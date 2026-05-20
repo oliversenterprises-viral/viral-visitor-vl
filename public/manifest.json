@@ -1,0 +1,21 @@
+{
+  "name": "ViralRefer",
+  "short_name": "ViralRefer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#18181b",
+  "theme_color": "#864cff",
+  "icons": [
+    {
+      "src": "/assets/ViralRefer-Profile.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/ViralRefer-Profile.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "description": "Refer friends and win a homepage banner promotion + $10 Cash App. Real-time viral referral platform."
+}

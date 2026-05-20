@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO -->
+    <title>ViralRefer • Earn Rewards by Referring Friends</title>
+    <meta name="description" content="Refer friends to ViralRefer and win a 30-day homepage banner promotion + $10 Cash App. The ultimate viral referral platform.">
+    <meta name="keywords" content="referral program, viral marketing, earn cash, homepage banner, referral rewards, cash app">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://viralrefer.app">
+    <meta property="og:title" content="ViralRefer • Earn Rewards by Referring Friends">
+    <meta property="og:description" content="The #1 referrer wins a full homepage banner promotion + $10 Cash App. Share your link and climb the leaderboard.">
+    <meta property="og:image" content="https://viralrefer.app/assets/ViralRefer-Cover.jpg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://viralrefer.app">
+    <meta name="twitter:title" content="ViralRefer • Earn Rewards by Referring Friends">
+    <meta name="twitter:description" content="Refer friends and win a homepage banner + $10 Cash App. Real-time leaderboard.">
+    <meta name="twitter:image" content="https://viralrefer.app/assets/ViralRefer-Cover.jpg">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/ViralRefer-Profile.png">
+    <link rel="apple-touch-icon" href="/assets/ViralRefer-Profile.png">
+
+    <!-- PRODUCTION SECURITY & PWA (will be hardened in build) -->
+    <link rel="manifest" href="/manifest.json">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "ViralRefer",
+      "url": "https://viralrefer.app",
+      "description": "Refer friends and win a homepage banner promotion + $10 Cash App. Real-time viral referral platform."
+    }
+    </script>
+
+    <link rel="stylesheet" href="/src/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="tail-container bg-zinc-950 text-zinc-100 min-h-screen">
+    <!-- NAVBAR -->
+    <nav class="border-b border-white/10 bg-zinc-950/80 backdrop-blur-lg fixed w-full z-50">
+        <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-violet-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl logo-font">V</div>
+                <span class="text-3xl font-semibold tracking-tighter logo-font">ViralRefer</span>
+            </div>
+            <div class="flex items-center gap-8 text-sm font-medium">
+                <a href="#how" class="hover:text-violet-400">How it works</a>
+                <a href="#leaderboard" class="hover:text-violet-400">Leaderboard</a>
+                <button id="admin-btn" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-3xl text-sm font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved"></i> ADMIN
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="pt-24 pb-16 max-w-6xl mx-auto px-6">
+       
+        <!-- HERO -->
+        <div class="rounded-3xl p-12 md:p-20 text-center hero-gradient shadow-2xl">
+            <div class="max-w-3xl mx-auto">
+                <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-medium px-4 py-2 rounded-3xl mb-8 border border-white/20">
+                    LIVE VIRAL CAMPAIGN • 2026
+                </div>
+               
+                <h1 id="hero-title" class="text-5xl sm:text-6xl md:text-[78px] font-bold tracking-tighter logo-font leading-none mb-6 text-white">
+                    <span id="hero-title-line1">Refer friends.</span><br>
+                    <span id="hero-title-accent" class="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-cyan-400 drop-shadow-[0_4px_20px_rgba(192,132,252,0.5)]">
+                        Get featured + cash.
+                    </span>
+                </h1>
+               
+                <p id="hero-subtitle" class="text-2xl text-zinc-200 max-w-2xl mx-auto mb-10 leading-relaxed">
+                    Share <span class="font-semibold text-violet-400">ViralRefer</span> with your network.<br>
+                    The #1 referrer wins a <span class="font-semibold text-emerald-400">full homepage banner + $10 Cash App</span>.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button onclick="getMyReferralLinkInstant()" 
+                            class="px-10 py-6 bg-white text-zinc-950 font-semibold text-xl rounded-3xl flex items-center justify-center gap-3 hover:scale-105 transition-all shadow-xl shadow-violet-500/40">
+                        <i class="fa-solid fa-gift"></i>
+                        <span>Get my referral link</span>
+                    </button>
+                   
+                    <button onclick="document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth' })" 
+                            class="px-8 py-6 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold text-xl rounded-3xl flex items-center justify-center gap-3 transition-all">
+                        See leaderboard
+                    </button>
+                </div>
+
+                <div class="mt-8 text-sm text-zinc-400">
+                    Join <span id="total-referrers" class="font-semibold text-white">0</span> people already referring
+                </div>
+            </div>
+        </div>
+
+        <!-- REFERRAL ATTRIBUTION BANNER -->
+        <div id="referral-attribution" class="hidden mt-6 max-w-2xl mx-auto">
+            <div class="glass border border-emerald-500/30 bg-emerald-500/5 rounded-3xl px-6 py-4 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-medium text-emerald-400">You were referred by</div>
+                        <div id="referrer-code-display" class="font-mono text-lg font-semibold text-white"></div>
+                    </div>
+                </div>
+                <button onclick="joinViaReferral()" 
+                        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-2xl text-sm flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-handshake"></i>
+                    <span>Join &amp; Get My Link</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MY STATS -->
+        <div id="my-stats" class="mt-8 glass border border-white/10 rounded-3xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="stats-title" class="text-2xl font-semibold">Your Stats</h2>
+                <div class="text-xs text-emerald-400 flex items-center gap-1">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    LIVE
+                </div>
+            </div>
+            <div id="stats-content">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- RECENT ACTIVITY FEED -->
+        <div class="mt-8 glass border border-white/10 rounded-3xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 id="recent-activity-title" class="text-2xl font-semibold">Recent Activity</h2>
+                    <p id="recent-activity-description" class="text-sm text-zinc-400">Live updates from all users</p>
+                </div>
+                <div class="text-xs text-emerald-400 flex items-center gap-1">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    LIVE
+                </div>
+            </div>
+            <div id="recent-activity" class="space-y-3 min-h-[120px]">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- HOW IT WORKS -->
+        <div id="how" class="mt-12">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span id="how-it-works-badge">3 SIMPLE STEPS</span>
+                </div>
+                <h2 id="how-it-works-title" class="text-5xl font-bold tracking-tighter">How ViralRefer Works</h2>
+                <p id="how-it-works-subtitle" class="text-xl text-zinc-400 mt-2 max-w-md mx-auto">Earn the ultimate prize in under 10 minutes of sharing.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-violet-500/50 transition-all">
+                    <div class="mx-auto w-14 h-14 bg-violet-600/20 text-violet-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-link"></i>
+                    </div>
+                    <div id="how-step1-title" class="text-2xl font-semibold mb-2">1. Get your link</div>
+                    <p id="how-step1-desc" class="text-zinc-400 leading-relaxed">Click the button below and instantly receive your unique, trackable referral link.</p>
+                </div>
+                <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-violet-500/50 transition-all">
+                    <div class="mx-auto w-14 h-14 bg-violet-600/20 text-violet-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-share-alt"></i>
+                    </div>
+                    <div id="how-step2-title" class="text-2xl font-semibold mb-2">2. Share everywhere</div>
+                    <p id="how-step2-desc" class="text-zinc-400 leading-relaxed">Post on X, WhatsApp, LinkedIn, Telegram, SMS — every click through your link counts toward your total.</p>
+                </div>
+                <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-amber-400/50 transition-all">
+                    <div class="mx-auto w-14 h-14 bg-amber-400/20 text-amber-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div id="how-step3-title" class="text-2xl font-semibold mb-2">3. Win the prize</div>
+                    <p id="how-it-works-step3" class="text-zinc-400 leading-relaxed">Reach the top of the leaderboard (10+ referrals) and claim the homepage banner + <span class="font-semibold text-emerald-400">$10 Cash App</span>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- REFERRAL LINK + SOCIAL SHARING -->
+        <div id="referral-section" class="mt-12">
+            <div class="max-w-2xl mx-auto">
+                <div class="text-center mb-8">
+                    <h2 id="winning-link-title" class="text-5xl font-bold tracking-tighter mb-3">Your winning link</h2>
+                    <p id="winning-link-description" class="text-xl text-zinc-300">Every signup through this link moves you up the leaderboard.</p>
+                </div>
+               
+                <div class="glass border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-link text-violet-400 text-2xl"></i>
+                            <h3 id="unique-referral-link-title" class="text-2xl font-semibold">Your unique referral link</h3>
+                        </div>
+                        <button id="new-code-button" onclick="generateNewCode()" 
+                                class="text-xs font-semibold text-violet-400 hover:text-violet-300 px-3 py-1.5 rounded-xl border border-violet-400/30 hover:bg-violet-400/10 transition-all">
+                            NEW CODE
+                        </button>
+                    </div>
+                   
+                    <div class="relative mb-8">
+                        <div class="flex items-center bg-zinc-900 border border-white/20 focus-within:border-violet-500 rounded-2xl px-5 py-4 transition-all">
+                            <i class="fa-solid fa-link text-zinc-400 mr-3"></i>
+                            <input id="ref-link" readonly 
+                                   class="flex-1 bg-transparent text-lg font-mono text-emerald-300 focus:outline-none">
+                            <button onclick="copyLink()" 
+                                    class="copy-btn ml-3 px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl flex items-center gap-2 text-sm shadow-lg shadow-violet-500/30">
+                                <i class="fa-solid fa-copy"></i> 
+                                <span>COPY</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- QR Code -->
+                    <div class="flex flex-col sm:flex-row items-center gap-4 bg-zinc-900/60 border border-white/10 rounded-2xl p-4 mb-8">
+                        <div class="flex-shrink-0">
+                            <img id="qr-code" 
+                                 class="w-24 h-24 sm:w-20 sm:h-20 rounded-xl border border-white/10 cursor-pointer hover:scale-105 transition-transform"
+                                 alt="QR Code for your referral link"
+                                 onclick="showQRModal()">
+                        </div>
+                        <div class="text-center sm:text-left">
+                            <div id="qr-scan-text" class="text-sm font-semibold text-emerald-400">Scan to share</div>
+                            <div id="qr-mobile-text" class="text-xs text-zinc-400 mt-0.5">Perfect for mobile — friends can scan and join instantly</div>
+                            <button id="qr-show-larger" onclick="showQRModal()" 
+                                    class="mt-2 text-xs px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/20 rounded-xl font-medium">
+                                Show larger QR
+                            </button>
+                        </div>
+                    </div>
+                   
+                    <div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fa-solid fa-share-alt text-violet-400"></i>
+                            <span id="share-link-heading" class="font-semibold text-lg">Share your link</span>
+                        </div>
+                       
+                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+                            <button onclick="shareTo('x')" class="share-btn flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 border border-white/20 text-white p-4 rounded-2xl font-medium text-sm">
+                                <span class="text-xl">𝕏</span> <span id="share-x-label">X</span>
+                            </button>
+                            <button onclick="shareTo('whatsapp')" class="share-btn flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-2xl font-medium text-sm">
+                                <i class="fa-brands fa-whatsapp text-xl"></i> <span id="share-whatsapp-label">WhatsApp</span>
+                            </button>
+                            <button onclick="shareTo('linkedin')" class="share-btn flex items-center justify-center gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white p-4 rounded-2xl font-medium text-sm">
+                                <i class="fa-brands fa-linkedin-in text-xl"></i> <span id="share-linkedin-label">LinkedIn</span>
+                            </button>
+                            <button onclick="shareTo('facebook')" class="share-btn flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#0d5fcc] text-white p-4 rounded-2xl font-medium text-sm">
+                                <i class="fa-brands fa-facebook-f text-xl"></i> <span id="share-facebook-label">Facebook</span>
+                            </button>
+                            <button onclick="shareTo('telegram')" class="share-btn flex items-center justify-center gap-2 bg-[#26A5E4] hover:bg-[#1a8bc4] text-white p-4 rounded-2xl font-medium text-sm">
+                                <i class="fa-brands fa-telegram text-xl"></i> <span id="share-telegram-label">Telegram</span>
+                            </button>
+                            <button onclick="shareTo('sms')" class="share-btn flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-2xl font-medium text-sm">
+                                <i class="fa-solid fa-sms text-xl"></i> <span id="share-sms-label">SMS</span>
+                            </button>
+                            <button onclick="shareTo('email')" class="share-btn flex items-center justify-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-white p-4 rounded-2xl font-medium text-sm">
+                                <i class="fa-solid fa-envelope text-xl"></i> <span id="share-email-label">Email</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRIZE SECTION (abridged for starter) -->
+        <div class="mt-12 grid md:grid-cols-2 gap-8">
+            <div class="premium-card glass border border-white/10 rounded-3xl p-8 md:p-10 flex flex-col">
+                <div class="inline-flex items-center gap-2 bg-amber-400/10 text-amber-400 px-4 py-1.5 rounded-3xl text-sm font-semibold mb-6 w-fit">
+                    <i class="fa-solid fa-trophy"></i> 
+                    <span id="prize-badge">PREMIUM PRIZE</span>
+                </div>
+                <!-- BATCH 5: small clean prize_pool display in Prize section (visible, ready for admin control) -->
+                <div class="text-xs text-amber-400/90 font-medium tracking-[1px] mb-1">PRIZE POOL <span id="prize-pool" class="font-mono text-amber-400 text-sm font-bold">50,000</span></div>
+                <h2 id="prize-title" class="text-4xl font-bold tracking-tighter mb-4">Homepage Banner Promotion + Cash App</h2>
+                <p id="prize-description" class="text-xl text-zinc-300 mb-8">Your website + custom banner featured on our homepage for 30 days + instant Cash App payout!</p>
+               
+                <div class="flex gap-4 mb-8">
+                    <div class="px-5 py-3 bg-white/5 rounded-2xl text-center flex-1">
+                        <div class="text-xs text-zinc-400 mb-1">MINIMUM</div>
+                        <div id="min-referrals-value" class="text-4xl font-bold text-white">10</div>
+                        <div class="text-xs text-zinc-400">REFERRALS</div>
+                    </div>
+                    <div class="px-5 py-3 bg-emerald-500/10 rounded-2xl text-center flex-1">
+                        <div class="text-xs text-emerald-400 mb-1">INSTANT</div>
+                        <div id="cash-amount-value" class="text-4xl font-bold text-white">$10</div>
+                        <div class="text-xs text-emerald-400">CASH APP</div>
+                    </div>
+                </div>
+               
+                <button onclick="claimBanner()" 
+                        class="mt-auto w-full py-4 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-zinc-950 font-bold text-lg rounded-3xl flex items-center justify-center gap-3 shadow-lg shadow-amber-500/30 transition-all">
+                    <i class="fa-solid fa-trophy"></i> 
+                    I'm the #1 Winner – Claim Banner + $<span id="claim-cash-value">10</span> Cash App Now
+                </button>
+            </div>
+            
+            <div class="premium-card glass border border-white/10 rounded-3xl overflow-hidden flex flex-col">
+                <div class="px-8 pt-8 pb-6 bg-gradient-to-br from-zinc-900 to-black">
+                    <div id="current-winner-badge" class="inline-flex items-center gap-2 bg-white/10 text-white px-4 py-1.5 rounded-3xl text-xs font-semibold mb-6">
+                        CURRENT #1 WINNER GETS THIS
+                    </div>
+                    <h3 id="prize-banner-title" class="text-4xl font-bold tracking-tighter mb-4">
+                        <span id="prize-banner-line1">Homepage Banner</span><br>
+                        <span id="prize-banner-line2">Promotion</span>
+                    </h3>
+                    <p id="prize-banner-description" class="text-lg text-zinc-300">Your website + custom banner featured on our homepage!</p>
+                </div>
+                <div class="flex-1 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 p-8 flex items-center justify-center relative">
+                    <div class="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-[280px]">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center">
+                                <span class="text-white font-bold text-xl">V</span>
+                            </div>
+                            <div>
+                                <div class="font-bold text-xl text-zinc-900">ViralRefer</div>
+                                <div id="featured-partner-label" class="text-xs text-zinc-500">Featured Partner</div>
+                            </div>
+                        </div>
+                        <div class="text-center py-4">
+                            <div id="your-website-label" class="text-2xl font-bold text-zinc-900 mb-1">Your Website</div>
+                            <div id="featured-on-viralrefer-label" class="text-sm text-zinc-500">Featured on ViralRefer.app</div>
+                        </div>
+                        <div class="mt-4 bg-zinc-900 text-white text-center py-2.5 rounded-2xl text-sm font-medium">
+                            yourwebsite.com
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIVE LEADERBOARD -->
+        <div id="leaderboard" class="mt-12">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h2 id="leaderboard-title" class="text-5xl font-bold tracking-tighter">Live Leaderboard</h2>
+                        <div class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-semibold rounded-3xl flex items-center gap-1.5">
+                            <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                            LIVE
+                            <span id="realtime-status" class="ml-1 text-[10px] opacity-70">• Realtime</span>
+                        </div>
+                    </div>
+                    <p id="leaderboard-description" class="text-zinc-400 mt-1">Only 10+ referrals qualify • Real-time from Supabase</p>
+                </div>
+                <button onclick="simulateNewReferral()" 
+                        class="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-vial"></i> 
+                    <span>Demo +1 Referral</span>
+                </button>
+            </div>
+            
+            <div id="leaderboard-container" class="min-h-[280px]">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-black py-12 border-t border-white/10 text-center text-xs text-zinc-500">
+        <div class="max-w-5xl mx-auto px-4 space-y-2">
+            <div id="footer-legal-disclaimer">
+                © 2026 ViralRefer Premium. All rights reserved. 
+                This is a <span class="font-semibold">skill-based referral contest</span>. 
+                <strong>NO PURCHASE OR PAYMENT NECESSARY TO ENTER OR WIN.</strong> 
+                Void where prohibited by law. Open only to legal residents of the 50 United States and D.C., age 18+. 
+                Winners determined by verified unique referrals (server-side IP/device checks via secure Edge Functions). 
+                Prizes subject to eligibility verification, tax reporting (IRS Form 1099-MISC for U.S. winners), and compliance with Official Rules. 
+                All decisions final. Fraud, self-referrals, or abuse will result in disqualification.
+            </div>
+            <!-- BATCH 5: short "Key Rules" paragraph near footer (visible but not overwhelming; wired to rules_text) -->
+            <div class="text-xs text-zinc-400">
+              <span class="font-semibold text-zinc-300">Key Rules:</span> <span id="rules-text">No self-referrals. Unique IPs only. Fair play enforced. Turnstile protected.</span>
+            </div>
+            <div class="pt-1">
+                <a id="footer-link-rules" href="#rules" onclick="showRulesModal(); return false;" class="underline hover:text-white transition-colors">Official Rules &amp; Full Disclaimers</a> • 
+                <a id="footer-link-privacy" href="#privacy" class="underline hover:text-white transition-colors">Privacy Policy</a> • 
+                <a id="footer-link-terms" href="#terms" class="underline hover:text-white transition-colors">Terms of Service</a>
+            </div>
+            <div id="footer-tech-attribution" class="pt-2 text-[10px] opacity-75">
+                Built with Supabase • Secure RLS + Edge Functions architecture (writes via audited service_role only) • Production v2.0
+            </div>
+        </div>
+    </footer>
+
+    <!-- Admin Password Modal -->
+    <div id="admin-password-modal" onclick="closeAdminPasswordModal()" class="hidden fixed inset-0 bg-black/90 z-[600] flex items-center justify-center">
+        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-md mx-4 p-8">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 bg-rose-600/20 text-rose-400 rounded-2xl flex items-center justify-center">
+                    <i class="fa-solid fa-shield-halved text-2xl"></i>
+                </div>
+                <div>
+                    <div class="font-bold text-2xl">Admin Access</div>
+                    <div class="text-sm text-zinc-400">Enter password to open dashboard</div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-zinc-400 mb-2">Password</label>
+                <div class="relative">
+                    <input id="admin-password-input" type="password" 
+                           class="w-full bg-zinc-900 border border-white/20 focus:border-violet-500 rounded-2xl px-5 py-4 text-lg font-mono tracking-wider placeholder:text-zinc-600"
+                           placeholder="••••••••••••" onkeydown="if (event.key === 'Enter') submitAdminPassword()">
+                    <button onclick="toggleAdminPasswordVisibility()" type="button"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white">
+                        <i id="admin-password-eye" class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+                <div id="admin-password-error" class="hidden text-red-400 text-sm mt-2 flex items-center gap-2">
+                    <i class="fa-solid fa-exclamation-circle"></i> 
+                    <span>Incorrect password. Please try again.</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeAdminPasswordModal()" 
+                        class="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/20 rounded-2xl font-semibold transition-all">
+                    Cancel
+                </button>
+                <button onclick="submitAdminPassword()" id="admin-password-submit-btn"
+                        class="flex-1 py-4 bg-violet-600 hover:bg-violet-500 rounded-2xl font-semibold text-white transition-all flex items-center justify-center gap-2">
+                    <span>Unlock Dashboard</span>
+                </button>
+            </div>
+
+            <div class="text-[10px] text-center text-zinc-500 mt-4">
+                SHA-256 verified • Session protected
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard Modal -->
+    <div id="admin-modal" onclick="closeAdminPanel()" class="hidden fixed inset-0 bg-black/90 z-[400] flex items-center justify-center">
+        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-6xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="px-8 py-6 border-b border-white/10 flex items-center justify-between">
+                <div class="font-bold text-2xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-rose-400"></i> Admin Dashboard</div>
+                <button onclick="closeAdminPanel()" class="text-3xl text-zinc-400 hover:text-white">✕</button>
+            </div>
+           
+            <div class="flex border-b border-white/10 px-8">
+                <button onclick="switchAdminTab(0)" id="tab-0" class="admin-tab px-6 py-4 font-semibold border-b-2 border-violet-500 text-violet-400">REFERRALS</button>
+                <button onclick="switchAdminTab(1)" id="tab-1" class="admin-tab px-6 py-4 font-semibold text-zinc-400 hover:text-white">SHARE ANALYTICS</button>
+                <button onclick="switchAdminTab(2)" id="tab-2" class="admin-tab px-6 py-4 font-semibold text-zinc-400 hover:text-white">EDIT CONTENT</button>
+                <button onclick="switchAdminTab(3)" id="tab-3" class="admin-tab px-6 py-4 font-semibold text-zinc-400 hover:text-white">PRIZE CLAIMS</button>
+            </div>
+           
+            <div class="p-8 overflow-auto flex-1" id="admin-content"></div>
+        </div>
+    </div>
+
+    <!-- Claim Details Modal -->
+    <div id="claim-details-modal" onclick="closeClaimDetailsModal()" class="hidden fixed inset-0 bg-black/90 z-[700] flex items-center justify-center">
+        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-2xl mx-4 p-8">
+            <div class="flex items-center justify-between mb-6">
+                <div class="font-bold text-2xl">Claim Details</div>
+                <button onclick="closeClaimDetailsModal()" class="text-3xl text-zinc-400 hover:text-white">✕</button>
+            </div>
+
+            <div id="claim-details-content" class="space-y-4 text-sm">
+                <!-- Populated dynamically by JS -->
+            </div>
+
+            <div class="mt-8 flex justify-end">
+                <button onclick="closeClaimDetailsModal()" 
+                        class="px-6 py-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-2xl font-semibold">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral Details Modal (for improved Referrals tab - modeled exactly on claim-details-modal) -->
+    <div id="referral-details-modal" onclick="closeReferralDetailsModal()" class="hidden fixed inset-0 bg-black/90 z-[700] flex items-center justify-center">
+        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-2xl mx-4 p-8">
+            <div class="flex items-center justify-between mb-6">
+                <div class="font-bold text-2xl">Referral Details</div>
+                <button onclick="closeReferralDetailsModal()" class="text-3xl text-zinc-400 hover:text-white">✕</button>
+            </div>
+
+            <div id="referral-details-content" class="space-y-4 text-sm">
+                <!-- Populated dynamically by JS in showReferralDetails() -->
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3">
+                <button onclick="closeReferralDetailsModal()" 
+                        class="px-6 py-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-2xl font-semibold">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BATCH 5: Rules modal (simple, clean, reusable style modeled on claim-details-modal). Displays rules_full from site_content. -->
+    <!-- Triggered by footer "Official Rules & Full Disclaimers" link (now opens modal instead of #rules anchor) -->
+    <div id="rules-modal" onclick="closeRulesModal()" class="hidden fixed inset-0 bg-black/90 z-[710] flex items-center justify-center">
+        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-3xl mx-4 p-8 max-h-[82vh] overflow-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div class="font-bold text-2xl">Official Rules &amp; Full Disclaimers</div>
+                <button onclick="closeRulesModal()" class="text-3xl text-zinc-400 hover:text-white">✕</button>
+            </div>
+
+            <div id="rules-full-content" class="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">
+Full rules and disclaimers for the ViralRefer Premium skill-based referral contest.
+
+Eligibility: Open to U.S. residents 18+. No purchase necessary. Void where prohibited.
+
+No self-referrals, shared devices, bots, or fraud. All referrals verified server-side via Edge Functions, IP checks, and Turnstile.
+
+Winners (top verified referrers meeting min threshold) claim via secure form. Prizes subject to verification, taxes (1099 for $600+), and final approval. All decisions final.
+
+(Admin: Set "rules_full" key in site_content table via Admin panel for live full legal text. This static fallback preserves functionality.)
+            </div>
+
+            <div class="mt-8 flex justify-end">
+                <button onclick="closeRulesModal()" 
+                        class="px-6 py-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-2xl font-semibold">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
