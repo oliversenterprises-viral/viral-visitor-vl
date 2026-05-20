@@ -48,8 +48,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #a1a1aa;
-    --text-h: #f4f4f5;
+    --text: #d4d4d8;     /* Much more readable body text */
+    --text-h: #fafafa;   /* Strong, premium headings */
     --bg: #0a0a0f;
     --border: #27272a;
     --code-bg: #18181b;
@@ -60,6 +60,17 @@
     --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
     --glass-bg: rgba(10, 10, 15, 0.65);
     --glass-border: rgba(255, 255, 255, 0.12);
+  }
+}
+
+/* Broad contrast boost for common low-contrast classes in dark mode */
+@media (prefers-color-scheme: dark) {
+  .text-zinc-400,
+  .text-zinc-500 {
+    color: #d4d4d8 !important;
+  }
+  .text-zinc-300 {
+    color: #e4e4e7 !important;
   }
 }
 
