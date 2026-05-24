@@ -52,8 +52,8 @@
                 <span class="text-3xl font-semibold tracking-tighter logo-font">ViralRefer</span>
             </div>
             <div class="flex items-center gap-8 text-sm font-medium">
-                <a href="#how" class="hover:text-violet-400">How it works</a>
-                <a href="#leaderboard" class="hover:text-violet-400">Leaderboard</a>
+                <a href="#how" class="text-zinc-300 hover:text-violet-400 transition-colors">How it works</a>
+                <a href="#leaderboard" class="text-zinc-300 hover:text-violet-400 transition-colors">Leaderboard</a>
                 <button id="admin-btn" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-3xl text-sm font-semibold flex items-center gap-2">
                     <i class="fa-solid fa-shield-halved"></i> ADMIN
                 </button>
@@ -66,13 +66,13 @@
         <!-- HERO -->
         <div class="rounded-3xl p-12 md:p-20 text-center hero-gradient shadow-2xl">
             <div class="max-w-3xl mx-auto">
-                <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-medium px-4 py-2 rounded-3xl mb-8 border border-white/20">
+                <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-xs font-medium px-4 py-2 rounded-3xl mb-8 border border-white/20" style="color: var(--text-hero-badge)">
                     LIVE VIRAL CAMPAIGN • 2026
                 </div>
                
-                <h1 id="hero-title" class="text-6xl sm:text-[68px] md:text-[82px] font-bold tracking-[-0.04em] logo-font leading-none mb-6 text-white">
+                <h1 id="hero-title" class="text-[58px] sm:text-[72px] md:text-[88px] font-bold tracking-[-0.05em] logo-font leading-none mb-6" style="color: var(--text-hero-title)">
                     Refer friends.<br>
-                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-cyan-400 drop-shadow-[0_4px_25px_rgba(192,132,252,0.6)]">
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-cyan-400 drop-shadow-[0_4px_20px_rgba(192,132,252,0.5)]">
                         Get featured + cash.
                     </span>
                 </h1>
@@ -84,13 +84,13 @@
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <button onclick="getMyReferralLinkInstant()" 
-                            class="btn-primary px-10 py-6 text-xl flex items-center justify-center gap-3">
+                            class="btn-primary px-12 py-6 text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/30">
                         <i class="fa-solid fa-gift"></i>
                         <span>Get my referral link</span>
                     </button>
                    
                     <button onclick="document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth' })" 
-                            class="btn-secondary px-9 py-6 text-xl flex items-center justify-center gap-3">
+                            class="btn-secondary px-10 py-6 text-xl flex items-center justify-center gap-3">
                         See leaderboard
                     </button>
                 </div>
@@ -124,7 +124,7 @@
         <!-- MY STATS -->
         <div id="my-stats" class="mt-8 glass border border-white/10 rounded-3xl p-8">
             <div class="flex justify-between items-center mb-6">
-                <h2 id="stats-title" class="text-2xl font-semibold">Your Stats</h2>
+                <h2 id="stats-title" class="text-2xl font-semibold" style="color: var(--text-stats-title)">Your Stats</h2>
                 <div class="text-xs text-emerald-400 flex items-center gap-1">
                     <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                     LIVE
@@ -139,7 +139,7 @@
         <div class="mt-8 glass border border-white/10 rounded-3xl p-8">
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 id="recent-activity-title" class="text-2xl font-semibold">Recent Activity</h2>
+                    <h2 id="recent-activity-title" class="text-2xl font-semibold" style="color: var(--text-activity-title)">Recent Activity</h2>
                     <p id="recent-activity-description" class="text-sm text-zinc-400">Live updates from all users</p>
                 </div>
                 <div class="text-xs text-emerald-400 flex items-center gap-1">
@@ -157,9 +157,9 @@
             <div class="text-center mb-8">
                 <div class="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">
                     <i class="fa-solid fa-lightbulb"></i>
-                    <span id="how-it-works-badge">3 SIMPLE STEPS</span>
+                    <span id="how-it-works-badge" style="color: var(--text-how-badge)">3 SIMPLE STEPS</span>
                 </div>
-                <h2 id="how-it-works-title" class="text-5xl font-bold tracking-tighter">How ViralRefer Works</h2>
+                <h2 id="how-it-works-title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-how-title)">How ViralRefer Works</h2>
                 <p id="how-it-works-subtitle" class="text-xl text-zinc-400 mt-2 max-w-md mx-auto">Earn the ultimate prize in under 10 minutes of sharing.</p>
             </div>
 
@@ -168,21 +168,21 @@
                     <div class="mx-auto w-14 h-14 bg-violet-600/20 text-violet-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-link"></i>
                     </div>
-                    <div id="how-step1-title" class="text-2xl font-semibold mb-2">1. Get your link</div>
+                    <div id="how-step1-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title)">1. Get your link</div>
                     <p id="how-step1-desc" class="text-zinc-400 leading-relaxed">Click the button below and instantly receive your unique, trackable referral link.</p>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-violet-500/50 transition-all">
                     <div class="mx-auto w-14 h-14 bg-violet-600/20 text-violet-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-share-alt"></i>
                     </div>
-                    <div id="how-step2-title" class="text-2xl font-semibold mb-2">2. Share everywhere</div>
+                    <div id="how-step2-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title)">2. Share everywhere</div>
                     <p id="how-step2-desc" class="text-zinc-400 leading-relaxed">Post on X, WhatsApp, LinkedIn, Telegram, SMS — every click through your link counts toward your total.</p>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-amber-400/50 transition-all">
                     <div class="mx-auto w-14 h-14 bg-amber-400/20 text-amber-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-trophy"></i>
                     </div>
-                    <div id="how-step3-title" class="text-2xl font-semibold mb-2">3. Win the prize</div>
+                    <div id="how-step3-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title)">3. Win the prize</div>
                     <p id="how-it-works-step3" class="text-zinc-400 leading-relaxed">Reach the top of the leaderboard (10+ referrals) and claim the homepage banner + <span class="font-semibold text-emerald-400">$10 Cash App</span>.</p>
                 </div>
             </div>
@@ -192,7 +192,7 @@
         <div id="referral-section" class="mt-12">
             <div class="max-w-2xl mx-auto">
                 <div class="text-center mb-8">
-                    <h2 id="winning-link-title" class="text-5xl font-bold tracking-tighter mb-3">Your winning link</h2>
+                    <h2 id="winning-link-title" class="text-5xl font-bold tracking-tighter mb-3" style="color: var(--text-referral-heading)">Your winning link</h2>
                     <p id="winning-link-description" class="text-xl text-zinc-300">Every signup through this link moves you up the leaderboard.</p>
                 </div>
                
@@ -200,7 +200,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
                             <i class="fa-solid fa-link text-violet-400 text-2xl"></i>
-                            <h3 id="unique-referral-link-title" class="text-2xl font-semibold">Your unique referral link</h3>
+                            <h3 id="unique-referral-link-title" class="text-2xl font-semibold" style="color: var(--text-referral-heading)">Your unique referral link</h3>
                         </div>
                         <button id="new-code-button" onclick="generateNewCode()" 
                                 class="text-xs font-semibold text-violet-400 hover:text-violet-300 px-3 py-1.5 rounded-xl border border-violet-400/30 hover:bg-violet-400/10 transition-all">
@@ -209,14 +209,24 @@
                     </div>
                    
                     <div class="relative mb-8">
-                        <div class="flex items-center bg-zinc-900 border border-white/20 focus-within:border-violet-500 rounded-2xl px-5 py-4 transition-all">
-                            <i class="fa-solid fa-link text-zinc-400 mr-3"></i>
+                        <div class="flex items-center bg-zinc-900 border focus-within:border-violet-500 rounded-2xl px-5 py-4 transition-all" style="border-color: var(--referral-input-border)">
+                            <i id="ref-link-icon" class="fa-solid fa-link mr-3" style="color: var(--text-referral-link-icon)"></i>
                             <input id="ref-link" readonly 
-                                   class="flex-1 bg-transparent text-lg font-mono text-emerald-300 focus:outline-none">
-                            <button onclick="copyLink()" 
-                                    class="copy-btn ml-3 px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl flex items-center gap-2 text-sm shadow-lg shadow-violet-500/30">
+                                   class="flex-1 bg-transparent text-lg font-mono tracking-tight focus:outline-none"
+                                   style="color: var(--text-referral-link)">
+                            <button id="copy-link-btn" onclick="copyLink()" 
+                                    class="copy-btn ml-3 px-6 py-2.5 hover:bg-violet-500 font-semibold rounded-xl flex items-center gap-2 text-sm shadow-lg shadow-violet-500/30"
+                                    style="background-color: var(--referral-copy-btn-bg); color: var(--referral-copy-btn-text);">
                                 <i class="fa-solid fa-copy"></i> 
                                 <span>COPY</span>
+                            </button>
+
+                            <!-- Small QR icon button for quick access to QR modal -->
+                            <button onclick="showQRModal()" 
+                                    class="ml-2 px-3 py-2 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all"
+                                    title="Show QR Code"
+                                    style="color: var(--referral-qr-icon)">
+                                <i class="fa-solid fa-qrcode text-lg"></i>
                             </button>
                         </div>
                     </div>
@@ -224,16 +234,20 @@
                     <!-- QR Code -->
                     <div class="flex flex-col sm:flex-row items-center gap-4 bg-zinc-900/60 border border-white/10 rounded-2xl p-4 mb-8">
                         <div class="flex-shrink-0">
-                            <img id="qr-code" 
-                                 class="w-24 h-24 sm:w-20 sm:h-20 rounded-xl border border-white/10 cursor-pointer hover:scale-105 transition-transform"
-                                 alt="QR Code for your referral link"
-                                 onclick="showQRModal()">
+                            <!-- White background wrapper for excellent QR contrast and scannability -->
+                            <div class="bg-white p-2 rounded-2xl shadow-inner ring-1" style="--tw-ring-color: var(--referral-qr-border)">
+                                <img id="qr-code" 
+                                     class="w-24 h-24 sm:w-20 sm:h-20 rounded-xl cursor-pointer hover:scale-105 transition-transform"
+                                     alt="QR Code for your referral link"
+                                     onclick="showQRModal()">
+                            </div>
                         </div>
                         <div class="text-center sm:text-left">
-                            <div id="qr-scan-text" class="text-sm font-semibold text-emerald-400">Scan to share</div>
+                            <div id="qr-scan-text" class="text-sm font-semibold" style="color: var(--qr-scan-text)">Scan to share</div>
                             <div id="qr-mobile-text" class="text-xs text-zinc-400 mt-0.5">Perfect for mobile — friends can scan and join instantly</div>
                             <button id="qr-show-larger" onclick="showQRModal()" 
-                                    class="mt-2 text-xs px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/20 rounded-xl font-medium">
+                                    class="mt-2 text-xs px-3 py-1 hover:bg-white/10 border border-white/20 rounded-xl font-medium"
+                                    style="background-color: var(--qr-show-larger-bg); color: var(--qr-show-larger-text)">
                                 Show larger QR
                             </button>
                         </div>
@@ -242,7 +256,7 @@
                     <div>
                         <div class="flex items-center gap-2 mb-4">
                             <i class="fa-solid fa-share-alt text-violet-400"></i>
-                            <span id="share-link-heading" class="font-semibold text-lg">Share your link</span>
+                            <span id="share-link-heading" class="font-semibold text-lg" style="color: var(--text-referral-heading)">Share your link</span>
                         </div>
                        
                         <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
@@ -275,48 +289,48 @@
 
         <!-- PRIZE SECTION (abridged for starter) -->
         <div class="mt-12 grid md:grid-cols-2 gap-8">
-            <div class="premium-card glass border border-white/10 rounded-3xl p-8 md:p-10 flex flex-col">
-                <div class="inline-flex items-center gap-2 bg-amber-400/10 text-amber-400 px-4 py-1.5 rounded-3xl text-sm font-semibold mb-6 w-fit">
+            <div class="premium-card glass border border-white/10 rounded-3xl p-8 md:p-10 flex flex-col shadow-2xl">
+                <div class="inline-flex items-center gap-2 bg-amber-400/10 px-4 py-1.5 rounded-3xl text-sm font-semibold mb-6 w-fit" style="color: var(--text-prize-badge)">
                     <i class="fa-solid fa-trophy"></i> 
                     <span id="prize-badge">PREMIUM PRIZE</span>
                 </div>
                 <!-- BATCH 5: small clean prize_pool display in Prize section (visible, ready for admin control) -->
                 <div class="text-xs text-amber-400/90 font-medium tracking-[1px] mb-1">PRIZE POOL <span id="prize-pool" class="font-mono text-amber-400 text-sm font-bold">50,000</span></div>
-                <h2 id="prize-title" class="text-4xl font-bold tracking-tighter mb-4">Homepage Banner Promotion + Cash App</h2>
-                <p id="prize-description" class="text-xl text-zinc-300 mb-8">Your website + custom banner featured on our homepage for 30 days + instant Cash App payout!</p>
+                <h2 id="prize-title" class="text-4xl font-semibold tracking-[-1.5px] mb-3 leading-tight" style="color: var(--text-prize-title)">Homepage Banner Promotion + Cash App</h2>
+                <p id="prize-description" class="text-lg text-zinc-300 mb-6 leading-relaxed">Your website + custom banner featured on our homepage for 30 days + instant Cash App payout.</p>
                
                 <div class="flex gap-4 mb-8">
-                    <div class="px-5 py-4 bg-white/5 rounded-2xl text-center flex-1 border border-white/10">
-                        <div class="text-[10px] uppercase tracking-[1.5px] text-zinc-500 mb-1">Minimum</div>
-                        <div id="min-referrals-value" class="text-4xl font-semibold text-white tracking-tighter">10</div>
-                        <div class="text-xs text-zinc-400 mt-0.5">Referrals</div>
+                    <div class="px-6 py-4 bg-white/5 rounded-2xl text-center flex-1 border border-white/10">
+                        <div class="text-[10px] uppercase tracking-[2px] mb-0.5" style="color: var(--text-minimum-label)">Minimum</div>
+                        <div id="min-referrals-value" class="text-4xl font-semibold text-white tracking-[-1.5px]">10</div>
+                        <div class="text-xs mt-1" style="color: var(--text-minimum-label)">Referrals</div>
                     </div>
-                    <div class="px-5 py-4 bg-emerald-500/10 rounded-2xl text-center flex-1 border border-emerald-500/20">
-                        <div class="text-[10px] uppercase tracking-[1.5px] text-emerald-400 mb-1">Instant</div>
-                        <div id="cash-amount-value" class="text-4xl font-semibold text-white tracking-tighter">$10</div>
-                        <div class="text-xs text-emerald-400 mt-0.5">Cash App</div>
+                    <div class="px-6 py-4 bg-emerald-500/10 rounded-2xl text-center flex-1 border border-emerald-500/20">
+                        <div class="text-[10px] uppercase tracking-[2px] mb-0.5" style="color: var(--text-instant-label)">Instant</div>
+                        <div id="cash-amount-value" class="text-4xl font-semibold text-white tracking-[-1.5px]">$10</div>
+                        <div class="text-xs mt-1" style="color: var(--text-instant-label)">Cash App</div>
                     </div>
                 </div>
                
                 <button onclick="claimBanner()" 
-                        class="mt-auto w-full py-4 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-zinc-950 font-semibold text-lg rounded-3xl flex items-center justify-center gap-3 shadow-xl shadow-amber-500/40 active:scale-[0.985] transition-all">
+                        class="mt-auto w-full py-4 bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-300 hover:to-amber-300 text-zinc-950 font-bold text-lg rounded-3xl flex items-center justify-center gap-3 shadow-2xl shadow-amber-500/50 active:scale-[0.985] transition-all">
                     <i class="fa-solid fa-trophy"></i> 
-                    <span>I'm the #1 Winner – Claim <span class="font-bold">Banner + $10 Cash App</span></span>
+                    <span>I'm the #1 Winner – Claim <span class="font-extrabold tracking-tight">Banner + $10 Cash App</span></span>
                 </button>
             </div>
             
-            <div class="premium-card glass border border-white/10 rounded-3xl overflow-hidden flex flex-col">
+            <div class="premium-card border border-white/10 rounded-3xl overflow-hidden flex flex-col bg-zinc-900 shadow-2xl">
                 <div class="px-8 pt-8 pb-6 bg-gradient-to-br from-zinc-900 to-black">
                     <div id="current-winner-badge" class="inline-flex items-center gap-2 bg-white/10 text-white px-4 py-1.5 rounded-3xl text-xs font-semibold mb-6">
                         CURRENT #1 WINNER GETS THIS
                     </div>
-                    <h3 id="prize-banner-title" class="text-4xl font-bold tracking-tighter mb-4">
+                    <h3 id="prize-banner-title" class="text-4xl font-bold tracking-tighter mb-4" style="color: var(--text-prize-banner-title)">
                         <span id="prize-banner-line1">Homepage Banner</span><br>
                         <span id="prize-banner-line2">Promotion</span>
                     </h3>
                     <p id="prize-banner-description" class="text-lg text-zinc-300">Your website + custom banner featured on our homepage!</p>
                 </div>
-                <div class="flex-1 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 p-8 flex items-center justify-center relative">
+                <div class="flex-1 bg-gradient-to-br from-[#7c3aed] via-[#9333ea] to-[#c026d3] p-8 flex items-center justify-center relative">
                     <div class="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-[280px]">
                         <div class="flex items-center gap-3 mb-4">
                             <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center">
@@ -344,14 +358,14 @@
             <div class="flex items-center justify-between mb-6">
                 <div>
                     <div class="flex items-center gap-3">
-                        <h2 id="leaderboard-title" class="text-5xl font-bold tracking-tighter">Live Leaderboard</h2>
+                        <h2 id="leaderboard-title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-leaderboard-title)">Live Leaderboard</h2>
                         <div class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-semibold rounded-3xl flex items-center gap-1.5">
                             <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                             LIVE
                             <span id="realtime-status" class="ml-1 text-[10px] opacity-70">• Realtime</span>
                         </div>
                     </div>
-                    <p id="leaderboard-description" class="text-zinc-400 mt-1">Only 10+ referrals qualify • Real-time from Supabase</p>
+                    <p id="leaderboard-description" class="mt-1" style="color: var(--text-muted)">Only 10+ referrals qualify • Real-time from Supabase</p>
                 </div>
                 <button onclick="simulateNewReferral()" 
                         class="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all">
@@ -452,6 +466,7 @@
                 <button onclick="switchAdminTab(1)" id="tab-1" class="admin-tab px-6 py-4 font-semibold text-zinc-400 hover:text-white">SHARE ANALYTICS</button>
                 <button onclick="switchAdminTab(2)" id="tab-2" class="admin-tab px-6 py-4 font-semibold text-zinc-400 hover:text-white">EDIT CONTENT</button>
                 <button onclick="switchAdminTab(3)" id="tab-3" class="admin-tab px-6 py-4 font-semibold text-zinc-400 hover:text-white">PRIZE CLAIMS</button>
+                <button onclick="switchAdminTab(4)" id="tab-4" class="admin-tab px-6 py-4 font-semibold text-zinc-400 hover:text-white">TEXT COLORS</button>
             </div>
            
             <div class="p-8 overflow-auto flex-1" id="admin-content"></div>

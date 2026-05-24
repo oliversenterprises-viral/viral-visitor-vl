@@ -96,19 +96,10 @@ export interface SiteContent {
   updated_by?: string;           // admin user id
 }
 
-/** Denormalized leaderboard row (usually a view or Edge Function computed result) */
-export interface LeaderboardEntry {
-  rank: number;
-  user_id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  referral_code: string;
-  points: number;
-  total_referrals: number;
-  tier: Tier;
-  // For "this week / this month" filters
-  period_points?: number;
-}
+// NOTE: The active LeaderboardEntry (lightweight shape for current queries) is defined above near line 20.
+// A richer denormalized row (with user profile fields + period points) can be added later as `LeaderboardRow`
+// if Edge Functions or views start returning the full shape. The previous duplicate definition has been removed
+// to keep the module's exported types unambiguous.
 
 /** Utility: minimal public profile for sharing / display (no sensitive fields) */
 export interface PublicProfile {
@@ -183,4 +174,10 @@ export interface AnalyticsSummary {
   cumulativeTrend?: { labels: string[]; values: number[] };
   bestDayOfWeek?: string;
   avgPerDay?: number;
+}
+
+/** Shape returned by fetchRecentActivity (used in public homepage) */
+export interface RecentActivityItem {
+  referrer_code: string;
+  created_at: string;
 }

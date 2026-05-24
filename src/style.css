@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
 
 /* ============================================
    VIRALREFER PREMIUM — EXACT STYLES FROM ORIGINAL
@@ -12,6 +12,9 @@
   --color-accent: #854cff;
   --color-accent-dark: #6b3acc;
   --color-gold: #fbbf24;
+
+  /* Brand Primary (Violet) — exact from design system */
+  --color-primary: #864cff;
 }
 
 /* Base + Typography (ported + enhanced from original rich HTML) */
@@ -48,30 +51,105 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #d4d4d8;     /* Much more readable body text */
-    --text-h: #fafafa;   /* Strong, premium headings */
-    --bg: #0a0a0f;
+    --text: #f4f4f5;           /* Primary Text */
+    --text-h: #f4f4f5;         /* Headings (same as primary) */
+    --bg: #09090b;             /* Main Background */
     --border: #27272a;
     --code-bg: #18181b;
-    --accent: #a78bfa;
-    --accent-bg: rgba(167, 139, 250, 0.15);
-    --accent-border: rgba(167, 139, 250, 0.45);
-    --social-bg: rgba(39, 39, 42, 0.6);
-    --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-    --glass-bg: rgba(10, 10, 15, 0.65);
-    --glass-border: rgba(255, 255, 255, 0.12);
+    --accent: #864cff;
+    --accent-bg: rgba(134, 76, 255, 0.15);
+    --accent-border: rgba(134, 76, 255, 0.4);
+    --social-bg: rgba(39, 39, 42, 0.55);
+    --shadow: rgba(0, 0, 0, 0.35) 0 10px 15px -3px, rgba(0, 0, 0, 0.2) 0 4px 6px -2px;
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.10);
   }
 }
 
-/* Broad contrast boost for common low-contrast classes in dark mode */
+/* Enforce the exact muted text scale from the scheme */
 @media (prefers-color-scheme: dark) {
-  .text-zinc-400,
-  .text-zinc-500 {
-    color: #d4d4d8 !important;
-  }
   .text-zinc-300 {
-    color: #e4e4e7 !important;
+    color: #d4d4d8 !important;   /* Muted Text */
   }
+  .text-zinc-400 {
+    color: #a1a1aa !important;   /* Muted Text */
+  }
+  .text-zinc-500 {
+    color: #71717a !important;   /* Very Muted */
+  }
+  .text-zinc-600 {
+    color: #52525b !important;   /* Very Muted */
+  }
+}
+
+/* ============================================
+   DYNAMIC TEXT COLORS (Admin controllable)
+   Set via site_content keys like:
+     color_prize_title, color_prize_banner_title,
+     color_minimum_label, color_instant_label, etc.
+   JS applies them as CSS variables on :root.
+   ============================================ */
+:root {
+  /* Prize Section (left card) */
+  --text-prize-title: #ffffff;
+  --text-prize-description: #d4d4d8;
+  --text-minimum-label: #c4b4ff;      /* violet-400 tone */
+  --text-instant-label: #34d399;      /* emerald-400 */
+  --text-prize-badge: #fbbf24;        /* amber-400 */
+
+  /* Right Banner Card */
+  --text-prize-banner-title: #ffffff;
+  --text-prize-banner-description: #d4d4d8;
+  --text-current-winner-badge: #ffffff;
+
+  /* Hero */
+  --text-hero-title: #ffffff;
+  --text-hero-accent: #c084fc;
+  --text-hero-badge: #e0e7ff;
+
+  /* How it Works */
+  --text-how-badge: #a5b4fc;
+  --text-how-title: #ffffff;
+  --text-step-title: #ffffff;
+  --text-step-desc: #a1a1aa;
+
+  /* Leaderboard + Stats + Referral */
+  --text-heading: #ffffff;
+  --text-muted: #a1a1aa;
+  --text-accent-violet: #c4b4ff;
+  --text-accent-emerald: #34d399;
+
+  /* Sharing & Footer */
+  --text-share-label: #d4d4d8;
+  --text-footer: #a1a1aa;
+
+  /* Additional high-visibility sections */
+  --text-leaderboard-title: #ffffff;
+  --text-stats-title: #ffffff;
+  --text-activity-title: #ffffff;
+  --text-how-step-title: #ffffff;
+  --text-referral-heading: #ffffff;
+  --text-winner-badge: #e0e7ff;
+
+  /* Referral Link (the actual URL in the input field) */
+  --text-referral-link: #34d399;
+
+  /* Referral Link Icon */
+  --text-referral-link-icon: #a1a1aa;
+
+  /* Referral Box - Copy Button & QR */
+  --referral-copy-btn-bg: #7c3aed;      /* violet-600 */
+  --referral-copy-btn-text: #ffffff;
+  --referral-qr-border: rgba(255, 255, 255, 0.1);
+
+  /* Referral Box Extras */
+  --referral-input-border: rgba(255, 255, 255, 0.2);
+  --qr-scan-text: #34d399;              /* emerald-400 */
+  --qr-show-larger-bg: rgba(255, 255, 255, 0.05);
+  --qr-show-larger-text: #d4d4d8;
+
+  /* Small QR icon next to the referral input */
+  --referral-qr-icon: #a1a1aa;
 }
 
 body {
@@ -100,13 +178,18 @@ h3 { font-size: 1.35rem; }
    ============================================ */
 /* Tailwind v4 custom utilities for glassmorphism (exact original ViralRefer) */
 @utility glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }
+
+/* ============================================
+   RESTORED ORIGINAL CONTRAST LOGIC
+   Light / bright text on dark + subtle glass (matching the original single-file version)
+   ============================================ */
 
 /* Premium button treatments */
 @utility btn-primary {
@@ -150,6 +233,11 @@ h3 { font-size: 1.35rem; }
   transform: translateY(-1px);
 }
 
+/* Leaderboard row hover — exact from design system */
+.leaderboard-row:hover {
+  background-color: rgba(134, 76, 255, 0.08) !important;
+}
+
 @utility glass-strong {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(32px);
@@ -165,7 +253,7 @@ h3 { font-size: 1.35rem; }
    HERO GRADIENT (rich original ViralRefer hero)
    ============================================ */
 .hero-gradient {
-  background: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 35%, #302b63 70%, #4c1d95 100%);
+  background: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 50%, #302b63 100%);
   position: relative;
   overflow: hidden;
 }
@@ -184,7 +272,7 @@ h3 { font-size: 1.35rem; }
    PREMIUM CARDS (exact from original)
    ============================================ */
 .premium-card {
-  background: white;
+  background: #111113;
   border: 1px solid var(--border);
   border-radius: var(--radius-2xl);
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
@@ -200,20 +288,22 @@ h3 { font-size: 1.35rem; }
 }
 
 .dark .premium-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
-  border-color: #3f3f46;
+  transform: translateY(-4px);
+  box-shadow: 0 15px 25px -5px rgba(134, 76, 255, 0.25); /* violet shadow */
+  border-color: rgba(134, 76, 255, 0.3);
 }
 
 .premium-card:hover {
-  transform: translateY(-8px) scale(1.005);
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25), 0 10px 10px -6px rgb(0 0 0 / 0.1);
-  border-color: rgba(133, 76, 255, 0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 15px 25px -5px rgba(134, 76, 255, 0.2);
+  border-color: rgba(134, 76, 255, 0.25);
 }
 
 .premium-card.glass {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 /* ============================================
