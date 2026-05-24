@@ -103,9 +103,24 @@ export function copyLink(): void {
  */
 export function showQRModal(): void {
   const input = document.getElementById('ref-link') as HTMLInputElement | null;
-  const code = getMyReferralCode() || 'DEMO';
-  const link = input?.value || buildReferralLink(code);
+  const code = getMyReferralCode();
 
+  // If no referral code has been generated yet, show a friendly message instead of a broken QR
+  if (!code) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/90 z-[900] flex items-center justify-center';
+    modal.innerHTML = `
+      <div onclick="event.target.remove()" class="glass border border-white/10 rounded-3xl p-8 max-w-sm w-full mx-4 text-center">
+        <div class="text-xl font-bold mb-4">${getQrModalTitle() || 'Scan to Get Your Link'}</div>
+        <div class="text-zinc-300">Please click "Get my referral link" first to see your QR code.</div>
+        <button class="mt-6 px-8 py-3 bg-white/10 hover:bg-white/20 rounded-2xl">Close</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    return;
+  }
+
+  const link = input?.value || buildReferralLink(code);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(link)}`;
 
   const modal = document.createElement('div');
