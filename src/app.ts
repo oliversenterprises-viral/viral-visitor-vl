@@ -21,7 +21,7 @@ export async function loadLeaderboard() {
   try {
     const entries = await fetchLeaderboard(0);
     if (!entries || entries.length === 0) {
-      container.innerHTML = `<div class="text-center py-8 text-zinc-400">Be the first to refer someone!</div>`;
+      container.innerHTML = `<div class="text-center py-8 text-zinc-400">No referrals yet — Be the first to top the board!</div>`;
       return;
     }
     let h = '<div class="space-y-2">';
@@ -94,12 +94,16 @@ export async function initApp() {
   try {
     const recent = await fetchRecentActivity(6);
     const actEl = document.getElementById('recent-activity');
-    if (actEl && recent.length) {
-      actEl.innerHTML = recent.map((a) => `
-        <div class="flex justify-between text-xs bg-zinc-900/70 px-4 py-2 rounded-2xl">
-          <span class="font-mono text-emerald-400">${a.referrer_code}</span>
-          <span class="text-zinc-400">${new Date(a.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-        </div>`).join('');
+    if (actEl) {
+      if (recent.length) {
+        actEl.innerHTML = recent.map((a) => `
+          <div class="flex justify-between text-xs bg-zinc-900/70 px-4 py-2 rounded-2xl">
+            <span class="font-mono text-emerald-400">${a.referrer_code}</span>
+            <span class="text-zinc-400">${new Date(a.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+          </div>`).join('');
+      } else {
+        actEl.innerHTML = `<div class="text-center py-4 text-zinc-400 text-sm">Recent activity from early participants will appear here.</div>`;
+      }
     }
   } catch {}
 
