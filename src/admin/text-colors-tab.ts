@@ -81,7 +81,8 @@ export async function renderTextColorsTab(container: HTMLElement) {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
 
       groups[groupName].forEach((ctrl: ColorControl) => {
-        const currentValue = currentContent[ctrl.key] || ctrl.default;
+        const rawValue = currentContent[ctrl.key];
+        const currentValue = typeof rawValue === 'string' ? rawValue : ctrl.default;
         const safeId = ctrl.key.replace(/[^a-z0-9]/gi, '_');
         const pickerValue = toHexForColorInput(currentValue, ctrl.default);
 
