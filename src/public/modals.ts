@@ -4,11 +4,23 @@
  */
 
 import { ViralRefer, registerGlobal } from '../lib/global';
+import { switchAdminTab } from '../admin';
 
 registerGlobal('closeAdminPanel', () => {
   const modal = document.getElementById('admin-modal');
   if (modal) modal.classList.add('hidden');
 });
+
+registerGlobal('switchAdminTab', switchAdminTab);
+
+const triggerRefreshSpin = (el?: HTMLElement) => {
+  if (el) {
+    const orig = el.innerHTML;
+    el.innerHTML = '<i class="fa-solid fa-sync fa-spin"></i>';
+    setTimeout(() => { if (el) el.innerHTML = orig; }, 900);
+  }
+};
+registerGlobal('triggerRefreshSpin', triggerRefreshSpin);
 
 registerGlobal('openAdminPanel', async () => {
   const modal = document.getElementById('admin-modal');
