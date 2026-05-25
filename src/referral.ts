@@ -56,6 +56,12 @@ export function getMyReferralLinkInstant(): void {
   if (qrImg) {
     qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(link)}`;
   }
+
+  // Small "Next Step" hint for new users after generating their link
+  const nextStepHint = document.getElementById('referral-next-step');
+  if (nextStepHint) {
+    nextStepHint.classList.remove('hidden');
+  }
 }
 
 /**

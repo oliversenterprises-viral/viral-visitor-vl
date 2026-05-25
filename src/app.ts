@@ -21,7 +21,7 @@ export async function loadLeaderboard() {
   try {
     const entries = await fetchLeaderboard(0);
     if (!entries || entries.length === 0) {
-      container.innerHTML = `<div class="text-center py-8 text-zinc-400">No referrals yet — Be the first to top the board!</div>`;
+      container.innerHTML = `<div class="text-center py-8 text-zinc-400">The leaderboard is just getting started.<br>Be one of the first to get on it!</div>`;
       return;
     }
     let h = '<div class="space-y-2">';
@@ -118,13 +118,14 @@ export async function initApp() {
     }
   }
 
-  // Simple empty state for new users in the "Your Stats" section
+  // Improved empty state for new users in the "Your Stats" section
   const statsContent = document.getElementById('stats-content');
   if (statsContent && !statsContent.innerHTML.trim()) {
     statsContent.innerHTML = `
-      <div class="text-center py-2">
+      <div class="text-center py-3">
         <p class="text-zinc-400 mb-1">You haven’t received any referrals yet.</p>
-        <p class="text-sm text-zinc-500">Share your link to start tracking your progress here.</p>
+        <p class="text-sm text-zinc-500 mb-2">Once people sign up using your link, you’ll see your stats and progress here.</p>
+        <p class="text-xs text-emerald-400">Share your link to get started!</p>
       </div>
     `;
   }
