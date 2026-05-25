@@ -33,6 +33,27 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Strong cache-bust for GitHub Pages + custom domain (viralrefer.app).
+      # Rewrites the script/link src in the emitted index.html so the HTML bytes
+      # themselves change on every deploy. Combined with the "remove + re-add
+      # custom domain" step in repo Settings → Pages, this finally defeats the
+      # stubborn edge cache that has been serving the old monolithic admin.
+      - name: Generate build ID and bust HTML cache
+        run: |
+          BUILD_ID="$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)"
+          echo "BUILD_ID=$BUILD_ID" | tee -a $GITHUB_ENV
+          echo "$BUILD_ID" > dist/version.txt
+          echo "{\"version\":\"$BUILD_ID\",\"deployed_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > dist/version.json
+
+          # Append ?v=BUILD_ID to the hashed JS and CSS so index.html content is unique
+          sed -i "s|src=\"\\(/assets/[^\"]*\\.js\\)\"|src=\"\\1?v=${BUILD_ID}\"|g" dist/index.html
+          sed -i "s|href=\"\\(/assets/[^\"]*\\.css\\)\"|href=\"\\1?v=${BUILD_ID}\"|g" dist/index.html
+
+          # Add a visible meta tag for debugging
+          sed -i "s|</head>|<meta name=\"x-viralrefer-build\" content=\"${BUILD_ID}\"></head>|g" dist/index.html
+
+          echo "Cache-busted index.html with build ID: $BUILD_ID"
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 

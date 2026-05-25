@@ -1,0 +1,5 @@
+{
+  "note": "This file is overwritten at build time by the deploy workflow with a fresh timestamp + short SHA. Used for cache-busting and future client-side version checks.",
+  "version": "build-time-placeholder",
+  "deployed_at": "build-time-placeholder"
+}
