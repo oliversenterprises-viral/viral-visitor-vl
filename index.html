@@ -96,10 +96,10 @@
                     </button>
                 </div>
 
-                <div class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-xs font-medium px-3 py-1 rounded-3xl mb-3">
+                <div id="hero-campaign-badge" class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-xs font-medium px-3 py-1 rounded-3xl mb-3">
                     Campaign just launched
                 </div>
-                <div class="mt-1 text-sm text-zinc-400 tracking-wide">
+                <div id="hero-stats-subtext" class="mt-1 text-sm text-zinc-400 tracking-wide">
                     Be one of the first to refer
                 </div>
             </div>
@@ -144,7 +144,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 id="recent-activity-title" class="text-2xl font-semibold" style="color: var(--text-activity-title)">Recent Activity</h2>
-                    <p id="recent-activity-description" class="text-sm text-zinc-400">Live updates from all users</p>
+                    <p id="recent-activity-description" class="text-sm text-zinc-400">Early activity from the first participants</p>
                 </div>
                 <div class="text-xs text-emerald-400 flex items-center gap-1">
                     <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
@@ -408,7 +408,7 @@
                 <a id="footer-link-rules" href="#rules" onclick="showRulesModal(); return false;" class="underline hover:text-white transition-colors">Official Rules &amp; Full Disclaimers</a> • 
                 <a id="footer-link-privacy" href="#privacy" class="underline hover:text-white transition-colors">Privacy Policy</a> • 
                 <a id="footer-link-terms" href="#terms" class="underline hover:text-white transition-colors">Terms of Service</a> • 
-                Created by Karanga Oliver
+                <span id="footer-credit">Created by Karanga Oliver</span>
             </div>
             <div id="footer-tech-attribution" class="pt-2 text-[10px] opacity-75">
                 Built with Supabase • Secure RLS + Edge Functions architecture (writes via audited service_role only) • Production v2.0

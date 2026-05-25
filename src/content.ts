@@ -76,6 +76,11 @@ export async function updatePublicContent(content: Record<string, any>) {
   apply('recent-activity-description', 'recent_activity_description');
   apply('how-step3-title', 'how_step3_title');
 
+  // Newly wired for hero campaign copy + footer credit (enables instant Admin-driven updates, no deploy needed for these strings)
+  apply('hero-campaign-badge', 'hero_campaign_badge');
+  apply('hero-stats-subtext', 'hero_stats_subtext');
+  apply('footer-credit', 'footer_credit');
+
   // Referral section controls + footer + share template
   apply('new-code-button', 'new_code_button');
   apply('qr-scan-text', 'qr_scan_text');

@@ -102,7 +102,7 @@ export async function initApp() {
             <span class="text-zinc-400">${new Date(a.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
           </div>`).join('');
       } else {
-        actEl.innerHTML = `<div class="text-center py-4 text-zinc-400 text-sm">Recent activity from early participants will appear here.</div>`;
+        actEl.innerHTML = `<div class="text-center py-4 text-zinc-400 text-sm">Early activity from the first participants will appear here.</div>`;
       }
     }
   } catch {}
@@ -118,7 +118,7 @@ export async function initApp() {
     }
   }
 
-  // Improved empty state for new users in the "Your Stats" section
+  // Exact "Your Stats" empty state the user requested (simple, no extra features)
   const statsContent = document.getElementById('stats-content');
   if (statsContent && !statsContent.innerHTML.trim()) {
     statsContent.innerHTML = `
