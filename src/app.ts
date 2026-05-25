@@ -119,15 +119,16 @@ export async function initApp() {
   }
 
   // Exact "Your Stats" empty state the user requested (simple, no extra features)
+  // Now supports Admin-driven overrides via site_content keys
   const statsContent = document.getElementById('stats-content');
   if (statsContent) {
     const current = statsContent.innerHTML.trim();
     if (!current || !current.includes('You haven’t received any referrals yet')) {
       statsContent.innerHTML = `
         <div class="text-center py-3">
-          <p class="text-zinc-400 mb-1">You haven’t received any referrals yet.</p>
-          <p class="text-sm text-zinc-500 mb-2">Once people sign up using your link, you’ll see your stats and progress here.</p>
-          <p class="text-xs text-emerald-400">Share your link to get started!</p>
+          <p id="your-stats-line1" class="text-zinc-400 mb-1">You haven’t received any referrals yet.</p>
+          <p id="your-stats-line2" class="text-sm text-zinc-500 mb-2">Once people sign up using your link, you’ll see your stats and progress here.</p>
+          <p id="your-stats-line3" class="text-xs text-emerald-400">Share your link to get started!</p>
         </div>
       `;
     }

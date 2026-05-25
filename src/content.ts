@@ -81,6 +81,12 @@ export async function updatePublicContent(content: Record<string, any>) {
   apply('hero-stats-subtext', 'hero_stats_subtext');
   apply('footer-credit', 'footer_credit');
 
+  // First-time visitor focused messaging (wired for Admin control)
+  apply('referral-next-step', 'referral_next_step_hint');
+  apply('your-stats-line1', 'your_stats_line1');
+  apply('your-stats-line2', 'your_stats_line2');
+  apply('your-stats-line3', 'your_stats_line3');
+
   // Referral section controls + footer + share template
   apply('new-code-button', 'new_code_button');
   apply('qr-scan-text', 'qr_scan_text');
