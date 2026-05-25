@@ -11,7 +11,7 @@
 import { supabase } from '../lib/supabase';
 import { fetchSiteContent } from '../lib/supabase';
 import { showToast } from '../ui';
-import { getColorControls, applyTextColors, type ColorControl } from '../colors';
+import { getColorControls, applyTextColors, toHexForColorInput, type ColorControl } from '../colors';
 
 export async function renderTextColorsTab(container: HTMLElement) {
   container.innerHTML = `
@@ -83,6 +83,7 @@ export async function renderTextColorsTab(container: HTMLElement) {
       groups[groupName].forEach((ctrl: ColorControl) => {
         const currentValue = currentContent[ctrl.key] || ctrl.default;
         const safeId = ctrl.key.replace(/[^a-z0-9]/gi, '_');
+        const pickerValue = toHexForColorInput(currentValue, ctrl.default);
 
         html += `
           <div class="glass border border-white/10 rounded-2xl p-4 flex items-center gap-4">
@@ -91,7 +92,7 @@ export async function renderTextColorsTab(container: HTMLElement) {
               <div class="text-[10px] text-zinc-500 font-mono mt-0.5">${ctrl.key}</div>
             </div>
             <div class="flex items-center gap-3">
-              <input type="color" id="picker_${safeId}" value="${currentValue}" class="w-12 h-10 bg-transparent border border-white/20 rounded-xl cursor-pointer p-1" />
+              <input type="color" id="picker_${safeId}" value="${pickerValue}" class="w-12 h-10 bg-transparent border border-white/20 rounded-xl cursor-pointer p-1" />
               <input type="text" id="hex_${safeId}" value="${currentValue}" class="w-28 bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm font-mono focus:border-violet-500" placeholder="#ffffff" />
             </div>
           </div>`;
@@ -182,7 +183,10 @@ export async function renderTextColorsTab(container: HTMLElement) {
 
       const handleChange = (val: string) => {
         if (hexInput.value !== val) hexInput.value = val;
-        if (picker.value !== val) picker.value = val;
+
+        // Always feed the color picker a valid hex (never rgba)
+        const hexForPicker = toHexForColorInput(val, ctrl.default);
+        if (picker.value !== hexForPicker) picker.value = hexForPicker;
 
         clearTimeout(saveTimeout);
         saveTimeout = setTimeout(() => saveColor(val), 350);
