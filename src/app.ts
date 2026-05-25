@@ -118,6 +118,17 @@ export async function initApp() {
     }
   }
 
+  // Simple empty state for new users in the "Your Stats" section
+  const statsContent = document.getElementById('stats-content');
+  if (statsContent && !statsContent.innerHTML.trim()) {
+    statsContent.innerHTML = `
+      <div class="text-center py-2">
+        <p class="text-zinc-400 mb-1">You haven’t received any referrals yet.</p>
+        <p class="text-sm text-zinc-500">Share your link to start tracking your progress here.</p>
+      </div>
+    `;
+  }
+
   const params = new URLSearchParams(location.search);
   const refCode = params.get('ref');
   if (refCode) {
