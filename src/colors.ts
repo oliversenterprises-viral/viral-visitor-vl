@@ -88,32 +88,3 @@ export function getColorControls(): ColorControl[] {
 
 // Also re-export applyTextColors under a namespace-friendly name if needed
 export { applyTextColors as applyDynamicTextColors };
-
-/**
- * Converts any color value (hex or rgba) into a valid 6-digit hex
- * suitable for <input type="color">.
- * Falls back to the provided default if conversion fails.
- */
-export function toHexForColorInput(value: string | undefined | null, fallback: string): string {
-  if (!value) return fallback;
-  const v = String(value).trim();
-
-  // Already a valid 6-digit hex
-  if (/^#[0-9a-fA-F]{6}$/.test(v)) return v;
-
-  // rgb(...) or rgba(...)
-  const rgbaMatch = v.match(/rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i);
-  if (rgbaMatch) {
-    const r = Math.min(255, Math.max(0, parseInt(rgbaMatch[1], 10)));
-    const g = Math.min(255, Math.max(0, parseInt(rgbaMatch[2], 10)));
-    const b = Math.min(255, Math.max(0, parseInt(rgbaMatch[3], 10)));
-    return `#${[r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
-  }
-
-  // 3-digit hex -> expand
-  if (/^#[0-9a-fA-F]{3}$/.test(v)) {
-    return '#' + v[1] + v[1] + v[2] + v[2] + v[3] + v[3];
-  }
-
-  return fallback;
-}
