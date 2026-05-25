@@ -1,4 +1,4 @@
-import { fetchLeaderboard, fetchTotalReferrers, fetchRecentActivity, fetchSiteContent } from './lib/supabase';
+import { fetchLeaderboard, fetchTotalReferrers, fetchRecentActivity, fetchSiteContent, fetchMyReferralCount } from './lib/supabase';
 import * as Referral from './referral';
 
 import { updatePublicContent } from './content';
@@ -118,21 +118,8 @@ export async function initApp() {
     }
   }
 
-  // Exact "Your Stats" empty state the user requested (simple, no extra features)
-  // Now supports Admin-driven overrides via site_content keys
-  const statsContent = document.getElementById('stats-content');
-  if (statsContent) {
-    const current = statsContent.innerHTML.trim();
-    if (!current || !current.includes('You haven’t received any referrals yet')) {
-      statsContent.innerHTML = `
-        <div class="text-center py-3">
-          <p id="your-stats-line1" class="text-zinc-400 mb-1">You haven’t received any referrals yet.</p>
-          <p id="your-stats-line2" class="text-sm text-zinc-500 mb-2">Once people sign up using your link, you’ll see your stats and progress here.</p>
-          <p id="your-stats-line3" class="text-xs text-emerald-400">Share your link to get started!</p>
-        </div>
-      `;
-    }
-  }
+  // Richer personal progress version restored (with actual counts, progress bar, and status)
+  await renderMyStats(myReferralCode);
 
   const params = new URLSearchParams(location.search);
   const refCode = params.get('ref');
@@ -147,4 +134,64 @@ export async function initApp() {
   }
 
   console.log('%c[ViralRefer] === Full app initialized successfully ===', 'color:#34d399; font-weight:bold');
+}
+
+/**
+ * Renders the richer "Your Stats" section with actual personal progress.
+ */
+async function renderMyStats(myCode: string | null): Promise<void> {
+  const container = document.getElementById('stats-content');
+  if (!container) return;
+
+  if (!myCode) {
+    container.innerHTML = `
+      <div class="text-center py-4">
+        <div class="text-4xl mb-3">📈</div>
+        <p class="text-zinc-300 font-medium mb-1">No referrals tracked yet for you.</p>
+        <p class="text-sm text-zinc-500 mb-4">Get your unique link and share it. Your stats and progress will update live here.</p>
+        <button onclick="getMyReferralLinkInstant()" 
+                class="px-6 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold rounded-2xl inline-flex items-center gap-2 transition-all active:scale-[0.985]">
+          <i class="fa-solid fa-link"></i>
+          <span>Get my referral link</span>
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const count = await fetchMyReferralCount(myCode);
+  const progress = Math.min(Math.floor((count / 10) * 100), 100);
+  const isOnLeaderboard = count >= 1;
+
+  container.innerHTML = `
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-zinc-900/70 border border-white/10 rounded-2xl p-4 text-center">
+        <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Your Referrals</div>
+        <div class="text-4xl font-bold text-emerald-400 tabular-nums">${count}</div>
+        <div class="text-xs text-zinc-500 mt-0.5">signups via your link</div>
+      </div>
+      <div class="bg-zinc-900/70 border border-white/10 rounded-2xl p-4 text-center">
+        <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Progress to Prize</div>
+        <div class="text-4xl font-bold text-amber-400 tabular-nums">${count}/10</div>
+        <div class="text-xs text-zinc-500 mt-0.5">referrals needed</div>
+        <div class="mt-2 h-2 bg-white/10 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-emerald-400 to-amber-400 transition-all" style="width: ${progress}%"></div>
+        </div>
+      </div>
+      <div class="bg-zinc-900/70 border border-white/10 rounded-2xl p-4 flex flex-col justify-center text-center sm:text-left">
+        <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Status</div>
+        ${count === 0 
+          ? `<div class="text-sm text-emerald-400 font-medium">Ready to go live!<br><span class="text-zinc-400 text-xs">Share your link anywhere to get your first referral.</span></div>`
+          : isOnLeaderboard 
+            ? `<div class="text-sm text-emerald-400 font-medium">You're on the leaderboard!<br><span class="text-zinc-400 text-xs">Keep sharing to climb higher.</span></div>`
+            : `<div class="text-sm text-amber-400 font-medium">First referral incoming.<br><span class="text-zinc-400 text-xs">You're in the race.</span></div>`
+        }
+        <button onclick="document.getElementById('referral-section').scrollIntoView({behavior:'smooth'})" 
+                class="mt-3 text-xs px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 rounded-xl text-white self-center sm:self-start">
+          View / Share Link
+        </button>
+      </div>
+    </div>
+    ${count === 0 ? `<p class="text-center text-xs text-emerald-400 mt-3">Next step: share your link to start seeing real numbers here.</p>` : ''}
+  `;
 }

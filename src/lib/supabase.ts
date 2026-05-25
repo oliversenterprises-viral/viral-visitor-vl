@@ -58,6 +58,20 @@ export async function fetchTotalReferrers(): Promise<number> {
   return count || 0;
 }
 
+export async function fetchMyReferralCount(referrerCode: string): Promise<number> {
+  if (!referrerCode) return 0;
+  const { count, error } = await supabase
+    .from('referrals')
+    .select('*', { count: 'exact', head: true })
+    .eq('referrer_code', referrerCode);
+
+  if (error) {
+    console.warn('[ViralRefer] fetchMyReferralCount error:', error);
+    return 0;
+  }
+  return count || 0;
+}
+
 export async function fetchRecentActivity(limit = 8): Promise<RecentActivityItem[]> {
   const { data } = await supabase
     .from('referrals')
