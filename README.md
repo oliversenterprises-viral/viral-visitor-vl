@@ -1,67 +1,81 @@
-# ViralRefer Premium — Production Ready (v2.0)
+# ViralRefer — Production Ready
 
-The ultimate viral referral platform. Refer friends, climb the real-time leaderboard, and win a 30-day homepage banner + $10 Cash App for the #1 referrer (10+ referrals).
+The viral referral platform. Refer friends, climb the real-time leaderboard, and win prizes for top referrers.
 
-**Status**: Premium UI + realtime Supabase integration complete. Security-hardened architecture (RLS + Edge Functions) delivered. Ready for secure production deployment.
+**Status**: Production deployment on Vercel with Supabase Edge Functions, RLS security, realtime leaderboard, and multi-tab admin dashboard.
+
+**Live Site**: https://viralrefer.app
 
 ## Quick Start (5 minutes)
 
 ```bash
 git clone <your-repo>
-cd viralrefer-premium
+cd viral-visitor-vl
 npm install
-cp .env.example .env.local
-# Edit .env.local with your Supabase keys (see below)
+# Set environment variables (see below)
 npm run dev
 ```
 
-Open http://localhost:5173 — you will see the full rich premium experience with:
-- Live leaderboard from your real Supabase `referrals` table
-- Realtime updates
-- Full sharing (X, WhatsApp, LinkedIn, Facebook, Telegram, SMS, Email) + QR
-- Profile creation, referral attribution via `?ref=`
-- Admin dashboard (demo mode until you complete the Auth migration)
+Open http://localhost:5173 to see the full experience:
+- Live realtime leaderboard from Supabase `referrals` table
+- Referral link generation + QR codes + 7-platform sharing
+- Profile/referral attribution via `?ref=`
+- Admin dashboard (client-side password gate using `VITE_ADMIN_PASSWORD`)
+- Turnstile-protected prize claim flow
 
 ## Supabase Setup (One-time)
 
-1. Go to your Supabase project (https://wqbefjzpgsezzwdrvvua.supabase.co or your own)
-2. SQL Editor → paste and run the full content of:
-   ```
-   supabase/migrations/0001_init_rls.sql
-   ```
-3. This enables strict RLS, creates the 5 tables (`profiles`, `referrals`, `shares`, `prize_claims`, `site_content`), adds indexes, and security triggers.
-4. (Optional but recommended) Create the Edge Functions:
-   ```bash
-   supabase login
-   supabase link --project-ref wqbefjzpgsezzwdrvvua
-   supabase functions deploy record-referral
-   supabase functions deploy submit-claim
-   ```
+1. Go to your Supabase project.
+2. SQL Editor → run the full content of all migrations in `supabase/migrations/` (in order).
+3. This creates the tables (`profiles`, `referrals`, `shares`, `prize_claims`, `site_content`), applies strict RLS, indexes, and security triggers.
+4. Deploy the Edge Functions:
+
+```bash
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+supabase functions deploy record-referral
+supabase functions deploy submit-claim
+supabase functions deploy admin-action
+```
+
 5. Add secrets in Supabase Dashboard → Edge Functions → Secrets:
    - `TURNSTILE_SECRET_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
 
 ## Environment Variables
 
-See `.env.example`. The app falls back to the original production Supabase project for immediate testing.
+### Vercel (Production / Preview)
 
-## Architecture Highlights (see docs/adr/001-architecture.md)
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_TURNSTILE_SITEKEY`
+- `VITE_ADMIN_PASSWORD` (client-side admin access password — treat as sensitive)
 
-- **Frontend**: Vite 5 + TypeScript + Tailwind v4 (build-time, no runtime CDN bloat)
-- **Backend**: Supabase (Postgres + Realtime + Auth + Edge Functions on Deno)
-- **Security**: All high-value writes go through Edge Functions + `service_role`. RLS blocks anon writes. Client-side admin password hash removed.
-- **Why not monolithic HTML or Next.js?** Best balance of speed, DX, security, and maintainability for a realtime viral campaign tool.
+### Supabase Edge Function Secrets (Deno)
 
-## Key Production Features Delivered
+- `TURNSTILE_SECRET_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+The app uses the values from the current Supabase project for immediate testing when properly configured.
+
+## Architecture Highlights
+
+- **Frontend**: Vite 8 + TypeScript (strict) + Tailwind CSS v4 via `@tailwindcss/vite`
+- **Backend**: Supabase (Postgres + Realtime + RLS + Edge Functions on Deno)
+- **Security**: All high-value writes go through Edge Functions using `service_role`. RLS blocks anon writes. Admin dashboard currently uses a client-side `VITE_ADMIN_PASSWORD` gate (temporary — not real Supabase Auth).
+- **Deployment**: Vercel (static Vite build + `vercel.json` for headers and SPA routing) + Supabase Edge Functions.
+
+See `docs/adr/001-architecture.md` and `ARCHITECTURE.md` for deeper details.
+
+## Key Production Features
 
 - Real-time leaderboard + activity feed (Supabase `postgres_changes`)
-- 7-platform sharing with analytics logging
+- 7-platform sharing with analytics logging (`shares` table)
 - QR codes (mobile-optimized)
-- Profile system (display name, email, website)
-- Prize claim flow (stubbed — calls secure `submit-claim` Edge Function once deployed)
-- Full admin dashboard (4 tabs) — ready for Supabase Auth migration
-- Mobile-first (sticky bar, bottom sheets ready)
-- Glassmorphism premium dark UI with micro-interactions
+- Profile / referral attribution system
+- Secure prize claim flow (Turnstile + `submit-claim` Edge Function)
+- Full admin dashboard (5 tabs) with live content editing, color theming, claim management, and share analytics
+- Mobile-first premium glassmorphism UI
 
 ## Scripts
 
@@ -70,54 +84,43 @@ npm run dev          # Local development
 npm run build        # Production build (dist/)
 npm run preview      # Preview production build
 npm run test         # Vitest unit tests
-npm run test:e2e     # Playwright E2E (6 critical flows)
+npm run test:e2e     # Playwright E2E tests
 npm run lint
 npm run format
-
-# Supabase local + Edge
-npm run supabase:local
-npm run edge:deploy
 ```
 
-## Deployment (Recommended: Cloudflare Pages)
+Edge Functions:
+```bash
+npm run edge:deploy  # deploys all functions
+```
 
-1. Push to GitHub
-2. Connect repo to Cloudflare Pages
-3. Build command: `npm run build`
-4. Output directory: `dist`
-5. Add environment variables in Cloudflare dashboard
-6. Add the security headers from `vercel.json` / `_headers` (CSP, HSTS, etc.)
+## Deployment
 
-See `DEPLOY.md` (created by Flux) for exact steps.
+**Primary platform**: Vercel.
+
+See the complete runbook in `DEPLOY.md` for exact steps, environment variable configuration, Edge Function deployment, and the current post-deploy security checklist.
+
+Security headers and SPA fallback are provided by the committed `vercel.json`.
 
 ## Security & Compliance Notes
 
-- **Never** commit real service role keys or admin passwords.
-- After applying `0001_init_rls.sql`, the anon key can **no longer** insert fake referrals or claims.
-- Prize claims must go through the Edge Function (server-side #1 + 10+ referral validation).
-- Add Cloudflare Turnstile (free) on profile + claim forms for bot protection.
-- Legal: Strengthen the prize disclaimer for US sweepstakes rules (18+, void where prohibited, tax reporting for winners >$600). See `ADMIN_GUIDE.md`.
+- **Never** commit real service role keys, Turnstile secrets, or production `VITE_ADMIN_PASSWORD`.
+- After RLS migrations, the anon key cannot insert fake referrals or claims.
+- Prize claims must go through the `submit-claim` Edge Function (server-side validation + Turnstile).
+- Cloudflare Turnstile is active on the claim path.
+- Admin access is currently a client-side password gate (`VITE_ADMIN_PASSWORD`). This is temporary and not backed by Supabase Auth sessions. The `admin-action` Edge Function supports this flow via a temporary bypass.
+- Legal / prize disclaimers are linked from the footer (see `docs/rules.md`).
 
-## Team Credits (13-Agent Super-Team)
+## Documentation
 
-- **Nova** (Orchestrator & Scout) — Plan, architecture, integration, coordination
-- **Atlas** (System Architect) — ADR-001, Vite/TS setup, types, Tailwind v4, porting strategy
-- **Helix + Sentinel** (Backend Integrator + Security Guardian) — Full RLS migration + production Edge Functions (`record-referral` + `submit-claim` skeleton)
-- **Codex + Lumina** (Core Engineer + Frontend UX Wizard) — Rich UI port + all critical flows wired
-- **Flux** (DevOps) — CI/CD, security headers, deploy configs
-- **Quill** (Docs Archivist) — README, ADMIN_GUIDE, legal text
-- **Vigil, Pulse, Apex, Horizon, Oracle** — QA, perf, debugging, research, prompt quality
+- `DEPLOY.md` — Full Vercel + Supabase deployment runbook
+- `ADMIN_GUIDE.md` — How to use the admin dashboard (claims, content, colors)
+- `TESTING_CHECKLIST.md` — Manual verification steps for all flows
+- `ARCHITECTURE.md` — Current module structure and design decisions
+- `docs/adr/001-architecture.md` and `002-...` — Architecture decision records
+- `docs/project-structure.md` — Historical structure notes
+- `docs/rules.md` — Official rules and disclaimers
 
-## Next Steps (Remaining High-Value Work)
+---
 
-1. Apply the RLS migration + deploy Edge Functions (security gate)
-2. Migrate admin to real Supabase Auth (remove last client-side hash)
-3. Complete `submit-claim` Edge Function + claim UI flow
-4. Add Turnstile widgets + E2E tests
-5. Deploy to production domain with security headers
-
-The foundation is production-grade. The viral magic (realtime leaderboard, sharing, QR, prize psychology) is fully preserved and enhanced.
-
-Built for scale. Secured for real cash prizes.
-
-— Nova & the 13-agent team
+Built for scale. Secured for real campaigns.
