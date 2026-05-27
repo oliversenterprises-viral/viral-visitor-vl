@@ -248,6 +248,7 @@ function attachClaimsListeners(content: HTMLElement) {
       (btn as HTMLElement as HTMLButtonElement).disabled = true;
 
       try {
+        const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
         const { data, error } = await supabase.functions.invoke('admin-action', {
           body: {
             action: 'update_claim_status',
@@ -256,7 +257,8 @@ function attachClaimsListeners(content: HTMLElement) {
               status: newStatus,
               note: null
             }
-          }
+          },
+          headers: adminSecret ? { 'x-admin-secret': adminSecret } : {}
         });
 
         if (error) throw error;
