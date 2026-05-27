@@ -18,7 +18,7 @@ export const shareTo = (platform: string) => {
   const link = input?.value || window.location.href;
   console.log('[ViralRefer] Sharing link via', platform, ':', link);
 
-  let text = getShareMessageTemplate() || 'Join me on ViralRefer â€” win homepage banner + $10! {link}';
+  let text = getShareMessageTemplate() || 'Join me on ViralRefer -- win homepage banner + $10! {link}';
   text = text.replace(/\{link\}/g, link);
 
   let url = '';
