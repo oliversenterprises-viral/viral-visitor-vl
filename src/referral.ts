@@ -6,6 +6,13 @@
 import { registerGlobal } from './lib';
 import { getReferralBaseUrl, getQrModalTitle, getMyReferralCode, setMyReferralCode } from './public/globals';
 
+// Turnstile site key (from Vercel env, falls back for local dev)
+const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY || '';
+
+// Track attribution for the current page load
+let pendingReferrerCode: string | null = null;
+let referralRecordedThisSession = false;
+
 /**
  * Robustly builds a referral link, properly handling custom base URLs
  * that may already contain query parameters.
@@ -25,13 +32,140 @@ export function buildReferralLink(code: string): string {
 }
 
 /**
+ * Detects and stores pending referrer code from the current URL (?ref=).
+ * Called on page load / when attribution banner is shown.
+ */
+export function detectAndStoreAttribution(): void {
+  if (pendingReferrerCode) return;
+
+  const params = new URLSearchParams(location.search);
+  const ref = params.get('ref');
+  if (ref) {
+    pendingReferrerCode = ref.toUpperCase();
+  }
+}
+
+/**
+ * Loads the Turnstile script dynamically (if not already present).
+ */
+function ensureTurnstileScriptLoaded(): Promise<void> {
+  return new Promise((resolve) => {
+    if ((window as any).turnstile) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => resolve(); // fail open
+    document.head.appendChild(script);
+  });
+}
+
+/**
+ * Shows a Turnstile widget in the given container and returns a promise that resolves with the token.
+ */
+function getTurnstileToken(container: HTMLElement): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!TURNSTILE_SITEKEY) {
+      // No sitekey configured — allow in local/dev (Edge will still validate if secret is set)
+      console.warn('[ViralRefer] VITE_TURNSTILE_SITEKEY not set — skipping Turnstile for recording');
+      resolve('dev-bypass-token');
+      return;
+    }
+
+    container.innerHTML = '';
+    const widgetDiv = document.createElement('div');
+    container.appendChild(widgetDiv);
+
+    (window as any).turnstile.render(widgetDiv, {
+      sitekey: TURNSTILE_SITEKEY,
+      callback: (token: string) => {
+        resolve(token);
+      },
+      'error-callback': () => {
+        reject(new Error('Turnstile error'));
+      },
+      'expired-callback': () => {
+        reject(new Error('Turnstile expired'));
+      },
+    });
+  });
+}
+
+/**
+ * Records the referral for the current attribution (if any) via the Edge Function.
+ * Requires Turnstile. Idempotent per page load.
+ */
+async function recordReferralIfAttributed(): Promise<boolean> {
+  if (!pendingReferrerCode || referralRecordedThisSession) {
+    return true; // nothing to record or already done
+  }
+
+  const container = document.getElementById('referral-turnstile-container');
+  if (!container) {
+    console.warn('[ViralRefer] Turnstile container not found — recording skipped');
+    referralRecordedThisSession = true;
+    return true;
+  }
+
+  try {
+    await ensureTurnstileScriptLoaded();
+
+    // Show a small label + widget
+    container.style.display = 'block';
+    container.innerHTML = '<div class="text-xs text-zinc-400 mb-1">Verifying you are not a bot...</div>';
+
+    const token = await getTurnstileToken(container);
+
+    const { data, error } = await (await import('./lib')).supabase.functions.invoke('record-referral', {
+      body: {
+        referrerCode: pendingReferrerCode,
+        turnstileToken: token,
+      },
+    });
+
+    if (error) {
+      console.error('[ViralRefer] record-referral error:', error);
+      // Still allow the user to continue (non-fatal for UX)
+    } else if (data?.success) {
+      console.log('[ViralRefer] Referral recorded for', pendingReferrerCode);
+    }
+
+    referralRecordedThisSession = true;
+    container.style.display = 'none';
+    container.innerHTML = '';
+    return true;
+  } catch (err) {
+    console.warn('[ViralRefer] Turnstile / record-referral failed (continuing):', err);
+    referralRecordedThisSession = true;
+    if (container) {
+      container.style.display = 'none';
+      container.innerHTML = '';
+    }
+    return true;
+  }
+}
+
+/**
  * Generates or retrieves the user's referral code and populates the UI
  */
 /**
  * Gets or generates a referral code for the current user and pre-fills the referral input.
  * Called when the user wants to join via referral or share their link.
+ *
+ * If the page was loaded with ?ref= (attribution), we record the referral for the original referrer
+ * via the Edge Function (with Turnstile) before generating the new user's code.
  */
-export function getMyReferralLinkInstant(): void {
+export async function getMyReferralLinkInstant(): Promise<void> {
+  // First time on an attributed page — attempt to record the incoming referral
+  if (pendingReferrerCode && !referralRecordedThisSession) {
+    await recordReferralIfAttributed();
+  }
+
   let code = getMyReferralCode();
 
   if (!code) {
@@ -83,21 +217,46 @@ export function generateNewCode(): void {
 /**
  * Copies the current referral link to the clipboard.
  * Shows a temporary "Copied!" feedback on the copy button.
+ * Robust implementation that finds the copy button via ID + data attribute
+ * instead of fragile sibling traversal.
  */
 export function copyLink(): void {
   const input = document.getElementById('ref-link') as HTMLInputElement | null;
-  if (input && input.value) {
-    navigator.clipboard.writeText(input.value).then(() => {
-      const btn = input.nextElementSibling as HTMLElement;
-      if (btn) {
-        const orig = btn.textContent;
-        btn.textContent = 'COPIED!';
-        setTimeout(() => {
-          if (btn && orig) btn.textContent = orig;
-        }, 1200);
-      }
-    });
-  }
+  if (!input || !input.value) return;
+
+  navigator.clipboard.writeText(input.value).then(() => {
+    // Robust button lookup — prefers the known copy button ID, falls back to
+    // any adjacent button that was the original "COPY" control.
+    const btn =
+      (document.getElementById('copy-link-btn') as HTMLElement | null) ||
+      (input.parentElement?.querySelector('button') as HTMLElement | null) ||
+      (input.nextElementSibling as HTMLElement | null);
+
+    if (btn) {
+      const origHTML = btn.innerHTML;
+      const origText = btn.textContent;
+
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> COPIED!';
+      btn.setAttribute('aria-label', 'Copied to clipboard');
+
+      setTimeout(() => {
+        if (btn) {
+          btn.innerHTML = origHTML || 'COPY';
+          if (origText) btn.textContent = origText;
+          btn.removeAttribute('aria-label');
+        }
+      }, 1400);
+    }
+  }).catch(() => {
+    // Graceful fallback for environments without clipboard API
+    try {
+      input.select();
+      document.execCommand('copy');
+    } catch {
+      // Last resort: show the link for manual copy
+      alert('Copy failed. Link: ' + input.value);
+    }
+  });
 }
 
 /**
@@ -163,3 +322,6 @@ registerGlobal('copyLink', copyLink);
 registerGlobal('showQRModal', showQRModal);
 registerGlobal('debugReferral', debugReferral);
 registerGlobal('buildReferralLink', buildReferralLink);
+
+// Auto-detect attribution on module load (so the first call to getMyReferralLinkInstant can record)
+detectAndStoreAttribution();
