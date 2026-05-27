@@ -12,6 +12,11 @@ import { getReferralBaseUrl, getMyReferralCode } from './globals';
 /**
  * Demo helper that simulates a new referral (used for testing the UI).
  * Registered globally as `simulateNewReferral`.
+ *
+ * NOTE: This is a LOCAL visual simulation only (DOM mutation).
+ * Real-time cross-tab and cross-device updates are now powered by Supabase
+ * postgres_changes subscriptions on the referrals table (triggered by real
+ * record-referral Edge Function calls with Turnstile + valid codes).
  */
 export const simulateNewReferral = async () => {
   const container = document.getElementById('leaderboard-container');
@@ -20,7 +25,7 @@ export const simulateNewReferral = async () => {
   setTimeout(async () => {
     await loadLeaderboard();
     const act = document.getElementById('recent-activity');
-    if (act) act.innerHTML += `<div class="text-xs px-3 py-1.5 bg-emerald-900/30 rounded-xl mt-1">DEMO â€¢ just now</div>`;
+    if (act) act.innerHTML += `<div class="text-xs px-3 py-1.5 bg-emerald-900/30 rounded-xl mt-1">DEMO • just now</div>`;
   }, 600);
 };
 registerGlobal('simulateNewReferral', simulateNewReferral);
