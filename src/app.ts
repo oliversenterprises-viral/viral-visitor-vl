@@ -1,4 +1,4 @@
-import { fetchLeaderboard, fetchTotalReferrers, fetchRecentActivity, fetchSiteContent, fetchMyReferralCount } from './lib/supabase';
+import { fetchLeaderboard, fetchTotalReferrers, fetchRecentActivity, fetchSiteContent, fetchMyReferralCount, supabase } from './lib/supabase';
 import * as Referral from './referral';
 
 import { updatePublicContent } from './content';
@@ -9,6 +9,76 @@ import { getMyReferralCode } from './public/globals';
 // Handles loading dynamic content, leaderboard, referral link prefill, etc.
 
 const buildReferralLink = Referral.buildReferralLink;
+
+let referralsChannel: any = null;
+
+function updateRealtimeStatus(status: string) {
+  const el = document.getElementById('realtime-status');
+  if (!el) return;
+  if (status === 'SUBSCRIBED') {
+    el.textContent = '• Realtime';
+    el.className = 'ml-1 text-[10px] opacity-70 text-emerald-400';
+  } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED' || status === 'TIMED_OUT') {
+    el.textContent = '• Offline';
+    el.className = 'ml-1 text-[10px] opacity-70 text-amber-400';
+  } else {
+    el.textContent = '• Reconnecting...';
+    el.className = 'ml-1 text-[10px] opacity-70 text-amber-400';
+  }
+}
+
+async function renderRecentActivity() {
+  const actEl = document.getElementById('recent-activity');
+  if (!actEl) return;
+  try {
+    const recent = await fetchRecentActivity(6);
+    if (recent.length) {
+      actEl.innerHTML = recent.map((a) => `
+        <div class="flex justify-between text-xs bg-zinc-900/70 px-4 py-2 rounded-2xl">
+          <span class="font-mono text-emerald-400">${a.referrer_code}</span>
+          <span class="text-zinc-400">${new Date(a.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+        </div>`).join('');
+    } else {
+      actEl.innerHTML = `<div class="text-center py-4 text-zinc-400 text-sm">Early activity from the first participants will appear here.</div>`;
+    }
+  } catch {
+    actEl.innerHTML = `<div class="text-center py-4 text-zinc-400 text-sm">Unable to load activity.</div>`;
+  }
+}
+
+function initRealtimeSubscriptions() {
+  if (referralsChannel) return;
+
+  referralsChannel = supabase
+    .channel('referrals-live')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'referrals',
+    }, async (payload) => {
+      console.log('[ViralRefer Realtime] New referral recorded:', payload.new);
+
+      // Live refresh all public views
+      await loadLeaderboard();
+      await renderRecentActivity();
+
+      // Personal stats only for the affected referrer
+      const myCode = getMyReferralCode();
+      if (myCode && payload.new && payload.new.referrer_code === myCode) {
+        await renderMyStats(myCode);
+      }
+    })
+    .subscribe((status) => {
+      updateRealtimeStatus(status);
+    });
+}
+
+function cleanupRealtimeSubscriptions() {
+  if (referralsChannel) {
+    supabase.removeChannel(referralsChannel);
+    referralsChannel = null;
+  }
+}
 
 /**
  * Loads and renders the public leaderboard.
@@ -91,21 +161,7 @@ export async function initApp() {
 
   await loadLeaderboard();
 
-  try {
-    const recent = await fetchRecentActivity(6);
-    const actEl = document.getElementById('recent-activity');
-    if (actEl) {
-      if (recent.length) {
-        actEl.innerHTML = recent.map((a) => `
-          <div class="flex justify-between text-xs bg-zinc-900/70 px-4 py-2 rounded-2xl">
-            <span class="font-mono text-emerald-400">${a.referrer_code}</span>
-            <span class="text-zinc-400">${new Date(a.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-          </div>`).join('');
-      } else {
-        actEl.innerHTML = `<div class="text-center py-4 text-zinc-400 text-sm">Early activity from the first participants will appear here.</div>`;
-      }
-    }
-  } catch {}
+  await renderRecentActivity();
 
   if (myReferralCode) {
     const input = document.getElementById('ref-link') as HTMLInputElement | null;
@@ -132,6 +188,10 @@ export async function initApp() {
       banner.classList.remove('hidden');
     }
   }
+
+  // Enable true Supabase Realtime for leaderboard, recent activity, and personal stats
+  initRealtimeSubscriptions();
+  window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
 
   console.log('%c[ViralRefer] === Full app initialized successfully ===', 'color:#34d399; font-weight:bold');
 }
