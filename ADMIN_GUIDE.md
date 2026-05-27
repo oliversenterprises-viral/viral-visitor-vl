@@ -1,84 +1,98 @@
-# ViralRefer Premium — Admin Guide
+# ViralRefer — Admin Guide
 
-For authorized administrators only. Follow these steps to manage the live platform using Supabase Auth and the secure architecture.
+For authorized administrators only. This guide reflects the current production implementation.
 
-## Logging In as Admin (Supabase Auth)
+**Current Admin Access Mechanism (Temporary)**
 
-1. Use the in-app **Auth / Profile modal** (or "Sign in" button).
-2. Enter your admin email (pre-approved, e.g. admin@yourdomain.com) and request a **Magic Link** (recommended — passwordless, secure).
-3. Or use email + password if configured in Supabase Auth settings.
-4. Click the link in your email → you are signed in with a valid Supabase JWT session.
-5. Once logged in, click **Admin Dashboard** (or call `openAdminPanel()`). The production version verifies your session server-side via Edge Functions before showing sensitive tabs.
+Admin access is currently gated by a **client-side password** using the `VITE_ADMIN_PASSWORD` environment variable (fallback default in development: `TestAdmin2026!`).
 
-**Note:** Regular users cannot access admin features. Access is gated by Supabase Auth + future role checks (e.g., special claim in JWT or allowlisted email in an `admin_users` table / app_metadata).
+- Users click the Admin button in the UI.
+- A password modal appears.
+- The entered password is compared directly in the browser against the value of `VITE_ADMIN_PASSWORD`.
+- On success, the admin dashboard modal opens.
+
+**Important**: This is a temporary client-side gate and is **not** real Supabase Auth. The `admin-action` Edge Function currently contains a temporary bypass (`isAdmin = true`) to support this flow. A future migration to proper Supabase Auth (JWT sessions + server-side role verification) is planned. Until then, protect the `VITE_ADMIN_PASSWORD` value as a high-privilege secret.
+
+## Logging In as Admin
+
+1. On the live site, click the **Admin** button (or equivalent trigger).
+2. Enter the production value configured for `VITE_ADMIN_PASSWORD` in the Vercel environment variables.
+3. On success, the Admin Dashboard opens with five tabs:
+   - REFERRALS
+   - SHARE ANALYTICS
+   - EDIT CONTENT
+   - PRIZE CLAIMS
+   - TEXT COLORS
+
+Regular users without the correct password cannot open the dashboard.
 
 ## Managing Prize Claims & Approving Winners
 
-1. In Supabase Dashboard (supabase.com → your project → **Table Editor**):
-   - Open the `prize_claims` table.
-   - Filter by `status = 'pending'`.
-2. Review each claim:
-   - Cross-check the user's `referral_count` (query `profiles` or use the public leaderboard).
-   - Verify rank using server-side logic (the `submit-claim` Edge Function already did top-1 check; you confirm manually).
-3. To approve:
-   - Change `status` to `'approved'` (or `'paid'` after sending funds).
-   - Add `notes` (e.g., "Verified top referrer #3 on 2026-05-15. Paid via Cash App.").
-   - Set `processed_at` to current timestamp.
-4. Approved/paid claims automatically become visible to the public (via RLS policy `prize_claims_select_public_approved`) for social proof on the leaderboard/winners section.
-5. Reject suspicious claims by setting `status = 'rejected'` + reason in notes.
+1. In Supabase Dashboard → Table Editor → `prize_claims` table.
+2. Filter by `status = 'pending'`.
+3. Review each claim:
+   - Cross-check the user's `referral_count`.
+   - Verify rank context using the public leaderboard or direct queries.
+4. To approve:
+   - Use the in-app Admin Dashboard **PRIZE CLAIMS** tab (preferred for auditability) or directly update the row.
+   - Set `status` to `'approved'` or `'paid'`.
+   - Add `review_note` with details (e.g., verification date, payout method, rank).
+   - `reviewed_at` is set automatically by the `admin-action` Edge Function when using the dashboard.
+5. Approved/paid claims become visible to the public via RLS for social proof.
+6. Reject suspicious claims by setting `status = 'rejected'` and documenting the reason in `review_note`.
 
-**Important (Secure Architecture):** You cannot (and should not) approve directly from the public app without proper Edge Function calls. For high-value payouts, always use the Supabase Table Editor or a future dedicated admin Edge Function (`admin-approve-claim`) that logs every action.
+**All high-value actions should prefer the in-app admin dashboard** (which routes through the `admin-action` Edge Function) over direct table edits when possible.
 
-## Editing Live Site Content (Hero, Prizes, Rules)
+## Editing Live Site Content (Hero, Prizes, Rules, Referral Base URL, etc.)
 
-The `site_content` table powers dynamic text without redeploying the site.
+The `site_content` table powers dynamic text without requiring a redeploy.
 
-1. In Supabase Dashboard → **Table Editor** → `site_content`.
-2. Edit existing rows or add new:
-   - `key`: e.g. `hero_title`, `prize_pool`, `rules_text`, `min_referrals_for_claim`
-   - `value`: JSON or string (current code expects simple values; see `fetchSiteContent()`)
-   - `description`: Internal note for other admins
-3. Changes are live instantly (public `SELECT` policy allows anyone to read; only service_role or admins with dashboard access can write).
-4. Examples:
-   - Update prize amounts
-   - Change rules short text (full legal in `docs/rules.md`)
-   - Modify hero copy for campaigns
+1. Open Admin Dashboard → **EDIT CONTENT** tab (recommended), or use Supabase Table Editor directly.
+2. Valid keys include (but are not limited to):
+   - `hero_title`, `hero_badge`, `prize_pool`, `rules_text`
+   - `min_referrals_for_claim`
+   - `referral_base_url` (custom base for generated referral links)
+3. Changes are live immediately for public visitors (public `SELECT` policy).
+4. Always add a clear `description` or note when editing via the dashboard for auditability.
 
-**Best Practice:** Always add a description like "Updated by AdminName on [date] for Summer Campaign".
+**Best Practice**: When using the admin UI, changes are persisted through the `admin-action` Edge Function.
+
+## Text Colors (Live Preview)
+
+Admin Dashboard → **TEXT COLORS** tab:
+
+- Modify any design token color (Prize Title, Referral Link Text, buttons, etc.).
+- Changes apply live to the public page behind the modal.
+- "Reset All Defaults" restores the design system values.
+- Custom colors can be added for future-proofing.
 
 ## Rotating Keys & Secrets (Security Maintenance)
 
-- **Supabase Keys** (rarely needed):
-  - Dashboard → Project Settings → API → Regenerate anon key or service_role if you suspect compromise.
-  - Immediately update:
-    - `.env` / hosting env vars for `VITE_SUPABASE_ANON_KEY`
-    - Redeploy Edge Functions (they use service_role via secrets)
-    - Run `supabase secrets set SUPABASE_SERVICE_ROLE_KEY=new-key...`
-  - Rotate the JWT secret only in extreme cases (affects all sessions).
+### Vercel Environment Variables (Client)
+- Rotate `VITE_ADMIN_PASSWORD` in Vercel when the current value is at risk.
+- Rotate `VITE_SUPABASE_ANON_KEY` or `VITE_TURNSTILE_SITEKEY` when necessary and redeploy.
 
-- **Cloudflare Turnstile (CAPTCHA)**:
-  - Rotate `TURNSTILE_SECRET_KEY` in Cloudflare dashboard.
-  - Update via `supabase secrets set TURNSTILE_SECRET_KEY=newsecret`
-  - Update `VITE_TURNSTILE_SITEKEY` in `.env` and redeploy frontend if changed.
+### Supabase Secrets (Edge Functions)
+- Rotate `TURNSTILE_SECRET_KEY` and `SUPABASE_SERVICE_ROLE_KEY` in the Supabase Dashboard under Edge Functions → Secrets.
+- Redeploy affected Edge Functions after rotation.
 
-- **General Hygiene:**
-  - Regularly review Supabase Auth → Users for suspicious signups.
-  - Monitor Edge Function logs in Supabase Dashboard → Functions.
-  - Never share service_role key. It bypasses all RLS.
+### General Hygiene
+- Regularly review Supabase Auth → Users for anomalies.
+- Monitor Edge Function logs.
+- Never share the service_role key.
+- Review `prize_claims` and `shares` tables for abuse patterns.
 
 ## Additional Admin Tips
 
-- **View Live Leaderboard & Activity:** Use the public site or query `referrals` table (RLS lets you see only your own + referred; as project owner you have full dashboard access).
-- **Site Content Keys Reference:** See seed in `0001_init_rls.sql` (`hero_title`, `prize_pool`, `rules_text`, etc.).
-- **Audit Trail:** All changes to `prize_claims` and `site_content` have `updated_at` + `updated_by` (when wired). Check `referrals` and `shares` tables for abuse patterns.
-- **Emergency:** To pause claims, set a high `min_referrals_for_claim` value in site_content or temporarily disable the claim button in code.
+- **Live Leaderboard & Activity**: View on the public site or query the `referrals` and `shares` tables.
+- **Site Content Keys**: See the seed data in `supabase/migrations/0001_init_rls.sql` for the current set of keys.
+- **Audit Trail**: Use `updated_at`, `reviewed_at`, and `review_note` fields. All mutations through Edge Functions are logged in Supabase.
+- **Emergency Controls**: Raise `min_referrals_for_claim` in `site_content` or temporarily adjust UI to pause new claims.
 
-**You are responsible for following the Official Rules in `docs/rules.md` when approving real cash prizes.** Always document your approvals.
+**You are responsible for following the Official Rules** (linked from the site footer and documented in `docs/rules.md`) when approving real cash prizes. Always document approvals thoroughly.
 
-For technical issues, refer the engineering team to `README.md` and the architecture ADR.
+For technical issues, refer to `DEPLOY.md`, `README.md`, and the architecture documents.
 
 ---
 
-*Admin access is a privilege. Use the Supabase dashboard responsibly. All actions are auditable via Postgres logs.*
-
-This guide assumes basic familiarity with the Supabase Dashboard (Table Editor + SQL Editor). No coding required for daily admin tasks.
+*Admin access is a privilege. Use the dashboard and Supabase responsibly. All privileged actions are auditable.*
