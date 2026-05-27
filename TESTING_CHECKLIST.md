@@ -2,16 +2,17 @@
 
 Use this checklist to manually verify the core workflows after changes.
 
-> **Note**: In addition to this manual checklist, the project now has **unit tests** (run with `npm test`) covering the pure helper functions (`formatError`, `computeHighRiskIPs`, `filterReferralsByDays`, etc.).
+> **Note**: In addition to this manual checklist, the project has **unit tests** (run with `npm test`) covering pure helper functions.
 
 ---
 
 ## 1. Prerequisites
 
 - [ ] App is running locally (`npm run dev`)
-- [ ] You can access the public site (usually http://localhost:5173)
-- [ ] You can open the Admin panel (password: `TestAdmin2026!`)
-- [ ] Browser console is open (for defensive logs)
+- [ ] You can access the public site (usually http://localhost:5173 or the preview URL)
+- [ ] You know the current admin password (`VITE_ADMIN_PASSWORD` value or development default `TestAdmin2026!`)
+- [ ] Browser console is open (for defensive `[ViralRefer]` logs)
+- [ ] Vercel preview or production environment variables are correctly set for testing
 
 ---
 
@@ -55,20 +56,20 @@ Use this checklist to manually verify the core workflows after changes.
 - [ ] With no `referral_base_url` set, links should use `https://viralrefer.app`
 
 ### 4.2 Custom Base URL
-1. Go to **Admin → Edit Content**
-2. Add new key:
+1. Open **Admin** (enter correct password) → **EDIT CONTENT**
+2. Add or update key:
    - Key: `referral_base_url`
    - Value: `https://my-test-domain.com/join`
 3. Save
 4. Refresh the public page
 5. Click **"Get my referral link"**
-6. The generated link should now start with `https://my-test-domain.com/join?ref=...`
-7. Test Copy, QR, and all share buttons — they should all use the new base
+6. The generated link should now start with the custom base
+7. Test Copy, QR, and all share buttons — they must use the new base
 
 ### 4.3 Return Visit (Stored Code)
 - [ ] Generate a link with a custom base
 - [ ] Refresh the page (or close and reopen)
-- [ ] The pre-filled link (if you had a stored code) should use the custom base
+- [ ] The pre-filled link uses the custom base
 - [ ] Use `debugReferral()` in console to verify
 
 ---
@@ -76,26 +77,26 @@ Use this checklist to manually verify the core workflows after changes.
 ## 5. Text Colors Admin Tab
 
 ### 5.1 Basic Color Changes
-- [ ] Go to **Admin → TEXT COLORS**
+- [ ] Open **Admin** → **TEXT COLORS**
 - [ ] Change several colors (e.g. Prize Title, Referral Link Text, Copy Button BG)
 - [ ] Watch the public page behind the modal update in real time
 
 ### 5.2 Reset All Defaults
 - [ ] Click **"Reset All Defaults"**
 - [ ] Confirm the dialog
-- [ ] All custom colors should revert to design system defaults on the public page
+- [ ] All custom colors revert to design system defaults on the public page
 
 ### 5.3 Add Custom Color
-- [ ] In the "Add Custom Color" section at the bottom:
+- [ ] In the "Add Custom Color" section:
   - Enter a suffix (e.g. `my_footer_link`)
   - Pick a color
   - Click **Add & Save**
 - [ ] Refresh the Text Colors tab
-- [ ] The new custom color should appear under "Custom Colors (user-added)"
+- [ ] The new custom color appears under "Custom Colors (user-added)"
 
 ### 5.4 Live Preview on Tab Open
 - [ ] Close and reopen the Text Colors tab
-- [ ] Colors should be applied immediately to the public page
+- [ ] Colors are applied immediately to the public page
 
 ---
 
@@ -107,7 +108,7 @@ In the browser console, run:
 debugReferral()
 ```
 
-Expected output should show:
+Expected output shows:
 - `referralBaseUrl`
 - `myReferralCode`
 - Current value of `#ref-link`
@@ -120,38 +121,52 @@ Expected output should show:
 ### 7.1 Bad `referral_base_url`
 - [ ] Set `referral_base_url` to an invalid value (e.g. `not-a-url`)
 - [ ] Generate a new link
-- [ ] It should fall back gracefully and log a warning in console
+- [ ] It falls back gracefully and logs a warning
 
 ### 7.2 Empty `referral_base_url`
 - [ ] Delete or empty the `referral_base_url` key
-- [ ] App should fall back to `https://viralrefer.app`
+- [ ] App falls back to `https://viralrefer.app`
 
 ### 7.3 Referral with Query Params in Base
 - [ ] Set `referral_base_url` to `https://example.com?campaign=spring2026`
-- [ ] Generated link should correctly become `https://example.com?campaign=spring2026&ref=XXXX`
+- [ ] Generated link correctly becomes `https://example.com?campaign=spring2026&ref=XXXX`
 
 ---
 
-## 8. Admin → Edit Content
+## 8. Admin Dashboard
 
-- [ ] Add/edit/delete keys freely
-- [ ] Changes to text content (e.g. `prize_title`, `hero_badge`) reflect on public site after refresh
+- [ ] Enter correct admin password to open dashboard
+- [ ] All five tabs open without crashing: REFERRALS, SHARE ANALYTICS, EDIT CONTENT, PRIZE CLAIMS, TEXT COLORS
+- [ ] REFERRALS tab loads data
+- [ ] SHARE ANALYTICS tab loads data and renders charts
+- [ ] EDIT CONTENT tab allows add/edit/delete of keys (changes visible after refresh)
+- [ ] PRIZE CLAIMS tab loads claims and supports status updates via the `admin-action` Edge Function
+- [ ] TEXT COLORS tab functions with live preview and reset
 
 ---
 
-## 9. General Polish
+## 9. Prize Claims Flow (Stub + Edge Function)
+
+- [ ] Open a prize claim form (if visible in UI)
+- [ ] Turnstile widget appears and functions
+- [ ] Submission routes through the `submit-claim` Edge Function
+- [ ] Claims appear in the Admin → PRIZE CLAIMS tab
+
+---
+
+## 10. General Polish
 
 - [ ] No obvious console errors on page load
-- [ ] Admin password works (`TestAdmin2026!`)
-- [ ] All 5 admin tabs open without crashing
-- [ ] Responsive on mobile (at least basic)
+- [ ] Admin password gate works with the current `VITE_ADMIN_PASSWORD` value
+- [ ] Responsive on mobile (at least basic functionality)
+- [ ] Realtime updates visible in leaderboard/activity when testing with multiple tabs or devices
 
 ---
 
 **Tip**: Keep the browser console open during all tests. Most defensive logs start with `[ViralRefer]`.
 
-Run this checklist after any significant change to the referral, color, or content systems.
+Run this checklist after any significant change to the referral, color, content, or admin systems.
 
 ---
 
-Last updated: 2026-05-22
+Last updated: 2026-05-26
