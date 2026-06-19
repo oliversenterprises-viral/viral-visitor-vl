@@ -30,6 +30,11 @@ declare global {
   }
 }
 
+function callRdt(...args: unknown[]): void {
+  const rdt = window.rdt as RedditPixelFn | undefined;
+  rdt?.(...args);
+}
+
 function loadRedditPixelScript(): void {
   if (window.rdt || document.querySelector('script[data-vr-reddit-pixel]')) return;
 
@@ -117,11 +122,8 @@ export function initRedditPixel(): void {
   // index.html may have already initialized the pixel in <head>
   if (!window.rdt) {
     loadRedditPixelScript();
-    const rdt = window.rdt;
-    if (rdt) {
-      rdt('init', REDDIT_PIXEL_ID);
-      rdt('track', 'PageVisit');
-    }
+    callRdt('init', REDDIT_PIXEL_ID);
+    callRdt('track', 'PageVisit');
   }
 
   console.log('[ViralRefer] Reddit pixel ready');
@@ -134,9 +136,9 @@ export function trackRedditEvent(
   if (!REDDIT_PIXEL_ID || !window.rdt) return;
 
   if (event === 'Custom' && options?.customEventName) {
-    window.rdt('track', 'Custom', { customEventName: options.customEventName });
+    callRdt('track', 'Custom', { customEventName: options.customEventName });
   } else {
-    window.rdt('track', event);
+    callRdt('track', event);
   }
 }
 
