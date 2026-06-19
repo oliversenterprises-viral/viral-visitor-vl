@@ -4,6 +4,7 @@
  */
 
 import { registerGlobal } from './lib';
+import { trackRedditEvent } from './lib/reddit-tracking';
 import { getReferralBaseUrl, getQrModalTitle, getMyReferralCode, setMyReferralCode } from './public/globals';
 
 // Turnstile site key (from Vercel env, falls back for local dev)
@@ -180,6 +181,7 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   if (refInput) refInput.value = link;
 
   console.log('[ViralRefer] Generated referral link:', link);
+  trackRedditEvent('Lead');
 
   // Show referral section if it exists
   const refSection = document.getElementById('referral-section');
