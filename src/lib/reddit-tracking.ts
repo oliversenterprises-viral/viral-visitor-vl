@@ -114,10 +114,17 @@ export function initRedditPixel(): void {
     return;
   }
 
-  loadRedditPixelScript();
-  window.rdt?.('init', REDDIT_PIXEL_ID);
-  window.rdt?.('track', 'PageVisit');
-  console.log('[ViralRefer] Reddit pixel initialized');
+  // index.html may have already initialized the pixel in <head>
+  if (!window.rdt) {
+    loadRedditPixelScript();
+    const rdt = window.rdt;
+    if (rdt) {
+      rdt('init', REDDIT_PIXEL_ID);
+      rdt('track', 'PageVisit');
+    }
+  }
+
+  console.log('[ViralRefer] Reddit pixel ready');
 }
 
 export function trackRedditEvent(

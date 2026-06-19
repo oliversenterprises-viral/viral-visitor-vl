@@ -44,6 +44,29 @@
     <link rel="stylesheet" href="/src/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+    <!-- Reddit Pixel — early head load so Reddit Events Manager can detect base pixel -->
+    <script>
+    (function () {
+      var pixelId = '%VITE_REDDIT_PIXEL_ID%';
+      if (!pixelId || pixelId.indexOf('VITE_') !== -1) return;
+      !function (w, d) {
+        if (!w.rdt) {
+          var p = (w.rdt = function () {
+            p.sendEvent ? p.sendEvent.apply(p, arguments) : p.callQueue.push(arguments);
+          });
+          p.callQueue = [];
+          var t = d.createElement('script');
+          t.src = 'https://www.redditstatic.com/ads/pixel.js';
+          t.async = true;
+          var s = d.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(t, s);
+        }
+      }(window, document);
+      rdt('init', pixelId);
+      rdt('track', 'PageVisit');
+    })();
+    </script>
+
     <!-- Cloudflare Turnstile (explicit render for referral debug + future claim flow) -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
