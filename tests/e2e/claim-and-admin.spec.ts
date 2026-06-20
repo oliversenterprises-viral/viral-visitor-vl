@@ -37,10 +37,13 @@ test.describe('ViralRefer - Prize Claim Flow & Admin', () => {
     await page.click('button:has-text("ADMIN")');
     await page.fill('#admin-password-input', adminPass!);
     await page.click('#admin-password-submit-btn');
-    
-    // Stronger, more resilient expectation for either success or graceful failure states
-    await expect(
-      page.locator('#admin-modal, #admin-dashboard, text=Login failed, text=Admin access granted, text=Access denied, text=Password')
-    ).toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(2000);
+
+    // Must match live admin-flow audit: no nocache kick-out, dashboard stays open
+    expect(page.url()).not.toMatch(/nocache=|force=/);
+    await expect(page.locator('#admin-modal')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('#admin-content')).toContainText(/Referrals|Share|Prize/i, {
+      timeout: 10000,
+    });
   });
 });
