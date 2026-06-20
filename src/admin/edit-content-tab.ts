@@ -10,6 +10,36 @@ interface ContentRow {
   value?: unknown;
 }
 
+/** Serialize site_content values for the edit textarea (handles JSONB objects/arrays). */
+function formatValueForInput(value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'object') return JSON.stringify(value, null, 2);
+  return String(value);
+}
+
+async function saveSiteContentEntry(key: string, value: unknown): Promise<boolean> {
+  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+  try {
+    const invokeOpts: {
+      body: { action: string; payload: { key: string; value: unknown } };
+      headers?: Record<string, string>;
+    } = {
+      body: { action: 'update_site_content', payload: { key, value } },
+    };
+    if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
+    const { data, error } = await supabase.functions.invoke('admin-action', invokeOpts);
+    if (!error && data?.success) return true;
+  } catch {
+    // fall through to direct upsert
+  }
+  try {
+    const { error } = await supabase.from('site_content').upsert({ key, value }, { onConflict: 'key' });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Admin Tab: Edit Site Content (Live CMS)
  *
@@ -70,7 +100,7 @@ async function renderEditContentTab(content: HTMLElement) {
       const html = buildContentListHTML(rows);
       content.innerHTML = html;
 
-      attachContentListeners(content, loadAndRenderList);
+      attachContentListeners(content, loadAndRenderList, rows);
       await wireBannerStatsQuick(content);
 
   // Wire up the prominent "Create Multi-Banner Rotation (v2)" button if it exists
@@ -318,7 +348,7 @@ function showContentForm(
     keyInput.value = existing.id || '';
     keyInput.disabled = true;
     descInput.value = '';
-    valInput.value = String(existing.value || '');
+    valInput.value = formatValueForInput(existing.value);
   } else {
     titleEl.textContent = 'Add New Content Entry';
     keyInput.value = '';
@@ -348,29 +378,14 @@ function showContentForm(
       saveBtn.textContent = 'Saving...';
       saveBtn.disabled = true;
 
-      try {
-        const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-        const invokeOpts: {
-          body: { action: string; payload: { key: string; value: unknown } };
-          headers?: Record<string, string>;
-        } = {
-          body: { action: 'update_site_content', payload: { key, value: parsedValue } },
-        };
-        if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
-        const { data, error } = await supabase.functions.invoke('admin-action', invokeOpts);
-        if (error || !data?.success) {
-          await supabase.from('site_content').upsert({ key, value: parsedValue }, { onConflict: 'key' });
-        }
-      } catch (_) {
-        try {
-          await supabase.from('site_content').upsert({ key, value: parsedValue }, { onConflict: 'key' });
-        } catch {
-          // Demo / RLS graceful fallback
-        }
-      }
+      const saved = await saveSiteContentEntry(key, parsedValue);
 
       saveBtn.textContent = originalSaveText || 'Save (upsert)';
       saveBtn.disabled = false;
+      if (!saved) {
+        showToast('Save failed — check admin secret or try again', 'info');
+        return;
+      }
       await reloadList();
       showToast('Content saved successfully', 'success');
     };
@@ -406,7 +421,7 @@ function showContentForm(
  *
  * Handles: search filtering, Add New Key, Edit, and Delete actions.
  */
-function attachContentListeners(content: HTMLElement, reloadList: () => Promise<void>) {
+function attachContentListeners(content: HTMLElement, reloadList: () => Promise<void>, rows: ContentRow[]) {
   // Update last refreshed timestamp
   const contentTs = content.querySelector('#content-last-updated');
   if (contentTs) {
@@ -432,11 +447,12 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
     });
   }
 
-  // Edit buttons (use id for lookup)
+  // Edit buttons — pass full row so the form loads the current value (not just the key)
   content.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = (btn as HTMLElement).dataset.id!;
-      showContentForm({ id }, reloadList);
+      const row = rows.find((r) => r.id === id);
+      showContentForm(row ?? { id }, reloadList);
     });
   });
 
@@ -506,7 +522,13 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
   }
 
   // If the current value was not a valid array (e.g. old single URL or empty), offer easy starter
-  const isValidArray = Array.isArray(JSON.parse(valInput.value || 'null'));
+  let isValidArray = false;
+  try {
+    const probe = valInput.value.trim() ? JSON.parse(valInput.value) : null;
+    isValidArray = Array.isArray(probe);
+  } catch {
+    isValidArray = false;
+  }
   if (!isValidArray || banners.length === 0) {
     const initDiv = document.createElement('div');
     initDiv.className = 'mb-3 p-3 bg-yellow-900/20 border border-yellow-500/40 rounded-xl text-sm';
