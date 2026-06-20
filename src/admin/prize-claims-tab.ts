@@ -365,6 +365,7 @@ function buildClaimsTableHTML(claims: readonly AdminClaimRow[]): string {
       </div>
       <div class="flex items-center gap-3">
         <span id="claims-last-updated" class="text-[10px] text-zinc-500"></span>
+        <button id="export-claims-csv-btn" class="px-4 py-2 text-sm bg-white/10 rounded-2xl flex items-center gap-2"><i class="fa-solid fa-download"></i> Export CSV</button>
         <button onclick="window.triggerRefreshSpin(this); window.switchAdminTab(3)" class="px-4 py-2 text-sm bg-white/10 rounded-2xl flex items-center gap-2"><i class="fa-solid fa-sync"></i> Refresh</button>
       </div>
     </div>
@@ -439,7 +440,29 @@ function buildClaimsTableHTML(claims: readonly AdminClaimRow[]): string {
  * - Cashtag copy buttons
  * - Action buttons (Approve / Reject / Mark Paid) with confirm + Edge Function update
  */
+function exportClaimsCSV(claims: readonly AdminClaimRow[]) {
+  const headers = ['id', 'created_at', 'referrer_code', 'website', 'cashtag', 'message', 'status', 'paid_at'];
+  const rows = claims.map((c) => headers.map((h) => {
+    const v = String((c as Record<string, unknown>)[h] ?? '');
+    return `"${v.replace(/"/g, '""')}"`;
+  }).join(','));
+  const blob = new Blob([[headers.join(','), ...rows].join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `viralrefer-claims-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 function attachClaimsListeners(content: HTMLElement) {
+  const exportBtn = content.querySelector('#export-claims-csv-btn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      exportClaimsCSV(adminClaimsCache);
+      showToast('Claims CSV downloaded', 'success');
+    });
+  }
+
   // Attach View buttons (opens claim details modal)
   content.querySelectorAll('.view-claim-btn').forEach(btn => {
     btn.addEventListener('click', () => {

@@ -18,7 +18,7 @@ async function renderReferralsTab(content: HTMLElement) {
     <div class="flex items-center justify-between mb-4">
       <div>
         <div class="text-2xl font-bold">Referrals</div>
-        <div class="text-sm text-zinc-400">Monitor all referral activity â€¢ Abuse detection built-in</div>
+        <div class="text-sm text-zinc-400">Monitor all referral activity • Abuse detection built-in</div>
       </div>
       <div class="flex items-center gap-3">
         <span id="referrals-last-updated" class="text-[10px] text-zinc-500"></span>
@@ -32,22 +32,22 @@ async function renderReferralsTab(content: HTMLElement) {
     <div id="referrals-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <div class="glass admin-stat-card rounded-2xl p-4">
         <div class="text-xs text-zinc-400">TOTAL REFERRALS</div>
-        <div id="stat-total" class="text-4xl font-bold text-white mt-1">â€”</div>
+        <div id="stat-total" class="text-4xl font-bold text-white mt-1">—</div>
       </div>
       <div class="glass admin-stat-card rounded-2xl p-4">
         <div class="text-xs text-zinc-400">UNIQUE REFERRERS</div>
-        <div id="stat-unique" class="text-4xl font-bold text-emerald-400 mt-1">â€”</div>
+        <div id="stat-unique" class="text-4xl font-bold text-emerald-400 mt-1">—</div>
       </div>
       <div class="glass admin-stat-card rounded-2xl p-4">
         <div class="text-xs text-zinc-400">TODAY</div>
-        <div id="stat-today" class="text-4xl font-bold text-white mt-1">â€”</div>
+        <div id="stat-today" class="text-4xl font-bold text-white mt-1">—</div>
       </div>
       <div class="glass admin-stat-card rounded-2xl p-4 border border-red-500/30" title="IPs that have generated 3+ referrals (possible abuse or VPN farming). Click rows to investigate.">
         <div class="text-xs text-red-400 flex items-center gap-1">
           HIGH-RISK IPs
           <i class="fa-solid fa-info-circle text-[10px] opacity-60"></i>
         </div>
-        <div id="stat-risk" class="text-4xl font-bold text-red-400 mt-1">â€”</div>
+        <div id="stat-risk" class="text-4xl font-bold text-red-400 mt-1">—</div>
       </div>
     </div>
 
@@ -285,15 +285,15 @@ function showReferralDetails(row: AdminReferralRow, isHighRisk: boolean = false)
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  const created = row.created_at ? new Date(row.created_at).toLocaleString() : 'â€”';
+  const created = row.created_at ? new Date(row.created_at).toLocaleString() : '—';
 
   contentBox.innerHTML = `
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-      <div><span class="text-zinc-400">Referral ID</span><div class="font-mono text-xs break-all">${row.id || 'â€”'}</div></div>
+      <div><span class="text-zinc-400">Referral ID</span><div class="font-mono text-xs break-all">${row.id || '—'}</div></div>
       <div>
         <span class="text-zinc-400">Referrer Code</span>
         <div class="flex items-center gap-2">
-          <div class="font-mono text-emerald-400 text-lg">${row.referrer_code || 'â€”'}</div>
+          <div class="font-mono text-emerald-400 text-lg">${row.referrer_code || '—'}</div>
           ${row.referrer_code ? `
             <button class="copy-modal-code-btn text-emerald-400 hover:text-emerald-300 px-2 py-0.5 rounded bg-white/5 text-xs" data-code="${row.referrer_code}">
               <i class="fa-solid fa-copy"></i> Copy
@@ -302,13 +302,13 @@ function showReferralDetails(row: AdminReferralRow, isHighRisk: boolean = false)
         </div>
       </div>
       
-      <div><span class="text-zinc-400">IP Address</span><div class="font-mono text-xs">${row.ip_address || 'â€”'}</div></div>
-      <div><span class="text-zinc-400">Risk Level</span><div>${isHighRisk ? '<span class="px-3 py-0.5 text-xs rounded bg-red-600 text-white font-medium">HIGH â€” Multiple referrals from this IP</span>' : '<span class="text-emerald-400">Normal</span>'}</div></div>
+      <div><span class="text-zinc-400">IP Address</span><div class="font-mono text-xs">${row.ip_address || '—'}</div></div>
+      <div><span class="text-zinc-400">Risk Level</span><div>${isHighRisk ? '<span class="px-3 py-0.5 text-xs rounded bg-red-600 text-white font-medium">HIGH — Multiple referrals from this IP</span>' : '<span class="text-emerald-400">Normal</span>'}</div></div>
 
-      <div class="md:col-span-2"><span class="text-zinc-400">User Agent</span><div class="text-xs break-all text-zinc-300">${row.user_agent || 'â€”'}</div></div>
+      <div class="md:col-span-2"><span class="text-zinc-400">User Agent</span><div class="text-xs break-all text-zinc-300">${row.user_agent || '—'}</div></div>
       
-      <div><span class="text-zinc-400">Referrer User ID</span><div class="font-mono text-xs">${row.referrer_user_id || 'â€”'}</div></div>
-      <div><span class="text-zinc-400">Referred User ID</span><div class="font-mono text-xs">${row.referred_user_id || 'â€”'}</div></div>
+      <div><span class="text-zinc-400">Referrer User ID</span><div class="font-mono text-xs">${row.referrer_user_id || '—'}</div></div>
+      <div><span class="text-zinc-400">Referred User ID</span><div class="font-mono text-xs">${row.referred_user_id || '—'}</div></div>
     </div>
 
     <div class="mt-4 pt-4 border-t border-white/10 text-xs text-zinc-400">

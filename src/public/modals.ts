@@ -5,6 +5,7 @@
 
 import { ViralRefer, registerGlobal } from '../lib/global';
 import { switchAdminTab } from '../admin';
+import { supabase } from '../lib/supabase';
 
 registerGlobal('closeAdminPanel', () => {
   const modal = document.getElementById('admin-modal');
@@ -60,9 +61,20 @@ const submitAdminPassword = async () => {
   if (!input) return;
   const val = input.value.trim();
 
-  const VALID = import.meta.env.VITE_ADMIN_PASSWORD || ''; // Hardened: no hardcoded fallback (full audit security)
+  const VALID = import.meta.env.VITE_ADMIN_PASSWORD || '';
 
-  if (val === VALID) {
+  let authorized = false;
+  try {
+    const { data, error } = await supabase.functions.invoke('admin-action', {
+      body: { action: 'verify_owner_password', payload: { password: val } },
+    });
+    if (!error && data?.success === true) authorized = true;
+  } catch {
+    // fall through to client fallback
+  }
+  if (!authorized && VALID && val === VALID) authorized = true;
+
+  if (authorized) {
     if (errorEl) errorEl.classList.add('hidden');
     const pwModal = document.getElementById('admin-password-modal');
     if (pwModal) pwModal.classList.add('hidden');
@@ -72,7 +84,7 @@ const submitAdminPassword = async () => {
     if (errorEl) errorEl.classList.remove('hidden');
     if (btn) {
       const orig = btn.innerHTML;
-      btn.innerHTML = 'Incorrect â€” try again';
+      btn.innerHTML = 'Incorrect — try again';
       setTimeout(() => { if (btn) btn.innerHTML = orig; }, 1400);
     }
   }

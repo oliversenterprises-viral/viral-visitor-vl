@@ -16,6 +16,7 @@
 import './modals';
 import './handlers';
 import './debug';
+import '../timer';
 
 export function initPublic(): void {
   // All registration happens via the side-effect imports above.

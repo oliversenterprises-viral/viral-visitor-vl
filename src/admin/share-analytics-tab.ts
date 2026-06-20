@@ -163,7 +163,7 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
             <div class="admin-stat-card">
               <div class="text-sm text-zinc-400">TOTAL SHARES</div>
               <div class="text-6xl font-bold text-white">${formatNumber(data.total)}</div>
-              <div class="text-xs text-zinc-500 mt-1">From ${data.uniqueSharers} unique people â€¢ Avg ${data.avgPerDay}/day</div>
+              <div class="text-xs text-zinc-500 mt-1">From ${data.uniqueSharers} unique people • Avg ${data.avgPerDay}/day</div>
             </div>
             <div class="flex items-center gap-3">
               <span id="analytics-last-updated" class="text-[10px] text-zinc-500"></span>
@@ -194,7 +194,7 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
           <div class="bg-zinc-900 border border-white/10 rounded-2xl p-4">
             <h4 class="text-sm font-semibold text-zinc-300 mb-3">Key Insights</h4>
             <ul class="space-y-2 text-sm text-zinc-300">
-              ${data.insights.map((i: string) => `<li>â€¢ ${i}</li>`).join('')}
+              ${data.insights.map((i: string) => `<li>• ${i}</li>`).join('')}
             </ul>
           </div>
 

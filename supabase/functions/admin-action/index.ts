@@ -36,6 +36,22 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  const body = await req.json();
+  const { action, payload } = body;
+
+  // Owner password verify — no admin secret required (password never stored in client bundle logic alone)
+  if (action === 'verify_owner_password') {
+    const password = String(payload?.password || '');
+    const expected =
+      Deno.env.get('ADMIN_OWNER_PASSWORD') ||
+      Deno.env.get('VITE_ADMIN_PASSWORD') ||
+      '';
+    const ok = !!expected && timingSafeEqual(password, expected);
+    return new Response(JSON.stringify({ success: ok }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   // Bridge auth: require the shared admin secret header (Phase 1)
   const adminSecretHeader = req.headers.get('x-admin-secret') || '';
   const expectedSecret = Deno.env.get('ADMIN_ACTION_SECRET') || '';
@@ -46,17 +62,11 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Future-proof skeleton retained (JWT path will be activated in Phase 2)
-  const authHeader = req.headers.get('Authorization');
-
   const supabaseAdmin = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     { auth: { persistSession: false } }
   );
-
-  const body = await req.json();
-  const { action, payload } = body;
 
   try {
     if (action === 'update_claim_status') {
