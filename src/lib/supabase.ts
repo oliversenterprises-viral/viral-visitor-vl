@@ -103,9 +103,14 @@ export async function fetchRecentActivity(limit = 8): Promise<RecentActivityItem
 }
 
 export async function fetchSiteContent(): Promise<Record<string, unknown>> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('site_content')
-    .select('*');
+    .select('key, id, value');
+
+  if (error) {
+    console.warn('[ViralRefer] site_content fetch error:', error.message, error.code);
+    return {};
+  }
 
   const content: Record<string, unknown> = {};
   (data as Array<{ key?: string; id?: string; value: unknown }> | null)?.forEach((row) => {

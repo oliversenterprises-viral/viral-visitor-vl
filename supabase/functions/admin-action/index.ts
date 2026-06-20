@@ -108,6 +108,18 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    if (action === 'delete_site_content') {
+      const key = String(payload?.key || '');
+      if (!key) {
+        return new Response(JSON.stringify({ success: false, error: 'key required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const { error } = await supabaseAdmin.from('site_content').delete().eq('key', key);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (action === 'get_shares') {
       // Full read for admin analytics — uses service_role to bypass user RLS
       const { data, error } = await supabaseAdmin

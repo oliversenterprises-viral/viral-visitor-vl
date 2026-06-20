@@ -337,16 +337,36 @@ function showContentForm(
       }
 
       const rawVal = valInput.value.trim();
-      const payload: { id: string; value: string } = { id: key, value: rawVal };
+      let parsedValue: unknown = rawVal;
+      try {
+        parsedValue = JSON.parse(rawVal);
+      } catch {
+        // keep as string
+      }
 
       const originalSaveText = saveBtn.textContent;
       saveBtn.textContent = 'Saving...';
       saveBtn.disabled = true;
 
       try {
-        await supabase.from('site_content').upsert(payload, { onConflict: 'id' });
+        const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+        const invokeOpts: {
+          body: { action: string; payload: { key: string; value: unknown } };
+          headers?: Record<string, string>;
+        } = {
+          body: { action: 'update_site_content', payload: { key, value: parsedValue } },
+        };
+        if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
+        const { data, error } = await supabase.functions.invoke('admin-action', invokeOpts);
+        if (error || !data?.success) {
+          await supabase.from('site_content').upsert({ key, value: parsedValue }, { onConflict: 'key' });
+        }
       } catch (_) {
-        // Demo / RLS fallback
+        try {
+          await supabase.from('site_content').upsert({ key, value: parsedValue }, { onConflict: 'key' });
+        } catch {
+          // Demo / RLS graceful fallback
+        }
       }
 
       saveBtn.textContent = originalSaveText || 'Save (upsert)';
@@ -430,9 +450,24 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
       (btn as HTMLElement as HTMLButtonElement).disabled = true;
 
       try {
-        await supabase.from('site_content').delete().eq('id', id);
+        const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+        const invokeOpts: {
+          body: { action: string; payload: { key: string } };
+          headers?: Record<string, string>;
+        } = {
+          body: { action: 'delete_site_content', payload: { key: id } },
+        };
+        if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
+        const { data, error } = await supabase.functions.invoke('admin-action', invokeOpts);
+        if (error || !data?.success) {
+          await supabase.from('site_content').delete().eq('key', id);
+        }
       } catch (_) {
-        /* demo / RLS graceful fallback */
+        try {
+          await supabase.from('site_content').delete().eq('key', id);
+        } catch {
+          /* demo / RLS graceful fallback */
+        }
       }
       await reloadList();
       showToast('Content deleted', 'info');
