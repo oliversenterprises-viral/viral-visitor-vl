@@ -34,10 +34,9 @@ export default defineConfig({
       output: {
         // Manual chunking via function (required in Vite 8 / Rollup 4+ for strict mode)
         manualChunks(id) {
-          if (id.includes('chart.js')) {
-            return 'chart';
-          }
-          // Add more chunks here as features/ grows (e.g. confetti)
+          if (id.includes('chart.js')) return 'chart';
+          if (id.includes('canvas-confetti')) return 'confetti';
+          if (id.includes('/src/timer/')) return 'timer';
           return undefined;
         },
         // Consistent file naming for long-term caching
