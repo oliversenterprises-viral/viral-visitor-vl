@@ -6,6 +6,7 @@ import { showToast } from '../ui';
  * Supports preloaded local events for immediate render (banner-stats-quick at tab top).
  */
 export async function renderBannerStats(container: HTMLElement, preloadedEvents?: any[]) {
+  container.classList.add('banner-stats-panel');
   let events: any[];
   let source: 'server' | 'local';
   if (preloadedEvents) {
@@ -35,15 +36,15 @@ export async function renderBannerStats(container: HTMLElement, preloadedEvents?
       <span class="text-emerald-400/60">${sourceNote}</span>
     </div>
     <div class="flex gap-2 mb-2">
-      <button id="bs-refresh" class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded">↻ Refresh</button>
-      <button id="bs-clear" class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded">🗑 Clear Local</button>
-      <button id="bs-copy" class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded">⎘ Copy JSON</button>
+      <button id="bs-refresh" class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">↻ Refresh</button>
+      <button id="bs-clear" class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">🗑 Clear Local</button>
+      <button id="bs-copy" class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">⎘ Copy JSON</button>
     </div>
   `;
 
   html += `<div class="text-[9px] text-zinc-400 mb-1">Last ${Math.min(5, stats.lastEvents.length)} events:</div>`;
   if (stats.lastEvents.length) {
-    html += `<div class="font-mono text-[8px] bg-black/30 p-1 rounded mb-2">`;
+    html += `<div class="font-mono text-[8px] text-zinc-300 bg-black/40 border border-white/10 p-1.5 rounded mb-2">`;
     stats.lastEvents.forEach((e: any) => {
       html += `${new Date(e.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ${e.type} ${escapeHtmlForStats(e.label || e.redirectUrl || '')}<br>`;
     });
@@ -53,20 +54,20 @@ export async function renderBannerStats(container: HTMLElement, preloadedEvents?
   }
 
   html += `
-    <table class="w-full text-[9px] border border-white/10">
-      <thead><tr class="text-emerald-300/80 bg-white/5">
-        <th class="text-left p-1">Banner</th><th class="p-1">Imps</th><th class="p-1">Clicks</th><th class="p-1">CTR</th>
-      </tr></thead><tbody>
+    <table class="banner-stats-table w-full text-[9px] text-zinc-200 border border-white/10">
+      <thead><tr class="text-emerald-300 bg-white/5">
+        <th class="text-left p-1.5 text-emerald-300">Banner</th><th class="p-1.5 text-emerald-300">Imps</th><th class="p-1.5 text-emerald-300">Clicks</th><th class="p-1.5 text-emerald-300">CTR</th>
+      </tr></thead><tbody class="text-zinc-200">
   `;
   stats.perBanner.forEach((b: any) => {
     const isCurrent = currentKeys.has(b.key);
     const ctr = b.impressions ? (b.clicks / b.impressions * 100).toFixed(1) + '%' : '—';
     html += `
-      <tr class="${isCurrent ? 'bg-emerald-900/10' : ''}">
-        <td class="p-1 truncate max-w-[140px]">${escapeHtmlForStats(b.label)}${isCurrent ? ' <span class="text-emerald-400">(current)</span>' : ''}</td>
-        <td class="p-1 text-center tabular-nums">${b.impressions}</td>
-        <td class="p-1 text-center tabular-nums">${b.clicks}</td>
-        <td class="p-1 text-center tabular-nums">${ctr}</td>
+      <tr class="border-t border-white/5 ${isCurrent ? 'bg-emerald-900/20' : ''}">
+        <td class="p-1.5 truncate max-w-[140px] text-zinc-100">${escapeHtmlForStats(b.label)}${isCurrent ? ' <span class="text-emerald-400">(current)</span>' : ''}</td>
+        <td class="p-1.5 text-center tabular-nums text-zinc-300">${b.impressions}</td>
+        <td class="p-1.5 text-center tabular-nums text-zinc-300">${b.clicks}</td>
+        <td class="p-1.5 text-center tabular-nums text-emerald-300/90">${ctr}</td>
       </tr>
     `;
   });

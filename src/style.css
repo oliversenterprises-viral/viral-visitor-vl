@@ -541,6 +541,20 @@ input, select, textarea {
   }
 }
 
+/* Banner stats — tables default to black text in some browsers; enforce dark-theme contrast */
+.banner-stats-panel {
+  color: #e4e4e7;
+}
+
+.banner-stats-panel table td,
+.banner-stats-panel table th {
+  color: #e4e4e7;
+}
+
+.banner-stats-panel .font-mono {
+  color: #d4d4d8;
+}
+
 /* Subtle table row fade-in */
 @keyframes rowFadeIn {
   from { opacity: 0; transform: translateY(4px); }
