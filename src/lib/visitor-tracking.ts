@@ -7,6 +7,34 @@ import { getStoredUtmAttribution } from './reddit-tracking';
 import { supabase } from './supabase';
 
 const VISITOR_EVENTS_KEY = 'viralrefer_visitor_events';
+const VISITOR_ID_KEY = 'vr_visitor_id';
+const VISITOR_SESSION_KEY = 'vr_visitor_session_id';
+
+function getOrCreateVisitorId(): string {
+  try {
+    let id = localStorage.getItem(VISITOR_ID_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(VISITOR_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
+
+function getOrCreateSessionId(): string {
+  try {
+    let id = sessionStorage.getItem(VISITOR_SESSION_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      sessionStorage.setItem(VISITOR_SESSION_KEY, id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
 
 /** Funnel steps shown in Admin → Edit → Site Visitor Funnel */
 export type VisitorFunnelEvent =
@@ -21,6 +49,8 @@ function pushLocalVisitorEvent(eventName: string, metadata: Record<string, unkno
   const utm = getStoredUtmAttribution();
   const entry = {
     event_name: eventName,
+    visitor_id: getOrCreateVisitorId(),
+    session_id: getOrCreateSessionId(),
     utm_source: utm?.source,
     utm_campaign: utm?.campaign,
     utm_content: utm?.content,
@@ -44,6 +74,8 @@ function logVisitorEventServer(eventName: string, metadata: Record<string, unkno
     .invoke('record-visitor-event', {
       body: {
         eventName,
+        visitor_id: getOrCreateVisitorId(),
+        session_id: getOrCreateSessionId(),
         utm_source: utm?.source,
         utm_campaign: utm?.campaign,
         utm_content: utm?.content,
@@ -87,6 +119,40 @@ function groupBy<T>(arr: T[], keyFn: (item: T) => string): Record<string, number
   return out;
 }
 
+function eventVisitorId(e: Record<string, unknown>): string | null {
+  const id = String(e.visitor_id || e.visitorId || '').trim();
+  return id || null;
+}
+
+function uniqueVisitorsFor(events: Array<Record<string, unknown>>, eventName?: string): number {
+  const ids = new Set<string>();
+  for (const e of events) {
+    if (eventName && String(e.event_name || e.eventName) !== eventName) continue;
+    const id = eventVisitorId(e);
+    if (id) ids.add(id);
+  }
+  return ids.size;
+}
+
+function uniqueByCountry(
+  events: Array<Record<string, unknown>>,
+  eventName = 'SiteLanding',
+): Array<{ country: string; unique: number; events: number }> {
+  const byCountry = new Map<string, { ids: Set<string>; events: number }>();
+  for (const e of events) {
+    if (String(e.event_name || e.eventName) !== eventName) continue;
+    const country = String(e.country_code || e.countryCode || '').trim().toUpperCase() || '—';
+    const bucket = byCountry.get(country) || { ids: new Set<string>(), events: 0 };
+    bucket.events += 1;
+    const id = eventVisitorId(e);
+    if (id) bucket.ids.add(id);
+    byCountry.set(country, bucket);
+  }
+  return [...byCountry.entries()]
+    .map(([country, v]) => ({ country, unique: v.ids.size, events: v.events }))
+    .sort((a, b) => b.unique - a.unique || b.events - a.events);
+}
+
 export function computeVisitorFunnelStats(events: Array<Record<string, any>>) {
   const counts: Record<string, number> = {};
   for (const e of events) {
@@ -104,12 +170,16 @@ export function computeVisitorFunnelStats(events: Array<Record<string, any>>) {
   const funnel = funnelOrder.map((name) => ({
     name,
     count: counts[name] || 0,
+    unique: uniqueVisitorsFor(events, name),
   }));
   return {
     funnel,
     total: events.length,
+    uniqueVisitorsLanding: uniqueVisitorsFor(events, 'SiteLanding'),
+    uniqueVisitorsAny: uniqueVisitorsFor(events),
     lastEvents: [...events].slice(-8).reverse(),
     bySource: groupBy(events, (e) => String(e.utm_source || e.utmSource || '(direct)')),
+    byCountry: uniqueByCountry(events),
   };
 }
 
@@ -145,6 +215,9 @@ export async function getVisitorEventsForStats(): Promise<{
     }
     const serverEvents = data.data.map((row: Record<string, any>) => ({
       event_name: row.event_name,
+      visitor_id: row.visitor_id,
+      session_id: row.session_id,
+      country_code: row.country_code,
       utm_source: row.utm_source,
       utm_campaign: row.utm_campaign,
       utm_content: row.utm_content,

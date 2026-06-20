@@ -62,7 +62,12 @@ export async function renderVisitorFunnelStats(container: HTMLElement, preloaded
     </div>
     <div class="text-[9px] text-zinc-500 mb-1">Updated ${refreshedAt}</div>
     <div class="text-[9px] text-zinc-400 mb-2">
-      All traffic on viralrefer.app: landing → get link → copy → share → claim. UTM source shown when present.
+      All traffic on viralrefer.app: landing → get link → copy → share → claim.
+      <span class="text-violet-300/80">Unique</span> = distinct browsers (first-party ID). Country from server geo when available.
+    </div>
+    <div class="text-[9px] text-zinc-300 mb-2">
+      Unique visitors (landings): <span class="tabular-nums text-violet-200">${stats.uniqueVisitorsLanding}</span>
+      ${stats.uniqueVisitorsAny !== stats.uniqueVisitorsLanding ? ` · engaged (any step): <span class="tabular-nums text-violet-200">${stats.uniqueVisitorsAny}</span>` : ''}
     </div>
   `;
 
@@ -76,14 +81,28 @@ export async function renderVisitorFunnelStats(container: HTMLElement, preloaded
     </div>
     <table class="w-full text-[9px] text-zinc-200 border border-white/10 mb-2">
       <thead><tr class="bg-white/5 text-violet-200">
-        <th class="text-left p-1.5">Funnel step</th><th class="p-1.5 text-right">Count</th>
+        <th class="text-left p-1.5">Funnel step</th><th class="p-1.5 text-right">Events</th><th class="p-1.5 text-right">Unique</th>
       </tr></thead><tbody>
   `;
 
   for (const row of stats.funnel) {
-    html += `<tr class="border-t border-white/5"><td class="p-1.5 text-zinc-100">${row.name}</td><td class="p-1.5 text-right tabular-nums text-zinc-300">${row.count}</td></tr>`;
+    const uniqueLabel = row.unique > 0 ? String(row.unique) : '—';
+    html += `<tr class="border-t border-white/5"><td class="p-1.5 text-zinc-100">${row.name}</td><td class="p-1.5 text-right tabular-nums text-zinc-300">${row.count}</td><td class="p-1.5 text-right tabular-nums text-violet-200/90">${uniqueLabel}</td></tr>`;
   }
   html += `</tbody></table>`;
+
+  if (stats.byCountry.length) {
+    const hasGeo = stats.byCountry.some((c) => c.country !== '—');
+    if (hasGeo) {
+      html += `<div class="text-[9px] text-zinc-400 mb-1">By country (landing):</div>`;
+      html += `<table class="w-full text-[8px] text-zinc-200 border border-white/10 mb-2">
+        <thead><tr class="bg-white/5 text-violet-200"><th class="text-left p-1">Country</th><th class="p-1 text-right">Unique</th><th class="p-1 text-right">Landings</th></tr></thead><tbody>`;
+      for (const row of stats.byCountry.filter((c) => c.country !== '—').slice(0, 8)) {
+        html += `<tr class="border-t border-white/5"><td class="p-1 text-zinc-100">${row.country}</td><td class="p-1 text-right tabular-nums">${row.unique}</td><td class="p-1 text-right tabular-nums text-zinc-400">${row.events}</td></tr>`;
+      }
+      html += `</tbody></table>`;
+    }
+  }
 
   const sourceEntries = Object.entries(stats.bySource).sort((a, b) => b[1] - a[1]);
   if (sourceEntries.length > 1 || (sourceEntries.length === 1 && sourceEntries[0][0] !== '(direct)')) {
@@ -101,7 +120,8 @@ export async function renderVisitorFunnelStats(container: HTMLElement, preloaded
     for (const e of stats.lastEvents) {
       const t = e.created_at ? new Date(e.created_at).toLocaleString() : '';
       const src = e.utm_source ? ` [${e.utm_source}]` : '';
-      html += `${t} ${e.event_name}${src}<br>`;
+      const geo = e.country_code ? ` ${e.country_code}` : '';
+      html += `${t} ${e.event_name}${geo}${src}<br>`;
     }
     html += `</div>`;
   } else {
