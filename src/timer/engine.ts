@@ -144,7 +144,7 @@ async function triggerFinishSideEffects() {
 
 function stopWorkerLoop() {
   if (worker) {
-    try { worker.postMessage({ type: 'RESET' } as MainToWorker); } catch {}
+    try { worker.postMessage({ type: 'RESET' } as MainToWorker); } catch { /* worker may be gone */ }
     // Do not terminate here — we reuse the worker for next timer.
   }
 }
@@ -397,7 +397,7 @@ export function importConfig(cfg: Partial<TimerState>) {
 if (typeof window !== 'undefined') {
   // Delay slightly to allow UI mount
   setTimeout(() => {
-    try { hydrate(); } catch {}
+    try { hydrate(); } catch { /* storage unavailable */ }
     // Global visibility recovery (cheap)
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) forceSyncFromWorker();

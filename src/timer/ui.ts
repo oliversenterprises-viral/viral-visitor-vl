@@ -300,7 +300,7 @@ function attachListeners(root: HTMLElement) {
     a.click();
     a.remove();
     // Revoke to avoid leaking blob URL / memory for the full exported HTML (defense in depth)
-    setTimeout(() => { try { URL.revokeObjectURL(url); } catch {} }, 1500);
+    setTimeout(() => { try { URL.revokeObjectURL(url); } catch { /* already revoked */ } }, 1500);
   });
 }
 

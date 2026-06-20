@@ -321,7 +321,7 @@ let claimsChannel: any = null;
 function setupSafeClaimsRealtime(container: HTMLElement) {
   // Clean previous subscription to prevent the channel bug
   if (claimsChannel) {
-    try { claimsChannel.unsubscribe(); } catch (_) {}
+    try { claimsChannel.unsubscribe(); } catch { /* channel already closed */ }
     claimsChannel = null;
   }
 

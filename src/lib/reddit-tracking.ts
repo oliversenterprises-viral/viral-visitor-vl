@@ -40,7 +40,7 @@ function loadRedditPixelScript(): void {
 
   const queue = function (...args: unknown[]) {
     const r = window.rdt!;
-    if (r.sendEvent) r.sendEvent.apply(r, args);
+    if (r.sendEvent) r.sendEvent(...args);
     else (r.callQueue = r.callQueue || []).push(args);
   } as RedditPixelFn;
   window.rdt = queue;
