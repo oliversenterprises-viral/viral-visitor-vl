@@ -13,6 +13,24 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+function bannerEventKey(row: Record<string, unknown>): string {
+  const lab = String(row.banner_label || row.label || '').trim();
+  const url = String(row.redirect_url || row.redirectUrl || '').trim();
+  const explicit = String(row.key || '').trim();
+  if (explicit) return explicit;
+  return lab && url ? `${lab}|${url}` : url || lab || 'unknown';
+}
+
+function normalizeBannerEventRow(row: Record<string, unknown>) {
+  return {
+    type: row.event_type || row.type,
+    label: row.banner_label || row.label,
+    redirect_url: row.redirect_url || row.redirectUrl || null,
+    key: bannerEventKey(row),
+    created_at: row.created_at,
+  };
+}
+
 // Constant-time string comparison to prevent timing attacks
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) {
@@ -121,26 +139,34 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get_shares') {
-      // Full read for admin analytics — uses service_role to bypass user RLS
+      // Prod schema uses referrer_code (not referral_link / user_id from migration drafts)
       const { data, error } = await supabaseAdmin
         .from('shares')
-        .select('platform, referral_link, created_at, user_id')
+        .select('platform, referrer_code, created_at')
         .order('created_at', { ascending: false })
         .limit(20000);
       if (error) throw error;
-      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+      const normalized = (data || []).map((row: Record<string, unknown>) => ({
+        platform: row.platform,
+        referrer_code: row.referrer_code,
+        referral_link: row.referrer_code,
+        created_at: row.created_at,
+      }));
+      return new Response(JSON.stringify({ success: true, data: normalized }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
     if (action === 'get_banner_stats') {
+      // select('*') + normalize — prod uses event_type/banner_label, not type/label/key
       const { data, error } = await supabaseAdmin
         .from('banner_events')
-        .select('type, label, redirect_url, key, created_at')
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(500);
       if (error) throw error;
-      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+      const normalized = (data || []).map((row: Record<string, unknown>) => normalizeBannerEventRow(row));
+      return new Response(JSON.stringify({ success: true, data: normalized }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }

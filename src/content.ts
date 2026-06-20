@@ -61,10 +61,10 @@ export async function getBannerEventsForStats(): Promise<{ events: Array<Record<
         body: { action: 'get_banner_stats' },
         headers: { 'x-admin-secret': adminSecret },
       });
-      if (!error && data?.success && Array.isArray(data.data) && data.data.length > 0) {
+      if (!error && data?.success && Array.isArray(data.data)) {
         const serverEvents = data.data.map((row: Record<string, any>) => ({
-          type: row.type,
-          label: row.label,
+          type: row.type || row.event_type,
+          label: row.label || row.banner_label,
           redirectUrl: row.redirect_url || row.redirectUrl,
           key: row.key,
           timestamp: row.created_at || row.timestamp,
