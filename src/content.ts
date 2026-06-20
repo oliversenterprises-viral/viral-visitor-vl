@@ -5,6 +5,79 @@ import {
 } from './public/globals';
 
 import { applyTextColors } from './colors';
+import { supabase } from './lib/supabase';
+
+export const BANNER_EVENTS_KEY = 'viralrefer_banner_events';
+
+export function getBannerKey(banner: { label?: string; redirectUrl?: string }): string {
+  const lab = (banner.label || '').trim();
+  const u = (banner.redirectUrl || '').trim();
+  return lab && u ? `${lab}|${u}` : (u || lab || 'unknown');
+}
+
+export function getLocalBannerEvents(): Array<Record<string, unknown>> {
+  try {
+    return JSON.parse(localStorage.getItem(BANNER_EVENTS_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+export function clearBannerEvents(): void {
+  localStorage.removeItem(BANNER_EVENTS_KEY);
+}
+
+export function computeBannerStats(events: Array<Record<string, any>>) {
+  const perBannerMap: Record<string, { key: string; label: string; redirectUrl: string; impressions: number; clicks: number }> = {};
+
+  for (const e of events) {
+    const key = e.key || getBannerKey(e);
+    if (!perBannerMap[key]) {
+      perBannerMap[key] = {
+        key,
+        label: e.label || key.split('|')[0] || 'untitled',
+        redirectUrl: e.redirectUrl || e.redirect_url || '',
+        impressions: 0,
+        clicks: 0,
+      };
+    }
+    if (e.type === 'impression') perBannerMap[key].impressions++;
+    else if (e.type === 'click') perBannerMap[key].clicks++;
+  }
+
+  return {
+    perBanner: Object.values(perBannerMap),
+    lastEvents: [...events].slice(-5).reverse(),
+  };
+}
+
+export async function getBannerEventsForStats(): Promise<{ events: Array<Record<string, any>>; source: 'server' | 'local' }> {
+  const local = getLocalBannerEvents();
+  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+
+  if (adminSecret) {
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-action', {
+        body: { action: 'get_banner_stats' },
+        headers: { 'x-admin-secret': adminSecret },
+      });
+      if (!error && data?.success && Array.isArray(data.data) && data.data.length > 0) {
+        const serverEvents = data.data.map((row: Record<string, any>) => ({
+          type: row.type,
+          label: row.label,
+          redirectUrl: row.redirect_url || row.redirectUrl,
+          key: row.key,
+          timestamp: row.created_at || row.timestamp,
+        }));
+        return { events: serverEvents, source: 'server' };
+      }
+    } catch {
+      // fall through to local
+    }
+  }
+
+  return { events: local, source: 'local' };
+}
 
 // Simple escaping helper to mitigate XSS in user-controlled content (banner, claims)
 export function escapeHtml(str: string): string {
@@ -26,29 +99,34 @@ function logBannerEvent(type: 'impression' | 'click', banner: any) {
     type,
     label: banner.label || 'untitled',
     redirectUrl: banner.redirectUrl,
+    key: getBannerKey(banner),
     timestamp: new Date().toISOString(),
   };
 
-  // Console for immediate visibility
-  console.log(`[Banner ${type.toUpperCase()}]`, event);
-
-  // Persist last 50 events in localStorage (easy for admins to inspect during early testing)
   try {
-    const key = 'viralrefer_banner_events';
-    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const existing = getLocalBannerEvents();
     existing.push(event);
-    // Keep only last 50
-    const trimmed = existing.slice(-50);
-    localStorage.setItem(key, JSON.stringify(trimmed));
-  } catch (_) {
-    // Non-critical
+    localStorage.setItem(BANNER_EVENTS_KEY, JSON.stringify(existing.slice(-50)));
+  } catch {
+    // non-critical
   }
+
+  // Best-effort server persistence (never blocks public render)
+  supabase.functions.invoke('record-banner-event', {
+    body: {
+      type: event.type,
+      label: event.label,
+      redirectUrl: event.redirectUrl,
+      key: event.key,
+      timestamp: event.timestamp,
+    },
+  }).catch(() => {});
 }
 
 // Expose a debug helper globally for admins/devs
 (window as any).debugBannerEvents = () => {
   try {
-    const events = JSON.parse(localStorage.getItem('viralrefer_banner_events') || '[]');
+    const events = getLocalBannerEvents();
     console.table(events);
     return events;
   } catch (_) {

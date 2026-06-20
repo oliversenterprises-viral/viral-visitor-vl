@@ -173,6 +173,10 @@ export const submitPrizeClaim = async () => {
     }
     showToast('Claim submitted — check Admin → Prize Claims', 'success');
 
+    import('canvas-confetti').then(({ default: confetti }) => {
+      confetti({ particleCount: 90, spread: 75, origin: { y: 0.62 }, colors: ['#34d399', '#a78bfa', '#fbbf24'] });
+    }).catch(() => {});
+
     setTimeout(() => {
       closeWinnerModal();
       const adminModal = document.getElementById('admin-modal');

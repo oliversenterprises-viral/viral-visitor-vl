@@ -1,6 +1,8 @@
 import { supabase } from '../lib/supabase';
 import { formatError } from '../lib';
 import { showToast } from '../ui';
+import { getLocalBannerEvents } from '../content';
+import { renderBannerStats } from './banner-stats';
 
 /** Lightweight row shape used by the Edit Content admin tab */
 interface ContentRow {
@@ -15,14 +17,16 @@ interface ContentRow {
  * Allows admins to add, edit, delete, and search all dynamic content
  * that powers the public homepage.
  */
-async function renderEditContentTab(content: HTMLElement) {
-  const deployTimestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
-  content.innerHTML = `
-    <!-- VERY OBVIOUS DEPLOY TEST BANNER - If you see this with a recent timestamp, new code loaded -->
-    <div style="background: #b91c1c; color: white; padding: 12px 16px; margin-bottom: 16px; border-radius: 12px; font-weight: 600; font-size: 14px; text-align: center;">
-      V2 BANNER SYSTEM DEPLOYED — ${deployTimestamp} — If you see this banner, the latest code reached your browser.
-    </div>
+async function wireBannerStatsQuick(root: HTMLElement) {
+  const el = root.querySelector('#banner-stats-quick') as HTMLElement | null;
+  if (!el) return;
+  const local = getLocalBannerEvents();
+  await renderBannerStats(el, local);
+  renderBannerStats(el).catch(() => {});
+}
 
+async function renderEditContentTab(content: HTMLElement) {
+  content.innerHTML = `
     <div class="flex items-center justify-between mb-4">
       <div>
         <div class="h-7 w-48 skeleton mb-1"></div>
@@ -52,19 +56,22 @@ async function renderEditContentTab(content: HTMLElement) {
   // Thin reload function: fetch → build HTML → attach listeners
   async function loadAndRenderList() {
     try {
-      const { data, error } = await supabase
-        .from('site_content')
-        .select('id, value')
-        .order('id', { ascending: true });
-
+      const { data, error } = await supabase.from('site_content').select('*');
       if (error) throw error;
 
-      const rows = data || [];
+      const rows = (data || [])
+        .map((row: { key?: string; id?: string; value?: unknown }) => ({
+          id: String(row.key ?? row.id ?? ''),
+          value: row.value,
+        }))
+        .filter((row) => row.id)
+        .sort((a, b) => a.id.localeCompare(b.id));
 
       const html = buildContentListHTML(rows);
       content.innerHTML = html;
 
       attachContentListeners(content, loadAndRenderList);
+      await wireBannerStatsQuick(content);
 
   // Wire up the prominent "Create Multi-Banner Rotation (v2)" button if it exists
   const createBannersBtn = content.querySelector('#create-banners-key-btn') as HTMLButtonElement | null;
@@ -197,6 +204,7 @@ function buildContentListHTML(rows: ContentRow[]): string {
         </button>
       </div>
     </div>
+    <div id="banner-stats-quick" class="mb-4 p-3 border border-emerald-500/30 bg-zinc-900/50 rounded-2xl"></div>
     <div id="content-list" class="space-y-3">
   `;
 
@@ -615,6 +623,13 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
         render();
       };
     }
+
+    (window as any).__currentBannersForStats = banners;
+    const statsEl = document.createElement('div');
+    statsEl.id = 'banner-stats';
+    statsEl.className = 'mt-3 pt-3 border-t border-white/10';
+    container.appendChild(statsEl);
+    renderBannerStats(statsEl, getLocalBannerEvents()).catch(() => {});
   }
 
   function sync() {

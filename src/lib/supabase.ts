@@ -28,58 +28,67 @@ export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON
   },
 });
 
-// Typed query helpers (safe public reads after RLS)
-export async function fetchLeaderboard(minReferrals: number = 1): Promise<LeaderboardEntry[]> {
+// Client-side fallback (pre-0005 or if RPC unavailable)
+async function fetchLeaderboardFallback(minReferrals: number): Promise<LeaderboardEntry[]> {
   const { data, error } = await supabase
     .from('referrals')
     .select('referrer_code')
     .order('created_at', { ascending: false })
     .limit(5000);
 
-  if (error) {
-    console.error('Leaderboard fetch error:', error);
-    return [];
-  }
+  if (error) return [];
 
   const counts: Record<string, number> = {};
   (data as Array<{ referrer_code: string }> | null)?.forEach((row) => {
     counts[row.referrer_code] = (counts[row.referrer_code] || 0) + 1;
   });
 
-  const entries = Object.entries(counts)
+  return Object.entries(counts)
     .filter(([, count]) => count >= minReferrals)
-    .map(([code, count]) => ({
-      referrer_code: code,
-      referral_count: count,
-      rank: 0,
-    }))
+    .map(([code, count]) => ({ referrer_code: code, referral_count: count, rank: 0 }))
     .sort((a, b) => b.referral_count - a.referral_count)
     .slice(0, 50)
-    .map((entry, idx) => ({ ...entry, rank: idx + 1 }));
+    .map((entry, idx) => ({ ...entry, rank: idx + 1 })) as LeaderboardEntry[];
+}
 
-  return entries as LeaderboardEntry[];
+// Typed query helpers — prefer 0005 RPCs, fall back safely
+export async function fetchLeaderboard(minReferrals: number = 1): Promise<LeaderboardEntry[]> {
+  try {
+    const { data, error } = await supabase.rpc('get_leaderboard', { min_referrals: minReferrals });
+    if (!error && Array.isArray(data) && data.length >= 0) {
+      return data as LeaderboardEntry[];
+    }
+  } catch {
+    // RPC not deployed yet
+  }
+  return fetchLeaderboardFallback(minReferrals);
 }
 
 export async function fetchTotalReferrers(): Promise<number> {
-  const { count, error } = await supabase
-    .from('referrals')
-    .select('*', { count: 'exact', head: true });
-
+  try {
+    const { data, error } = await supabase.rpc('get_total_referral_count');
+    if (!error && typeof data === 'number') return data;
+  } catch {
+    // fallback
+  }
+  const { count, error } = await supabase.from('referrals').select('*', { count: 'exact', head: true });
   if (error) return 0;
   return count || 0;
 }
 
 export async function fetchMyReferralCount(referrerCode: string): Promise<number> {
   if (!referrerCode) return 0;
+  try {
+    const { data, error } = await supabase.rpc('get_my_referral_count', { p_referrer_code: referrerCode });
+    if (!error && typeof data === 'number') return data;
+  } catch {
+    // fallback
+  }
   const { count, error } = await supabase
     .from('referrals')
     .select('*', { count: 'exact', head: true })
     .eq('referrer_code', referrerCode);
-
-  if (error) {
-    // console.warn('[ViralRefer] fetchMyReferralCount error:', error); // silenced for prod (audit)
-    return 0;
-  }
+  if (error) return 0;
   return count || 0;
 }
 

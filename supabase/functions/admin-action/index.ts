@@ -111,6 +111,18 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    if (action === 'get_banner_stats') {
+      const { data, error } = await supabaseAdmin
+        .from('banner_events')
+        .select('type, label, redirect_url, key, created_at')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     return new Response(JSON.stringify({ success: false, error: 'Unknown action' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
