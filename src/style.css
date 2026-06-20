@@ -555,6 +555,16 @@ input, select, textarea {
   color: #d4d4d8;
 }
 
+/* Reddit campaign stats — same dark-panel contrast fix */
+.reddit-campaign-stats-panel {
+  color: #e4e4e7;
+}
+
+.reddit-campaign-stats-panel table td,
+.reddit-campaign-stats-panel table th {
+  color: #e4e4e7;
+}
+
 /* Subtle table row fade-in */
 @keyframes rowFadeIn {
   from { opacity: 0; transform: translateY(4px); }

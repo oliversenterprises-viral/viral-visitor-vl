@@ -1,7 +1,9 @@
 /**
- * Reddit Ads pixel + UTM attribution for paid campaigns.
- * Pixel ID: set VITE_REDDIT_PIXEL_ID in Vercel (from Reddit Events Manager).
+ * Reddit Ads pixel + UTM attribution + funnel events for paid campaigns.
+ * Pixel ID: VITE_REDDIT_PIXEL_ID in Vercel (fallback matches index.html head snippet).
  */
+
+import { supabase } from './supabase';
 
 export interface UtmAttribution {
   source: string | null;
@@ -13,10 +15,24 @@ export interface UtmAttribution {
 }
 
 const UTM_STORAGE_KEY = 'vr_utm_attribution';
+const REDDIT_EVENTS_KEY = 'viralrefer_reddit_events';
 
-const REDDIT_PIXEL_ID = (import.meta.env.VITE_REDDIT_PIXEL_ID as string | undefined)?.trim() || '';
+/** Must match index.html fallback so track calls never silently no-op when env is inlined. */
+const REDDIT_PIXEL_ID_FALLBACK = 'a2_jr6jdbg2r4';
 
-type RedditEvent = 'PageVisit' | 'Lead' | 'SignUp' | 'Custom';
+const REDDIT_PIXEL_ID =
+  (import.meta.env.VITE_REDDIT_PIXEL_ID as string | undefined)?.trim() || REDDIT_PIXEL_ID_FALLBACK;
+
+type RedditStandardEvent = 'PageVisit' | 'Lead' | 'SignUp' | 'Custom';
+
+/** Funnel steps you can see in Admin → Edit → Reddit Campaign Stats */
+export type RedditFunnelEvent =
+  | 'RedditLanding'
+  | 'GetReferralLink'
+  | 'CopyReferralLink'
+  | 'ShareReferral'
+  | 'OpenPrizeClaim'
+  | 'SubmitPrizeClaim';
 
 type RedditPixelFn = {
   (...args: unknown[]): void;
@@ -28,6 +44,10 @@ declare global {
   interface Window {
     rdt?: RedditPixelFn;
   }
+}
+
+export function getRedditPixelId(): string {
+  return REDDIT_PIXEL_ID;
 }
 
 function callRdt(...args: unknown[]): void {
@@ -70,7 +90,7 @@ export function captureUtmAttribution(): UtmAttribution | null {
   try {
     sessionStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(attribution));
   } catch {
-    // Non-fatal — tracking still works for this page load
+    // Non-fatal
   }
 
   console.log('[ViralRefer] UTM attribution captured:', attribution);
@@ -93,6 +113,57 @@ export function isRedditTraffic(): boolean {
   return stored?.source === 'reddit';
 }
 
+function pushLocalRedditEvent(eventName: string, metadata: Record<string, unknown> = {}): void {
+  const utm = getStoredUtmAttribution();
+  const entry = {
+    event_name: eventName,
+    utm_campaign: utm?.campaign,
+    utm_content: utm?.content,
+    utm_medium: utm?.medium,
+    ref_code: utm?.ref,
+    metadata,
+    created_at: new Date().toISOString(),
+  };
+  try {
+    const prev = JSON.parse(localStorage.getItem(REDDIT_EVENTS_KEY) || '[]') as unknown[];
+    const next = Array.isArray(prev) ? [...prev, entry].slice(-100) : [entry];
+    localStorage.setItem(REDDIT_EVENTS_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
+}
+
+function logRedditEventServer(eventName: string, metadata: Record<string, unknown> = {}): void {
+  const utm = getStoredUtmAttribution();
+  supabase.functions
+    .invoke('record-reddit-event', {
+      body: {
+        eventName,
+        utm_campaign: utm?.campaign,
+        utm_content: utm?.content,
+        utm_medium: utm?.medium,
+        ref_code: utm?.ref,
+        metadata,
+        timestamp: new Date().toISOString(),
+      },
+    })
+    .catch(() => {});
+}
+
+/** Map funnel steps to Reddit standard + custom pixel events for Events Manager. */
+function pixelEventForFunnel(step: RedditFunnelEvent): { standard: RedditStandardEvent; customName?: string } {
+  switch (step) {
+    case 'RedditLanding':
+      return { standard: 'Custom', customName: 'RedditLanding' };
+    case 'GetReferralLink':
+      return { standard: 'Lead' };
+    case 'SubmitPrizeClaim':
+      return { standard: 'SignUp' };
+    default:
+      return { standard: 'Custom', customName: step };
+  }
+}
+
 /** Show a welcome strip for Reddit ad clicks. */
 export function showRedditWelcomeBanner(): void {
   if (!isRedditTraffic()) return;
@@ -112,28 +183,20 @@ export function showRedditWelcomeBanner(): void {
 }
 
 export function initRedditPixel(): void {
-  if (!REDDIT_PIXEL_ID) {
-    if (isRedditTraffic()) {
-      console.warn('[ViralRefer] Reddit traffic detected but VITE_REDDIT_PIXEL_ID is not set');
-    }
-    return;
-  }
-
-  // index.html may have already initialized the pixel in <head>
   if (!window.rdt) {
     loadRedditPixelScript();
     callRdt('init', REDDIT_PIXEL_ID);
     callRdt('track', 'PageVisit');
   }
 
-  console.log('[ViralRefer] Reddit pixel ready');
+  console.log('[ViralRefer] Reddit pixel ready', REDDIT_PIXEL_ID);
 }
 
 export function trackRedditEvent(
-  event: RedditEvent,
+  event: RedditStandardEvent,
   options?: { customEventName?: string },
 ): void {
-  if (!REDDIT_PIXEL_ID || !window.rdt) return;
+  if (!window.rdt) return;
 
   if (event === 'Custom' && options?.customEventName) {
     callRdt('track', 'Custom', { customEventName: options.customEventName });
@@ -142,9 +205,112 @@ export function trackRedditEvent(
   }
 }
 
+/**
+ * Track a funnel step: Reddit pixel + local log + server log (when table/edge deployed).
+ * Only logs server-side for Reddit-attributed sessions to reduce noise.
+ */
+export function trackRedditFunnel(
+  step: RedditFunnelEvent,
+  metadata: Record<string, unknown> = {},
+): void {
+  const { standard, customName } = pixelEventForFunnel(step);
+  if (standard === 'Custom' && customName) {
+    trackRedditEvent('Custom', { customEventName: customName });
+  } else {
+    trackRedditEvent(standard);
+  }
+
+  if (!isRedditTraffic()) return;
+
+  pushLocalRedditEvent(step, metadata);
+  logRedditEventServer(step, metadata);
+}
+
 /** Call once at bootstrap: capture UTMs, init pixel, show Reddit banner. */
 export function initRedditTracking(): void {
-  captureUtmAttribution();
+  const utm = captureUtmAttribution();
   initRedditPixel();
   showRedditWelcomeBanner();
+
+  if (utm?.source === 'reddit' || isRedditTraffic()) {
+    trackRedditFunnel('RedditLanding', { path: location.pathname });
+  }
+}
+
+export function getLocalRedditEvents(): Array<Record<string, unknown>> {
+  try {
+    return JSON.parse(localStorage.getItem(REDDIT_EVENTS_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+export function computeRedditFunnelStats(events: Array<Record<string, any>>) {
+  const counts: Record<string, number> = {};
+  for (const e of events) {
+    const name = String(e.event_name || e.eventName || 'unknown');
+    counts[name] = (counts[name] || 0) + 1;
+  }
+  const funnelOrder: RedditFunnelEvent[] = [
+    'RedditLanding',
+    'GetReferralLink',
+    'CopyReferralLink',
+    'ShareReferral',
+    'OpenPrizeClaim',
+    'SubmitPrizeClaim',
+  ];
+  const funnel = funnelOrder.map((name) => ({
+    name,
+    count: counts[name] || 0,
+  }));
+  return {
+    funnel,
+    total: events.length,
+    lastEvents: [...events].slice(-8).reverse(),
+    byCampaign: groupBy(events, (e) => String(e.utm_campaign || e.utmCampaign || '(none)')),
+  };
+}
+
+function groupBy<T>(arr: T[], keyFn: (item: T) => string): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const item of arr) {
+    const k = keyFn(item);
+    out[k] = (out[k] || 0) + 1;
+  }
+  return out;
+}
+
+export async function getRedditEventsForStats(): Promise<{
+  events: Array<Record<string, any>>;
+  source: 'server' | 'local';
+}> {
+  const local = getLocalRedditEvents();
+  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+
+  if (adminSecret) {
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-action', {
+        body: { action: 'get_reddit_stats' },
+        headers: { 'x-admin-secret': adminSecret },
+      });
+      if (!error && data?.success && Array.isArray(data.data)) {
+        const serverEvents = data.data.map((row: Record<string, any>) => ({
+          event_name: row.event_name,
+          utm_campaign: row.utm_campaign,
+          utm_content: row.utm_content,
+          utm_medium: row.utm_medium,
+          ref_code: row.ref_code,
+          metadata: row.metadata,
+          created_at: row.created_at,
+        }));
+        if (serverEvents.length > 0) {
+          return { events: serverEvents, source: 'server' };
+        }
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  return { events: local, source: 'local' };
 }
