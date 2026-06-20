@@ -157,6 +157,18 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    if (action === 'get_visitor_stats') {
+      const { data, error } = await supabaseAdmin
+        .from('visitor_events')
+        .select('event_name, utm_source, utm_campaign, utm_content, utm_medium, ref_code, metadata, created_at')
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ success: false, error: 'Unknown action' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -5,6 +5,7 @@
 
 import { registerGlobal } from './lib';
 import { trackRedditFunnel } from './lib/reddit-tracking';
+import { trackVisitorFunnel } from './lib/visitor-tracking';
 import { getReferralBaseUrl, getQrModalTitle, getMyReferralCode, setMyReferralCode } from './public/globals';
 
 // Turnstile site key (from Vercel env, falls back for local dev)
@@ -182,6 +183,7 @@ export async function getMyReferralLinkInstant(): Promise<void> {
 
   console.log('[ViralRefer] Generated referral link:', link);
   trackRedditFunnel('GetReferralLink');
+  trackVisitorFunnel('GetReferralLink');
 
   // Show referral section if it exists
   const refSection = document.getElementById('referral-section');
@@ -234,6 +236,7 @@ export function copyLink(): void {
 
   navigator.clipboard.writeText(input.value).then(() => {
     trackRedditFunnel('CopyReferralLink');
+    trackVisitorFunnel('CopyReferralLink');
     // Robust button lookup — prefers the known copy button ID, falls back to
     // any adjacent button that was the original "COPY" control.
     const btn =

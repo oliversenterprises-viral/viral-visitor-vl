@@ -4,6 +4,7 @@ import { showToast } from '../ui';
 import { getLocalBannerEvents } from '../content';
 import { renderBannerStats } from './banner-stats';
 import { wireRedditCampaignStatsQuick } from './reddit-campaign-stats';
+import { wireVisitorFunnelStatsQuick } from './visitor-funnel-stats';
 
 /** Lightweight row shape used by the Edit Content admin tab */
 interface ContentRow {
@@ -120,6 +121,7 @@ async function renderEditContentTab(content: HTMLElement) {
       content.innerHTML = html;
 
       attachContentListeners(content, loadAndRenderList, rows);
+      await wireVisitorFunnelStatsQuick(content);
       await wireBannerStatsQuick(content);
       await wireRedditCampaignStatsQuick(content);
 
@@ -254,6 +256,7 @@ function buildContentListHTML(rows: ContentRow[]): string {
         </button>
       </div>
     </div>
+    <div id="visitor-stats-quick" class="mb-4 p-3 border border-violet-500/30 bg-zinc-900/50 rounded-2xl"></div>
     <div id="reddit-stats-quick" class="mb-4 p-3 border border-orange-500/30 bg-zinc-900/50 rounded-2xl"></div>
     <div id="banner-stats-quick" class="mb-4 p-3 border border-emerald-500/30 bg-zinc-900/50 rounded-2xl"></div>
     <div id="content-list" class="space-y-3">

@@ -8,6 +8,7 @@ import { getShareMessageTemplate, getMyReferralCode } from './globals';
 import { supabase } from '../lib/supabase';
 import { showToast } from '../ui';
 import { trackRedditFunnel } from '../lib/reddit-tracking';
+import { trackVisitorFunnel } from '../lib/visitor-tracking';
 
 const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY || '';
 
@@ -84,6 +85,7 @@ export const shareTo = (platform: string) => {
 
   if (url) window.open(url, '_blank', 'noopener');
   trackRedditFunnel('ShareReferral', { platform });
+  trackVisitorFunnel('ShareReferral', { platform });
 };
 registerGlobal('shareTo', shareTo);
 
@@ -109,6 +111,7 @@ export const claimBanner = () => {
 
   modal.classList.remove('hidden');
   trackRedditFunnel('OpenPrizeClaim');
+  trackVisitorFunnel('OpenPrizeClaim');
 
   const turnstileContainer = document.getElementById('claim-turnstile-container');
   if (turnstileContainer && TURNSTILE_SITEKEY) {
@@ -176,6 +179,7 @@ export const submitPrizeClaim = async () => {
     }
     showToast('Claim submitted — check Admin → Prize Claims', 'success');
     trackRedditFunnel('SubmitPrizeClaim');
+    trackVisitorFunnel('SubmitPrizeClaim');
 
     import('canvas-confetti').then(({ default: confetti }) => {
       confetti({ particleCount: 90, spread: 75, origin: { y: 0.62 }, colors: ['#34d399', '#a78bfa', '#fbbf24'] });

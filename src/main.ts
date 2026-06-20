@@ -1,5 +1,6 @@
 import { initApp } from './app';
 import { initRedditTracking } from './lib/reddit-tracking';
+import { initVisitorTracking } from './lib/visitor-tracking';
 
 // Public layer (all onclick handlers, modals, debug, etc.)
 import { initPublic } from './public';
@@ -25,5 +26,6 @@ seedDefaultTextColors();
 // =====================================================
 
 initRedditTracking();
+initVisitorTracking();
 initPublic();
 initApp();

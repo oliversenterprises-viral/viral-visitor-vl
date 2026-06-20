@@ -565,6 +565,20 @@ input, select, textarea {
   color: #e4e4e7;
 }
 
+/* Site visitor funnel stats — same dark-panel contrast fix */
+.visitor-funnel-stats-panel {
+  color: #e4e4e7;
+}
+
+.visitor-funnel-stats-panel table td,
+.visitor-funnel-stats-panel table th {
+  color: #e4e4e7;
+}
+
+.visitor-funnel-stats-panel .font-mono {
+  color: #d4d4d8;
+}
+
 /* Subtle table row fade-in */
 @keyframes rowFadeIn {
   from { opacity: 0; transform: translateY(4px); }
