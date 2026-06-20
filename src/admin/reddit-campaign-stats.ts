@@ -1,9 +1,47 @@
 import { computeRedditFunnelStats, getRedditEventsForStats, getLocalRedditEvents } from '../lib/reddit-tracking';
+import { showToast } from '../ui';
+
+function bindRedditStatsRefresh(container: HTMLElement) {
+  if (container.dataset.redditRefreshBound === '1') return;
+  container.dataset.redditRefreshBound = '1';
+  container.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('[data-reddit-stats-refresh]');
+    if (!btn || !container.contains(btn)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    void refreshRedditCampaignStats(container, btn as HTMLButtonElement);
+  });
+}
+
+async function refreshRedditCampaignStats(container: HTMLElement, btn?: HTMLButtonElement) {
+  const refreshBtn =
+    btn || (container.querySelector('[data-reddit-stats-refresh]') as HTMLButtonElement | null);
+  const originalLabel = refreshBtn?.textContent || '↻ Refresh';
+  if (refreshBtn) {
+    refreshBtn.disabled = true;
+    refreshBtn.textContent = '↻ Refreshing…';
+  }
+  try {
+    await renderRedditCampaignStats(container);
+    showToast('Reddit funnel stats refreshed', 'success');
+  } catch {
+    showToast('Could not refresh Reddit stats', 'info');
+  } finally {
+    if (refreshBtn) {
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = originalLabel;
+    }
+  }
+}
+
 export async function renderRedditCampaignStats(container: HTMLElement, preloadedEvents?: any[]) {
   container.classList.add('reddit-campaign-stats-panel');
+  bindRedditStatsRefresh(container);
 
   let events: any[];
   let source: 'server' | 'local';
+  let fetchError: string | undefined;
+
   if (preloadedEvents) {
     events = preloadedEvents;
     source = 'local';
@@ -11,23 +49,33 @@ export async function renderRedditCampaignStats(container: HTMLElement, preloade
     const res = await getRedditEventsForStats();
     events = res.events;
     source = res.source;
+    fetchError = res.fetchError;
   }
 
   const stats = computeRedditFunnelStats(events);
   const sourceLabel = source === 'server' ? 'Server (all Reddit visitors)' : 'Local (this browser only)';
   const pixelId = 'a2_jr6jdbg2r4';
+  const refreshedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   let html = `
     <div class="text-[10px] font-semibold text-orange-300 mb-1">
       Reddit Campaign Funnel (${sourceLabel})
       <span class="text-orange-300/60"> — pixel ${pixelId}</span>
     </div>
+    <div class="text-[9px] text-zinc-500 mb-1">Updated ${refreshedAt}</div>
     <div class="text-[9px] text-zinc-400 mb-2">
       Tracks Reddit ad visitors: landing → get link → copy → share → claim. Register matching Custom events in Reddit Events Manager.
     </div>
+  `;
+
+  if (fetchError && source === 'local') {
+    html += `<div class="text-[9px] text-amber-400/90 mb-2">Server fetch failed (${fetchError}) — showing this browser only.</div>`;
+  }
+
+  html += `
     <div class="flex gap-2 mb-2">
-      <button id="rs-refresh" class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">↻ Refresh</button>
-      <a href="https://ads.reddit.com/events-manager" target="_blank" rel="noopener" class="text-[9px] px-2 py-0.5 bg-orange-600/40 hover:bg-orange-600/60 text-orange-100 rounded">Open Reddit Events Manager</a>
+      <button type="button" data-reddit-stats-refresh class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded disabled:opacity-50">↻ Refresh</button>
+      <a href="https://ads.reddit.com/events-manager/testing" target="_blank" rel="noopener" class="text-[9px] px-2 py-0.5 bg-orange-600/40 hover:bg-orange-600/60 text-orange-100 rounded">Event testing</a>
     </div>
     <table class="w-full text-[9px] text-zinc-200 border border-white/10 mb-2">
       <thead><tr class="bg-white/5 text-orange-200">
@@ -53,17 +101,14 @@ export async function renderRedditCampaignStats(container: HTMLElement, preloade
   }
 
   container.innerHTML = html;
-
-  const ref = container.querySelector('#rs-refresh') as HTMLButtonElement | null;
-  if (ref) {
-    ref.onclick = () => renderRedditCampaignStats(container);
-  }
 }
 
 export async function wireRedditCampaignStatsQuick(root: HTMLElement) {
   const el = root.querySelector('#reddit-stats-quick') as HTMLElement | null;
   if (!el) return;
   const local = getLocalRedditEvents();
-  await renderRedditCampaignStats(el, local);
-  renderRedditCampaignStats(el).catch(() => {});
+  if (local.length) {
+    await renderRedditCampaignStats(el, local);
+  }
+  await renderRedditCampaignStats(el);
 }

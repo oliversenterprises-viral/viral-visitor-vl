@@ -283,34 +283,46 @@ function groupBy<T>(arr: T[], keyFn: (item: T) => string): Record<string, number
 export async function getRedditEventsForStats(): Promise<{
   events: Array<Record<string, any>>;
   source: 'server' | 'local';
+  fetchError?: string;
 }> {
   const local = getLocalRedditEvents();
   const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
 
-  if (adminSecret) {
-    try {
-      const { data, error } = await supabase.functions.invoke('admin-action', {
-        body: { action: 'get_reddit_stats' },
-        headers: { 'x-admin-secret': adminSecret },
-      });
-      if (!error && data?.success && Array.isArray(data.data)) {
-        const serverEvents = data.data.map((row: Record<string, any>) => ({
-          event_name: row.event_name,
-          utm_campaign: row.utm_campaign,
-          utm_content: row.utm_content,
-          utm_medium: row.utm_medium,
-          ref_code: row.ref_code,
-          metadata: row.metadata,
-          created_at: row.created_at,
-        }));
-        if (serverEvents.length > 0) {
-          return { events: serverEvents, source: 'server' };
-        }
-      }
-    } catch {
-      // fall through
-    }
+  if (!adminSecret) {
+    return { events: local, source: 'local', fetchError: 'Admin secret not configured in build' };
   }
 
-  return { events: local, source: 'local' };
+  try {
+    const { data, error } = await supabase.functions.invoke('admin-action', {
+      body: { action: 'get_reddit_stats' },
+      headers: { 'x-admin-secret': adminSecret },
+    });
+    if (error) {
+      return { events: local, source: 'local', fetchError: error.message || 'Server request failed' };
+    }
+    if (!data?.success) {
+      return {
+        events: local,
+        source: 'local',
+        fetchError: String(data?.error || 'get_reddit_stats rejected'),
+      };
+    }
+    if (!Array.isArray(data.data)) {
+      return { events: local, source: 'local', fetchError: 'Invalid server response' };
+    }
+    const serverEvents = data.data.map((row: Record<string, any>) => ({
+      event_name: row.event_name,
+      utm_campaign: row.utm_campaign,
+      utm_content: row.utm_content,
+      utm_medium: row.utm_medium,
+      ref_code: row.ref_code,
+      metadata: row.metadata,
+      created_at: row.created_at,
+    }));
+    // Trust server even when empty — refresh should show 0s, not silently fall back to local
+    return { events: serverEvents, source: 'server' };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Network error';
+    return { events: local, source: 'local', fetchError: msg };
+  }
 }
