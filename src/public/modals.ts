@@ -68,19 +68,6 @@ const submitAdminPassword = async () => {
     if (pwModal) pwModal.classList.add('hidden');
     input.value = '';
     await ViralRefer.openAdminPanel();
-
-    // Self-healing cache buster for the owner:
-    // If after opening admin we don't see the new red "NEW CODE LOADED" banner
-    // (meaning the browser loaded an old cached JS bundle), force a full cache-busting reload.
-    // This runs automatically the next time you open Admin normally — no special steps needed.
-    setTimeout(() => {
-      const hasNewCode = document.querySelector('#guaranteed-owner-tools') ||
-                         document.querySelector('[style*="NEW CODE LOADED"]');
-      if (!hasNewCode) {
-        const url = location.origin + location.pathname + '?nocache=' + Date.now() + location.hash;
-        location.href = url;
-      }
-    }, 1800);
   } else {
     if (errorEl) errorEl.classList.remove('hidden');
     if (btn) {

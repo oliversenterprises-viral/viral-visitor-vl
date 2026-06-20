@@ -2,19 +2,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Aggressive cache-buster for owner admin flow. Runs before anything else. -->
-    <script>
-    (function() {
-      try {
-        var LATEST = '2026-06-01-final-5';
-        if (localStorage.getItem('vr_owner_version') !== LATEST) {
-          localStorage.setItem('vr_owner_version', LATEST);
-          var clean = location.href.split('?')[0].split('#')[0];
-          location.replace(clean + '?v=' + Date.now() + (location.hash || ''));
-        }
-      } catch (e) {}
-    })();
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
@@ -475,15 +462,6 @@
 
             <div class="text-[10px] text-center text-zinc-500 mt-4">
                 SHA-256 verified • Session protected
-            </div>
-
-            <!-- Temporary owner cache-bust button (pure HTML, works even with old JS bundle) -->
-            <div class="mt-4 p-3 bg-red-600/20 border border-red-500/50 rounded-2xl text-center">
-                <button onclick="location.replace((location.origin + location.pathname + '?force=' + Date.now() + (location.hash || '')))" 
-                        class="w-full py-3 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-bold rounded-2xl text-sm transition-colors">
-                    🔄 Force load latest admin code (bypasses stale cache)
-                </button>
-                <div class="text-[9px] text-red-400 mt-1">Click if you still see the old Prize Claims error after entering password</div>
             </div>
         </div>
     </div>
