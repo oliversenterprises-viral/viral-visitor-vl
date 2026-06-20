@@ -25,8 +25,7 @@ test.describe('ViralRefer - Prize Claim Flow & Admin', () => {
     const adminModal = page.locator('#admin-password-modal');
     await expect(adminModal).toBeVisible({ timeout: 5000 });
     
-    // More resilient text check
-    await expect(page.locator('text=Admin Access, text=Password')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#admin-password-input')).toBeVisible({ timeout: 5000 });
   });
 
   test('Admin login flow (real Supabase Auth)', async ({ page }) => {
