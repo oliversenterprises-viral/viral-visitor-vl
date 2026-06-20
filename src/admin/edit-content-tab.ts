@@ -17,6 +17,24 @@ function formatValueForInput(value: unknown): string {
   return String(value);
 }
 
+/** On-brand banners hosted on viralrefer.app — swap into the winner/prize card slot from admin. */
+const BANNER_PRESETS = [
+  {
+    id: 'winner-spotlight',
+    label: 'Winner Spotlight',
+    imageUrl: 'https://www.viralrefer.app/assets/banners/winner-spotlight.svg',
+    redirectUrl: 'https://www.viralrefer.app/#prize',
+    hint: 'Default #1 winner slot',
+  },
+  {
+    id: 'featured-partner',
+    label: 'Featured Partner',
+    imageUrl: 'https://www.viralrefer.app/assets/banners/featured-partner.svg',
+    redirectUrl: 'https://www.viralrefer.app/',
+    hint: 'Partner spotlight — change redirect URL to their site',
+  },
+] as const;
+
 async function saveSiteContentEntry(key: string, value: unknown): Promise<boolean> {
   const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
   try {
@@ -542,8 +560,37 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
     // Will attach listener after render
   }
 
+  function applyPreset(preset: (typeof BANNER_PRESETS)[number], mode: 'add' | 'replace-first') {
+    const entry = {
+      imageUrl: preset.imageUrl,
+      redirectUrl: preset.redirectUrl,
+      label: preset.label,
+      enabled: true,
+      weight: 1,
+    };
+    if (mode === 'replace-first' && banners.length > 0) {
+      banners[0] = { ...banners[0], ...entry };
+    } else {
+      banners.push(entry);
+    }
+    sync();
+    render();
+    showToast(`${preset.label} banner added — click Save when ready`, 'info');
+  }
+
   function render() {
+    const presetButtons = BANNER_PRESETS.map(
+      (p) =>
+        `<button type="button" data-preset="${p.id}" data-mode="add" class="preset-add-btn text-[10px] px-2.5 py-1.5 bg-emerald-600/80 hover:bg-emerald-500 rounded-lg font-semibold whitespace-nowrap" title="${p.hint}">+ ${p.label}</button>
+         <button type="button" data-preset="${p.id}" data-mode="replace-first" class="preset-replace-btn text-[10px] px-2.5 py-1.5 bg-violet-600/80 hover:bg-violet-500 rounded-lg font-semibold whitespace-nowrap" title="Replace first banner slot">Use as Winner Slot</button>`
+    ).join('');
+
     container.innerHTML = `
+      <div class="mb-3 p-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20">
+        <div class="text-xs font-semibold text-emerald-400 mb-1">ViralRefer banner templates</div>
+        <div class="text-[10px] text-zinc-400 mb-2">One-click branded banners for the prize card winner spot. Edit redirect URL after applying.</div>
+        <div class="flex flex-wrap gap-2">${presetButtons}</div>
+      </div>
       <div class="flex justify-between items-center mb-2">
         <div class="text-sm font-semibold text-emerald-400">Banners (v2)</div>
         <button id="add-banner" class="text-xs px-3 py-1 bg-violet-600 hover:bg-violet-500 rounded-xl flex items-center gap-1">
@@ -552,6 +599,15 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
       </div>
       <div id="banner-list" class="space-y-3"></div>
     `;
+
+    container.querySelectorAll('[data-preset]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = (btn as HTMLElement).dataset.preset!;
+        const mode = ((btn as HTMLElement).dataset.mode || 'add') as 'add' | 'replace-first';
+        const preset = BANNER_PRESETS.find((p) => p.id === id);
+        if (preset) applyPreset(preset, mode);
+      });
+    });
 
     const list = container.querySelector('#banner-list') as HTMLElement;
     const addBtn = container.querySelector('#add-banner') as HTMLButtonElement;
