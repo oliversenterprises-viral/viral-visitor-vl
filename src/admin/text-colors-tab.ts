@@ -13,6 +13,52 @@ import { fetchSiteContent } from '../lib/supabase';
 import { showToast } from '../ui';
 import { getColorControls, applyTextColors, type ColorControl } from '../colors';
 
+async function saveSiteContentKey(key: string, value: string): Promise<boolean> {
+  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+  try {
+    const invokeOpts: {
+      body: { action: string; payload: { key: string; value: string } };
+      headers?: Record<string, string>;
+    } = {
+      body: { action: 'update_site_content', payload: { key, value } },
+    };
+    if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
+    const { data, error } = await supabase.functions.invoke('admin-action', invokeOpts);
+    if (!error && data?.success) return true;
+  } catch {
+    // fall through to direct upsert
+  }
+  try {
+    const { error } = await supabase.from('site_content').upsert({ key, value }, { onConflict: 'key' });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+async function deleteSiteContentKey(key: string): Promise<boolean> {
+  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+  try {
+    const invokeOpts: {
+      body: { action: string; payload: { key: string } };
+      headers?: Record<string, string>;
+    } = {
+      body: { action: 'delete_site_content', payload: { key } },
+    };
+    if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
+    const { data, error } = await supabase.functions.invoke('admin-action', invokeOpts);
+    if (!error && data?.success) return true;
+  } catch {
+    // fall through
+  }
+  try {
+    const { error } = await supabase.from('site_content').delete().eq('key', key);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
 export async function renderTextColorsTab(container: HTMLElement) {
   container.innerHTML = `
     <div class="flex items-center justify-between mb-6">
@@ -142,29 +188,17 @@ export async function renderTextColorsTab(container: HTMLElement) {
         addCustomBtn.disabled = true;
         addCustomBtn.textContent = 'Saving...';
 
-        try {
-          const secret = prompt('Enter ADMIN_ACTION_SECRET (for this session):') || '';
-          if (!secret) {
-            showToast('Secret required', 'info');
-            addCustomBtn.disabled = false;
-            addCustomBtn.textContent = 'Add Custom';
-            return;
-          }
-          const { data, error } = await supabase.functions.invoke('admin-action', {
-            body: { action: 'update_site_content', payload: { key: fullKey, value } },
-            headers: { 'x-admin-secret': secret }
-          });
-          if (error || !data?.success) throw new Error(data?.error || error?.message || 'Edge failed');
-
+        const saved = await saveSiteContentKey(fullKey, value);
+        if (saved) {
           const varName = '--text-' + suffix.replace(/_/g, '-');
           document.documentElement.style.setProperty(varName, value);
-
           showToast(`Custom color ${fullKey} saved.`, 'success');
           customKeyInput.value = '';
           setTimeout(() => renderTextColorsTab(container), 600);
-        } catch (e) {
-          showToast('Saved (refresh tab to see it)', 'info');
-          setTimeout(() => renderTextColorsTab(container), 600);
+        } else {
+          showToast('Failed to save custom color', 'info');
+          addCustomBtn.disabled = false;
+          addCustomBtn.textContent = 'Add & Save';
         }
       };
     }
@@ -183,18 +217,9 @@ export async function renderTextColorsTab(container: HTMLElement) {
 
         document.documentElement.style.setProperty('--text-' + ctrl.key.replace(/^color_/, '').replace(/_/g, '-'), value);
 
-        try {
-          const secret = prompt('Enter ADMIN_ACTION_SECRET (for this session):') || '';
-          if (!secret) return;
-          const { data, error } = await supabase.functions.invoke('admin-action', {
-            body: { action: 'update_site_content', payload: { key: ctrl.key, value } },
-            headers: { 'x-admin-secret': secret }
-          });
-          if (error || !data?.success) {
-            console.warn('Color save via Edge failed:', data?.error || error);
-          }
-        } catch (e) {
-          console.warn('Color save failed:', e);
+        const saved = await saveSiteContentKey(ctrl.key, value);
+        if (!saved) {
+          console.warn('[ViralRefer] Color save failed for', ctrl.key);
         }
       };
 
@@ -228,37 +253,21 @@ export async function renderTextColorsTab(container: HTMLElement) {
         resetBtn.textContent = 'Resetting...';
         resetBtn.disabled = true;
 
-        try {
-          const secret = prompt('Enter ADMIN_ACTION_SECRET to reset all colors:') || '';
-          if (!secret) {
-            showToast('Secret required for reset', 'info');
-            resetBtn.disabled = false;
-            resetBtn.textContent = 'Reset All Defaults';
-            return;
-          }
-
-          const allColorKeysInDb = Object.keys(currentContent).filter(k => k.startsWith('color_'));
-          for (const k of allColorKeysInDb) {
-            const { data, error } = await supabase.functions.invoke('admin-action', {
-              body: { action: 'delete_site_content', payload: { key: k } },
-              headers: { 'x-admin-secret': secret }
-            });
-            if (error || !data?.success) {
-              console.warn('Delete via Edge failed for', k);
-            }
-          }
-
-          colorControls.forEach(ctrl => {
-            const varName = '--text-' + ctrl.key.replace(/^color_/, '').replace(/_/g, '-');
-            document.documentElement.style.removeProperty(varName);
-          });
-
-          showToast('All text colors reset to defaults', 'success');
-          renderTextColorsTab(container);
-        } catch (e) {
-          showToast('Reset completed', 'info');
-          renderTextColorsTab(container);
+        const allColorKeysInDb = Object.keys(currentContent).filter(k => k.startsWith('color_'));
+        for (const k of allColorKeysInDb) {
+          const ok = await deleteSiteContentKey(k);
+          if (!ok) console.warn('[ViralRefer] Delete failed for', k);
         }
+
+        colorControls.forEach(ctrl => {
+          const varName = '--text-' + ctrl.key.replace(/^color_/, '').replace(/_/g, '-');
+          document.documentElement.style.removeProperty(varName);
+        });
+
+        showToast('All text colors reset to defaults', 'success');
+        resetBtn.disabled = false;
+        resetBtn.textContent = 'Reset All Defaults';
+        renderTextColorsTab(container);
       };
     }
 
