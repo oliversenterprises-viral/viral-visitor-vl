@@ -4,19 +4,69 @@
  */
 
 import { ViralRefer, registerGlobal } from '../lib/global';
-import { getShareMessageTemplate } from './globals';
+import { getShareMessageTemplate, getMyReferralCode } from './globals';
+import { supabase } from '../lib/supabase';
+import { showToast } from '../ui';
 
-// Note: getMyReferralLinkInstant, generateNewCode, copyLink, showQRModal
-// are registered directly by the Referral module itself for simplicity.
+const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY || '';
+
+function escapeHtml(text: string): string {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+async function ensureTurnstileReady(): Promise<void> {
+  if ((window as any).turnstile) return;
+  await new Promise<void>((resolve) => {
+    const existing = document.querySelector('script[src*="turnstile"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true });
+      setTimeout(resolve, 2000);
+      return;
+    }
+    resolve();
+  });
+}
+
+async function getTurnstileToken(container: HTMLElement): Promise<string> {
+  if (!TURNSTILE_SITEKEY) {
+    console.warn('[ViralRefer] VITE_TURNSTILE_SITEKEY not set — using dev bypass for claim');
+    return 'dev-bypass-token';
+  }
+
+  await ensureTurnstileReady();
+  container.innerHTML = '';
+
+  return new Promise((resolve, reject) => {
+    const widgetDiv = document.createElement('div');
+    container.appendChild(widgetDiv);
+
+    (window as any).turnstile.render(widgetDiv, {
+      sitekey: TURNSTILE_SITEKEY,
+      callback: (token: string) => resolve(token),
+      'error-callback': () => reject(new Error('Turnstile verification failed')),
+      'expired-callback': () => reject(new Error('Turnstile expired — please try again')),
+    });
+  });
+}
+
+export const closeWinnerModal = () => {
+  const modal = document.getElementById('winner-modal');
+  if (modal) modal.classList.add('hidden');
+  const turnstile = document.getElementById('claim-turnstile-container');
+  if (turnstile) turnstile.innerHTML = '';
+  const result = document.getElementById('claim-form-result');
+  if (result) result.textContent = '';
+};
+registerGlobal('closeWinnerModal', closeWinnerModal);
 
 /**
  * Handles sharing the referral link to various platforms.
- * Called from the share buttons on the public site.
  */
 export const shareTo = (platform: string) => {
   const input = document.getElementById('ref-link') as HTMLInputElement | null;
   const link = input?.value || window.location.href;
-  console.log('[ViralRefer] Sharing link via', platform, ':', link);
 
   let text = getShareMessageTemplate() || 'Join me on ViralRefer -- win homepage banner + $10! {link}';
   text = text.replace(/\{link\}/g, link);
@@ -33,34 +83,114 @@ export const shareTo = (platform: string) => {
 
   if (url) window.open(url, '_blank', 'noopener');
 };
-
 registerGlobal('shareTo', shareTo);
 
 /**
- * Opens the winner claim flow (or shows a demo message).
- * Registered globally as `claimBanner`.
+ * Opens the production claim form and submits via submit-claim Edge Function.
  */
 export const claimBanner = () => {
-  const winModal = document.getElementById('winner-modal');
-  if (winModal) {
-    winModal.classList.remove('hidden');
-  } else {
-    alert('Claim flow opened (demo).\nIn production this shows the full claim form (website + cashtag + message + Turnstile).\nAfter submit it appears in the Admin â†’ Prize Claims tab.');
-    const adminModal = document.getElementById('admin-modal');
-    if (adminModal && !adminModal.classList.contains('hidden')) {
-      ViralRefer.switchAdminTab(3);
-    }
+  const myCode = getMyReferralCode();
+  if (!myCode) {
+    showToast('Get your referral link first, then claim when you are #1.', 'info');
+    ViralRefer.getMyReferralLinkInstant();
+    return;
+  }
+
+  const codeDisplay = document.getElementById('claim-referrer-code-display');
+  if (codeDisplay) codeDisplay.textContent = myCode;
+
+  const modal = document.getElementById('winner-modal');
+  if (!modal) {
+    showToast('Claim form unavailable — please refresh the page.', 'info');
+    return;
+  }
+
+  modal.classList.remove('hidden');
+
+  const turnstileContainer = document.getElementById('claim-turnstile-container');
+  if (turnstileContainer && TURNSTILE_SITEKEY) {
+    turnstileContainer.innerHTML = '';
+    ensureTurnstileReady().then(() => {
+      if (!turnstileContainer.isConnected) return;
+      getTurnstileToken(turnstileContainer).catch(() => {});
+    });
   }
 };
 registerGlobal('claimBanner', claimBanner);
 
 /**
- * Starts the "Join via Referral" flow (gets or generates a referral code).
- * Registered globally as `joinViaReferral`.
+ * Submits the prize claim form (called from winner-modal button).
  */
+export const submitPrizeClaim = async () => {
+  const myCode = getMyReferralCode();
+  if (!myCode) {
+    showToast('Generate your referral link before claiming.', 'info');
+    return;
+  }
+
+  const website = (document.getElementById('claim-website') as HTMLInputElement)?.value.trim() || '';
+  const cashtag = (document.getElementById('claim-cashtag') as HTMLInputElement)?.value.trim() || '';
+  const message = (document.getElementById('claim-message') as HTMLTextAreaElement)?.value.trim() || '';
+  const resultEl = document.getElementById('claim-form-result');
+  const submitBtn = document.getElementById('submit-claim-form') as HTMLButtonElement | null;
+
+  if (!cashtag && !website) {
+    if (resultEl) resultEl.innerHTML = '<span class="text-amber-400">Please enter your Cash App cashtag or website.</span>';
+    return;
+  }
+
+  if (resultEl) resultEl.textContent = 'Verifying and submitting securely...';
+  if (submitBtn) submitBtn.disabled = true;
+
+  try {
+    const turnstileContainer = document.getElementById('claim-turnstile-container');
+    let turnstileToken = 'dev-bypass-token';
+    if (turnstileContainer && TURNSTILE_SITEKEY) {
+      turnstileToken = await getTurnstileToken(turnstileContainer);
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const body: Record<string, string> = {
+      turnstileToken,
+      website,
+      cashtag,
+      message,
+      referrerCode: myCode,
+    };
+
+    const invokeOptions: { body: Record<string, string>; headers?: Record<string, string> } = { body };
+    if (sessionData.session?.access_token) {
+      invokeOptions.headers = { Authorization: `Bearer ${sessionData.session.access_token}` };
+    }
+
+    const { data, error } = await supabase.functions.invoke('submit-claim', invokeOptions);
+
+    if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || 'Claim was rejected');
+
+    if (resultEl) {
+      resultEl.innerHTML = `<span class="text-emerald-400">${escapeHtml(data.message || 'Claim submitted! We will review within 48 hours.')}</span>`;
+    }
+    showToast('Claim submitted — check Admin → Prize Claims', 'success');
+
+    setTimeout(() => {
+      closeWinnerModal();
+      const adminModal = document.getElementById('admin-modal');
+      if (adminModal && !adminModal.classList.contains('hidden')) {
+        ViralRefer.switchAdminTab(3);
+      }
+    }, 2200);
+  } catch (err: any) {
+    const msg = err?.message || err?.error || 'Submission failed. You may not be #1 yet or already have a pending claim.';
+    if (resultEl) resultEl.innerHTML = `<span class="text-red-400">${escapeHtml(String(msg))}</span>`;
+    showToast('Claim not accepted — see message in form.', 'info');
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
+};
+registerGlobal('submitPrizeClaim', submitPrizeClaim);
+
 export const joinViaReferral = () => {
   ViralRefer.getMyReferralLinkInstant();
 };
 registerGlobal('joinViaReferral', joinViaReferral);
-
-

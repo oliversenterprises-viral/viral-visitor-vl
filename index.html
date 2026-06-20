@@ -486,6 +486,46 @@
         </div>
     </div>
 
+    <!-- Winner / Public Prize Claim Modal -->
+    <div id="winner-modal" onclick="closeWinnerModal()" class="hidden fixed inset-0 bg-black/90 z-[700] flex items-center justify-center">
+        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-lg mx-4 p-8">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <div class="font-bold text-2xl">Claim Your Prize</div>
+                    <div class="text-sm text-zinc-400">Verified #1 referrer only — server checks rank + referrals</div>
+                </div>
+                <button onclick="closeWinnerModal()" class="text-3xl text-zinc-400 hover:text-white leading-none" aria-label="Close">×</button>
+            </div>
+
+            <div class="mb-4 px-4 py-2 bg-zinc-900/70 border border-white/10 rounded-2xl text-sm flex justify-between items-center">
+                <span class="text-zinc-400">Your referral code</span>
+                <span id="claim-referrer-code-display" class="font-mono text-emerald-400 font-semibold">—</span>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">Your Website / Link</label>
+                    <input id="claim-website" type="text" class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl px-4 py-2 text-sm" placeholder="https://your-site.com" />
+                </div>
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">Cash App Cashtag</label>
+                    <input id="claim-cashtag" type="text" class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl px-4 py-2 text-sm" placeholder="$yourtag" />
+                </div>
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1">Short message (optional)</label>
+                    <textarea id="claim-message" rows="2" class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl px-4 py-2 text-sm" placeholder="Thanks! Excited to be featured."></textarea>
+                </div>
+                <div id="claim-turnstile-container" class="flex justify-center min-h-[65px]"></div>
+            </div>
+
+            <div class="mt-6 flex gap-3">
+                <button onclick="closeWinnerModal()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/20 rounded-2xl font-semibold text-sm">Cancel</button>
+                <button id="submit-claim-form" onclick="submitPrizeClaim()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-semibold text-sm text-white">Submit Claim Securely</button>
+            </div>
+            <div id="claim-form-result" class="mt-3 text-xs text-center text-zinc-400"></div>
+        </div>
+    </div>
+
     <!-- Claim Details Modal -->
     <div id="claim-details-modal" onclick="closeClaimDetailsModal()" class="hidden fixed inset-0 bg-black/90 z-[700] flex items-center justify-center">
         <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-2xl mx-4 p-8">

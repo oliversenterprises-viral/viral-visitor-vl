@@ -35,8 +35,11 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     const referralModal = document.getElementById('referral-details-modal');
     const claimModal = document.getElementById('claim-details-modal');
+    const winnerModal = document.getElementById('winner-modal');
 
-    if (referralModal && !referralModal.classList.contains('hidden')) {
+    if (winnerModal && !winnerModal.classList.contains('hidden')) {
+      winnerModal.classList.add('hidden');
+    } else if (referralModal && !referralModal.classList.contains('hidden')) {
       referralModal.classList.add('hidden');
     } else if (claimModal && !claimModal.classList.contains('hidden')) {
       claimModal.classList.add('hidden');
