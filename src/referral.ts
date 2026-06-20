@@ -198,6 +198,12 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   if (nextStepHint) {
     nextStepHint.classList.remove('hidden');
   }
+
+  // Re-render the richer Your Stats section now that a code exists
+  if ((window as any).renderMyStats) {
+    // console.log('[ViralRefer] Re-rendering stats with code:', code); // silenced
+    (window as any).renderMyStats(code);
+  }
 }
 
 /**
@@ -309,11 +315,12 @@ export function showQRModal(): void {
  */
 export function debugReferral(): void {
   console.group('%c[ViralRefer Debug] Referral State', 'color:#34d399');
-  console.log('referralBaseUrl:', getReferralBaseUrl());
-  console.log('myReferralCode:', getMyReferralCode());
-  const refInput = document.getElementById('ref-link') as HTMLInputElement | null;
-  console.log('#ref-link value:', refInput?.value);
-  console.log('Current page URL:', window.location.href);
+  // Debug logs silenced for prod (full audit cleanup)
+  // console.log('referralBaseUrl:', getReferralBaseUrl());
+  // console.log('myReferralCode:', getMyReferralCode());
+  // const refInput = document.getElementById('ref-link') as HTMLInputElement | null;
+  // console.log('#ref-link value:', refInput?.value);
+  // console.log('Current page URL:', window.location.href);
   console.groupEnd();
 }
 

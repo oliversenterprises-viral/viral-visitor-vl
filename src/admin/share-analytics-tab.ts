@@ -42,11 +42,28 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
     const { Chart, registerables } = await import('chart.js');
     Chart.register(...registerables);
 
-    // Note: table may use referral_link instead of referrer_code. We keep the original query for fidelity.
-    const { data: sharesData } = await supabase
-      .from('shares')
-      .select('platform, referrer_code, created_at')
-      .order('created_at', { ascending: false });
+    let sharesData: ShareEvent[] | null = null;
+    const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+    if (adminSecret) {
+      const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
+        body: { action: 'get_shares' },
+        headers: { 'x-admin-secret': adminSecret },
+      });
+      if (!edgeErr && edgeData?.success && Array.isArray(edgeData.data)) {
+        sharesData = edgeData.data.map((row: { platform: string; referral_link?: string; referrer_code?: string; created_at: string }) => ({
+          platform: row.platform,
+          referrer_code: row.referrer_code || row.referral_link || 'unknown',
+          created_at: row.created_at,
+        }));
+      }
+    }
+    if (!sharesData) {
+      const { data } = await supabase
+        .from('shares')
+        .select('platform, referrer_code, created_at')
+        .order('created_at', { ascending: false });
+      sharesData = (data as ShareEvent[]) || [];
+    }
 
     if (!sharesData || sharesData.length === 0) {
       content.innerHTML = `

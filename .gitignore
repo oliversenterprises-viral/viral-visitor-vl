@@ -1,3 +1,19 @@
+# ============================================================================
+# Sentinel Key Purge: Secrets Hygiene
+# NEVER commit real environment variables, keys, passwords, or JWTs.
+# Use .env.example as the ONLY committed template (placeholders only).
+# ============================================================================
+
+# Environment / Secrets (critical — block all real .env files)
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.* 
+!.env.example
+*.env
+
 # Logs
 logs
 *.log
@@ -23,3 +39,4 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+.env*

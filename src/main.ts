@@ -4,7 +4,14 @@ import { initRedditTracking } from './lib/reddit-tracking';
 // Public layer (all onclick handlers, modals, debug, etc.)
 import { initPublic } from './public';
 
-console.log('%c[ViralRefer] main.ts module loaded', 'color:#64748b');
+// === ROBUST COLOR SYSTEM ===
+// Seed safe defaults for ALL --text-* variables as early as possible.
+// This guarantees the hero title (and all other dynamic text) never goes dark/invisible
+// even if Supabase fetch is slow, fails, or no color_* keys exist yet in site_content.
+import { seedDefaultTextColors } from './colors';
+seedDefaultTextColors();
+
+// console.log('%c[ViralRefer] main.ts module loaded', 'color:#64748b'); // silenced for prod (audit cleanup)
 
 // =====================================================
 // VIRALREFER PREMIUM — main.ts (pure bootstrap)

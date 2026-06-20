@@ -1,9 +1,20 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { LeaderboardEntry, RecentActivityItem } from './types';
 
-// Production Supabase project (from original ViralRefer)
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://wqbefjzpgsezzwdrvvua.supabase.co";
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxYmVmanpwZ3Nlenp3ZHJ2dnVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTMyNDAsImV4cCI6MjA4OTUyOTI0MH0.pVHqeG0sGPgpUlOlskf7rOvnAsdrzrv5govZXcyxEdk";
+// CRITICAL: Secrets must come ONLY from Vite env vars (VITE_*).
+// No hardcoded fallbacks. Fail hard at import time if missing — this prevents
+// accidental use of prod keys or shipping builds with baked secrets.
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error(
+    'FATAL: Missing required Supabase environment variables.\n' +
+    'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local (copy from .env.example).\n' +
+    'For production builds (Cloudflare/Vercel/etc), configure these as build env vars.\n' +
+    'NEVER commit real keys to source control. Rotate keys regularly via Supabase dashboard.'
+  );
+}
 
 export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
@@ -66,7 +77,7 @@ export async function fetchMyReferralCount(referrerCode: string): Promise<number
     .eq('referrer_code', referrerCode);
 
   if (error) {
-    console.warn('[ViralRefer] fetchMyReferralCount error:', error);
+    // console.warn('[ViralRefer] fetchMyReferralCount error:', error); // silenced for prod (audit)
     return 0;
   }
   return count || 0;

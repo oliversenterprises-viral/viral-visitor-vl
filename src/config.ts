@@ -10,6 +10,6 @@
 
 export const DEFAULT_REFERRAL_BASE_URL = 'https://viralrefer.app';
 
-export const DEFAULT_ADMIN_PASSWORD = 'TestAdmin2026!';
+export const DEFAULT_ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || ''; // Hardened: no hardcoded fallback (audit security fix)
 
 export const APP_NAME = 'ViralRefer';

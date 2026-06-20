@@ -7,7 +7,7 @@
 
 import { registerGlobal } from '../lib/global';
 import { loadLeaderboard } from '../app';
-import { getReferralBaseUrl, getMyReferralCode } from './globals';
+// import { getReferralBaseUrl, getMyReferralCode } from './globals'; // silenced in debug (audit)
 
 /**
  * Demo helper that simulates a new referral (used for testing the UI).
@@ -29,6 +29,18 @@ export const simulateNewReferral = async () => {
   }, 600);
 };
 registerGlobal('simulateNewReferral', simulateNewReferral);
+
+// Hide demo referral button on production (localhost + ?debug=1 only)
+(function hideDemoButtonInProduction() {
+  const isLocal =
+    location.hostname === 'localhost' ||
+    location.hostname === '127.0.0.1' ||
+    location.hostname.endsWith('.local');
+  const debugMode = new URLSearchParams(location.search).has('debug');
+  if (!isLocal && !debugMode) return;
+  const btn = document.getElementById('demo-referral-btn');
+  if (btn) btn.classList.remove('hidden');
+})();
 
 // Escape key support for detail modals
 document.addEventListener('keydown', (e) => {
@@ -54,11 +66,12 @@ document.addEventListener('keydown', (e) => {
  */
 export const debugReferral = () => {
   console.group('%c[ViralRefer Debug] Referral State', 'color:#34d399');
-  console.log('referralBaseUrl:', getReferralBaseUrl());
-  console.log('myReferralCode:', getMyReferralCode());
-  const refInput = document.getElementById('ref-link') as HTMLInputElement | null;
-  console.log('#ref-link value:', refInput?.value);
-  console.log('Current page URL:', window.location.href);
+  // Logs silenced for production cleanliness (full audit)
+  // console.log('referralBaseUrl:', getReferralBaseUrl());
+  // console.log('myReferralCode:', getMyReferralCode());
+  // const refInput = document.getElementById('ref-link') as HTMLInputElement | null;
+  // console.log('#ref-link value:', refInput?.value);
+  // console.log('Current page URL:', window.location.href);
   console.groupEnd();
 };
 registerGlobal('debugReferral', debugReferral);

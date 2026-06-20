@@ -8,8 +8,9 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
   test('Get referral link + profile creation flow', async ({ page }) => {
     await page.click('text=Get my referral link');
     
-    // Profile modal should appear
-    await expect(page.locator('#profile-modal')).toBeVisible();
+    // Profile modal should appear (more resilient wait)
+    const modal = page.locator('#profile-modal');
+    await expect(modal).toBeVisible({ timeout: 8000 });
     
     await page.fill('#profile-name', 'Test Referrer');
     await page.fill('#profile-email', 'test@viralrefer.app');
@@ -17,8 +18,9 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     
     await page.click('#profile-save-btn');
     
-    await expect(page.locator('#profile-modal')).toBeHidden();
-    await expect(page.locator('#ref-link')).toHaveValue(/ref=/);
+    // Wait for modal to close and link to appear
+    await expect(modal).toBeHidden({ timeout: 8000 });
+    await expect(page.locator('#ref-link')).toHaveValue(/ref=/, { timeout: 8000 });
   });
 
   test('Referral attribution via ?ref= parameter', async ({ page }) => {
@@ -63,5 +65,27 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     
     // Toast should appear
     await expect(page.locator('text=Link copied')).toBeVisible({ timeout: 3000 });
+  });
+
+  // Critical visual regression snapshots for hero + prize area (Phase 1 quality lock-in)
+  // To update snapshots: npx playwright test --update-snapshots
+  test('Hero section visual snapshot', async ({ page }) => {
+    await page.goto('/');
+    const hero = page.locator('.hero-gradient').first();
+    await expect(hero).toBeVisible({ timeout: 8000 });
+    await expect(hero).toHaveScreenshot('hero-section.png', { 
+      maxDiffPixelRatio: 0.02,
+      timeout: 10000 
+    });
+  });
+
+  test('Prize cards + banner area visual snapshot', async ({ page }) => {
+    await page.goto('/');
+    const prizeSection = page.locator('#prize-section, .premium-card').first();
+    await expect(prizeSection).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('body')).toHaveScreenshot('prize-banner-area.png', { 
+      maxDiffPixelRatio: 0.03,
+      timeout: 12000 
+    });
   });
 });

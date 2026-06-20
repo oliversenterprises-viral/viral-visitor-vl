@@ -241,11 +241,15 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  const bypassNote = isOwnerBypass ? ' (owner test bypass used)' : '';
+  console.log(`[submit-claim] Claim created id=${newClaim.id} referrer=${userReferrerCode}${bypassNote}`);
+
   return new Response(JSON.stringify({
     success: true,
     claimId: newClaim.id,
     rank: 1,
     referralCount: topCount,
-    message: 'Claim submitted successfully. We will review within 48 hours.',
+    bypassUsed: isOwnerBypass,
+    message: `Claim submitted successfully. We will review within 48 hours.${bypassNote}`,
   }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 });

@@ -258,6 +258,12 @@ h3 { font-size: 1.35rem; }
   overflow: hidden;
 }
 
+/* Strong guarantee for hero title contrast (overrides any variable or load-order issues) */
+.hero-gradient #hero-title,
+.hero-gradient h1#hero-title {
+  color: #ffffff !important;
+}
+
 .hero-gradient::before {
   content: '';
   position: absolute;

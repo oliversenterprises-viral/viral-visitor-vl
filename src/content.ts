@@ -1,11 +1,154 @@
 import {
   setReferralBaseUrl,
-  getReferralBaseUrl,
   setShareMessageTemplate,
   setQrModalTitle,
 } from './public/globals';
 
 import { applyTextColors } from './colors';
+
+// Simple escaping helper to mitigate XSS in user-controlled content (banner, claims)
+export function escapeHtml(str: string): string {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Basic banner event tracking (Phase 2 MVP)
+ * Logs impression and click events.
+ * Stores in localStorage for easy inspection + console output.
+ */
+function logBannerEvent(type: 'impression' | 'click', banner: any) {
+  const event = {
+    type,
+    label: banner.label || 'untitled',
+    redirectUrl: banner.redirectUrl,
+    timestamp: new Date().toISOString(),
+  };
+
+  // Console for immediate visibility
+  console.log(`[Banner ${type.toUpperCase()}]`, event);
+
+  // Persist last 50 events in localStorage (easy for admins to inspect during early testing)
+  try {
+    const key = 'viralrefer_banner_events';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    existing.push(event);
+    // Keep only last 50
+    const trimmed = existing.slice(-50);
+    localStorage.setItem(key, JSON.stringify(trimmed));
+  } catch (_) {
+    // Non-critical
+  }
+}
+
+// Expose a debug helper globally for admins/devs
+(window as any).debugBannerEvents = () => {
+  try {
+    const events = JSON.parse(localStorage.getItem('viralrefer_banner_events') || '[]');
+    console.table(events);
+    return events;
+  } catch (_) {
+    console.log('No banner events recorded yet.');
+    return [];
+  }
+};
+
+// Admin/dev helper: reset rotation counter so you immediately see the first banner again
+(window as any).resetBannerRotation = () => {
+  localStorage.removeItem('viralrefer_banner_rotation_index');
+  console.log('[Banner] Rotation index reset. Reload the page to see banner #1 next.');
+};
+
+// Expose rotation helpers for console inspection / manual testing by admins
+(window as any).parseBanners = parseBanners;
+(window as any).selectBanner = selectBanner;
+
+/**
+ * Banner System v2 (Phase 2)
+ * Data shape produced by the admin banners array editor + consumed on public site.
+ */
+export interface Banner {
+  imageUrl: string;
+  redirectUrl: string;
+  label?: string;
+  enabled?: boolean;
+  weight?: number; // optional positive int; higher = shown more frequently in rotation
+}
+
+/**
+ * Parses raw banners value (string JSON or array) into clean Banner objects.
+ * Filters out invalid entries (missing imageUrl).
+ */
+export function parseBanners(raw: unknown): Banner[] {
+  if (!raw) return [];
+  try {
+    const arr = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .map((b: any) => ({
+        imageUrl: String(b.imageUrl || '').trim(),
+        redirectUrl: String(b.redirectUrl || '').trim(),
+        label: b.label ? String(b.label).trim() : undefined,
+        enabled: b.enabled !== false,
+        weight: (typeof b.weight === 'number' && b.weight > 0) ? Math.floor(b.weight) : 1,
+      }))
+      .filter(b => b.imageUrl.length > 0 && b.redirectUrl.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Simple rotation selector (logical option #1).
+ * - Pure round-robin when all weights are 1 (default).
+ * - Weighted round-robin when any banner has weight > 1: higher weight banners appear proportionally more often.
+ * - Uses a single localStorage counter for deterministic, cross-visit rotation (no randomness).
+ * - Returns the chosen banner + display info for the "+N of M" indicator.
+ */
+export function selectBanner(banners: Banner[]): { banner: Banner; displayIndex: number; total: number } | null {
+  const enabled = banners.filter(b => b.enabled !== false);
+  if (enabled.length === 0) return null;
+
+  const rotationKey = 'viralrefer_banner_rotation_index';
+  const counter = parseInt(localStorage.getItem(rotationKey) || '0', 10);
+
+  // Weighted round-robin: treat the cycle length as sum of weights
+  const totalWeight = enabled.reduce((sum, b) => sum + (b.weight || 1), 0) || 1;
+  const pick = counter % totalWeight;
+
+  let chosen: Banner | null = null;
+  let chosenDisplayIndex = 0;
+  let cumulative = 0;
+
+  for (let i = 0; i < enabled.length; i++) {
+    const w = enabled[i].weight || 1;
+    cumulative += w;
+    if (pick < cumulative) {
+      chosen = enabled[i];
+      chosenDisplayIndex = i;
+      break;
+    }
+  }
+
+  if (!chosen) {
+    chosen = enabled[0];
+    chosenDisplayIndex = 0;
+  }
+
+  // Advance counter (cap growth to avoid huge numbers over time)
+  const nextCounter = (counter + 1) % (totalWeight * 12 + 7);
+  localStorage.setItem(rotationKey, nextCounter.toString());
+
+  return {
+    banner: chosen,
+    displayIndex: chosenDisplayIndex,
+    total: enabled.length,
+  };
+}
 
 /**
  * Dynamic Site Content System
@@ -63,6 +206,61 @@ export async function updatePublicContent(content: Record<string, any>) {
   apply('prize-banner-description', 'prize_banner_description');
   apply('min-referrals-value', 'min_referrals_for_claim');  // or 'min_referrals' - using seed convention
   apply('cash-amount-value', 'cash_amount');
+
+  // Phase 2 Banner v2: Multiple banners with simple weighted rotation (option #1)
+  // Uses parseBanners + selectBanner for clean, testable logic supporting weight field.
+  const bannersRaw = content['banners'];
+  const parsedBanners = parseBanners(bannersRaw);
+  if (parsedBanners.length > 0) {
+    const selection = selectBanner(parsedBanners);
+    if (selection) {
+      const { banner: activeBanner, displayIndex, total } = selection;
+      const visualContainer = document.getElementById('prize-banner-visual');
+      if (visualContainer) {
+        logBannerEvent('impression', activeBanner);
+
+        const link = document.createElement('a');
+        link.href = activeBanner.redirectUrl || '#';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        // LCP/hero-area paint isolation + transform hints (consistent with premium card strategy)
+        link.style.contain = 'layout style paint';
+        link.style.willChange = 'transform';
+        link.className = 'block w-full max-w-[280px] rounded-3xl overflow-hidden shadow-2xl hover:scale-[1.02] transition-transform';
+
+        const img = document.createElement('img');
+        img.src = activeBanner.imageUrl;
+        img.alt = activeBanner.label || 'Featured Banner';
+        img.loading = 'lazy';
+        img.className = 'w-full h-auto';
+        img.style.backfaceVisibility = 'hidden';
+
+        link.appendChild(img);
+
+        if (activeBanner.label) {
+          const labelDiv = document.createElement('div');
+          labelDiv.className = 'bg-white/90 text-zinc-900 text-center py-1 text-xs font-medium';
+          labelDiv.textContent = activeBanner.label;
+          link.appendChild(labelDiv);
+        }
+
+        link.addEventListener('click', () => {
+          logBannerEvent('click', activeBanner);
+        }, { once: true });
+
+        visualContainer.innerHTML = '';
+        visualContainer.appendChild(link);
+
+        // Rotation indicator (only when 2+ enabled banners exist)
+        if (total > 1) {
+          const note = document.createElement('div');
+          note.className = 'text-[10px] text-center text-zinc-500 mt-1.5';
+          note.textContent = `Showing ${displayIndex + 1} of ${total} (rotates)`;
+          visualContainer.appendChild(note);
+        }
+      }
+    }
+  }
   apply('claim-cash-value', 'cash_amount');
 
   // High-visibility public headings and descriptions
@@ -145,11 +343,11 @@ export async function updatePublicContent(content: Record<string, any>) {
   const referralBase = content['referral_base_url'];
   if (referralBase != null && referralBase !== '') {
     setReferralBaseUrl(String(referralBase));
-    console.log('[ViralRefer] Using custom referral_base_url:', getReferralBaseUrl());
+    // console.log('[ViralRefer] Using custom referral_base_url:', getReferralBaseUrl()); // silenced
   } else {
     // Default base URL for referral links (you can override this via Admin → Edit Content with key "referral_base_url")
     setReferralBaseUrl('https://viralrefer.app');
-    console.log('[ViralRefer] Using default referral_base_url:', getReferralBaseUrl());
+    // console.log('[ViralRefer] Using default referral_base_url:', getReferralBaseUrl()); // silenced
   }
 
   // Apply any dynamic text colors from site_content (color_* keys) — wired via the colors module

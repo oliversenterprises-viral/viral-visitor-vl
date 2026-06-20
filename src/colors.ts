@@ -37,7 +37,7 @@ export function applyTextColors(content: Record<string, any>) {
   });
 
   if (count > 0) {
-    console.log(`[ViralRefer] Applied ${count} dynamic text colors from site_content`);
+    // console.log(`[ViralRefer] Applied ${count} dynamic text colors from site_content`); // silenced for prod (audit)
   }
 }
 
@@ -88,3 +88,77 @@ export function getColorControls(): ColorControl[] {
 
 // Also re-export applyTextColors under a namespace-friendly name if needed
 export { applyTextColors as applyDynamicTextColors };
+
+/**
+ * Returns the authoritative default values for all text color CSS variables.
+ * This is now the single source of truth (used by seed + fallbacks + admin reset).
+ */
+export function getDefaultTextColorVars(): Record<string, string> {
+  return {
+    '--text-hero-badge': '#e0e7ff',
+    '--text-hero-title': '#ffffff',
+    '--text-hero-accent': '#c084fc',
+    '--text-prize-title': '#ffffff',
+    '--text-prize-description': '#d4d4d8',
+    '--text-minimum-label': '#c4b4ff',
+    '--text-instant-label': '#34d399',
+    '--text-prize-badge': '#fbbf24',
+    '--text-prize-banner-title': '#ffffff',
+    '--text-prize-banner-description': '#d4d4d8',
+    '--text-current-winner-badge': '#ffffff',
+    '--text-how-badge': '#a5b4fc',
+    '--text-how-title': '#ffffff',
+    '--text-how-step-title': '#ffffff',
+    '--text-step-desc': '#a1a1aa',
+    '--text-heading': '#ffffff',
+    '--text-muted': '#a1a1aa',
+    '--text-accent-violet': '#c4b4ff',
+    '--text-accent-emerald': '#34d399',
+    '--text-share-label': '#d4d4d8',
+    '--text-footer': '#a1a1aa',
+    '--text-leaderboard-title': '#ffffff',
+    '--text-stats-title': '#ffffff',
+    '--text-activity-title': '#ffffff',
+    '--text-referral-heading': '#ffffff',
+    '--text-referral-link': '#34d399',
+    '--text-referral-link-icon': '#a1a1aa',
+    '--referral-copy-btn-bg': '#7c3aed',
+    '--referral-copy-btn-text': '#ffffff',
+    '--referral-qr-border': 'rgba(255, 255, 255, 0.1)',
+    '--referral-input-border': 'rgba(255, 255, 255, 0.2)',
+    '--qr-scan-text': '#34d399',
+    '--qr-show-larger-bg': 'rgba(255, 255, 255, 0.05)',
+    '--qr-show-larger-text': '#d4d4d8',
+    '--referral-qr-icon': '#a1a1aa',
+  };
+}
+
+/**
+ * Seeds all critical text color CSS variables with safe defaults.
+ * Call this as early as possible (top of main.ts) so first paint is always correct,
+ * even before any Supabase fetch or admin overrides.
+ * This is the key defense against the "dark text on dark hero" class of bugs.
+ */
+export function seedDefaultTextColors(): void {
+  const root = document.documentElement;
+  const defaults = getDefaultTextColorVars();
+
+  Object.entries(defaults).forEach(([varName, value]) => {
+    // Only set if not already explicitly overridden by admin/DB this session
+    if (!root.style.getPropertyValue(varName)) {
+      root.style.setProperty(varName, value);
+    }
+  });
+}
+
+/**
+ * Clears any admin overrides (used on full reset in admin tab).
+ */
+export function clearAllTextColorOverrides(): void {
+  const root = document.documentElement;
+  const defaults = getDefaultTextColorVars();
+
+  Object.keys(defaults).forEach((varName) => {
+    root.style.removeProperty(varName);
+  });
+}

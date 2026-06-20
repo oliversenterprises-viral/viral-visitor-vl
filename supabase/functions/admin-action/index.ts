@@ -74,6 +74,20 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    if (action === 'get_claims') {
+      // Service role read so password-based admin (no real user session) and owner tools both see the full list (pending + all statuses)
+      // Bypasses RLS select_own / public-approved-only policies for admin visibility.
+      const { data, error } = await supabaseAdmin
+        .from('prize_claims')
+        .select('id, created_at, referrer_code, website, cashtag, message, status, paid_at, review_note, reviewed_at')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     if (action === 'update_site_content') {
       const { key, value } = payload;
       const { error } = await supabaseAdmin

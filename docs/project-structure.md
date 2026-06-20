@@ -96,8 +96,8 @@ The original ViralRefer Premium prototype contains beautiful, highly polished ma
 - **Styling:** All custom design tokens + glassmorphism live in `src/style.css`. No inline styles except for dynamic values (e.g. confetti colors).
 - **Data access:** Only through `src/lib/supabase.ts` helpers. Never call `supabase.from()` directly from features.
 - **Testing:** Playwright (already in devDeps) for E2E on critical flows (claim prize, leaderboard update).
-- **Environment:** `.env` for `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`. Never commit keys.
-- **Build output:** `dist/` is purely static. Deploy to any static host. Edge Functions deployed separately via Supabase CLI.
+- **Environment:** `.env.local` (gitignored) for `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` / `VITE_ADMIN_PASSWORD` / `VITE_TURNSTILE_SITEKEY`. Never commit real keys — `.env.example` has placeholders ONLY. Code in `src/lib/supabase.ts` (and admin/modals) does hard-fail if required VITE_* missing. See README.md Security section.
+- **Build output:** `dist/` is purely static (run `npm run build` + verify `grep -r` finds NO secrets/URLs/JWTs/passwords from .env.example or old baked values). Deploy to any static host. Edge Functions deployed separately via Supabase CLI.
 
 ## Next Immediate Actions After Structure
 

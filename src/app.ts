@@ -137,7 +137,7 @@ export async function loadSiteContent() {
 export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
-  console.log('%c[ViralRefer] === App Initialization Started ===', 'color:#34d399; font-weight:bold');
+  // console.log('%c[ViralRefer] === App Initialization Started ===', 'color:#34d399; font-weight:bold'); // silenced for prod cleanliness (audit fix)
 
   const adminBtn = document.getElementById('admin-btn');
   if (adminBtn) {
@@ -147,9 +147,9 @@ export async function initApp() {
     });
   }
 
-  console.log('[ViralRefer] Loading site content...');
+  // console.log('[ViralRefer] Loading site content...'); // silenced
   await loadSiteContent();
-  console.log('[ViralRefer] Site content loaded and applied.');
+  // console.log('[ViralRefer] Site content loaded and applied.'); // silenced for prod cleanliness (audit)
 
   try {
     const totalEl = document.getElementById('total-referrers');
@@ -157,7 +157,7 @@ export async function initApp() {
       const count = await fetchTotalReferrers();
       totalEl.textContent = count.toLocaleString();
     }
-  } catch {}
+  } catch (_) { /* best-effort, non-critical */ }
 
   await loadLeaderboard();
 
@@ -180,7 +180,7 @@ export async function initApp() {
   const params = new URLSearchParams(location.search);
   const refCode = params.get('ref');
   if (refCode) {
-    console.log('[ViralRefer] Referral attribution detected:', refCode);
+    // console.log('[ViralRefer] Referral attribution detected:', refCode); // silenced
     const banner = document.getElementById('referral-attribution');
     const disp = document.getElementById('referrer-code-display');
     if (banner && disp) {
@@ -193,8 +193,11 @@ export async function initApp() {
   initRealtimeSubscriptions();
   window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
 
-  console.log('%c[ViralRefer] === Full app initialized successfully ===', 'color:#34d399; font-weight:bold');
+  // console.log('%c[ViralRefer] === Full app initialized successfully ===', 'color:#34d399; font-weight:bold'); // silenced for prod (audit)
 }
+
+// Expose for referral.ts after code generation
+(window as any).renderMyStats = renderMyStats;
 
 /**
  * Renders the richer "Your Stats" section with actual personal progress.

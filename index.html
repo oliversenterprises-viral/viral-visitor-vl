@@ -2,6 +2,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Aggressive cache-buster for owner admin flow. Runs before anything else. -->
+    <script>
+    (function() {
+      try {
+        var LATEST = '2026-06-01-final-5';
+        if (localStorage.getItem('vr_owner_version') !== LATEST) {
+          localStorage.setItem('vr_owner_version', LATEST);
+          var clean = location.href.split('?')[0].split('#')[0];
+          location.replace(clean + '?v=' + Date.now() + (location.hash || ''));
+        }
+      } catch (e) {}
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
@@ -94,11 +107,11 @@
         <!-- HERO -->
         <div class="rounded-3xl p-12 md:p-20 text-center hero-gradient shadow-2xl">
             <div class="max-w-3xl mx-auto">
-                <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-xs font-medium px-4 py-2 rounded-3xl mb-8 border border-white/20" style="color: var(--text-hero-badge)">
+                <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-xs font-medium px-4 py-2 rounded-3xl mb-8 border border-white/20" style="color: var(--text-hero-badge, #e0e7ff)">
                     LIVE VIRAL CAMPAIGN • 2026
                 </div>
                
-                <h1 id="hero-title" class="text-[58px] sm:text-[72px] md:text-[88px] font-bold tracking-[-0.05em] logo-font leading-none mb-6" style="color: var(--text-hero-title)">
+                <h1 id="hero-title" class="text-[58px] sm:text-[72px] md:text-[88px] font-bold tracking-[-0.05em] logo-font leading-none mb-6" style="color: var(--text-hero-title, #ffffff); text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
                     Refer friends.<br>
                     <span class="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-cyan-400 drop-shadow-[0_4px_20px_rgba(192,132,252,0.5)]">
                         Get featured + cash.
@@ -155,7 +168,7 @@
         <!-- MY STATS -->
         <div id="my-stats" class="mt-8 glass border border-white/10 rounded-3xl p-8">
             <div class="flex justify-between items-center mb-6">
-                <h2 id="stats-title" class="text-2xl font-semibold" style="color: var(--text-stats-title)">Your Stats</h2>
+                <h2 id="stats-title" class="text-2xl font-semibold" style="color: var(--text-stats-title, #ffffff)">Your Stats</h2>
                 <div class="text-xs text-emerald-400 flex items-center gap-1">
                     <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                     LIVE
@@ -170,7 +183,7 @@
         <div class="mt-8 glass border border-white/10 rounded-3xl p-8">
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 id="recent-activity-title" class="text-2xl font-semibold" style="color: var(--text-activity-title)">Recent Activity</h2>
+                    <h2 id="recent-activity-title" class="text-2xl font-semibold" style="color: var(--text-activity-title, #ffffff)">Recent Activity</h2>
                     <p id="recent-activity-description" class="text-sm text-zinc-400">Early activity from the first participants</p>
                 </div>
                 <div class="text-xs text-emerald-400 flex items-center gap-1">
@@ -188,9 +201,9 @@
             <div class="text-center mb-8">
                 <div class="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">
                     <i class="fa-solid fa-lightbulb"></i>
-                    <span id="how-it-works-badge" style="color: var(--text-how-badge)">3 SIMPLE STEPS</span>
+                    <span id="how-it-works-badge" style="color: var(--text-how-badge, #a5b4fc)">3 SIMPLE STEPS</span>
                 </div>
-                <h2 id="how-it-works-title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-how-title)">How ViralRefer Works</h2>
+                <h2 id="how-it-works-title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-how-title, #ffffff)">How ViralRefer Works</h2>
                 <p id="how-it-works-subtitle" class="text-xl text-zinc-400 mt-2 max-w-md mx-auto">Earn the ultimate prize in under 10 minutes of sharing.</p>
             </div>
 
@@ -199,21 +212,21 @@
                     <div class="mx-auto w-14 h-14 bg-violet-600/20 text-violet-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-link"></i>
                     </div>
-                    <div id="how-step1-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title)">1. Get your link</div>
+                    <div id="how-step1-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">1. Get your link</div>
                     <p id="how-step1-desc" class="text-zinc-400 leading-relaxed">Click the button below and instantly receive your unique, trackable referral link.</p>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-violet-500/50 transition-all">
                     <div class="mx-auto w-14 h-14 bg-violet-600/20 text-violet-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-share-alt"></i>
                     </div>
-                    <div id="how-step2-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title)">2. Share everywhere</div>
+                    <div id="how-step2-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">2. Share everywhere</div>
                     <p id="how-step2-desc" class="text-zinc-400 leading-relaxed">Post on X, WhatsApp, LinkedIn, Telegram, SMS — every click through your link counts toward your total.</p>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-amber-400/50 transition-all">
                     <div class="mx-auto w-14 h-14 bg-amber-400/20 text-amber-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-trophy"></i>
                     </div>
-                    <div id="how-step3-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title)">3. Win the prize</div>
+                    <div id="how-step3-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">3. Win the prize</div>
                     <p id="how-it-works-step3" class="text-zinc-400 leading-relaxed">Reach the top of the leaderboard (10+ referrals) and claim the homepage banner + <span class="font-semibold text-emerald-400">$10 Cash App</span>.</p>
                 </div>
             </div>
@@ -223,7 +236,7 @@
         <div id="referral-section" class="mt-12">
             <div class="max-w-2xl mx-auto">
                 <div class="text-center mb-8">
-                    <h2 id="winning-link-title" class="text-5xl font-bold tracking-tighter mb-3" style="color: var(--text-referral-heading)">Your winning link</h2>
+                    <h2 id="winning-link-title" class="text-5xl font-bold tracking-tighter mb-3" style="color: var(--text-referral-heading, #ffffff)">Your winning link</h2>
                     <p id="winning-link-description" class="text-xl text-zinc-300">Every signup through this link moves you up the leaderboard.</p>
                 </div>
                
@@ -231,7 +244,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
                             <i class="fa-solid fa-link text-violet-400 text-2xl"></i>
-                            <h3 id="unique-referral-link-title" class="text-2xl font-semibold" style="color: var(--text-referral-heading)">Your unique referral link</h3>
+                            <h3 id="unique-referral-link-title" class="text-2xl font-semibold" style="color: var(--text-referral-heading, #ffffff)">Your unique referral link</h3>
                         </div>
                         <button id="new-code-button" onclick="generateNewCode()" 
                                 class="text-xs font-semibold text-violet-400 hover:text-violet-300 px-3 py-1.5 rounded-xl border border-violet-400/30 hover:bg-violet-400/10 transition-all">
@@ -241,10 +254,10 @@
                    
                     <div class="relative mb-8">
                         <div class="flex items-center bg-zinc-900 border focus-within:border-violet-500 rounded-2xl px-5 py-4 transition-all" style="border-color: var(--referral-input-border)">
-                            <i id="ref-link-icon" class="fa-solid fa-link mr-3" style="color: var(--text-referral-link-icon)"></i>
+                            <i id="ref-link-icon" class="fa-solid fa-link mr-3" style="color: var(--text-referral-link-icon, #a1a1aa)"></i>
                             <input id="ref-link" readonly 
                                    class="flex-1 bg-transparent text-lg font-mono tracking-tight focus:outline-none"
-                                   style="color: var(--text-referral-link)">
+                                   style="color: var(--text-referral-link, #34d399)">
                             <button id="copy-link-btn" onclick="copyLink()" 
                                     class="copy-btn ml-3 px-6 py-2.5 hover:bg-violet-500 font-semibold rounded-xl flex items-center gap-2 text-sm shadow-lg shadow-violet-500/30"
                                     style="background-color: var(--referral-copy-btn-bg); color: var(--referral-copy-btn-text);">
@@ -292,7 +305,7 @@
                     <div>
                         <div class="flex items-center gap-2 mb-4">
                             <i class="fa-solid fa-share-alt text-violet-400"></i>
-                            <span id="share-link-heading" class="font-semibold text-lg" style="color: var(--text-referral-heading)">Share your link</span>
+                            <span id="share-link-heading" class="font-semibold text-lg" style="color: var(--text-referral-heading, #ffffff)">Share your link</span>
                         </div>
                        
                         <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
@@ -366,8 +379,8 @@
                     CURRENT #1 WINNER GETS THIS
                 </div>
 
-                <!-- Visual prize mock -->
-                <div class="mt-6 max-w-md mx-auto">
+                <!-- Visual prize mock (dynamic banner rotation targets #prize-banner-visual) -->
+                <div id="prize-banner-visual" class="mt-6 max-w-md mx-auto">
                     <div class="glass border border-white/10 rounded-3xl p-6 text-left">
                         <div class="flex items-center gap-4">
                             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-2xl ring-1 ring-white/20">V</div>
@@ -388,17 +401,17 @@
             <div class="flex items-center justify-between mb-6">
                 <div>
                     <div class="flex items-center gap-3">
-                        <h2 id="leaderboard-title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-leaderboard-title)">Early Leaderboard</h2>
+                        <h2 id="leaderboard-title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-leaderboard-title, #ffffff)">Early Leaderboard</h2>
                         <div class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-semibold rounded-3xl flex items-center gap-1.5">
                             <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                             LIVE
                             <span id="realtime-status" class="ml-1 text-[10px] opacity-70">• Realtime</span>
                         </div>
                     </div>
-                    <p id="leaderboard-description" class="mt-1" style="color: var(--text-muted)">Campaign just launched • Be the first to qualify</p>
+                    <p id="leaderboard-description" class="mt-1" style="color: var(--text-muted, #a1a1aa)">Campaign just launched • Be the first to qualify</p>
                 </div>
-                <button onclick="simulateNewReferral()" 
-                        class="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all">
+                <button id="demo-referral-btn" onclick="simulateNewReferral()" 
+                        class="hidden px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all">
                     <i class="fa-solid fa-vial"></i> 
                     <span>Demo +1 Referral</span>
                 </button>
@@ -462,6 +475,15 @@
 
             <div class="text-[10px] text-center text-zinc-500 mt-4">
                 SHA-256 verified • Session protected
+            </div>
+
+            <!-- Temporary owner cache-bust button (pure HTML, works even with old JS bundle) -->
+            <div class="mt-4 p-3 bg-red-600/20 border border-red-500/50 rounded-2xl text-center">
+                <button onclick="location.replace((location.origin + location.pathname + '?force=' + Date.now() + (location.hash || '')))" 
+                        class="w-full py-3 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-bold rounded-2xl text-sm transition-colors">
+                    🔄 Force load latest admin code (bypasses stale cache)
+                </button>
+                <div class="text-[9px] text-red-400 mt-1">Click if you still see the old Prize Claims error after entering password</div>
             </div>
         </div>
     </div>
