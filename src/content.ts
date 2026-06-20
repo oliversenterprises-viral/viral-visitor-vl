@@ -41,8 +41,9 @@ export function computeBannerStats(events: Array<Record<string, any>>) {
         clicks: 0,
       };
     }
-    if (e.type === 'impression') perBannerMap[key].impressions++;
-    else if (e.type === 'click') perBannerMap[key].clicks++;
+    const eventType = String(e.type || e.event_type || '').toLowerCase();
+    if (eventType === 'impression') perBannerMap[key].impressions++;
+    else if (eventType === 'click') perBannerMap[key].clicks++;
   }
 
   return {
@@ -51,32 +52,48 @@ export function computeBannerStats(events: Array<Record<string, any>>) {
   };
 }
 
-export async function getBannerEventsForStats(): Promise<{ events: Array<Record<string, any>>; source: 'server' | 'local' }> {
+export async function getBannerEventsForStats(): Promise<{
+  events: Array<Record<string, any>>;
+  source: 'server' | 'local';
+  fetchError?: string;
+}> {
   const local = getLocalBannerEvents();
   const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
 
-  if (adminSecret) {
-    try {
-      const { data, error } = await supabase.functions.invoke('admin-action', {
-        body: { action: 'get_banner_stats' },
-        headers: { 'x-admin-secret': adminSecret },
-      });
-      if (!error && data?.success && Array.isArray(data.data)) {
-        const serverEvents = data.data.map((row: Record<string, any>) => ({
-          type: row.type || row.event_type,
-          label: row.label || row.banner_label,
-          redirectUrl: row.redirect_url || row.redirectUrl,
-          key: row.key,
-          timestamp: row.created_at || row.timestamp,
-        }));
-        return { events: serverEvents, source: 'server' };
-      }
-    } catch {
-      // fall through to local
-    }
+  if (!adminSecret) {
+    return { events: local, source: 'local', fetchError: 'Admin secret not configured in build' };
   }
 
-  return { events: local, source: 'local' };
+  try {
+    const { data, error } = await supabase.functions.invoke('admin-action', {
+      body: { action: 'get_banner_stats' },
+      headers: { 'x-admin-secret': adminSecret },
+    });
+    if (error) {
+      return { events: local, source: 'local', fetchError: error.message || 'Server request failed' };
+    }
+    if (!data?.success) {
+      return {
+        events: local,
+        source: 'local',
+        fetchError: String(data?.error || 'get_banner_stats rejected'),
+      };
+    }
+    if (!Array.isArray(data.data)) {
+      return { events: local, source: 'local', fetchError: 'Invalid server response' };
+    }
+    const serverEvents = data.data.map((row: Record<string, any>) => ({
+      type: row.type || row.event_type,
+      label: row.label || row.banner_label,
+      redirectUrl: row.redirect_url || row.redirectUrl,
+      key: row.key || (row.additional?.key ?? row.additional?.Key),
+      timestamp: row.created_at || row.timestamp,
+    }));
+    return { events: serverEvents, source: 'server' };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Network error';
+    return { events: local, source: 'local', fetchError: msg };
+  }
 }
 
 // Simple escaping helper to mitigate XSS in user-controlled content (banner, claims)

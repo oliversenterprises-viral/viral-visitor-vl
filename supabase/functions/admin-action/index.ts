@@ -22,11 +22,17 @@ function bannerEventKey(row: Record<string, unknown>): string {
 }
 
 function normalizeBannerEventRow(row: Record<string, unknown>) {
+  const additional =
+    row.additional && typeof row.additional === 'object'
+      ? (row.additional as Record<string, unknown>)
+      : {};
+  const keyFromAdditional = String(additional.key || '').trim();
   return {
     type: row.event_type || row.type,
     label: row.banner_label || row.label,
     redirect_url: row.redirect_url || row.redirectUrl || null,
-    key: bannerEventKey(row),
+    key: keyFromAdditional || bannerEventKey(row),
+    additional,
     created_at: row.created_at,
   };
 }

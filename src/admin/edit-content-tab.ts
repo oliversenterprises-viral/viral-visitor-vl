@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase';
 import { formatError } from '../lib';
 import { showToast } from '../ui';
 import { getLocalBannerEvents } from '../content';
-import { renderBannerStats } from './banner-stats';
+import { renderBannerStats, wireBannerStatsQuick } from './banner-stats';
 import { wireRedditCampaignStatsQuick } from './reddit-campaign-stats';
 import { wireVisitorFunnelStatsQuick } from './visitor-funnel-stats';
 
@@ -67,14 +67,6 @@ async function saveSiteContentEntry(key: string, value: unknown): Promise<boolea
  * Allows admins to add, edit, delete, and search all dynamic content
  * that powers the public homepage.
  */
-async function wireBannerStatsQuick(root: HTMLElement) {
-  const el = root.querySelector('#banner-stats-quick') as HTMLElement | null;
-  if (!el) return;
-  const local = getLocalBannerEvents();
-  await renderBannerStats(el, local);
-  renderBannerStats(el).catch(() => {});
-}
-
 async function renderEditContentTab(content: HTMLElement) {
   content.innerHTML = `
     <div class="flex items-center justify-between mb-4">
