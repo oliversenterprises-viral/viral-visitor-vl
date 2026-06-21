@@ -14,15 +14,40 @@ function getClientIp(req: Request): string {
   return '';
 }
 
-function getCountryCode(req: Request): string | null {
-  const raw =
-    req.headers.get('cf-ipcountry') ||
-    req.headers.get('x-vercel-ip-country') ||
-    req.headers.get('x-country-code');
+function normalizeCountryCode(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const code = raw.trim().toUpperCase();
   if (!/^[A-Z]{2}$/.test(code) || code === 'XX' || code === 'T1') return null;
   return code;
+}
+
+function getCountryFromHeaders(req: Request): string | null {
+  return normalizeCountryCode(
+    req.headers.get('cf-ipcountry') ||
+      req.headers.get('x-vercel-ip-country') ||
+      req.headers.get('x-country-code') ||
+      req.headers.get('x-sb-client-region'),
+  );
+}
+
+/** Browser → Supabase invoke often lacks CF geo headers; resolve from client IP. */
+async function resolveCountryFromIp(ip: string): Promise<string | null> {
+  if (!ip || ip === 'unknown' || ip.startsWith('127.') || ip.startsWith('10.') || ip === '::1') {
+    return null;
+  }
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 2500);
+    const res = await fetch(`https://ipapi.co/${encodeURIComponent(ip)}/country_code/`, {
+      signal: ctrl.signal,
+      headers: { 'User-Agent': 'viralrefer-visitor-stats/1' },
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    return normalizeCountryCode(await res.text());
+  } catch {
+    return null;
+  }
 }
 
 async function hashIp(ip: string): Promise<string | null> {
@@ -68,7 +93,10 @@ Deno.serve(async (req: Request) => {
     const sessionId = String(body.session_id || body.sessionId || '').trim().slice(0, 64) || null;
     const ip = getClientIp(req);
     const ipHash = await hashIp(ip);
-    const countryCode = getCountryCode(req);
+    let countryCode = getCountryFromHeaders(req);
+    if (!countryCode && ip) {
+      countryCode = await resolveCountryFromIp(ip);
+    }
 
     const row = {
       event_name: eventName.slice(0, 80),
