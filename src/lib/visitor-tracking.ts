@@ -134,6 +134,17 @@ function uniqueVisitorsFor(events: Array<Record<string, unknown>>, eventName?: s
   return ids.size;
 }
 
+/** Newest-first — works for server (DESC) and local (append) event lists. */
+function latestEvents(events: Array<Record<string, unknown>>, limit: number) {
+  return [...events]
+    .sort((a, b) => {
+      const ta = new Date(String(a.created_at || a.timestamp || 0)).getTime();
+      const tb = new Date(String(b.created_at || b.timestamp || 0)).getTime();
+      return tb - ta;
+    })
+    .slice(0, limit);
+}
+
 function uniqueByCountry(
   events: Array<Record<string, unknown>>,
   eventName = 'SiteLanding',
@@ -177,7 +188,7 @@ export function computeVisitorFunnelStats(events: Array<Record<string, any>>) {
     total: events.length,
     uniqueVisitorsLanding: uniqueVisitorsFor(events, 'SiteLanding'),
     uniqueVisitorsAny: uniqueVisitorsFor(events),
-    lastEvents: [...events].slice(-8).reverse(),
+    lastEvents: latestEvents(events, 8),
     bySource: groupBy(events, (e) => String(e.utm_source || e.utmSource || '(direct)')),
     byCountry: uniqueByCountry(events),
   };

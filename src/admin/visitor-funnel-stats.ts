@@ -68,6 +68,7 @@ export async function renderVisitorFunnelStats(container: HTMLElement, preloaded
     <div class="text-[9px] text-zinc-300 mb-2">
       Unique visitors (landings): <span class="tabular-nums text-violet-200">${stats.uniqueVisitorsLanding}</span>
       ${stats.uniqueVisitorsAny !== stats.uniqueVisitorsLanding ? ` · engaged (any step): <span class="tabular-nums text-violet-200">${stats.uniqueVisitorsAny}</span>` : ''}
+      · <span class="text-zinc-500">${stats.total} events loaded${source === 'server' ? ' (latest 500 from server)' : ''}</span>
     </div>
   `;
 
@@ -118,7 +119,7 @@ export async function renderVisitorFunnelStats(container: HTMLElement, preloaded
     html += `<div class="text-[9px] text-zinc-400 mb-1">Recent events:</div>`;
     html += `<div class="font-mono text-[8px] text-zinc-300 bg-black/40 border border-white/10 p-1.5 rounded max-h-24 overflow-y-auto">`;
     for (const e of stats.lastEvents) {
-      const t = e.created_at ? new Date(e.created_at).toLocaleString() : '';
+      const t = e.created_at ? new Date(String(e.created_at)).toLocaleString() : '';
       const src = e.utm_source ? ` [${e.utm_source}]` : '';
       const geo = e.country_code ? ` ${e.country_code}` : '';
       html += `${t} ${e.event_name}${geo}${src}<br>`;

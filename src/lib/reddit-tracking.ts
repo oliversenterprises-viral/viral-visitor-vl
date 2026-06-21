@@ -245,6 +245,16 @@ export function getLocalRedditEvents(): Array<Record<string, unknown>> {
   }
 }
 
+function latestRedditEvents(events: Array<Record<string, unknown>>, limit: number) {
+  return [...events]
+    .sort((a, b) => {
+      const ta = new Date(String(a.created_at || a.timestamp || 0)).getTime();
+      const tb = new Date(String(b.created_at || b.timestamp || 0)).getTime();
+      return tb - ta;
+    })
+    .slice(0, limit);
+}
+
 export function computeRedditFunnelStats(events: Array<Record<string, any>>) {
   const counts: Record<string, number> = {};
   for (const e of events) {
@@ -266,7 +276,7 @@ export function computeRedditFunnelStats(events: Array<Record<string, any>>) {
   return {
     funnel,
     total: events.length,
-    lastEvents: [...events].slice(-8).reverse(),
+    lastEvents: latestRedditEvents(events, 8),
     byCampaign: groupBy(events, (e) => String(e.utm_campaign || e.utmCampaign || '(none)')),
   };
 }

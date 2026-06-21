@@ -27,6 +27,16 @@ export function clearBannerEvents(): void {
   localStorage.removeItem(BANNER_EVENTS_KEY);
 }
 
+function latestBannerEvents(events: Array<Record<string, unknown>>, limit: number) {
+  return [...events]
+    .sort((a, b) => {
+      const ta = new Date(String(a.created_at || a.timestamp || 0)).getTime();
+      const tb = new Date(String(b.created_at || b.timestamp || 0)).getTime();
+      return tb - ta;
+    })
+    .slice(0, limit);
+}
+
 export function computeBannerStats(events: Array<Record<string, any>>) {
   const perBannerMap: Record<string, { key: string; label: string; redirectUrl: string; impressions: number; clicks: number }> = {};
 
@@ -48,7 +58,7 @@ export function computeBannerStats(events: Array<Record<string, any>>) {
 
   return {
     perBanner: Object.values(perBannerMap),
-    lastEvents: [...events].slice(-5).reverse(),
+    lastEvents: latestBannerEvents(events, 5),
   };
 }
 

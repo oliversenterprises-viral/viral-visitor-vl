@@ -92,7 +92,7 @@ export async function renderRedditCampaignStats(container: HTMLElement, preloade
     html += `<div class="text-[9px] text-zinc-400 mb-1">Recent events:</div>`;
     html += `<div class="font-mono text-[8px] text-zinc-300 bg-black/40 border border-white/10 p-1.5 rounded max-h-24 overflow-y-auto">`;
     for (const e of stats.lastEvents) {
-      const t = e.created_at ? new Date(e.created_at).toLocaleString() : '';
+      const t = e.created_at ? new Date(String(e.created_at)).toLocaleString() : '';
       html += `${t} ${e.event_name} ${e.utm_campaign ? `(${e.utm_campaign})` : ''}<br>`;
     }
     html += `</div>`;
