@@ -6,6 +6,7 @@ import {
 
 import { applyTextColors } from './colors';
 import { supabase } from './lib/supabase';
+import { latestEvents } from './lib/stats-helpers';
 
 export const BANNER_EVENTS_KEY = 'viralrefer_banner_events';
 
@@ -25,16 +26,6 @@ export function getLocalBannerEvents(): Array<Record<string, unknown>> {
 
 export function clearBannerEvents(): void {
   localStorage.removeItem(BANNER_EVENTS_KEY);
-}
-
-function latestBannerEvents(events: Array<Record<string, unknown>>, limit: number) {
-  return [...events]
-    .sort((a, b) => {
-      const ta = new Date(String(a.created_at || a.timestamp || 0)).getTime();
-      const tb = new Date(String(b.created_at || b.timestamp || 0)).getTime();
-      return tb - ta;
-    })
-    .slice(0, limit);
 }
 
 export function computeBannerStats(events: Array<Record<string, any>>) {
@@ -58,7 +49,8 @@ export function computeBannerStats(events: Array<Record<string, any>>) {
 
   return {
     perBanner: Object.values(perBannerMap),
-    lastEvents: latestBannerEvents(events, 5),
+    lastEvents: latestEvents(events, 5),
+    total: events.length,
   };
 }
 

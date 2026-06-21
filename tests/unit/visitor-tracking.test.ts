@@ -26,6 +26,17 @@ describe('visitor-tracking stats', () => {
     expect(stats.lastEvents[0].created_at).toBe('2026-06-20T22:00:00.000Z');
   });
 
+  it('UTM source breakdown counts landings only', () => {
+    const events = [
+      { event_name: 'SiteLanding', utm_source: 'reddit' },
+      { event_name: 'SiteLanding', utm_source: 'reddit' },
+      { event_name: 'GetReferralLink', utm_source: 'reddit' },
+      { event_name: 'SiteLanding', utm_source: null },
+    ];
+    const stats = computeVisitorFunnelStats(events);
+    expect(stats.bySource).toEqual({ reddit: 2, '(direct)': 1 });
+  });
+
   it('groups country breakdown by landing unique visitors', () => {
     const events = [
       { event_name: 'SiteLanding', visitor_id: 'a', country_code: 'US' },

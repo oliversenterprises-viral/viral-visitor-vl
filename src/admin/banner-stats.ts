@@ -1,4 +1,4 @@
-import { clearBannerEvents, computeBannerStats, getBannerEventsForStats, getLocalBannerEvents } from '../content';
+import { clearBannerEvents, computeBannerStats, getBannerEventsForStats } from '../content';
 import { showToast } from '../ui';
 
 function bindBannerStatsActions(container: HTMLElement) {
@@ -102,7 +102,7 @@ export async function renderBannerStats(container: HTMLElement, preloadedEvents?
   });
 
   const copyPayload = JSON.stringify(
-    { generated: new Date().toISOString(), source, stats, rawEvents: events.slice(-50) },
+    { generated: new Date().toISOString(), source, stats, rawEvents: stats.lastEvents },
     null,
     2,
   );
@@ -112,7 +112,7 @@ export async function renderBannerStats(container: HTMLElement, preloadedEvents?
     <div class="text-[10px] font-semibold text-emerald-400 mb-1">Banner Performance (${sourceLabel})
       <span class="text-emerald-400/60">${sourceNote}</span>
     </div>
-    <div class="text-[9px] text-zinc-500 mb-1">Updated ${refreshedAt}</div>
+    <div class="text-[9px] text-zinc-500 mb-1">Updated ${refreshedAt} · ${stats.total} events loaded${isServer ? ' (latest 500 from server)' : ''}</div>
   `;
 
   if (fetchError && source === 'local') {
@@ -169,10 +169,6 @@ export async function renderBannerStats(container: HTMLElement, preloadedEvents?
 export async function wireBannerStatsQuick(root: HTMLElement) {
   const el = root.querySelector('#banner-stats-quick') as HTMLElement | null;
   if (!el) return;
-  const local = getLocalBannerEvents();
-  if (local.length) {
-    await renderBannerStats(el, local);
-  }
   await renderBannerStats(el);
 }
 

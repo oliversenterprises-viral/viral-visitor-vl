@@ -1,4 +1,4 @@
-import { computeRedditFunnelStats, getRedditEventsForStats, getLocalRedditEvents } from '../lib/reddit-tracking';
+import { computeRedditFunnelStats, getRedditEventsForStats } from '../lib/reddit-tracking';
 import { showToast } from '../ui';
 
 function bindRedditStatsRefresh(container: HTMLElement) {
@@ -64,8 +64,9 @@ export async function renderRedditCampaignStats(container: HTMLElement, preloade
     </div>
     <div class="text-[9px] text-zinc-500 mb-1">Updated ${refreshedAt}</div>
     <div class="text-[9px] text-zinc-400 mb-2">
-      Tracks Reddit ad visitors: landing → get link → copy → share → claim. Register matching Custom events in Reddit Events Manager.
+      Reddit UTM traffic only (<code class="text-orange-200/80">utm_source=reddit</code>). Funnel steps + pixel events. Counts = total actions, not unique visitors.
     </div>
+    <div class="text-[9px] text-zinc-500 mb-2">${stats.total} events loaded${source === 'server' ? ' (latest 500 from server)' : ''}</div>
   `;
 
   if (fetchError && source === 'local') {
@@ -88,6 +89,16 @@ export async function renderRedditCampaignStats(container: HTMLElement, preloade
   }
   html += `</tbody></table>`;
 
+  const campaignEntries = Object.entries(stats.byCampaign).sort((a, b) => b[1] - a[1]);
+  if (campaignEntries.length > 0 && !(campaignEntries.length === 1 && campaignEntries[0][0] === '(none)')) {
+    html += `<div class="text-[9px] text-zinc-400 mb-1">By campaign (Reddit landings):</div>`;
+    html += `<div class="text-[8px] text-zinc-300 mb-2">`;
+    for (const [camp, count] of campaignEntries.slice(0, 6)) {
+      html += `<span class="inline-block mr-2 mb-1 px-1.5 py-0.5 bg-orange-900/40 border border-orange-500/30 rounded">${camp}: ${count}</span>`;
+    }
+    html += `</div>`;
+  }
+
   if (stats.lastEvents.length) {
     html += `<div class="text-[9px] text-zinc-400 mb-1">Recent events:</div>`;
     html += `<div class="font-mono text-[8px] text-zinc-300 bg-black/40 border border-white/10 p-1.5 rounded max-h-24 overflow-y-auto">`;
@@ -106,9 +117,5 @@ export async function renderRedditCampaignStats(container: HTMLElement, preloade
 export async function wireRedditCampaignStatsQuick(root: HTMLElement) {
   const el = root.querySelector('#reddit-stats-quick') as HTMLElement | null;
   if (!el) return;
-  const local = getLocalRedditEvents();
-  if (local.length) {
-    await renderRedditCampaignStats(el, local);
-  }
   await renderRedditCampaignStats(el);
 }

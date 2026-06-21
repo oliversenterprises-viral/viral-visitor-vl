@@ -1,4 +1,4 @@
-import { computeVisitorFunnelStats, getLocalVisitorEvents, getVisitorEventsForStats } from '../lib/visitor-tracking';
+import { computeVisitorFunnelStats, getVisitorEventsForStats } from '../lib/visitor-tracking';
 import { showToast } from '../ui';
 
 function bindVisitorStatsRefresh(container: HTMLElement) {
@@ -107,7 +107,7 @@ export async function renderVisitorFunnelStats(container: HTMLElement, preloaded
 
   const sourceEntries = Object.entries(stats.bySource).sort((a, b) => b[1] - a[1]);
   if (sourceEntries.length > 1 || (sourceEntries.length === 1 && sourceEntries[0][0] !== '(direct)')) {
-    html += `<div class="text-[9px] text-zinc-400 mb-1">By UTM source:</div>`;
+    html += `<div class="text-[9px] text-zinc-400 mb-1">By UTM source (landings only):</div>`;
     html += `<div class="text-[8px] text-zinc-300 mb-2">`;
     for (const [src, count] of sourceEntries.slice(0, 6)) {
       html += `<span class="inline-block mr-2 mb-1 px-1.5 py-0.5 bg-violet-900/40 border border-violet-500/30 rounded">${src}: ${count}</span>`;
@@ -135,9 +135,5 @@ export async function renderVisitorFunnelStats(container: HTMLElement, preloaded
 export async function wireVisitorFunnelStatsQuick(root: HTMLElement) {
   const el = root.querySelector('#visitor-stats-quick') as HTMLElement | null;
   if (!el) return;
-  const local = getLocalVisitorEvents();
-  if (local.length) {
-    await renderVisitorFunnelStats(el, local);
-  }
   await renderVisitorFunnelStats(el);
 }

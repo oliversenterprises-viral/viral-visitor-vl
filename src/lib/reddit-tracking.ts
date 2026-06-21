@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './supabase';
+import { eventName, groupBy, latestEvents } from './stats-helpers';
 
 export interface UtmAttribution {
   source: string | null;
@@ -245,20 +246,10 @@ export function getLocalRedditEvents(): Array<Record<string, unknown>> {
   }
 }
 
-function latestRedditEvents(events: Array<Record<string, unknown>>, limit: number) {
-  return [...events]
-    .sort((a, b) => {
-      const ta = new Date(String(a.created_at || a.timestamp || 0)).getTime();
-      const tb = new Date(String(b.created_at || b.timestamp || 0)).getTime();
-      return tb - ta;
-    })
-    .slice(0, limit);
-}
-
 export function computeRedditFunnelStats(events: Array<Record<string, any>>) {
   const counts: Record<string, number> = {};
   for (const e of events) {
-    const name = String(e.event_name || e.eventName || 'unknown');
+    const name = eventName(e);
     counts[name] = (counts[name] || 0) + 1;
   }
   const funnelOrder: RedditFunnelEvent[] = [
@@ -276,18 +267,12 @@ export function computeRedditFunnelStats(events: Array<Record<string, any>>) {
   return {
     funnel,
     total: events.length,
-    lastEvents: latestRedditEvents(events, 8),
-    byCampaign: groupBy(events, (e) => String(e.utm_campaign || e.utmCampaign || '(none)')),
+    lastEvents: latestEvents(events, 8),
+    byCampaign: groupBy(
+      events.filter((e) => eventName(e) === 'RedditLanding'),
+      (e) => String(e.utm_campaign || e.utmCampaign || '(none)'),
+    ),
   };
-}
-
-function groupBy<T>(arr: T[], keyFn: (item: T) => string): Record<string, number> {
-  const out: Record<string, number> = {};
-  for (const item of arr) {
-    const k = keyFn(item);
-    out[k] = (out[k] || 0) + 1;
-  }
-  return out;
 }
 
 export async function getRedditEventsForStats(): Promise<{

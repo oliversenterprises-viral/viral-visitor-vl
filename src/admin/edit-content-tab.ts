@@ -1,7 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { formatError } from '../lib';
 import { showToast } from '../ui';
-import { getLocalBannerEvents } from '../content';
 import { renderBannerStats, wireBannerStatsQuick } from './banner-stats';
 import { wireRedditCampaignStatsQuick } from './reddit-campaign-stats';
 import { wireVisitorFunnelStatsQuick } from './visitor-funnel-stats';
@@ -740,7 +739,7 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
     statsEl.id = 'banner-stats';
     statsEl.className = 'mt-3 pt-3 border-t border-white/10';
     container.appendChild(statsEl);
-    renderBannerStats(statsEl, getLocalBannerEvents()).catch(() => {});
+    renderBannerStats(statsEl).catch(() => {});
   }
 
   function sync() {
