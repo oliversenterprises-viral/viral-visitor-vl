@@ -123,10 +123,12 @@ async function recordReferralIfAttributed(): Promise<boolean> {
 
     const token = await getTurnstileToken(container);
 
+    const visitorCode = getMyReferralCode() || localStorage.getItem('vr_my_ref_code') || null;
     const { data, error } = await (await import('./lib')).supabase.functions.invoke('record-referral', {
       body: {
         referrerCode: pendingReferrerCode,
         turnstileToken: token,
+        ...(visitorCode ? { referredCode: visitorCode } : {}),
       },
     });
 

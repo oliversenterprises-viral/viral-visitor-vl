@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { uploadBannerImage, BANNER_UPLOAD_ACCEPT } from '../lib/banner-upload';
 import { formatError } from '../lib';
 import { showToast } from '../ui';
 import { renderBannerStats, wireBannerStatsQuick } from './banner-stats';
@@ -628,7 +629,12 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
           <div class="flex-1 text-xs space-y-1.5">
             <div>
               <div class="text-zinc-400 text-[10px]">Image URL ${!hasImg ? '<span class="text-red-400">(required)</span>' : ''}</div>
-              <input data-idx="${i}" data-field="imageUrl" value="${b.imageUrl || ''}" class="w-full bg-zinc-900 border border-white/20 rounded px-2 py-1 text-xs" placeholder="https://...jpg">
+              <div class="flex gap-1.5 items-center">
+                <input data-idx="${i}" data-field="imageUrl" value="${b.imageUrl || ''}" class="flex-1 min-w-0 bg-zinc-900 border border-white/20 rounded px-2 py-1 text-xs" placeholder="https://...jpg or upload below">
+                <input type="file" accept="${BANNER_UPLOAD_ACCEPT}" data-idx="${i}" data-field="file" class="hidden banner-file-input">
+                <button type="button" data-idx="${i}" data-action="upload" class="text-[10px] px-2 py-1 bg-emerald-600/80 hover:bg-emerald-500 rounded-lg font-semibold whitespace-nowrap">Upload</button>
+              </div>
+              <div class="text-[9px] text-zinc-500 mt-0.5">JPG, PNG, GIF, WebP, SVG · max 2MB</div>
             </div>
             <div>
               <div class="text-zinc-400 text-[10px]">Redirect URL ${!hasRedirect ? '<span class="text-red-400">(required)</span>' : ''}</div>
@@ -689,11 +695,54 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
         });
       });
 
+      const refreshBannerThumbnail = (idx: number) => {
+        const thumbWrap = card.querySelector('.w-14');
+        if (!thumbWrap) return;
+        const has = banners[idx].imageUrl && banners[idx].imageUrl.trim();
+        thumbWrap.innerHTML = has
+          ? `<img src="${banners[idx].imageUrl}" class="max-w-full max-h-full object-contain" onerror="this.parentElement.innerHTML='<div class=\\'text-[9px] text-red-400 text-center\\'>Bad image</div>'">`
+          : `<div class="text-[10px] text-zinc-500 text-center leading-[14px] p-1">No image</div>`;
+        const hasImgNow = !!banners[idx].imageUrl && banners[idx].imageUrl.trim().length > 0;
+        const hasRedirectNow = !!banners[idx].redirectUrl && banners[idx].redirectUrl.trim().length > 0;
+        card.className = `bg-zinc-950 border rounded-xl p-3 ${(!hasImgNow || !hasRedirectNow) ? 'border-red-500/60' : 'border-white/10'}`;
+      };
+
+      const fileInput = card.querySelector('input[data-field="file"]') as HTMLInputElement | null;
+      const uploadBtn = card.querySelector('button[data-action="upload"]') as HTMLButtonElement | null;
+      if (fileInput && uploadBtn) {
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', async () => {
+          const file = fileInput.files?.[0];
+          fileInput.value = '';
+          if (!file) return;
+
+          const idx = parseInt(fileInput.dataset.idx || '0', 10);
+          const originalLabel = uploadBtn.textContent;
+          uploadBtn.disabled = true;
+          uploadBtn.textContent = 'Uploading…';
+          try {
+            const url = await uploadBannerImage(file);
+            banners[idx].imageUrl = url;
+            sync();
+            const urlInput = card.querySelector('input[data-field="imageUrl"]') as HTMLInputElement | null;
+            if (urlInput) urlInput.value = url;
+            refreshBannerThumbnail(idx);
+            showToast('Banner image uploaded', 'success');
+          } catch (err: unknown) {
+            showToast(formatError(err) || 'Banner upload failed', 'info');
+          } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = originalLabel || 'Upload';
+          }
+        });
+      }
+
       // Buttons
       card.querySelectorAll('button[data-action]').forEach((btn: any) => {
         btn.addEventListener('click', () => {
           const idx = parseInt(btn.dataset.idx);
           const act = btn.dataset.action;
+          if (act === 'upload') return;
           if (act === 'del') {
             banners.splice(idx, 1);
             render();

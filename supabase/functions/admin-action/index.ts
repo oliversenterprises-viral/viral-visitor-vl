@@ -21,6 +21,32 @@ function bannerEventKey(row: Record<string, unknown>): string {
   return lab && url ? `${lab}|${url}` : url || lab || 'unknown';
 }
 
+const BANNER_UPLOAD_ALLOWED_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+]);
+const BANNER_UPLOAD_MAX_BYTES = 2 * 1024 * 1024;
+
+function sanitizeBannerFileName(raw: string): string {
+  const base = String(raw || 'banner')
+    .split(/[/\\]/).pop()!
+    .replace(/[^a-zA-Z0-9._-]/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 80);
+  return base || 'banner';
+}
+
+function decodeBase64ToBytes(data: string): Uint8Array {
+  const cleaned = data.includes(',') ? data.split(',').pop()! : data;
+  const binary = atob(cleaned.replace(/\s/g, ''));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
 function normalizeBannerEventRow(row: Record<string, unknown>) {
   const additional =
     row.additional && typeof row.additional === 'object'
@@ -199,6 +225,42 @@ Deno.serve(async (req: Request) => {
         .limit(500);
       if (error) throw error;
       return new Response(JSON.stringify({ success: true, data: data || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'upload_banner_image') {
+      const fileName = sanitizeBannerFileName(String(payload?.fileName || 'banner'));
+      const contentType = String(payload?.contentType || '').toLowerCase();
+      const data = String(payload?.data || '');
+
+      if (!data) {
+        return new Response(JSON.stringify({ success: false, error: 'Image data required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (!BANNER_UPLOAD_ALLOWED_TYPES.has(contentType)) {
+        return new Response(JSON.stringify({ success: false, error: 'Unsupported image type' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const bytes = decodeBase64ToBytes(data);
+      if (bytes.length === 0 || bytes.length > BANNER_UPLOAD_MAX_BYTES) {
+        return new Response(JSON.stringify({ success: false, error: 'Image must be between 1 byte and 2MB' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const storagePath = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${fileName}`;
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('banner-assets')
+        .upload(storagePath, bytes, { contentType, upsert: false, cacheControl: '3600' });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabaseAdmin.storage.from('banner-assets').getPublicUrl(storagePath);
+      return new Response(JSON.stringify({ success: true, url: publicData.publicUrl, path: storagePath }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
