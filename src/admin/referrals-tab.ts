@@ -12,11 +12,18 @@ function getReferralsTabRoot(from: HTMLElement): HTMLElement {
   return (from.closest('#admin-content') as HTMLElement) || from;
 }
 
+/** Production DB uses referred_ip; legacy rows may still have ip_address. */
+export function getReferralIp(row: AdminReferralRow): string {
+  const ip = row.referred_ip ?? row.ip_address;
+  return typeof ip === 'string' ? ip.trim() : '';
+}
+
 /** Exported for testability (pure function). */
 export function computeHighRiskIPs(rows: readonly AdminReferralRow[]): Set<string> {
   const ipCounts: Record<string, number> = {};
   rows.forEach((r) => {
-    if (r.ip_address) ipCounts[r.ip_address] = (ipCounts[r.ip_address] || 0) + 1;
+    const ip = getReferralIp(r);
+    if (ip) ipCounts[ip] = (ipCounts[ip] || 0) + 1;
   });
   return new Set(Object.entries(ipCounts).filter(([, c]) => c >= 3).map(([ip]) => ip));
 }
@@ -36,7 +43,7 @@ export function filterReferralsBySearch(rows: readonly AdminReferralRow[], query
   return rows.filter(
     (r) =>
       (r.referrer_code || '').toLowerCase().includes(q) ||
-      (r.ip_address || '').toLowerCase().includes(q) ||
+      getReferralIp(r).toLowerCase().includes(q) ||
       (r.user_agent || '').toLowerCase().includes(q),
   );
 }
@@ -48,7 +55,10 @@ export function filterReferralsByRisk(
   filter: RiskFilter,
 ): AdminReferralRow[] {
   if (filter === 'all') return [...rows];
-  return rows.filter((r) => r.ip_address && riskIPs.has(r.ip_address));
+  return rows.filter((r) => {
+    const ip = getReferralIp(r);
+    return ip && riskIPs.has(ip);
+  });
 }
 
 /** Exported for testability (pure function). */
@@ -430,14 +440,14 @@ function formatNumber(n: number): string {
 function exportReferralsCSV(rows: readonly AdminReferralRow[]) {
   if (!rows.length) return;
 
-  const headers = ['created_at', 'referrer_code', 'ip_address', 'user_agent', 'referrer_user_id'];
+  const headers = ['created_at', 'referrer_code', 'referred_ip', 'user_agent', 'referrer_user_id'];
   const csvRows = [headers.join(',')];
 
   rows.forEach((r) => {
     const line = [
       r.created_at || '',
       `"${(r.referrer_code || '').replace(/"/g, '""')}"`,
-      r.ip_address || '',
+      getReferralIp(r),
       `"${(r.user_agent || '').replace(/"/g, '""')}"`,
       r.referrer_user_id || '',
     ];
@@ -463,7 +473,8 @@ function showReferralDetails(row: AdminReferralRow, isHighRisk: boolean = false)
   const pretty = JSON.stringify(row, null, 2).replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const created = row.created_at ? new Date(row.created_at).toLocaleString() : '—';
   const safeCode = escapeHtml(row.referrer_code || '—');
-  const safeIp = escapeHtml(row.ip_address || '—');
+  const rowIp = getReferralIp(row);
+  const safeIp = escapeHtml(rowIp || '—');
   const safeUa = escapeHtml(row.user_agent || '—');
 
   contentBox.innerHTML = `
@@ -485,7 +496,7 @@ function showReferralDetails(row: AdminReferralRow, isHighRisk: boolean = false)
         <span class="text-zinc-400">IP Address</span>
         <div class="flex items-center gap-2">
           <div class="font-mono text-xs">${safeIp}</div>
-          ${row.ip_address ? `
+          ${rowIp ? `
             <button class="copy-modal-ip-btn text-sky-400 hover:text-sky-300 px-2 py-0.5 rounded bg-white/5 text-xs" data-ip="${safeIp}">
               <i class="fa-solid fa-copy"></i> Copy
             </button>
@@ -573,11 +584,12 @@ function buildReferralsTableHTML(filtered: readonly AdminReferralRow[], riskIPs:
     const rowId = row.id || `${row.referrer_code}-${row.created_at}`;
     const dateStr = new Date(row.created_at).toLocaleDateString();
     const code = escapeHtml(row.referrer_code || '—');
-    const ip = escapeHtml(row.ip_address || '—');
+    const rowIp = getReferralIp(row);
+    const ip = escapeHtml(rowIp || '—');
     const uaRaw = row.user_agent || '';
     const ua = uaRaw ? escapeHtml(uaRaw.substring(0, 38) + (uaRaw.length > 38 ? '…' : '')) : '—';
     const timeAgo = getRelativeTime(row.created_at);
-    const isRisk = !!(row.ip_address && riskIPs.has(row.ip_address));
+    const isRisk = !!(rowIp && riskIPs.has(rowIp));
 
     html += `
       <tr data-referral-id="${escapeHtml(rowId)}" class="referral-row table-row border-b border-white/10 hover:bg-zinc-900/60 cursor-pointer ${isRisk ? 'bg-red-950/20' : ''}">
@@ -593,7 +605,7 @@ function buildReferralsTableHTML(filtered: readonly AdminReferralRow[], riskIPs:
         <td class="py-3 pr-4 font-mono text-xs text-zinc-300">
           <span class="inline-flex items-center gap-1">
             ${ip}
-            ${row.ip_address ? `
+            ${rowIp ? `
               <button data-ip="${ip}" class="copy-ip-btn text-sky-400 hover:text-sky-300 p-1" title="Copy IP">
                 <i class="fa-solid fa-copy text-[10px]"></i>
               </button>
@@ -626,7 +638,7 @@ function attachReferralTableListeners(
 ) {
   const openRow = (id: string) => {
     const row = findReferralInList(filtered, id);
-    if (row) showReferralDetails(row, riskIPs.has(row.ip_address || ''));
+    if (row) showReferralDetails(row, riskIPs.has(getReferralIp(row)));
   };
 
   tableContainer.querySelectorAll('.referral-row').forEach((rowEl) => {

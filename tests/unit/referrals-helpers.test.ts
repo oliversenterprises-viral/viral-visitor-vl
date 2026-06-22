@@ -6,6 +6,7 @@ import {
   filterReferralsByRisk,
   computeTopReferrers,
   applyReferralFilters,
+  getReferralIp,
 } from '../../src/admin/referrals-tab';
 import type { AdminReferralRow } from '../../src/admin/state';
 
@@ -16,6 +17,15 @@ const makeRow = (overrides: Partial<AdminReferralRow> = {}): AdminReferralRow =>
 });
 
 describe('referrals helpers (pure)', () => {
+  it('getReferralIp prefers referred_ip over legacy ip_address', () => {
+    expect(getReferralIp(makeRow({ referred_ip: '203.0.113.77' }))).toBe('203.0.113.77');
+    expect(
+      getReferralIp(makeRow({ referred_ip: '203.0.113.77', ip_address: '1.2.3.4' })),
+    ).toBe('203.0.113.77');
+    expect(getReferralIp(makeRow({ ip_address: '1.2.3.4' }))).toBe('1.2.3.4');
+    expect(getReferralIp(makeRow({}))).toBe('');
+  });
+
   it('computeHighRiskIPs detects IPs with 3+ referrals', () => {
     const rows: AdminReferralRow[] = [
       makeRow({ ip_address: '1.2.3.4' }),
@@ -27,6 +37,15 @@ describe('referrals helpers (pure)', () => {
     const risk = computeHighRiskIPs(rows);
     expect(risk.has('1.2.3.4')).toBe(true);
     expect(risk.has('5.6.7.8')).toBe(false);
+  });
+
+  it('computeHighRiskIPs uses production referred_ip column', () => {
+    const rows: AdminReferralRow[] = [
+      makeRow({ referred_ip: '203.0.113.1' }),
+      makeRow({ referred_ip: '203.0.113.1' }),
+      makeRow({ referred_ip: '203.0.113.1' }),
+    ];
+    expect(computeHighRiskIPs(rows).has('203.0.113.1')).toBe(true);
   });
 
   it('filterReferralsByDays returns all when days=0', () => {
@@ -91,7 +110,7 @@ describe('referrals helpers (pure)', () => {
     const riskIPs = computeHighRiskIPs(rows);
     const filtered = filterReferralsByRisk(rows, riskIPs, 'high-risk');
     expect(filtered.length).toBe(3);
-    expect(filtered.every((r) => r.ip_address === '1.2.3.4')).toBe(true);
+    expect(filtered.every((r) => getReferralIp(r) === '1.2.3.4')).toBe(true);
   });
 
   it('computeTopReferrers ranks by count', () => {

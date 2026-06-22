@@ -13,6 +13,9 @@ export interface AdminReferralRow {
   id?: string;
   referrer_code: string;
   created_at: string;
+  /** Production referrals table column (record-referral edge function). */
+  referred_ip?: string;
+  /** Legacy column name from earlier schema migrations. */
   ip_address?: string;
   user_agent?: string;
   referrer_user_id?: string;
