@@ -1,4 +1,4 @@
-/** Plan verification steps 4+6: imports and calls all six shipped admin stats render/wire entry points on real DOM. */
+/** Fresh goal confirmation: steps 4+6 — all six shipped admin stats render/wire entry points on real DOM. */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderBannerStats, wireBannerStatsQuick } from '../../src/admin/banner-stats';
 import {
