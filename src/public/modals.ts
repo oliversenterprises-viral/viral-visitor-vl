@@ -47,10 +47,17 @@ const openAdminPasswordModal = () => {
   });
 };
 
-const adminBtn = document.getElementById('admin-btn');
-if (adminBtn && !adminBtn.dataset.vrWired) {
+function wireAdminButton(): void {
+  const adminBtn = document.getElementById('admin-btn');
+  if (!adminBtn || adminBtn.dataset.vrWired) return;
   adminBtn.dataset.vrWired = '1';
   adminBtn.addEventListener('click', openAdminPasswordModal);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', wireAdminButton);
+} else {
+  wireAdminButton();
 }
 
 const toggleAdminPasswordVisibility = () => {

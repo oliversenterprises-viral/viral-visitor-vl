@@ -4,6 +4,7 @@
  */
 
 import { registerGlobal } from './lib';
+import { supabase } from './lib/supabase';
 import { trackRedditFunnel } from './lib/reddit-tracking';
 import { trackVisitorFunnel } from './lib/visitor-tracking';
 import {
@@ -124,7 +125,7 @@ async function recordReferralIfAttributed(): Promise<boolean> {
     const token = await getTurnstileToken(container);
 
     const visitorCode = getMyReferralCode() || localStorage.getItem('vr_my_ref_code') || null;
-    const { data, error } = await (await import('./lib')).supabase.functions.invoke('record-referral', {
+    const { data, error } = await supabase.functions.invoke('record-referral', {
       body: {
         referrerCode: pendingReferrerCode,
         turnstileToken: token,

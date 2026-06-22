@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { LeaderboardEntry, RecentActivityItem } from './types';
+import { createSupabaseStub } from './supabase-stub';
 
 // CRITICAL: Secrets must come ONLY from Vite env vars (VITE_*).
 // Production deploys (Vercel) inject real values at build time.
@@ -20,21 +21,19 @@ if (!isSupabaseConfigured) {
   );
 }
 
-export const supabase: SupabaseClient = createClient(
-  SUPABASE_URL || 'https://unconfigured.invalid',
-  SUPABASE_ANON_KEY || 'unconfigured-anon-key',
-  {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
-    },
-  },
-  },
-);
+export const supabase: SupabaseClient = isSupabaseConfigured
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    })
+  : createSupabaseStub();
 
 // Client-side fallback (pre-0005 or if RPC unavailable)
 async function fetchLeaderboardFallback(minReferrals: number): Promise<LeaderboardEntry[]> {

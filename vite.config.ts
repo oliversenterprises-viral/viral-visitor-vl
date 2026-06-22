@@ -7,9 +7,29 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/** SPA fallback for /r/CODE clean referral paths in dev + preview. */
+function spaReferralPathFallback() {
+  const fallback = (req: { url?: string }, _res: unknown, next: () => void) => {
+    const url = req.url?.split('?')[0] ?? '';
+    if (/^\/r\/[A-Za-z0-9_-]+\/?$/.test(url) && !url.includes('.')) {
+      req.url = '/index.html';
+    }
+    next();
+  };
+  return {
+    name: 'spa-referral-path-fallback',
+    configureServer(server: { middlewares: { use: (fn: typeof fallback) => void } }) {
+      server.middlewares.use(fallback);
+    },
+    configurePreviewServer(server: { middlewares: { use: (fn: typeof fallback) => void } }) {
+      server.middlewares.use(fallback);
+    },
+  };
+}
+
 export default defineConfig({
   base: '/',
-  plugins: [tailwindcss()],
+  plugins: [tailwindcss(), spaReferralPathFallback()],
 
   resolve: {
     alias: {

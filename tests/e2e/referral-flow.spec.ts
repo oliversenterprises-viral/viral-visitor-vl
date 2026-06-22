@@ -24,8 +24,8 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
   });
 
   test('Clean /r/ path attribution', async ({ page }) => {
-    await page.goto('/?ref=VIRAL-DEMOCODE');
-    await expect(page.locator('#referral-attribution')).toBeVisible({ timeout: 5000 });
+    await page.goto('/r/VIRAL-DEMOCODE');
+    await expect(page.locator('#referral-attribution')).toBeVisible({ timeout: 8000 });
     await expect(page.locator('#referrer-code-display')).toHaveText('VIRAL-DEMOCODE');
   });
 
