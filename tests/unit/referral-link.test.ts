@@ -1,6 +1,12 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { buildReferralLink } from '../../src/referral';
 import { setReferralBaseUrl } from '../../src/public/globals';
+import { parseRefFromLocation } from '../../src/lib/referral-url';
+
+function locationFromUrl(url: string): Location {
+  const u = new URL(url);
+  return { pathname: u.pathname, search: u.search } as Location;
+}
 
 describe('buildReferralLink', () => {
   beforeEach(() => {
@@ -31,5 +37,15 @@ describe('buildReferralLink', () => {
     expect(buildReferralLink('VIRAL-UTM')).toBe(
       'https://landing.example.com?utm_source=email&ref=VIRAL-UTM',
     );
+  });
+
+  it.each([
+    ['https://www.viralrefer.app', 'VIRAL-RT-ROOT'],
+    ['https://mybrand.com/join', 'VIRAL-RT-SUB'],
+    ['https://landing.example.com/?utm=x', 'VIRAL-RT-QS'],
+  ])('buildReferralLink roundtrips via parseRefFromLocation (%s)', (base, code) => {
+    setReferralBaseUrl(base);
+    const link = buildReferralLink(code);
+    expect(parseRefFromLocation(locationFromUrl(link))).toBe(code);
   });
 });

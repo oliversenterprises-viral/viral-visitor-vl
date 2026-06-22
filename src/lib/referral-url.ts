@@ -1,11 +1,13 @@
 /**
  * Referral URL helpers — path-based links are less likely to be flagged as spam on X.
- * Supports: /r/VIRAL-CODE and legacy ?ref=VIRAL-CODE
+ * Invariant: every link buildReferralLinkFromBase emits must roundtrip through parseRefFromLocation.
+ * Supports: /r/CODE, /{subpath}/r/CODE, and legacy ?ref=CODE
  */
 
 const REF_SESSION_KEY = 'vr_landing_ref';
 
-const PATH_REF_RE = /^\/r\/([A-Za-z0-9_-]+)\/?$/;
+/** Trailing /r/CODE segment (root /r/CODE or subpath e.g. /join/r/CODE). */
+const PATH_REF_RE = /\/r\/([A-Za-z0-9_-]+)\/?$/;
 
 export function normalizeReferralCode(code: string): string {
   return code.trim().toUpperCase();

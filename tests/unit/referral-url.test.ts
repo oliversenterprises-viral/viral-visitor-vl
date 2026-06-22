@@ -13,6 +13,11 @@ function mockLocation(pathname: string, search = '') {
   return { pathname, search } as Location;
 }
 
+function locationFromUrl(url: string): Location {
+  const u = new URL(url);
+  return { pathname: u.pathname, search: u.search } as Location;
+}
+
 describe('referral-url', () => {
   it('parses ?ref= query', () => {
     expect(parseRefFromLocation(mockLocation('/', '?ref=viral-abc123'))).toBe('VIRAL-ABC123');
@@ -21,6 +26,10 @@ describe('referral-url', () => {
   it('parses /r/CODE path', () => {
     expect(parseRefFromLocation(mockLocation('/r/VIRAL-97UWEGZ'))).toBe('VIRAL-97UWEGZ');
     expect(parseRefFromLocation(mockLocation('/r/viral-97uwegz/'))).toBe('VIRAL-97UWEGZ');
+  });
+
+  it('parses subpath /join/r/CODE', () => {
+    expect(parseRefFromLocation(mockLocation('/join/r/VIRAL-SUBPATH'))).toBe('VIRAL-SUBPATH');
   });
 
   it('builds clean path link', () => {
@@ -45,6 +54,15 @@ describe('referral-url', () => {
     expect(buildReferralLinkFromBase('VIRAL-ROOT', 'https://www.viralrefer.app')).toBe(
       'https://www.viralrefer.app/r/VIRAL-ROOT',
     );
+  });
+
+  it.each([
+    ['https://www.viralrefer.app', 'VIRAL-RT-ROOT'],
+    ['https://mybrand.com/join', 'VIRAL-RT-SUB'],
+    ['https://landing.example.com/?utm=x', 'VIRAL-RT-QS'],
+  ])('buildReferralLinkFromBase roundtrips via parseRefFromLocation (%s)', (base, code) => {
+    const link = buildReferralLinkFromBase(code, base);
+    expect(parseRefFromLocation(locationFromUrl(link))).toBe(code);
   });
 
   it('normalizes codes', () => {
