@@ -33,8 +33,7 @@ function countExpectedTests(src) {
     0,
   );
   const plainIt = (src.match(/\bit\s*\(/g) || []).length;
-  const itEachDecl = (src.match(/\bit\.each\s*\(/g) || []).length;
-  return plainIt - itEachDecl + eachCases;
+  return plainIt + eachCases;
 }
 
 function countItBlocks(filePath) {
