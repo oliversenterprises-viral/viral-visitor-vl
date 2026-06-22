@@ -44,10 +44,47 @@ export function getStoredLandingRef(): string | null {
   }
 }
 
-/** Build a clean share URL (preferred for X / social). */
+/** Build a clean share URL (preferred for X / social) at site root. */
 export function buildCleanReferralLink(code: string, baseUrl?: string): string {
   const base = (baseUrl || 'https://www.viralrefer.app').replace(/\/$/, '');
   return `${base}/r/${normalizeReferralCode(code)}`;
+}
+
+/**
+ * Build referral link from admin-configured base URL.
+ * Preserves subpaths (e.g. /join → /join/r/CODE) and merges ?ref= into existing query strings.
+ */
+export function buildReferralLinkFromBase(
+  code: string,
+  rawBase: string,
+  fallbackOrigin = 'https://www.viralrefer.app',
+): string {
+  const normalized = normalizeReferralCode(code);
+  let parsed: URL;
+  try {
+    parsed = new URL(rawBase);
+  } catch {
+    try {
+      parsed = new URL(rawBase, fallbackOrigin);
+    } catch {
+      return buildCleanReferralLink(code, fallbackOrigin);
+    }
+  }
+
+  const path = parsed.pathname.replace(/\/$/, '') || '';
+
+  if (parsed.search) {
+    const params = new URLSearchParams(parsed.search);
+    params.set('ref', normalized);
+    const qs = params.toString();
+    return `${parsed.origin}${path || ''}?${qs}`;
+  }
+
+  if (path && path !== '/') {
+    return `${parsed.origin}${path}/r/${normalized}`;
+  }
+
+  return `${parsed.origin}/r/${normalized}`;
 }
 
 /** Show the referral attribution banner immediately (no async init required). */

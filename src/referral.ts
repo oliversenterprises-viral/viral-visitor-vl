@@ -8,16 +8,14 @@ import { supabase } from './lib/supabase';
 import { trackRedditFunnel } from './lib/reddit-tracking';
 import { trackVisitorFunnel } from './lib/visitor-tracking';
 import {
-  buildCleanReferralLink,
+  buildReferralLinkFromBase,
   captureReferralAttribution,
   parseRefFromLocation,
 } from './lib/referral-url';
+import { ensureTurnstileReady, getTurnstileToken } from './lib/turnstile';
 import { escapeHtml } from './content';
 import { showToast } from './ui';
 import { getReferralBaseUrl, getQrModalTitle, getMyReferralCode, setMyReferralCode } from './public/globals';
-
-// Turnstile site key (from Vercel env, falls back for local dev)
-const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY || '';
 
 // Track attribution for the current page load
 let pendingReferrerCode: string | null = null;
@@ -29,13 +27,7 @@ let referralRecordedThisSession = false;
  */
 export function buildReferralLink(code: string): string {
   const rawBase = getReferralBaseUrl() || location.origin;
-  try {
-    const origin = new URL(rawBase).origin;
-    return buildCleanReferralLink(code, origin);
-  } catch {
-    console.warn('%c[ViralRefer] Invalid referral_base_url — using /r/ path on current origin', 'color:#f59e0b', rawBase);
-    return buildCleanReferralLink(code, location.origin);
-  }
+  return buildReferralLinkFromBase(code, rawBase, location.origin);
 }
 
 /**
@@ -46,57 +38,6 @@ export function detectAndStoreAttribution(): void {
   if (pendingReferrerCode) return;
   const ref = captureReferralAttribution() || parseRefFromLocation();
   if (ref) pendingReferrerCode = ref;
-}
-
-/**
- * Loads the Turnstile script dynamically (if not already present).
- */
-function ensureTurnstileScriptLoaded(): Promise<void> {
-  return new Promise((resolve) => {
-    if ((window as any).turnstile) {
-      resolve();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => resolve(); // fail open
-    document.head.appendChild(script);
-  });
-}
-
-/**
- * Shows a Turnstile widget in the given container and returns a promise that resolves with the token.
- */
-function getTurnstileToken(container: HTMLElement): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (!TURNSTILE_SITEKEY) {
-      // No sitekey configured — allow in local/dev (Edge will still validate if secret is set)
-      console.warn('[ViralRefer] VITE_TURNSTILE_SITEKEY not set — skipping Turnstile for recording');
-      resolve('dev-bypass-token');
-      return;
-    }
-
-    container.innerHTML = '';
-    const widgetDiv = document.createElement('div');
-    container.appendChild(widgetDiv);
-
-    (window as any).turnstile.render(widgetDiv, {
-      sitekey: TURNSTILE_SITEKEY,
-      callback: (token: string) => {
-        resolve(token);
-      },
-      'error-callback': () => {
-        reject(new Error('Turnstile error'));
-      },
-      'expired-callback': () => {
-        reject(new Error('Turnstile expired'));
-      },
-    });
-  });
 }
 
 /**
@@ -116,13 +57,13 @@ async function recordReferralIfAttributed(): Promise<boolean> {
   }
 
   try {
-    await ensureTurnstileScriptLoaded();
+    await ensureTurnstileReady();
 
     // Show a small label + widget
     container.style.display = 'block';
     container.innerHTML = '<div class="text-xs text-zinc-400 mb-1">Verifying you are not a bot...</div>';
 
-    const token = await getTurnstileToken(container);
+    const token = await getTurnstileToken(container, undefined, 'Turnstile for recording');
 
     const visitorCode = getMyReferralCode() || localStorage.getItem('vr_my_ref_code') || null;
     const { data, error } = await supabase.functions.invoke('record-referral', {

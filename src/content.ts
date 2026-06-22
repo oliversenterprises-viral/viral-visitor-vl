@@ -443,7 +443,7 @@ export async function updatePublicContent(content: Record<string, any>) {
     // console.log('[ViralRefer] Using custom referral_base_url:', getReferralBaseUrl()); // silenced
   } else {
     // Default base URL for referral links (you can override this via Admin → Edit Content with key "referral_base_url")
-    setReferralBaseUrl('https://viralrefer.app');
+    setReferralBaseUrl('https://www.viralrefer.app');
     // console.log('[ViralRefer] Using default referral_base_url:', getReferralBaseUrl()); // silenced
   }
 

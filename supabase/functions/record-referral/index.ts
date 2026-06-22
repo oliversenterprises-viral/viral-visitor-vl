@@ -11,6 +11,7 @@
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { isValidReferrerCode, normalizeReferrerCode } from '../_shared/referrer-code.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,18 +20,9 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 };
 
-const REFERRER_CODE_RE = /^[A-Z0-9][A-Z0-9_-]{3,19}$/;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 3;
 const DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000;
-
-export function normalizeReferrerCode(raw: unknown): string {
-  return String(raw || '').trim().toUpperCase();
-}
-
-export function isValidReferrerCode(code: string): boolean {
-  return REFERRER_CODE_RE.test(code);
-}
 
 function getClientIp(req: Request): string {
   const cfIp = req.headers.get('cf-connecting-ip');

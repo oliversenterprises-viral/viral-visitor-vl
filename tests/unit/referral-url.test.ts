@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildCleanReferralLink,
+  buildReferralLinkFromBase,
   captureReferralAttribution,
   getStoredLandingRef,
   normalizeReferralCode,
@@ -25,6 +26,24 @@ describe('referral-url', () => {
   it('builds clean path link', () => {
     expect(buildCleanReferralLink('VIRAL-97UWEGZ')).toBe(
       'https://www.viralrefer.app/r/VIRAL-97UWEGZ',
+    );
+  });
+
+  it('buildReferralLinkFromBase preserves subpath (/join → /join/r/CODE)', () => {
+    expect(buildReferralLinkFromBase('VIRAL-JOIN', 'https://mybrand.com/join')).toBe(
+      'https://mybrand.com/join/r/VIRAL-JOIN',
+    );
+  });
+
+  it('buildReferralLinkFromBase merges ?ref= into existing query', () => {
+    expect(
+      buildReferralLinkFromBase('VIRAL-QS', 'https://landing.example.com/?utm_source=x'),
+    ).toBe('https://landing.example.com?utm_source=x&ref=VIRAL-QS');
+  });
+
+  it('buildReferralLinkFromBase uses clean /r/ for root base', () => {
+    expect(buildReferralLinkFromBase('VIRAL-ROOT', 'https://www.viralrefer.app')).toBe(
+      'https://www.viralrefer.app/r/VIRAL-ROOT',
     );
   });
 

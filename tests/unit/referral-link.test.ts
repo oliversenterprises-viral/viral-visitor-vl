@@ -18,4 +18,18 @@ describe('buildReferralLink', () => {
     const link = buildReferralLink('VIRAL-FALLBACK');
     expect(link).toMatch(/\/r\/VIRAL-FALLBACK$/);
   });
+
+  it('preserves custom subpath from admin-configured base', () => {
+    setReferralBaseUrl('https://mybrand.com/join');
+    expect(buildReferralLink('VIRAL-CUSTOM')).toBe(
+      'https://mybrand.com/join/r/VIRAL-CUSTOM',
+    );
+  });
+
+  it('merges ref into base URL with existing query params', () => {
+    setReferralBaseUrl('https://landing.example.com/?utm_source=email');
+    expect(buildReferralLink('VIRAL-UTM')).toBe(
+      'https://landing.example.com?utm_source=email&ref=VIRAL-UTM',
+    );
+  });
 });

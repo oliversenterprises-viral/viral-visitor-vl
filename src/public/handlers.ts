@@ -9,48 +9,18 @@ import { supabase } from '../lib/supabase';
 import { showToast } from '../ui';
 import { trackRedditFunnel } from '../lib/reddit-tracking';
 import { trackVisitorFunnel } from '../lib/visitor-tracking';
+import {
+  ensureTurnstileReady,
+  getTurnstileSiteKey,
+  getTurnstileToken,
+} from '../lib/turnstile';
 
-const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY || '';
+const TURNSTILE_SITEKEY = getTurnstileSiteKey();
 
 function escapeHtml(text: string): string {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
-}
-
-async function ensureTurnstileReady(): Promise<void> {
-  if ((window as any).turnstile) return;
-  await new Promise<void>((resolve) => {
-    const existing = document.querySelector('script[src*="turnstile"]');
-    if (existing) {
-      existing.addEventListener('load', () => resolve(), { once: true });
-      setTimeout(resolve, 2000);
-      return;
-    }
-    resolve();
-  });
-}
-
-async function getTurnstileToken(container: HTMLElement): Promise<string> {
-  if (!TURNSTILE_SITEKEY) {
-    console.warn('[ViralRefer] VITE_TURNSTILE_SITEKEY not set — using dev bypass for claim');
-    return 'dev-bypass-token';
-  }
-
-  await ensureTurnstileReady();
-  container.innerHTML = '';
-
-  return new Promise((resolve, reject) => {
-    const widgetDiv = document.createElement('div');
-    container.appendChild(widgetDiv);
-
-    (window as any).turnstile.render(widgetDiv, {
-      sitekey: TURNSTILE_SITEKEY,
-      callback: (token: string) => resolve(token),
-      'error-callback': () => reject(new Error('Turnstile verification failed')),
-      'expired-callback': () => reject(new Error('Turnstile expired — please try again')),
-    });
-  });
 }
 
 export const closeWinnerModal = () => {
@@ -118,7 +88,7 @@ export const claimBanner = () => {
     turnstileContainer.innerHTML = '';
     ensureTurnstileReady().then(() => {
       if (!turnstileContainer.isConnected) return;
-      getTurnstileToken(turnstileContainer).catch(() => {});
+      getTurnstileToken(turnstileContainer, TURNSTILE_SITEKEY, 'claim').catch(() => {});
     });
   }
 };
@@ -152,7 +122,7 @@ export const submitPrizeClaim = async () => {
     const turnstileContainer = document.getElementById('claim-turnstile-container');
     let turnstileToken = 'dev-bypass-token';
     if (turnstileContainer && TURNSTILE_SITEKEY) {
-      turnstileToken = await getTurnstileToken(turnstileContainer);
+      turnstileToken = await getTurnstileToken(turnstileContainer, TURNSTILE_SITEKEY, 'claim');
     }
 
     const { data: sessionData } = await supabase.auth.getSession();

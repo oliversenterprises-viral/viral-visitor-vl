@@ -1,14 +1,5 @@
 import { describe, it, expect } from 'vitest';
-
-const REFERRER_CODE_RE = /^[A-Z0-9][A-Z0-9_-]{3,19}$/;
-
-function normalizeReferrerCode(raw: unknown): string {
-  return String(raw || '').trim().toUpperCase();
-}
-
-function isValidReferrerCode(code: string): boolean {
-  return REFERRER_CODE_RE.test(code);
-}
+import { isValidReferrerCode, normalizeReferrerCode } from '../../src/lib/referrer-code';
 
 describe('record-referral validation (prod schema)', () => {
   it('accepts client-generated VIRAL codes', () => {
