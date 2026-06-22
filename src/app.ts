@@ -136,7 +136,7 @@ export async function loadLeaderboard() {
 export async function loadSiteContent() {
   try {
     const content = await fetchSiteContent();
-    updatePublicContent(content);
+    await updatePublicContent(content);
   } catch (err) {
     console.warn('[ViralRefer] Failed to load site_content, using static defaults:', err);
   }

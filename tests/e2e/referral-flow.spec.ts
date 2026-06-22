@@ -29,20 +29,27 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await expect(page.locator('#referrer-code-display')).toHaveText('VIRAL-DEMOCODE');
   });
 
-  test('Custom referral base via site_content: generate subpath link, visit and attribute', async ({
+  test('SPA preview serves index.html for bare /join path', async ({ page }) => {
+    await page.goto('/join');
+    await waitForAppReady(page);
+    await expect(page.locator('#hero-title')).toBeVisible({ timeout: 8000 });
+  });
+
+  test('Custom referral base via fetchSiteContent: generate subpath link, visit and attribute', async ({
     page,
     baseURL,
   }) => {
     const joinBase = `${baseURL}/join`;
+    await page.route('**/site_content**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ key: 'referral_base_url', value: joinBase }]),
+      });
+    });
+
     await page.goto('/');
     await waitForAppReady(page);
-
-    await page.evaluate(async (base) => {
-      const vr = (window as Window & {
-        ViralRefer?: { updatePublicContent?: (c: Record<string, string>) => Promise<void> };
-      }).ViralRefer;
-      await vr?.updatePublicContent?.({ referral_base_url: base });
-    }, joinBase);
 
     await page.click('text=Get my referral link');
     const link = await page.locator('#ref-link').inputValue();

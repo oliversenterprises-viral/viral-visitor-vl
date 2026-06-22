@@ -1,20 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-
-const invokeMock = vi.hoisted(() =>
-  vi.fn().mockResolvedValue({ data: { success: true }, error: null }),
-);
-
-vi.mock('../../src/lib/supabase', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../src/lib/supabase')>();
-  return {
-    ...actual,
-    supabase: {
-      ...actual.supabase,
-      functions: { invoke: invokeMock },
-    },
-  };
-});
-
+import { clearStubInvokeLog, getStubInvokeLog } from '../../src/lib/supabase-stub';
 import { claimBanner } from '../../src/public/handlers';
 import { detectAndStoreAttribution, getMyReferralLinkInstant } from '../../src/referral';
 import { setMyReferralCode } from '../../src/public/globals';
@@ -29,10 +14,10 @@ function installTurnstileWidget() {
     };
 }
 
-describe('turnstile shared module (static handlers + referral imports)', () => {
+describe('turnstile shared module (static handlers + referral imports, stub supabase)', () => {
   beforeEach(() => {
     installTurnstileWidget();
-    invokeMock.mockClear();
+    clearStubInvokeLog();
     sessionStorage.clear();
     localStorage.clear();
   });
@@ -58,7 +43,7 @@ describe('turnstile shared module (static handlers + referral imports)', () => {
     });
   });
 
-  it('getMyReferralLinkInstant uses real Turnstile and invokes record-referral', async () => {
+  it('getMyReferralLinkInstant records stub invoke with real Turnstile token', async () => {
     document.body.innerHTML = `
       <div id="referral-turnstile-container" style="display:none"></div>
       <input id="ref-link" />
@@ -73,14 +58,11 @@ describe('turnstile shared module (static handlers + referral imports)', () => {
     detectAndStoreAttribution();
     await getMyReferralLinkInstant();
 
-    expect(invokeMock).toHaveBeenCalledWith(
-      'record-referral',
-      expect.objectContaining({
-        body: expect.objectContaining({
-          referrerCode: 'VIRAL-ATTRIB-REAL',
-          turnstileToken: 'shared-module-turnstile-token',
-        }),
-      }),
-    );
+    const calls = getStubInvokeLog();
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls[0].name).toBe('record-referral');
+    const body = (calls[0].options as { body?: Record<string, string> })?.body;
+    expect(body?.referrerCode).toBe('VIRAL-ATTRIB-REAL');
+    expect(body?.turnstileToken).toBe('shared-module-turnstile-token');
   });
 });

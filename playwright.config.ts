@@ -24,5 +24,9 @@ export default defineConfig({
     url: 'http://localhost:4173',
     reuseExistingServer: false,
     timeout: 180 * 1000,
+    env: {
+      VITE_SUPABASE_URL: 'https://wqbefjzpgsezzwdrvvua.supabase.co',
+      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || 'e2e-anon-key-for-site-content-mock',
+    },
   },
 });

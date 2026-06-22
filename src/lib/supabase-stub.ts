@@ -1,5 +1,20 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+export type StubInvokeCall = {
+  name: string;
+  options: unknown;
+};
+
+const invokeLog: StubInvokeCall[] = [];
+
+export function getStubInvokeLog(): StubInvokeCall[] {
+  return [...invokeLog];
+}
+
+export function clearStubInvokeLog(): void {
+  invokeLog.length = 0;
+}
+
 /** Inert client — no network, no WebSocket, safe for builds without env. */
 export function createSupabaseStub(): SupabaseClient {
   const empty = Promise.resolve({ data: null, error: null, count: 0, status: 200, statusText: 'OK' });
@@ -21,7 +36,10 @@ export function createSupabaseStub(): SupabaseClient {
     from: () => query(),
     rpc: () => empty,
     functions: {
-      invoke: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+      invoke: (name: string, options?: unknown) => {
+        invokeLog.push({ name, options });
+        return Promise.resolve({ data: null, error: new Error('Supabase not configured') });
+      },
     },
     channel: () => ({
       on: () => ({ subscribe: () => 'SUBSCRIBED' }),
