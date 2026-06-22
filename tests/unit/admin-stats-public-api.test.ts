@@ -1,3 +1,4 @@
+/** Verification step 6: exercises all six shipped admin stats render/wire entry points. */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderBannerStats, wireBannerStatsQuick } from '../../src/admin/banner-stats';
 import {

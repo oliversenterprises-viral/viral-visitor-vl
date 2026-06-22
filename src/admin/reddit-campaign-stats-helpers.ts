@@ -1,3 +1,5 @@
+/** Pure helpers for Reddit campaign stats panels (admin audit). */
+
 export interface RedditFunnelRow {
   name: string;
   count: number;

@@ -1,3 +1,5 @@
+/** Pure helpers for visitor funnel stats panels (admin audit). */
+
 export interface FunnelRow {
   name: string;
   count: number;
