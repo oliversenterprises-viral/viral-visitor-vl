@@ -29,7 +29,7 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await expect(page.locator('#referrer-code-display')).toHaveText('VIRAL-DEMOCODE');
   });
 
-  test('Custom referral base: set base, generate subpath link, visit and attribute', async ({
+  test('Custom referral base via site_content: generate subpath link, visit and attribute', async ({
     page,
     baseURL,
   }) => {
@@ -37,9 +37,11 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await page.goto('/');
     await waitForAppReady(page);
 
-    await page.evaluate((base) => {
-      (window as Window & { ViralRefer?: { setReferralBaseUrl?: (u: string) => void } }).ViralRefer
-        ?.setReferralBaseUrl?.(base);
+    await page.evaluate(async (base) => {
+      const vr = (window as Window & {
+        ViralRefer?: { updatePublicContent?: (c: Record<string, string>) => Promise<void> };
+      }).ViralRefer;
+      await vr?.updatePublicContent?.({ referral_base_url: base });
     }, joinBase);
 
     await page.click('text=Get my referral link');

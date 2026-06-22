@@ -4,6 +4,7 @@ import {
   setQrModalTitle,
 } from './public/globals';
 
+import { registerGlobal } from './lib/global';
 import { applyTextColors } from './colors';
 import { supabase } from './lib/supabase';
 import { latestEvents } from './lib/stats-helpers';
@@ -435,18 +436,20 @@ export async function updatePublicContent(content: Record<string, any>) {
     setQrModalTitle(String(qrModalTitle));
   }
 
-  // Referral base URL — allows the admin to change the domain or path of the shared referral link
-  // Example values: "https://viralrefer.app", "https://mybrand.com/join", "https://landing.mysite.com"
-  const referralBase = content['referral_base_url'];
-  if (referralBase != null && referralBase !== '') {
-    setReferralBaseUrl(String(referralBase));
-    // console.log('[ViralRefer] Using custom referral_base_url:', getReferralBaseUrl()); // silenced
-  } else {
-    // Default base URL for referral links (you can override this via Admin → Edit Content with key "referral_base_url")
-    setReferralBaseUrl('https://www.viralrefer.app');
-    // console.log('[ViralRefer] Using default referral_base_url:', getReferralBaseUrl()); // silenced
-  }
+  applyReferralBaseFromSiteContent(content);
 
   // Apply any dynamic text colors from site_content (color_* keys) — wired via the colors module
   applyTextColors(content);
 }
+
+/** Apply referral_base_url from site_content (pure seam — tested independently). */
+export function applyReferralBaseFromSiteContent(content: Record<string, unknown>): void {
+  const referralBase = content['referral_base_url'];
+  if (referralBase != null && referralBase !== '') {
+    setReferralBaseUrl(String(referralBase));
+  } else {
+    setReferralBaseUrl('https://www.viralrefer.app');
+  }
+}
+
+registerGlobal('updatePublicContent', updatePublicContent);

@@ -1,8 +1,24 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+
+const invokeMock = vi.hoisted(() =>
+  vi.fn().mockResolvedValue({ data: { success: true }, error: null }),
+);
+
+vi.mock('../../src/lib/supabase', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/lib/supabase')>();
+  return {
+    ...actual,
+    supabase: {
+      ...actual.supabase,
+      functions: { invoke: invokeMock },
+    },
+  };
+});
+
 import { claimBanner } from '../../src/public/handlers';
+import { detectAndStoreAttribution, getMyReferralLinkInstant } from '../../src/referral';
 import { setMyReferralCode } from '../../src/public/globals';
 
-/** Real shared turnstile module — window.turnstile mocked, no vi.doMock on turnstile. */
 function installTurnstileWidget() {
   (window as { turnstile?: { render: (el: HTMLElement, opts: Record<string, unknown>) => void } })
     .turnstile = {
@@ -13,23 +29,21 @@ function installTurnstileWidget() {
     };
 }
 
-describe('turnstile shared module through handlers.ts + referral.ts', () => {
+describe('turnstile shared module (static handlers + referral imports)', () => {
   beforeEach(() => {
     installTurnstileWidget();
+    invokeMock.mockClear();
     sessionStorage.clear();
     localStorage.clear();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
-    vi.doUnmock('../../src/lib/supabase');
-    vi.resetModules();
     delete (window as { turnstile?: unknown }).turnstile;
     document.body.innerHTML = '';
     vi.unstubAllGlobals();
   });
 
-  it('claimBanner (handlers) uses real getTurnstileToken with widget callback', async () => {
+  it('claimBanner uses real getTurnstileToken via window.turnstile', async () => {
     setMyReferralCode('VIRAL-CLAIM-REAL');
     document.body.innerHTML = `
       <div id="winner-modal" class="hidden"></div>
@@ -44,7 +58,7 @@ describe('turnstile shared module through handlers.ts + referral.ts', () => {
     });
   });
 
-  it('getMyReferralLinkInstant (referral) invokes record-referral with real Turnstile token', async () => {
+  it('getMyReferralLinkInstant uses real Turnstile and invokes record-referral', async () => {
     document.body.innerHTML = `
       <div id="referral-turnstile-container" style="display:none"></div>
       <input id="ref-link" />
@@ -56,27 +70,10 @@ describe('turnstile shared module through handlers.ts + referral.ts', () => {
       href: 'http://localhost/r/VIRAL-ATTRIB-REAL',
     } as Location);
 
-    vi.resetModules();
-    installTurnstileWidget();
-
-    const invokeSpy = vi.fn().mockResolvedValue({ data: { success: true }, error: null });
-    vi.doMock('../../src/lib/supabase', async () => {
-      const actual = await vi.importActual<typeof import('../../src/lib/supabase')>('../../src/lib/supabase');
-      return {
-        ...actual,
-        supabase: {
-          ...actual.supabase,
-          functions: { invoke: invokeSpy },
-        },
-      };
-    });
-
-    const { detectAndStoreAttribution, getMyReferralLinkInstant } = await import('../../src/referral');
-
     detectAndStoreAttribution();
     await getMyReferralLinkInstant();
 
-    expect(invokeSpy).toHaveBeenCalledWith(
+    expect(invokeMock).toHaveBeenCalledWith(
       'record-referral',
       expect.objectContaining({
         body: expect.objectContaining({

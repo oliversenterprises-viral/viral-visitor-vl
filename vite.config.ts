@@ -7,19 +7,28 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/** SPA fallback for /r/CODE clean referral paths in dev + preview. */
-function spaReferralPathFallback() {
-  const fallback = (req: { url?: string }, _res: unknown, next: () => void) => {
-    const url = req.url?.split('?')[0] ?? '';
-    const isReferralPath =
-      /^\/r\/[A-Za-z0-9_-]+\/?$/.test(url) || /\/r\/[A-Za-z0-9_-]+\/?$/.test(url);
-    if (isReferralPath && !url.includes('.')) {
-      req.url = '/index.html';
+/** SPA fallback — match vercel.json catch-all for non-asset routes in dev + preview. */
+function spaFallback() {
+  const fallback = (req: { url?: string; method?: string }, _res: unknown, next: () => void) => {
+    if (req.method && req.method !== 'GET' && req.method !== 'HEAD') {
+      next();
+      return;
+    }
+    const raw = req.url ?? '/';
+    const [pathname, search = ''] = raw.split('?');
+    const isViteInternal =
+      pathname.startsWith('/@') ||
+      pathname.startsWith('/node_modules') ||
+      pathname.startsWith('/src/') ||
+      pathname === '/index.html';
+    const isAsset = pathname.startsWith('/assets/') || /\.[a-zA-Z0-9]{2,8}$/.test(pathname);
+    if (!isViteInternal && !isAsset) {
+      req.url = search ? `/index.html?${search}` : '/index.html';
     }
     next();
   };
   return {
-    name: 'spa-referral-path-fallback',
+    name: 'spa-fallback',
     configureServer(server: { middlewares: { use: (fn: typeof fallback) => void } }) {
       server.middlewares.use(fallback);
     },
@@ -31,7 +40,7 @@ function spaReferralPathFallback() {
 
 export default defineConfig({
   base: '/',
-  plugins: [tailwindcss(), spaReferralPathFallback()],
+  plugins: [tailwindcss(), spaFallback()],
 
   resolve: {
     alias: {

@@ -6,7 +6,7 @@
  * global `window` / `ViralRefer` objects.
  */
 
-import { registerGlobal } from '../lib/global';
+import { registerGlobal, ViralRefer } from '../lib/global';
 
 let _referralBaseUrl = 'https://www.viralrefer.app';
 let _shareMessageTemplate = '';
@@ -20,9 +20,8 @@ let _myReferralCode = '';
  */
 export function setReferralBaseUrl(url: string): void {
   _referralBaseUrl = url.replace(/\/$/, '');
-  (window as any).referralBaseUrl = _referralBaseUrl;
-  (window as any).ViralRefer = (window as any).ViralRefer || {};
-  (window as any).ViralRefer.referralBaseUrl = _referralBaseUrl;
+  ViralRefer.referralBaseUrl = _referralBaseUrl;
+  (window as { referralBaseUrl?: string }).referralBaseUrl = _referralBaseUrl;
 }
 
 export function getReferralBaseUrl(): string {

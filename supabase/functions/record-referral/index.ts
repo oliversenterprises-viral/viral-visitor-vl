@@ -2,16 +2,9 @@
 // supabase/functions/record-referral/index.ts
 // ViralRefer — Record Referral (production schema aligned)
 // ============================================================================
-//
-// Production referrals table (wqbefjzpgsezzwdrvvua):
-//   id, referrer_code, referred_email, referred_ip, user_agent, created_at
-// Client-generated codes (VIRAL-XXXX) are valid without a profiles row.
-//
-// Deploy: supabase functions deploy record-referral
-// ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
-import { handleRecordReferral } from '../_shared/record-referral-handler.ts';
+import { createRecordReferralServeHandler } from '../_shared/record-referral-serve.ts';
 
 async function verifyTurnstile(token: string, ip: string): Promise<{ success: boolean; error?: string }> {
   const secret = Deno.env.get('TURNSTILE_SECRET_KEY');
@@ -46,8 +39,8 @@ async function verifyTurnstile(token: string, ip: string): Promise<{ success: bo
   }
 }
 
-Deno.serve((req: Request) =>
-  handleRecordReferral(req, {
+Deno.serve(
+  createRecordReferralServeHandler({
     verifyTurnstile,
     supabaseAdmin: createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
