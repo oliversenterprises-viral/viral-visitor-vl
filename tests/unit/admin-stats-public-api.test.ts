@@ -1,4 +1,4 @@
-/** NovaCodeSwarm-Goal confirmation: steps 4+6 — six shipped admin stats render/wire entry points on real DOM. */
+/** NovaCodeSwarm-Goal closure: steps 4+6 — six shipped admin stats render/wire entry points on real DOM. */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderBannerStats, wireBannerStatsQuick } from '../../src/admin/banner-stats';
 import {
