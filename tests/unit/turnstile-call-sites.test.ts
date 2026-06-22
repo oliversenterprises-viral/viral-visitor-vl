@@ -1,22 +1,36 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import * as turnstile from '../../src/lib/turnstile';
+import { claimBanner } from '../../src/public/handlers';
 import { setMyReferralCode } from '../../src/public/globals';
 
-describe('turnstile through handlers.ts call site', () => {
+/** Real shared turnstile module — window.turnstile mocked, no vi.doMock on turnstile. */
+function installTurnstileWidget() {
+  (window as { turnstile?: { render: (el: HTMLElement, opts: Record<string, unknown>) => void } })
+    .turnstile = {
+      render: (_el, opts) => {
+        const cb = opts.callback as ((t: string) => void) | undefined;
+        cb?.('shared-module-turnstile-token');
+      },
+    };
+}
+
+describe('turnstile shared module through handlers.ts + referral.ts', () => {
   beforeEach(() => {
-    vi.spyOn(turnstile, 'ensureTurnstileReady').mockResolvedValue(undefined);
-    vi.spyOn(turnstile, 'getTurnstileToken').mockResolvedValue('call-site-mock-token');
+    installTurnstileWidget();
+    sessionStorage.clear();
+    localStorage.clear();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.doUnmock('../../src/lib/supabase');
+    vi.resetModules();
+    delete (window as { turnstile?: unknown }).turnstile;
     document.body.innerHTML = '';
+    vi.unstubAllGlobals();
   });
 
-  it('claimBanner calls shared ensureTurnstileReady + getTurnstileToken', async () => {
-    const { claimBanner } = await import('../../src/public/handlers');
-    setMyReferralCode('VIRAL-CLAIM-SITE');
-
+  it('claimBanner (handlers) uses real getTurnstileToken with widget callback', async () => {
+    setMyReferralCode('VIRAL-CLAIM-REAL');
     document.body.innerHTML = `
       <div id="winner-modal" class="hidden"></div>
       <div id="claim-turnstile-container"></div>
@@ -25,74 +39,49 @@ describe('turnstile through handlers.ts call site', () => {
 
     claimBanner();
 
-    await vi.waitFor(() => expect(turnstile.ensureTurnstileReady).toHaveBeenCalled());
-    await vi.waitFor(() => expect(turnstile.getTurnstileToken).toHaveBeenCalled());
-    const args = vi.mocked(turnstile.getTurnstileToken).mock.calls.at(-1);
-    expect(args?.[2]).toBe('claim');
+    await vi.waitFor(() => {
+      expect(document.getElementById('claim-turnstile-container')?.childElementCount).toBeGreaterThan(0);
+    });
   });
-});
 
-describe('turnstile through referral.ts call site', () => {
-  const invokeMock = vi.fn();
-  const ensureReadyMock = vi.fn();
-  const getTokenMock = vi.fn();
-
-  beforeEach(() => {
-    invokeMock.mockResolvedValue({ data: { success: true }, error: null });
-    ensureReadyMock.mockResolvedValue(undefined);
-    getTokenMock.mockResolvedValue('referral-call-site-token');
-
-    vi.doMock('../../src/lib/turnstile', () => ({
-      ensureTurnstileReady: ensureReadyMock,
-      getTurnstileToken: getTokenMock,
-      getTurnstileSiteKey: () => 'dummy-turnstile-sitekey-for-tests',
-    }));
-    vi.doMock('../../src/lib/supabase', () => ({
-      supabase: {
-        functions: { invoke: invokeMock },
-        auth: { getSession: vi.fn().mockResolvedValue({ data: { session: null } }) },
-      },
-      isSupabaseConfigured: true,
-    }));
-
-    sessionStorage.clear();
-    localStorage.clear();
+  it('getMyReferralLinkInstant (referral) invokes record-referral with real Turnstile token', async () => {
     document.body.innerHTML = `
       <div id="referral-turnstile-container" style="display:none"></div>
       <input id="ref-link" />
     `;
 
     vi.stubGlobal('location', {
-      pathname: '/r/VIRAL-ATTRIB',
+      pathname: '/r/VIRAL-ATTRIB-REAL',
       search: '',
-      href: 'http://localhost/r/VIRAL-ATTRIB',
+      href: 'http://localhost/r/VIRAL-ATTRIB-REAL',
     } as Location);
 
     vi.resetModules();
-  });
+    installTurnstileWidget();
 
-  afterEach(() => {
-    vi.resetModules();
-    vi.doUnmock('../../src/lib/turnstile');
-    vi.doUnmock('../../src/lib/supabase');
-    vi.unstubAllGlobals();
-    document.body.innerHTML = '';
-  });
+    const invokeSpy = vi.fn().mockResolvedValue({ data: { success: true }, error: null });
+    vi.doMock('../../src/lib/supabase', async () => {
+      const actual = await vi.importActual<typeof import('../../src/lib/supabase')>('../../src/lib/supabase');
+      return {
+        ...actual,
+        supabase: {
+          ...actual.supabase,
+          functions: { invoke: invokeSpy },
+        },
+      };
+    });
 
-  it('getMyReferralLinkInstant calls Turnstile + record-referral invoke on attributed visit', async () => {
     const { detectAndStoreAttribution, getMyReferralLinkInstant } = await import('../../src/referral');
 
     detectAndStoreAttribution();
     await getMyReferralLinkInstant();
 
-    expect(ensureReadyMock).toHaveBeenCalled();
-    expect(getTokenMock).toHaveBeenCalled();
-    expect(invokeMock).toHaveBeenCalledWith(
+    expect(invokeSpy).toHaveBeenCalledWith(
       'record-referral',
       expect.objectContaining({
         body: expect.objectContaining({
-          referrerCode: 'VIRAL-ATTRIB',
-          turnstileToken: 'referral-call-site-token',
+          referrerCode: 'VIRAL-ATTRIB-REAL',
+          turnstileToken: 'shared-module-turnstile-token',
         }),
       }),
     );

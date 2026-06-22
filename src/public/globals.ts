@@ -6,6 +6,8 @@
  * global `window` / `ViralRefer` objects.
  */
 
+import { registerGlobal } from '../lib/global';
+
 let _referralBaseUrl = 'https://www.viralrefer.app';
 let _shareMessageTemplate = '';
 let _qrModalTitle = 'Scan to Get Your Link';
@@ -84,3 +86,5 @@ export function getMyReferralCode(): string {
   }
   return _myReferralCode;
 }
+
+registerGlobal('setReferralBaseUrl', setReferralBaseUrl);

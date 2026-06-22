@@ -29,10 +29,27 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await expect(page.locator('#referrer-code-display')).toHaveText('VIRAL-DEMOCODE');
   });
 
-  test('Subpath /join/r/CODE attribution (custom referral base)', async ({ page }) => {
-    await page.goto('/join/r/VIRAL-SUBPATH');
+  test('Custom referral base: set base, generate subpath link, visit and attribute', async ({
+    page,
+    baseURL,
+  }) => {
+    const joinBase = `${baseURL}/join`;
+    await page.goto('/');
+    await waitForAppReady(page);
+
+    await page.evaluate((base) => {
+      (window as Window & { ViralRefer?: { setReferralBaseUrl?: (u: string) => void } }).ViralRefer
+        ?.setReferralBaseUrl?.(base);
+    }, joinBase);
+
+    await page.click('text=Get my referral link');
+    const link = await page.locator('#ref-link').inputValue();
+    expect(link).toMatch(/\/join\/r\/VIRAL-/i);
+
+    const referrerCode = new URL(link).pathname.split('/').pop()!;
+    await page.goto(new URL(link).pathname);
     await expect(page.locator('#referral-attribution')).toBeVisible({ timeout: 8000 });
-    await expect(page.locator('#referrer-code-display')).toHaveText('VIRAL-SUBPATH');
+    await expect(page.locator('#referrer-code-display')).toHaveText(referrerCode);
   });
 
   test('All 7 share buttons are present and functional', async ({ page }) => {
