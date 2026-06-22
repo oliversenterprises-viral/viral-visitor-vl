@@ -29,6 +29,12 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await expect(page.locator('#referrer-code-display')).toHaveText('VIRAL-DEMOCODE');
   });
 
+  test('Subpath /join/r/CODE attribution (custom referral base)', async ({ page }) => {
+    await page.goto('/join/r/VIRAL-SUBPATH');
+    await expect(page.locator('#referral-attribution')).toBeVisible({ timeout: 8000 });
+    await expect(page.locator('#referrer-code-display')).toHaveText('VIRAL-SUBPATH');
+  });
+
   test('All 7 share buttons are present and functional', async ({ page }) => {
     await page.goto('/');
     await ensureReferralLink(page);

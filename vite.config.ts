@@ -11,7 +11,9 @@ const __dirname = path.dirname(__filename);
 function spaReferralPathFallback() {
   const fallback = (req: { url?: string }, _res: unknown, next: () => void) => {
     const url = req.url?.split('?')[0] ?? '';
-    if (/^\/r\/[A-Za-z0-9_-]+\/?$/.test(url) && !url.includes('.')) {
+    const isReferralPath =
+      /^\/r\/[A-Za-z0-9_-]+\/?$/.test(url) || /\/r\/[A-Za-z0-9_-]+\/?$/.test(url);
+    if (isReferralPath && !url.includes('.')) {
       req.url = '/index.html';
     }
     next();

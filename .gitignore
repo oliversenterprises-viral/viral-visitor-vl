@@ -40,3 +40,10 @@ dist-ssr
 *.sw?
 .vercel
 .env*
+
+# Agent/session artifacts (not product source)
+playwright-report/
+test-results/
+terminals/
+agent-tools/
+mcps/

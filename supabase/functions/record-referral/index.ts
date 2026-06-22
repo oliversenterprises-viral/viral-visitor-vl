@@ -11,7 +11,10 @@
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
-import { isValidReferrerCode, normalizeReferrerCode } from '../_shared/referrer-code.ts';
+import {
+  isSelfReferral,
+  parseRecordReferralRequest,
+} from '../_shared/record-referral-request.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -85,17 +88,10 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    referrerCode = normalizeReferrerCode(body.referrerCode || body.referrer_code);
-    turnstileToken = String(body.turnstileToken || body.token || '').trim();
-    const rawReferred = body.referredCode || body.referred_code || body.visitorCode || null;
-    referredCode = rawReferred ? normalizeReferrerCode(rawReferred) : null;
-
-    if (!isValidReferrerCode(referrerCode)) {
-      throw new Error('Missing or invalid referrerCode');
-    }
-    if (!turnstileToken) {
-      throw new Error('Missing turnstileToken');
-    }
+    const parsed = parseRecordReferralRequest(body);
+    referrerCode = parsed.referrerCode;
+    turnstileToken = parsed.turnstileToken;
+    referredCode = parsed.referredCode;
   } catch (parseErr) {
     console.warn('[record-referral] Invalid request body:', parseErr);
     return new Response(JSON.stringify({ success: false, error: 'Invalid request payload' }), {
@@ -104,7 +100,7 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  if (referredCode && referredCode === referrerCode) {
+  if (isSelfReferral(referrerCode, referredCode)) {
     return new Response(JSON.stringify({ success: false, error: 'Self-referral is not allowed.' }), {
       status: 403,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
