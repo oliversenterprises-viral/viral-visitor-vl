@@ -28,7 +28,7 @@ function inScope(file) {
 }
 
 function countExpectedTests(src) {
-  const eachCases = [...src.matchAll(/it\.each\s*\(\s*\[([\s\S]*?)\]\s*,/g)].reduce(
+  const eachCases = [...src.matchAll(/it\.each\s*\(\s*\[([\s\S]*?)\]\s*\)/g)].reduce(
     (sum, m) => sum + (m[1].match(/\[[^\]]+\]/g) || []).length,
     0,
   );
