@@ -42,20 +42,26 @@ registerGlobal('simulateNewReferral', simulateNewReferral);
   if (btn) btn.classList.remove('hidden');
 })();
 
-// Escape key support for detail modals
+// Escape key support — nested modals first, then admin panels
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    const referralModal = document.getElementById('referral-details-modal');
-    const claimModal = document.getElementById('claim-details-modal');
-    const winnerModal = document.getElementById('winner-modal');
+  if (e.key !== 'Escape') return;
 
-    if (winnerModal && !winnerModal.classList.contains('hidden')) {
-      winnerModal.classList.add('hidden');
-    } else if (referralModal && !referralModal.classList.contains('hidden')) {
-      referralModal.classList.add('hidden');
-    } else if (claimModal && !claimModal.classList.contains('hidden')) {
-      claimModal.classList.add('hidden');
-    }
+  const referralModal = document.getElementById('referral-details-modal');
+  const claimModal = document.getElementById('claim-details-modal');
+  const winnerModal = document.getElementById('winner-modal');
+  const adminModal = document.getElementById('admin-modal');
+  const adminPwModal = document.getElementById('admin-password-modal');
+
+  if (winnerModal && !winnerModal.classList.contains('hidden')) {
+    winnerModal.classList.add('hidden');
+  } else if (referralModal && !referralModal.classList.contains('hidden')) {
+    referralModal.classList.add('hidden');
+  } else if (claimModal && !claimModal.classList.contains('hidden')) {
+    claimModal.classList.add('hidden');
+  } else if (adminModal && !adminModal.classList.contains('hidden')) {
+    adminModal.classList.add('hidden');
+  } else if (adminPwModal && !adminPwModal.classList.contains('hidden')) {
+    adminPwModal.classList.add('hidden');
   }
 });
 

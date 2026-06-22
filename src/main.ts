@@ -1,4 +1,5 @@
 import { initApp } from './app';
+import { captureReferralAttribution } from './lib/referral-url';
 import { initRedditTracking } from './lib/reddit-tracking';
 import { initVisitorTracking } from './lib/visitor-tracking';
 
@@ -25,6 +26,7 @@ seedDefaultTextColors();
 //   - Call explicit initializers (public registrations + app bootstrap)
 // =====================================================
 
+captureReferralAttribution();
 initRedditTracking();
 initVisitorTracking();
 initPublic();

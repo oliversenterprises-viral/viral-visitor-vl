@@ -56,12 +56,18 @@ registerGlobal('toggleAdminPasswordVisibility', toggleAdminPasswordVisibility);
 const submitAdminPassword = async () => {
   const input = document.getElementById('admin-password-input') as HTMLInputElement | null;
   const errorEl = document.getElementById('admin-password-error');
-  const btn = document.getElementById('admin-password-submit-btn');
+  const btn = document.getElementById('admin-password-submit-btn') as HTMLButtonElement | null;
 
   if (!input) return;
   const val = input.value.trim();
 
   const VALID = import.meta.env.VITE_ADMIN_PASSWORD || '';
+  const btnOrigHtml = btn?.innerHTML || '';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>Verifying…</span>';
+  }
 
   let authorized = false;
   try {
@@ -83,11 +89,13 @@ const submitAdminPassword = async () => {
   } else {
     if (errorEl) errorEl.classList.remove('hidden');
     if (btn) {
-      const orig = btn.innerHTML;
       btn.innerHTML = 'Incorrect — try again';
-      setTimeout(() => { if (btn) btn.innerHTML = orig; }, 1400);
+      setTimeout(() => { if (btn) btn.innerHTML = btnOrigHtml; }, 1400);
     }
   }
+
+  if (btn) btn.disabled = false;
+  if (btn && authorized) btn.innerHTML = btnOrigHtml;
 };
 registerGlobal('submitAdminPassword', submitAdminPassword);
 

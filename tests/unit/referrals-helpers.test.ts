@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { computeHighRiskIPs, filterReferralsByDays } from '../../src/admin/referrals-tab';
+import {
+  computeHighRiskIPs,
+  filterReferralsByDays,
+  filterReferralsBySearch,
+  filterReferralsByRisk,
+  computeTopReferrers,
+  applyReferralFilters,
+} from '../../src/admin/referrals-tab';
 import type { AdminReferralRow } from '../../src/admin/state';
 
 const makeRow = (overrides: Partial<AdminReferralRow> = {}): AdminReferralRow => ({
@@ -61,5 +68,54 @@ describe('referrals helpers (pure)', () => {
 
     expect(filterReferralsByDays(rows, 1).length).toBe(1);
     expect(filterReferralsByDays(rows, 10).length).toBe(2);
+  });
+
+  it('filterReferralsBySearch matches code, IP, and user agent', () => {
+    const rows: AdminReferralRow[] = [
+      makeRow({ referrer_code: 'VIRAL-ABC', ip_address: '1.2.3.4', user_agent: 'Chrome/120' }),
+      makeRow({ referrer_code: 'OTHER', ip_address: '9.9.9.9', user_agent: 'Safari' }),
+    ];
+    expect(filterReferralsBySearch(rows, 'viral').length).toBe(1);
+    expect(filterReferralsBySearch(rows, '1.2.3').length).toBe(1);
+    expect(filterReferralsBySearch(rows, 'safari').length).toBe(1);
+    expect(filterReferralsBySearch(rows, '').length).toBe(2);
+  });
+
+  it('filterReferralsByRisk returns only high-risk rows', () => {
+    const rows: AdminReferralRow[] = [
+      makeRow({ ip_address: '1.2.3.4' }),
+      makeRow({ ip_address: '1.2.3.4' }),
+      makeRow({ ip_address: '1.2.3.4' }),
+      makeRow({ ip_address: '5.6.7.8' }),
+    ];
+    const riskIPs = computeHighRiskIPs(rows);
+    const filtered = filterReferralsByRisk(rows, riskIPs, 'high-risk');
+    expect(filtered.length).toBe(3);
+    expect(filtered.every((r) => r.ip_address === '1.2.3.4')).toBe(true);
+  });
+
+  it('computeTopReferrers ranks by count', () => {
+    const rows: AdminReferralRow[] = [
+      makeRow({ referrer_code: 'A' }),
+      makeRow({ referrer_code: 'B' }),
+      makeRow({ referrer_code: 'A' }),
+      makeRow({ referrer_code: 'A' }),
+    ];
+    const top = computeTopReferrers(rows, 2);
+    expect(top[0]).toEqual({ code: 'A', count: 3 });
+    expect(top[1]).toEqual({ code: 'B', count: 1 });
+  });
+
+  it('applyReferralFilters composes day, search, and risk filters', () => {
+    const now = new Date().toISOString();
+    const old = new Date(Date.now() - 20 * 86400000).toISOString();
+    const rows: AdminReferralRow[] = [
+      makeRow({ referrer_code: 'VIRAL-1', ip_address: '1.1.1.1', created_at: now }),
+      makeRow({ referrer_code: 'VIRAL-2', ip_address: '1.1.1.1', created_at: now }),
+      makeRow({ referrer_code: 'VIRAL-3', ip_address: '1.1.1.1', created_at: now }),
+      makeRow({ referrer_code: 'OLD', ip_address: '2.2.2.2', created_at: old }),
+    ];
+    const { filtered } = applyReferralFilters(rows, 7, 'viral', 'high-risk');
+    expect(filtered.length).toBe(3);
   });
 });

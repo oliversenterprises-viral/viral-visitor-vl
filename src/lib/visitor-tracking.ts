@@ -3,6 +3,7 @@
  * Mirrors reddit-tracking funnel steps for Admin → Edit → Site Visitor Funnel.
  */
 
+import { getStoredLandingRef } from './referral-url';
 import { getStoredUtmAttribution } from './reddit-tracking';
 import { supabase } from './supabase';
 import { eventName, groupBy, latestEvents } from './stats-helpers';
@@ -46,6 +47,11 @@ export type VisitorFunnelEvent =
   | 'OpenPrizeClaim'
   | 'SubmitPrizeClaim';
 
+function resolveRefCode(): string | undefined {
+  const utm = getStoredUtmAttribution();
+  return utm?.ref || getStoredLandingRef() || undefined;
+}
+
 function pushLocalVisitorEvent(eventName: string, metadata: Record<string, unknown> = {}): void {
   const utm = getStoredUtmAttribution();
   const entry = {
@@ -56,7 +62,7 @@ function pushLocalVisitorEvent(eventName: string, metadata: Record<string, unkno
     utm_campaign: utm?.campaign,
     utm_content: utm?.content,
     utm_medium: utm?.medium,
-    ref_code: utm?.ref,
+    ref_code: resolveRefCode(),
     metadata,
     created_at: new Date().toISOString(),
   };
@@ -81,7 +87,7 @@ function logVisitorEventServer(eventName: string, metadata: Record<string, unkno
         utm_campaign: utm?.campaign,
         utm_content: utm?.content,
         utm_medium: utm?.medium,
-        ref_code: utm?.ref,
+        ref_code: resolveRefCode(),
         metadata,
         timestamp: new Date().toISOString(),
       },

@@ -2,6 +2,7 @@ import { fetchLeaderboard, fetchTotalReferrers, fetchRecentActivity, fetchSiteCo
 import * as Referral from './referral';
 
 import { updatePublicContent } from './content';
+import { parseRefFromLocation } from './lib/referral-url';
 import { getMyReferralCode } from './public/globals';
 
 // ------------------ PUBLIC SITE INITIALIZATION ------------------
@@ -56,7 +57,7 @@ function initRealtimeSubscriptions() {
       schema: 'public',
       table: 'referrals',
     }, async (payload) => {
-      console.log('[ViralRefer Realtime] New referral recorded:', payload.new);
+      // console.log('[ViralRefer Realtime] New referral recorded:', payload.new); // silenced for prod (audit)
 
       // Live refresh all public views
       await loadLeaderboard();
@@ -143,7 +144,13 @@ export async function initApp() {
   if (adminBtn) {
     adminBtn.addEventListener('click', () => {
       const pw = document.getElementById('admin-password-modal');
-      if (pw) pw.classList.remove('hidden');
+      if (pw) {
+        pw.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          const input = document.getElementById('admin-password-input') as HTMLInputElement | null;
+          input?.focus();
+        });
+      }
     });
   }
 
@@ -177,8 +184,7 @@ export async function initApp() {
   // Richer personal progress version restored (with actual counts, progress bar, and status)
   await renderMyStats(myReferralCode);
 
-  const params = new URLSearchParams(location.search);
-  const refCode = params.get('ref');
+  const refCode = parseRefFromLocation();
   if (refCode) {
     // console.log('[ViralRefer] Referral attribution detected:', refCode); // silenced
     const banner = document.getElementById('referral-attribution');

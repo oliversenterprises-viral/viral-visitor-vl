@@ -18,23 +18,64 @@ export interface AnalyticsViewData {
   insights: string[];
 }
 
-
 /**
  * Filters share events to the last N days (0 = all time).
  * Pure function.
  */
-export function filterByDays(shares: ShareEvent[], days: number): ShareEvent[] {
-  if (days === 0) return shares;
+export function filterByDays(shares: readonly ShareEvent[], days: number): ShareEvent[] {
+  if (days === 0) return [...shares];
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   return shares.filter((s) => new Date(s.created_at) >= cutoff);
+}
+
+/** Exported for testability (pure function). */
+export function filterSharesBySearch(shares: readonly ShareEvent[], query: string): ShareEvent[] {
+  const q = query.toLowerCase().trim();
+  if (!q) return [...shares];
+  return shares.filter(
+    (s) =>
+      (s.referrer_code || '').toLowerCase().includes(q) ||
+      (s.platform || '').toLowerCase().includes(q),
+  );
+}
+
+/** Exported for testability (pure function). */
+export function filterSharesByPlatform(shares: readonly ShareEvent[], platform: string): ShareEvent[] {
+  if (!platform || platform === 'all') return [...shares];
+  return shares.filter((s) => (s.platform || '').toLowerCase() === platform.toLowerCase());
+}
+
+/** Applies day, search, and platform filters in one pass. */
+export function applyShareFilters(
+  shares: readonly ShareEvent[],
+  days: number,
+  search: string,
+  platform: string,
+): ShareEvent[] {
+  let filtered = filterByDays(shares, days);
+  filtered = filterSharesBySearch(filtered, search);
+  filtered = filterSharesByPlatform(filtered, platform);
+  return filtered;
+}
+
+/** Returns unique platform names sorted by share count (desc). */
+export function getUniquePlatforms(shares: readonly ShareEvent[]): string[] {
+  const counts: Record<string, number> = {};
+  shares.forEach((s) => {
+    const p = s.platform || 'unknown';
+    counts[p] = (counts[p] || 0) + 1;
+  });
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([p]) => p);
 }
 
 /**
  * Computes all analytics data needed for the Share Analytics tab.
  * Pure function — no side effects.
  */
-export function computeAnalyticsData(filteredShares: ShareEvent[]): AnalyticsViewData {
+export function computeAnalyticsData(filteredShares: readonly ShareEvent[]): AnalyticsViewData {
   const total = filteredShares.length;
 
   const platformCounts: Record<string, number> = {};
@@ -70,21 +111,25 @@ export function computeAnalyticsData(filteredShares: ShareEvent[]): AnalyticsVie
   const avgPerDay = trendData.length > 0 ? Math.round(total / trendData.length) : 0;
 
   const insights: string[] = [];
-  if (sortedPlatforms.length > 0) {
-    const top = sortedPlatforms[0];
-    insights.push(`<strong>${top[0]}</strong> is your strongest channel (${Math.round((top[1] / total) * 100)}% of shares)`);
+  if (total === 0) {
+    insights.push('No shares in the current view — try widening your filters.');
+  } else {
+    if (sortedPlatforms.length > 0) {
+      const top = sortedPlatforms[0];
+      insights.push(`<strong>${top[0]}</strong> is your strongest channel (${Math.round((top[1] / total) * 100)}% of shares)`);
+    }
+    if (topReferrers.length >= 3) {
+      const top3 = topReferrers.slice(0, 3).reduce((sum, [, c]) => sum + c, 0);
+      insights.push(`Your top 3 referrers drive <strong>${Math.round((top3 / total) * 100)}%</strong> of all shares`);
+    }
+    if (trendData.length >= 5) {
+      const firstHalf = trendData.slice(0, Math.floor(trendData.length / 2)).reduce((a, b) => a + b, 0);
+      const secondHalf = trendData.slice(Math.floor(trendData.length / 2)).reduce((a, b) => a + b, 0);
+      if (secondHalf > firstHalf * 1.4) insights.push('Shares have <strong>increased sharply</strong> recently');
+      else if (secondHalf < firstHalf * 0.6) insights.push('Shares have <strong>declined</strong> recently');
+    }
+    insights.push(`Peak day: <strong>${peakDay.day}</strong> with ${peakDay.count} shares`);
   }
-  if (topReferrers.length >= 3) {
-    const top3 = topReferrers.slice(0, 3).reduce((sum, [, c]) => sum + c, 0);
-    insights.push(`Your top 3 referrers drive <strong>${Math.round((top3 / total) * 100)}%</strong> of all shares`);
-  }
-  if (trendData.length >= 5) {
-    const firstHalf = trendData.slice(0, Math.floor(trendData.length / 2)).reduce((a, b) => a + b, 0);
-    const secondHalf = trendData.slice(Math.floor(trendData.length / 2)).reduce((a, b) => a + b, 0);
-    if (secondHalf > firstHalf * 1.4) insights.push(`Shares have <strong>increased sharply</strong> recently`);
-    else if (secondHalf < firstHalf * 0.6) insights.push(`Shares have <strong>declined</strong> recently`);
-  }
-  insights.push(`Peak day: <strong>${peakDay.day}</strong> with ${peakDay.count} shares`);
 
   return {
     total,

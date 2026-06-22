@@ -512,6 +512,26 @@ input, select, textarea {
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.1);
 }
 
+/* Admin tab bar — horizontal scroll on mobile */
+.admin-tab-bar {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.admin-tab-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+/* Pending claims badge pulse when visible */
+#tab-3-badge:not(.hidden) {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
 /* Mobile tweaks for admin tables */
 @media (max-width: 768px) {
   .admin-tab-content table {

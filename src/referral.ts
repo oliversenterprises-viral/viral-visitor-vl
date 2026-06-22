@@ -6,6 +6,11 @@
 import { registerGlobal } from './lib';
 import { trackRedditFunnel } from './lib/reddit-tracking';
 import { trackVisitorFunnel } from './lib/visitor-tracking';
+import {
+  buildCleanReferralLink,
+  captureReferralAttribution,
+  parseRefFromLocation,
+} from './lib/referral-url';
 import { getReferralBaseUrl, getQrModalTitle, getMyReferralCode, setMyReferralCode } from './public/globals';
 
 // Turnstile site key (from Vercel env, falls back for local dev)
@@ -20,16 +25,13 @@ let referralRecordedThisSession = false;
  * that may already contain query parameters.
  */
 export function buildReferralLink(code: string): string {
-  const rawBase = getReferralBaseUrl() || `${location.origin}${location.pathname}`;
-
+  const rawBase = getReferralBaseUrl() || location.origin;
   try {
-    const url = new URL(rawBase);
-    url.searchParams.set('ref', code);
-    return url.toString();
-  } catch (e) {
-    console.warn('%c[ViralRefer] Invalid referral_base_url detected — falling back to current origin', 'color:#f59e0b', rawBase);
-    const cleanBase = rawBase.replace(/\/$/, '');
-    return `${cleanBase}?ref=${code}`;
+    const origin = new URL(rawBase).origin;
+    return buildCleanReferralLink(code, origin);
+  } catch {
+    console.warn('%c[ViralRefer] Invalid referral_base_url — using /r/ path on current origin', 'color:#f59e0b', rawBase);
+    return buildCleanReferralLink(code, location.origin);
   }
 }
 
@@ -39,12 +41,8 @@ export function buildReferralLink(code: string): string {
  */
 export function detectAndStoreAttribution(): void {
   if (pendingReferrerCode) return;
-
-  const params = new URLSearchParams(location.search);
-  const ref = params.get('ref');
-  if (ref) {
-    pendingReferrerCode = ref.toUpperCase();
-  }
+  const ref = captureReferralAttribution() || parseRefFromLocation();
+  if (ref) pendingReferrerCode = ref;
 }
 
 /**
@@ -136,7 +134,7 @@ async function recordReferralIfAttributed(): Promise<boolean> {
       console.error('[ViralRefer] record-referral error:', error);
       // Still allow the user to continue (non-fatal for UX)
     } else if (data?.success) {
-      console.log('[ViralRefer] Referral recorded for', pendingReferrerCode);
+      // console.log('[ViralRefer] Referral recorded for', pendingReferrerCode); // silenced for prod (audit)
     }
 
     referralRecordedThisSession = true;
@@ -183,7 +181,7 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   const refInput = document.getElementById('ref-link') as HTMLInputElement | null;
   if (refInput) refInput.value = link;
 
-  console.log('[ViralRefer] Generated referral link:', link);
+  // console.log('[ViralRefer] Generated referral link:', link); // silenced for prod (audit)
   trackRedditFunnel('GetReferralLink');
   trackVisitorFunnel('GetReferralLink');
 

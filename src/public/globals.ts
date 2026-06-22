@@ -6,7 +6,7 @@
  * global `window` / `ViralRefer` objects.
  */
 
-let _referralBaseUrl = 'https://viralrefer.app';
+let _referralBaseUrl = 'https://www.viralrefer.app';
 let _shareMessageTemplate = '';
 let _qrModalTitle = 'Scan to Get Your Link';
 let _myReferralCode = '';

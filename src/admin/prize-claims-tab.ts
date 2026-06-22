@@ -1,8 +1,44 @@
 import { supabase } from '../lib/supabase';
 import { formatError } from '../lib';
-import { showToast } from '../ui';
+import { showToast, updatePendingClaimsBadge } from '../ui';
 import { adminClaimsCache, replaceClaimsCache, updateClaimInCache, type AdminClaimRow } from './state';
 import { escapeHtml } from '../content';
+
+type ClaimStatusFilter = 'all' | 'pending' | 'approved' | 'paid' | 'rejected';
+
+const STATUS_PRIORITY: Record<string, number> = {
+  pending: 0,
+  approved: 1,
+  paid: 2,
+  rejected: 3,
+};
+
+let currentClaimStatusFilter: ClaimStatusFilter = 'all';
+
+function getClaimsTabRoot(from: HTMLElement): HTMLElement {
+  return (from.closest('#admin-content') as HTMLElement) || from;
+}
+
+/** Exported for testability (pure function). */
+export function sortClaimsByPriority(claims: readonly AdminClaimRow[]): AdminClaimRow[] {
+  return [...claims].sort((a, b) => {
+    const sa = STATUS_PRIORITY[a.status || 'pending'] ?? 9;
+    const sb = STATUS_PRIORITY[b.status || 'pending'] ?? 9;
+    if (sa !== sb) return sa - sb;
+    return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+  });
+}
+
+/** Exported for testability (pure function). */
+export function filterClaimsByStatus(claims: readonly AdminClaimRow[], filter: ClaimStatusFilter): AdminClaimRow[] {
+  if (filter === 'all') return [...claims];
+  return claims.filter((c) => (c.status || 'pending') === filter);
+}
+
+/** Exported for testability (pure function). */
+export function countPendingClaims(claims: readonly AdminClaimRow[]): number {
+  return claims.filter((c) => (c.status || 'pending') === 'pending').length;
+}
 
 /**
  * Renders the Prize Claims admin tab.
@@ -99,6 +135,7 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
     }
 
     replaceClaimsCache(rows);
+    updatePendingClaimsBadge(countPendingClaims(adminClaimsCache));
 
     if (!adminClaimsCache.length) {
       mainArea.innerHTML = `
@@ -112,16 +149,7 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
       return;
     }
 
-    const html = buildClaimsTableHTML(adminClaimsCache);
-    mainArea.innerHTML = html;
-
-    const claimsTs = document.getElementById('claims-last-updated');
-    if (claimsTs) {
-      const now = new Date();
-      claimsTs.textContent = `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-
-    attachClaimsListeners(mainArea);
+    renderClaimsList(mainArea, currentClaimStatusFilter);
 
     // Safe realtime so new claims or status changes appear without manual refresh
     setupSafeClaimsRealtime(content);
@@ -352,22 +380,57 @@ function setupSafeClaimsRealtime(container: HTMLElement) {
   // The next render will call this again and clean first.
 }
 
+function renderClaimsList(mainArea: HTMLElement, statusFilter: ClaimStatusFilter) {
+  const sorted = sortClaimsByPriority(adminClaimsCache);
+  const filtered = filterClaimsByStatus(sorted, statusFilter);
+  const pendingCount = countPendingClaims(adminClaimsCache);
+
+  mainArea.innerHTML = buildClaimsTableHTML(filtered, pendingCount, statusFilter);
+
+  const claimsTs = document.getElementById('claims-last-updated');
+  if (claimsTs) {
+    const now = new Date();
+    claimsTs.textContent = `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  attachClaimsListeners(mainArea, statusFilter);
+  updatePendingClaimsBadge(pendingCount);
+}
+
 /**
  * Builds the full Prize Claims table HTML (header + rows with status badges and action buttons).
  * Pure presentation function — no side effects.
  */
-function buildClaimsTableHTML(claims: readonly AdminClaimRow[]): string {
+function buildClaimsTableHTML(
+  claims: readonly AdminClaimRow[],
+  pendingCount: number,
+  activeFilter: ClaimStatusFilter,
+): string {
+  const filterChip = (value: ClaimStatusFilter, label: string) => {
+    const active = activeFilter === value;
+    return `<button data-status="${value}" class="claim-status-filter px-3 py-1 text-xs rounded-full border transition-colors ${
+      active ? 'bg-violet-600 border-violet-500 text-white' : 'border-white/20 text-zinc-400 hover:bg-white/10'
+    }">${label}</button>`;
+  };
+
   let html = `
     <div class="flex justify-between items-center mb-4">
       <div>
         <div class="text-2xl font-bold">Prize Claims</div>
-        <div class="text-sm text-zinc-400">${claims.length} total submissions</div>
+        <div class="text-sm text-zinc-400">${pendingCount > 0 ? `${pendingCount} pending · ` : ''}${adminClaimsCache.length} total submissions</div>
       </div>
       <div class="flex items-center gap-3">
         <span id="claims-last-updated" class="text-[10px] text-zinc-500"></span>
         <button id="export-claims-csv-btn" class="px-4 py-2 text-sm bg-white/10 rounded-2xl flex items-center gap-2"><i class="fa-solid fa-download"></i> Export CSV</button>
         <button onclick="window.triggerRefreshSpin(this); window.switchAdminTab(3)" class="px-4 py-2 text-sm bg-white/10 rounded-2xl flex items-center gap-2"><i class="fa-solid fa-sync"></i> Refresh</button>
       </div>
+    </div>
+    <div class="flex flex-wrap gap-2 mb-4">
+      ${filterChip('all', 'All')}
+      ${filterChip('pending', 'Pending')}
+      ${filterChip('approved', 'Approved')}
+      ${filterChip('paid', 'Paid')}
+      ${filterChip('rejected', 'Rejected')}
     </div>
     <div class="overflow-x-auto">
     <table class="w-full text-sm">
@@ -385,7 +448,14 @@ function buildClaimsTableHTML(claims: readonly AdminClaimRow[]): string {
       <tbody>
   `;
 
-  claims.forEach((claim, idx: number) => {
+  if (!claims.length) {
+    html += `
+      <tr><td colspan="7" class="py-10 text-center text-zinc-400">
+        No claims match this filter. <button data-status="all" class="claim-status-filter text-violet-400 hover:underline ml-1">Show all</button>
+      </td></tr>`;
+  }
+
+  claims.forEach((claim) => {
     const date = new Date(claim.created_at || Date.now()).toLocaleDateString();
     const status = claim.status || 'pending';
     const statusColor = status === 'approved' ? 'text-emerald-400 bg-emerald-950' :
@@ -417,13 +487,13 @@ function buildClaimsTableHTML(claims: readonly AdminClaimRow[]): string {
         <td class="py-3 pr-3"><span class="px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">${status}</span></td>
         <td class="py-3">
           <div class="flex flex-wrap gap-1">
-            <button data-idx="${idx}" class="view-claim-btn text-xs px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20">View</button>
+            <button data-claim-id="${claim.id}" class="view-claim-btn text-xs px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20">View</button>
             ${status === 'pending' ? `
-              <button data-idx="${idx}" data-status="approved" class="action-claim-btn text-xs px-3 py-1 rounded-xl bg-emerald-600/80 hover:bg-emerald-600">Approve</button>
-              <button data-idx="${idx}" data-status="rejected" class="action-claim-btn text-xs px-3 py-1 rounded-xl bg-red-600/70 hover:bg-red-600">Reject</button>
+              <button data-claim-id="${claim.id}" data-status="approved" class="action-claim-btn text-xs px-3 py-1 rounded-xl bg-emerald-600/80 hover:bg-emerald-600">Approve</button>
+              <button data-claim-id="${claim.id}" data-status="rejected" class="action-claim-btn text-xs px-3 py-1 rounded-xl bg-red-600/70 hover:bg-red-600">Reject</button>
             ` : ''}
             ${status === 'approved' ? `
-              <button data-idx="${idx}" data-status="paid" class="action-claim-btn text-xs px-3 py-1 rounded-xl bg-sky-600/80 hover:bg-sky-600">Mark Paid</button>
+              <button data-claim-id="${claim.id}" data-status="paid" class="action-claim-btn text-xs px-3 py-1 rounded-xl bg-sky-600/80 hover:bg-sky-600">Mark Paid</button>
             ` : ''}
           </div>
         </td>
@@ -454,21 +524,31 @@ function exportClaimsCSV(claims: readonly AdminClaimRow[]) {
   URL.revokeObjectURL(a.href);
 }
 
-function attachClaimsListeners(content: HTMLElement) {
+function attachClaimsListeners(content: HTMLElement, statusFilter: ClaimStatusFilter) {
+  content.querySelectorAll('.claim-status-filter').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      currentClaimStatusFilter = ((btn as HTMLElement).dataset.status || 'all') as ClaimStatusFilter;
+      renderClaimsList(content, currentClaimStatusFilter);
+    });
+  });
+
   const exportBtn = content.querySelector('#export-claims-csv-btn');
   if (exportBtn) {
     exportBtn.addEventListener('click', () => {
-      exportClaimsCSV(adminClaimsCache);
+      const sorted = sortClaimsByPriority(adminClaimsCache);
+      const toExport = filterClaimsByStatus(sorted, statusFilter);
+      exportClaimsCSV(toExport);
       showToast('Claims CSV downloaded', 'success');
     });
   }
 
+  const findClaimById = (id: string) => adminClaimsCache.find((c) => c.id === id);
+
   // Attach View buttons (opens claim details modal)
   content.querySelectorAll('.view-claim-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const idx = parseInt((btn as HTMLElement).dataset.idx!);
-      const claim = adminClaimsCache[idx];
-      showClaimDetails(claim);
+      const claim = findClaimById((btn as HTMLElement).dataset.claimId || '');
+      if (claim) showClaimDetails(claim);
     });
   });
 
@@ -489,16 +569,20 @@ function attachClaimsListeners(content: HTMLElement) {
   // Attach action buttons with confirmations + auto-refresh after update
   content.querySelectorAll('.action-claim-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const idx = parseInt((btn as HTMLElement).dataset.idx!);
+      const claimId = (btn as HTMLElement).dataset.claimId || '';
+      const cacheIdx = adminClaimsCache.findIndex((c) => c.id === claimId);
       const newStatus = (btn as HTMLElement).dataset.status!;
-      const claim = adminClaimsCache[idx];
+      const claim = cacheIdx >= 0 ? adminClaimsCache[cacheIdx] : undefined;
+      if (!claim) return;
 
       if (!confirm(`Are you sure you want to ${newStatus.toUpperCase()} this claim from ${claim.referrer_code || 'unknown'}?`)) {
         return;
       }
 
-      (btn as HTMLElement).textContent = 'Saving...';
-      (btn as HTMLElement as HTMLButtonElement).disabled = true;
+      const btnEl = btn as HTMLButtonElement;
+      const originalText = btnEl.textContent || '';
+      btnEl.textContent = 'Saving...';
+      btnEl.disabled = true;
 
       try {
         const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
@@ -517,20 +601,22 @@ function attachClaimsListeners(content: HTMLElement) {
         if (error) throw error;
         if (!data?.success) throw new Error(data?.error || 'Edge Function failed');
 
+        updateClaimInCache(cacheIdx, {
+          status: newStatus,
+          ...(newStatus === 'paid' ? { paid_at: new Date().toISOString() } : {}),
+        });
+
+        const actionText = newStatus === 'approved' ? 'approved' :
+                           newStatus === 'rejected' ? 'rejected' : 'marked as paid';
+        showToast(`Claim ${actionText}`, 'success');
+        updatePendingClaimsBadge(countPendingClaims(adminClaimsCache));
+        await renderPrizeClaimsTab(getClaimsTabRoot(content));
       } catch (err) {
-        console.warn('[Admin] admin-action Edge Function failed. Local cache updated.', err);
+        console.warn('[Admin] admin-action Edge Function failed:', err);
+        showToast(`Failed to update claim: ${formatError(err)}`, 'info');
+        btnEl.textContent = originalText;
+        btnEl.disabled = false;
       }
-
-      updateClaimInCache(idx, {
-        status: newStatus,
-        ...(newStatus === 'paid' ? { paid_at: new Date().toISOString() } : {}),
-      });
-
-      const actionText = newStatus === 'approved' ? 'approved' : 
-                         newStatus === 'rejected' ? 'rejected' : 'marked as paid';
-      showToast(`Claim ${actionText}`, 'success');
-
-      await renderPrizeClaimsTab(content);
     });
   });
 }

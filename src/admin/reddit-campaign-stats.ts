@@ -1,11 +1,36 @@
-import { computeRedditFunnelStats, getRedditEventsForStats } from '../lib/reddit-tracking';
+import { computeRedditFunnelStats, getLocalRedditEvents, getRedditEventsForStats } from '../lib/reddit-tracking';
+import { escapeHtml } from '../content';
 import { showToast } from '../ui';
+import {
+  REDDIT_PIXEL_DISPLAY_ID,
+  computeRedditFunnelTotals,
+  shouldShowCampaignBreakdown,
+  sortCampaignEntries,
+  topCampaigns,
+} from './reddit-campaign-stats-helpers';
+
+const SKELETON = `<div class="space-y-2 py-1"><div class="h-4 w-56 skeleton rounded"></div><div class="h-16 skeleton rounded"></div></div>`;
 
 function bindRedditStatsRefresh(container: HTMLElement) {
   if (container.dataset.redditRefreshBound === '1') return;
   container.dataset.redditRefreshBound = '1';
   container.addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest('[data-reddit-stats-refresh]');
+    const csvBtn = (e.target as HTMLElement).closest('[data-reddit-stats-csv]');
+    if (csvBtn && container.contains(csvBtn)) {
+      e.preventDefault();
+      const csv = container.dataset.redditStatsCsv;
+      if (!csv) return;
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `viralrefer-reddit-funnel-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Reddit funnel CSV downloaded', 'success');
+      return;
+    }
     if (!btn || !container.contains(btn)) return;
     e.preventDefault();
     e.stopPropagation();
@@ -34,88 +59,113 @@ async function refreshRedditCampaignStats(container: HTMLElement, btn?: HTMLButt
   }
 }
 
-export async function renderRedditCampaignStats(container: HTMLElement, preloadedEvents?: any[]) {
-  container.classList.add('reddit-campaign-stats-panel');
-  bindRedditStatsRefresh(container);
+function buildRedditCsv(funnel: Array<{ name: string; count: number }>): string {
+  const headers = ['step', 'count'];
+  const rows = funnel.map((r) => [r.name, r.count].join(','));
+  return [headers.join(','), ...rows].join('\n');
+}
 
-  let events: any[];
-  let source: 'server' | 'local';
-  let fetchError: string | undefined;
-
-  if (preloadedEvents) {
-    events = preloadedEvents;
-    source = 'local';
-  } else {
-    const res = await getRedditEventsForStats();
-    events = res.events;
-    source = res.source;
-    fetchError = res.fetchError;
-  }
-
+function renderRedditCampaignView(
+  container: HTMLElement,
+  events: Array<Record<string, unknown>>,
+  source: 'server' | 'local',
+  fetchError?: string,
+) {
   const stats = computeRedditFunnelStats(events);
-  const sourceLabel = source === 'server' ? 'Server (all Reddit visitors)' : 'Local (this browser only)';
-  const pixelId = 'a2_jr6jdbg2r4';
+  const totals = computeRedditFunnelTotals(stats.funnel);
+  const isServer = source === 'server';
   const refreshedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
+  container.dataset.redditStatsCsv = buildRedditCsv(stats.funnel);
+
   let html = `
-    <div class="text-[10px] font-semibold text-orange-300 mb-1">
-      Reddit Campaign Funnel (${sourceLabel})
-      <span class="text-orange-300/60"> — pixel ${pixelId}</span>
+    <div class="flex flex-wrap items-center gap-2 mb-2">
+      <div class="text-[10px] font-semibold text-orange-300">Reddit Campaign Funnel</div>
+      ${isServer ? '<span class="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-200 text-[8px]">SERVER</span>' : '<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[8px]">LOCAL</span>'}
+      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt} · pixel ${REDDIT_PIXEL_DISPLAY_ID}</span>
     </div>
-    <div class="text-[9px] text-zinc-500 mb-1">Updated ${refreshedAt}</div>
-    <div class="text-[9px] text-zinc-400 mb-2">
-      Reddit UTM traffic only (<code class="text-orange-200/80">utm_source=reddit</code>). Funnel steps + pixel events. Counts = total actions, not unique visitors.
-    </div>
-    <div class="text-[9px] text-zinc-500 mb-2">${stats.total} events loaded${source === 'server' ? ' (latest 500 from server)' : ''}</div>
+    <div class="text-[9px] text-zinc-400 mb-2">Reddit UTM traffic only (<code class="text-orange-200/80">utm_source=reddit</code>).</div>
   `;
 
-  if (fetchError && source === 'local') {
-    html += `<div class="text-[9px] text-amber-400/90 mb-2">Server fetch failed (${fetchError}) — showing this browser only.</div>`;
+  if (fetchError && !isServer) {
+    html += `<div class="text-[9px] text-amber-400/90 mb-2">Server unavailable (${escapeHtml(fetchError)}) — local data shown.</div>`;
   }
 
   html += `
-    <div class="flex gap-2 mb-2">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Landings</div><div class="text-lg font-bold text-white tabular-nums">${totals.landings}</div></div>
+      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Claims</div><div class="text-lg font-bold text-orange-300 tabular-nums">${totals.claims}</div></div>
+      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Events</div><div class="text-lg font-bold text-white tabular-nums">${stats.total}</div></div>
+      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Conv.</div><div class="text-lg font-bold text-emerald-300 tabular-nums">${totals.conversion}</div></div>
+    </div>
+    <div class="flex gap-2 mb-2 flex-wrap">
       <button type="button" data-reddit-stats-refresh class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded disabled:opacity-50">↻ Refresh</button>
+      <button type="button" data-reddit-stats-csv class="text-[9px] px-2 py-0.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded">⬇ CSV</button>
       <a href="https://ads.reddit.com/events-manager/testing" target="_blank" rel="noopener" class="text-[9px] px-2 py-0.5 bg-orange-600/40 hover:bg-orange-600/60 text-orange-100 rounded">Event testing</a>
     </div>
     <table class="w-full text-[9px] text-zinc-200 border border-white/10 mb-2">
-      <thead><tr class="bg-white/5 text-orange-200">
-        <th class="text-left p-1.5">Funnel step</th><th class="p-1.5 text-right">Count</th>
-      </tr></thead><tbody>
+      <thead><tr class="bg-white/5 text-orange-200"><th class="text-left p-1.5">Step</th><th class="p-1.5 text-right">Count</th></tr></thead><tbody>
   `;
 
   for (const row of stats.funnel) {
-    html += `<tr class="border-t border-white/5"><td class="p-1.5 text-zinc-100">${row.name}</td><td class="p-1.5 text-right tabular-nums text-zinc-300">${row.count}</td></tr>`;
+    html += `<tr class="border-t border-white/5"><td class="p-1.5 text-zinc-100">${escapeHtml(row.name)}</td><td class="p-1.5 text-right tabular-nums text-zinc-300">${row.count}</td></tr>`;
   }
   html += `</tbody></table>`;
 
-  const campaignEntries = Object.entries(stats.byCampaign).sort((a, b) => b[1] - a[1]);
-  if (campaignEntries.length > 0 && !(campaignEntries.length === 1 && campaignEntries[0][0] === '(none)')) {
-    html += `<div class="text-[9px] text-zinc-400 mb-1">By campaign (Reddit landings):</div>`;
-    html += `<div class="text-[8px] text-zinc-300 mb-2">`;
-    for (const [camp, count] of campaignEntries.slice(0, 6)) {
-      html += `<span class="inline-block mr-2 mb-1 px-1.5 py-0.5 bg-orange-900/40 border border-orange-500/30 rounded">${camp}: ${count}</span>`;
+  if (shouldShowCampaignBreakdown(stats.byCampaign)) {
+    html += `<div class="text-[9px] text-zinc-400 mb-1">By campaign (Reddit landings):</div><div class="text-[8px] text-zinc-300 mb-2">`;
+    for (const [camp, count] of topCampaigns(sortCampaignEntries(stats.byCampaign))) {
+      html += `<span class="inline-block mr-2 mb-1 px-1.5 py-0.5 bg-orange-900/40 border border-orange-500/30 rounded">${escapeHtml(camp)}: ${count}</span>`;
     }
     html += `</div>`;
   }
 
   if (stats.lastEvents.length) {
-    html += `<div class="text-[9px] text-zinc-400 mb-1">Recent events:</div>`;
-    html += `<div class="font-mono text-[8px] text-zinc-300 bg-black/40 border border-white/10 p-1.5 rounded max-h-24 overflow-y-auto">`;
+    html += `<div class="text-[9px] text-zinc-400 mb-1">Recent events:</div><div class="font-mono text-[8px] text-zinc-300 bg-black/40 border border-white/10 p-1.5 rounded max-h-24 overflow-y-auto">`;
     for (const e of stats.lastEvents) {
-      const t = e.created_at ? new Date(String(e.created_at)).toLocaleString() : '';
-      html += `${t} ${e.event_name} ${e.utm_campaign ? `(${e.utm_campaign})` : ''}<br>`;
+      const camp = e.utm_campaign ? ` (${e.utm_campaign})` : '';
+      html += `${escapeHtml(String(e.event_name || ''))}${escapeHtml(String(camp))}<br>`;
     }
     html += `</div>`;
   } else {
-    html += `<div class="text-[9px] text-zinc-500">No Reddit funnel events yet. Visit with <code class="text-orange-200">?utm_source=reddit</code> and click Get my referral link.</div>`;
+    html += `<div class="text-[9px] text-zinc-500">No Reddit events yet. Visit with <code class="text-orange-200">?utm_source=reddit</code>.</div>`;
   }
 
   container.innerHTML = html;
 }
 
+export async function renderRedditCampaignStats(
+  container: HTMLElement,
+  preloadedEvents?: Array<Record<string, unknown>>,
+) {
+  container.classList.add('reddit-campaign-stats-panel');
+  bindRedditStatsRefresh(container);
+
+  if (preloadedEvents) {
+    renderRedditCampaignView(container, preloadedEvents, 'local');
+    return;
+  }
+
+  const res = await getRedditEventsForStats();
+  renderRedditCampaignView(container, res.events, res.source, res.fetchError);
+}
+
 export async function wireRedditCampaignStatsQuick(root: HTMLElement) {
   const el = root.querySelector('#reddit-stats-quick') as HTMLElement | null;
   if (!el) return;
-  await renderRedditCampaignStats(el);
+  bindRedditStatsRefresh(el);
+  const local = getLocalRedditEvents();
+  if (local.length) {
+    renderRedditCampaignView(el, local, 'local');
+  } else {
+    el.innerHTML = SKELETON;
+  }
+  try {
+    const res = await getRedditEventsForStats();
+    renderRedditCampaignView(el, res.events, res.source, res.fetchError);
+  } catch {
+    if (!local.length) {
+      el.innerHTML = `<div class="text-[9px] text-amber-400">Could not load Reddit stats. Click Refresh.</div>`;
+    }
+  }
 }

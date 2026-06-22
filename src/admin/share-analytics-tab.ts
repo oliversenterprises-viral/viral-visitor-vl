@@ -1,71 +1,313 @@
+import type { Chart } from 'chart.js';
 import { supabase } from '../lib/supabase';
 import { showToast } from '../ui';
+import { escapeHtml } from '../content';
+import {
+  type ShareEvent,
+  type AnalyticsViewData,
+  filterByDays,
+  applyShareFilters,
+  computeAnalyticsData,
+  formatNumber,
+  getUniquePlatforms,
+} from './share-analytics-helpers';
 
-/** Shape of a single share event as used by this analytics tab */
-interface ShareEvent {
-  platform: string;
-  referrer_code: string;
-  created_at: string;
+let allSharesCache: ShareEvent[] = [];
+let currentFilterDays = 0;
+let currentSearch = '';
+let currentPlatformFilter = 'all';
+let sharesChannel: ReturnType<typeof supabase.channel> | null = null;
+let shareBarChart: Chart | null = null;
+let shareTrendChart: Chart | null = null;
+
+function getShareAnalyticsTabRoot(from: HTMLElement): HTMLElement {
+  return (from.closest('#admin-content') as HTMLElement) || from;
 }
 
-/** Internal view model returned by the computation layer */
-interface AnalyticsViewData {
-  total: number;
-  sortedPlatforms: Array<[string, number]>;
-  topReferrers: Array<[string, number]>;
-  trendLabels: string[];
-  trendData: number[];
-  uniqueSharers: number;
-  peakDay: { day: string; count: number };
-  avgPerDay: number;
-  insights: string[];
+function destroyCharts() {
+  shareBarChart?.destroy();
+  shareTrendChart?.destroy();
+  shareBarChart = null;
+  shareTrendChart = null;
 }
 
-// Local state for the currently filtered analytics data (used by export button)
-let currentAnalyticsFiltered: ShareEvent[] = [];
+async function fetchSharesData(): Promise<ShareEvent[]> {
+  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+  if (adminSecret) {
+    const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
+      body: { action: 'get_shares' },
+      headers: { 'x-admin-secret': adminSecret },
+    });
+    if (!edgeErr && edgeData?.success && Array.isArray(edgeData.data)) {
+      return edgeData.data.map(
+        (row: { platform: string; referral_link?: string; referrer_code?: string; created_at: string }) => ({
+          platform: row.platform || 'unknown',
+          referrer_code: row.referrer_code || row.referral_link || 'unknown',
+          created_at: row.created_at,
+        }),
+      );
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('shares')
+    .select('platform, referrer_code, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ShareEvent[]) || [];
+}
+
+function exportSharesCSV(shares: readonly ShareEvent[]) {
+  if (!shares.length) return;
+
+  const headers = ['created_at', 'referrer_code', 'platform'];
+  const csvRows = [headers.join(',')];
+
+  shares.forEach((s) => {
+    csvRows.push(
+      [
+        s.created_at || '',
+        `"${(s.referrer_code || '').replace(/"/g, '""')}"`,
+        s.platform || '',
+      ].join(','),
+    );
+  });
+
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `viralrefer-shares-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function buildAnalyticsHTML(
+  viewData: AnalyticsViewData,
+  globalTotal: number,
+  filteredCount: number,
+  platforms: string[],
+  activePlatform: string,
+): string {
+  const platformChip = (value: string, label: string) => {
+    const active = activePlatform === value;
+    return `<button data-platform="${escapeHtml(value)}" class="share-platform-filter px-3 py-1 text-xs rounded-full border transition-colors ${
+      active ? 'bg-violet-600 border-violet-500 text-white' : 'border-white/20 text-zinc-400 hover:bg-white/10'
+    }">${escapeHtml(label)}</button>`;
+  };
+
+  let html = `
+    <div class="mb-6">
+      <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+        <div class="admin-stat-card">
+          <div class="text-sm text-zinc-400">TOTAL SHARES (ALL TIME)</div>
+          <div id="share-stat-total" class="text-5xl md:text-6xl font-bold text-white">${formatNumber(globalTotal)}</div>
+          <div id="share-stat-subtitle" class="text-xs text-zinc-500 mt-1">From ${formatNumber(viewData.uniqueSharers)} unique sharers in view • Avg ${viewData.avgPerDay}/day</div>
+        </div>
+        <div class="flex flex-col items-end gap-2">
+          <div class="flex items-center gap-3 flex-wrap justify-end">
+            <span id="shares-live-indicator" class="hidden text-[10px] text-emerald-400/80"><i class="fa-solid fa-circle text-[6px] mr-1"></i>live</span>
+            <span id="analytics-last-updated" class="text-[10px] text-zinc-500"></span>
+            <button id="shares-refresh-btn" class="px-4 py-1.5 text-sm bg-white/10 hover:bg-white/20 rounded-2xl flex items-center gap-2">
+              <i class="fa-solid fa-sync"></i> Refresh
+            </button>
+          </div>
+          <div class="flex gap-2 flex-wrap justify-end">
+            <button data-days="1" class="share-time-filter px-3 py-1.5 text-sm rounded-2xl border border-white/20 hover:bg-white/10">Today</button>
+            <button data-days="7" class="share-time-filter px-3 py-1.5 text-sm rounded-2xl border border-white/20 hover:bg-white/10">7 days</button>
+            <button data-days="30" class="share-time-filter px-3 py-1.5 text-sm rounded-2xl border border-white/20 hover:bg-white/10">30 days</button>
+            <button data-days="0" class="share-time-filter px-3 py-1.5 text-sm rounded-2xl bg-violet-600 text-white">All time</button>
+          </div>
+          <button id="export-shares-btn" class="px-4 py-1.5 text-sm bg-emerald-600/90 hover:bg-emerald-600 rounded-2xl flex items-center gap-1.5">
+            <i class="fa-solid fa-download text-xs"></i> Export CSV
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-3 items-center mb-3">
+      <div class="relative flex-1 w-full">
+        <input id="share-search" type="search" placeholder="Search referrer code or platform..."
+               class="w-full bg-zinc-900 border border-white/10 rounded-2xl px-4 py-2 pr-10 text-sm focus:border-violet-500" />
+        <button type="button" id="share-search-clear" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs" aria-label="Clear search">✕</button>
+      </div>
+      <span id="shares-result-count" class="text-xs text-zinc-500 whitespace-nowrap"></span>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-6">
+      ${platformChip('all', 'All platforms')}
+      ${platforms.map((p) => platformChip(p, p)).join('')}
+    </div>
+  `;
+
+  if (viewData.total === 0) {
+    html += `
+      <div class="text-center py-12 text-zinc-400 border border-white/10 rounded-2xl">
+        <i class="fa-solid fa-filter text-4xl mb-3 block opacity-60"></i>
+        <div class="font-semibold text-zinc-300">No shares match current filters</div>
+        <p class="text-sm mt-1">Try widening the time range or clearing search/platform filters.</p>
+      </div>`;
+    return html;
+  }
+
+  html += `
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="glass admin-stat-card rounded-2xl p-4">
+        <div class="text-xs text-zinc-400">IN VIEW</div>
+        <div class="text-3xl font-bold text-white mt-1">${formatNumber(filteredCount)}</div>
+      </div>
+      <div class="glass admin-stat-card rounded-2xl p-4">
+        <div class="text-xs text-zinc-400">UNIQUE SHARERS</div>
+        <div class="text-3xl font-bold text-emerald-400 mt-1">${formatNumber(viewData.uniqueSharers)}</div>
+      </div>
+      <div class="glass admin-stat-card rounded-2xl p-4">
+        <div class="text-xs text-zinc-400">PLATFORMS</div>
+        <div class="text-3xl font-bold text-white mt-1">${formatNumber(viewData.sortedPlatforms.length)}</div>
+      </div>
+      <div class="glass admin-stat-card rounded-2xl p-4">
+        <div class="text-xs text-zinc-400">PEAK DAY</div>
+        <div class="text-lg font-bold text-amber-400 mt-1">${escapeHtml(viewData.peakDay.day)}</div>
+        <div class="text-xs text-zinc-500">${viewData.peakDay.count} shares</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+      <div>
+        <h4 class="text-sm font-semibold text-zinc-300 mb-2">Shares by Platform</h4>
+        <canvas id="share-chart" style="max-height: 260px;"></canvas>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold text-zinc-300 mb-2">Shares Over Time (last 14 days)</h4>
+        <canvas id="trend-chart" style="max-height: 260px;"></canvas>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="bg-zinc-900 border border-white/10 rounded-2xl p-4">
+        <h4 class="text-sm font-semibold text-zinc-300 mb-3">Key Insights</h4>
+        <ul class="space-y-2 text-sm text-zinc-300">
+          ${viewData.insights.map((i) => `<li>• ${i}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-sm font-semibold text-zinc-300 mb-3">Top Referrers by Shares</h4>
+        <div class="space-y-1.5">
+  `;
+
+  viewData.topReferrers.forEach(([referrer, count], index) => {
+    const percentage = Math.round((count / viewData.total) * 100);
+    html += `
+      <button type="button" data-search-code="${escapeHtml(referrer)}" class="share-referrer-chip w-full flex items-center justify-between table-row bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm hover:bg-zinc-800/80 transition-colors text-left">
+        <div class="flex items-center gap-3">
+          <div class="w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center text-xs font-bold">${index + 1}</div>
+          <div class="font-mono text-emerald-300">${escapeHtml(referrer)}</div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-zinc-400">${count} shares</div>
+          <div class="font-semibold text-emerald-400 w-11 text-right">${percentage}%</div>
+        </div>
+      </button>`;
+  });
+
+  html += `</div></div><div><h4 class="text-sm font-semibold text-zinc-300 mb-3">Platform Breakdown</h4><div class="space-y-2">`;
+
+  viewData.sortedPlatforms.forEach(([platform, count]) => {
+    const percentage = Math.round((count / viewData.total) * 100);
+    html += `
+      <button type="button" data-platform="${escapeHtml(platform)}" class="share-platform-row w-full flex items-center justify-between table-row bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm hover:bg-zinc-800/80 transition-colors text-left">
+        <div class="font-medium">${escapeHtml(platform)}</div>
+        <div class="flex items-center gap-4">
+          <div class="text-zinc-400">${count} shares</div>
+          <div class="font-semibold text-emerald-400 w-12 text-right">${percentage}%</div>
+        </div>
+      </button>`;
+  });
+
+  html += `</div></div></div>`;
+  return html;
+}
+
+function renderAnalyticsCharts(data: AnalyticsViewData, ChartCtor: typeof Chart) {
+  destroyCharts();
+
+  const { sortedPlatforms, trendLabels, trendData } = data;
+
+  const barCtx = (document.getElementById('share-chart') as HTMLCanvasElement)?.getContext('2d');
+  if (barCtx && sortedPlatforms.length) {
+    shareBarChart = new ChartCtor(barCtx, {
+      type: 'bar',
+      data: {
+        labels: sortedPlatforms.map(([p]) => p),
+        datasets: [{ label: 'Shares', data: sortedPlatforms.map(([, c]) => c), backgroundColor: '#864cff', borderRadius: 6 }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.raw} shares` } } },
+        scales: { y: { beginAtZero: true, ticks: { color: '#71717a' } }, x: { ticks: { color: '#71717a' } } },
+      },
+    });
+  }
+
+  const trendCtx = (document.getElementById('trend-chart') as HTMLCanvasElement)?.getContext('2d');
+  if (trendCtx && trendLabels.length) {
+    shareTrendChart = new ChartCtor(trendCtx, {
+      type: 'line',
+      data: {
+        labels: trendLabels.map((d) => d.slice(5)),
+        datasets: [{
+          label: 'Daily Shares',
+          data: trendData,
+          borderColor: '#34d399',
+          tension: 0.3,
+          fill: true,
+          backgroundColor: 'rgba(52,211,153,0.1)',
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { color: '#71717a' } }, x: { ticks: { color: '#71717a' } } },
+      },
+    });
+  }
+}
 
 /**
  * Admin Tab: Share Analytics
  *
- * Advanced analytics dashboard for share events:
- * - Platform and referrer breakdowns
- * - Time-series charts (Chart.js, lazy-loaded)
- * - Key insights
- * - Filtered CSV export
- *
- * One of the heavier admin tabs (dynamically imported).
+ * Platform/referrer breakdowns, time-series charts (Chart.js lazy-loaded),
+ * filters, insights, and CSV export.
  */
 async function renderShareAnalyticsTab(content: HTMLElement) {
-  content.innerHTML = `<div class="text-center py-6">Loading advanced analytics...</div>`;
+  content.innerHTML = `
+    <div class="space-y-4 py-2">
+      <div class="h-8 w-56 skeleton rounded-xl"></div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="h-24 skeleton rounded-2xl"></div>
+        <div class="h-24 skeleton rounded-2xl"></div>
+        <div class="h-24 skeleton rounded-2xl"></div>
+        <div class="h-24 skeleton rounded-2xl"></div>
+      </div>
+      <div class="h-64 skeleton rounded-2xl"></div>
+    </div>`;
+
+  let ChartCtor: typeof Chart;
 
   try {
     const { Chart, registerables } = await import('chart.js');
     Chart.register(...registerables);
+    ChartCtor = Chart;
 
-    let sharesData: ShareEvent[] | null = null;
-    const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-    if (adminSecret) {
-      const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
-        body: { action: 'get_shares' },
-        headers: { 'x-admin-secret': adminSecret },
-      });
-      if (!edgeErr && edgeData?.success && Array.isArray(edgeData.data)) {
-        sharesData = edgeData.data.map((row: { platform: string; referral_link?: string; referrer_code?: string; created_at: string }) => ({
-          platform: row.platform,
-          referrer_code: row.referrer_code || row.referral_link || 'unknown',
-          created_at: row.created_at,
-        }));
-      }
-    }
-    if (!sharesData) {
-      const { data } = await supabase
-        .from('shares')
-        .select('platform, referrer_code, created_at')
-        .order('created_at', { ascending: false });
-      sharesData = (data as ShareEvent[]) || [];
-    }
+    allSharesCache = await fetchSharesData();
 
-    if (!sharesData || sharesData.length === 0) {
+    if (!allSharesCache.length) {
+      destroyCharts();
       content.innerHTML = `
         <div class="flex flex-col items-center justify-center py-12 text-center">
           <i class="fa-solid fa-share-alt text-5xl text-zinc-600 mb-4 opacity-60"></i>
@@ -73,293 +315,234 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
           <p class="text-sm text-zinc-500 mt-2 max-w-md">
             When users share their referral links on social media, detailed analytics and insights will appear here automatically.
           </p>
+          <button id="shares-empty-refresh" class="mt-4 px-5 py-2 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">Refresh</button>
         </div>`;
+      document.getElementById('shares-empty-refresh')?.addEventListener('click', () => {
+        renderShareAnalyticsTab(getShareAnalyticsTabRoot(content));
+      });
+      setupSafeSharesRealtime(getShareAnalyticsTabRoot(content), () => {
+        renderShareAnalyticsTab(getShareAnalyticsTabRoot(content)).catch(() => {});
+      });
       return;
     }
 
-    const allShares: ShareEvent[] = sharesData as ShareEvent[];
+    const tabRoot = getShareAnalyticsTabRoot(content);
 
-    function formatNumber(n: number): string {
-      return n.toLocaleString();
-    }
+    const renderView = () => {
+      const filtered = applyShareFilters(allSharesCache, currentFilterDays, currentSearch, currentPlatformFilter);
+      const viewData = computeAnalyticsData(filtered);
+      const platforms = getUniquePlatforms(
+        filterByDays(allSharesCache, currentFilterDays),
+      );
 
-    function filterByDays(days: number): ShareEvent[] {
-      if (days === 0) return allShares;
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - days);
-      return allShares.filter((s: ShareEvent) => new Date(s.created_at) >= cutoff);
-    }
+      destroyCharts();
+      content.innerHTML = buildAnalyticsHTML(
+        viewData,
+        allSharesCache.length,
+        filtered.length,
+        platforms,
+        currentPlatformFilter,
+      );
 
-    function computeAnalyticsData(filteredShares: ShareEvent[]): AnalyticsViewData {
-      const total = filteredShares.length;
-
-      const platformCounts: Record<string, number> = {};
-      filteredShares.forEach((s) => {
-        platformCounts[s.platform] = (platformCounts[s.platform] || 0) + 1;
-      });
-      const sortedPlatforms = Object.entries(platformCounts).sort((a, b) => b[1] - a[1]);
-
-      const referrerCounts: Record<string, number> = {};
-      filteredShares.forEach((s) => {
-        referrerCounts[s.referrer_code] = (referrerCounts[s.referrer_code] || 0) + 1;
-      });
-      const topReferrers = Object.entries(referrerCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 6);
-
-      const dailyCounts: Record<string, number> = {};
-      filteredShares.forEach((s) => {
-        const day = new Date(s.created_at).toISOString().split('T')[0];
-        dailyCounts[day] = (dailyCounts[day] || 0) + 1;
-      });
-      const sortedDays = Object.keys(dailyCounts).sort().slice(-14);
-      const trendLabels = sortedDays;
-      const trendData = sortedDays.map(day => dailyCounts[day] || 0);
-
-      const uniqueSharers = new Set(filteredShares.map((s) => s.referrer_code)).size;
-
-      let peakDay = { day: '-', count: 0 };
-      Object.entries(dailyCounts).forEach(([day, count]) => {
-        if (count > peakDay.count) peakDay = { day, count };
-      });
-
-      const avgPerDay = trendData.length > 0 ? Math.round(total / trendData.length) : 0;
-
-      const insights: string[] = [];
-      if (sortedPlatforms.length > 0) {
-        const top = sortedPlatforms[0];
-        insights.push(`<strong>${top[0]}</strong> is your strongest channel (${Math.round((top[1] / total) * 100)}% of shares)`);
-      }
-      if (topReferrers.length >= 3) {
-        const top3 = topReferrers.slice(0, 3).reduce((sum, [, c]) => sum + c, 0);
-        insights.push(`Your top 3 referrers drive <strong>${Math.round((top3 / total) * 100)}%</strong> of all shares`);
-      }
-      if (trendData.length >= 5) {
-        const firstHalf = trendData.slice(0, Math.floor(trendData.length / 2)).reduce((a, b) => a + b, 0);
-        const secondHalf = trendData.slice(Math.floor(trendData.length / 2)).reduce((a, b) => a + b, 0);
-        if (secondHalf > firstHalf * 1.4) insights.push(`Shares have <strong>increased sharply</strong> recently`);
-        else if (secondHalf < firstHalf * 0.6) insights.push(`Shares have <strong>declined</strong> recently`);
-      }
-      insights.push(`Peak day: <strong>${peakDay.day}</strong> with ${peakDay.count} shares`);
-
-      return {
-        total,
-        sortedPlatforms,
-        topReferrers,
-        trendLabels,
-        trendData,
-        uniqueSharers,
-        peakDay,
-        avgPerDay,
-        insights,
-      };
-    }
-
-    function buildAnalyticsHTML(data: AnalyticsViewData) {
-
-      let html = `
-        <div class="mb-6">
-          <div class="flex items-center justify-between">
-            <div class="admin-stat-card">
-              <div class="text-sm text-zinc-400">TOTAL SHARES</div>
-              <div class="text-6xl font-bold text-white">${formatNumber(data.total)}</div>
-              <div class="text-xs text-zinc-500 mt-1">From ${data.uniqueSharers} unique people • Avg ${data.avgPerDay}/day</div>
-            </div>
-            <div class="flex items-center gap-3">
-              <span id="analytics-last-updated" class="text-[10px] text-zinc-500"></span>
-              <div class="flex gap-2">
-                <button data-days="7" class="time-filter px-4 py-1.5 text-sm rounded-2xl border border-white/20 hover:bg-white/10">Last 7 days</button>
-                <button data-days="30" class="time-filter px-4 py-1.5 text-sm rounded-2xl border border-white/20 hover:bg-white/10">Last 30 days</button>
-                <button data-days="0" class="time-filter px-4 py-1.5 text-sm rounded-2xl bg-violet-600 text-white">All time</button>
-              </div>
-              <button id="export-shares-btn" class="ml-2 px-4 py-1.5 text-sm bg-emerald-600/90 hover:bg-emerald-600 rounded-2xl flex items-center gap-1.5">
-                <i class="fa-solid fa-download text-xs"></i> Export
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
-          <div>
-            <h4 class="text-sm font-semibold text-zinc-300 mb-2">Shares by Platform</h4>
-            <canvas id="share-chart" style="max-height: 260px;"></canvas>
-          </div>
-          <div>
-            <h4 class="text-sm font-semibold text-zinc-300 mb-2">Shares Over Time (last 14 days)</h4>
-            <canvas id="trend-chart" style="max-height: 260px;"></canvas>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="bg-zinc-900 border border-white/10 rounded-2xl p-4">
-            <h4 class="text-sm font-semibold text-zinc-300 mb-3">Key Insights</h4>
-            <ul class="space-y-2 text-sm text-zinc-300">
-              ${data.insights.map((i: string) => `<li>• ${i}</li>`).join('')}
-            </ul>
-          </div>
-
-          <div>
-            <h4 class="text-sm font-semibold text-zinc-300 mb-3">Top Referrers by Shares</h4>
-            <div class="space-y-1.5">
-      `;
-
-      data.topReferrers.forEach(([referrer, count], index: number) => {
-        const percentage = Math.round((count / data.total) * 100);
-        html += `
-          <div class="flex items-center justify-between table-row bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm">
-            <div class="flex items-center gap-3">
-              <div class="w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center text-xs font-bold">${index + 1}</div>
-              <div class="font-mono text-emerald-300">${referrer}</div>
-            </div>
-            <div class="flex items-center gap-4">
-              <div class="text-zinc-400">${count} shares</div>
-              <div class="font-semibold text-emerald-400 w-11 text-right">${percentage}%</div>
-            </div>
-          </div>`;
-      });
-
-      html += `</div></div>`;
-
-      html += `
-        <div>
-          <h4 class="text-sm font-semibold text-zinc-300 mb-3">Platform Breakdown</h4>
-          <div class="space-y-2">
-      `;
-
-      data.sortedPlatforms.forEach(([platform, count]) => {
-        const percentage = Math.round((count / data.total) * 100);
-        html += `
-          <div class="flex items-center justify-between table-row bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm">
-            <div class="font-medium">${platform}</div>
-            <div class="flex items-center gap-4">
-              <div class="text-zinc-400">${count} shares</div>
-              <div class="font-semibold text-emerald-400 w-12 text-right">${percentage}%</div>
-            </div>
-          </div>`;
-      });
-
-      html += `</div></div></div>`;
-
-      return html;
-    }
-
-    function renderAnalyticsCharts(data: AnalyticsViewData) {
-      const { sortedPlatforms, trendLabels, trendData } = data;
-
-      const barCtx = (document.getElementById('share-chart') as HTMLCanvasElement)?.getContext('2d');
-      if (barCtx) {
-        new Chart(barCtx, {
-          type: 'bar',
-          data: {
-            labels: sortedPlatforms.map(([p]) => p),
-            datasets: [{ label: 'Shares', data: sortedPlatforms.map(([, c]) => c), backgroundColor: '#864cff', borderRadius: 6 }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.raw} shares` } } },
-            scales: { y: { beginAtZero: true, ticks: { color: '#71717a' } }, x: { ticks: { color: '#71717a' } } }
-          }
-        });
+      if (viewData.total > 0) {
+        renderAnalyticsCharts(viewData, ChartCtor);
       }
 
-      const trendCtx = (document.getElementById('trend-chart') as HTMLCanvasElement)?.getContext('2d');
-      if (trendCtx) {
-        new Chart(trendCtx, {
-          type: 'line',
-          data: {
-            labels: trendLabels.map((d) => d.slice(5)),
-            datasets: [{ label: 'Daily Shares', data: trendData, borderColor: '#34d399', tension: 0.3, fill: true, backgroundColor: 'rgba(52,211,153,0.1)' }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { color: '#71717a' } }, x: { ticks: { color: '#71717a' } } }
-          }
-        });
-      }
-    }
-
-    function attachAnalyticsListeners() {
-      // Re-attach time filters
-      document.querySelectorAll('.time-filter').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const days = parseInt((btn as HTMLElement).dataset.days || '0');
-          const filtered = days === 0 ? allShares : filterByDays(days);
-          currentAnalyticsFiltered = filtered;
-          renderAnalytics(filtered);
-        });
-      });
-
-      // Export CSV for current view
-      const exportSharesBtn = document.getElementById('export-shares-btn') as HTMLButtonElement | null;
-      if (exportSharesBtn) {
-        exportSharesBtn.onclick = () => {
-          const currentFiltered = currentAnalyticsFiltered || allShares;
-          exportSharesCSV(currentFiltered);
-          showToast('Shares exported successfully', 'success');
-        };
-      }
-    }
-
-    function renderAnalytics(filteredShares: ShareEvent[]) {
-      currentAnalyticsFiltered = filteredShares;
-
-      const data = computeAnalyticsData(filteredShares);
-      const html = buildAnalyticsHTML(data);
-
-      content.innerHTML = html;
-
-      renderAnalyticsCharts(data);
-
-      // Update timestamp
       const analyticsTs = document.getElementById('analytics-last-updated');
       if (analyticsTs) {
         const now = new Date();
         analyticsTs.textContent = `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
       }
 
-      attachAnalyticsListeners();
-    }
+      const resultEl = document.getElementById('shares-result-count');
+      if (resultEl) {
+        resultEl.textContent =
+          filtered.length === allSharesCache.length
+            ? `Showing ${formatNumber(filtered.length)} shares`
+            : `Showing ${formatNumber(filtered.length)} of ${formatNumber(allSharesCache.length)}`;
+      }
 
-    // Store last rendered data for export
-    currentAnalyticsFiltered = allShares;
-    renderAnalytics(allShares);
+      syncShareFilterButtons();
+      attachShareAnalyticsListeners(content, tabRoot, ChartCtor);
+    };
 
+    renderView();
+    setupSafeSharesRealtime(tabRoot, async () => {
+      try {
+        allSharesCache = await fetchSharesData();
+        renderView();
+      } catch {
+        /* keep current view on background refresh failure */
+      }
+    });
   } catch (e) {
-    const { data } = await supabase.from('shares').select('platform');
-    const counts: Record<string, number> = {};
-    (data || []).forEach((s: { platform: string }) => counts[s.platform] = (counts[s.platform] || 0) + 1);
-    const total = Object.values(counts).reduce((a, b) => a + b, 0);
-    content.innerHTML = `<pre class="text-xs bg-black/40 p-4 rounded-xl">Total: ${total}\n${JSON.stringify(counts, null, 2)}</pre>`;
+    destroyCharts();
+    content.innerHTML = `
+      <div class="p-6 text-amber-400 border border-amber-500/30 rounded-2xl">
+        Unable to load share analytics. ${escapeHtml(String(e))}
+        <button id="shares-retry-btn" class="mt-3 block px-4 py-2 text-sm bg-white/10 rounded-2xl">Retry</button>
+      </div>`;
+    document.getElementById('shares-retry-btn')?.addEventListener('click', () => {
+      renderShareAnalyticsTab(getShareAnalyticsTabRoot(content));
+    });
   }
 }
 
-// CSV export helper for shares (moved here with the tab; only used by Share Analytics)
-function exportSharesCSV(shares: readonly ShareEvent[]) {
-  if (!shares || !shares.length) return;
-
-  const headers = ['created_at', 'referrer_code', 'platform'];
-  const csvRows = [headers.join(',')];
-
-  shares.forEach(s => {
-    csvRows.push([
-      s.created_at || '',
-      `"${(s.referrer_code || '').replace(/"/g, '""')}"`,
-      s.platform || ''
-    ].join(','));
+function syncShareFilterButtons() {
+  document.querySelectorAll('.share-time-filter').forEach((btn) => {
+    const days = parseInt((btn as HTMLElement).dataset.days || '0', 10);
+    const active = days === currentFilterDays;
+    btn.classList.toggle('bg-violet-600', active);
+    btn.classList.toggle('text-white', active);
+    btn.classList.toggle('border-white/20', !active);
   });
 
-  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `viralrefer-shares-${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const clearBtn = document.getElementById('share-search-clear');
+  if (clearBtn) clearBtn.classList.toggle('hidden', !currentSearch.trim());
+}
+
+function attachShareAnalyticsListeners(content: HTMLElement, tabRoot: HTMLElement, ChartCtor: typeof Chart) {
+  const searchInput = document.getElementById('share-search') as HTMLInputElement | null;
+  const searchClear = document.getElementById('share-search-clear');
+  const refreshBtn = document.getElementById('shares-refresh-btn') as HTMLButtonElement | null;
+  const exportBtn = document.getElementById('export-shares-btn') as HTMLButtonElement | null;
+
+  if (searchInput) searchInput.value = currentSearch;
+
+  let searchTimeout: number;
+  searchInput?.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = window.setTimeout(() => {
+      currentSearch = searchInput.value;
+      syncShareFilterButtons();
+      rerender();
+    }, 200);
+  });
+
+  searchClear?.addEventListener('click', () => {
+    currentSearch = '';
+    if (searchInput) searchInput.value = '';
+    syncShareFilterButtons();
+    rerender();
+    searchInput?.focus();
+  });
+
+  document.querySelectorAll('.share-time-filter').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      currentFilterDays = parseInt((btn as HTMLElement).dataset.days || '0', 10);
+      rerender();
+    });
+  });
+
+  document.querySelectorAll('.share-platform-filter').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      currentPlatformFilter = (btn as HTMLElement).dataset.platform || 'all';
+      rerender();
+    });
+  });
+
+  document.querySelectorAll('.share-referrer-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const code = (chip as HTMLElement).dataset.searchCode || '';
+      currentSearch = code;
+      if (searchInput) searchInput.value = code;
+      syncShareFilterButtons();
+      rerender();
+    });
+  });
+
+  document.querySelectorAll('.share-platform-row').forEach((row) => {
+    row.addEventListener('click', () => {
+      currentPlatformFilter = (row as HTMLElement).dataset.platform || 'all';
+      rerender();
+    });
+  });
+
+  refreshBtn?.addEventListener('click', async () => {
+    const icon = refreshBtn.querySelector('i');
+    if (icon) icon.classList.add('fa-spin');
+    refreshBtn.disabled = true;
+    try {
+      allSharesCache = await fetchSharesData();
+      showToast('Share analytics refreshed', 'success');
+      rerender();
+    } catch (err) {
+      showToast(`Refresh failed: ${String(err)}`, 'info');
+    } finally {
+      refreshBtn.disabled = false;
+      if (icon) icon.classList.remove('fa-spin');
+    }
+  });
+
+  exportBtn?.addEventListener('click', () => {
+    const filtered = applyShareFilters(allSharesCache, currentFilterDays, currentSearch, currentPlatformFilter);
+    if (!filtered.length) {
+      showToast('No shares match current filters', 'info');
+      return;
+    }
+    exportSharesCSV(filtered);
+    showToast('Shares exported successfully', 'success');
+  });
+
+  function rerender() {
+    const filtered = applyShareFilters(allSharesCache, currentFilterDays, currentSearch, currentPlatformFilter);
+    const viewData = computeAnalyticsData(filtered);
+    const platforms = getUniquePlatforms(filterByDays(allSharesCache, currentFilterDays));
+
+    destroyCharts();
+    content.innerHTML = buildAnalyticsHTML(
+      viewData,
+      allSharesCache.length,
+      filtered.length,
+      platforms,
+      currentPlatformFilter,
+    );
+
+    if (viewData.total > 0) {
+      renderAnalyticsCharts(viewData, ChartCtor);
+    }
+
+    const analyticsTs = document.getElementById('analytics-last-updated');
+    if (analyticsTs) {
+      const now = new Date();
+      analyticsTs.textContent = `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+
+    const resultEl = document.getElementById('shares-result-count');
+    if (resultEl) {
+      resultEl.textContent =
+        filtered.length === allSharesCache.length
+          ? `Showing ${formatNumber(filtered.length)} shares`
+          : `Showing ${formatNumber(filtered.length)} of ${formatNumber(allSharesCache.length)}`;
+    }
+
+    syncShareFilterButtons();
+    attachShareAnalyticsListeners(content, tabRoot, ChartCtor);
+  }
+}
+
+function setupSafeSharesRealtime(tabRoot: HTMLElement, onRefresh: () => void) {
+  if (sharesChannel) {
+    try {
+      sharesChannel.unsubscribe();
+    } catch {
+      /* channel already closed */
+    }
+    sharesChannel = null;
+  }
+
+  sharesChannel = supabase
+    .channel('shares-admin-live')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'shares' }, () => {
+      const adminModal = document.getElementById('admin-modal');
+      if (document.body.contains(tabRoot) && adminModal && !adminModal.classList.contains('hidden')) {
+        onRefresh();
+      }
+    })
+    .subscribe((status) => {
+      const liveEl = document.getElementById('shares-live-indicator');
+      if (liveEl) liveEl.classList.toggle('hidden', status !== 'SUBSCRIBED');
+    });
 }
 
 export { renderShareAnalyticsTab };

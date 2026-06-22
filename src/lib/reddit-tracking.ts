@@ -3,6 +3,7 @@
  * Pixel ID: VITE_REDDIT_PIXEL_ID in Vercel (fallback matches index.html head snippet).
  */
 
+import { getStoredLandingRef, parseRefFromLocation } from './referral-url';
 import { supabase } from './supabase';
 import { eventName, groupBy, latestEvents } from './stats-helpers';
 
@@ -84,7 +85,7 @@ export function captureUtmAttribution(): UtmAttribution | null {
     medium: params.get('utm_medium'),
     campaign: params.get('utm_campaign'),
     content: params.get('utm_content'),
-    ref: params.get('ref'),
+    ref: params.get('ref') || parseRefFromLocation() || getStoredLandingRef(),
     landed_at: new Date().toISOString(),
   };
 

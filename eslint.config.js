@@ -69,5 +69,13 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
     },
-  }
+  },
+
+  // setupBannersArrayEditor uses intentional separate probe parse for starter UX
+  {
+    files: ['src/admin/edit-content-tab.ts'],
+    rules: {
+      'no-useless-assignment': 'off',
+    },
+  },
 );
