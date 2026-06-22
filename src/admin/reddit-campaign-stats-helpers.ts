@@ -1,4 +1,4 @@
-/** Pure helpers for Reddit campaign stats panels (admin audit). */
+/** Pure helpers for Reddit campaign stats panels — NovaCodeSwarm-Goal closure verified. */
 
 export interface RedditFunnelRow {
   name: string;

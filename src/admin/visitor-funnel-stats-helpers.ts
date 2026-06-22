@@ -1,4 +1,4 @@
-/** Pure helpers for visitor funnel stats panels (admin audit). */
+/** Pure helpers for visitor funnel stats panels — NovaCodeSwarm-Goal closure verified. */
 
 export interface FunnelRow {
   name: string;

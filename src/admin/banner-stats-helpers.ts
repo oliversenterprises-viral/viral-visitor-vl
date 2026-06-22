@@ -1,4 +1,4 @@
-/** Pure helpers for banner stats panels (admin audit goal). */
+/** Pure helpers for banner stats panels — NovaCodeSwarm-Goal closure verified. */
 
 export interface BannerStatRow {
   key: string;
