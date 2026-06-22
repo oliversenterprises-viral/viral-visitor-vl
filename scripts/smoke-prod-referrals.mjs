@@ -42,9 +42,20 @@ function errors() {
   return results.filter((r) => !r.ok && r.severity === 'error').length;
 }
 
+function readRecordReferralSource() {
+  const files = [
+    'supabase/functions/record-referral/index.ts',
+    'supabase/functions/_shared/record-referral-index.ts',
+    'supabase/functions/_shared/record-referral-serve.ts',
+    'supabase/functions/_shared/record-referral-handler.ts',
+    'supabase/functions/_shared/record-referral-request.ts',
+    'supabase/functions/_shared/referrer-code.ts',
+  ];
+  return files.map((rel) => readFileSync(resolve(ROOT, rel), 'utf8')).join('\n');
+}
+
 function checkSourceGuards() {
-  const path = resolve(ROOT, 'supabase/functions/record-referral/index.ts');
-  const src = readFileSync(path, 'utf8');
+  const src = readRecordReferralSource();
 
   record(
     'source: no profiles table lookup',
