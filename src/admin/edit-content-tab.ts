@@ -481,6 +481,7 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
       (btn as HTMLElement).textContent = 'Deleting...';
       (btn as HTMLElement as HTMLButtonElement).disabled = true;
 
+      let deleted = false;
       try {
         const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
         const invokeOpts: {
@@ -491,18 +492,28 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
         };
         if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
         const { data, error } = await supabase.functions.invoke('admin-action', invokeOpts);
-        if (error || !data?.success) {
-          await supabase.from('site_content').delete().eq('key', id);
+        if (!error && data?.success) {
+          deleted = true;
+        } else {
+          const { error: delErr } = await supabase.from('site_content').delete().eq('key', id);
+          if (!delErr) deleted = true;
         }
-      } catch (_) {
+      } catch {
         try {
-          await supabase.from('site_content').delete().eq('key', id);
+          const { error: delErr } = await supabase.from('site_content').delete().eq('key', id);
+          if (!delErr) deleted = true;
         } catch {
           /* demo / RLS graceful fallback */
         }
       }
-      await reloadList();
-      showToast('Content deleted', 'info');
+      if (deleted) {
+        await reloadList();
+        showToast('Content deleted', 'info');
+      } else {
+        showToast('Delete failed — check admin access', 'info');
+        (btn as HTMLElement).textContent = 'Delete';
+        (btn as HTMLElement as HTMLButtonElement).disabled = false;
+      }
     });
   });
 }

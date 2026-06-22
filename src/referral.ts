@@ -11,6 +11,8 @@ import {
   captureReferralAttribution,
   parseRefFromLocation,
 } from './lib/referral-url';
+import { escapeHtml } from './content';
+import { showToast } from './ui';
 import { getReferralBaseUrl, getQrModalTitle, getMyReferralCode, setMyReferralCode } from './public/globals';
 
 // Turnstile site key (from Vercel env, falls back for local dev)
@@ -214,11 +216,11 @@ export async function getMyReferralLinkInstant(): Promise<void> {
 /**
  * Generates a new random referral code for the user and updates the UI.
  */
-export function generateNewCode(): void {
+export async function generateNewCode(): Promise<void> {
   const code = 'VIRAL-' + Math.random().toString(36).substring(2, 9).toUpperCase();
   localStorage.setItem('vr_my_ref_code', code);
   setMyReferralCode(code);
-  getMyReferralLinkInstant();
+  await getMyReferralLinkInstant();
 }
 
 /**
@@ -235,6 +237,7 @@ export function copyLink(): void {
   if (!input || !input.value) return;
 
   navigator.clipboard.writeText(input.value).then(() => {
+    showToast('Link copied', 'success');
     trackRedditFunnel('CopyReferralLink');
     trackVisitorFunnel('CopyReferralLink');
     // Robust button lookup — prefers the known copy button ID, falls back to
@@ -288,7 +291,7 @@ export function showQRModal(): void {
     modal.className = 'fixed inset-0 bg-black/90 z-[900] flex items-center justify-center';
     modal.innerHTML = `
       <div onclick="event.target.remove()" class="glass border border-white/10 rounded-3xl p-8 max-w-sm w-full mx-4 text-center">
-        <div class="text-xl font-bold mb-4">${getQrModalTitle() || 'Scan to Get Your Link'}</div>
+        <div class="text-xl font-bold mb-4">${escapeHtml(getQrModalTitle() || 'Scan to Get Your Link')}</div>
         <div class="text-zinc-300">Please click "Get my referral link" first to see your QR code.</div>
         <button class="mt-6 px-8 py-3 bg-white/10 hover:bg-white/20 rounded-2xl">Close</button>
       </div>
@@ -304,9 +307,9 @@ export function showQRModal(): void {
   modal.className = 'fixed inset-0 bg-black/90 z-[900] flex items-center justify-center';
   modal.innerHTML = `
     <div onclick="event.target.remove()" class="glass border border-white/10 rounded-3xl p-8 max-w-sm w-full mx-4 text-center">
-      <div class="text-xl font-bold mb-4">${getQrModalTitle() || 'Scan to Get Your Link'}</div>
+      <div class="text-xl font-bold mb-4">${escapeHtml(getQrModalTitle() || 'Scan to Get Your Link')}</div>
       <img src="${qrUrl}" class="mx-auto rounded-2xl border border-white/10" alt="QR Code" />
-      <div class="text-xs text-zinc-400 mt-4 break-all">${link}</div>
+      <div class="text-xs text-zinc-400 mt-4 break-all">${escapeHtml(link)}</div>
       <button class="mt-6 px-8 py-3 bg-white/10 hover:bg-white/20 rounded-2xl">Close</button>
     </div>
   `;

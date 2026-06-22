@@ -123,7 +123,7 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
       } else {
         throw edgeErr || new Error('Edge get_claims did not return data');
       }
-    } catch (edgeError) {
+    } catch (_edgeError) {
       // Fallback to direct (works well once owner is signed in via the tools above or real auth)
       const { data, error } = await supabase
         .from('prize_claims')
@@ -156,6 +156,7 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
 
   } catch (e) {
     mainArea.innerHTML = `<div class="p-6 text-amber-400">Unable to load prize claims. ${formatError(e)}</div>`;
+    showToast(`Unable to load prize claims: ${formatError(e)}`, 'info');
   }
 }
 
@@ -260,7 +261,7 @@ function wireOwnerTestTools(content: HTMLElement) {
         if (idRow) idRow.classList.add('hidden');
         if (testBtn) testBtn.classList.add('hidden');
       }
-    } catch (e) {
+    } catch (_e) {
       statusEl.textContent = 'Session check failed';
       statusEl.className = 'text-sm text-red-400';
     }
@@ -471,7 +472,7 @@ function buildClaimsTableHTML(
     html += `
       <tr class="table-row border-b border-white/10 hover:bg-zinc-900/60 align-top">
         <td class="py-3 pr-3 text-xs text-zinc-400 whitespace-nowrap">${date}</td>
-        <td class="py-3 pr-3 font-mono text-emerald-400 text-sm">${claim.referrer_code || '—'}</td>
+        <td class="py-3 pr-3 font-mono text-emerald-400 text-sm">${escapeHtml((claim.referrer_code || '—').toString())}</td>
         <td class="py-3 pr-3 text-xs max-w-[160px] truncate" title="${website}">${shortWebsite}</td>
         <td class="py-3 pr-3 font-mono text-xs text-sky-300">
           ${cashtag ? `

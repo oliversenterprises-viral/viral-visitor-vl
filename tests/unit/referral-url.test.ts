@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildCleanReferralLink,
+  captureReferralAttribution,
+  getStoredLandingRef,
   normalizeReferralCode,
   parseRefFromLocation,
+  revealReferralAttributionBanner,
 } from '../../src/lib/referral-url';
 
 function mockLocation(pathname: string, search = '') {
@@ -27,5 +30,28 @@ describe('referral-url', () => {
 
   it('normalizes codes', () => {
     expect(normalizeReferralCode(' viral-x ')).toBe('VIRAL-X');
+  });
+
+  it('captureReferralAttribution stores ref in sessionStorage', () => {
+    sessionStorage.clear();
+    const ref = captureReferralAttribution(mockLocation('/', '?ref=VIRAL-STORED'));
+    expect(ref).toBe('VIRAL-STORED');
+    expect(getStoredLandingRef()).toBe('VIRAL-STORED');
+  });
+
+  it('getStoredLandingRef returns null when empty', () => {
+    sessionStorage.clear();
+    expect(getStoredLandingRef()).toBeNull();
+  });
+
+  it('revealReferralAttributionBanner unhides banner DOM', () => {
+    document.body.innerHTML = `
+      <div id="referral-attribution" class="hidden">
+        <span id="referrer-code-display"></span>
+      </div>`;
+    revealReferralAttributionBanner(mockLocation('/r/VIRAL-BANNER'));
+    const banner = document.getElementById('referral-attribution');
+    expect(banner?.classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('referrer-code-display')?.textContent).toBe('VIRAL-BANNER');
   });
 });

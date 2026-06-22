@@ -1,5 +1,5 @@
 import { initApp } from './app';
-import { captureReferralAttribution } from './lib/referral-url';
+import { captureReferralAttribution, revealReferralAttributionBanner } from './lib/referral-url';
 import { initRedditTracking } from './lib/reddit-tracking';
 import { initVisitorTracking } from './lib/visitor-tracking';
 
@@ -27,7 +27,12 @@ seedDefaultTextColors();
 // =====================================================
 
 captureReferralAttribution();
+revealReferralAttributionBanner();
 initRedditTracking();
 initVisitorTracking();
 initPublic();
-initApp();
+initApp().catch((err) => {
+  console.warn('[ViralRefer] initApp failed (degraded mode):', err);
+}).finally(() => {
+  document.documentElement.setAttribute('data-vr-ready', '1');
+});

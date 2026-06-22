@@ -37,6 +37,22 @@ const closeAdminPasswordModal = () => {
 };
 registerGlobal('closeAdminPasswordModal', closeAdminPasswordModal);
 
+const openAdminPasswordModal = () => {
+  const pw = document.getElementById('admin-password-modal');
+  if (!pw) return;
+  pw.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    const input = document.getElementById('admin-password-input') as HTMLInputElement | null;
+    input?.focus();
+  });
+};
+
+const adminBtn = document.getElementById('admin-btn');
+if (adminBtn && !adminBtn.dataset.vrWired) {
+  adminBtn.dataset.vrWired = '1';
+  adminBtn.addEventListener('click', openAdminPasswordModal);
+}
+
 const toggleAdminPasswordVisibility = () => {
   const input = document.getElementById('admin-password-input') as HTMLInputElement | null;
   const eye = document.getElementById('admin-password-eye');

@@ -54,6 +54,7 @@ export default defineConfig({
     // Allow access from local network for testing on mobile
     host: true,
   },
+  appType: 'spa',
 
   // Preview server matches production behavior
   preview: {

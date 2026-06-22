@@ -2,21 +2,28 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { LeaderboardEntry, RecentActivityItem } from './types';
 
 // CRITICAL: Secrets must come ONLY from Vite env vars (VITE_*).
-// No hardcoded fallbacks. Fail hard at import time if missing — this prevents
-// accidental use of prod keys or shipping builds with baked secrets.
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Production deploys (Vercel) inject real values at build time.
+// Local/preview without env degrades to static shell — no import-time crash.
+function envString(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error(
-    'FATAL: Missing required Supabase environment variables.\n' +
-    'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local (copy from .env.example).\n' +
-    'For production builds (Cloudflare/Vercel/etc), configure these as build env vars.\n' +
-    'NEVER commit real keys to source control. Rotate keys regularly via Supabase dashboard.'
+const SUPABASE_URL = envString(import.meta.env.VITE_SUPABASE_URL);
+const SUPABASE_ANON_KEY = envString(import.meta.env.VITE_SUPABASE_ANON_KEY);
+
+export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+if (!isSupabaseConfigured) {
+  console.warn(
+    '[ViralRefer] Supabase env not configured — static/degraded mode. ' +
+      'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for live leaderboard/content.',
   );
 }
 
-export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const supabase: SupabaseClient = createClient(
+  SUPABASE_URL || 'https://unconfigured.invalid',
+  SUPABASE_ANON_KEY || 'unconfigured-anon-key',
+  {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -26,10 +33,12 @@ export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON
       eventsPerSecond: 10,
     },
   },
-});
+  },
+);
 
 // Client-side fallback (pre-0005 or if RPC unavailable)
 async function fetchLeaderboardFallback(minReferrals: number): Promise<LeaderboardEntry[]> {
+  if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase
     .from('referrals')
     .select('referrer_code')
@@ -53,6 +62,7 @@ async function fetchLeaderboardFallback(minReferrals: number): Promise<Leaderboa
 
 // Typed query helpers — prefer 0005 RPCs, fall back safely
 export async function fetchLeaderboard(minReferrals: number = 1): Promise<LeaderboardEntry[]> {
+  if (!isSupabaseConfigured) return [];
   try {
     const { data, error } = await supabase.rpc('get_leaderboard', { min_referrals: minReferrals });
     if (!error && Array.isArray(data) && data.length >= 0) {
@@ -65,6 +75,7 @@ export async function fetchLeaderboard(minReferrals: number = 1): Promise<Leader
 }
 
 export async function fetchTotalReferrers(): Promise<number> {
+  if (!isSupabaseConfigured) return 0;
   try {
     const { data, error } = await supabase.rpc('get_total_referral_count');
     if (!error && typeof data === 'number') return data;
@@ -77,7 +88,7 @@ export async function fetchTotalReferrers(): Promise<number> {
 }
 
 export async function fetchMyReferralCount(referrerCode: string): Promise<number> {
-  if (!referrerCode) return 0;
+  if (!referrerCode || !isSupabaseConfigured) return 0;
   try {
     const { data, error } = await supabase.rpc('get_my_referral_count', { p_referrer_code: referrerCode });
     if (!error && typeof data === 'number') return data;
@@ -93,6 +104,7 @@ export async function fetchMyReferralCount(referrerCode: string): Promise<number
 }
 
 export async function fetchRecentActivity(limit = 8): Promise<RecentActivityItem[]> {
+  if (!isSupabaseConfigured) return [];
   const { data } = await supabase
     .from('referrals')
     .select('referrer_code, created_at')
@@ -103,6 +115,7 @@ export async function fetchRecentActivity(limit = 8): Promise<RecentActivityItem
 }
 
 export async function fetchSiteContent(): Promise<Record<string, unknown>> {
+  if (!isSupabaseConfigured) return {};
   const { data, error } = await supabase
     .from('site_content')
     .select('key, id, value');

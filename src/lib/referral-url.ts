@@ -49,3 +49,15 @@ export function buildCleanReferralLink(code: string, baseUrl?: string): string {
   const base = (baseUrl || 'https://www.viralrefer.app').replace(/\/$/, '');
   return `${base}/r/${normalizeReferralCode(code)}`;
 }
+
+/** Show the referral attribution banner immediately (no async init required). */
+export function revealReferralAttributionBanner(loc: Location = location): void {
+  const ref = parseRefFromLocation(loc);
+  if (!ref) return;
+  const banner = document.getElementById('referral-attribution');
+  const disp = document.getElementById('referrer-code-display');
+  if (banner && disp) {
+    disp.textContent = ref;
+    banner.classList.remove('hidden');
+  }
+}

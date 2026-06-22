@@ -33,8 +33,8 @@ export interface AdminClaimRow {
 }
 
 // Private mutable storage (only this module mutates them)
-let _adminClaimsCache: AdminClaimRow[] = [];
-let _adminReferralsCache: AdminReferralRow[] = [];
+const _adminClaimsCache: AdminClaimRow[] = [];
+const _adminReferralsCache: AdminReferralRow[] = [];
 
 // Public readonly views — all external code must use the helper functions below
 export const adminClaimsCache: readonly AdminClaimRow[] = _adminClaimsCache;

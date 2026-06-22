@@ -1,8 +1,15 @@
-import { fetchLeaderboard, fetchTotalReferrers, fetchRecentActivity, fetchSiteContent, fetchMyReferralCount, supabase } from './lib/supabase';
+import {
+  fetchLeaderboard,
+  fetchTotalReferrers,
+  fetchRecentActivity,
+  fetchSiteContent,
+  fetchMyReferralCount,
+  isSupabaseConfigured,
+  supabase,
+} from './lib/supabase';
 import * as Referral from './referral';
 
 import { updatePublicContent } from './content';
-import { parseRefFromLocation } from './lib/referral-url';
 import { getMyReferralCode } from './public/globals';
 
 // ------------------ PUBLIC SITE INITIALIZATION ------------------
@@ -12,6 +19,15 @@ import { getMyReferralCode } from './public/globals';
 const buildReferralLink = Referral.buildReferralLink;
 
 let referralsChannel: any = null;
+
+const INIT_FETCH_TIMEOUT_MS = 12_000;
+
+async function withInitTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), INIT_FETCH_TIMEOUT_MS)),
+  ]);
+}
 
 function updateRealtimeStatus(status: string) {
   const el = document.getElementById('realtime-status');
@@ -138,68 +154,42 @@ export async function loadSiteContent() {
 export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
-  // console.log('%c[ViralRefer] === App Initialization Started ===', 'color:#34d399; font-weight:bold'); // silenced for prod cleanliness (audit fix)
-
-  const adminBtn = document.getElementById('admin-btn');
-  if (adminBtn) {
-    adminBtn.addEventListener('click', () => {
-      const pw = document.getElementById('admin-password-modal');
-      if (pw) {
-        pw.classList.remove('hidden');
-        requestAnimationFrame(() => {
-          const input = document.getElementById('admin-password-input') as HTMLInputElement | null;
-          input?.focus();
-        });
-      }
-    });
-  }
-
-  // console.log('[ViralRefer] Loading site content...'); // silenced
-  await loadSiteContent();
-  // console.log('[ViralRefer] Site content loaded and applied.'); // silenced for prod cleanliness (audit)
-
   try {
-    const totalEl = document.getElementById('total-referrers');
-    if (totalEl) {
-      const count = await fetchTotalReferrers();
-      totalEl.textContent = count.toLocaleString();
-    }
-  } catch (_) { /* best-effort, non-critical */ }
+    await withInitTimeout(loadSiteContent(), undefined);
 
-  await loadLeaderboard();
-
-  await renderRecentActivity();
-
-  if (myReferralCode) {
-    const input = document.getElementById('ref-link') as HTMLInputElement | null;
-    if (input) {
-      input.value = buildReferralLink(myReferralCode);
+    try {
+      const totalEl = document.getElementById('total-referrers');
+      if (totalEl) {
+        const count = await withInitTimeout(fetchTotalReferrers(), 0);
+        totalEl.textContent = count.toLocaleString();
+      }
+    } catch {
+      /* best-effort, non-critical */
     }
-    const qr = document.getElementById('qr-code') as HTMLImageElement | null;
-    if (qr && input?.value) {
-      qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input.value)}`;
+
+    await withInitTimeout(loadLeaderboard(), undefined);
+    await withInitTimeout(renderRecentActivity(), undefined);
+
+    if (myReferralCode) {
+      const input = document.getElementById('ref-link') as HTMLInputElement | null;
+      if (input) {
+        input.value = buildReferralLink(myReferralCode);
+      }
+      const qr = document.getElementById('qr-code') as HTMLImageElement | null;
+      if (qr && input?.value) {
+        qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input.value)}`;
+      }
     }
+
+    await withInitTimeout(renderMyStats(myReferralCode), undefined);
+
+    if (isSupabaseConfigured) {
+      initRealtimeSubscriptions();
+      window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
+    }
+  } catch (err) {
+    console.warn('[ViralRefer] initApp partial failure:', err);
   }
-
-  // Richer personal progress version restored (with actual counts, progress bar, and status)
-  await renderMyStats(myReferralCode);
-
-  const refCode = parseRefFromLocation();
-  if (refCode) {
-    // console.log('[ViralRefer] Referral attribution detected:', refCode); // silenced
-    const banner = document.getElementById('referral-attribution');
-    const disp = document.getElementById('referrer-code-display');
-    if (banner && disp) {
-      disp.textContent = refCode;
-      banner.classList.remove('hidden');
-    }
-  }
-
-  // Enable true Supabase Realtime for leaderboard, recent activity, and personal stats
-  initRealtimeSubscriptions();
-  window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
-
-  // console.log('%c[ViralRefer] === Full app initialized successfully ===', 'color:#34d399; font-weight:bold'); // silenced for prod (audit)
 }
 
 // Expose for referral.ts after code generation

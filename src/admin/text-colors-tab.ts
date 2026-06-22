@@ -177,7 +177,7 @@ export async function renderTextColorsTab(container: HTMLElement) {
 
     if (addCustomBtn && customKeyInput && customPicker) {
       addCustomBtn.onclick = async () => {
-        let suffix = customKeyInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+        const suffix = customKeyInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
         if (!suffix) {
           showToast('Please enter a key suffix', 'info');
           return;
@@ -287,7 +287,7 @@ export async function renderTextColorsTab(container: HTMLElement) {
           const appliedCount = Object.keys(freshContent).filter(k => k.startsWith('color_')).length;
 
           showToast(`Public preview refreshed (${appliedCount} colors applied)`, 'success');
-        } catch (e) {
+        } catch (_e) {
           showToast('Failed to refresh public preview', 'info');
         } finally {
           previewRefreshBtn.innerHTML = originalText;
