@@ -1,3 +1,4 @@
+/** Premium Reddit campaign quick-stats panel (admin audit). */
 import { computeRedditFunnelStats, getLocalRedditEvents, getRedditEventsForStats } from '../lib/reddit-tracking';
 import { escapeHtml } from '../content';
 import { showToast } from '../ui';

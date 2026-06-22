@@ -71,7 +71,7 @@ export default tseslint.config(
     },
   },
 
-  // setupBannersArrayEditor uses intentional separate probe parse for starter UX
+  // edit-content-tab.ts untouched; suppress pre-existing probe-parse lint only
   {
     files: ['src/admin/edit-content-tab.ts'],
     rules: {

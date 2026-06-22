@@ -1,3 +1,5 @@
+/** Pure helpers for banner stats panels (admin audit goal). */
+
 export interface BannerStatRow {
   key: string;
   label: string;

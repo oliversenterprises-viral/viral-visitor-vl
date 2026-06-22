@@ -1,3 +1,4 @@
+/** Premium banner quick-stats panel (admin audit). */
 import {
   clearBannerEvents,
   computeBannerStats,

@@ -1,3 +1,4 @@
+/** Premium visitor funnel quick-stats panel (admin audit). */
 import { computeVisitorFunnelStats, getLocalVisitorEvents, getVisitorEventsForStats } from '../lib/visitor-tracking';
 import { escapeHtml } from '../content';
 import { showToast } from '../ui';
