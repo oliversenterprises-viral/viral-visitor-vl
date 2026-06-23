@@ -16,11 +16,11 @@ function bindRedditStatsRefresh(container: HTMLElement) {
   if (container.dataset.redditRefreshBound === '1') return;
   container.dataset.redditRefreshBound = '1';
   container.addEventListener('click', (e) => {
-    const btn = (e.target as HTMLElement).closest('[data-reddit-stats-refresh]');
-    const csvBtn = (e.target as HTMLElement).closest('[data-reddit-stats-csv]');
+    const btn = (e.target as HTMLElement).closest('button[data-reddit-stats-refresh]');
+    const csvBtn = (e.target as HTMLElement).closest('button[data-reddit-stats-csv]');
     if (csvBtn && container.contains(csvBtn)) {
       e.preventDefault();
-      const csv = container.dataset.redditStatsCsv;
+      const csv = container.dataset.redditCsvPayload;
       if (!csv) return;
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
@@ -77,7 +77,7 @@ function renderRedditCampaignView(
   const isServer = source === 'server';
   const refreshedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  container.dataset.redditStatsCsv = buildRedditCsv(stats.funnel);
+  container.dataset.redditCsvPayload = buildRedditCsv(stats.funnel);
 
   let html = `
     <div class="flex flex-wrap items-center gap-2 mb-2">

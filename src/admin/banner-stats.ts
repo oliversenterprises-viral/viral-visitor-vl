@@ -34,10 +34,10 @@ function bindBannerStatsActions(container: HTMLElement) {
 
   container.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
-    const refreshBtn = target.closest('[data-banner-stats-refresh]');
-    const clearBtn = target.closest('[data-banner-stats-clear]');
-    const copyBtn = target.closest('[data-banner-stats-copy]');
-    const csvBtn = target.closest('[data-banner-stats-csv]');
+    const refreshBtn = target.closest('button[data-banner-stats-refresh]');
+    const clearBtn = target.closest('button[data-banner-stats-clear]');
+    const copyBtn = target.closest('button[data-banner-stats-copy]');
+    const csvBtn = target.closest('button[data-banner-stats-csv]');
     const sortBtn = target.closest('[data-banner-sort]');
     const clearSearchBtn = target.closest('[data-banner-search-clear]');
 
@@ -72,7 +72,7 @@ function bindBannerStatsActions(container: HTMLElement) {
     if (csvBtn) {
       e.preventDefault();
       e.stopPropagation();
-      const csv = container.dataset.bannerStatsCsv;
+      const csv = container.dataset.bannerCsvPayload;
       if (!csv) {
         showToast('No banner data to export', 'info');
         return;
@@ -216,7 +216,7 @@ function renderBannerStatsView(
     2,
   );
   container.dataset.bannerStatsCopy = copyPayload;
-  container.dataset.bannerStatsCsv = buildCsv(sorted);
+  container.dataset.bannerCsvPayload = buildCsv(sorted);
 
   const sortChip = (key: BannerSortKey, label: string) => {
     const active = currentBannerSort === key;

@@ -17,11 +17,11 @@ function bindVisitorStatsRefresh(container: HTMLElement) {
   if (container.dataset.visitorRefreshBound === '1') return;
   container.dataset.visitorRefreshBound = '1';
   container.addEventListener('click', (e) => {
-    const btn = (e.target as HTMLElement).closest('[data-visitor-stats-refresh]');
-    const csvBtn = (e.target as HTMLElement).closest('[data-visitor-stats-csv]');
+    const btn = (e.target as HTMLElement).closest('button[data-visitor-stats-refresh]');
+    const csvBtn = (e.target as HTMLElement).closest('button[data-visitor-stats-csv]');
     if (csvBtn && container.contains(csvBtn)) {
       e.preventDefault();
-      const csv = container.dataset.visitorStatsCsv;
+      const csv = container.dataset.visitorCsvPayload;
       if (!csv) return;
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
@@ -78,7 +78,7 @@ function renderVisitorFunnelView(
   const isServer = source === 'server';
   const refreshedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  container.dataset.visitorStatsCsv = buildVisitorCsv(stats.funnel);
+  container.dataset.visitorCsvPayload = buildVisitorCsv(stats.funnel);
 
   let html = `
     <div class="flex flex-wrap items-center gap-2 mb-2">
