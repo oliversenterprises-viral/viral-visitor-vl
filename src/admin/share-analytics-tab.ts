@@ -11,6 +11,8 @@ import {
   formatNumber,
   getUniquePlatforms,
   normalizeShareRow,
+  countTestShares,
+  listTestShareCodes,
 } from './share-analytics-helpers';
 
 let allSharesCache: ShareEvent[] = [];
@@ -76,6 +78,31 @@ async function fetchSharesData(): Promise<ShareEvent[]> {
   return edgeData.data.map((row: Record<string, unknown>) => normalizeShareRow(row));
 }
 
+async function clearTestSharesFromServer(): Promise<{ deleted: number; codes: string[] }> {
+  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+  if (!adminSecret) {
+    throw new Error('Admin secret not configured');
+  }
+
+  const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
+    body: { action: 'clear_test_shares', payload: { dry_run: false } },
+    headers: { 'x-admin-secret': adminSecret },
+  });
+
+  if (edgeErr && !(edgeData && typeof edgeData === 'object' && (edgeData as { success?: boolean }).success)) {
+    throw new Error(parseAdminActionError(edgeErr, edgeData));
+  }
+  if (!edgeData?.success) {
+    throw new Error(String(edgeData?.error || 'clear_test_shares rejected'));
+  }
+
+  const result = edgeData.data as { deleted?: number; codes?: string[] } | undefined;
+  return {
+    deleted: result?.deleted ?? 0,
+    codes: Array.isArray(result?.codes) ? result.codes : [],
+  };
+}
+
 function exportSharesCSV(shares: readonly ShareEvent[]) {
   if (!shares.length) return;
 
@@ -109,6 +136,7 @@ function buildAnalyticsHTML(
   filteredCount: number,
   platforms: string[],
   activePlatform: string,
+  testShareCount: number,
 ): string {
   const platformChip = (value: string, label: string) => {
     const active = activePlatform === value;
@@ -139,9 +167,19 @@ function buildAnalyticsHTML(
             <button data-days="30" class="share-time-filter px-3 py-1.5 text-sm rounded-2xl border border-white/20 hover:bg-white/10">30 days</button>
             <button data-days="0" class="share-time-filter px-3 py-1.5 text-sm rounded-2xl bg-violet-600 text-white">All time</button>
           </div>
-          <button id="export-shares-btn" class="px-4 py-1.5 text-sm bg-emerald-600/90 hover:bg-emerald-600 rounded-2xl flex items-center gap-1.5">
-            <i class="fa-solid fa-download text-xs"></i> Export CSV
-          </button>
+          <div class="flex gap-2 flex-wrap justify-end">
+            <button id="export-shares-btn" class="px-4 py-1.5 text-sm bg-emerald-600/90 hover:bg-emerald-600 rounded-2xl flex items-center gap-1.5">
+              <i class="fa-solid fa-download text-xs"></i> Export CSV
+            </button>
+            ${
+              testShareCount > 0
+                ? `<button id="clear-test-shares-btn" type="button" title="Removes agent/smoke test rows only (PROBE, READY, SMOKETEST, unknown, etc.)"
+                    class="px-4 py-1.5 text-sm bg-amber-600/80 hover:bg-amber-600 text-white rounded-2xl flex items-center gap-1.5">
+                <i class="fa-solid fa-broom text-xs"></i> Clear test shares (${testShareCount})
+              </button>`
+                : ''
+            }
+          </div>
         </div>
       </div>
     </div>
@@ -352,6 +390,7 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
       const platforms = getUniquePlatforms(
         filterByDays(allSharesCache, currentFilterDays),
       );
+      const testShareCount = countTestShares(allSharesCache);
 
       destroyCharts();
       content.innerHTML = buildAnalyticsHTML(
@@ -360,6 +399,7 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
         filtered.length,
         platforms,
         currentPlatformFilter,
+        testShareCount,
       );
 
       if (viewData.total > 0) {
@@ -424,6 +464,7 @@ function attachShareAnalyticsListeners(content: HTMLElement, tabRoot: HTMLElemen
   const searchClear = document.getElementById('share-search-clear');
   const refreshBtn = document.getElementById('shares-refresh-btn') as HTMLButtonElement | null;
   const exportBtn = document.getElementById('export-shares-btn') as HTMLButtonElement | null;
+  const clearTestBtn = document.getElementById('clear-test-shares-btn') as HTMLButtonElement | null;
 
   if (searchInput) searchInput.value = currentSearch;
 
@@ -502,10 +543,45 @@ function attachShareAnalyticsListeners(content: HTMLElement, tabRoot: HTMLElemen
     showToast('Shares exported successfully', 'success');
   });
 
+  clearTestBtn?.addEventListener('click', () => {
+    void (async () => {
+      const codes = listTestShareCodes(allSharesCache);
+      if (!codes.length) {
+        showToast('No test shares to clear', 'info');
+        return;
+      }
+
+      const msg =
+        `Remove ${codes.length} test referrer code(s) from share analytics?\n\n` +
+        `${codes.join(', ')}\n\n` +
+        'Only agent/smoke patterns are deleted. Real user shares are never touched.';
+
+      if (!window.confirm(msg)) return;
+
+      clearTestBtn.disabled = true;
+      try {
+        const { deleted, codes: removed } = await clearTestSharesFromServer();
+        allSharesCache = await fetchSharesData();
+        showToast(
+          deleted > 0
+            ? `Cleared ${deleted} test share(s): ${removed.join(', ')}`
+            : 'No test shares matched on server',
+          deleted > 0 ? 'success' : 'info',
+        );
+        rerender();
+      } catch (err) {
+        showToast(`Clear failed: ${String(err)}`, 'info');
+      } finally {
+        clearTestBtn.disabled = false;
+      }
+    })();
+  });
+
   function rerender() {
     const filtered = applyShareFilters(allSharesCache, currentFilterDays, currentSearch, currentPlatformFilter);
     const viewData = computeAnalyticsData(filtered);
     const platforms = getUniquePlatforms(filterByDays(allSharesCache, currentFilterDays));
+    const testShareCount = countTestShares(allSharesCache);
 
     destroyCharts();
     content.innerHTML = buildAnalyticsHTML(
@@ -514,6 +590,7 @@ function attachShareAnalyticsListeners(content: HTMLElement, tabRoot: HTMLElemen
       filtered.length,
       platforms,
       currentPlatformFilter,
+      testShareCount,
     );
 
     if (viewData.total > 0) {

@@ -15,6 +15,33 @@ export function extractReferrerCodeFromLink(link: string | null | undefined): st
   return match?.[1] ? match[1].toUpperCase() : null;
 }
 
+/**
+ * True for agent/smoke/E2E share rows — conservative patterns only (never real user codes).
+ */
+export function isTestShareReferrerCode(code: string): boolean {
+  const c = (code || '').trim().toUpperCase();
+  if (!c || c === 'UNKNOWN') return true;
+  if (c === 'VIRAL-READY') return true;
+  if (/PROBE/.test(c)) return true;
+  if (/SMOKETEST/.test(c)) return true;
+  if (/DEMOCODE/.test(c)) return true;
+  if (/^DEMO\d+$/.test(c)) return true;
+  if (/TESTFIX/.test(c)) return true;
+  return false;
+}
+
+export function countTestShares(shares: readonly ShareEvent[]): number {
+  return shares.filter((s) => isTestShareReferrerCode(s.referrer_code)).length;
+}
+
+export function listTestShareCodes(shares: readonly ShareEvent[]): string[] {
+  const codes = new Set<string>();
+  for (const s of shares) {
+    if (isTestShareReferrerCode(s.referrer_code)) codes.add(s.referrer_code);
+  }
+  return [...codes].sort();
+}
+
 /** Normalize a shares row from admin-action or legacy schemas. */
 export function normalizeShareRow(row: Record<string, unknown>): ShareEvent {
   const referralLink = String(row.referral_link || row.referralLink || '').trim();

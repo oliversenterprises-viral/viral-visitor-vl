@@ -8,6 +8,9 @@ import {
   getUniquePlatforms,
   extractReferrerCodeFromLink,
   normalizeShareRow,
+  isTestShareReferrerCode,
+  countTestShares,
+  listTestShareCodes,
   type ShareEvent,
 } from '../../src/admin/share-analytics-helpers';
 
@@ -87,5 +90,23 @@ describe('share analytics helpers (pure)', () => {
     });
     expect(row.referrer_code).toBe('VIRAL-TEST12');
     expect(row.platform).toBe('telegram');
+  });
+
+  it('isTestShareReferrerCode matches agent/smoke codes only', () => {
+    expect(isTestShareReferrerCode('VIRAL-PROBE1')).toBe(true);
+    expect(isTestShareReferrerCode('VIRAL-READY')).toBe(true);
+    expect(isTestShareReferrerCode('unknown')).toBe(true);
+    expect(isTestShareReferrerCode('VIRAL-97UWEGZ')).toBe(false);
+    expect(isTestShareReferrerCode('VIRAL-2DCURPE')).toBe(false);
+  });
+
+  it('countTestShares and listTestShareCodes', () => {
+    const shares = [
+      makeShare({ referrer_code: 'VIRAL-PROBE1' }),
+      makeShare({ referrer_code: 'VIRAL-97UWEGZ' }),
+      makeShare({ referrer_code: 'VIRAL-2DCURPE' }),
+    ];
+    expect(countTestShares(shares)).toBe(1);
+    expect(listTestShareCodes(shares)).toEqual(['VIRAL-PROBE1']);
   });
 });

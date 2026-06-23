@@ -47,6 +47,26 @@ function decodeBase64ToBytes(data: string): Uint8Array {
   return bytes;
 }
 
+function resolveShareReferrerCode(row: Record<string, unknown>): string {
+  const code = String(row.referrer_code ?? row.referrerCode ?? '').trim();
+  if (code && code.toLowerCase() !== 'unknown') return code.toUpperCase();
+  const match = String(row.referral_link ?? row.referralLink ?? '').match(/\/r\/([A-Za-z0-9_-]+)/i);
+  return match?.[1] ? match[1].toUpperCase() : 'unknown';
+}
+
+/** Agent/smoke/E2E patterns only — must match client share-analytics-helpers.ts */
+function isTestShareReferrerCode(code: string): boolean {
+  const c = (code || '').trim().toUpperCase();
+  if (!c || c === 'UNKNOWN') return true;
+  if (c === 'VIRAL-READY') return true;
+  if (/PROBE/.test(c)) return true;
+  if (/SMOKETEST/.test(c)) return true;
+  if (/DEMOCODE/.test(c)) return true;
+  if (/^DEMO\d+$/.test(c)) return true;
+  if (/TESTFIX/.test(c)) return true;
+  return false;
+}
+
 function normalizeBannerEventRow(row: Record<string, unknown>) {
   const additional =
     row.additional && typeof row.additional === 'object'
@@ -179,18 +199,11 @@ Deno.serve(async (req: Request) => {
         .limit(20000);
       if (error) throw error;
 
-      const refFromLink = (link: unknown, explicit: unknown): string => {
-        const code = String(explicit || '').trim();
-        if (code && code.toLowerCase() !== 'unknown') return code.toUpperCase();
-        const match = String(link || '').match(/\/r\/([A-Za-z0-9_-]+)/i);
-        return match?.[1] ? match[1].toUpperCase() : 'unknown';
-      };
-
       const normalized = (data || []).map((row: Record<string, unknown>) => {
         const referral_link = row.referral_link ?? row.referralLink ?? null;
         return {
           platform: row.platform,
-          referrer_code: refFromLink(referral_link, row.referrer_code ?? row.referrerCode),
+          referrer_code: resolveShareReferrerCode(row),
           referral_link,
           created_at: row.created_at,
         };
@@ -198,6 +211,48 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ success: true, data: normalized }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
+    }
+
+    if (action === 'clear_test_shares') {
+      const dryRun = payload?.dry_run === true;
+      const { data, error } = await supabaseAdmin
+        .from('shares')
+        .select('id, referrer_code, referral_link')
+        .limit(20000);
+      if (error) throw error;
+
+      const idsToDelete: string[] = [];
+      const codes = new Set<string>();
+      for (const row of data || []) {
+        const id = row.id;
+        if (!id) continue;
+        const code = resolveShareReferrerCode(row as Record<string, unknown>);
+        if (!isTestShareReferrerCode(code)) continue;
+        idsToDelete.push(String(id));
+        codes.add(code);
+      }
+
+      const codeList = [...codes].sort();
+      if (dryRun || idsToDelete.length === 0) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { deleted: 0, would_delete: idsToDelete.length, codes: codeList },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+
+      const { error: delErr } = await supabaseAdmin.from('shares').delete().in('id', idsToDelete);
+      if (delErr) throw delErr;
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: { deleted: idsToDelete.length, codes: codeList },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
     if (action === 'get_banner_stats') {
