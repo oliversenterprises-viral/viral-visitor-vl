@@ -245,7 +245,8 @@
                         <div class="flex items-center bg-zinc-900 border focus-within:border-violet-500 rounded-2xl px-5 py-4 transition-all" style="border-color: var(--referral-input-border)">
                             <i id="ref-link-icon" class="fa-solid fa-link mr-3" style="color: var(--text-referral-link-icon, #a1a1aa)"></i>
                             <input id="ref-link" readonly 
-                                   class="flex-1 bg-transparent text-lg font-mono tracking-tight focus:outline-none"
+                                   placeholder="Your link appears here — tap Get my referral link above"
+                                   class="flex-1 bg-transparent text-lg font-mono tracking-tight focus:outline-none placeholder:text-zinc-500 placeholder:text-sm placeholder:font-sans"
                                    style="color: var(--text-referral-link, #34d399)">
                             <button id="copy-link-btn" onclick="copyLink()" 
                                     class="copy-btn ml-3 px-6 py-2.5 hover:bg-violet-500 font-semibold rounded-xl flex items-center gap-2 text-sm shadow-lg shadow-violet-500/30"
@@ -297,7 +298,7 @@
                             <span id="share-link-heading" class="font-semibold text-lg" style="color: var(--text-referral-heading, #ffffff)">Share your link</span>
                         </div>
                        
-                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+                        <div id="share-buttons-panel" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
                             <button onclick="shareTo('x')" class="share-btn flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 border border-white/20 text-white p-4 rounded-2xl font-medium text-sm">
                                 <span class="text-xl">𝕏</span> <span id="share-x-label">X</span>
                             </button>

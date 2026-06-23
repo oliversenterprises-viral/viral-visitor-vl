@@ -7,7 +7,7 @@ import {
   isSupabaseConfigured,
   supabase,
 } from './lib/supabase';
-import * as Referral from './referral';
+import { applyExistingReferralLink, syncMobileReferralCta } from './referral';
 
 import { updatePublicContent } from './content';
 import { getMyReferralCode } from './public/globals';
@@ -15,8 +15,6 @@ import { getMyReferralCode } from './public/globals';
 // ------------------ PUBLIC SITE INITIALIZATION ------------------
 // Central place for bootstrapping the public-facing homepage.
 // Handles loading dynamic content, leaderboard, referral link prefill, etc.
-
-const buildReferralLink = Referral.buildReferralLink;
 
 let referralsChannel: any = null;
 
@@ -171,14 +169,9 @@ export async function initApp() {
     await withInitTimeout(renderRecentActivity(), undefined);
 
     if (myReferralCode) {
-      const input = document.getElementById('ref-link') as HTMLInputElement | null;
-      if (input) {
-        input.value = buildReferralLink(myReferralCode);
-      }
-      const qr = document.getElementById('qr-code') as HTMLImageElement | null;
-      if (qr && input?.value) {
-        qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(input.value)}`;
-      }
+      applyExistingReferralLink(myReferralCode);
+    } else {
+      syncMobileReferralCta();
     }
 
     await withInitTimeout(renderMyStats(myReferralCode), undefined);

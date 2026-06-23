@@ -60,9 +60,10 @@ async function recordReferralIfAttributed(): Promise<boolean> {
     await ensureTurnstileReady();
 
     // Show a small label + widget
+    container.style.cssText =
+      'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;';
     container.style.display = 'block';
-    container.innerHTML =
-      '<div class="text-xs text-zinc-400 mb-1">Securing referral credit for your inviter…</div>';
+    container.innerHTML = '';
 
     const token = await getTurnstileToken(container, undefined, 'Turnstile for recording');
 
@@ -122,6 +123,46 @@ function populateReferralLinkUI(code: string, link: string): void {
   if ((window as any).renderMyStats) {
     (window as any).renderMyStats(code);
   }
+
+  const sharePanel = document.getElementById('share-buttons-panel');
+  if (sharePanel) sharePanel.classList.add('share-ready');
+
+  highlightCopyButton();
+}
+
+function highlightCopyButton(): void {
+  const btn = document.getElementById('copy-link-btn');
+  if (!btn) return;
+  btn.classList.add('copy-link-pulse');
+  window.setTimeout(() => btn.classList.remove('copy-link-pulse'), 2400);
+}
+
+/** Current value in #ref-link (empty until generated). */
+export function getReferralLinkFromInput(): string {
+  const input = document.getElementById('ref-link') as HTMLInputElement | null;
+  return input?.value?.trim() || '';
+}
+
+/** Generate link if missing — safe for copy/share/QR/claim entry points. */
+export async function ensureReferralLinkReady(): Promise<string> {
+  const existing = getReferralLinkFromInput();
+  if (existing && /\/r\/VIRAL-/i.test(existing)) return existing;
+
+  const code = getMyReferralCode();
+  if (code) {
+    const link = buildReferralLink(code);
+    populateReferralLinkUI(code, link);
+    return link;
+  }
+
+  await getMyReferralLinkInstant();
+  return getReferralLinkFromInput();
+}
+
+/** Restore UI for returning visitors who already have a code in localStorage. */
+export function applyExistingReferralLink(code: string): void {
+  populateReferralLinkUI(code, buildReferralLink(code));
+  syncMobileReferralCta();
 }
 
 /** Sticky mobile CTA — hidden once #ref-link has a value. */
@@ -193,20 +234,17 @@ export async function generateNewCode(): Promise<void> {
  * Robust implementation that finds the copy button via ID + data attribute
  * instead of fragile sibling traversal.
  */
-export function copyLink(): void {
+function performCopyToClipboard(link: string): void {
   const input = document.getElementById('ref-link') as HTMLInputElement | null;
-  if (!input || !input.value) return;
 
-  navigator.clipboard.writeText(input.value).then(() => {
-    showToast('Link copied', 'success');
+  navigator.clipboard.writeText(link).then(() => {
+    showToast('Link copied — paste it anywhere to refer', 'success');
     trackRedditFunnel('CopyReferralLink');
     trackVisitorFunnel('CopyReferralLink');
-    // Robust button lookup — prefers the known copy button ID, falls back to
-    // any adjacent button that was the original "COPY" control.
     const btn =
       (document.getElementById('copy-link-btn') as HTMLElement | null) ||
-      (input.parentElement?.querySelector('button') as HTMLElement | null) ||
-      (input.nextElementSibling as HTMLElement | null);
+      (input?.parentElement?.querySelector('button') as HTMLElement | null) ||
+      (input?.nextElementSibling as HTMLElement | null);
 
     if (btn) {
       const origHTML = btn.innerHTML;
@@ -224,15 +262,29 @@ export function copyLink(): void {
       }, 1400);
     }
   }).catch(() => {
-    // Graceful fallback for environments without clipboard API
+    if (!input) return;
     try {
+      input.value = link;
       input.select();
       document.execCommand('copy');
+      showToast('Link copied', 'success');
+      trackRedditFunnel('CopyReferralLink');
+      trackVisitorFunnel('CopyReferralLink');
     } catch {
-      // Last resort: show the link for manual copy
-      alert('Copy failed. Link: ' + input.value);
+      alert('Copy failed. Link: ' + link);
     }
   });
+}
+
+export function copyLink(): void {
+  void (async () => {
+    const link = await ensureReferralLinkReady();
+    if (!link) {
+      showToast('Could not generate your link — tap Get my referral link', 'info');
+      return;
+    }
+    performCopyToClipboard(link);
+  })();
 }
 
 /**
@@ -243,25 +295,21 @@ export function copyLink(): void {
  * The modal title can be customized via site_content.
  */
 export function showQRModal(): void {
-  const input = document.getElementById('ref-link') as HTMLInputElement | null;
-  const code = getMyReferralCode();
+  void (async () => {
+    await ensureReferralLinkReady();
+    const code = getMyReferralCode();
+    if (!code) {
+      showToast('Get your referral link first', 'info');
+      return;
+    }
 
-  // If no referral code has been generated yet, show a friendly message instead of a broken QR
-  if (!code) {
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black/90 z-[900] flex items-center justify-center';
-    modal.innerHTML = `
-      <div onclick="event.target.remove()" class="glass border border-white/10 rounded-3xl p-8 max-w-sm w-full mx-4 text-center">
-        <div class="text-xl font-bold mb-4">${escapeHtml(getQrModalTitle() || 'Scan to Get Your Link')}</div>
-        <div class="text-zinc-300">Please click "Get my referral link" first to see your QR code.</div>
-        <button class="mt-6 px-8 py-3 bg-white/10 hover:bg-white/20 rounded-2xl">Close</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
-    return;
-  }
+    const input = document.getElementById('ref-link') as HTMLInputElement | null;
+    const link = input?.value || buildReferralLink(code);
+    openQrModalWithLink(link);
+  })();
+}
 
-  const link = input?.value || buildReferralLink(code);
+function openQrModalWithLink(link: string): void {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(link)}`;
 
   const modal = document.createElement('div');

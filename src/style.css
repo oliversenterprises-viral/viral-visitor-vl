@@ -222,6 +222,27 @@ h3 { font-size: 1.35rem; }
   }
 }
 
+.copy-link-pulse {
+  animation: vr-copy-pulse 0.6s ease-in-out 3;
+  box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.5);
+}
+
+@keyframes vr-copy-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.35);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(139, 92, 246, 0);
+    transform: scale(1.04);
+  }
+}
+
+#share-buttons-panel:not(.share-ready) .share-btn {
+  opacity: 0.72;
+}
+
 .btn-secondary:hover {
   background: rgba(255,255,255,0.14);
   border-color: rgba(255,255,255,0.35);

@@ -4,6 +4,7 @@
  */
 
 import { ViralRefer, registerGlobal } from '../lib/global';
+import { ensureReferralLinkReady } from '../referral';
 import { getShareMessageTemplate, getMyReferralCode } from './globals';
 import { supabase } from '../lib/supabase';
 import { showToast } from '../ui';
@@ -37,25 +38,33 @@ registerGlobal('closeWinnerModal', closeWinnerModal);
  * Handles sharing the referral link to various platforms.
  */
 export const shareTo = (platform: string) => {
-  const input = document.getElementById('ref-link') as HTMLInputElement | null;
-  const link = input?.value || window.location.href;
+  void (async () => {
+    const link = await ensureReferralLinkReady();
+    if (!link) {
+      showToast('Generate your link first, then share', 'info');
+      return;
+    }
 
-  let text = getShareMessageTemplate() || 'Join me on ViralRefer -- win homepage banner + $10! {link}';
-  text = text.replace(/\{link\}/g, link);
+    let text = getShareMessageTemplate() || 'Join me on ViralRefer — win homepage banner + $10! {link}';
+    text = text.replace(/\{link\}/g, link);
 
-  let url = '';
-  if (platform === 'x') url = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
-  else if (platform === 'whatsapp') url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-  else if (platform === 'linkedin') url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`;
-  else if (platform === 'facebook') url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
-  else if (platform === 'telegram') url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
-  else if (platform === 'sms') url = `sms:?body=${encodeURIComponent(text)}`;
-  else if (platform === 'email') url = `mailto:?subject=Check%20out%20ViralRefer&body=${encodeURIComponent(text)}`;
-  else navigator.clipboard.writeText(link);
+    let url = '';
+    if (platform === 'x') url = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    else if (platform === 'whatsapp') url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    else if (platform === 'linkedin') url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`;
+    else if (platform === 'facebook') url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
+    else if (platform === 'telegram') url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+    else if (platform === 'sms') url = `sms:?body=${encodeURIComponent(text)}`;
+    else if (platform === 'email') url = `mailto:?subject=Check%20out%20ViralRefer&body=${encodeURIComponent(text)}`;
+    else {
+      await navigator.clipboard.writeText(link);
+      showToast('Link copied for sharing', 'success');
+    }
 
-  if (url) window.open(url, '_blank', 'noopener');
-  trackRedditFunnel('ShareReferral', { platform });
-  trackVisitorFunnel('ShareReferral', { platform });
+    if (url) window.open(url, '_blank', 'noopener');
+    trackRedditFunnel('ShareReferral', { platform });
+    trackVisitorFunnel('ShareReferral', { platform });
+  })();
 };
 registerGlobal('shareTo', shareTo);
 
@@ -63,12 +72,18 @@ registerGlobal('shareTo', shareTo);
  * Opens the production claim form and submits via submit-claim Edge Function.
  */
 export const claimBanner = () => {
-  const myCode = getMyReferralCode();
-  if (!myCode) {
-    showToast('Get your referral link first, then claim when you are #1.', 'info');
-    ViralRefer.getMyReferralLinkInstant();
-    return;
-  }
+  void (async () => {
+    const link = await ensureReferralLinkReady();
+    const myCode = getMyReferralCode();
+    if (!link || !myCode) {
+      showToast('Get your referral link first, then claim when you are #1.', 'info');
+      return;
+    }
+    openClaimModal(myCode);
+  })();
+};
+
+function openClaimModal(myCode: string): void {
 
   const codeDisplay = document.getElementById('claim-referrer-code-display');
   if (codeDisplay) codeDisplay.textContent = myCode;
@@ -91,7 +106,7 @@ export const claimBanner = () => {
       getTurnstileToken(turnstileContainer, TURNSTILE_SITEKEY, 'claim').catch(() => {});
     });
   }
-};
+}
 registerGlobal('claimBanner', claimBanner);
 
 /**
