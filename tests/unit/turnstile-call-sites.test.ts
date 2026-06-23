@@ -58,10 +58,16 @@ describe('turnstile shared module (static handlers + referral imports, stub supa
     detectAndStoreAttribution();
     await getMyReferralLinkInstant();
 
-    const calls = getStubInvokeLog();
-    expect(calls.length).toBeGreaterThan(0);
-    expect(calls[0].name).toBe('record-referral');
-    const body = (calls[0].options as { body?: Record<string, string> })?.body;
+    const refInput = document.getElementById('ref-link') as HTMLInputElement;
+    expect(refInput.value).toMatch(/\/r\/VIRAL-/i);
+
+    await vi.waitFor(() => {
+      expect(getStubInvokeLog().length).toBeGreaterThan(0);
+    });
+
+    const referralCall = getStubInvokeLog().find((c) => c.name === 'record-referral');
+    expect(referralCall).toBeDefined();
+    const body = (referralCall!.options as { body?: Record<string, string> })?.body;
     expect(body?.referrerCode).toBe('VIRAL-ATTRIB-REAL');
     expect(body?.turnstileToken).toBe('shared-module-turnstile-token');
   });

@@ -61,7 +61,8 @@ async function recordReferralIfAttributed(): Promise<boolean> {
 
     // Show a small label + widget
     container.style.display = 'block';
-    container.innerHTML = '<div class="text-xs text-zinc-400 mb-1">Verifying you are not a bot...</div>';
+    container.innerHTML =
+      '<div class="text-xs text-zinc-400 mb-1">Securing referral credit for your inviter…</div>';
 
     const token = await getTurnstileToken(container, undefined, 'Turnstile for recording');
 
@@ -99,19 +100,47 @@ async function recordReferralIfAttributed(): Promise<boolean> {
 /**
  * Generates or retrieves the user's referral code and populates the UI
  */
-/**
- * Gets or generates a referral code for the current user and pre-fills the referral input.
- * Called when the user wants to join via referral or share their link.
- *
- * If the page was loaded with ?ref= (attribution), we record the referral for the original referrer
- * via the Edge Function (with Turnstile) before generating the new user's code.
- */
-export async function getMyReferralLinkInstant(): Promise<void> {
-  // First time on an attributed page — attempt to record the incoming referral
-  if (pendingReferrerCode && !referralRecordedThisSession) {
-    await recordReferralIfAttributed();
+/** Populate #ref-link, QR, stats — synchronous so the visitor sees value immediately. */
+function populateReferralLinkUI(code: string, link: string): void {
+  const refInput = document.getElementById('ref-link') as HTMLInputElement | null;
+  if (refInput) refInput.value = link;
+
+  const qrImg = document.getElementById('qr-code') as HTMLImageElement | null;
+  if (qrImg) {
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(link)}`;
   }
 
+  const nextStepHint = document.getElementById('referral-next-step');
+  if (nextStepHint) {
+    nextStepHint.classList.remove('hidden');
+    if (pendingReferrerCode) {
+      nextStepHint.textContent =
+        'Your link is ready — tap COPY and share to climb the leaderboard.';
+    }
+  }
+
+  if ((window as any).renderMyStats) {
+    (window as any).renderMyStats(code);
+  }
+}
+
+/** Sticky mobile CTA — hidden once #ref-link has a value. */
+export function syncMobileReferralCta(): void {
+  const bar = document.getElementById('mobile-referral-cta');
+  const input = document.getElementById('ref-link') as HTMLInputElement | null;
+  if (!bar) return;
+  if (input?.value?.trim()) {
+    bar.classList.add('hidden');
+    return;
+  }
+  bar.classList.remove('hidden');
+}
+
+/**
+ * Gets or generates a referral code for the current user and pre-fills the referral input.
+ * Link + funnel events fire first (conversion); Turnstile recording runs in the background.
+ */
+export async function getMyReferralLinkInstant(): Promise<void> {
   let code = getMyReferralCode();
 
   if (!code) {
@@ -121,34 +150,24 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   }
 
   const link = buildReferralLink(code);
+  populateReferralLinkUI(code, link);
 
-  const refInput = document.getElementById('ref-link') as HTMLInputElement | null;
-  if (refInput) refInput.value = link;
-
-  // console.log('[ViralRefer] Generated referral link:', link); // silenced for prod (audit)
   trackRedditFunnel('GetReferralLink');
   trackVisitorFunnel('GetReferralLink');
 
-  // Show referral section if it exists
+  if (pendingReferrerCode) {
+    showToast('Your link is ready — copy and share to start referring', 'success');
+  } else {
+    showToast('Link ready — tap COPY to share', 'success');
+  }
+
+  syncMobileReferralCta();
+
   const refSection = document.getElementById('referral-section');
   if (refSection) refSection.scrollIntoView({ behavior: 'smooth' });
 
-  // Also update QR if present
-  const qrImg = document.getElementById('qr-code') as HTMLImageElement | null;
-  if (qrImg) {
-    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(link)}`;
-  }
-
-  // Small "Next Step" hint for new users after generating their link
-  const nextStepHint = document.getElementById('referral-next-step');
-  if (nextStepHint) {
-    nextStepHint.classList.remove('hidden');
-  }
-
-  // Re-render the richer Your Stats section now that a code exists
-  if ((window as any).renderMyStats) {
-    // console.log('[ViralRefer] Re-rendering stats with code:', code); // silenced
-    (window as any).renderMyStats(code);
+  if (pendingReferrerCode && !referralRecordedThisSession) {
+    void recordReferralIfAttributed();
   }
 }
 

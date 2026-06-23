@@ -1,5 +1,6 @@
 import { initApp } from './app';
 import { captureReferralAttribution, revealReferralAttributionBanner } from './lib/referral-url';
+import { syncMobileReferralCta } from './referral';
 import { initRedditTracking } from './lib/reddit-tracking';
 import { initVisitorTracking } from './lib/visitor-tracking';
 
@@ -35,4 +36,5 @@ initApp().catch((err) => {
   console.warn('[ViralRefer] initApp failed (degraded mode):', err);
 }).finally(() => {
   document.documentElement.setAttribute('data-vr-ready', '1');
+  syncMobileReferralCta();
 });

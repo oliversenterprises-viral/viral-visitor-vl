@@ -215,6 +215,13 @@ h3 { font-size: 1.35rem; }
   transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
+/* Room for sticky mobile referral CTA */
+@media (max-width: 767px) {
+  body:has(#mobile-referral-cta:not(.hidden)) {
+    padding-bottom: 5.5rem;
+  }
+}
+
 .btn-secondary:hover {
   background: rgba(255,255,255,0.14);
   border-color: rgba(255,255,255,0.35);

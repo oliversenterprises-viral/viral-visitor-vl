@@ -98,5 +98,7 @@ export function revealReferralAttributionBanner(loc: Location = location): void 
   if (banner && disp) {
     disp.textContent = ref;
     banner.classList.remove('hidden');
+    const hint = document.getElementById('referrer-invite-hint');
+    if (hint) hint.classList.remove('hidden');
   }
 }

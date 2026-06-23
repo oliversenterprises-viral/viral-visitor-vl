@@ -19,7 +19,7 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await expect(page.locator('#referral-attribution')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('#referrer-code-display')).toHaveText('DEMO1234');
 
-    await page.click('text=Join & Get My Link');
+    await page.getByRole('button', { name: /get my referral link/i }).nth(1).click();
     await expect(page.locator('#ref-link')).toHaveValue(/\/r\/VIRAL-/i, { timeout: 10000 });
   });
 
