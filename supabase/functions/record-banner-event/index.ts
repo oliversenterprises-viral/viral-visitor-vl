@@ -1,6 +1,7 @@
 // ============================================================================
 // supabase/functions/record-banner-event/index.ts
-// Public Edge — log banner impressions/clicks server-side (prod schema aligned).
+// Public Edge — log banner impressions/clicks server-side.
+// Tries prod, legacy (0006), and premium (banner_key) insert shapes.
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
@@ -42,35 +43,72 @@ Deno.serve(async (req: Request) => {
 
     const label = String(body.label || body.banner_label || 'untitled').slice(0, 200);
     const redirectUrl = body.redirectUrl || body.redirect_url || null;
-    const key = body.key || null;
+    const stableKey = body.key || (label && redirectUrl ? `${label}|${redirectUrl}` : null);
     const timestamp = body.timestamp || new Date().toISOString();
+    const userAgent = body.user_agent || body.userAgent || req.headers.get('user-agent') || null;
+    const ip =
+      req.headers.get('cf-connecting-ip') ||
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      null;
 
-    // Production banner_events: event_type, banner_label, redirect_url, source, additional (JSONB)
-    const row: Record<string, unknown> = {
-      event_type: type,
-      banner_label: label,
-      redirect_url: redirectUrl,
-      source: 'public-client',
-      page_path: body.page_path || body.pagePath || null,
-      referrer: body.referrer || null,
-      user_agent: body.user_agent || body.userAgent || req.headers.get('user-agent') || null,
-      ip: req.headers.get('cf-connecting-ip') ||
-        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-        null,
-      additional: {
-        key,
-        client_source: 'record-banner-event',
-        ...(body.metadata && typeof body.metadata === 'object' ? body.metadata : {}),
+    const attempts: Record<string, unknown>[] = [
+      {
+        event_type: type,
+        banner_label: label,
+        redirect_url: redirectUrl,
+        source: 'client',
+        page_path: body.page_path || body.pagePath || null,
+        referrer: body.referrer || null,
+        user_agent: userAgent,
+        ip,
+        additional: {
+          key: stableKey,
+          client_source: 'record-banner-event',
+          ...(body.metadata && typeof body.metadata === 'object' ? body.metadata : {}),
+        },
+        created_at: timestamp,
       },
-      created_at: timestamp,
-    };
+      {
+        type,
+        label,
+        redirect_url: redirectUrl,
+        key: stableKey,
+        created_at: timestamp,
+        metadata: {
+          source: 'public-client',
+          client_source: 'record-banner-event',
+          key: stableKey,
+        },
+      },
+      {
+        type,
+        banner_key: stableKey || 'unknown',
+        label,
+        redirect_url: redirectUrl,
+        created_at: timestamp,
+        ip_address: ip,
+        user_agent: userAgent,
+        metadata: {
+          source: 'public-client',
+          client_source: 'record-banner-event',
+          key: stableKey,
+        },
+      },
+    ];
 
-    const { error } = await supabaseAdmin.from('banner_events').insert(row);
-    if (error) throw error;
+    let lastError: { message?: string } | null = null;
+    for (const row of attempts) {
+      const { error } = await supabaseAdmin.from('banner_events').insert(row);
+      if (!error) {
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      lastError = error;
+      console.error('[record-banner-event] insert failed:', error.message);
+    }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    throw lastError;
   } catch (err) {
     console.error('[record-banner-event] error:', err);
     return new Response(JSON.stringify({ success: false, error: 'Logged server-side' }), {

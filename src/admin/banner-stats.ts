@@ -366,9 +366,13 @@ export async function wireBannerStatsQuick(root: HTMLElement) {
   bindBannerStatsActions(el);
   const local = getLocalBannerEvents();
 
-  if (local.length) {
-    renderBannerStatsView(el, local, 'local');
-  } else {
+  try {
+    if (local.length) {
+      renderBannerStatsView(el, local, 'local');
+    } else {
+      el.innerHTML = BANNER_STATS_SKELETON;
+    }
+  } catch {
     el.innerHTML = BANNER_STATS_SKELETON;
   }
 

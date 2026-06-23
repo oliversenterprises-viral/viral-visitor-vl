@@ -89,9 +89,19 @@ export async function getBannerEventsForStats(): Promise<{
       type: row.type || row.event_type,
       label: row.label || row.banner_label,
       redirectUrl: row.redirect_url || row.redirectUrl,
-      key: row.key || (row.additional?.key ?? row.additional?.Key),
+      key: row.key || row.banner_key || (row.additional?.key ?? row.additional?.Key),
       timestamp: row.created_at || row.timestamp,
     }));
+    if (serverEvents.length > 0) {
+      return { events: serverEvents, source: 'server' };
+    }
+    if (local.length > 0) {
+      return {
+        events: local,
+        source: 'local',
+        fetchError: 'Server has no banner events yet — showing this browser',
+      };
+    }
     return { events: serverEvents, source: 'server' };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Network error';

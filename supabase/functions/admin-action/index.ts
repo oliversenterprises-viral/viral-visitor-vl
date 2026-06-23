@@ -16,7 +16,7 @@ const corsHeaders = {
 function bannerEventKey(row: Record<string, unknown>): string {
   const lab = String(row.banner_label || row.label || '').trim();
   const url = String(row.redirect_url || row.redirectUrl || '').trim();
-  const explicit = String(row.key || '').trim();
+  const explicit = String(row.key || row.banner_key || '').trim();
   if (explicit) return explicit;
   return lab && url ? `${lab}|${url}` : url || lab || 'unknown';
 }
@@ -77,7 +77,7 @@ function normalizeBannerEventRow(row: Record<string, unknown>) {
     type: row.event_type || row.type,
     label: row.banner_label || row.label,
     redirect_url: row.redirect_url || row.redirectUrl || null,
-    key: keyFromAdditional || bannerEventKey(row),
+    key: keyFromAdditional || String(row.key || row.banner_key || '').trim() || bannerEventKey(row),
     additional,
     created_at: row.created_at,
   };

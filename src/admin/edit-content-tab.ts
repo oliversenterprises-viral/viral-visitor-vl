@@ -113,9 +113,11 @@ async function renderEditContentTab(content: HTMLElement) {
       content.innerHTML = html;
 
       attachContentListeners(content, loadAndRenderList, rows);
-      await wireVisitorFunnelStatsQuick(content);
-      await wireBannerStatsQuick(content);
-      await wireRedditCampaignStatsQuick(content);
+      await Promise.allSettled([
+        wireVisitorFunnelStatsQuick(content),
+        wireBannerStatsQuick(content),
+        wireRedditCampaignStatsQuick(content),
+      ]);
 
   // Wire up the prominent "Create Multi-Banner Rotation (v2)" button if it exists
   const createBannersBtn = content.querySelector('#create-banners-key-btn') as HTMLButtonElement | null;
