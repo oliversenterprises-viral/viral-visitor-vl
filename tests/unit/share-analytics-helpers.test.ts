@@ -6,6 +6,8 @@ import {
   applyShareFilters,
   computeAnalyticsData,
   getUniquePlatforms,
+  extractReferrerCodeFromLink,
+  normalizeShareRow,
   type ShareEvent,
 } from '../../src/admin/share-analytics-helpers';
 
@@ -68,5 +70,22 @@ describe('share analytics helpers (pure)', () => {
   it('filterByDays returns all when days=0', () => {
     const shares = [makeShare(), makeShare()];
     expect(filterByDays(shares, 0).length).toBe(2);
+  });
+
+  it('extractReferrerCodeFromLink parses /r/ path', () => {
+    expect(extractReferrerCodeFromLink('https://www.viralrefer.app/r/VIRAL-97UWEGZ')).toBe(
+      'VIRAL-97UWEGZ',
+    );
+    expect(extractReferrerCodeFromLink('')).toBeNull();
+  });
+
+  it('normalizeShareRow derives referrer_code from referral_link when missing', () => {
+    const row = normalizeShareRow({
+      platform: 'telegram',
+      referral_link: 'https://www.viralrefer.app/r/VIRAL-TEST12',
+      created_at: '2026-05-12T00:00:00Z',
+    });
+    expect(row.referrer_code).toBe('VIRAL-TEST12');
+    expect(row.platform).toBe('telegram');
   });
 });

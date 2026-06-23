@@ -3,6 +3,34 @@ export interface ShareEvent {
   platform: string;
   referrer_code: string;
   created_at: string;
+  referral_link?: string;
+}
+
+const REF_CODE_FROM_LINK_RE = /\/r\/([A-Za-z0-9_-]+)/i;
+
+/** Extract VIRAL-XXXX from a referral URL path segment. */
+export function extractReferrerCodeFromLink(link: string | null | undefined): string | null {
+  if (!link) return null;
+  const match = String(link).match(REF_CODE_FROM_LINK_RE);
+  return match?.[1] ? match[1].toUpperCase() : null;
+}
+
+/** Normalize a shares row from admin-action or legacy schemas. */
+export function normalizeShareRow(row: Record<string, unknown>): ShareEvent {
+  const referralLink = String(row.referral_link || row.referralLink || '').trim();
+  const directCode = String(row.referrer_code || row.referrerCode || '').trim();
+  const fromLink = extractReferrerCodeFromLink(referralLink);
+  const referrer_code =
+    (directCode && directCode.toLowerCase() !== 'unknown' ? directCode : null) ||
+    fromLink ||
+    'unknown';
+
+  return {
+    platform: String(row.platform || 'unknown').toLowerCase(),
+    referrer_code,
+    referral_link: referralLink || undefined,
+    created_at: String(row.created_at || row.createdAt || new Date().toISOString()),
+  };
 }
 
 /** Internal view model returned by the computation layer */

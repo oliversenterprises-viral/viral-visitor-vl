@@ -171,17 +171,24 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get_shares') {
-      // Prod schema uses referrer_code (not referral_link / user_id from migration drafts)
       const { data, error } = await supabaseAdmin
         .from('shares')
-        .select('platform, referrer_code, created_at')
+        .select('platform, referrer_code, referral_link, created_at')
         .order('created_at', { ascending: false })
         .limit(20000);
       if (error) throw error;
+
+      const refFromLink = (link: unknown, explicit: unknown): string => {
+        const code = String(explicit || '').trim();
+        if (code && code.toLowerCase() !== 'unknown') return code.toUpperCase();
+        const match = String(link || '').match(/\/r\/([A-Za-z0-9_-]+)/i);
+        return match?.[1] ? match[1].toUpperCase() : 'unknown';
+      };
+
       const normalized = (data || []).map((row: Record<string, unknown>) => ({
         platform: row.platform,
-        referrer_code: row.referrer_code,
-        referral_link: row.referrer_code,
+        referrer_code: refFromLink(row.referral_link, row.referrer_code),
+        referral_link: row.referral_link || null,
         created_at: row.created_at,
       }));
       return new Response(JSON.stringify({ success: true, data: normalized }), {

@@ -8,6 +8,7 @@ import { ensureReferralLinkReady } from '../referral';
 import { getShareMessageTemplate, getMyReferralCode } from './globals';
 import { supabase } from '../lib/supabase';
 import { showToast } from '../ui';
+import { recordShareEvent } from '../lib/record-share';
 import { trackRedditFunnel } from '../lib/reddit-tracking';
 import { trackVisitorFunnel } from '../lib/visitor-tracking';
 import {
@@ -45,7 +46,9 @@ export const shareTo = (platform: string) => {
       return;
     }
 
-    let text = getShareMessageTemplate() || 'Join me on ViralRefer — win homepage banner + $10! {link}';
+    let text =
+      getShareMessageTemplate() ||
+      'Free to join — grab your link in ~30 sec. #1 wins homepage feature + $10 Cash App. {link}';
     text = text.replace(/\{link\}/g, link);
 
     let url = '';
@@ -62,6 +65,12 @@ export const shareTo = (platform: string) => {
     }
 
     if (url) window.open(url, '_blank', 'noopener');
+
+    const myCode = getMyReferralCode();
+    if (myCode) {
+      recordShareEvent({ platform, referrer_code: myCode, referral_link: link });
+    }
+
     trackRedditFunnel('ShareReferral', { platform });
     trackVisitorFunnel('ShareReferral', { platform });
   })();

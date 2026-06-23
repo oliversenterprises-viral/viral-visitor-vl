@@ -5,6 +5,7 @@
 
 import { registerGlobal } from './lib';
 import { supabase } from './lib/supabase';
+import { recordShareEvent } from './lib/record-share';
 import { trackRedditFunnel } from './lib/reddit-tracking';
 import { trackVisitorFunnel } from './lib/visitor-tracking';
 import {
@@ -239,6 +240,8 @@ function performCopyToClipboard(link: string): void {
 
   navigator.clipboard.writeText(link).then(() => {
     showToast('Link copied — paste it anywhere to refer', 'success');
+    const code = getMyReferralCode();
+    if (code) recordShareEvent({ platform: 'copy', referrer_code: code, referral_link: link });
     trackRedditFunnel('CopyReferralLink');
     trackVisitorFunnel('CopyReferralLink');
     const btn =
@@ -268,6 +271,8 @@ function performCopyToClipboard(link: string): void {
       input.select();
       document.execCommand('copy');
       showToast('Link copied', 'success');
+      const code = getMyReferralCode();
+      if (code) recordShareEvent({ platform: 'copy', referrer_code: code, referral_link: link });
       trackRedditFunnel('CopyReferralLink');
       trackVisitorFunnel('CopyReferralLink');
     } catch {

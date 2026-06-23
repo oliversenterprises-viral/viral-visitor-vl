@@ -10,6 +10,7 @@ import {
   computeAnalyticsData,
   formatNumber,
   getUniquePlatforms,
+  normalizeShareRow,
 } from './share-analytics-helpers';
 
 let allSharesCache: ShareEvent[] = [];
@@ -33,29 +34,28 @@ function destroyCharts() {
 
 async function fetchSharesData(): Promise<ShareEvent[]> {
   const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (adminSecret) {
-    const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
-      body: { action: 'get_shares' },
-      headers: { 'x-admin-secret': adminSecret },
-    });
-    if (!edgeErr && edgeData?.success && Array.isArray(edgeData.data)) {
-      return edgeData.data.map(
-        (row: { platform: string; referral_link?: string; referrer_code?: string; created_at: string }) => ({
-          platform: row.platform || 'unknown',
-          referrer_code: row.referrer_code || row.referral_link || 'unknown',
-          created_at: row.created_at,
-        }),
-      );
-    }
+  if (!adminSecret) {
+    throw new Error(
+      'Admin stats secret not configured. Rebuild with VITE_ADMIN_ACTION_SECRET to load share analytics.',
+    );
   }
 
-  const { data, error } = await supabase
-    .from('shares')
-    .select('platform, referrer_code, created_at')
-    .order('created_at', { ascending: false });
+  const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
+    body: { action: 'get_shares' },
+    headers: { 'x-admin-secret': adminSecret },
+  });
 
-  if (error) throw error;
-  return (data as ShareEvent[]) || [];
+  if (edgeErr) {
+    throw new Error(edgeErr.message || 'get_shares request failed');
+  }
+  if (!edgeData?.success) {
+    throw new Error(String(edgeData?.error || 'get_shares rejected'));
+  }
+  if (!Array.isArray(edgeData.data)) {
+    throw new Error('Invalid get_shares response');
+  }
+
+  return edgeData.data.map((row: Record<string, unknown>) => normalizeShareRow(row));
 }
 
 function exportSharesCSV(shares: readonly ShareEvent[]) {
