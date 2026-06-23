@@ -171,9 +171,10 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get_shares') {
+      // select('*') — prod schema may have referrer_code OR referral_link (not always both)
       const { data, error } = await supabaseAdmin
         .from('shares')
-        .select('platform, referrer_code, referral_link, created_at')
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(20000);
       if (error) throw error;
@@ -185,12 +186,15 @@ Deno.serve(async (req: Request) => {
         return match?.[1] ? match[1].toUpperCase() : 'unknown';
       };
 
-      const normalized = (data || []).map((row: Record<string, unknown>) => ({
-        platform: row.platform,
-        referrer_code: refFromLink(row.referral_link, row.referrer_code),
-        referral_link: row.referral_link || null,
-        created_at: row.created_at,
-      }));
+      const normalized = (data || []).map((row: Record<string, unknown>) => {
+        const referral_link = row.referral_link ?? row.referralLink ?? null;
+        return {
+          platform: row.platform,
+          referrer_code: refFromLink(referral_link, row.referrer_code ?? row.referrerCode),
+          referral_link,
+          created_at: row.created_at,
+        };
+      });
       return new Response(JSON.stringify({ success: true, data: normalized }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -276,8 +280,9 @@ Deno.serve(async (req: Request) => {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err: any) {
+    // Return 200 so Supabase client surfaces error JSON (non-2xx becomes a generic invoke error)
     return new Response(JSON.stringify({ success: false, error: err.message || 'Action failed' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });

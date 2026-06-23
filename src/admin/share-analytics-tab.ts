@@ -32,6 +32,24 @@ function destroyCharts() {
   shareTrendChart = null;
 }
 
+function parseAdminActionError(edgeErr: unknown, edgeData: unknown): string {
+  if (edgeData && typeof edgeData === 'object' && edgeData !== null && 'error' in edgeData) {
+    const msg = (edgeData as { error?: unknown }).error;
+    if (msg) return String(msg);
+  }
+  if (edgeErr && typeof edgeErr === 'object' && edgeErr !== null && 'context' in edgeErr) {
+    try {
+      const ctx = (edgeErr as { context?: { body?: unknown } }).context;
+      const raw = ctx?.body;
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      if (parsed?.error) return String(parsed.error);
+    } catch {
+      /* ignore parse errors */
+    }
+  }
+  return edgeErr instanceof Error ? edgeErr.message : 'get_shares request failed';
+}
+
 async function fetchSharesData(): Promise<ShareEvent[]> {
   const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
   if (!adminSecret) {
@@ -45,11 +63,11 @@ async function fetchSharesData(): Promise<ShareEvent[]> {
     headers: { 'x-admin-secret': adminSecret },
   });
 
-  if (edgeErr) {
-    throw new Error(edgeErr.message || 'get_shares request failed');
+  if (edgeErr && !(edgeData && typeof edgeData === 'object' && (edgeData as { success?: boolean }).success)) {
+    throw new Error(parseAdminActionError(edgeErr, edgeData));
   }
   if (!edgeData?.success) {
-    throw new Error(String(edgeData?.error || 'get_shares rejected'));
+    throw new Error(String(edgeData?.error || parseAdminActionError(edgeErr, edgeData)));
   }
   if (!Array.isArray(edgeData.data)) {
     throw new Error('Invalid get_shares response');
