@@ -3,6 +3,11 @@ import { computeVisitorFunnelStats, getLocalVisitorEvents, getVisitorEventsForSt
 import { escapeHtml } from '../content';
 import { showToast } from '../ui';
 import {
+  eventTimestamp,
+  formatEventTimestampLabel,
+  latestEventTimestamp,
+} from '../lib/stats-helpers';
+import {
   countryLabel,
   computeFunnelTotals,
   filterCountryRowsForDisplay,
@@ -77,6 +82,8 @@ function renderVisitorFunnelView(
   const totals = computeFunnelTotals(stats.funnel);
   const isServer = source === 'server';
   const refreshedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const latestTs = latestEventTimestamp(events);
+  const latestLabel = latestTs ? formatEventTimestampLabel(latestTs) : '';
 
   container.dataset.visitorCsvPayload = buildVisitorCsv(stats.funnel);
 
@@ -84,7 +91,7 @@ function renderVisitorFunnelView(
     <div class="flex flex-wrap items-center gap-2 mb-2">
       <div class="text-[10px] font-semibold text-violet-300">Site Visitor Funnel</div>
       ${isServer ? '<span class="px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-200 text-[8px]">SERVER</span>' : '<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[8px]">LOCAL</span>'}
-      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}</span>
+      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''}</span>
     </div>
     <div class="text-[9px] text-zinc-400 mb-2">Landing → get link → copy → share → claim. Unique = distinct browsers.</div>
   `;
@@ -137,9 +144,14 @@ function renderVisitorFunnelView(
   if (stats.lastEvents.length) {
     html += `<div class="text-[9px] text-zinc-400 mb-1">Recent events:</div><div class="font-mono text-[8px] text-zinc-300 bg-black/40 border border-white/10 p-1.5 rounded max-h-24 overflow-y-auto">`;
     for (const e of stats.lastEvents) {
+      const ts = eventTimestamp(e);
+      const when = ts ? formatEventTimestampLabel(ts) : '';
       const src = e.utm_source ? ` [${e.utm_source}]` : '';
       const geo = e.country_code ? ` ${countryLabel(String(e.country_code))}` : '';
-      html += `${escapeHtml(String(e.event_name || ''))}${escapeHtml(geo)}${escapeHtml(String(src))}<br>`;
+      const timePrefix = when
+        ? `<span class="text-zinc-500">${escapeHtml(when)}</span> · `
+        : '';
+      html += `<div class="mb-0.5">${timePrefix}${escapeHtml(String(e.event_name || ''))}${escapeHtml(geo)}${escapeHtml(String(src))}</div>`;
     }
     html += `</div>`;
   } else {

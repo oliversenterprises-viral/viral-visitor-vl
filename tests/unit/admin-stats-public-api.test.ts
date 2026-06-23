@@ -55,6 +55,7 @@ describe('admin stats public API (shipped render/wire)', () => {
     expect(el.innerHTML).toContain('Banner Performance');
     expect(el.innerHTML).toContain('LOCAL');
     expect(el.innerHTML).toContain('Promo');
+    expect(el.innerHTML).toContain('Latest event');
   });
 
   it('renderVisitorFunnelStats renders panel markup from preloaded events', async () => {
@@ -64,6 +65,8 @@ describe('admin stats public API (shipped render/wire)', () => {
     expect(el.innerHTML).toContain('Site Visitor Funnel');
     expect(el.innerHTML).toContain('LOCAL');
     expect(el.innerHTML).toContain('Landings');
+    expect(el.innerHTML).toContain('Latest event');
+    expect(el.innerHTML).toContain('Recent events');
   });
 
   it('renderRedditCampaignStats renders panel markup from preloaded events', async () => {
@@ -73,6 +76,8 @@ describe('admin stats public API (shipped render/wire)', () => {
     expect(el.innerHTML).toContain('Reddit Campaign Funnel');
     expect(el.innerHTML).toContain('LOCAL');
     expect(el.innerHTML).toContain('launch_week1');
+    expect(el.innerHTML).toContain('Latest event');
+    expect(el.innerHTML).toContain('Recent events');
   });
 
   it('wireBannerStatsQuick wires #banner-stats-quick without runtime error', async () => {

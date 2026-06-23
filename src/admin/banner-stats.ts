@@ -6,6 +6,11 @@ import {
   getBannerEventsForStats,
   getLocalBannerEvents,
 } from '../content';
+import {
+  eventTimestamp,
+  formatEventTimestampLabel,
+  latestEventTimestamp,
+} from '../lib/stats-helpers';
 import { showToast } from '../ui';
 import {
   type BannerStatRow,
@@ -147,16 +152,6 @@ async function refreshBannerStats(container: HTMLElement, btn?: HTMLButtonElemen
   }
 }
 
-function getRelativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
-
 function buildCsv(rows: readonly BannerStatRow[]): string {
   const headers = ['label', 'redirect_url', 'impressions', 'clicks', 'ctr'];
   const lines = rows.map((r) =>
@@ -209,6 +204,8 @@ function renderBannerStatsView(
     minute: '2-digit',
     second: '2-digit',
   });
+  const latestTs = latestEventTimestamp(events);
+  const latestLabel = latestTs ? formatEventTimestampLabel(latestTs) : '';
 
   const copyPayload = JSON.stringify(
     { generated: new Date().toISOString(), source, totals, stats: sorted, rawEvents: stats.lastEvents },
@@ -229,7 +226,7 @@ function renderBannerStatsView(
     <div class="flex flex-wrap items-center gap-2 mb-2">
       <div class="text-[10px] font-semibold text-emerald-400">Banner Performance</div>
       ${sourceBadge}
-      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt} · ${stats.total} events${isServer ? ' (latest 500)' : ''}</span>
+      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''} · ${stats.total} events${isServer ? ' (latest 500)' : ''}</span>
     </div>
   `;
 
@@ -282,14 +279,15 @@ function renderBannerStatsView(
   if (stats.lastEvents.length) {
     html += `<div class="font-mono text-[8px] text-zinc-300 bg-black/40 border border-white/10 p-1.5 rounded mb-2 space-y-0.5">`;
     stats.lastEvents.forEach((ev: Record<string, unknown>) => {
-      const ts = String(ev.timestamp || ev.created_at || '');
-      const rel = ts ? getRelativeTime(ts) : '';
+      const ts = eventTimestamp(ev);
+      const when = ts ? formatEventTimestampLabel(ts) : '';
       const eventType = String(ev.type || ev.event_type || '').toLowerCase();
       const badge =
         eventType === 'click'
           ? '<span class="text-sky-400">click</span>'
           : '<span class="text-violet-300">imp</span>';
-      html += `<div>${badge} <span class="text-zinc-500">${rel}</span> ${escapeHtml(String(ev.label || ev.redirectUrl || ''))}</div>`;
+      const timeLabel = when ? `<span class="text-zinc-500">${escapeHtml(when)}</span> · ` : '';
+      html += `<div>${badge} ${timeLabel}${escapeHtml(String(ev.label || ev.redirectUrl || ''))}</div>`;
     });
     html += `</div>`;
   } else {

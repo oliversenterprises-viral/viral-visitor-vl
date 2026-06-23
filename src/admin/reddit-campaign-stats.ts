@@ -3,6 +3,11 @@ import { computeRedditFunnelStats, getLocalRedditEvents, getRedditEventsForStats
 import { escapeHtml } from '../content';
 import { showToast } from '../ui';
 import {
+  eventTimestamp,
+  formatEventTimestampLabel,
+  latestEventTimestamp,
+} from '../lib/stats-helpers';
+import {
   REDDIT_PIXEL_DISPLAY_ID,
   computeRedditFunnelTotals,
   shouldShowCampaignBreakdown,
@@ -76,6 +81,8 @@ function renderRedditCampaignView(
   const totals = computeRedditFunnelTotals(stats.funnel);
   const isServer = source === 'server';
   const refreshedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const latestTs = latestEventTimestamp(events);
+  const latestLabel = latestTs ? formatEventTimestampLabel(latestTs) : '';
 
   container.dataset.redditCsvPayload = buildRedditCsv(stats.funnel);
 
@@ -83,7 +90,7 @@ function renderRedditCampaignView(
     <div class="flex flex-wrap items-center gap-2 mb-2">
       <div class="text-[10px] font-semibold text-orange-300">Reddit Campaign Funnel</div>
       ${isServer ? '<span class="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-200 text-[8px]">SERVER</span>' : '<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[8px]">LOCAL</span>'}
-      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt} · pixel ${REDDIT_PIXEL_DISPLAY_ID}</span>
+      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''} · pixel ${REDDIT_PIXEL_DISPLAY_ID}</span>
     </div>
     <div class="text-[9px] text-zinc-400 mb-2">Reddit UTM traffic only (<code class="text-orange-200/80">utm_source=reddit</code>).</div>
   `;
@@ -124,8 +131,13 @@ function renderRedditCampaignView(
   if (stats.lastEvents.length) {
     html += `<div class="text-[9px] text-zinc-400 mb-1">Recent events:</div><div class="font-mono text-[8px] text-zinc-300 bg-black/40 border border-white/10 p-1.5 rounded max-h-24 overflow-y-auto">`;
     for (const e of stats.lastEvents) {
+      const ts = eventTimestamp(e);
+      const when = ts ? formatEventTimestampLabel(ts) : '';
       const camp = e.utm_campaign ? ` (${e.utm_campaign})` : '';
-      html += `${escapeHtml(String(e.event_name || ''))}${escapeHtml(String(camp))}<br>`;
+      const timePrefix = when
+        ? `<span class="text-zinc-500">${escapeHtml(when)}</span> · `
+        : '';
+      html += `<div class="mb-0.5">${timePrefix}${escapeHtml(String(e.event_name || ''))}${escapeHtml(String(camp))}</div>`;
     }
     html += `</div>`;
   } else {
