@@ -4,7 +4,7 @@ The viral referral platform. Refer friends, climb the real-time leaderboard, and
 
 **Status**: Production deployment on Vercel with Supabase Edge Functions, RLS security, realtime leaderboard, and multi-tab admin dashboard.
 
-**Live Site**: https://viralrefer.app
+**Live Site**: https://www.viralrefer.app (Vercel project: `viralrefer-premium`, repo folder: `viral-visitor-vl`)
 
 ## Quick Start (5 minutes)
 

@@ -20,7 +20,8 @@ function run(cmd, label) {
   execSync(cmd, { stdio: 'inherit', cwd: ROOT });
 }
 
-console.log('=== ViralRefer production deploy (with smoke gate) ===\n');
+console.log('=== ViralRefer production deploy (with smoke gate) ===');
+console.log('Vercel project: viralrefer-premium → https://www.viralrefer.app\n');
 
 run(
   `npx supabase functions deploy record-referral --project-ref ${PROJECT_REF} --yes`,

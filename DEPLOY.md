@@ -2,7 +2,15 @@
 
 **Production Platform**: Vercel (vercel.json is the active configuration).
 
-**Live Site**: https://viralrefer.app (Porkbun custom domain with SSL).
+**Vercel project (only one)**: `viralrefer-premium` — linked from this repo (`viral-visitor-vl`).
+
+**Canonical live URLs** (all serve the same production build):
+
+- https://www.viralrefer.app (primary — use for sharing)
+- https://viralrefer.app (redirects to www)
+- https://viral-visitor-vl.vercel.app (legacy alias → same build as www)
+
+**Do not** create a second Vercel project for this repo; duplicate projects caused drift and confusion.
 
 ## Vercel Deployment (Primary / Production)
 
