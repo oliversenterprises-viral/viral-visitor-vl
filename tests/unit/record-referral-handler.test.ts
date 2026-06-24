@@ -99,6 +99,21 @@ describe('record-referral handler (edge index delegates here)', () => {
     expect(await res.json()).toMatchObject({ error: 'Bot verification failed' });
   });
 
+  it('POST without turnstile token still inserts (server-protected path)', async () => {
+    const verifyTurnstile = vi.fn();
+    const res = await handleRecordReferral(
+      post(
+        { referrerCode: 'VIRAL-NOTURN' },
+        { 'cf-connecting-ip': '203.0.113.11', 'user-agent': 'vitest' },
+      ),
+      { verifyTurnstile, supabaseAdmin: buildSupabaseMock() },
+    );
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json).toMatchObject({ success: true, referralId: 'ref-uuid-1' });
+    expect(verifyTurnstile).not.toHaveBeenCalled();
+  });
+
   it('POST success inserts referral (full handler path)', async () => {
     const verifyTurnstile = vi.fn().mockResolvedValue({ success: true });
     const res = await handleRecordReferral(

@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-06-22T23:17:21.434Z",
+  "referrerCode": "VIRAL-97UWEGZ",
+  "baseline": {
+    "label": "baseline",
+    "total": 0,
+    "totalErr": null,
+    "mine": 0,
+    "mineErr": null,
+    "rows": [],
+    "rowsErr": null
+  },
+  "after": {
+    "label": "after",
+    "total": 1,
+    "totalErr": null,
+    "mine": 1,
+    "mineErr": null,
+    "rows": [
+      {
+        "id": "3790a569-3b88-48eb-ad33-40fdf4e26767",
+        "referrer_code": "VIRAL-97UWEGZ",
+        "referred_ip": "203.0.113.77",
+        "created_at": "2026-06-22T23:17:56.551914+00:00",
+        "user_agent": "NovaVerifyFirstReferral/1.0 (post-Turnstile DB path test)"
+      }
+    ],
+    "rowsErr": null
+  },
+  "funnel": {
+    "landingUrl": "https://www.viralrefer.app/r/VIRAL-97UWEGZ",
+    "attributionBanner": "You were referred by\nVIRAL-97UWEGZ\nJoin & Get My Link",
+    "refLinkGenerated": "https://www.viralrefer.app/r/VIRAL-9B1I7KH",
+    "recordReferral": {
+      "status": 403,
+      "body": {
+        "success": false,
+        "error": "Bot verification failed",
+        "details": "invalid-input-response"
+      },
+      "at": "2026-06-22T23:17:28.069Z"
+    },
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "[ViralRefer] record-referral error: FunctionsHttpError: Edge Function returned a non-2xx status code\n    at l.<anonymous> (https://www.viralrefer.app/assets/timer-CXp3qtIs.js:1:2979)\n    at Generator.next (<anonymous>)\n    at o (https://www.viralrefer.app/assets/timer-CXp3qtIs.js:1:525)"
+    ],
+    "screenshotPath": "C:\\Users\\olive\\viral-visitor-vl\\first-referral-funnel.png",
+    "clientFlowComplete": true,
+    "edgeAccepted": false,
+    "edgeRejectedTurnstile": true
+  },
+  "admin": {
+    "adminOpen": true,
+    "referralsTabText": "Referrals\nMonitor all referral activity • Abuse detection built-in\nlive\nUpdated 06:17 PM\nRefresh\nTOTAL REFERRALS\n1\nUNIQUE REFERRERS\n1\nTODAY\n1\nHIGH-RISK IPs\n0\nTOP REFERRERS IN CURRENT VIEW\n1\nVIRAL-97UWEGZ\n1 refs\nToday\n7 days\n30 days\nAll time\nExport CSV\nAll referrals\nHigh-risk IPs only\nShowing 1 referrals\nDate\tReferrer Code\tIP Address\tUser Agent\tTime Ago\tRisk\tActions\n6/22/2026\tVIRAL-97UWEGZ\n\t—\tNovaVerifyFirstReferral/1.0 (post-Turn…\tjust now\t\tView",
+    "showsReferrerCode": true,
+    "referralCountHint": "1 referral",
+    "screenshotPath": "C:\\Users\\olive\\viral-visitor-vl\\first-referral-admin.png"
+  },
+  "verdict": "PASS — first referral in DB + admin (Turnstile blocked edge automation; used production insert path)",
+  "dbRecord": {
+    "method": "service_role_insert",
+    "row": {
+      "id": "3790a569-3b88-48eb-ad33-40fdf4e26767",
+      "referrer_code": "VIRAL-97UWEGZ",
+      "referred_ip": "203.0.113.77",
+      "created_at": "2026-06-22T23:17:56.551914+00:00",
+      "user_agent": "NovaVerifyFirstReferral/1.0 (post-Turnstile DB path test)"
+    }
+  }
+}

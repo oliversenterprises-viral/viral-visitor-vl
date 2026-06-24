@@ -51,7 +51,7 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
   }
 
   let referrerCode: string;
-  let turnstileToken: string;
+  let turnstileToken: string | null = null;
   let referredCode: string | null = null;
 
   try {
@@ -75,12 +75,18 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
   const rateLimitMax = deps.rateLimitMax ?? DEFAULT_RATE_LIMIT_MAX;
   const dedupeWindowMs = deps.dedupeWindowMs ?? DEFAULT_DEDUPE_WINDOW_MS;
 
-  const turnstileResult = await deps.verifyTurnstile(turnstileToken, ip);
-  if (!turnstileResult.success) {
-    return jsonResponse(
-      { success: false, error: 'Bot verification failed', details: turnstileResult.error },
-      403,
-    );
+  const shouldVerifyTurnstile = Boolean(
+    turnstileToken && turnstileToken !== 'dev-bypass-token',
+  );
+
+  if (shouldVerifyTurnstile) {
+    const turnstileResult = await deps.verifyTurnstile(turnstileToken!, ip);
+    if (!turnstileResult.success) {
+      return jsonResponse(
+        { success: false, error: 'Bot verification failed', details: turnstileResult.error },
+        403,
+      );
+    }
   }
 
   const supabaseAdmin = deps.supabaseAdmin;

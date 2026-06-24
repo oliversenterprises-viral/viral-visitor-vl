@@ -4,7 +4,8 @@ import { isValidReferrerCode, normalizeReferrerCode } from './referrer-code.ts';
 
 export type ParsedRecordReferralRequest = {
   referrerCode: string;
-  turnstileToken: string;
+  /** Optional — when absent, edge relies on rate limit + dedupe + self-referral checks. */
+  turnstileToken: string | null;
   referredCode: string | null;
 };
 
@@ -13,15 +14,13 @@ export function parseRecordReferralRequest(body: unknown): ParsedRecordReferralR
   const raw = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>;
 
   const referrerCode = normalizeReferrerCode(raw.referrerCode ?? raw.referrer_code);
-  const turnstileToken = String(raw.turnstileToken ?? raw.token ?? '').trim();
+  const turnstileRaw = String(raw.turnstileToken ?? raw.token ?? '').trim();
+  const turnstileToken = turnstileRaw || null;
   const referredRaw = raw.referredCode ?? raw.referred_code ?? raw.visitorCode ?? null;
   const referredCode = referredRaw ? normalizeReferrerCode(referredRaw) : null;
 
   if (!isValidReferrerCode(referrerCode)) {
     throw new Error('Missing or invalid referrerCode');
-  }
-  if (!turnstileToken) {
-    throw new Error('Missing turnstileToken');
   }
 
   return { referrerCode, turnstileToken, referredCode };

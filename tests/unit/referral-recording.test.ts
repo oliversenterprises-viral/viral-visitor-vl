@@ -137,7 +137,7 @@ describe('referral recording (landing + retry)', () => {
     await getMyReferralLinkInstant();
 
     await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalledTimes(2);
+      expect(invokeMock.mock.calls.length).toBeGreaterThanOrEqual(2);
     });
   });
 

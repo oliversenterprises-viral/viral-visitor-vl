@@ -78,3 +78,5 @@ tests/reddit-brave-block-test.mjs
 tests/reddit-event-testing-fill.mjs
 tests/reddit-pixel-live.mjs
 tests/referral-flow-audit.mjs
+
+.vercel

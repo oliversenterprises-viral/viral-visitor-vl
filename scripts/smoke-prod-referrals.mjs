@@ -130,6 +130,13 @@ async function checkEdgeFunctionContract() {
     valid.status === 403 && reachedTurnstile,
     valid.json?.error || `status=${valid.status}`,
   );
+
+  const noTurnstile = await invokeRecordReferral({ referrerCode: SMOKE_REF_CODE });
+  record(
+    'edge: records referral without Turnstile (server-protected path)',
+    noTurnstile.status === 200 && noTurnstile.json?.success === true,
+    `status=${noTurnstile.status} ${noTurnstile.text.slice(0, 120)}`,
+  );
 }
 
 async function checkLeaderboardRpc() {

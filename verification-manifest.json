@@ -1,0 +1,232 @@
+{
+  "generatedAt": "2026-06-22T22:49:20.400Z",
+  "gitHead": "9d6249c87fcd0d4037d4882c8235b298fa5d55ae",
+  "scopedChangedFiles": [
+    ".gitignore",
+    "index.html",
+    "package.json",
+    "playwright.config.ts",
+    "scripts/verification-manifest.mjs",
+    "src/admin/banner-stats-helpers.ts",
+    "src/admin/banner-stats.ts",
+    "src/admin/edit-content-tab.ts",
+    "src/admin/prize-claims-tab.ts",
+    "src/admin/reddit-campaign-stats-helpers.ts",
+    "src/admin/reddit-campaign-stats.ts",
+    "src/admin/referrals-tab.ts",
+    "src/admin/share-analytics-helpers.ts",
+    "src/admin/share-analytics-tab.ts",
+    "src/admin/state.ts",
+    "src/admin/switcher.ts",
+    "src/admin/text-colors-tab.ts",
+    "src/admin/visitor-funnel-stats-helpers.ts",
+    "src/admin/visitor-funnel-stats.ts",
+    "src/app.ts",
+    "src/content.ts",
+    "src/lib/reddit-tracking.ts",
+    "src/lib/referral-url.ts",
+    "src/lib/referrer-code.ts",
+    "src/lib/supabase-stub.ts",
+    "src/lib/supabase.ts",
+    "src/lib/turnstile.ts",
+    "src/lib/visitor-tracking.ts",
+    "src/main.ts",
+    "src/public/debug.ts",
+    "src/public/globals.ts",
+    "src/public/handlers.ts",
+    "src/public/modals.ts",
+    "src/referral.ts",
+    "src/style.css",
+    "src/ui/admin.ts",
+    "src/ui/index.ts",
+    "supabase/functions/_shared/record-referral-handler.ts",
+    "supabase/functions/_shared/record-referral-index.ts",
+    "supabase/functions/_shared/record-referral-request.ts",
+    "supabase/functions/_shared/record-referral-serve.ts",
+    "supabase/functions/_shared/referrer-code.ts",
+    "supabase/functions/record-referral/index.ts",
+    "tests/e2e/claim-and-admin.spec.ts",
+    "tests/e2e/helpers.ts",
+    "tests/e2e/leaderboard-realtime.spec.ts",
+    "tests/e2e/referral-flow.spec.ts",
+    "tests/e2e/referral-flow.spec.ts-snapshots/hero-section-chromium-win32.png",
+    "tests/e2e/referral-flow.spec.ts-snapshots/prize-banner-area-chromium-win32.png",
+    "tests/preview-load.mjs",
+    "tests/unit/admin-stats-public-api.test.ts",
+    "tests/unit/banner-stats-helpers.test.ts",
+    "tests/unit/content-escape.test.ts",
+    "tests/unit/load-site-content.test.ts",
+    "tests/unit/prize-claims-helpers.test.ts",
+    "tests/unit/record-referral-handler.test.ts",
+    "tests/unit/record-referral-helpers.test.ts",
+    "tests/unit/record-referral-index-contract.test.ts",
+    "tests/unit/record-referral-index.test.ts",
+    "tests/unit/record-referral-request.test.ts",
+    "tests/unit/record-referral-serve.test.ts",
+    "tests/unit/reddit-campaign-stats-helpers.test.ts",
+    "tests/unit/referral-base-from-content.test.ts",
+    "tests/unit/referral-link.test.ts",
+    "tests/unit/referral-url.test.ts",
+    "tests/unit/referrals-helpers.test.ts",
+    "tests/unit/share-analytics-helpers.test.ts",
+    "tests/unit/supabase-config.test.ts",
+    "tests/unit/turnstile-call-sites.test.ts",
+    "tests/unit/turnstile-import-contract.test.ts",
+    "tests/unit/turnstile.test.ts",
+    "tests/unit/visitor-funnel-stats-helpers.test.ts",
+    "tests/vitest.turnstile-stub.setup.ts",
+    "vercel.json",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ],
+  "scopedChangedCount": 76,
+  "unitTestsTotal": 151,
+  "unitTestFileCountsFromRun": {
+    "timer-engine.test.ts": 29,
+    "turnstile-call-sites.test.ts": 2,
+    "admin-stats-public-api.test.ts": 7,
+    "supabase-config.test.ts": 3,
+    "turnstile.test.ts": 4,
+    "record-referral-handler.test.ts": 6,
+    "visitor-funnel-stats-helpers.test.ts": 6,
+    "referral-url.test.ts": 14,
+    "record-referral-index.test.ts": 4,
+    "record-referral-serve.test.ts": 2,
+    "referrals-helpers.test.ts": 9,
+    "reddit-campaign-stats-helpers.test.ts": 6,
+    "referral-link.test.ts": 7,
+    "banner-upload.test.ts": 4,
+    "banner-helpers.test.ts": 5,
+    "reddit-tracking.test.ts": 2,
+    "record-referral-request.test.ts": 5,
+    "referral-base-from-content.test.ts": 3,
+    "share-analytics-helpers.test.ts": 6,
+    "turnstile-import-contract.test.ts": 2,
+    "visitor-tracking.test.ts": 4,
+    "prize-claims-helpers.test.ts": 3,
+    "edit-content-helpers.test.ts": 2,
+    "content-escape.test.ts": 2,
+    "banner-stats-helpers.test.ts": 5,
+    "error.test.ts": 5,
+    "stats-helpers.test.ts": 2
+  },
+  "unitTestFileCountsFromSource": {
+    "admin-stats-public-api.test.ts": {
+      "it": 7,
+      "each": 0
+    },
+    "banner-helpers.test.ts": {
+      "it": 5,
+      "each": 0
+    },
+    "banner-stats-helpers.test.ts": {
+      "it": 5,
+      "each": 0
+    },
+    "banner-upload.test.ts": {
+      "it": 4,
+      "each": 0
+    },
+    "content-escape.test.ts": {
+      "it": 2,
+      "each": 0
+    },
+    "edit-content-helpers.test.ts": {
+      "it": 2,
+      "each": 0
+    },
+    "error.test.ts": {
+      "it": 5,
+      "each": 0
+    },
+    "load-site-content.test.ts": {
+      "it": 1,
+      "each": 0
+    },
+    "prize-claims-helpers.test.ts": {
+      "it": 3,
+      "each": 0
+    },
+    "record-referral-handler.test.ts": {
+      "it": 6,
+      "each": 0
+    },
+    "record-referral-index-contract.test.ts": {
+      "it": 1,
+      "each": 0
+    },
+    "record-referral-index.test.ts": {
+      "it": 4,
+      "each": 0
+    },
+    "record-referral-request.test.ts": {
+      "it": 5,
+      "each": 0
+    },
+    "record-referral-serve.test.ts": {
+      "it": 2,
+      "each": 0
+    },
+    "reddit-campaign-stats-helpers.test.ts": {
+      "it": 6,
+      "each": 0
+    },
+    "reddit-tracking.test.ts": {
+      "it": 2,
+      "each": 0
+    },
+    "referral-base-from-content.test.ts": {
+      "it": 3,
+      "each": 0
+    },
+    "referral-link.test.ts": {
+      "it": 7,
+      "each": 1
+    },
+    "referral-url.test.ts": {
+      "it": 14,
+      "each": 1
+    },
+    "referrals-helpers.test.ts": {
+      "it": 9,
+      "each": 0
+    },
+    "share-analytics-helpers.test.ts": {
+      "it": 6,
+      "each": 0
+    },
+    "stats-helpers.test.ts": {
+      "it": 2,
+      "each": 0
+    },
+    "supabase-config.test.ts": {
+      "it": 3,
+      "each": 0
+    },
+    "timer-engine.test.ts": {
+      "it": 29,
+      "each": 0
+    },
+    "turnstile-call-sites.test.ts": {
+      "it": 2,
+      "each": 0
+    },
+    "turnstile-import-contract.test.ts": {
+      "it": 2,
+      "each": 0
+    },
+    "turnstile.test.ts": {
+      "it": 4,
+      "each": 0
+    },
+    "visitor-funnel-stats-helpers.test.ts": {
+      "it": 6,
+      "each": 0
+    },
+    "visitor-tracking.test.ts": {
+      "it": 4,
+      "each": 0
+    }
+  },
+  "countMismatches": []
+}

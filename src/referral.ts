@@ -14,7 +14,6 @@ import {
   parseRefFromLocation,
 } from './lib/referral-url';
 import { parseEdgeFunctionBody } from './lib/edge-response';
-import { ensureTurnstileReady, getTurnstileToken } from './lib/turnstile';
 import { escapeHtml } from './content';
 import { showToast } from './ui';
 import { getReferralBaseUrl, getQrModalTitle, getMyReferralCode, setMyReferralCode } from './public/globals';
@@ -54,26 +53,14 @@ function notifyReferralOutcome(outcome: ReferralRecordOutcome, allowFailureRetry
     return;
   }
   if (outcome === 'failed' && (!referralFailureToastShown || allowFailureRetryToast)) {
-    showToast("Couldn't credit referral — complete the check below or refresh", 'info');
+    showToast("Couldn't credit referral — refresh and try again", 'info');
     referralFailureToastShown = true;
   }
 }
 
-function prepareReferralTurnstileContainer(): HTMLElement | null {
-  const container = document.getElementById('referral-turnstile-container');
-  if (!container) return null;
-
-  const wrap = document.getElementById('referral-turnstile-wrap');
-  if (wrap) wrap.classList.remove('hidden');
-
-  container.classList.remove('hidden');
-  container.style.cssText = '';
-  return container;
-}
-
 /**
  * Records the referral for the current attribution (if any) via the Edge Function.
- * Requires Turnstile. Retries on failure until success/duplicate (same page session).
+ * Server-side rate limit + dedupe protect the path (Turnstile optional when configured).
  */
 async function recordReferralIfAttributed(options: {
   notify?: boolean;
@@ -88,24 +75,8 @@ async function recordReferralIfAttributed(options: {
     return 'in_flight';
   }
 
-  const container = prepareReferralTurnstileContainer();
-  if (!container) {
-    console.warn('[ViralRefer] Turnstile container not found — will retry');
-    return 'failed';
-  }
-
   referralRecordingInFlight = true;
   try {
-    await ensureTurnstileReady();
-
-    const token = await getTurnstileToken(container, undefined, 'Turnstile for recording', {
-      size: 'compact',
-      theme: 'dark',
-      appearance: 'interaction-only',
-      action: 'referral-record',
-      timeoutMs: 30_000,
-    });
-
     const visitorCode = getMyReferralCode() || localStorage.getItem('vr_my_ref_code') || null;
     const referredCode =
       visitorCode && visitorCode.toUpperCase() !== pendingReferrerCode.toUpperCase()
@@ -115,7 +86,6 @@ async function recordReferralIfAttributed(options: {
     const { data, error } = await supabase.functions.invoke('record-referral', {
       body: {
         referrerCode: pendingReferrerCode,
-        turnstileToken: token,
         ...(referredCode ? { referredCode } : {}),
       },
     });
@@ -149,7 +119,7 @@ async function recordReferralIfAttributed(options: {
     }
     return 'failed';
   } catch (err) {
-    console.warn('[ViralRefer] Turnstile / record-referral failed (continuing):', err);
+    console.warn('[ViralRefer] record-referral failed (continuing):', err);
     if (notify) {
       notifyReferralOutcome('failed', options.allowFailureRetryToast);
     }
@@ -159,21 +129,10 @@ async function recordReferralIfAttributed(options: {
   }
 }
 
-const LANDING_RECORD_MAX_CONTAINER_POLLS = 24;
-const LANDING_RECORD_MAX_ATTEMPTS = 6;
-const LANDING_RECORD_RETRY_MS = [0, 2000, 4000, 8000, 12000, 20000] as const;
-
-async function waitForReferralTurnstileContainer(maxPolls = LANDING_RECORD_MAX_CONTAINER_POLLS): Promise<boolean> {
-  for (let polls = 0; polls < maxPolls; polls++) {
-    if (document.getElementById('referral-turnstile-container')) return true;
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-  }
-  return Boolean(document.getElementById('referral-turnstile-container'));
-}
+const LANDING_RECORD_MAX_ATTEMPTS = 4;
+const LANDING_RECORD_RETRY_MS = [0, 1500, 4000, 8000] as const;
 
 async function runLandingReferralRecording(): Promise<void> {
-  await waitForReferralTurnstileContainer();
-
   for (let attempt = 0; attempt < LANDING_RECORD_MAX_ATTEMPTS; attempt++) {
     if (referralRecordedThisSession) return;
 

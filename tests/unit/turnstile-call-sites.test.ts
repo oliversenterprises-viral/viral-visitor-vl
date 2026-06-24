@@ -75,6 +75,6 @@ describe('turnstile shared module (static handlers + referral imports, stub supa
     expect(referralCall).toBeDefined();
     const body = (referralCall!.options as { body?: Record<string, string> })?.body;
     expect(body?.referrerCode).toBe('VIRAL-ATTRIB-REAL');
-    expect(body?.turnstileToken).toBe('shared-module-turnstile-token');
+    expect(body?.turnstileToken).toBeUndefined();
   });
 });

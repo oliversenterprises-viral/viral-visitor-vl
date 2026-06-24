@@ -33,9 +33,10 @@ describe('record-referral edge request parser (shipped _shared module)', () => {
       .toThrow('Missing or invalid referrerCode');
   });
 
-  it('rejects missing turnstileToken', () => {
-    expect(() => parseRecordReferralRequest({ referrerCode: 'VIRAL-OK' }))
-      .toThrow('Missing turnstileToken');
+  it('allows missing turnstileToken (server rate limit + dedupe path)', () => {
+    const parsed = parseRecordReferralRequest({ referrerCode: 'VIRAL-OK' });
+    expect(parsed.referrerCode).toBe('VIRAL-OK');
+    expect(parsed.turnstileToken).toBeNull();
   });
 
   it('detects self-referral before DB insert', () => {
