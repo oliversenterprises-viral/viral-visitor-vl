@@ -1,6 +1,6 @@
 import { initApp } from './app';
 import { captureReferralAttribution, revealReferralAttributionBanner } from './lib/referral-url';
-import { syncMobileReferralCta } from './referral';
+import { initAttributedReferralRecording, syncMobileReferralCta } from './referral';
 import { initRedditTracking } from './lib/reddit-tracking';
 import { initVisitorTracking } from './lib/visitor-tracking';
 
@@ -29,6 +29,7 @@ seedDefaultTextColors();
 
 captureReferralAttribution();
 revealReferralAttributionBanner();
+initAttributedReferralRecording();
 initRedditTracking();
 initVisitorTracking();
 initPublic();

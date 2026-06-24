@@ -9,10 +9,13 @@ import { ViralRefer, registerGlobal } from '../lib/global';
 let toastContainer: HTMLElement | null = null;
 
 export function showToast(message: string, type: 'success' | 'info' = 'success') {
-  if (!toastContainer) {
-    toastContainer = document.createElement('div');
-    toastContainer.id = 'toast-container';
-    document.body.appendChild(toastContainer);
+  if (!toastContainer || !toastContainer.isConnected) {
+    toastContainer = document.getElementById('toast-container') as HTMLElement | null;
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'toast-container';
+      document.body.appendChild(toastContainer);
+    }
   }
 
   const toast = document.createElement('div');

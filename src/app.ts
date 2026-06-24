@@ -10,6 +10,7 @@ import {
 import { applyExistingReferralLink, syncMobileReferralCta } from './referral';
 
 import { updatePublicContent } from './content';
+import { applyRedditLandingCopy } from './lib/reddit-tracking';
 import { getMyReferralCode } from './public/globals';
 
 // ------------------ PUBLIC SITE INITIALIZATION ------------------
@@ -154,6 +155,7 @@ export async function initApp() {
 
   try {
     await withInitTimeout(loadSiteContent(), undefined);
+    applyRedditLandingCopy();
 
     try {
       const totalEl = document.getElementById('total-referrers');
@@ -199,8 +201,8 @@ async function renderMyStats(myCode: string | null): Promise<void> {
     container.innerHTML = `
       <div class="text-center py-4">
         <div class="text-4xl mb-3">📈</div>
-        <p class="text-zinc-300 font-medium mb-1">No referrals tracked yet for you.</p>
-        <p class="text-sm text-zinc-500 mb-4">Get your unique link and share it. Your stats and progress will update live here.</p>
+        <p class="text-zinc-300 font-medium mb-1">No link yet — takes about 30 seconds.</p>
+        <p class="text-sm text-zinc-500 mb-4">Get your unique link below, then copy &amp; share on Reddit or anywhere. Stats update live here.</p>
         <button onclick="getMyReferralLinkInstant()" 
                 class="px-6 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold rounded-2xl inline-flex items-center gap-2 transition-all active:scale-[0.985]">
           <i class="fa-solid fa-link"></i>

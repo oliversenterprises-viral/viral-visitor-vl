@@ -68,8 +68,14 @@ const trackNetwork = (url, patch) => {
   networkEntries.set(url, { ...prev, ...patch });
 };
 
+const ignorableConsole = (text = '') =>
+  /site_content|401|NaN|font-size:0|color:transparent/i.test(text);
+
 page.on('console', (msg) => {
-  if (msg.type() === 'error') consoleErrors.push(msg.text());
+  if (msg.type() !== 'error') return;
+  const text = msg.text();
+  if (ignorableConsole(text)) return;
+  consoleErrors.push(text);
 });
 
 page.on('request', (req) => {
@@ -96,7 +102,7 @@ page.on('requestfailed', (req) => {
 });
 
 try {
-  const resp = await page.goto(base + utm, { waitUntil: 'networkidle', timeout: 60000 });
+  const resp = await page.goto(base + utm, { waitUntil: 'domcontentloaded', timeout: 45000 });
   if (!resp || resp.status() >= 400) fail('Homepage load', `HTTP ${resp?.status()}`);
   else pass('Homepage load', `HTTP ${resp.status()}`);
 

@@ -421,7 +421,7 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
       }
 
       syncShareFilterButtons();
-      attachShareAnalyticsListeners(content, tabRoot, ChartCtor);
+      attachShareAnalyticsListeners(content, tabRoot, ChartCtor, renderView);
     };
 
     renderView();
@@ -459,7 +459,12 @@ function syncShareFilterButtons() {
   if (clearBtn) clearBtn.classList.toggle('hidden', !currentSearch.trim());
 }
 
-function attachShareAnalyticsListeners(content: HTMLElement, tabRoot: HTMLElement, ChartCtor: typeof Chart) {
+function attachShareAnalyticsListeners(
+  _content: HTMLElement,
+  _tabRoot: HTMLElement,
+  _ChartCtor: typeof Chart,
+  renderView: () => void,
+) {
   const searchInput = document.getElementById('share-search') as HTMLInputElement | null;
   const searchClear = document.getElementById('share-search-clear');
   const refreshBtn = document.getElementById('shares-refresh-btn') as HTMLButtonElement | null;
@@ -474,7 +479,7 @@ function attachShareAnalyticsListeners(content: HTMLElement, tabRoot: HTMLElemen
     searchTimeout = window.setTimeout(() => {
       currentSearch = searchInput.value;
       syncShareFilterButtons();
-      rerender();
+      renderView();
     }, 200);
   });
 
@@ -482,21 +487,21 @@ function attachShareAnalyticsListeners(content: HTMLElement, tabRoot: HTMLElemen
     currentSearch = '';
     if (searchInput) searchInput.value = '';
     syncShareFilterButtons();
-    rerender();
+    renderView();
     searchInput?.focus();
   });
 
   document.querySelectorAll('.share-time-filter').forEach((btn) => {
     btn.addEventListener('click', () => {
       currentFilterDays = parseInt((btn as HTMLElement).dataset.days || '0', 10);
-      rerender();
+      renderView();
     });
   });
 
   document.querySelectorAll('.share-platform-filter').forEach((btn) => {
     btn.addEventListener('click', () => {
       currentPlatformFilter = (btn as HTMLElement).dataset.platform || 'all';
-      rerender();
+      renderView();
     });
   });
 
@@ -506,14 +511,14 @@ function attachShareAnalyticsListeners(content: HTMLElement, tabRoot: HTMLElemen
       currentSearch = code;
       if (searchInput) searchInput.value = code;
       syncShareFilterButtons();
-      rerender();
+      renderView();
     });
   });
 
   document.querySelectorAll('.share-platform-row').forEach((row) => {
     row.addEventListener('click', () => {
       currentPlatformFilter = (row as HTMLElement).dataset.platform || 'all';
-      rerender();
+      renderView();
     });
   });
 
@@ -524,7 +529,7 @@ function attachShareAnalyticsListeners(content: HTMLElement, tabRoot: HTMLElemen
     try {
       allSharesCache = await fetchSharesData();
       showToast('Share analytics refreshed', 'success');
-      rerender();
+      renderView();
     } catch (err) {
       showToast(`Refresh failed: ${String(err)}`, 'info');
     } finally {
@@ -568,7 +573,7 @@ function attachShareAnalyticsListeners(content: HTMLElement, tabRoot: HTMLElemen
             : 'No test shares matched on server',
           deleted > 0 ? 'success' : 'info',
         );
-        rerender();
+        renderView();
       } catch (err) {
         showToast(`Clear failed: ${String(err)}`, 'info');
       } finally {
@@ -576,44 +581,6 @@ function attachShareAnalyticsListeners(content: HTMLElement, tabRoot: HTMLElemen
       }
     })();
   });
-
-  function rerender() {
-    const filtered = applyShareFilters(allSharesCache, currentFilterDays, currentSearch, currentPlatformFilter);
-    const viewData = computeAnalyticsData(filtered);
-    const platforms = getUniquePlatforms(filterByDays(allSharesCache, currentFilterDays));
-    const testShareCount = countTestShares(allSharesCache);
-
-    destroyCharts();
-    content.innerHTML = buildAnalyticsHTML(
-      viewData,
-      allSharesCache.length,
-      filtered.length,
-      platforms,
-      currentPlatformFilter,
-      testShareCount,
-    );
-
-    if (viewData.total > 0) {
-      renderAnalyticsCharts(viewData, ChartCtor);
-    }
-
-    const analyticsTs = document.getElementById('analytics-last-updated');
-    if (analyticsTs) {
-      const now = new Date();
-      analyticsTs.textContent = `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-
-    const resultEl = document.getElementById('shares-result-count');
-    if (resultEl) {
-      resultEl.textContent =
-        filtered.length === allSharesCache.length
-          ? `Showing ${formatNumber(filtered.length)} shares`
-          : `Showing ${formatNumber(filtered.length)} of ${formatNumber(allSharesCache.length)}`;
-    }
-
-    syncShareFilterButtons();
-    attachShareAnalyticsListeners(content, tabRoot, ChartCtor);
-  }
 }
 
 function setupSafeSharesRealtime(tabRoot: HTMLElement, onRefresh: () => void) {

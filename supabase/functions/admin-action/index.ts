@@ -215,9 +215,10 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'clear_test_shares') {
       const dryRun = payload?.dry_run === true;
+      // select('*') — prod shares may have referrer_code only (no referral_link column)
       const { data, error } = await supabaseAdmin
         .from('shares')
-        .select('id, referrer_code, referral_link')
+        .select('*')
         .limit(20000);
       if (error) throw error;
 

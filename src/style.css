@@ -288,8 +288,13 @@ h3 { font-size: 1.35rem; }
 
 /* Strong guarantee for hero title contrast (overrides any variable or load-order issues) */
 .hero-gradient #hero-title,
-.hero-gradient h1#hero-title {
+.hero-gradient h1#hero-title,
+.hero-gradient #hero-title-line1 {
   color: #ffffff !important;
+}
+
+.hero-gradient #hero-title-accent {
+  color: transparent !important;
 }
 
 .hero-gradient::before {

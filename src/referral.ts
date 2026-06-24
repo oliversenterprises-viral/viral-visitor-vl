@@ -21,6 +21,11 @@ import { getReferralBaseUrl, getQrModalTitle, getMyReferralCode, setMyReferralCo
 // Track attribution for the current page load
 let pendingReferrerCode: string | null = null;
 let referralRecordedThisSession = false;
+let referralRecordingInFlight = false;
+let referralSuccessToastShown = false;
+let referralFailureToastShown = false;
+
+export type ReferralRecordOutcome = 'success' | 'duplicate' | 'skipped' | 'failed' | 'in_flight';
 
 /**
  * Robustly builds a referral link, properly handling custom base URLs
@@ -41,26 +46,45 @@ export function detectAndStoreAttribution(): void {
   if (ref) pendingReferrerCode = ref;
 }
 
+function notifyReferralOutcome(outcome: ReferralRecordOutcome, allowFailureRetryToast = false): void {
+  if (outcome === 'success' && !referralSuccessToastShown) {
+    showToast('Referral credited — thanks for joining!', 'success');
+    referralSuccessToastShown = true;
+    return;
+  }
+  if (outcome === 'failed' && (!referralFailureToastShown || allowFailureRetryToast)) {
+    showToast("Couldn't credit referral — refresh and try again", 'info');
+    referralFailureToastShown = true;
+  }
+}
+
 /**
  * Records the referral for the current attribution (if any) via the Edge Function.
- * Requires Turnstile. Idempotent per page load.
+ * Requires Turnstile. Retries on failure until success/duplicate (same page session).
  */
-async function recordReferralIfAttributed(): Promise<boolean> {
+async function recordReferralIfAttributed(options: {
+  notify?: boolean;
+  allowFailureRetryToast?: boolean;
+} = {}): Promise<ReferralRecordOutcome> {
+  const notify = options.notify !== false;
+
   if (!pendingReferrerCode || referralRecordedThisSession) {
-    return true; // nothing to record or already done
+    return 'skipped';
+  }
+  if (referralRecordingInFlight) {
+    return 'in_flight';
   }
 
   const container = document.getElementById('referral-turnstile-container');
   if (!container) {
-    console.warn('[ViralRefer] Turnstile container not found — recording skipped');
-    referralRecordedThisSession = true;
-    return true;
+    console.warn('[ViralRefer] Turnstile container not found — will retry');
+    return 'failed';
   }
 
+  referralRecordingInFlight = true;
   try {
     await ensureTurnstileReady();
 
-    // Show a small label + widget
     container.style.cssText =
       'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;';
     container.style.display = 'block';
@@ -79,24 +103,79 @@ async function recordReferralIfAttributed(): Promise<boolean> {
 
     if (error) {
       console.error('[ViralRefer] record-referral error:', error);
-      // Still allow the user to continue (non-fatal for UX)
-    } else if (data?.success) {
-      // console.log('[ViralRefer] Referral recorded for', pendingReferrerCode); // silenced for prod (audit)
+      if (notify) {
+        notifyReferralOutcome('failed', options.allowFailureRetryToast);
+      }
+      return 'failed';
     }
 
-    referralRecordedThisSession = true;
-    container.style.display = 'none';
-    container.innerHTML = '';
-    return true;
+    if (data?.success) {
+      referralRecordedThisSession = true;
+      if (notify) {
+        notifyReferralOutcome(data.duplicate ? 'duplicate' : 'success');
+      }
+      return data.duplicate ? 'duplicate' : 'success';
+    }
+
+    if (notify) {
+      notifyReferralOutcome('failed', options.allowFailureRetryToast);
+    }
+    return 'failed';
   } catch (err) {
     console.warn('[ViralRefer] Turnstile / record-referral failed (continuing):', err);
-    referralRecordedThisSession = true;
+    if (notify) {
+      notifyReferralOutcome('failed', options.allowFailureRetryToast);
+    }
+    return 'failed';
+  } finally {
+    referralRecordingInFlight = false;
     if (container) {
       container.style.display = 'none';
       container.innerHTML = '';
     }
-    return true;
   }
+}
+
+const LANDING_RECORD_MAX_CONTAINER_POLLS = 24;
+
+/**
+ * Record attributed visits on landing (background Turnstile), not only on button click.
+ * Safe to call once per page load from main.ts bootstrap.
+ */
+export function initAttributedReferralRecording(): void {
+  detectAndStoreAttribution();
+  if (!pendingReferrerCode || referralRecordedThisSession) return;
+
+  let polls = 0;
+  const attempt = () => {
+    if (referralRecordedThisSession) return;
+
+    const container = document.getElementById('referral-turnstile-container');
+    if (!container) {
+      if (polls++ < LANDING_RECORD_MAX_CONTAINER_POLLS) {
+        requestAnimationFrame(attempt);
+      }
+      return;
+    }
+
+    void recordReferralIfAttributed();
+  };
+
+  const start = () => requestAnimationFrame(attempt);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
+}
+
+/** Vitest-only reset for per-session recording flags. */
+export function resetReferralRecordingStateForTests(): void {
+  pendingReferrerCode = null;
+  referralRecordedThisSession = false;
+  referralRecordingInFlight = false;
+  referralSuccessToastShown = false;
+  referralFailureToastShown = false;
 }
 
 /**
@@ -209,7 +288,7 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   if (refSection) refSection.scrollIntoView({ behavior: 'smooth' });
 
   if (pendingReferrerCode && !referralRecordedThisSession) {
-    void recordReferralIfAttributed();
+    void recordReferralIfAttributed({ allowFailureRetryToast: true });
   }
 }
 

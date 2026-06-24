@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { captureUtmAttribution, getStoredUtmAttribution } from '../../src/lib/reddit-tracking';
+import {
+  applyRedditLandingCopy,
+  captureUtmAttribution,
+  getStoredUtmAttribution,
+} from '../../src/lib/reddit-tracking';
 
 describe('reddit-tracking', () => {
   beforeEach(() => {
@@ -23,5 +27,18 @@ describe('reddit-tracking', () => {
   it('returns null when no utm_source in URL', () => {
     vi.stubGlobal('location', { search: '?ref=VIRAL-TEST' });
     expect(captureUtmAttribution()).toBeNull();
+  });
+
+  it('applyRedditLandingCopy updates hero for Reddit traffic', () => {
+    captureUtmAttribution();
+    document.body.innerHTML = `
+      <div id="hero-badge"></div>
+      <span id="hero-title-line1"></span>
+      <p id="hero-subtitle"></p>
+    `;
+    applyRedditLandingCopy();
+    expect(document.getElementById('hero-badge')?.textContent).toContain('FROM REDDIT');
+    expect(document.getElementById('hero-title-line1')?.textContent).toContain('clicked the ad');
+    expect(document.getElementById('hero-subtitle')?.textContent).toContain('Reddit');
   });
 });

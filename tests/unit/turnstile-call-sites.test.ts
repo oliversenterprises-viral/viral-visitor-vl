@@ -1,7 +1,11 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { clearStubInvokeLog, getStubInvokeLog } from '../../src/lib/supabase-stub';
 import { claimBanner } from '../../src/public/handlers';
-import { detectAndStoreAttribution, getMyReferralLinkInstant } from '../../src/referral';
+import {
+  detectAndStoreAttribution,
+  getMyReferralLinkInstant,
+  resetReferralRecordingStateForTests,
+} from '../../src/referral';
 import { setMyReferralCode } from '../../src/public/globals';
 
 function installTurnstileWidget() {
@@ -18,6 +22,7 @@ describe('turnstile shared module (static handlers + referral imports, stub supa
   beforeEach(() => {
     installTurnstileWidget();
     clearStubInvokeLog();
+    resetReferralRecordingStateForTests();
     sessionStorage.clear();
     localStorage.clear();
   });
@@ -26,6 +31,7 @@ describe('turnstile shared module (static handlers + referral imports, stub supa
     delete (window as { turnstile?: unknown }).turnstile;
     document.body.innerHTML = '';
     vi.unstubAllGlobals();
+    resetReferralRecordingStateForTests();
   });
 
   it('claimBanner uses real getTurnstileToken via window.turnstile', async () => {

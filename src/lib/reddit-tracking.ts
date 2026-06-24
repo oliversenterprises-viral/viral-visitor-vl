@@ -166,6 +166,34 @@ function pixelEventForFunnel(step: RedditFunnelEvent): { standard: RedditStandar
   }
 }
 
+function scrollToReferralCta(): void {
+  const cta =
+    document.querySelector<HTMLElement>('#mobile-referral-cta button') ||
+    document.querySelector<HTMLElement>('button[onclick*="getMyReferralLinkInstant"]');
+  cta?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/** Reddit-specific hero/badge tweaks after site_content (if any) is applied. */
+export function applyRedditLandingCopy(): void {
+  if (!isRedditTraffic()) return;
+
+  const badge = document.getElementById('hero-badge');
+  if (badge) {
+    badge.textContent = 'FROM REDDIT • FREE • ~30 SEC';
+  }
+
+  const line1 = document.getElementById('hero-title-line1');
+  if (line1) {
+    line1.textContent = 'You clicked the ad — now get your link.';
+  }
+
+  const subtitle = document.getElementById('hero-subtitle');
+  if (subtitle) {
+    subtitle.textContent =
+      'Free, no signup — tap Get my referral link, copy it, and share back on Reddit or anywhere. #1 wins homepage feature + $10 Cash App.';
+  }
+}
+
 /** Show a welcome strip for Reddit ad clicks. */
 export function showRedditWelcomeBanner(): void {
   if (!isRedditTraffic()) return;
@@ -175,9 +203,18 @@ export function showRedditWelcomeBanner(): void {
     banner = document.createElement('div');
     banner.id = 'reddit-welcome-banner';
     banner.className =
-      'bg-gradient-to-r from-orange-600/25 to-orange-500/10 border-b border-orange-500/30 px-4 py-2.5 text-center text-sm text-orange-100';
+      'bg-gradient-to-r from-orange-600/25 to-orange-500/10 border-b border-orange-500/30 px-4 py-2.5 text-center text-sm text-orange-100 cursor-pointer hover:from-orange-600/35 transition-colors';
+    banner.setAttribute('role', 'button');
+    banner.setAttribute('tabindex', '0');
     banner.innerHTML =
-      '👋 Welcome from Reddit — grab your referral link in 30 seconds and climb the live leaderboard.';
+      '👋 From Reddit — <strong class="font-semibold text-orange-50">tap Get my referral link</strong> (free, ~30 sec). Every share moves you up the live leaderboard.';
+    banner.addEventListener('click', scrollToReferralCta);
+    banner.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        scrollToReferralCta();
+      }
+    });
     document.body.prepend(banner);
   } else {
     banner.classList.remove('hidden');
