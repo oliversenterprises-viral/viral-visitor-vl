@@ -41,6 +41,16 @@ async function flushLandingRecording(maxFrames = 30): Promise<void> {
   }
 }
 
+async function waitForInvokeCount(count: number, timeoutMs = 5000): Promise<void> {
+  const started = Date.now();
+  while (invokeMock.mock.calls.length < count) {
+    if (Date.now() - started > timeoutMs) {
+      throw new Error(`Expected ${count} invoke(s), got ${invokeMock.mock.calls.length}`);
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, 50));
+  }
+}
+
 function toastText(): string {
   return document.getElementById('toast-container')?.textContent ?? '';
 }
@@ -81,6 +91,25 @@ describe('referral recording (landing + retry)', () => {
     const call = invokeMock.mock.calls.find((c) => c[0] === 'record-referral');
     expect(call).toBeDefined();
     expect((call![1] as { body: Record<string, string> }).body.referrerCode).toBe('VIRAL-LANDING');
+  });
+
+  it('retries on landing after transient Turnstile/edge failure', async () => {
+    let calls = 0;
+    invokeMock.mockImplementation(async () => {
+      calls += 1;
+      if (calls === 1) return { data: null, error: new Error('403') };
+      return { data: { success: true }, error: null };
+    });
+
+    vi.stubGlobal('location', {
+      pathname: '/r/VIRAL-LANDING-RETRY',
+      search: '',
+      href: 'http://localhost/r/VIRAL-LANDING-RETRY',
+    } as Location);
+
+    initAttributedReferralRecording();
+    await waitForInvokeCount(2, 8000);
+    expect(invokeMock.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 
   it('retries after failure when user clicks Get my referral link', async () => {

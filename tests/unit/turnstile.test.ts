@@ -51,4 +51,28 @@ describe('turnstile (shared by referral.ts + handlers.ts)', () => {
     expect(token).toBe('test-token-abc');
     expect(render).toHaveBeenCalledOnce();
   });
+
+  it('getTurnstileToken passes invisible size for background referral recording', async () => {
+    const render = vi.fn((_el, opts: { callback: (t: string) => void; size?: string }) => {
+      expect(opts.size).toBe('invisible');
+      opts.callback('invisible-token');
+    });
+    (window as { turnstile?: { render: typeof render } }).turnstile = { render };
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const token = await getTurnstileToken(container, 'test-site-key', 'Turnstile for recording', {
+      invisible: true,
+    });
+    expect(token).toBe('invisible-token');
+  });
+
+  it('getTurnstileToken rejects when API is missing', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    await expect(getTurnstileToken(container, 'test-site-key', 'claim')).rejects.toThrow(
+      'Turnstile API not available',
+    );
+  });
 });

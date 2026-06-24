@@ -85,21 +85,39 @@ async function recordReferralIfAttributed(options: {
   try {
     await ensureTurnstileReady();
 
+    container.classList.remove('hidden');
     container.style.cssText =
-      'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;';
-    container.style.display = 'block';
+      'position:fixed;left:0;bottom:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;z-index:-1;';
     container.innerHTML = '';
 
-    const token = await getTurnstileToken(container, undefined, 'Turnstile for recording');
+    const token = await getTurnstileToken(container, undefined, 'Turnstile for recording', {
+      invisible: true,
+      timeoutMs: 25_000,
+    });
 
     const visitorCode = getMyReferralCode() || localStorage.getItem('vr_my_ref_code') || null;
+    const referredCode =
+      visitorCode && visitorCode.toUpperCase() !== pendingReferrerCode.toUpperCase()
+        ? visitorCode
+        : null;
+
     const { data, error } = await supabase.functions.invoke('record-referral', {
       body: {
         referrerCode: pendingReferrerCode,
         turnstileToken: token,
-        ...(visitorCode ? { referredCode: visitorCode } : {}),
+        ...(referredCode ? { referredCode } : {}),
       },
     });
+
+    const responseBody = (data ?? (error as { context?: { body?: unknown } } | null)?.context?.body) as
+      | { success?: boolean; duplicate?: boolean; error?: string }
+      | undefined;
+    const errorText = String(error?.message ?? responseBody?.error ?? '');
+
+    if (errorText.includes('Self-referral')) {
+      referralRecordedThisSession = true;
+      return 'skipped';
+    }
 
     if (error) {
       console.error('[ViralRefer] record-referral error:', error);
@@ -109,12 +127,12 @@ async function recordReferralIfAttributed(options: {
       return 'failed';
     }
 
-    if (data?.success) {
+    if (responseBody?.success) {
       referralRecordedThisSession = true;
       if (notify) {
-        notifyReferralOutcome(data.duplicate ? 'duplicate' : 'success');
+        notifyReferralOutcome(responseBody.duplicate ? 'duplicate' : 'success');
       }
-      return data.duplicate ? 'duplicate' : 'success';
+      return responseBody.duplicate ? 'duplicate' : 'success';
     }
 
     if (notify) {
@@ -137,6 +155,37 @@ async function recordReferralIfAttributed(options: {
 }
 
 const LANDING_RECORD_MAX_CONTAINER_POLLS = 24;
+const LANDING_RECORD_MAX_ATTEMPTS = 6;
+const LANDING_RECORD_RETRY_MS = [0, 2000, 4000, 8000, 12000, 20000] as const;
+
+async function waitForReferralTurnstileContainer(maxPolls = LANDING_RECORD_MAX_CONTAINER_POLLS): Promise<boolean> {
+  for (let polls = 0; polls < maxPolls; polls++) {
+    if (document.getElementById('referral-turnstile-container')) return true;
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  }
+  return Boolean(document.getElementById('referral-turnstile-container'));
+}
+
+async function runLandingReferralRecording(): Promise<void> {
+  await waitForReferralTurnstileContainer();
+
+  for (let attempt = 0; attempt < LANDING_RECORD_MAX_ATTEMPTS; attempt++) {
+    if (referralRecordedThisSession) return;
+
+    const delay = LANDING_RECORD_RETRY_MS[attempt] ?? 20_000;
+    if (delay > 0) {
+      await new Promise<void>((resolve) => window.setTimeout(resolve, delay));
+    }
+    if (referralRecordedThisSession) return;
+
+    const outcome = await recordReferralIfAttributed({
+      notify: attempt === 0,
+      allowFailureRetryToast: attempt === LANDING_RECORD_MAX_ATTEMPTS - 1,
+    });
+
+    if (outcome === 'success' || outcome === 'duplicate' || outcome === 'skipped') return;
+  }
+}
 
 /**
  * Record attributed visits on landing (background Turnstile), not only on button click.
@@ -146,22 +195,7 @@ export function initAttributedReferralRecording(): void {
   detectAndStoreAttribution();
   if (!pendingReferrerCode || referralRecordedThisSession) return;
 
-  let polls = 0;
-  const attempt = () => {
-    if (referralRecordedThisSession) return;
-
-    const container = document.getElementById('referral-turnstile-container');
-    if (!container) {
-      if (polls++ < LANDING_RECORD_MAX_CONTAINER_POLLS) {
-        requestAnimationFrame(attempt);
-      }
-      return;
-    }
-
-    void recordReferralIfAttributed();
-  };
-
-  const start = () => requestAnimationFrame(attempt);
+  const start = () => void runLandingReferralRecording();
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start, { once: true });
   } else {
