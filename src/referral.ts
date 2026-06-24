@@ -13,6 +13,7 @@ import {
   captureReferralAttribution,
   parseRefFromLocation,
 } from './lib/referral-url';
+import { parseEdgeFunctionBody } from './lib/edge-response';
 import { ensureTurnstileReady, getTurnstileToken } from './lib/turnstile';
 import { escapeHtml } from './content';
 import { showToast } from './ui';
@@ -53,9 +54,21 @@ function notifyReferralOutcome(outcome: ReferralRecordOutcome, allowFailureRetry
     return;
   }
   if (outcome === 'failed' && (!referralFailureToastShown || allowFailureRetryToast)) {
-    showToast("Couldn't credit referral — refresh and try again", 'info');
+    showToast("Couldn't credit referral — complete the check below or refresh", 'info');
     referralFailureToastShown = true;
   }
+}
+
+function prepareReferralTurnstileContainer(): HTMLElement | null {
+  const container = document.getElementById('referral-turnstile-container');
+  if (!container) return null;
+
+  const wrap = document.getElementById('referral-turnstile-wrap');
+  if (wrap) wrap.classList.remove('hidden');
+
+  container.classList.remove('hidden');
+  container.style.cssText = '';
+  return container;
 }
 
 /**
@@ -75,7 +88,7 @@ async function recordReferralIfAttributed(options: {
     return 'in_flight';
   }
 
-  const container = document.getElementById('referral-turnstile-container');
+  const container = prepareReferralTurnstileContainer();
   if (!container) {
     console.warn('[ViralRefer] Turnstile container not found — will retry');
     return 'failed';
@@ -85,14 +98,12 @@ async function recordReferralIfAttributed(options: {
   try {
     await ensureTurnstileReady();
 
-    container.classList.remove('hidden');
-    container.style.cssText =
-      'position:fixed;left:0;bottom:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;z-index:-1;';
-    container.innerHTML = '';
-
     const token = await getTurnstileToken(container, undefined, 'Turnstile for recording', {
-      invisible: true,
-      timeoutMs: 25_000,
+      size: 'compact',
+      theme: 'dark',
+      appearance: 'interaction-only',
+      action: 'referral-record',
+      timeoutMs: 30_000,
     });
 
     const visitorCode = getMyReferralCode() || localStorage.getItem('vr_my_ref_code') || null;
@@ -109,22 +120,14 @@ async function recordReferralIfAttributed(options: {
       },
     });
 
-    const responseBody = (data ?? (error as { context?: { body?: unknown } } | null)?.context?.body) as
-      | { success?: boolean; duplicate?: boolean; error?: string }
-      | undefined;
-    const errorText = String(error?.message ?? responseBody?.error ?? '');
+    const responseBody = await parseEdgeFunctionBody(data, error);
+    const errorText = String(
+      responseBody?.error ?? responseBody?.details ?? error?.message ?? '',
+    );
 
     if (errorText.includes('Self-referral')) {
       referralRecordedThisSession = true;
       return 'skipped';
-    }
-
-    if (error) {
-      console.error('[ViralRefer] record-referral error:', error);
-      if (notify) {
-        notifyReferralOutcome('failed', options.allowFailureRetryToast);
-      }
-      return 'failed';
     }
 
     if (responseBody?.success) {
@@ -134,6 +137,12 @@ async function recordReferralIfAttributed(options: {
       }
       return responseBody.duplicate ? 'duplicate' : 'success';
     }
+
+    console.error('[ViralRefer] record-referral failed:', {
+      error: error?.message,
+      body: responseBody,
+      referrerCode: pendingReferrerCode,
+    });
 
     if (notify) {
       notifyReferralOutcome('failed', options.allowFailureRetryToast);
@@ -147,10 +156,6 @@ async function recordReferralIfAttributed(options: {
     return 'failed';
   } finally {
     referralRecordingInFlight = false;
-    if (container) {
-      container.style.display = 'none';
-      container.innerHTML = '';
-    }
   }
 }
 

@@ -177,7 +177,7 @@ describe('referral recording (landing + retry)', () => {
       expect(invokeMock).toHaveBeenCalled();
     });
     await vi.waitFor(() => {
-      expect(toastText()).toContain("Couldn't credit referral");
+      expect(toastText()).toMatch(/Couldn't credit referral/);
     });
   });
 });

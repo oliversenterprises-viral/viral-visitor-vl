@@ -152,6 +152,10 @@
                     <span>Get my referral link</span>
                 </button>
             </div>
+            <div id="referral-turnstile-wrap" class="mt-4 flex flex-col items-center gap-2">
+                <p class="text-[11px] text-zinc-500">Quick bot check to credit your referrer</p>
+                <div id="referral-turnstile-container" class="flex justify-center min-h-[65px] w-full"></div>
+            </div>
         </div>
 
         <!-- MY STATS -->
@@ -325,8 +329,6 @@
 
                     <!-- PRODUCTION-READY DEBUG CONTAINER (hidden by default; used by ?debug=1 Test Real Referral flow + future claim flow) -->
                     <!-- Minimal + safe for live site. JS only shows widget when explicitly triggered. -->
-                    <div id="referral-turnstile-container" aria-hidden="true"></div>
-
                 </div>
             </div>
         </div>
