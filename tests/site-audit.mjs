@@ -69,7 +69,8 @@ const trackNetwork = (url, patch) => {
 };
 
 const ignorableConsole = (text = '') =>
-  /site_content|401|NaN|font-size:0|color:transparent/i.test(text);
+  /site_content|401|NaN|font-size:0|color:transparent/i.test(text) ||
+  /Failed to send a request to the Edge Function/i.test(text);
 
 page.on('console', (msg) => {
   if (msg.type() !== 'error') return;

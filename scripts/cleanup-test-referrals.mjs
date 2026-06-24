@@ -40,6 +40,8 @@ export function isTestReferralRow(row) {
   if (LEGACY_DEMO_CODES.has(String(row.referrer_code || '').trim())) return true;
   if (/NovaVerify/i.test(ua)) return true;
   if (/\b(vitest|playwright|smoke|headless|automation)\b/i.test(ua)) return true;
+  if (/HeadlessChrome/i.test(ua)) return true;
+  if (ua === 'node') return true;
   if (/^203\.0\.113\./.test(ip)) return true;
   if (code === 'VIRAL-SMOKETEST' || code === 'VIRAL-READY') return true;
   if (/SMOKETEST/.test(code)) return true;
