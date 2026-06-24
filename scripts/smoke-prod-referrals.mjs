@@ -113,10 +113,6 @@ async function checkEdgeFunctionContract() {
   });
 
   const invalidReferrer = valid.text.includes('Invalid referrer code');
-  const reachedTurnstile =
-    valid.text.includes('Bot verification') ||
-    valid.text.includes('verification_failed') ||
-    valid.text.includes('verification');
 
   record(
     'edge: valid VIRAL code is NOT "Invalid referrer code"',
@@ -126,8 +122,8 @@ async function checkEdgeFunctionContract() {
       : valid.json?.error || `status=${valid.status}`,
   );
   record(
-    'edge: request reaches Turnstile gate (not blocked pre-check)',
-    valid.status === 403 && reachedTurnstile,
+    'edge: invalid Turnstile token does NOT block recording',
+    valid.status === 200 && valid.json?.success === true,
     valid.json?.error || `status=${valid.status}`,
   );
 

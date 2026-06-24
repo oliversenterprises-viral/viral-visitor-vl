@@ -87,7 +87,7 @@ describe('record-referral handler (edge index delegates here)', () => {
     expect(await res.json()).toMatchObject({ error: 'Self-referral is not allowed.' });
   });
 
-  it('POST with failed Turnstile returns 403', async () => {
+  it('POST with failed Turnstile still records (non-blocking hardening)', async () => {
     const res = await handleRecordReferral(
       post({ referrerCode: 'VIRAL-OK', turnstileToken: 'bad' }),
       {
@@ -95,8 +95,8 @@ describe('record-referral handler (edge index delegates here)', () => {
         supabaseAdmin: buildSupabaseMock(),
       },
     );
-    expect(res.status).toBe(403);
-    expect(await res.json()).toMatchObject({ error: 'Bot verification failed' });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ success: true });
   });
 
   it('POST without turnstile token still inserts (server-protected path)', async () => {

@@ -10,8 +10,12 @@ export const RECORD_REFERRAL_CORS_HEADERS = {
 };
 
 const DEFAULT_RATE_LIMIT_WINDOW_MS = 60_000;
-const DEFAULT_RATE_LIMIT_MAX = 3;
+const DEFAULT_RATE_LIMIT_MAX = 2;
 const DEFAULT_DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000;
+/** Max referrals any single IP can credit (any referrer) per 24h — slows VPN farms. */
+const GLOBAL_IP_DAILY_MAX = 8;
+const UNKNOWN_IP_RATE_WINDOW_MS = 5 * 60_000;
+const UNKNOWN_IP_RATE_MAX = 1;
 
 export function getClientIp(req: Request): string {
   const cfIp = req.headers.get('cf-connecting-ip');
@@ -82,17 +86,18 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
   if (shouldVerifyTurnstile) {
     const turnstileResult = await deps.verifyTurnstile(turnstileToken!, ip);
     if (!turnstileResult.success) {
-      return jsonResponse(
-        { success: false, error: 'Bot verification failed', details: turnstileResult.error },
-        403,
-      );
+      // Never block real referrals when Turnstile is misconfigured or tokens fail.
+      console.warn('[record-referral] Turnstile failed — continuing with server limits:', turnstileResult.error);
     }
   }
 
   const supabaseAdmin = deps.supabaseAdmin;
 
+  const rateWindowMs = ip === 'unknown' ? UNKNOWN_IP_RATE_WINDOW_MS : rateLimitWindowMs;
+  const rateMax = ip === 'unknown' ? UNKNOWN_IP_RATE_MAX : rateLimitMax;
+
   try {
-    const windowStart = new Date(Date.now() - rateLimitWindowMs).toISOString();
+    const windowStart = new Date(Date.now() - rateWindowMs).toISOString();
     const rateQuery = supabaseAdmin.from('referrals') as {
       select: (
         cols: string,
@@ -110,7 +115,7 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
 
     if (rateError) {
       console.error('[record-referral] Rate limit query error:', rateError);
-    } else if ((count ?? 0) >= rateLimitMax) {
+    } else if ((count ?? 0) >= rateMax) {
       return jsonResponse(
         { success: false, error: 'Rate limit exceeded. Please wait before trying again.' },
         429,
@@ -118,6 +123,37 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
     }
   } catch (rateErr) {
     console.error('[record-referral] Rate limiting exception:', rateErr);
+  }
+
+  if (ip !== 'unknown') {
+    try {
+      const dayStart = new Date(Date.now() - DEFAULT_DEDUPE_WINDOW_MS).toISOString();
+      const dailyQuery = supabaseAdmin.from('referrals') as {
+        select: (
+          cols: string,
+          opts: { count: string; head: boolean },
+        ) => {
+          eq: (col: string, val: string) => {
+            gte: (col: string, val: string) => Promise<{ count: number | null; error: unknown }>;
+          };
+        };
+      };
+      const { count: dailyCount, error: dailyError } = await dailyQuery
+        .select('*', { count: 'exact', head: true })
+        .eq('referred_ip', ip)
+        .gte('created_at', dayStart);
+
+      if (dailyError) {
+        console.error('[record-referral] Daily IP cap query error:', dailyError);
+      } else if ((dailyCount ?? 0) >= GLOBAL_IP_DAILY_MAX) {
+        return jsonResponse(
+          { success: false, error: 'Daily referral limit reached for this network. Try again tomorrow.' },
+          429,
+        );
+      }
+    } catch (dailyErr) {
+      console.error('[record-referral] Daily IP cap exception:', dailyErr);
+    }
   }
 
   if (ip !== 'unknown') {

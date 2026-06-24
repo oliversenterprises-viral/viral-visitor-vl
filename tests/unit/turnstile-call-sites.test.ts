@@ -9,13 +9,19 @@ import {
 import { setMyReferralCode } from '../../src/public/globals';
 
 function installTurnstileWidget() {
-  (window as { turnstile?: { render: (el: HTMLElement, opts: Record<string, unknown>) => void } })
-    .turnstile = {
-      render: (_el, opts) => {
-        const cb = opts.callback as ((t: string) => void) | undefined;
-        cb?.('shared-module-turnstile-token');
-      },
+  (window as {
+    turnstile?: {
+      render: (el: HTMLElement, opts: Record<string, unknown>) => string;
+      execute: (target: string | HTMLElement) => void;
     };
+  }).turnstile = {
+    render: (_el, opts) => {
+      const cb = opts.callback as ((t: string) => void) | undefined;
+      cb?.('shared-module-turnstile-token');
+      return 'mock-widget-id';
+    },
+    execute: () => {},
+  };
 }
 
 describe('turnstile shared module (static handlers + referral imports, stub supabase)', () => {
@@ -67,14 +73,20 @@ describe('turnstile shared module (static handlers + referral imports, stub supa
     const refInput = document.getElementById('ref-link') as HTMLInputElement;
     expect(refInput.value).toMatch(/\/r\/VIRAL-/i);
 
-    await vi.waitFor(() => {
-      expect(getStubInvokeLog().length).toBeGreaterThan(0);
-    });
+    let referralCall: ReturnType<typeof getStubInvokeLog>[number] | undefined;
+    await vi.waitFor(
+      () => {
+        referralCall = getStubInvokeLog().find((c) => c.name === 'record-referral');
+        expect(referralCall).toBeDefined();
+      },
+      { timeout: 3000 },
+    );
 
-    const referralCall = getStubInvokeLog().find((c) => c.name === 'record-referral');
-    expect(referralCall).toBeDefined();
     const body = (referralCall!.options as { body?: Record<string, string> })?.body;
     expect(body?.referrerCode).toBe('VIRAL-ATTRIB-REAL');
-    expect(body?.turnstileToken).toBeUndefined();
+    // Optional token when Turnstile mock succeeds; recording never depends on it.
+    if (body?.turnstileToken) {
+      expect(body.turnstileToken).toBe('shared-module-turnstile-token');
+    }
   });
 });

@@ -14,6 +14,7 @@ import {
   parseRefFromLocation,
 } from './lib/referral-url';
 import { parseEdgeFunctionBody } from './lib/edge-response';
+import { tryOptionalTurnstileToken } from './lib/turnstile';
 import { escapeHtml } from './content';
 import { showToast } from './ui';
 import { getReferralBaseUrl, getQrModalTitle, getMyReferralCode, setMyReferralCode } from './public/globals';
@@ -83,9 +84,12 @@ async function recordReferralIfAttributed(options: {
         ? visitorCode
         : null;
 
+    const turnstileToken = await tryOptionalTurnstileToken(800);
+
     const { data, error } = await supabase.functions.invoke('record-referral', {
       body: {
         referrerCode: pendingReferrerCode,
+        ...(turnstileToken ? { turnstileToken } : {}),
         ...(referredCode ? { referredCode } : {}),
       },
     });
