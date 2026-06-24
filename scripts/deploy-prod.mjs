@@ -31,7 +31,20 @@ run(
   `npx supabase functions deploy admin-action --project-ref ${PROJECT_REF} --yes`,
   'Deploy admin-action edge function',
 );
-run('npx vercel --prod --yes', 'Deploy frontend to Vercel production');
+const deployOut = execSync('npx vercel --prod --yes', { cwd: ROOT, encoding: 'utf8' });
+console.log(deployOut);
+const deployUrl = (deployOut.match(/https:\/\/viralrefer-premium-\S+\.vercel\.app/) || [])[0];
+if (deployUrl) {
+  console.log(`\n>>> Sync legacy alias viral-visitor-vl.vercel.app → ${deployUrl}\n`);
+  try {
+    execSync(`npx vercel alias set ${deployUrl} viral-visitor-vl.vercel.app`, {
+      stdio: 'inherit',
+      cwd: ROOT,
+    });
+  } catch {
+    console.warn('Legacy alias sync skipped (non-fatal).');
+  }
+}
 run('npm run test:smoke:prod', 'Run production referral smoke test');
 
 console.log('\n=== Deploy + smoke complete ===');
