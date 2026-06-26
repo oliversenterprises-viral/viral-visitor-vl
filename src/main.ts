@@ -1,7 +1,7 @@
 import { initApp } from './app';
 import { captureReferralAttribution, revealReferralAttributionBanner } from './lib/referral-url';
 import { initAttributedReferralRecording, syncMobileReferralCta } from './referral';
-import { initRedditTracking } from './lib/reddit-tracking';
+import { captureUtmAttribution } from './lib/utm-attribution';
 import { initVisitorTracking } from './lib/visitor-tracking';
 
 // Public layer (all onclick handlers, modals, debug, etc.)
@@ -28,9 +28,9 @@ seedDefaultTextColors();
 // =====================================================
 
 captureReferralAttribution();
+captureUtmAttribution();
 revealReferralAttributionBanner();
 initAttributedReferralRecording();
-initRedditTracking();
 initVisitorTracking();
 initPublic();
 initApp().catch((err) => {

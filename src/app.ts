@@ -10,7 +10,6 @@ import {
 import { applyExistingReferralLink, syncMobileReferralCta } from './referral';
 
 import { updatePublicContent } from './content';
-import { applyRedditLandingCopy } from './lib/reddit-tracking';
 import { getMyReferralCode } from './public/globals';
 
 // ------------------ PUBLIC SITE INITIALIZATION ------------------
@@ -155,7 +154,6 @@ export async function initApp() {
 
   try {
     await withInitTimeout(loadSiteContent(), undefined);
-    applyRedditLandingCopy();
 
     try {
       const totalEl = document.getElementById('total-referrers');

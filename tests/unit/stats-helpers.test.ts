@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { computeRedditFunnelStats } from '../../src/lib/reddit-tracking';
+import { computeRedditFunnelStats } from '../../src/lib/reddit-events-stats';
 import {
   formatEventTimestampLabel,
   formatRelativeTime,

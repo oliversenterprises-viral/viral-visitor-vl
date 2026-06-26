@@ -3,7 +3,6 @@ import { uploadBannerImage, BANNER_UPLOAD_ACCEPT } from '../lib/banner-upload';
 import { formatError } from '../lib';
 import { showToast } from '../ui';
 import { renderBannerStats, wireBannerStatsQuick } from './banner-stats';
-import { wireRedditCampaignStatsQuick } from './reddit-campaign-stats';
 import { wireVisitorFunnelStatsQuick } from './visitor-funnel-stats';
 
 /** Lightweight row shape used by the Edit Content admin tab */
@@ -116,7 +115,6 @@ async function renderEditContentTab(content: HTMLElement) {
       await Promise.allSettled([
         wireVisitorFunnelStatsQuick(content),
         wireBannerStatsQuick(content),
-        wireRedditCampaignStatsQuick(content),
       ]);
 
   // Wire up the prominent "Create Multi-Banner Rotation (v2)" button if it exists
@@ -251,7 +249,6 @@ function buildContentListHTML(rows: ContentRow[]): string {
       </div>
     </div>
     <div id="visitor-stats-quick" class="mb-4 p-3 border border-violet-500/30 bg-zinc-900/50 rounded-2xl"></div>
-    <div id="reddit-stats-quick" class="mb-4 p-3 border border-orange-500/30 bg-zinc-900/50 rounded-2xl"></div>
     <div id="banner-stats-quick" class="mb-4 p-3 border border-emerald-500/30 bg-zinc-900/50 rounded-2xl"></div>
     <div id="content-list" class="space-y-3">
   `;

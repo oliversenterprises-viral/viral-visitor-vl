@@ -9,7 +9,6 @@ import { getShareMessageTemplate, getMyReferralCode } from './globals';
 import { supabase } from '../lib/supabase';
 import { showToast } from '../ui';
 import { recordShareEvent } from '../lib/record-share';
-import { trackRedditFunnel } from '../lib/reddit-tracking';
 import { trackVisitorFunnel } from '../lib/visitor-tracking';
 import {
   ensureTurnstileReady,
@@ -71,11 +70,128 @@ export const shareTo = (platform: string) => {
       recordShareEvent({ platform, referrer_code: myCode, referral_link: link });
     }
 
-    trackRedditFunnel('ShareReferral', { platform });
     trackVisitorFunnel('ShareReferral', { platform });
   })();
 };
 registerGlobal('shareTo', shareTo);
+
+function drawWrappedCanvasText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  startY: number,
+  maxWidth: number,
+  lineHeight: number,
+): number {
+  let line = '';
+  let y = startY;
+  for (const ch of text) {
+    const testLine = line + ch;
+    if (ctx.measureText(testLine).width > maxWidth && line.length > 0) {
+      ctx.fillText(line, x, y);
+      line = ch;
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  if (line) ctx.fillText(line, x, y);
+  return y;
+}
+
+function referralCodeFromLink(link: string): string {
+  const match = link.match(/\/r\/([^/?#]+)/i);
+  return match?.[1] || 'share';
+}
+
+/**
+ * Image-based X share — downloads a promo card PNG and opens X with link-free text.
+ * Bypasses X malware/link filters because the referral URL lives in the image, not the tweet.
+ */
+export const generateXShareImage = () => {
+  void (async () => {
+    const link = await ensureReferralLinkReady();
+    if (!link || !/\/r\/VIRAL-/i.test(link)) {
+      showToast('Generate your link first, then share', 'info');
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1080;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) {
+      showToast('Could not create share image — try again', 'info');
+      return;
+    }
+
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
+    grad.addColorStop(0, '#7c3aed');
+    grad.addColorStop(1, '#c026d3');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, 90);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 64px system-ui, -apple-system, sans-serif';
+    ctx.fillText('ViralRefer', 80, 130);
+
+    ctx.fillStyle = '#a1a1aa';
+    ctx.font = '32px system-ui, sans-serif';
+    ctx.fillText('LIVE REFERRAL LEADERBOARD', 80, 175);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 48px system-ui, sans-serif';
+    ctx.fillText('My Referral Link', 80, 280);
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 36px ui-monospace, monospace';
+    const linkBottomY = drawWrappedCanvasText(ctx, link, 80, 360, 920, 48);
+
+    ctx.fillStyle = '#e4e4e7';
+    ctx.font = '36px system-ui, sans-serif';
+    ctx.fillText('Join the real-time leaderboard.', 80, linkBottomY + 80);
+
+    ctx.fillStyle = '#a1a1aa';
+    ctx.font = '28px system-ui, sans-serif';
+    ctx.fillText('Free to join — scan or type the link in the image.', 80, linkBottomY + 125);
+
+    ctx.fillStyle = '#18181b';
+    ctx.fillRect(0, 960, canvas.width, 120);
+
+    ctx.fillStyle = '#7c3aed';
+    ctx.font = 'bold 32px system-ui, sans-serif';
+    ctx.fillText('viralrefer.app', 80, 1015);
+
+    ctx.fillStyle = '#71717a';
+    ctx.font = '24px system-ui, sans-serif';
+    ctx.fillText('Attach this image to your post on X', 80, 1050);
+
+    const code = referralCodeFromLink(link);
+    const a = document.createElement('a');
+    a.download = `viralrefer-${code}.png`;
+    a.href = canvas.toDataURL('image/png');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    const safeXText =
+      'Live referral leaderboard on ViralRefer. Real-time status and rewards. (See image for my link)';
+    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(safeXText)}`, '_blank', 'noopener');
+
+    showToast('Share image downloaded — attach it to your X post', 'success');
+
+    const myCode = getMyReferralCode();
+    if (myCode) {
+      recordShareEvent({ platform: 'x', referrer_code: myCode, referral_link: link });
+    }
+
+    trackVisitorFunnel('ShareReferral', { platform: 'x-image' });
+  })();
+};
+registerGlobal('generateXShareImage', generateXShareImage);
 
 /**
  * Opens the production claim form and submits via submit-claim Edge Function.
@@ -104,7 +220,6 @@ function openClaimModal(myCode: string): void {
   }
 
   modal.classList.remove('hidden');
-  trackRedditFunnel('OpenPrizeClaim');
   trackVisitorFunnel('OpenPrizeClaim');
 
   const turnstileContainer = document.getElementById('claim-turnstile-container');
@@ -172,7 +287,6 @@ export const submitPrizeClaim = async () => {
       resultEl.innerHTML = `<span class="text-emerald-400">${escapeHtml(data.message || 'Claim submitted! We will review within 48 hours.')}</span>`;
     }
     showToast('Claim submitted — check Admin → Prize Claims', 'success');
-    trackRedditFunnel('SubmitPrizeClaim');
     trackVisitorFunnel('SubmitPrizeClaim');
 
     import('canvas-confetti').then(({ default: confetti }) => {

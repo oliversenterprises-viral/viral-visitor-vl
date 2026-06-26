@@ -6,7 +6,6 @@
 import { registerGlobal } from './lib';
 import { supabase } from './lib/supabase';
 import { recordShareEvent } from './lib/record-share';
-import { trackRedditFunnel } from './lib/reddit-tracking';
 import { trackVisitorFunnel } from './lib/visitor-tracking';
 import {
   buildReferralLinkFromBase,
@@ -275,7 +274,6 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   const link = buildReferralLink(code);
   populateReferralLinkUI(code, link);
 
-  trackRedditFunnel('GetReferralLink');
   trackVisitorFunnel('GetReferralLink');
 
   if (pendingReferrerCode) {
@@ -323,7 +321,6 @@ function performCopyToClipboard(link: string): void {
     showToast('Link copied — paste it anywhere to refer', 'success');
     const code = getMyReferralCode();
     if (code) recordShareEvent({ platform: 'copy', referrer_code: code, referral_link: link });
-    trackRedditFunnel('CopyReferralLink');
     trackVisitorFunnel('CopyReferralLink');
     const btn =
       (document.getElementById('copy-link-btn') as HTMLElement | null) ||
@@ -354,7 +351,6 @@ function performCopyToClipboard(link: string): void {
       showToast('Link copied', 'success');
       const code = getMyReferralCode();
       if (code) recordShareEvent({ platform: 'copy', referrer_code: code, referral_link: link });
-      trackRedditFunnel('CopyReferralLink');
       trackVisitorFunnel('CopyReferralLink');
     } catch {
       alert('Copy failed. Link: ' + link);

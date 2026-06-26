@@ -1,10 +1,10 @@
 /**
  * Site-wide visitor funnel tracking (all traffic, not just Reddit).
- * Mirrors reddit-tracking funnel steps for Admin → Edit → Site Visitor Funnel.
+ * Funnel steps for Admin → Edit → Site Visitor Funnel.
  */
 
 import { getStoredLandingRef } from './referral-url';
-import { getStoredUtmAttribution } from './reddit-tracking';
+import { getStoredUtmAttribution } from './utm-attribution';
 import { supabase } from './supabase';
 import { eventName, groupBy, latestEvents } from './stats-helpers';
 
@@ -219,6 +219,7 @@ export async function getVisitorEventsForStats(): Promise<{
       visitor_id: row.visitor_id,
       session_id: row.session_id,
       country_code: row.country_code,
+      ip_hash: row.ip_hash,
       utm_source: row.utm_source,
       utm_campaign: row.utm_campaign,
       utm_content: row.utm_content,

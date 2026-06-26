@@ -286,7 +286,7 @@ Deno.serve(async (req: Request) => {
       const { data, error } = await supabaseAdmin
         .from('visitor_events')
         .select(
-          'event_name, utm_source, utm_campaign, utm_content, utm_medium, ref_code, visitor_id, session_id, country_code, metadata, created_at',
+          'event_name, utm_source, utm_campaign, utm_content, utm_medium, ref_code, visitor_id, session_id, country_code, ip_hash, metadata, created_at',
         )
         .order('created_at', { ascending: false })
         .limit(500);

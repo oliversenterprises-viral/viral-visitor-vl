@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { wireBannerStatsQuick } from '../../src/admin/banner-stats';
-import { wireRedditCampaignStatsQuick } from '../../src/admin/reddit-campaign-stats';
 import { wireVisitorFunnelStatsQuick } from '../../src/admin/visitor-funnel-stats';
 import { BANNER_EVENTS_KEY } from '../../src/content';
 
@@ -19,18 +18,11 @@ const visitorEvent = {
   created_at: '2026-06-22T12:00:00Z',
 };
 
-const redditEvent = {
-  event_name: 'RedditLanding',
-  utm_campaign: 'launch_week1',
-  created_at: '2026-06-22T12:00:00Z',
-};
-
 function editContentRoot(): HTMLElement {
   const root = document.createElement('div');
   root.id = 'admin-content';
   root.innerHTML = `
     <div id="visitor-stats-quick" class="mb-4 p-3 border border-violet-500/30 bg-zinc-900/50 rounded-2xl"></div>
-    <div id="reddit-stats-quick" class="mb-4 p-3 border border-orange-500/30 bg-zinc-900/50 rounded-2xl"></div>
     <div id="banner-stats-quick" class="mb-4 p-3 border border-emerald-500/30 bg-zinc-900/50 rounded-2xl"></div>
   `;
   return root;
@@ -53,10 +45,8 @@ describe('stats panel refresh vs CSV clicks', () => {
   async function wireAll(root: HTMLElement) {
     localStorage.setItem(BANNER_EVENTS_KEY, JSON.stringify([bannerEvent]));
     localStorage.setItem('viralrefer_visitor_events', JSON.stringify([visitorEvent]));
-    localStorage.setItem('viralrefer_reddit_events', JSON.stringify([redditEvent]));
     await Promise.all([
       wireVisitorFunnelStatsQuick(root),
-      wireRedditCampaignStatsQuick(root),
       wireBannerStatsQuick(root),
     ]);
   }
@@ -69,19 +59,6 @@ describe('stats panel refresh vs CSV clicks', () => {
 
     const refresh = root.querySelector('[data-visitor-stats-refresh]') as HTMLButtonElement;
     expect(refresh).toBeTruthy();
-    refresh.click();
-
-    expect(anchorClick).not.toHaveBeenCalled();
-    expect(createObjectURL).not.toHaveBeenCalled();
-  });
-
-  it('reddit refresh does not download CSV', async () => {
-    const root = editContentRoot();
-    await wireAll(root);
-    anchorClick.mockClear();
-    createObjectURL.mockClear();
-
-    const refresh = root.querySelector('[data-reddit-stats-refresh]') as HTMLButtonElement;
     refresh.click();
 
     expect(anchorClick).not.toHaveBeenCalled();

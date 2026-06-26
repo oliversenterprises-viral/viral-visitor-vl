@@ -98,6 +98,14 @@ Deno.serve(async (req: Request) => {
       countryCode = await resolveCountryFromIp(ip);
     }
 
+    const clientMetadata =
+      body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata)
+        ? { ...body.metadata }
+        : {};
+    if (ip && ip !== 'unknown') {
+      clientMetadata.client_ip = ip;
+    }
+
     const row = {
       event_name: eventName.slice(0, 80),
       utm_source: body.utm_source || body.utmSource || null,
@@ -109,7 +117,7 @@ Deno.serve(async (req: Request) => {
       session_id: sessionId,
       ip_hash: ipHash,
       country_code: countryCode,
-      metadata: body.metadata && typeof body.metadata === 'object' ? body.metadata : {},
+      metadata: clientMetadata,
       created_at: body.timestamp || new Date().toISOString(),
     };
 
