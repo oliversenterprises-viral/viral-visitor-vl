@@ -28,7 +28,7 @@ Add the following **VITE_** prefixed variables (these are exposed to the client)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_TURNSTILE_SITEKEY`
-- `VITE_REDDIT_PIXEL_ID` (Reddit Ads pixel ID from Events Manager — enables conversion tracking for paid Reddit campaigns)
+
 - `VITE_ADMIN_PASSWORD` (client-side admin gate password; change from the development default for production)
 
 **Note on Admin Access**: The current production admin mechanism is a client-side password gate using `VITE_ADMIN_PASSWORD`. This is a temporary implementation and is **not** real Supabase Auth. The `admin-action` Edge Function currently contains a temporary bypass to support this flow. Plan to migrate to proper Supabase Auth + server-side verification in the future.

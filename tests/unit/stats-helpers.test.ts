@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { computeRedditFunnelStats } from '../../src/lib/reddit-events-stats';
 import {
   formatEventTimestampLabel,
   formatRelativeTime,
@@ -48,13 +47,4 @@ describe('stats-helpers', () => {
     ).toBe('2026-06-20T22:00:00Z');
   });
 
-  it('reddit byCampaign counts RedditLanding only', () => {
-    const events = [
-      { event_name: 'RedditLanding', utm_campaign: 'launch' },
-      { event_name: 'RedditLanding', utm_campaign: 'launch' },
-      { event_name: 'GetReferralLink', utm_campaign: 'launch' },
-    ];
-    const stats = computeRedditFunnelStats(events);
-    expect(stats.byCampaign).toEqual({ launch: 2 });
-  });
 });

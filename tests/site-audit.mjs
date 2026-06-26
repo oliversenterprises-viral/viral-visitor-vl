@@ -1,11 +1,6 @@
 import { chromium } from 'playwright';
 
 const base = 'https://www.viralrefer.app';
-const utm =
-  '/?utm_source=reddit&utm_medium=paid&utm_campaign=launch_week1&ref=VIRAL-97UWEGZ';
-
-const REDDIT_TRACKING_TIMEOUT_MS = 15000;
-const REDDIT_TRACKING_POLL_MS = 250;
 
 const results = [];
 const fail = (name, detail) => results.push({ name, status: 'FAIL', detail });
@@ -18,20 +13,7 @@ const isOptionalWithFallback = (url = '') =>
   /\/rest\/v1\/site_content|site_content/i.test(url);
 
 const isTrackedNetworkUrl = (url = '') =>
-  url.includes('viralrefer') || url.includes('supabase') || url.includes('reddit');
-
-async function waitForRedditTracking(page, seenViaListener, timeoutMs = REDDIT_TRACKING_TIMEOUT_MS) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (seenViaListener()) return true;
-    const hit = await page.evaluate(() =>
-      performance.getEntriesByType('resource').some((e) => e.name.includes('alb.reddit.com')),
-    );
-    if (hit) return true;
-    await page.waitForTimeout(REDDIT_TRACKING_POLL_MS);
-  }
-  return seenViaListener();
-}
+  url.includes('viralrefer') || url.includes('supabase');
 
 function classifyNetworkFailure(entry) {
   if (entry.kind === 'abort') {
@@ -60,7 +42,6 @@ const page = await browser.newPage();
 
 const consoleErrors = [];
 const networkEntries = new Map();
-let redditTrackingSeen = false;
 
 const trackNetwork = (url, patch) => {
   if (!isTrackedNetworkUrl(url) || url.includes('favicon')) return;
@@ -80,14 +61,11 @@ page.on('console', (msg) => {
 });
 
 page.on('request', (req) => {
-  const url = req.url();
-  if (url.includes('alb.reddit.com')) redditTrackingSeen = true;
-  trackNetwork(url, { method: req.method() });
+  trackNetwork(req.url(), { method: req.method() });
 });
 
 page.on('response', (resp) => {
   const url = resp.url();
-  if (url.includes('alb.reddit.com')) redditTrackingSeen = true;
   if (!isTrackedNetworkUrl(url)) return;
   trackNetwork(url, { kind: 'http', status: resp.status(), err: resp.status() >= 400 ? `HTTP ${resp.status()}` : '' });
 });
@@ -103,7 +81,7 @@ page.on('requestfailed', (req) => {
 });
 
 try {
-  const resp = await page.goto(base + utm, { waitUntil: 'domcontentloaded', timeout: 45000 });
+  const resp = await page.goto(base + '/', { waitUntil: 'domcontentloaded', timeout: 45000 });
   if (!resp || resp.status() >= 400) fail('Homepage load', `HTTP ${resp?.status()}`);
   else pass('Homepage load', `HTTP ${resp.status()}`);
 
@@ -112,26 +90,21 @@ try {
   else fail('Page title', 'empty');
 
   const checks = await page.evaluate(() => ({
-    pixelId: document.documentElement.innerHTML.includes('a2_jr6jdbg2r4'),
-    rdt: typeof window.rdt === 'function',
     pixelScript: !!document.querySelector('script[src*="redditstatic.com/ads/pixel.js"]'),
+    redditPixelId: document.documentElement.innerHTML.includes('a2_jr6jdbg2r4'),
     welcomeBanner: !!document.getElementById('reddit-welcome-banner'),
-    getLinkBtn: !!document.querySelector('#get-referral-link, [data-action="get-link"], button'),
+    referralCta: !!document.querySelector('button[onclick*="getMyReferralLinkInstant"]'),
     leaderboard: document.body.innerText.toLowerCase().includes('leaderboard'),
     noPlaceholder: !document.documentElement.innerHTML.includes('%VITE_'),
   }));
 
-  checks.pixelId ? pass('Reddit pixel ID in HTML') : fail('Reddit pixel ID in HTML');
-  checks.rdt ? pass('window.rdt initialized') : fail('window.rdt initialized');
-  checks.pixelScript ? pass('pixel.js script tag') : fail('pixel.js script tag');
-  checks.welcomeBanner ? pass('Reddit welcome banner (UTM)') : fail('Reddit welcome banner (UTM)');
+  !checks.pixelScript ? pass('No Reddit pixel script') : fail('No Reddit pixel script', 'pixel.js still present');
+  !checks.redditPixelId ? pass('No Reddit pixel ID in HTML') : fail('No Reddit pixel ID in HTML');
+  !checks.welcomeBanner ? pass('No Reddit welcome banner') : fail('No Reddit welcome banner');
+  checks.referralCta ? pass('Referral CTA present') : fail('Referral CTA present');
   checks.leaderboard ? pass('Leaderboard content visible') : fail('Leaderboard content visible');
   checks.noPlaceholder ? pass('No unreplaced VITE placeholders') : fail('No unreplaced VITE placeholders');
 
-  const redditHit = await waitForRedditTracking(page, () => redditTrackingSeen);
-  redditHit ? pass('Reddit tracking request sent') : fail('Reddit tracking request sent', `no alb.reddit.com hit within ${REDDIT_TRACKING_TIMEOUT_MS}ms`);
-
-  // Apex redirect
   const apex = await page.goto('https://viralrefer.app/', { waitUntil: 'domcontentloaded', timeout: 30000 });
   const finalUrl = page.url();
   finalUrl.includes('www.viralrefer.app')

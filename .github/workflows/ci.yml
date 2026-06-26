@@ -10,7 +10,6 @@ env:
   # Public client vars — already exposed in the production JS bundle
   VITE_SUPABASE_URL: https://wqbefjzpgsezzwdrvvua.supabase.co
   VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxYmVmanpwZ3Nlenp3ZHJ2dnVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTMyNDAsImV4cCI6MjA4OTUyOTI0MH0.pVHqeG0sGPgpUlOlskf7rOvnAsdrzrv5govZXcyxEdk
-  VITE_REDDIT_PIXEL_ID: a2_jr6jdbg2r4
   VITE_TURNSTILE_SITEKEY: 0x4AAAAAADbxoHgHBgOr7tC9
 
 jobs:

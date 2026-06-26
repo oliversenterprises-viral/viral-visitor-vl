@@ -65,7 +65,7 @@ const html = await get(`${BASE}/`);
 const js = await fetchAllJsBundles(html);
 const adminSecret = extractAdminSecret(js);
 
-const ACTIONS = ['get_visitor_stats', 'get_reddit_stats', 'get_banner_stats', 'get_shares'];
+const ACTIONS = ['get_visitor_stats', 'get_banner_stats', 'get_shares'];
 const results = [];
 
 for (const action of ACTIONS) {

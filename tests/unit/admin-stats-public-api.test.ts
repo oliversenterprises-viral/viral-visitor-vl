@@ -1,11 +1,10 @@
-/** NovaCodeSwarm-Goal closure: steps 4+6 — six shipped admin stats render/wire entry points on real DOM. */
+/** NovaCodeSwarm-Goal closure: steps 4+6 — shipped admin stats render/wire entry points on real DOM. */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderBannerStats, wireBannerStatsQuick } from '../../src/admin/banner-stats';
 import {
   renderVisitorFunnelStats,
   wireVisitorFunnelStatsQuick,
 } from '../../src/admin/visitor-funnel-stats';
-import { renderRedditCampaignStats } from '../../src/admin/reddit-campaign-stats';
 import { BANNER_EVENTS_KEY } from '../../src/content';
 
 const bannerEvent = {
@@ -20,14 +19,8 @@ const visitorEvent = {
   event_name: 'SiteLanding',
   visitor_id: 'v-test-1',
   country_code: 'US',
-  utm_source: 'reddit',
+  utm_source: 'direct',
   metadata: { client_ip: '203.0.113.55' },
-  created_at: '2026-06-22T12:00:00Z',
-};
-
-const redditEvent = {
-  event_name: 'RedditLanding',
-  utm_campaign: 'launch_week1',
   created_at: '2026-06-22T12:00:00Z',
 };
 
@@ -65,17 +58,6 @@ describe('admin stats public API (shipped render/wire)', () => {
     expect(el.innerHTML).toContain('Latest event');
     expect(el.innerHTML).toContain('Recent events');
     expect(el.innerHTML).toContain('203.0.113.55');
-  });
-
-  it('renderRedditCampaignStats renders panel markup from preloaded events', async () => {
-    const el = document.createElement('div');
-    await renderRedditCampaignStats(el, [redditEvent]);
-    expect(el.classList.contains('reddit-campaign-stats-panel')).toBe(true);
-    expect(el.innerHTML).toContain('Reddit Campaign Funnel');
-    expect(el.innerHTML).toContain('LOCAL');
-    expect(el.innerHTML).toContain('launch_week1');
-    expect(el.innerHTML).toContain('Latest event');
-    expect(el.innerHTML).toContain('Recent events');
   });
 
   it('wireBannerStatsQuick wires #banner-stats-quick without runtime error', async () => {

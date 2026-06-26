@@ -74,9 +74,6 @@ scripts/verify-live.mjs
 scripts/verify-timex-fixed.mjs
 tests/extract-admin-secret.mjs
 tests/extract-env-from-vercel.mjs
-tests/reddit-brave-block-test.mjs
-tests/reddit-event-testing-fill.mjs
-tests/reddit-pixel-live.mjs
 tests/referral-flow-audit.mjs
 
 .vercel
