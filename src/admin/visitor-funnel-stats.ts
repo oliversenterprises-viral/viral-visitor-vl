@@ -9,6 +9,11 @@ import {
   latestEventTimestamp,
 } from '../lib/stats-helpers';
 import {
+  buildAutorefreshSelectHtml,
+  wireAdminStatsAutorefresh,
+} from '../lib/admin-stats-autorefresh';
+import { withAdminStatsReadOnlyRefresh } from '../lib/admin-stats-refresh-guard';
+import {
   countryLabel,
   computeFunnelTotals,
   countRecentReferralNotifiers,
@@ -24,6 +29,22 @@ import {
   type RecentReferralNotifierRow,
 } from './visitor-funnel-stats-helpers';
 const SKELETON = `<div class="space-y-2 py-1"><div class="h-4 w-56 skeleton rounded"></div><div class="h-16 skeleton rounded"></div></div>`;
+const VISITOR_AUTOREFRESH_KEY = 'vr_admin_autorefresh_visitor_ms';
+
+async function silentRefreshVisitorFunnelStats(container: HTMLElement): Promise<void> {
+  await withAdminStatsReadOnlyRefresh(async () => {
+    await renderVisitorFunnelStats(container);
+  });
+}
+
+function wireVisitorAutorefresh(container: HTMLElement): void {
+  wireAdminStatsAutorefresh(
+    container,
+    VISITOR_AUTOREFRESH_KEY,
+    'data-visitor-stats-autorefresh',
+    () => silentRefreshVisitorFunnelStats(container),
+  );
+}
 
 function parseAdminActionError(edgeErr: unknown, edgeData: unknown): string {
   if (edgeData && typeof edgeData === 'object' && edgeData !== null && 'error' in edgeData) {
@@ -113,7 +134,11 @@ function bindVisitorStatsRefresh(container: HTMLElement) {
   });
 }
 
-async function refreshVisitorFunnelStats(container: HTMLElement, btn?: HTMLButtonElement) {
+async function refreshVisitorFunnelStats(
+  container: HTMLElement,
+  btn?: HTMLButtonElement,
+  options: { silent?: boolean } = {},
+) {
   const refreshBtn =
     btn || (container.querySelector('[data-visitor-stats-refresh]') as HTMLButtonElement | null);
   const originalLabel = refreshBtn?.textContent || '↻ Refresh';
@@ -122,10 +147,16 @@ async function refreshVisitorFunnelStats(container: HTMLElement, btn?: HTMLButto
     refreshBtn.textContent = '↻ Refreshing…';
   }
   try {
-    await renderVisitorFunnelStats(container);
-    showToast('Visitor funnel stats refreshed', 'success');
+    await withAdminStatsReadOnlyRefresh(async () => {
+      await renderVisitorFunnelStats(container);
+    });
+    if (!options.silent) {
+      showToast('Visitor funnel stats refreshed', 'success');
+    }
   } catch {
-    showToast('Could not refresh visitor stats', 'info');
+    if (!options.silent) {
+      showToast('Could not refresh visitor stats', 'info');
+    }
   } finally {
     if (refreshBtn) {
       refreshBtn.disabled = false;
@@ -204,8 +235,9 @@ function renderVisitorFunnelView(
       <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Events</div><div class="text-lg font-bold text-white tabular-nums">${stats.total}</div></div>
       <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Claim conv.</div><div class="text-lg font-bold text-emerald-300 tabular-nums">${totals.conversion}</div></div>
     </div>
-    <div class="flex flex-wrap gap-2 mb-2">
+    <div class="flex flex-wrap items-center gap-2 mb-2">
       <button type="button" data-visitor-stats-refresh class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded disabled:opacity-50">↻ Refresh</button>
+      ${buildAutorefreshSelectHtml('data-visitor-stats-autorefresh', VISITOR_AUTOREFRESH_KEY)}
       <button type="button" data-visitor-stats-csv class="text-[9px] px-2 py-0.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded">⬇ CSV</button>
       ${
         excludedCount > 0
@@ -299,6 +331,7 @@ function renderVisitorFunnelView(
   }
 
   container.innerHTML = html;
+  wireVisitorAutorefresh(container);
 }
 
 export async function renderVisitorFunnelStats(

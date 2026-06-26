@@ -3,6 +3,7 @@
  * Funnel steps for Admin → Edit → Site Visitor Funnel.
  */
 
+import { isAdminStatsReadOnlyRefresh } from './admin-stats-refresh-guard';
 import { getStoredLandingRef } from './referral-url';
 import { getStoredUtmAttribution } from './utm-attribution';
 import { supabase } from './supabase';
@@ -100,6 +101,7 @@ export function trackVisitorFunnel(
   step: VisitorFunnelEvent,
   metadata: Record<string, unknown> = {},
 ): void {
+  if (isAdminStatsReadOnlyRefresh()) return;
   pushLocalVisitorEvent(step, metadata);
   logVisitorEventServer(step, metadata);
 }

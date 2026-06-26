@@ -4,6 +4,7 @@ import {
   setQrModalTitle,
 } from './public/globals';
 
+import { isAdminStatsReadOnlyRefresh } from './lib/admin-stats-refresh-guard';
 import { registerGlobal } from './lib/global';
 import { applyTextColors } from './colors';
 import { supabase } from './lib/supabase';
@@ -125,6 +126,7 @@ export function escapeHtml(str: string): string {
  * Stores in localStorage for easy inspection + console output.
  */
 function logBannerEvent(type: 'impression' | 'click', banner: any) {
+  if (isAdminStatsReadOnlyRefresh()) return;
   const event = {
     type,
     label: banner.label || 'untitled',

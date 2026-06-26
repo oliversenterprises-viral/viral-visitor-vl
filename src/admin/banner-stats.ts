@@ -13,6 +13,11 @@ import {
 } from '../lib/stats-helpers';
 import { showToast } from '../ui';
 import {
+  buildAutorefreshSelectHtml,
+  wireAdminStatsAutorefresh,
+} from '../lib/admin-stats-autorefresh';
+import { withAdminStatsReadOnlyRefresh } from '../lib/admin-stats-refresh-guard';
+import {
   type BannerStatRow,
   type BannerSortKey,
   computeBannerTotals,
@@ -24,6 +29,23 @@ import {
 
 let currentBannerSearch = '';
 let currentBannerSort: BannerSortKey = 'impressions';
+
+const BANNER_AUTOREFRESH_KEY = 'vr_admin_autorefresh_banner_ms';
+
+async function silentRefreshBannerStats(container: HTMLElement): Promise<void> {
+  await withAdminStatsReadOnlyRefresh(async () => {
+    await renderBannerStats(container);
+  });
+}
+
+function wireBannerAutorefresh(container: HTMLElement): void {
+  wireAdminStatsAutorefresh(
+    container,
+    BANNER_AUTOREFRESH_KEY,
+    'data-banner-stats-autorefresh',
+    () => silentRefreshBannerStats(container),
+  );
+}
 
 const BANNER_STATS_SKELETON = `
   <div class="space-y-2 py-1">
@@ -131,7 +153,11 @@ async function rerenderFromContainerState(container: HTMLElement) {
   }
 }
 
-async function refreshBannerStats(container: HTMLElement, btn?: HTMLButtonElement) {
+async function refreshBannerStats(
+  container: HTMLElement,
+  btn?: HTMLButtonElement,
+  options: { silent?: boolean } = {},
+) {
   const refreshBtn =
     btn || (container.querySelector('[data-banner-stats-refresh]') as HTMLButtonElement | null);
   const originalLabel = refreshBtn?.textContent || '↻ Refresh';
@@ -140,10 +166,16 @@ async function refreshBannerStats(container: HTMLElement, btn?: HTMLButtonElemen
     refreshBtn.textContent = '↻ Refreshing…';
   }
   try {
-    await renderBannerStats(container);
-    showToast('Banner stats refreshed', 'success');
+    await withAdminStatsReadOnlyRefresh(async () => {
+      await renderBannerStats(container);
+    });
+    if (!options.silent) {
+      showToast('Banner stats refreshed', 'success');
+    }
   } catch {
-    showToast('Could not refresh banner stats', 'info');
+    if (!options.silent) {
+      showToast('Could not refresh banner stats', 'info');
+    }
   } finally {
     if (refreshBtn) {
       refreshBtn.disabled = false;
@@ -254,8 +286,9 @@ function renderBannerStatsView(
       </div>
     </div>
 
-    <div class="flex flex-wrap gap-2 mb-2">
+    <div class="flex flex-wrap items-center gap-2 mb-2">
       <button type="button" data-banner-stats-refresh class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded disabled:opacity-50">↻ Refresh</button>
+      ${buildAutorefreshSelectHtml('data-banner-stats-autorefresh', BANNER_AUTOREFRESH_KEY)}
       <button type="button" data-banner-stats-clear class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">🗑 Clear Local</button>
       <button type="button" data-banner-stats-copy class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">⎘ Copy JSON</button>
       <button type="button" data-banner-stats-csv class="text-[9px] px-2 py-0.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded">⬇ CSV</button>
@@ -338,6 +371,7 @@ function renderBannerStatsView(
 
   html += `</tbody></table>`;
   container.innerHTML = html;
+  wireBannerAutorefresh(container);
 }
 
 /**
