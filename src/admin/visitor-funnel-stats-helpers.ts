@@ -1,10 +1,21 @@
 /** Pure helpers for visitor funnel stats panels — NovaCodeSwarm-Goal closure verified. */
 
-/** Owner/admin IPs hidden from funnel stats display only (recording unchanged). */
-export const ADMIN_FUNNEL_EXCLUDED_IPS = ['161.38.136.60'] as const;
+export {
+  ADMIN_FUNNEL_EXCLUDED_IPS,
+  ADMIN_FUNNEL_EXCLUDED_IP_HASHES,
+  countTestVisitorFunnelEvents,
+  filterTestVisitorFunnelEvents,
+  getVisitorEventIp,
+  isOwnerVisitorFunnelEvent,
+  isTestVisitorFunnelEvent,
+  isTestVisitorFunnelRefCode,
+} from '../../supabase/functions/_shared/visitor-funnel-test';
 
-/** ip_hash prefix for 161.38.136.60 (VISITOR_IP_HASH_SALT viralrefer-visitor-v1). */
-export const ADMIN_FUNNEL_EXCLUDED_IP_HASHES = ['d8399295624890754c844c12'] as const;
+import {
+  countTestVisitorFunnelEvents,
+  filterTestVisitorFunnelEvents,
+  getVisitorEventIp,
+} from '../../supabase/functions/_shared/visitor-funnel-test';
 
 export interface FunnelRow {
   name: string;
@@ -75,34 +86,16 @@ function metadataRecord(event: Record<string, unknown>): Record<string, unknown>
     : {};
 }
 
-/** Resolved client IP when present on a funnel event (metadata or legacy top-level). */
-export function getVisitorEventIp(event: Record<string, unknown>): string {
-  const meta = metadataRecord(event);
-  return String(meta.client_ip || event.client_ip || event.clientIp || '').trim();
-}
-
-export function isExcludedVisitorFunnelEvent(
-  event: Record<string, unknown>,
-  excludedIps: readonly string[] = ADMIN_FUNNEL_EXCLUDED_IPS,
-  excludedHashes: readonly string[] = ADMIN_FUNNEL_EXCLUDED_IP_HASHES,
-): boolean {
-  const ip = getVisitorEventIp(event);
-  if (ip && excludedIps.some((blocked) => blocked === ip)) return true;
-
-  const hash = String(event.ip_hash || event.ipHash || '').trim().toLowerCase();
-  if (!hash) return false;
-  return excludedHashes.some(
-    (blocked) => hash === blocked.toLowerCase() || hash.startsWith(blocked.toLowerCase()),
-  );
-}
-
-/** Drop owner/test IPs from admin funnel panels — does not affect server recording. */
+/** Drop owner/smoke/test rows from admin funnel panels — does not affect server recording. */
 export function filterExcludedVisitorFunnelEvents(
   events: readonly Record<string, unknown>[],
-  excludedIps: readonly string[] = ADMIN_FUNNEL_EXCLUDED_IPS,
-  excludedHashes: readonly string[] = ADMIN_FUNNEL_EXCLUDED_IP_HASHES,
 ): Record<string, unknown>[] {
-  return events.filter((e) => !isExcludedVisitorFunnelEvent(e, excludedIps, excludedHashes));
+  return filterTestVisitorFunnelEvents(events);
+}
+
+/** @deprecated Use isTestVisitorFunnelEvent — kept for existing tests. */
+export function isExcludedVisitorFunnelEvent(event: Record<string, unknown>): boolean {
+  return countTestVisitorFunnelEvents([event]) === 1;
 }
 
 /** Server stores client_ip in metadata; legacy rows may only have ip_hash. */

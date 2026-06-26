@@ -20,7 +20,7 @@ const visitorEvent = {
   visitor_id: 'v-test-1',
   country_code: 'US',
   utm_source: 'direct',
-  metadata: { client_ip: '203.0.113.55' },
+  metadata: { client_ip: '8.8.8.8' },
   created_at: '2026-06-22T12:00:00Z',
 };
 
@@ -57,7 +57,7 @@ describe('admin stats public API (shipped render/wire)', () => {
     expect(el.innerHTML).toContain('Landings');
     expect(el.innerHTML).toContain('Latest event');
     expect(el.innerHTML).toContain('Recent events');
-    expect(el.innerHTML).toContain('203.0.113.55');
+    expect(el.innerHTML).toContain('8.8.8.8');
   });
 
   it('wireBannerStatsQuick wires #banner-stats-quick without runtime error', async () => {

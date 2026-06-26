@@ -11,6 +11,7 @@ import {
   filterExcludedVisitorFunnelEvents,
   getVisitorEventIp,
   isExcludedVisitorFunnelEvent,
+  isTestVisitorFunnelRefCode,
   getReferralNotifierIp,
   isRecentReferralNotifier,
   countRecentReferralNotifiers,
@@ -80,7 +81,7 @@ describe('visitor funnel stats helpers (pure)', () => {
     };
     const real = {
       event_name: 'SiteLanding',
-      metadata: { client_ip: '203.0.113.10' },
+      metadata: { client_ip: '8.8.8.8' },
       created_at: '2026-06-25T12:01:00Z',
     };
     expect(isExcludedVisitorFunnelEvent(blocked)).toBe(true);
@@ -90,6 +91,37 @@ describe('visitor funnel stats helpers (pure)', () => {
     expect(
       isExcludedVisitorFunnelEvent({ event_name: 'SiteLanding', ip_hash: 'd8399295624890754c844c12' }),
     ).toBe(true);
+  });
+
+  it('filters smoke automation bursts and E2E ref codes', () => {
+    const smokeBurst = [
+      {
+        event_name: 'SiteLanding',
+        metadata: { client_ip: '20.161.69.68' },
+      },
+      {
+        event_name: 'GetReferralLink',
+        metadata: { client_ip: '20.161.69.68' },
+      },
+      {
+        event_name: 'OpenPrizeClaim',
+        metadata: { client_ip: '20.161.69.68' },
+      },
+    ];
+    expect(filterExcludedVisitorFunnelEvents(smokeBurst)).toHaveLength(0);
+
+    const e2e = {
+      event_name: 'SiteLanding',
+      ref_code: 'VIRAL-DEMOCODE',
+      metadata: { client_ip: '8.8.4.4' },
+    };
+    expect(filterExcludedVisitorFunnelEvents([e2e])).toHaveLength(0);
+  });
+
+  it('isTestVisitorFunnelRefCode matches smoke/E2E patterns only', () => {
+    expect(isTestVisitorFunnelRefCode('VIRAL-DEMOCODE')).toBe(true);
+    expect(isTestVisitorFunnelRefCode('DEMO1234')).toBe(true);
+    expect(isTestVisitorFunnelRefCode('VIRAL-97UWEGZ')).toBe(false);
   });
 
   it('formatVisitorIpLabel prefers metadata client_ip then ip_hash prefix', () => {

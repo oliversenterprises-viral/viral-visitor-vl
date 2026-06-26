@@ -12,6 +12,7 @@ import {
   countryLabel,
   computeFunnelTotals,
   countRecentReferralNotifiers,
+  countTestVisitorFunnelEvents,
   filterCountryRowsForDisplay,
   filterExcludedVisitorFunnelEvents,
   formatRecentVisitorEventDetail,
@@ -22,14 +23,47 @@ import {
   topCountries,
   type RecentReferralNotifierRow,
 } from './visitor-funnel-stats-helpers';
-
 const SKELETON = `<div class="space-y-2 py-1"><div class="h-4 w-56 skeleton rounded"></div><div class="h-16 skeleton rounded"></div></div>`;
+
+function parseAdminActionError(edgeErr: unknown, edgeData: unknown): string {
+  if (edgeData && typeof edgeData === 'object' && edgeData !== null && 'error' in edgeData) {
+    const msg = (edgeData as { error?: unknown }).error;
+    if (msg) return String(msg);
+  }
+  if (edgeErr && typeof edgeErr === 'object' && edgeErr !== null && 'message' in edgeErr) {
+    return String((edgeErr as { message?: unknown }).message || 'Admin action failed');
+  }
+  return 'Admin action failed';
+}
+
+async function clearTestVisitorEventsFromServer(): Promise<number> {
+  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+  if (!adminSecret) {
+    throw new Error('Admin secret not configured');
+  }
+
+  const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
+    body: { action: 'clear_test_visitor_events', payload: { dry_run: false } },
+    headers: { 'x-admin-secret': adminSecret },
+  });
+
+  if (edgeErr && !(edgeData && typeof edgeData === 'object' && (edgeData as { success?: boolean }).success)) {
+    throw new Error(parseAdminActionError(edgeErr, edgeData));
+  }
+  if (!edgeData?.success) {
+    throw new Error(String(edgeData?.error || 'clear_test_visitor_events rejected'));
+  }
+
+  const result = edgeData.data as { deleted?: number } | undefined;
+  return result?.deleted ?? 0;
+}
 
 function bindVisitorStatsRefresh(container: HTMLElement) {
   if (container.dataset.visitorRefreshBound === '1') return;
   container.dataset.visitorRefreshBound = '1';
   container.addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest('button[data-visitor-stats-refresh]');
+    const clearBtn = (e.target as HTMLElement).closest('button[data-visitor-stats-clear-test]');
     const csvBtn = (e.target as HTMLElement).closest('button[data-visitor-stats-csv]');
     if (csvBtn && container.contains(csvBtn)) {
       e.preventDefault();
@@ -43,6 +77,33 @@ function bindVisitorStatsRefresh(container: HTMLElement) {
       a.click();
       URL.revokeObjectURL(url);
       showToast('Visitor funnel CSV downloaded', 'success');
+      return;
+    }
+    if (clearBtn && container.contains(clearBtn)) {
+      e.preventDefault();
+      e.stopPropagation();
+      void (async () => {
+        const button = clearBtn as HTMLButtonElement;
+        const original = button.textContent || 'Clear test events';
+        if (!window.confirm('Remove owner/smoke test funnel events from the database? Real visitor rows are kept.')) {
+          return;
+        }
+        button.disabled = true;
+        button.textContent = 'Clearing…';
+        try {
+          const deleted = await clearTestVisitorEventsFromServer();
+          await renderVisitorFunnelStats(container);
+          showToast(
+            deleted > 0 ? `Removed ${deleted} test funnel event${deleted === 1 ? '' : 's'}` : 'No test events to remove',
+            deleted > 0 ? 'success' : 'info',
+          );
+        } catch {
+          showToast('Could not clear test funnel events', 'info');
+        } finally {
+          button.disabled = false;
+          button.textContent = original;
+        }
+      })();
       return;
     }
     if (!btn || !container.contains(btn)) return;
@@ -109,7 +170,7 @@ function renderVisitorFunnelView(
   referralFetchError?: string,
 ) {
   const visibleEvents = filterExcludedVisitorFunnelEvents(events);
-  const excludedCount = events.length - visibleEvents.length;
+  const excludedCount = countTestVisitorFunnelEvents(events);
   const stats = computeVisitorFunnelStats(visibleEvents);
   const totals = computeFunnelTotals(stats.funnel);
   const isServer = source === 'server';
@@ -129,7 +190,7 @@ function renderVisitorFunnelView(
   `;
 
   if (excludedCount > 0) {
-    html += `<div class="text-[9px] text-zinc-500 mb-2">Filtered ${excludedCount} owner/test event${excludedCount === 1 ? '' : 's'} (161.38.136.60) from this view.</div>`;
+    html += `<div class="text-[9px] text-zinc-500 mb-2">Filtered ${excludedCount} owner/smoke/test event${excludedCount === 1 ? '' : 's'} from this view.</div>`;
   }
 
   if (fetchError && !isServer) {
@@ -143,9 +204,15 @@ function renderVisitorFunnelView(
       <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Events</div><div class="text-lg font-bold text-white tabular-nums">${stats.total}</div></div>
       <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Claim conv.</div><div class="text-lg font-bold text-emerald-300 tabular-nums">${totals.conversion}</div></div>
     </div>
-    <div class="flex gap-2 mb-2">
+    <div class="flex flex-wrap gap-2 mb-2">
       <button type="button" data-visitor-stats-refresh class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded disabled:opacity-50">↻ Refresh</button>
       <button type="button" data-visitor-stats-csv class="text-[9px] px-2 py-0.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded">⬇ CSV</button>
+      ${
+        excludedCount > 0
+          ? `<button type="button" data-visitor-stats-clear-test title="Deletes owner IP, smoke automation, and E2E test rows from visitor_events"
+              class="text-[9px] px-2 py-0.5 bg-amber-600/80 hover:bg-amber-600 text-white rounded disabled:opacity-50">Clear test events (${excludedCount})</button>`
+          : ''
+      }
     </div>
     <table class="w-full text-[9px] text-zinc-200 border border-white/10 mb-2">
       <thead><tr class="bg-white/5 text-violet-200"><th class="text-left p-1.5">Step</th><th class="p-1.5 text-right">Events</th><th class="p-1.5 text-right">Unique</th></tr></thead><tbody>

@@ -6,6 +6,11 @@
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import {
+  getVisitorEventIp,
+  groupVisitorEventsByIp,
+  isTestVisitorFunnelEvent,
+} from '../_shared/visitor-funnel-test.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -277,11 +282,66 @@ Deno.serve(async (req: Request) => {
           'event_name, utm_source, utm_campaign, utm_content, utm_medium, ref_code, visitor_id, session_id, country_code, ip_hash, metadata, created_at',
         )
         .order('created_at', { ascending: false })
-        .limit(500);
+        .limit(2000);
       if (error) throw error;
       return new Response(JSON.stringify({ success: true, data: data || [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    if (action === 'clear_test_visitor_events') {
+      const dryRun = payload?.dry_run === true;
+      const pageSize = 1000;
+      const allRows: Record<string, unknown>[] = [];
+      let start = 0;
+
+      while (true) {
+        const { data, error } = await supabaseAdmin
+          .from('visitor_events')
+          .select('id, event_name, ref_code, ip_hash, metadata, created_at')
+          .order('created_at', { ascending: true })
+          .range(start, start + pageSize - 1);
+        if (error) throw error;
+        const batch = data || [];
+        allRows.push(...batch);
+        if (batch.length < pageSize) break;
+        start += pageSize;
+      }
+
+      const byIp = groupVisitorEventsByIp(allRows);
+      const idsToDelete: string[] = [];
+      for (const row of allRows) {
+        const id = row.id;
+        if (!id) continue;
+        const ipKey = getVisitorEventIp(row) || String(row.ip_hash || 'unknown');
+        if (!isTestVisitorFunnelEvent(row, byIp.get(ipKey))) continue;
+        idsToDelete.push(String(id));
+      }
+
+      if (dryRun || idsToDelete.length === 0) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { deleted: 0, would_delete: idsToDelete.length },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+
+      const chunk = 200;
+      for (let i = 0; i < idsToDelete.length; i += chunk) {
+        const slice = idsToDelete.slice(i, i + chunk);
+        const { error: delErr } = await supabaseAdmin.from('visitor_events').delete().in('id', slice);
+        if (delErr) throw delErr;
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: { deleted: idsToDelete.length },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
     if (action === 'upload_banner_image') {
