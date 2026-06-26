@@ -18,6 +18,8 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
 
     await expect(page.locator('#referral-attribution')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('#referrer-code-display')).toHaveText('DEMO1234');
+    await expect(page.locator('#referrer-invite-headline')).toContainText(/same contest/i);
+    await expect(page.locator('#hero-trust-line')).toContainText(/No email/i);
 
     await page.getByRole('button', { name: /get my referral link/i }).nth(1).click();
     await expect(page.locator('#ref-link')).toHaveValue(/\/r\/VIRAL-/i, { timeout: 10000 });
@@ -27,6 +29,8 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await page.goto('/r/VIRAL-DEMOCODE');
     await expect(page.locator('#referral-attribution')).toBeVisible({ timeout: 8000 });
     await expect(page.locator('#referrer-code-display')).toHaveText('VIRAL-DEMOCODE');
+    await expect(page.locator('#my-stats')).toBeHidden();
+    await expect(page.locator('#funnel-expand-wrap')).toBeVisible();
   });
 
   test('SPA preview serves index.html for bare /join path', async ({ page }) => {

@@ -93,13 +93,17 @@
                         <span>Get my referral link</span>
                     </button>
                    
-                    <button onclick="document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth' })" 
+                    <button id="hero-leaderboard-btn" onclick="document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth' })" 
                             class="btn-secondary px-10 py-6 text-xl flex items-center justify-center gap-3">
                         See leaderboard
                     </button>
                 </div>
 
-                <div id="hero-campaign-badge" class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-xs font-medium px-3 py-1 rounded-3xl mb-3">
+                <p id="hero-trust-line" class="mt-5 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
+                    No email &bull; No signup &bull; No payment info &bull; Your link in ~5 seconds
+                </p>
+
+                <div id="hero-campaign-badge" class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-xs font-medium px-3 py-1 rounded-3xl mb-3 mt-4">
                     FREE • NO SIGNUP • ~30 SEC
                 </div>
                 <div id="hero-stats-subtext" class="mt-1 text-sm text-zinc-400 tracking-wide">
@@ -110,28 +114,36 @@
 
         <!-- REFERRAL ATTRIBUTION BANNER -->
         <div id="referral-attribution" class="hidden mt-6 max-w-2xl mx-auto">
-            <div class="glass border border-emerald-500/30 bg-emerald-500/5 rounded-3xl px-6 py-4 flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center">
+            <div class="glass border border-emerald-500/30 bg-emerald-500/5 rounded-3xl px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-start gap-3">
+                    <div class="w-9 h-9 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center shrink-0">
                         <i class="fa-solid fa-user-plus"></i>
                     </div>
                     <div>
-                        <div class="text-sm font-semibold text-emerald-400">You&rsquo;re invited!</div>
-                        <p id="referrer-invite-hint" class="hidden text-xs text-zinc-400 mt-0.5">Get your own link in one tap — about 30 seconds</p>
-                        <div class="text-[11px] text-zinc-500 mt-1">Referred by</div>
+                        <div id="referrer-invite-headline" class="text-sm font-semibold text-emerald-400">You&rsquo;re in the same contest</div>
+                        <p id="referrer-invite-hint" class="text-xs text-zinc-300 mt-1 leading-relaxed">Get YOUR link in one tap — same leaderboard, ~30 seconds.</p>
+                        <div class="text-[11px] text-zinc-500 mt-2">You landed via <span id="referrer-code-inline" class="font-mono text-emerald-400/90"></span></div>
+                        <div class="text-[11px] text-zinc-500 mt-0.5">Referred by</div>
                         <div id="referrer-code-display" class="font-mono text-lg font-semibold text-white"></div>
                     </div>
                 </div>
                 <button onclick="joinViaReferral()" 
-                        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-2xl text-sm flex items-center gap-2 transition-all shrink-0">
+                        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-2xl text-sm flex items-center justify-center gap-2 transition-all shrink-0 w-full sm:w-auto">
                     <i class="fa-solid fa-gift"></i>
                     <span>Get my referral link</span>
                 </button>
             </div>
         </div>
 
+        <div id="funnel-expand-wrap" class="text-center mt-6">
+            <button type="button" id="funnel-expand-btn"
+                    class="text-sm text-violet-300 hover:text-violet-200 underline underline-offset-4 decoration-violet-500/50">
+                See prize details &amp; leaderboard &darr;
+            </button>
+        </div>
+
         <!-- MY STATS -->
-        <div id="my-stats" class="mt-8 glass border border-white/10 rounded-3xl p-8">
+        <div id="my-stats" data-vr-below-fold class="mt-8 glass border border-white/10 rounded-3xl p-8">
             <div class="flex justify-between items-center mb-6">
                 <h2 id="stats-title" class="text-2xl font-semibold" style="color: var(--text-stats-title, #ffffff)">Your Stats</h2>
                 <div class="text-xs text-emerald-400 flex items-center gap-1">
@@ -145,7 +157,7 @@
         </div>
 
         <!-- RECENT ACTIVITY FEED -->
-        <div class="mt-8 glass border border-white/10 rounded-3xl p-8">
+        <div data-vr-below-fold class="mt-8 glass border border-white/10 rounded-3xl p-8">
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 id="recent-activity-title" class="text-2xl font-semibold" style="color: var(--text-activity-title, #ffffff)">Recent Activity</h2>
@@ -162,7 +174,7 @@
         </div>
 
         <!-- HOW IT WORKS -->
-        <div id="how" class="mt-12">
+        <div id="how" data-vr-below-fold class="mt-12">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">
                     <i class="fa-solid fa-lightbulb"></i>
@@ -206,6 +218,13 @@
                 </div>
                
                 <div class="glass border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl">
+                    <div id="funnel-steps" class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 text-xs sm:text-sm" aria-label="Your steps">
+                        <span data-funnel-step="1" class="funnel-step funnel-step-active">1. Get link</span>
+                        <span class="text-zinc-600" aria-hidden="true">→</span>
+                        <span data-funnel-step="2" class="funnel-step funnel-step-pending">2. Copy</span>
+                        <span class="text-zinc-600" aria-hidden="true">→</span>
+                        <span data-funnel-step="3" class="funnel-step funnel-step-pending">3. Share</span>
+                    </div>
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
                             <i class="fa-solid fa-link text-violet-400 text-2xl"></i>
@@ -241,8 +260,8 @@
                         </div>
 
                         <!-- Small next step hint for new users -->
-                        <p id="referral-next-step" class="hidden mt-3 text-sm text-emerald-400">
-                            Link ready! Hit COPY, then paste on Reddit or DM a friend.
+                        <p id="referral-next-step" class="hidden mt-3 text-sm text-emerald-400 font-medium">
+                            Step 2: tap COPY — then share your link below.
                         </p>
                     </div>
 
@@ -283,7 +302,7 @@
                             <button onclick="generateXShareImage()" class="share-btn flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 border border-emerald-400/40 text-white p-4 rounded-2xl font-medium text-sm" title="Generate promo image + open X (recommended for X)" aria-label="Generate image for X">
                                 <span class="text-xl">𝕏</span> <span>Img</span>
                             </button>
-                            <button onclick="shareTo('whatsapp')" class="share-btn flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-2xl font-medium text-sm">
+                            <button id="share-whatsapp-primary" onclick="shareTo('whatsapp')" class="share-btn flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-2xl font-medium text-sm ring-2 ring-emerald-400/30" title="Recommended — fastest way to share">
                                 <i class="fa-brands fa-whatsapp text-xl"></i> <span id="share-whatsapp-label">WhatsApp</span>
                             </button>
                             <button onclick="shareTo('linkedin')" class="share-btn flex items-center justify-center gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white p-4 rounded-2xl font-medium text-sm">
@@ -311,7 +330,7 @@
         </div>
 
         <!-- PREMIUM PRIZE -->
-        <div id="prize" class="mt-12 glass border border-white/10 rounded-3xl p-8 md:p-10">
+        <div id="prize" data-vr-below-fold class="mt-12 glass border border-white/10 rounded-3xl p-8 md:p-10">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">
                     <i class="fa-solid fa-trophy"></i>
@@ -366,7 +385,7 @@
         </div>
 
         <!-- LIVE LEADERBOARD -->
-        <div id="leaderboard" class="mt-12">
+        <div id="leaderboard" data-vr-below-fold class="mt-12">
             <div class="flex items-center justify-between mb-6">
                 <div>
                     <div class="flex items-center gap-3">

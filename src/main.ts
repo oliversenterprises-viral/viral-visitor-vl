@@ -1,5 +1,6 @@
 import { initApp } from './app';
 import { captureReferralAttribution, revealReferralAttributionBanner } from './lib/referral-url';
+import { initFunnelConversion } from './lib/funnel-conversion';
 import { initAttributedReferralRecording, syncMobileReferralCta } from './referral';
 import { captureUtmAttribution } from './lib/utm-attribution';
 import { initVisitorTracking } from './lib/visitor-tracking';
@@ -30,6 +31,7 @@ seedDefaultTextColors();
 captureReferralAttribution();
 captureUtmAttribution();
 revealReferralAttributionBanner();
+initFunnelConversion();
 initAttributedReferralRecording();
 initVisitorTracking();
 initPublic();

@@ -243,6 +243,68 @@ h3 { font-size: 1.35rem; }
   opacity: 0.72;
 }
 
+.share-primary-pulse {
+  animation: vr-share-pulse 0.65s ease-in-out 4;
+}
+
+@keyframes vr-share-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(52, 211, 153, 0);
+    transform: scale(1.03);
+  }
+}
+
+/* Guided funnel steps */
+.funnel-step {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #a1a1aa;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.funnel-step-active {
+  color: #e9d5ff;
+  border-color: rgba(139, 92, 246, 0.55);
+  background: rgba(139, 92, 246, 0.15);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+.funnel-step-done {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.08);
+}
+
+.funnel-step-pending {
+  opacity: 0.75;
+}
+
+/* Referred landing: one-screen focus until visitor expands */
+#funnel-expand-wrap {
+  display: none;
+}
+
+html[data-vr-referred-landing] #funnel-expand-wrap {
+  display: block;
+}
+
+html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) [data-vr-below-fold] {
+  display: none !important;
+}
+
+html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) #hero-leaderboard-btn {
+  display: none;
+}
+
 .btn-secondary:hover {
   background: rgba(255,255,255,0.14);
   border-color: rgba(255,255,255,0.35);

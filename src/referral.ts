@@ -6,6 +6,7 @@
 import { registerGlobal } from './lib';
 import { supabase } from './lib/supabase';
 import { recordShareEvent } from './lib/record-share';
+import { onReferralLinkCopied, onReferralLinkReady } from './lib/funnel-conversion';
 import { trackVisitorFunnel } from './lib/visitor-tracking';
 import {
   buildReferralLinkFromBase,
@@ -192,15 +193,6 @@ function populateReferralLinkUI(code: string, link: string): void {
     qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(link)}`;
   }
 
-  const nextStepHint = document.getElementById('referral-next-step');
-  if (nextStepHint) {
-    nextStepHint.classList.remove('hidden');
-    if (pendingReferrerCode) {
-      nextStepHint.textContent =
-        'Your link is ready — tap COPY and share to climb the leaderboard.';
-    }
-  }
-
   if ((window as any).renderMyStats) {
     (window as any).renderMyStats(code);
   }
@@ -208,14 +200,7 @@ function populateReferralLinkUI(code: string, link: string): void {
   const sharePanel = document.getElementById('share-buttons-panel');
   if (sharePanel) sharePanel.classList.add('share-ready');
 
-  highlightCopyButton();
-}
-
-function highlightCopyButton(): void {
-  const btn = document.getElementById('copy-link-btn');
-  if (!btn) return;
-  btn.classList.add('copy-link-pulse');
-  window.setTimeout(() => btn.classList.remove('copy-link-pulse'), 2400);
+  onReferralLinkReady();
 }
 
 /** Current value in #ref-link (empty until generated). */
@@ -322,6 +307,7 @@ function performCopyToClipboard(link: string): void {
     const code = getMyReferralCode();
     if (code) recordShareEvent({ platform: 'copy', referrer_code: code, referral_link: link });
     trackVisitorFunnel('CopyReferralLink');
+    onReferralLinkCopied();
     const btn =
       (document.getElementById('copy-link-btn') as HTMLElement | null) ||
       (input?.parentElement?.querySelector('button') as HTMLElement | null) ||
@@ -352,6 +338,7 @@ function performCopyToClipboard(link: string): void {
       const code = getMyReferralCode();
       if (code) recordShareEvent({ platform: 'copy', referrer_code: code, referral_link: link });
       trackVisitorFunnel('CopyReferralLink');
+      onReferralLinkCopied();
     } catch {
       alert('Copy failed. Link: ' + link);
     }
