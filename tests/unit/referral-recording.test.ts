@@ -14,7 +14,9 @@ vi.mock('../../src/lib/supabase', () => ({
 import {
   detectAndStoreAttribution,
   getMyReferralLinkInstant,
+  hasPendingReferrerAttribution,
   initAttributedReferralRecording,
+  isReferralCreditedThisSession,
   resetReferralRecordingStateForTests,
 } from '../../src/referral';
 
@@ -32,20 +34,27 @@ function installReferralDom() {
   document.body.innerHTML = `
     <div id="referral-turnstile-container" style="display:none"></div>
     <input id="ref-link" />
+    <div id="funnel-credit-gate" class="hidden"></div>
   `;
 }
 
-async function flushLandingRecording(maxFrames = 30): Promise<void> {
+async function flushMicrotasks(maxFrames = 30): Promise<void> {
   for (let i = 0; i < maxFrames; i++) {
     await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
   }
 }
 
-async function waitForInvokeCount(count: number, timeoutMs = 5000): Promise<void> {
+function recordReferralCalls(): unknown[][] {
+  return invokeMock.mock.calls.filter((c) => c[0] === 'record-referral');
+}
+
+async function waitForRecordReferralCount(count: number, timeoutMs = 5000): Promise<void> {
   const started = Date.now();
-  while (invokeMock.mock.calls.length < count) {
+  while (recordReferralCalls().length < count) {
     if (Date.now() - started > timeoutMs) {
-      throw new Error(`Expected ${count} invoke(s), got ${invokeMock.mock.calls.length}`);
+      throw new Error(
+        `Expected ${count} record-referral invoke(s), got ${recordReferralCalls().length}`,
+      );
     }
     await new Promise<void>((resolve) => setTimeout(resolve, 50));
   }
@@ -55,7 +64,7 @@ function toastText(): string {
   return document.getElementById('toast-container')?.textContent ?? '';
 }
 
-describe('referral recording (landing + retry)', () => {
+describe('referral recording (funnel-gated Step 1)', () => {
   beforeEach(() => {
     installTurnstileWidget();
     installReferralDom();
@@ -72,7 +81,7 @@ describe('referral recording (landing + retry)', () => {
     resetReferralRecordingStateForTests();
   });
 
-  it('initAttributedReferralRecording invokes record-referral on landing', async () => {
+  it('initAttributedReferralRecording does NOT invoke record-referral on landing', async () => {
     invokeMock.mockResolvedValue({ data: { success: true }, error: null });
 
     vi.stubGlobal('location', {
@@ -82,66 +91,55 @@ describe('referral recording (landing + retry)', () => {
     } as Location);
 
     initAttributedReferralRecording();
-    await flushLandingRecording();
+    await flushMicrotasks();
 
-    await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalled();
-    });
-
-    const call = invokeMock.mock.calls.find((c) => c[0] === 'record-referral');
-    expect(call).toBeDefined();
-    expect((call![1] as { body: Record<string, string> }).body.referrerCode).toBe('VIRAL-LANDING');
+    expect(invokeMock).not.toHaveBeenCalled();
+    expect(hasPendingReferrerAttribution()).toBe(true);
+    expect(isReferralCreditedThisSession()).toBe(false);
   });
 
-  it('retries on landing after transient Turnstile/edge failure', async () => {
-    let calls = 0;
-    invokeMock.mockImplementation(async () => {
-      calls += 1;
-      if (calls === 1) return { data: null, error: new Error('403') };
-      return { data: { success: true }, error: null };
-    });
+  it('getMyReferralLinkInstant invokes record-referral for attributed visitors', async () => {
+    invokeMock.mockResolvedValue({ data: { success: true }, error: null });
 
     vi.stubGlobal('location', {
-      pathname: '/r/VIRAL-LANDING-RETRY',
+      pathname: '/r/VIRAL-FUNNEL',
       search: '',
-      href: 'http://localhost/r/VIRAL-LANDING-RETRY',
-    } as Location);
-
-    initAttributedReferralRecording();
-    await waitForInvokeCount(2, 8000);
-    expect(invokeMock.mock.calls.length).toBeGreaterThanOrEqual(2);
-  });
-
-  it('retries after failure when user clicks Get my referral link', async () => {
-    let calls = 0;
-    invokeMock.mockImplementation(async () => {
-      calls += 1;
-      if (calls === 1) return { data: null, error: new Error('edge down') };
-      return { data: { success: true }, error: null };
-    });
-
-    vi.stubGlobal('location', {
-      pathname: '/r/VIRAL-RETRY',
-      search: '',
-      href: 'http://localhost/r/VIRAL-RETRY',
+      href: 'http://localhost/r/VIRAL-FUNNEL',
     } as Location);
 
     detectAndStoreAttribution();
-    initAttributedReferralRecording();
-    await flushLandingRecording();
-
-    await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalledTimes(1);
-    });
-
+    expect(hasPendingReferrerAttribution()).toBe(true);
     await getMyReferralLinkInstant();
+    await waitForRecordReferralCount(1);
 
-    await vi.waitFor(() => {
-      expect(invokeMock.mock.calls.length).toBeGreaterThanOrEqual(2);
-    });
+    const call = recordReferralCalls()[0];
+    expect((call[1] as { body: Record<string, string> }).body.referrerCode).toBe('VIRAL-FUNNEL');
+    expect(isReferralCreditedThisSession()).toBe(true);
   });
 
-  it('shows success toast when referral is credited', async () => {
+  it('retries funnel credit after transient edge failure', async () => {
+    let referralCalls = 0;
+    invokeMock.mockImplementation(async (name: string) => {
+      if (name !== 'record-referral') return { data: { success: true }, error: null };
+      referralCalls += 1;
+      if (referralCalls === 1) return { data: null, error: new Error('403') };
+      return { data: { success: true }, error: null };
+    });
+
+    vi.stubGlobal('location', {
+      pathname: '/r/VIRAL-FUNNEL-RETRY',
+      search: '',
+      href: 'http://localhost/r/VIRAL-FUNNEL-RETRY',
+    } as Location);
+
+    detectAndStoreAttribution();
+    await getMyReferralLinkInstant();
+    await waitForRecordReferralCount(2, 8000);
+
+    expect(recordReferralCalls().length).toBeGreaterThanOrEqual(2);
+  }, 10_000);
+
+  it('shows success toast when funnel Step 1 credits referral', async () => {
     invokeMock.mockResolvedValue({ data: { success: true }, error: null });
 
     vi.stubGlobal('location', {
@@ -150,18 +148,16 @@ describe('referral recording (landing + retry)', () => {
       href: 'http://localhost/r/VIRAL-TOAST',
     } as Location);
 
-    initAttributedReferralRecording();
-    await flushLandingRecording();
+    detectAndStoreAttribution();
+    await getMyReferralLinkInstant();
 
-    await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalled();
-    });
+    await waitForRecordReferralCount(1);
     await vi.waitFor(() => {
       expect(toastText()).toContain('Referral credited');
     });
   });
 
-  it('shows failure toast when recording fails', async () => {
+  it('shows failure toast when funnel credit exhausts retries', async () => {
     invokeMock.mockResolvedValue({ data: null, error: new Error('403') });
 
     vi.stubGlobal('location', {
@@ -170,14 +166,15 @@ describe('referral recording (landing + retry)', () => {
       href: 'http://localhost/r/VIRAL-FAIL',
     } as Location);
 
-    initAttributedReferralRecording();
-    await flushLandingRecording();
+    detectAndStoreAttribution();
+    await getMyReferralLinkInstant();
 
-    await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalled();
-    });
-    await vi.waitFor(() => {
-      expect(toastText()).toMatch(/Couldn't credit referral/);
-    });
-  });
+    await waitForRecordReferralCount(1);
+    await vi.waitFor(
+      () => {
+        expect(toastText()).toMatch(/Couldn't credit referral/);
+      },
+      { timeout: 12_000 },
+    );
+  }, 15_000);
 });

@@ -1,6 +1,5 @@
 /**
- * Referred-landing funnel UX — clarity, trust, guided steps, focused first screen.
- * Pure helpers + DOM wiring; does not change referral recording or link generation.
+ * Referred-landing funnel UX — clarity, trust, guided steps, funnel-gated crediting UI.
  */
 
 import { getStoredLandingRef, parseRefFromLocation } from './referral-url';
@@ -45,32 +44,63 @@ function wireExpandToggle(): void {
 
 function tuneHeroForReferred(ref: string): void {
   const line1 = document.getElementById('hero-title-line1');
-  if (line1) line1.textContent = 'Same contest — get your own link.';
+  if (line1) line1.textContent = 'One tap credits your visit.';
 
   const subtitle = document.getElementById('hero-subtitle');
   if (subtitle) {
     subtitle.textContent =
-      `You helped ${ref} by visiting. Tap the button below, copy your link, and share anywhere to climb the leaderboard.`;
+      `You landed via ${ref} — that alone does not count. Tap Get my link (Step 1), then copy and share to join the same contest.`;
   }
 
   const badge = document.getElementById('hero-badge');
-  if (badge) badge.textContent = 'REFERRED VISITOR • FREE • ~30 SEC';
+  if (badge) badge.textContent = 'REFERRED VISITOR • STEP 1 REQUIRED';
+
+  const trust = document.getElementById('hero-trust-line');
+  if (trust) {
+    trust.innerHTML =
+      '<strong class="text-amber-300">Visiting alone does not credit them.</strong> Tap the button below to count as a real referral.';
+  }
 }
 
 function tuneAttributionBanner(ref: string): void {
   const headline = document.getElementById('referrer-invite-headline');
   if (headline) {
-    headline.textContent = 'You helped them land — now compete for #1';
+    headline.textContent = 'Step 1 required — tap Get my link to credit this visit';
   }
 
   const hint = document.getElementById('referrer-invite-hint');
   if (hint) {
-    hint.textContent = `Get YOUR link in one tap (same contest as ${ref}). No signup.`;
+    hint.textContent = `Only counts for ${ref} after you generate YOUR link (same contest, ~30 sec).`;
     hint.classList.remove('hidden');
   }
 
   const inline = document.getElementById('referrer-code-inline');
   if (inline) inline.textContent = ref;
+}
+
+function revealFunnelCreditGate(ref: string): void {
+  const gate = document.getElementById('funnel-credit-gate');
+  if (!gate) return;
+  gate.classList.remove('hidden');
+  gate.dataset.status = 'required';
+
+  const gateRef = document.getElementById('funnel-gate-ref');
+  if (gateRef) gateRef.textContent = ref;
+}
+
+function highlightHeroGetLink(): void {
+  const btn = document.getElementById('hero-get-link-btn');
+  if (!btn) return;
+  btn.classList.add('hero-get-link-pulse');
+  window.setTimeout(() => btn.classList.remove('hero-get-link-pulse'), 12_000);
+}
+
+function scrollToReferralSection(): void {
+  const section = document.getElementById('referral-section');
+  if (!section) return;
+  window.setTimeout(() => {
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 400);
 }
 
 /** Call at bootstrap after attribution banner is revealed. */
@@ -81,9 +111,13 @@ export function initFunnelConversion(loc: Location = location): void {
   if (!ref) return;
 
   document.documentElement.setAttribute('data-vr-referred-landing', '1');
+  document.documentElement.setAttribute('data-vr-credit-pending', '1');
   tuneHeroForReferred(ref);
   tuneAttributionBanner(ref);
+  revealFunnelCreditGate(ref);
+  highlightHeroGetLink();
   wireExpandToggle();
+  scrollToReferralSection();
 }
 
 /** Update the 1 → 2 → 3 progress strip in #referral-section. */
@@ -106,8 +140,59 @@ function highlightPrimaryShare(): void {
   window.setTimeout(() => primary.classList.remove('share-primary-pulse'), 3200);
 }
 
+function updateCreditGate(status: 'required' | 'pending' | 'credited' | 'failed', message?: string): void {
+  const gate = document.getElementById('funnel-credit-gate');
+  if (!gate) return;
+  gate.classList.remove('hidden');
+  gate.dataset.status = status;
+
+  const desc = document.getElementById('funnel-credit-gate-desc');
+  if (desc && message) desc.textContent = message;
+}
+
+/** Step 1 clicked — referral credit request in flight. */
+export function onReferralCreditPending(): void {
+  document.documentElement.setAttribute('data-vr-credit-status', 'pending');
+  updateCreditGate(
+    'pending',
+    'Crediting your visit… stay on this page for a few seconds.',
+  );
+}
+
+/** Server confirmed referral credit (or duplicate within 24h). */
+export function onReferralCredited(): void {
+  document.documentElement.setAttribute('data-vr-credit-status', 'credited');
+  document.documentElement.removeAttribute('data-vr-credit-pending');
+
+  const title = document.getElementById('funnel-credit-gate-title');
+  if (title) title.textContent = 'Referral credited — you counted!';
+
+  updateCreditGate(
+    'credited',
+    'Step 1 complete. Now COPY your link (Step 2), then SHARE (Step 3).',
+  );
+
+  window.setTimeout(() => {
+    const gate = document.getElementById('funnel-credit-gate');
+    if (gate?.dataset.status === 'credited') {
+      gate.classList.add('funnel-credit-gate-fade');
+      window.setTimeout(() => gate.classList.add('hidden'), 600);
+    }
+  }, 5000);
+}
+
+/** All funnel credit retries exhausted. */
+export function onReferralCreditFailed(): void {
+  document.documentElement.setAttribute('data-vr-credit-status', 'failed');
+  updateCreditGate(
+    'failed',
+    'Could not credit — tap Get my link again or refresh the page.',
+  );
+}
+
 /** After #ref-link is populated — guide visitor to COPY. */
 export function onReferralLinkReady(): void {
+  document.documentElement.removeAttribute('data-vr-credit-pending');
   setFunnelStep(2);
   highlightCopyButton();
 }

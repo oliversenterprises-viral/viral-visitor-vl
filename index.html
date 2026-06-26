@@ -87,7 +87,7 @@
                 </p>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button onclick="getMyReferralLinkInstant()" 
+                    <button id="hero-get-link-btn" onclick="getMyReferralLinkInstant()" 
                             class="btn-primary px-12 py-6 text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/30">
                         <i class="fa-solid fa-gift"></i>
                         <span>Get my referral link</span>
@@ -127,10 +127,10 @@
                         <div id="referrer-code-display" class="font-mono text-lg font-semibold text-white"></div>
                     </div>
                 </div>
-                <button onclick="joinViaReferral()" 
-                        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-2xl text-sm flex items-center justify-center gap-2 transition-all shrink-0 w-full sm:w-auto">
-                    <i class="fa-solid fa-gift"></i>
-                    <span>Get my referral link</span>
+                <button id="attribution-get-link-btn" onclick="joinViaReferral()" 
+                        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-2xl text-sm flex items-center justify-center gap-2 transition-all shrink-0 w-full sm:w-auto funnel-step-cta">
+                    <i class="fa-solid fa-circle-1"></i>
+                    <span>Step 1: Get my link</span>
                 </button>
             </div>
         </div>
@@ -218,8 +218,20 @@
                 </div>
                
                 <div class="glass border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl">
+                    <div id="funnel-credit-gate" class="hidden funnel-credit-gate mb-6 rounded-2xl border px-5 py-4 text-left" role="status" aria-live="polite">
+                        <div class="flex items-start gap-3">
+                            <div class="funnel-gate-icon w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 font-bold text-lg">1</div>
+                            <div>
+                                <p id="funnel-credit-gate-title" class="font-semibold text-amber-200">Complete Step 1 to count as a real referral</p>
+                                <p id="funnel-credit-gate-desc" class="text-sm text-zinc-300 mt-1 leading-relaxed">
+                                    Just visiting does not credit <span id="funnel-gate-ref" class="font-mono text-emerald-400"></span>.
+                                    Tap <strong class="text-white">Get my referral link</strong> — that is the only way this visit counts.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                     <div id="funnel-steps" class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 text-xs sm:text-sm" aria-label="Your steps">
-                        <span data-funnel-step="1" class="funnel-step funnel-step-active">1. Get link</span>
+                        <span data-funnel-step="1" class="funnel-step funnel-step-active">1. Get link <span class="funnel-step-required">required</span></span>
                         <span class="text-zinc-600" aria-hidden="true">→</span>
                         <span data-funnel-step="2" class="funnel-step funnel-step-pending">2. Copy</span>
                         <span class="text-zinc-600" aria-hidden="true">→</span>
@@ -603,9 +615,9 @@ Winners (top verified referrers meeting min threshold) claim via secure form. Pr
     <!-- Mobile sticky CTA (hidden once link is generated) -->
     <div id="mobile-referral-cta" class="hidden md:hidden fixed bottom-0 inset-x-0 z-[800] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-zinc-950/95 border-t border-white/10 backdrop-blur-md">
         <button type="button" onclick="getMyReferralLinkInstant()"
-                class="btn-primary w-full py-4 text-base font-semibold flex items-center justify-center gap-2 shadow-lg shadow-violet-500/25">
-            <i class="fa-solid fa-gift"></i>
-            <span>Get my link — 30 sec</span>
+                class="btn-primary w-full py-4 text-base font-semibold flex items-center justify-center gap-2 shadow-lg shadow-violet-500/25 funnel-step-cta">
+            <i class="fa-solid fa-circle-1"></i>
+            <span>Step 1: Get my link</span>
         </button>
     </div>
 

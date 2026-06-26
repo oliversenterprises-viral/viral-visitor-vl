@@ -6,7 +6,13 @@
 import { registerGlobal } from './lib';
 import { supabase } from './lib/supabase';
 import { recordShareEvent } from './lib/record-share';
-import { onReferralLinkCopied, onReferralLinkReady } from './lib/funnel-conversion';
+import {
+  onReferralCreditFailed,
+  onReferralCreditPending,
+  onReferralCredited,
+  onReferralLinkCopied,
+  onReferralLinkReady,
+} from './lib/funnel-conversion';
 import { trackVisitorFunnel } from './lib/visitor-tracking';
 import {
   buildReferralLinkFromBase,
@@ -133,42 +139,55 @@ async function recordReferralIfAttributed(options: {
   }
 }
 
-const LANDING_RECORD_MAX_ATTEMPTS = 4;
-const LANDING_RECORD_RETRY_MS = [0, 1500, 4000, 8000] as const;
+const FUNNEL_RECORD_MAX_ATTEMPTS = 4;
+const FUNNEL_RECORD_RETRY_MS = [0, 1500, 4000, 8000] as const;
 
-async function runLandingReferralRecording(): Promise<void> {
-  for (let attempt = 0; attempt < LANDING_RECORD_MAX_ATTEMPTS; attempt++) {
-    if (referralRecordedThisSession) return;
+/** Credits referrer only after Step 1 (Get my link) — not on passive landing. */
+async function runFunnelReferralRecording(): Promise<ReferralRecordOutcome> {
+  if (!pendingReferrerCode || referralRecordedThisSession) return 'skipped';
 
-    const delay = LANDING_RECORD_RETRY_MS[attempt] ?? 20_000;
+  onReferralCreditPending();
+
+  for (let attempt = 0; attempt < FUNNEL_RECORD_MAX_ATTEMPTS; attempt++) {
+    if (referralRecordedThisSession) return 'success';
+
+    const delay = FUNNEL_RECORD_RETRY_MS[attempt] ?? 20_000;
     if (delay > 0) {
       await new Promise<void>((resolve) => window.setTimeout(resolve, delay));
     }
-    if (referralRecordedThisSession) return;
+    if (referralRecordedThisSession) return 'success';
 
     const outcome = await recordReferralIfAttributed({
       notify: attempt === 0,
-      allowFailureRetryToast: attempt === LANDING_RECORD_MAX_ATTEMPTS - 1,
+      allowFailureRetryToast: attempt === FUNNEL_RECORD_MAX_ATTEMPTS - 1,
     });
 
-    if (outcome === 'success' || outcome === 'duplicate' || outcome === 'skipped') return;
+    if (outcome === 'success' || outcome === 'duplicate') {
+      onReferralCredited();
+      return outcome;
+    }
+    if (outcome === 'skipped') return outcome;
   }
+
+  onReferralCreditFailed();
+  return 'failed';
 }
 
 /**
- * Record attributed visits on landing (background Turnstile), not only on button click.
- * Safe to call once per page load from main.ts bootstrap.
+ * Store attribution from /r/CODE or ?ref= on load. Crediting is funnel-gated (Step 1 click).
  */
 export function initAttributedReferralRecording(): void {
   detectAndStoreAttribution();
-  if (!pendingReferrerCode || referralRecordedThisSession) return;
+}
 
-  const start = () => void runLandingReferralRecording();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start, { once: true });
-  } else {
-    start();
-  }
+/** True when visitor arrived via someone else's link and is not yet credited. */
+export function hasPendingReferrerAttribution(): boolean {
+  return !!pendingReferrerCode && !referralRecordedThisSession;
+}
+
+/** Vitest helper — whether this session already credited (or skipped self-referral). */
+export function isReferralCreditedThisSession(): boolean {
+  return referralRecordedThisSession;
 }
 
 /** Vitest-only reset for per-session recording flags. */
@@ -209,7 +228,7 @@ export function getReferralLinkFromInput(): string {
   return input?.value?.trim() || '';
 }
 
-/** Generate link if missing — safe for copy/share/QR/claim entry points. */
+/** Returns an existing link only — does not auto-generate (funnel Step 1 is required first). */
 export async function ensureReferralLinkReady(): Promise<string> {
   const existing = getReferralLinkFromInput();
   if (existing && /\/r\/VIRAL-/i.test(existing)) return existing;
@@ -221,8 +240,7 @@ export async function ensureReferralLinkReady(): Promise<string> {
     return link;
   }
 
-  await getMyReferralLinkInstant();
-  return getReferralLinkFromInput();
+  return '';
 }
 
 /** Restore UI for returning visitors who already have a code in localStorage. */
@@ -262,7 +280,7 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   trackVisitorFunnel('GetReferralLink');
 
   if (pendingReferrerCode) {
-    showToast('Your link is ready — copy and share to start referring', 'success');
+    showToast('Step 1 done — crediting your visit now. Next: COPY your link.', 'success');
   } else {
     showToast('Link ready — tap COPY to share', 'success');
   }
@@ -273,7 +291,7 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   if (refSection) refSection.scrollIntoView({ behavior: 'smooth' });
 
   if (pendingReferrerCode && !referralRecordedThisSession) {
-    void recordReferralIfAttributed({ allowFailureRetryToast: true });
+    void runFunnelReferralRecording();
   }
 }
 
@@ -349,7 +367,7 @@ export function copyLink(): void {
   void (async () => {
     const link = await ensureReferralLinkReady();
     if (!link) {
-      showToast('Could not generate your link — tap Get my referral link', 'info');
+      showToast('Step 1 first — tap Get my referral link above', 'info');
       return;
     }
     performCopyToClipboard(link);
@@ -417,5 +435,5 @@ registerGlobal('showQRModal', showQRModal);
 registerGlobal('debugReferral', debugReferral);
 registerGlobal('buildReferralLink', buildReferralLink);
 
-// Auto-detect attribution on module load (so the first call to getMyReferralLinkInstant can record)
+// Auto-detect attribution on module load (funnel Step 1 credits when user taps Get my link)
 detectAndStoreAttribution();
