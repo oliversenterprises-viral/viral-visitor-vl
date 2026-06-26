@@ -171,14 +171,11 @@ function buildAnalyticsHTML(
             <button id="export-shares-btn" class="px-4 py-1.5 text-sm bg-emerald-600/90 hover:bg-emerald-600 rounded-2xl flex items-center gap-1.5">
               <i class="fa-solid fa-download text-xs"></i> Export CSV
             </button>
-            ${
-              testShareCount > 0
-                ? `<button id="clear-test-shares-btn" type="button" title="Removes agent/smoke test rows only (PROBE, READY, SMOKETEST, unknown, etc.)"
-                    class="px-4 py-1.5 text-sm bg-amber-600/80 hover:bg-amber-600 text-white rounded-2xl flex items-center gap-1.5">
-                <i class="fa-solid fa-broom text-xs"></i> Clear test shares (${testShareCount})
-              </button>`
-                : ''
-            }
+            <button id="clear-test-shares-btn" type="button"
+                    title="Removes agent/smoke test rows only (PROBE, READY, SMOKETEST, DEMOCODE, unknown, etc.). Real user shares are never deleted."
+                    class="px-4 py-1.5 text-sm bg-amber-600/80 hover:bg-amber-600 text-white rounded-2xl flex items-center gap-1.5 disabled:opacity-50">
+              <i class="fa-solid fa-broom text-xs"></i> Clear test shares${testShareCount > 0 ? ` (${testShareCount})` : ''}
+            </button>
           </div>
         </div>
       </div>
@@ -551,15 +548,9 @@ function attachShareAnalyticsListeners(
   clearTestBtn?.addEventListener('click', () => {
     void (async () => {
       const codes = listTestShareCodes(allSharesCache);
-      if (!codes.length) {
-        showToast('No test shares to clear', 'info');
-        return;
-      }
-
-      const msg =
-        `Remove ${codes.length} test referrer code(s) from share analytics?\n\n` +
-        `${codes.join(', ')}\n\n` +
-        'Only agent/smoke patterns are deleted. Real user shares are never touched.';
+      const msg = codes.length
+        ? `Remove ${codes.length} test referrer code(s) from share analytics?\n\n${codes.join(', ')}\n\nOnly agent/smoke patterns are deleted. Real user shares are never touched.`
+        : 'Scan the database and remove agent/smoke test shares (PROBE, SMOKETEST, DEMOCODE, unknown, etc.)?\n\nReal user shares are never touched.';
 
       if (!window.confirm(msg)) return;
 
