@@ -26,6 +26,8 @@ import {
   formatBannerCtr,
   sortBannerRows,
 } from './banner-stats-helpers';
+import { countTestBannerEvents, filterTestBannerEvents } from './banner-stats-test-helpers';
+import { clearTestAdminStatsFromServer } from './clear-test-admin-stats';
 
 let currentBannerSearch = '';
 let currentBannerSort: BannerSortKey = 'impressions';
@@ -63,12 +65,48 @@ function bindBannerStatsActions(container: HTMLElement) {
     const target = e.target as HTMLElement;
     const refreshBtn = target.closest('button[data-banner-stats-refresh]');
     const clearBtn = target.closest('button[data-banner-stats-clear]');
+    const clearTestBtn = target.closest('button[data-banner-stats-clear-test]');
     const copyBtn = target.closest('button[data-banner-stats-copy]');
     const csvBtn = target.closest('button[data-banner-stats-csv]');
     const sortBtn = target.closest('[data-banner-sort]');
     const clearSearchBtn = target.closest('[data-banner-search-clear]');
 
-    if (!container.contains(refreshBtn || clearBtn || copyBtn || csvBtn || sortBtn || clearSearchBtn)) {
+    if (!container.contains(refreshBtn || clearBtn || clearTestBtn || copyBtn || csvBtn || sortBtn || clearSearchBtn)) {
+      return;
+    }
+
+    if (clearTestBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      void (async () => {
+        const button = clearTestBtn as HTMLButtonElement;
+        const original = button.textContent || 'Clear test events';
+        if (
+          !window.confirm(
+            'Remove owner/smoke test rows from visitor funnel AND banner stats in the database? Real visitor data is kept.',
+          )
+        ) {
+          return;
+        }
+        button.disabled = true;
+        button.textContent = 'Clearing…';
+        try {
+          const { visitorDeleted, bannerDeleted } = await clearTestAdminStatsFromServer();
+          await renderBannerStats(container);
+          const total = visitorDeleted + bannerDeleted;
+          showToast(
+            total > 0
+              ? `Removed ${visitorDeleted} funnel + ${bannerDeleted} banner test event${total === 1 ? '' : 's'}`
+              : 'No test events to remove',
+            total > 0 ? 'success' : 'info',
+          );
+        } catch {
+          showToast('Could not clear test admin stats', 'info');
+        } finally {
+          button.disabled = false;
+          button.textContent = original;
+        }
+      })();
       return;
     }
 
@@ -205,12 +243,14 @@ function renderBannerStatsView(
   fetchError?: string,
 ) {
   container.classList.add('banner-stats-panel');
-  container.dataset.bannerStatsEvents = JSON.stringify(events);
+  const excludedCount = countTestBannerEvents(events);
+  const visibleEvents = filterTestBannerEvents(events);
+  container.dataset.bannerStatsEvents = JSON.stringify(visibleEvents);
   container.dataset.bannerStatsSource = source;
   if (fetchError) container.dataset.bannerStatsFetchError = fetchError;
   else delete container.dataset.bannerStatsFetchError;
 
-  const stats = computeBannerStats(events);
+  const stats = computeBannerStats(visibleEvents);
   const rows = stats.perBanner as BannerStatRow[];
   const filtered = filterBannerRowsBySearch(rows, currentBannerSearch);
   const sorted = sortBannerRows(filtered, currentBannerSort);
@@ -236,7 +276,7 @@ function renderBannerStatsView(
     minute: '2-digit',
     second: '2-digit',
   });
-  const latestTs = latestEventTimestamp(events);
+  const latestTs = latestEventTimestamp(visibleEvents);
   const latestLabel = latestTs ? formatEventTimestampLabel(latestTs) : '';
 
   const copyPayload = JSON.stringify(
@@ -261,6 +301,10 @@ function renderBannerStatsView(
       <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''} · ${stats.total} events${isServer ? ' (latest 500)' : ''}</span>
     </div>
   `;
+
+  if (excludedCount > 0) {
+    html += `<div class="text-[9px] text-zinc-500 mb-2">Filtered ${excludedCount} owner/smoke/test banner event${excludedCount === 1 ? '' : 's'} from this view.</div>`;
+  }
 
   if (fetchError && !isServer) {
     html += `<div class="text-[9px] text-amber-400/90 mb-2">Server unavailable (${escapeHtml(fetchError)}) — showing local data.</div>`;
@@ -289,6 +333,8 @@ function renderBannerStatsView(
     <div class="flex flex-wrap items-center gap-2 mb-2">
       <button type="button" data-banner-stats-refresh class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded disabled:opacity-50">↻ Refresh</button>
       ${buildAutorefreshSelectHtml('data-banner-stats-autorefresh', BANNER_AUTOREFRESH_KEY)}
+      <button type="button" data-banner-stats-clear-test title="Deletes owner IP and smoke automation rows from visitor_events and banner_events"
+        class="text-[9px] px-2 py-0.5 bg-amber-600/80 hover:bg-amber-600 text-white rounded disabled:opacity-50">Clear test events${excludedCount > 0 ? ` (${excludedCount})` : ''}</button>
       <button type="button" data-banner-stats-clear class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">🗑 Clear Local</button>
       <button type="button" data-banner-stats-copy class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">⎘ Copy JSON</button>
       <button type="button" data-banner-stats-csv class="text-[9px] px-2 py-0.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded">⬇ CSV</button>

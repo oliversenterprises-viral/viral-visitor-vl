@@ -91,6 +91,8 @@ export async function getBannerEventsForStats(): Promise<{
       label: row.label || row.banner_label,
       redirectUrl: row.redirect_url || row.redirectUrl,
       key: row.key || row.banner_key || (row.additional?.key ?? row.additional?.Key),
+      ip: row.ip || row.ip_address || row.additional?.ip,
+      user_agent: row.user_agent || row.additional?.user_agent,
       timestamp: row.created_at || row.timestamp,
     }));
     if (serverEvents.length > 0) {

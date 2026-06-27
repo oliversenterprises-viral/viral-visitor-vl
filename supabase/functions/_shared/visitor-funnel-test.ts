@@ -51,7 +51,7 @@ export function isOwnerVisitorFunnelEvent(
 export function isSmokeAutomationIpProfile(events: readonly Record<string, unknown>[]): boolean {
   if (!events.length) return false;
   const ip = getVisitorEventIp(events[0]);
-  if (!ip || !/^20\.|^135\./.test(ip)) return false;
+  if (!ip || !/^20\.|^48\.|^52\.|^74\.|^135\./.test(ip)) return false;
 
   const names = new Set(
     events.map((e) => String(e.event_name || e.eventName || '').trim()),

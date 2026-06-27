@@ -28,6 +28,8 @@ import {
   topCountries,
   type RecentReferralNotifierRow,
 } from './visitor-funnel-stats-helpers';
+import { clearTestAdminStatsFromServer } from './clear-test-admin-stats';
+
 const SKELETON = `<div class="space-y-2 py-1"><div class="h-4 w-56 skeleton rounded"></div><div class="h-16 skeleton rounded"></div></div>`;
 const VISITOR_AUTOREFRESH_KEY = 'vr_admin_autorefresh_visitor_ms';
 
@@ -44,39 +46,6 @@ function wireVisitorAutorefresh(container: HTMLElement): void {
     'data-visitor-stats-autorefresh',
     () => silentRefreshVisitorFunnelStats(container),
   );
-}
-
-function parseAdminActionError(edgeErr: unknown, edgeData: unknown): string {
-  if (edgeData && typeof edgeData === 'object' && edgeData !== null && 'error' in edgeData) {
-    const msg = (edgeData as { error?: unknown }).error;
-    if (msg) return String(msg);
-  }
-  if (edgeErr && typeof edgeErr === 'object' && edgeErr !== null && 'message' in edgeErr) {
-    return String((edgeErr as { message?: unknown }).message || 'Admin action failed');
-  }
-  return 'Admin action failed';
-}
-
-async function clearTestVisitorEventsFromServer(): Promise<number> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) {
-    throw new Error('Admin secret not configured');
-  }
-
-  const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
-    body: { action: 'clear_test_visitor_events', payload: { dry_run: false } },
-    headers: { 'x-admin-secret': adminSecret },
-  });
-
-  if (edgeErr && !(edgeData && typeof edgeData === 'object' && (edgeData as { success?: boolean }).success)) {
-    throw new Error(parseAdminActionError(edgeErr, edgeData));
-  }
-  if (!edgeData?.success) {
-    throw new Error(String(edgeData?.error || 'clear_test_visitor_events rejected'));
-  }
-
-  const result = edgeData.data as { deleted?: number } | undefined;
-  return result?.deleted ?? 0;
 }
 
 function bindVisitorStatsRefresh(container: HTMLElement) {
@@ -106,17 +75,24 @@ function bindVisitorStatsRefresh(container: HTMLElement) {
       void (async () => {
         const button = clearBtn as HTMLButtonElement;
         const original = button.textContent || 'Clear test events';
-        if (!window.confirm('Remove owner/smoke test funnel events from the database? Real visitor rows are kept.')) {
+        if (
+          !window.confirm(
+            'Remove owner/smoke test rows from visitor funnel AND banner stats in the database? Real visitor data is kept.',
+          )
+        ) {
           return;
         }
         button.disabled = true;
         button.textContent = 'Clearing…';
         try {
-          const deleted = await clearTestVisitorEventsFromServer();
+          const { visitorDeleted, bannerDeleted } = await clearTestAdminStatsFromServer();
           await renderVisitorFunnelStats(container);
+          const total = visitorDeleted + bannerDeleted;
           showToast(
-            deleted > 0 ? `Removed ${deleted} test funnel event${deleted === 1 ? '' : 's'}` : 'No test events to remove',
-            deleted > 0 ? 'success' : 'info',
+            total > 0
+              ? `Removed ${visitorDeleted} funnel + ${bannerDeleted} banner test event${total === 1 ? '' : 's'}`
+              : 'No test events to remove',
+            total > 0 ? 'success' : 'info',
           );
         } catch {
           showToast('Could not clear test funnel events', 'info');
@@ -239,12 +215,8 @@ function renderVisitorFunnelView(
       <button type="button" data-visitor-stats-refresh class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded disabled:opacity-50">↻ Refresh</button>
       ${buildAutorefreshSelectHtml('data-visitor-stats-autorefresh', VISITOR_AUTOREFRESH_KEY)}
       <button type="button" data-visitor-stats-csv class="text-[9px] px-2 py-0.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded">⬇ CSV</button>
-      ${
-        excludedCount > 0
-          ? `<button type="button" data-visitor-stats-clear-test title="Deletes owner IP, smoke automation, and E2E test rows from visitor_events"
-              class="text-[9px] px-2 py-0.5 bg-amber-600/80 hover:bg-amber-600 text-white rounded disabled:opacity-50">Clear test events (${excludedCount})</button>`
-          : ''
-      }
+      <button type="button" data-visitor-stats-clear-test title="Deletes owner IP, smoke automation, and E2E test rows from visitor_events and banner_events"
+        class="text-[9px] px-2 py-0.5 bg-amber-600/80 hover:bg-amber-600 text-white rounded disabled:opacity-50">Clear test events${excludedCount > 0 ? ` (${excludedCount})` : ''}</button>
     </div>
     <table class="w-full text-[9px] text-zinc-200 border border-white/10 mb-2">
       <thead><tr class="bg-white/5 text-violet-200"><th class="text-left p-1.5">Step</th><th class="p-1.5 text-right">Events</th><th class="p-1.5 text-right">Unique</th></tr></thead><tbody>

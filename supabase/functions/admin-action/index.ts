@@ -7,10 +7,12 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import {
+  getBannerEventIp,
   getVisitorEventIp,
   groupVisitorEventsByIp,
+  isTestBannerEvent,
   isTestVisitorFunnelEvent,
-} from '../_shared/visitor-funnel-test.ts';
+} from '../_shared/admin-stats-test.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -83,6 +85,8 @@ function normalizeBannerEventRow(row: Record<string, unknown>) {
     label: row.banner_label || row.label,
     redirect_url: row.redirect_url || row.redirectUrl || null,
     key: keyFromAdditional || String(row.key || row.banner_key || '').trim() || bannerEventKey(row),
+    ip: getBannerEventIp(row) || null,
+    user_agent: String(row.user_agent || additional.user_agent || '').trim() || null,
     additional,
     created_at: row.created_at,
   };
@@ -339,6 +343,153 @@ Deno.serve(async (req: Request) => {
         JSON.stringify({
           success: true,
           data: { deleted: idsToDelete.length },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (action === 'clear_test_banner_events') {
+      const dryRun = payload?.dry_run === true;
+      const pageSize = 1000;
+      const allRows: Record<string, unknown>[] = [];
+      let start = 0;
+
+      while (true) {
+        const { data, error } = await supabaseAdmin
+          .from('banner_events')
+          .select('id, event_type, banner_label, ip, user_agent, additional, created_at')
+          .order('created_at', { ascending: true })
+          .range(start, start + pageSize - 1);
+        if (error) throw error;
+        const batch = data || [];
+        allRows.push(...batch);
+        if (batch.length < pageSize) break;
+        start += pageSize;
+      }
+
+      const idsToDelete: string[] = [];
+      for (const row of allRows) {
+        const id = row.id;
+        if (!id) continue;
+        if (!isTestBannerEvent(row)) continue;
+        idsToDelete.push(String(id));
+      }
+
+      if (dryRun || idsToDelete.length === 0) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { deleted: 0, would_delete: idsToDelete.length },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+
+      const chunk = 200;
+      for (let i = 0; i < idsToDelete.length; i += chunk) {
+        const slice = idsToDelete.slice(i, i + chunk);
+        const { error: delErr } = await supabaseAdmin.from('banner_events').delete().in('id', slice);
+        if (delErr) throw delErr;
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: { deleted: idsToDelete.length },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (action === 'clear_test_admin_stats') {
+      const dryRun = payload?.dry_run === true;
+      const pageSize = 1000;
+
+      const visitorRows: Record<string, unknown>[] = [];
+      let visitorStart = 0;
+      while (true) {
+        const { data, error } = await supabaseAdmin
+          .from('visitor_events')
+          .select('id, event_name, ref_code, ip_hash, metadata, created_at')
+          .order('created_at', { ascending: true })
+          .range(visitorStart, visitorStart + pageSize - 1);
+        if (error) throw error;
+        const batch = data || [];
+        visitorRows.push(...batch);
+        if (batch.length < pageSize) break;
+        visitorStart += pageSize;
+      }
+
+      const bannerRows: Record<string, unknown>[] = [];
+      let bannerStart = 0;
+      while (true) {
+        const { data, error } = await supabaseAdmin
+          .from('banner_events')
+          .select('id, event_type, banner_label, ip, user_agent, additional, created_at')
+          .order('created_at', { ascending: true })
+          .range(bannerStart, bannerStart + pageSize - 1);
+        if (error) throw error;
+        const batch = data || [];
+        bannerRows.push(...batch);
+        if (batch.length < pageSize) break;
+        bannerStart += pageSize;
+      }
+
+      const visitorByIp = groupVisitorEventsByIp(visitorRows);
+      const visitorIds: string[] = [];
+      for (const row of visitorRows) {
+        const id = row.id;
+        if (!id) continue;
+        const ipKey = getVisitorEventIp(row) || String(row.ip_hash || 'unknown');
+        if (!isTestVisitorFunnelEvent(row, visitorByIp.get(ipKey))) continue;
+        visitorIds.push(String(id));
+      }
+
+      const bannerIds: string[] = [];
+      for (const row of bannerRows) {
+        const id = row.id;
+        if (!id) continue;
+        if (!isTestBannerEvent(row)) continue;
+        bannerIds.push(String(id));
+      }
+
+      if (dryRun) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              deleted: 0,
+              would_delete_visitor: visitorIds.length,
+              would_delete_banner: bannerIds.length,
+            },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+
+      const chunk = 200;
+      if (visitorIds.length > 0) {
+        for (let i = 0; i < visitorIds.length; i += chunk) {
+          const slice = visitorIds.slice(i, i + chunk);
+          const { error: delErr } = await supabaseAdmin.from('visitor_events').delete().in('id', slice);
+          if (delErr) throw delErr;
+        }
+      }
+      if (bannerIds.length > 0) {
+        for (let i = 0; i < bannerIds.length; i += chunk) {
+          const slice = bannerIds.slice(i, i + chunk);
+          const { error: delErr } = await supabaseAdmin.from('banner_events').delete().in('id', slice);
+          if (delErr) throw delErr;
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            deleted_visitor: visitorIds.length,
+            deleted_banner: bannerIds.length,
+          },
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
