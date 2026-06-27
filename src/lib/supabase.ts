@@ -112,7 +112,7 @@ export async function fetchRecentActivity(limit = 8): Promise<RecentActivityItem
     .limit(limit);
 
   return ((data as RecentActivityItem[]) || []).filter(
-    (row) => !isTestReferralRecord(row as Record<string, unknown>),
+    (row) => !isTestReferralRecord(row as unknown as Record<string, unknown>),
   );
 }
 
