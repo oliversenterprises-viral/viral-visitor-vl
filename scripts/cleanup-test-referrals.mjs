@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 /**
- * Remove Nova/agent-generated test referrals from production only.
- * Dry-run by default: node scripts/cleanup-test-referrals.mjs
- * Apply deletes:     node scripts/cleanup-test-referrals.mjs --apply
+ * Remove non-funnel referrals from production:
+ * - Nova/smoke/owner/test patterns (incl. 161.38.136.60)
+ * - Pre-funnel passive landing credits (before Step 1 gating)
+ * - Post-funnel rows without a matching GetReferralLink visitor event
+ *
+ * Dry-run: node scripts/cleanup-test-referrals.mjs
+ * Apply:    node scripts/cleanup-test-referrals.mjs --apply
  */
 import { createClient } from '@supabase/supabase-js';
 import { execSync } from 'node:child_process';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { partitionReferrals } from './referral-cleanup-helpers.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -15,10 +20,6 @@ const APPLY = process.argv.includes('--apply');
 
 const SUPABASE_URL =
   process.env.VITE_SUPABASE_URL || 'https://wqbefjzpgsezzwdrvvua.supabase.co';
-
-const LEGACY_DEMO_CODES = new Set([
-  'sarah_m', 'james_t', 'maria_k', 'david_r', 'emma_l', 'noah_p',
-]);
 
 function getServiceRoleKey() {
   if (process.env.SUPABASE_SERVICE_ROLE_KEY) return process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -31,94 +32,135 @@ function getServiceRoleKey() {
   return match[1];
 }
 
-/** Conservative: only rows Nova/agents/smoke scripts would have created. */
-export function isTestReferralRow(row) {
-  const code = String(row.referrer_code || '').trim().toUpperCase();
-  const ua = String(row.user_agent || '').trim();
-  const ip = String(row.referred_ip ?? row.ip_address ?? '').trim();
-
-  if (LEGACY_DEMO_CODES.has(String(row.referrer_code || '').trim())) return true;
-  if (/NovaVerify/i.test(ua)) return true;
-  if (/\b(vitest|playwright|smoke|headless|automation)\b/i.test(ua)) return true;
-  if (/HeadlessChrome/i.test(ua)) return true;
-  if (ua === 'node') return true;
-  if (/^203\.0\.113\./.test(ip)) return true;
-  if (code === 'VIRAL-SMOKETEST' || code === 'VIRAL-READY') return true;
-  if (/SMOKETEST/.test(code)) return true;
-  if (/DEMOCODE/.test(code)) return true;
-  if (/^DEMO\d+$/.test(code)) return true;
-  if (/PROBE/.test(code)) return true;
-  if (/TESTFIX/.test(code)) return true;
-
-  return false;
-}
-
 const admin = createClient(SUPABASE_URL, getServiceRoleKey(), {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-async function main() {
-  console.log(`=== Cleanup test referrals (${APPLY ? 'APPLY' : 'DRY-RUN'}) ===\n`);
-
-  const { data: all, error } = await admin
+async function fetchAllReferrals() {
+  const { data, error } = await admin
     .from('referrals')
     .select('id, referrer_code, referred_ip, user_agent, created_at')
     .order('created_at', { ascending: false })
     .limit(5000);
-
   if (error) throw error;
+  return data || [];
+}
 
-  const testRows = (all || []).filter(isTestReferralRow);
-  const realRows = (all || []).filter((r) => !isTestReferralRow(r));
+async function fetchFunnelEvents() {
+  const { data, error } = await admin
+    .from('visitor_events')
+    .select('event_name, ref_code, metadata, created_at')
+    .eq('event_name', 'GetReferralLink')
+    .order('created_at', { ascending: false })
+    .limit(5000);
+  if (error) throw error;
+  return data || [];
+}
 
-  console.log(`Total referrals in DB: ${all?.length ?? 0}`);
-  console.log(`Test rows to remove:   ${testRows.length}`);
-  console.log(`Real rows kept:        ${realRows.length}\n`);
+async function reconcileProfileCounts() {
+  const [{ data: refs }, { data: profiles }] = await Promise.all([
+    admin.from('referrals').select('referrer_code'),
+    admin.from('profiles').select('referrer_code, referral_count, total_points'),
+  ]);
 
-  if (testRows.length) {
-    console.log('Test rows:');
-    for (const r of testRows) {
+  const counts = new Map();
+  for (const row of refs || []) {
+    counts.set(row.referrer_code, (counts.get(row.referrer_code) || 0) + 1);
+  }
+
+  let updated = 0;
+  for (const profile of profiles || []) {
+    const actual = counts.get(profile.referrer_code) || 0;
+    const expectedPoints = actual * 10;
+    if (profile.referral_count === actual && profile.total_points === expectedPoints) continue;
+
+    const { error } = await admin
+      .from('profiles')
+      .update({
+        referral_count: actual,
+        total_points: expectedPoints,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('referrer_code', profile.referrer_code);
+    if (error) throw error;
+    updated += 1;
+  }
+
+  return updated;
+}
+
+function summarizeByReason(rows) {
+  const byReason = {};
+  for (const row of rows) {
+    byReason[row.reason] = (byReason[row.reason] || 0) + 1;
+  }
+  return byReason;
+}
+
+async function main() {
+  console.log(`=== Cleanup non-funnel referrals (${APPLY ? 'APPLY' : 'DRY-RUN'}) ===\n`);
+
+  const [all, events] = await Promise.all([fetchAllReferrals(), fetchFunnelEvents()]);
+  const { kept, removed } = partitionReferrals(all, events);
+
+  console.log(`Total referrals in DB: ${all.length}`);
+  console.log(`Rows to remove:        ${removed.length}`);
+  console.log(`Rows to keep:          ${kept.length}`);
+  console.log(`Remove breakdown:      ${JSON.stringify(summarizeByReason(removed))}\n`);
+
+  if (removed.length) {
+    console.log('Removing:');
+    for (const r of removed) {
       console.log(
-        `  - ${r.id} | ${r.referrer_code} | ip=${r.referred_ip ?? r.ip_address ?? '—'} | ua=${(r.user_agent || '—').slice(0, 60)}`,
+        `  - [${r.reason}] ${r.id} | ${r.referrer_code} | ip=${r.referred_ip ?? '—'} | ${r.created_at}`,
       );
     }
-  } else {
-    console.log('No test referral rows matched.');
   }
 
-  if (realRows.length) {
-    console.log('\nReal rows (kept):');
-    for (const r of realRows) {
+  if (kept.length) {
+    console.log('\nKeeping (funnel-gated):');
+    for (const r of kept) {
       console.log(
-        `  + ${r.id} | ${r.referrer_code} | ip=${r.referred_ip ?? r.ip_address ?? '—'} | ua=${(r.user_agent || '—').slice(0, 60)}`,
+        `  + ${r.id} | ${r.referrer_code} | ip=${r.referred_ip ?? '—'} | ${r.created_at}`,
       );
     }
   }
-
-  if (!APPLY || testRows.length === 0) {
-    if (!APPLY && testRows.length > 0) {
-      console.log('\nDry-run only. Re-run with --apply to delete test rows.');
-    }
-    const tot = await admin.rpc('get_total_referral_count');
-    const lb = await admin.rpc('get_leaderboard', { min_referrals: 1 });
-    console.log(`\nCurrent total count RPC: ${tot.data}`);
-    console.log(`Current leaderboard: ${JSON.stringify(lb.data)}`);
-    return;
-  }
-
-  const ids = testRows.map((r) => r.id);
-  const { error: delErr } = await admin.from('referrals').delete().in('id', ids);
-  if (delErr) throw delErr;
-
-  console.log(`\nDeleted ${ids.length} test referral row(s).`);
 
   const tot = await admin.rpc('get_total_referral_count');
   const lb = await admin.rpc('get_leaderboard', { min_referrals: 1 });
-  console.log(`After cleanup total count RPC: ${tot.data}`);
-  console.log(`After cleanup leaderboard: ${JSON.stringify(lb.data)}`);
+  console.log(`\nCurrent total count RPC: ${tot.data}`);
+  console.log(`Current leaderboard: ${JSON.stringify(lb.data)}`);
+
+  if (!APPLY || removed.length === 0) {
+    if (!APPLY && removed.length > 0) {
+      console.log('\nDry-run only. Re-run with --apply to delete non-funnel rows and reconcile profiles.');
+    }
+    return;
+  }
+
+  const ids = removed.map((r) => r.id);
+  const chunk = 100;
+  for (let i = 0; i < ids.length; i += chunk) {
+    const slice = ids.slice(i, i + chunk);
+    const { error: delErr } = await admin.from('referrals').delete().in('id', slice);
+    if (delErr) throw delErr;
+  }
+
+  const profilesUpdated = await reconcileProfileCounts();
+
+  console.log(`\nDeleted ${ids.length} non-funnel referral row(s).`);
+  console.log(`Reconciled ${profilesUpdated} profile row(s).`);
+
+  const totAfter = await admin.rpc('get_total_referral_count');
+  const lbAfter = await admin.rpc('get_leaderboard', { min_referrals: 1 });
+  console.log(`After cleanup total count RPC: ${totAfter.data}`);
+  console.log(`After cleanup leaderboard: ${JSON.stringify(lbAfter.data)}`);
 }
 
-main().catch((err) => {
-  console.error('Cleanup failed:', err);
-  process.exit(1);
-});
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  main().catch((err) => {
+    console.error('Cleanup failed:', err);
+    process.exit(1);
+  });
+}
