@@ -3,12 +3,7 @@
  * (visitor_events + banner_events).
  */
 
-import {
-  ADMIN_FUNNEL_EXCLUDED_IPS,
-  getVisitorEventIp,
-  groupVisitorEventsByIp,
-  isTestVisitorFunnelEvent,
-} from './visitor-funnel-test.ts';
+import { ADMIN_FUNNEL_EXCLUDED_IPS } from './visitor-funnel-test.ts';
 
 export {
   ADMIN_FUNNEL_EXCLUDED_IPS,
