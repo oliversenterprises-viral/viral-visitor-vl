@@ -46,5 +46,9 @@ if (deployUrl) {
   }
 }
 run('npm run test:smoke:prod', 'Run production referral smoke test');
+run(
+  'node scripts/cleanup-test-referral-pollution.mjs --apply',
+  'Purge smoke/owner referral pollution after smoke',
+);
 
 console.log('\n=== Deploy + smoke complete ===');

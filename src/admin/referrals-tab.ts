@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 import { showToast } from '../ui';
 import { escapeHtml } from '../content';
 import { adminReferralsCache, replaceReferralsCache, type AdminReferralRow } from './state';
+import { isTestReferralRecord } from '../lib/test-referral';
 
 type RiskFilter = 'all' | 'high-risk';
 
@@ -77,6 +78,11 @@ export function computeTopReferrers(
     .map(([code, count]) => ({ code, count }));
 }
 
+/** Drops owner/smoke/automation rows from admin views. */
+export function filterTestReferralsFromAdmin(rows: readonly AdminReferralRow[]): AdminReferralRow[] {
+  return rows.filter((row) => !isTestReferralRecord(row as Record<string, unknown>));
+}
+
 /** Applies day, search, and risk filters in one pass. */
 export function applyReferralFilters(
   rows: readonly AdminReferralRow[],
@@ -84,8 +90,9 @@ export function applyReferralFilters(
   search: string,
   riskFilter: RiskFilter,
 ): { filtered: AdminReferralRow[]; riskIPs: Set<string> } {
-  const riskIPs = computeHighRiskIPs(rows);
-  let filtered = [...filterReferralsByDays(rows, days)];
+  const realRows = filterTestReferralsFromAdmin(rows);
+  const riskIPs = computeHighRiskIPs(realRows);
+  let filtered = [...filterReferralsByDays(realRows, days)];
   filtered = filterReferralsBySearch(filtered, search);
   filtered = filterReferralsByRisk(filtered, riskIPs, riskFilter);
   return { filtered, riskIPs };
@@ -269,7 +276,7 @@ async function renderReferralsTab(content: HTMLElement) {
     tableContainer.innerHTML = buildReferralsTableHTML(filtered, riskIPs);
     attachReferralTableListeners(tableContainer, filtered, riskIPs);
     updateTopReferrersPanel(filtered);
-    updateResultCount(filtered.length, adminReferralsCache.length);
+    updateResultCount(filtered.length, filterTestReferralsFromAdmin(adminReferralsCache).length);
   }
 
   function applyFilters() {
@@ -292,7 +299,7 @@ async function renderReferralsTab(content: HTMLElement) {
 
     if (error) throw error;
     replaceReferralsCache(data || []);
-    updateGlobalStats(adminReferralsCache);
+    updateGlobalStats(filterTestReferralsFromAdmin(adminReferralsCache));
 
     const tsEl = document.getElementById('referrals-last-updated');
     if (tsEl) {

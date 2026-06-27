@@ -29,6 +29,7 @@ import {
   type RecentReferralNotifierRow,
 } from './visitor-funnel-stats-helpers';
 import { clearTestAdminStatsFromServer } from './clear-test-admin-stats';
+import { isTestReferralRecord } from '../lib/test-referral';
 
 const SKELETON = `<div class="space-y-2 py-1"><div class="h-4 w-56 skeleton rounded"></div><div class="h-16 skeleton rounded"></div></div>`;
 const VISITOR_AUTOREFRESH_KEY = 'vr_admin_autorefresh_visitor_ms';
@@ -161,7 +162,10 @@ async function fetchRecentReferralsForNotifier(limit = 6): Promise<ReferralNotif
       .order('created_at', { ascending: false })
       .limit(limit);
     if (error) return { rows: [], error: error.message };
-    return { rows: (data || []) as RecentReferralNotifierRow[] };
+    const rows = ((data || []) as RecentReferralNotifierRow[]).filter(
+      (row) => !isTestReferralRecord(row as Record<string, unknown>),
+    );
+    return { rows };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Could not load referrals';
     return { rows: [], error: message };

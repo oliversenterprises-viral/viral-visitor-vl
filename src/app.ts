@@ -8,6 +8,7 @@ import {
   supabase,
 } from './lib/supabase';
 import { applyExistingReferralLink, syncMobileReferralCta } from './referral';
+import { isTestReferralRecord } from './lib/test-referral';
 
 import { updatePublicContent } from './content';
 import { getMyReferralCode } from './public/globals';
@@ -71,7 +72,9 @@ function initRealtimeSubscriptions() {
       schema: 'public',
       table: 'referrals',
     }, async (payload) => {
-      // console.log('[ViralRefer Realtime] New referral recorded:', payload.new); // silenced for prod (audit)
+      if (payload.new && isTestReferralRecord(payload.new as Record<string, unknown>)) {
+        return;
+      }
 
       // Live refresh all public views
       await loadLeaderboard();

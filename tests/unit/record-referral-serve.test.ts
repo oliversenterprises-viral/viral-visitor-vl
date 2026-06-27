@@ -52,13 +52,13 @@ describe('createRecordReferralServeHandler (index.ts wiring contract)', () => {
     const res = await handler(
       new Request('https://edge.test/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'cf-connecting-ip': '203.0.113.1' },
+        headers: { 'Content-Type': 'application/json', 'cf-connecting-ip': '182.62.227.19', 'user-agent': 'Mozilla/5.0 Chrome' },
         body: JSON.stringify({ referrerCode: 'VIRAL-SERVE', turnstileToken: 'tok' }),
       }),
     );
     const json = await res.json();
     expect(res.status).toBe(200);
     expect(json).toMatchObject({ success: true, referralId: 'serve-test-id' });
-    expect(verifyTurnstile).toHaveBeenCalledWith('tok', '203.0.113.1');
+    expect(verifyTurnstile).toHaveBeenCalledWith('tok', '182.62.227.19');
   });
 });

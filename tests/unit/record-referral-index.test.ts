@@ -79,7 +79,7 @@ describe('record-referral index wiring (index.ts → createRecordReferralIndexHa
     const res = await handler(
       new Request('https://edge.test/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'cf-connecting-ip': '203.0.113.5' },
+        headers: { 'Content-Type': 'application/json', 'cf-connecting-ip': '182.62.227.19' },
         body: JSON.stringify({ referrerCode: 'VIRAL-INDEX', turnstileToken: 'good' }),
       }),
     );

@@ -1,6 +1,7 @@
 /** HTTP handler for record-referral — imported by edge index.ts and unit integration tests. */
 
 import { isSelfReferral, parseRecordReferralRequest } from './record-referral-request.ts';
+import { shouldSkipReferralCrediting } from './test-referral.ts';
 
 export const RECORD_REFERRAL_CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -75,6 +76,18 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
 
   const ip = getClientIp(req);
   const userAgent = req.headers.get('user-agent') || '';
+
+  if (shouldSkipReferralCrediting({ referrerCode, referredIp: ip, userAgent })) {
+    return jsonResponse(
+      {
+        success: true,
+        skipped: true,
+        message: 'Test or owner traffic is not credited',
+      },
+      200,
+    );
+  }
+
   const rateLimitWindowMs = deps.rateLimitWindowMs ?? DEFAULT_RATE_LIMIT_WINDOW_MS;
   const rateLimitMax = deps.rateLimitMax ?? DEFAULT_RATE_LIMIT_MAX;
   const dedupeWindowMs = deps.dedupeWindowMs ?? DEFAULT_DEDUPE_WINDOW_MS;

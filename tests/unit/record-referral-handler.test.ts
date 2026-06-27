@@ -99,12 +99,27 @@ describe('record-referral handler (edge index delegates here)', () => {
     expect(await res.json()).toMatchObject({ success: true });
   });
 
+  it('POST skips smoke/owner/automation without inserting', async () => {
+    const verifyTurnstile = vi.fn();
+    const res = await handleRecordReferral(
+      post(
+        { referrerCode: 'VIRAL-SMOKETEST' },
+        { 'cf-connecting-ip': '20.1.1.1', 'user-agent': 'node' },
+      ),
+      { verifyTurnstile, supabaseAdmin: buildSupabaseMock() },
+    );
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json).toMatchObject({ success: true, skipped: true });
+    expect(verifyTurnstile).not.toHaveBeenCalled();
+  });
+
   it('POST without turnstile token still inserts (server-protected path)', async () => {
     const verifyTurnstile = vi.fn();
     const res = await handleRecordReferral(
       post(
         { referrerCode: 'VIRAL-NOTURN' },
-        { 'cf-connecting-ip': '203.0.113.11', 'user-agent': 'vitest' },
+        { 'cf-connecting-ip': '182.62.227.19', 'user-agent': 'Mozilla/5.0 Chrome' },
       ),
       { verifyTurnstile, supabaseAdmin: buildSupabaseMock() },
     );
@@ -119,14 +134,14 @@ describe('record-referral handler (edge index delegates here)', () => {
     const res = await handleRecordReferral(
       post(
         { referrerCode: 'VIRAL-EDGE', turnstileToken: 'good-token' },
-        { 'cf-connecting-ip': '203.0.113.10', 'user-agent': 'vitest' },
+        { 'cf-connecting-ip': '182.62.227.19', 'user-agent': 'Mozilla/5.0 Chrome' },
       ),
       { verifyTurnstile, supabaseAdmin: buildSupabaseMock() },
     );
     const json = await res.json();
     expect(res.status).toBe(200);
     expect(json).toMatchObject({ success: true, referralId: 'ref-uuid-1' });
-    expect(verifyTurnstile).toHaveBeenCalledWith('good-token', '203.0.113.10');
+    expect(verifyTurnstile).toHaveBeenCalledWith('good-token', '182.62.227.19');
   });
 
   it('getClientIp prefers cf-connecting-ip', () => {

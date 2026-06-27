@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { LeaderboardEntry, RecentActivityItem } from './types';
 import { createSupabaseStub } from './supabase-stub';
+import { isTestReferralRecord, isTestReferrerCode } from './test-referral';
 
 // CRITICAL: Secrets must come ONLY from Vite env vars (VITE_*).
 // Production deploys (Vercel) inject real values at build time.
@@ -52,7 +53,7 @@ async function fetchLeaderboardFallback(minReferrals: number): Promise<Leaderboa
   });
 
   return Object.entries(counts)
-    .filter(([, count]) => count >= minReferrals)
+    .filter(([code, count]) => count >= minReferrals && !isTestReferrerCode(code))
     .map(([code, count]) => ({ referrer_code: code, referral_count: count, rank: 0 }))
     .sort((a, b) => b.referral_count - a.referral_count)
     .slice(0, 50)
@@ -110,7 +111,9 @@ export async function fetchRecentActivity(limit = 8): Promise<RecentActivityItem
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  return (data as RecentActivityItem[]) || [];
+  return ((data as RecentActivityItem[]) || []).filter(
+    (row) => !isTestReferralRecord(row as Record<string, unknown>),
+  );
 }
 
 export async function fetchSiteContent(): Promise<Record<string, unknown>> {
