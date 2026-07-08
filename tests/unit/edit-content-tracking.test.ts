@@ -51,7 +51,8 @@ describe('edit-content-tracking hub', () => {
   });
 
   it('refresh all triggers both panel renders', async () => {
-    vi.stubEnv('VITE_ADMIN_ACTION_SECRET', '');
+    const { clearAdminSessionToken } = await import('../../src/lib/admin-session');
+    clearAdminSessionToken();
     const root = document.createElement('div');
     root.dataset.vrEditContentRoot = '1';
     root.innerHTML = buildTrackingHubShellHtml();

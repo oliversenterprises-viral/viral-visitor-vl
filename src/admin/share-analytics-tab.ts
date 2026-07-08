@@ -1,5 +1,5 @@
 import type { Chart } from 'chart.js';
-import { supabase } from '../lib/supabase';
+import { invokeAdminAction } from '../lib/admin-action-client';
 import { registerAdminLiveRefresh } from './admin-live-hub';
 import { showToast } from '../ui';
 import { escapeHtml } from '../content';
@@ -54,87 +54,35 @@ function destroyCharts() {
   shareTrendChart = null;
 }
 
-function parseAdminActionError(edgeErr: unknown, edgeData: unknown): string {
-  if (edgeData && typeof edgeData === 'object' && edgeData !== null && 'error' in edgeData) {
-    const msg = (edgeData as { error?: unknown }).error;
-    if (msg) return String(msg);
-  }
-  if (edgeErr && typeof edgeErr === 'object' && edgeErr !== null && 'context' in edgeErr) {
-    try {
-      const ctx = (edgeErr as { context?: { body?: unknown } }).context;
-      const raw = ctx?.body;
-      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      if (parsed?.error) return String(parsed.error);
-    } catch {
-      /* ignore parse errors */
-    }
-  }
-  return edgeErr instanceof Error ? edgeErr.message : 'get_shares request failed';
-}
-
 async function fetchSharesData(): Promise<ShareEvent[]> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) {
-    throw new Error(
-      'Admin stats secret not configured. Rebuild with VITE_ADMIN_ACTION_SECRET to load share analytics.',
-    );
+  const result = await invokeAdminAction<Record<string, unknown>[]>('get_shares');
+  if (!result.success) {
+    throw new Error(result.error || 'get_shares failed');
   }
-
-  const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
-    body: { action: 'get_shares' },
-    headers: { 'x-admin-secret': adminSecret },
-  });
-
-  if (edgeErr && !(edgeData && typeof edgeData === 'object' && (edgeData as { success?: boolean }).success)) {
-    throw new Error(parseAdminActionError(edgeErr, edgeData));
-  }
-  if (!edgeData?.success) {
-    throw new Error(String(edgeData?.error || parseAdminActionError(edgeErr, edgeData)));
-  }
-  if (!Array.isArray(edgeData.data)) {
+  if (!Array.isArray(result.data)) {
     throw new Error('Invalid get_shares response');
   }
-
-  return edgeData.data.map((row: Record<string, unknown>) => normalizeShareRow(row));
+  return result.data.map((row) => normalizeShareRow(row));
 }
 
 async function fetchReferralCounts(): Promise<Record<string, number>> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) return {};
-
-  const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
-    body: { action: 'get_referral_counts' },
-    headers: { 'x-admin-secret': adminSecret },
-  });
-
-  if (edgeErr || !edgeData?.success || !edgeData.data || typeof edgeData.data !== 'object') {
+  const result = await invokeAdminAction<Record<string, number>>('get_referral_counts');
+  if (!result.success || !result.data || typeof result.data !== 'object') {
     return {};
   }
-  return edgeData.data as Record<string, number>;
+  return result.data;
 }
 
 async function clearTestSharesFromServer(): Promise<{ deleted: number; codes: string[] }> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) {
-    throw new Error('Admin secret not configured');
-  }
-
-  const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
-    body: { action: 'clear_test_shares', payload: { dry_run: false } },
-    headers: { 'x-admin-secret': adminSecret },
+  const result = await invokeAdminAction<{ deleted?: number; codes?: string[] }>('clear_test_shares', {
+    dry_run: false,
   });
-
-  if (edgeErr && !(edgeData && typeof edgeData === 'object' && (edgeData as { success?: boolean }).success)) {
-    throw new Error(parseAdminActionError(edgeErr, edgeData));
+  if (!result.success) {
+    throw new Error(result.error || 'clear_test_shares failed');
   }
-  if (!edgeData?.success) {
-    throw new Error(String(edgeData?.error || 'clear_test_shares rejected'));
-  }
-
-  const result = edgeData.data as { deleted?: number; codes?: string[] } | undefined;
   return {
-    deleted: result?.deleted ?? 0,
-    codes: Array.isArray(result?.codes) ? result.codes : [],
+    deleted: result.data?.deleted ?? 0,
+    codes: Array.isArray(result.data?.codes) ? result.data.codes : [],
   };
 }
 

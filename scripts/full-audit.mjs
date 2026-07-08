@@ -69,7 +69,8 @@ if (jsMatch) {
   report.checks.bundle = {
     mainJsKb: Math.round(js.body.length / 1024),
     hasSupabaseUrl: js.body.includes('wqbefjzpgsezzwdrvvua.supabase.co'),
-    hasAdminActionSecret: /VITE_ADMIN_ACTION_SECRET|x-admin-secret/.test(js.body),
+    hasBundledAdminSecret: /VITE_ADMIN_ACTION_SECRET|x-admin-secret/.test(js.body),
+    usesAdminSessionHeader: /x-admin-session/.test(js.body),
     hasHardcodedPassword: js.body.includes('nova2026') || js.body.includes('TestAdmin'),
   };
 }

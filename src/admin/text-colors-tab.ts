@@ -14,17 +14,10 @@ import { showToast } from '../ui';
 import { getColorControls, applyTextColors, type ColorControl } from '../colors';
 
 async function saveSiteContentKey(key: string, value: string): Promise<boolean> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
   try {
-    const invokeOpts: {
-      body: { action: string; payload: { key: string; value: string } };
-      headers?: Record<string, string>;
-    } = {
-      body: { action: 'update_site_content', payload: { key, value } },
-    };
-    if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
-    const { data, error } = await supabase.functions.invoke('admin-action', invokeOpts);
-    if (!error && data?.success) return true;
+    const { invokeAdminAction } = await import('../lib/admin-action-client');
+    const result = await invokeAdminAction('update_site_content', { key, value });
+    if (result.success) return true;
   } catch {
     // fall through to direct upsert
   }
@@ -37,17 +30,10 @@ async function saveSiteContentKey(key: string, value: string): Promise<boolean> 
 }
 
 async function deleteSiteContentKey(key: string): Promise<boolean> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
   try {
-    const invokeOpts: {
-      body: { action: string; payload: { key: string } };
-      headers?: Record<string, string>;
-    } = {
-      body: { action: 'delete_site_content', payload: { key } },
-    };
-    if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
-    const { data, error } = await supabase.functions.invoke('admin-action', invokeOpts);
-    if (!error && data?.success) return true;
+    const { invokeAdminAction } = await import('../lib/admin-action-client');
+    const result = await invokeAdminAction('delete_site_content', { key });
+    if (result.success) return true;
   } catch {
     // fall through
   }

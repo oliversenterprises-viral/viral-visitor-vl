@@ -63,31 +63,21 @@ export async function getBannerEventsForStats(): Promise<{
   fetchError?: string;
 }> {
   const local = getLocalBannerEvents();
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-
-  if (!adminSecret) {
-    return { events: local, source: 'local', fetchError: 'Admin secret not configured in build' };
+  const { invokeAdminAction } = await import('./lib/admin-action-client');
+  const result = await invokeAdminAction<Array<Record<string, unknown>>>('get_banner_stats');
+  if (!result.success) {
+    return {
+      events: local,
+      source: 'local',
+      fetchError: result.error || 'Admin session required',
+    };
+  }
+  if (!Array.isArray(result.data)) {
+    return { events: local, source: 'local', fetchError: 'Invalid server response' };
   }
 
   try {
-    const { data, error } = await supabase.functions.invoke('admin-action', {
-      body: { action: 'get_banner_stats' },
-      headers: { 'x-admin-secret': adminSecret },
-    });
-    if (error) {
-      return { events: local, source: 'local', fetchError: error.message || 'Server request failed' };
-    }
-    if (!data?.success) {
-      return {
-        events: local,
-        source: 'local',
-        fetchError: String(data?.error || 'get_banner_stats rejected'),
-      };
-    }
-    if (!Array.isArray(data.data)) {
-      return { events: local, source: 'local', fetchError: 'Invalid server response' };
-    }
-    const serverEvents = data.data.map((row: Record<string, any>) => ({
+    const serverEvents = result.data.map((row: Record<string, any>) => ({
       type: row.type || row.event_type,
       label: row.label || row.banner_label,
       redirectUrl: row.redirect_url || row.redirectUrl,

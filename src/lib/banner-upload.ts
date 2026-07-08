@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { invokeAdminAction } from './admin-action-client';
 
 export const BANNER_UPLOAD_ALLOWED_TYPES = [
   'image/jpeg',
@@ -56,34 +56,18 @@ export async function uploadBannerImage(file: File): Promise<string> {
   const validationError = validateBannerImageFile(file);
   if (validationError) throw new Error(validationError);
 
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) {
-    throw new Error('Admin upload secret is not configured (VITE_ADMIN_ACTION_SECRET)');
-  }
-
   const data = await fileToBase64(file);
-  const invokeOpts: {
-    body: {
-      action: string;
-      payload: { fileName: string; contentType: string; data: string };
-    };
-    headers: Record<string, string>;
-  } = {
-    body: {
-      action: 'upload_banner_image',
-      payload: {
-        fileName: sanitizeBannerFileName(file.name),
-        contentType: file.type,
-        data,
-      },
-    },
-    headers: { 'x-admin-secret': adminSecret },
-  };
-
-  const { data: response, error } = await supabase.functions.invoke('admin-action', invokeOpts);
-  if (error) throw error;
-  if (!response?.success || !response?.url) {
-    throw new Error(response?.error || 'Banner upload failed');
+  const result = await invokeAdminAction('upload_banner_image', {
+    fileName: sanitizeBannerFileName(file.name),
+    contentType: file.type,
+    data,
+  });
+  if (!result.success) {
+    throw new Error(result.error || 'Banner upload failed');
   }
-  return String(response.url);
+  const url = result.envelope.url;
+  if (typeof url !== 'string' || !url) {
+    throw new Error('Banner upload failed — no URL returned');
+  }
+  return url;
 }

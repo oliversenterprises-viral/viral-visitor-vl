@@ -8,9 +8,11 @@ import { switchAdminTab } from '../admin';
 import { startAdminLiveHub, stopAdminLiveHub } from '../admin/admin-live-hub';
 import { unlockAdminLiveSound } from '../admin/admin-live-sound';
 import { supabase } from '../lib/supabase';
+import { setAdminSessionToken, clearAdminSessionToken } from '../lib/admin-session';
 
 registerGlobal('closeAdminPanel', () => {
   stopAdminLiveHub();
+  clearAdminSessionToken();
   const modal = document.getElementById('admin-modal');
   if (modal) modal.classList.add('hidden');
 });
@@ -88,7 +90,6 @@ const submitAdminPassword = async () => {
   if (!input) return;
   const val = input.value.trim();
 
-  const VALID = import.meta.env.VITE_ADMIN_PASSWORD || '';
   const btnOrigHtml = btn?.innerHTML || '';
 
   if (btn) {
@@ -101,11 +102,15 @@ const submitAdminPassword = async () => {
     const { data, error } = await supabase.functions.invoke('admin-action', {
       body: { action: 'verify_owner_password', payload: { password: val } },
     });
-    if (!error && data?.success === true) authorized = true;
+    const sessionToken =
+      typeof data?.session_token === 'string' ? data.session_token.trim() : '';
+    if (!error && data?.success === true && sessionToken) {
+      setAdminSessionToken(sessionToken);
+      authorized = true;
+    }
   } catch {
-    // fall through to client fallback
+    /* edge unavailable */
   }
-  if (!authorized && VALID && val === VALID) authorized = true;
 
   if (authorized) {
     if (errorEl) errorEl.classList.add('hidden');

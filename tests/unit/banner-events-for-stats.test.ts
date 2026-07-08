@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BANNER_EVENTS_KEY } from '../../src/content';
+import { setAdminSessionToken, clearAdminSessionToken } from '../../src/lib/admin-session';
 
 const invokeMock = vi.fn();
 
 vi.mock('../../src/lib/supabase', () => ({
+  isSupabaseConfigured: true,
   supabase: {
     functions: {
       invoke: (...args: unknown[]) => invokeMock(...args),
@@ -14,13 +16,14 @@ vi.mock('../../src/lib/supabase', () => ({
 describe('getBannerEventsForStats', () => {
   afterEach(() => {
     localStorage.clear();
+    clearAdminSessionToken();
     vi.unstubAllEnvs();
     vi.resetModules();
     invokeMock.mockReset();
   });
 
   it('falls back to local events when server returns an empty array', async () => {
-    vi.stubEnv('VITE_ADMIN_ACTION_SECRET', 'test-admin-action-secret');
+    setAdminSessionToken('test-admin-session-token');
     localStorage.setItem(
       BANNER_EVENTS_KEY,
       JSON.stringify([
@@ -45,7 +48,7 @@ describe('getBannerEventsForStats', () => {
   });
 
   it('prefers server events when server has rows', async () => {
-    vi.stubEnv('VITE_ADMIN_ACTION_SECRET', 'test-admin-action-secret');
+    setAdminSessionToken('test-admin-session-token');
     localStorage.setItem(BANNER_EVENTS_KEY, JSON.stringify([{ type: 'click', label: 'Local only' }]));
     invokeMock.mockResolvedValue({
       data: {

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { wireBannerStatsQuick } from '../../src/admin/banner-stats';
 import { wireVisitorFunnelStatsQuick } from '../../src/admin/visitor-funnel-stats';
 import { BANNER_EVENTS_KEY } from '../../src/content';
+import { clearAdminSessionToken } from '../../src/lib/admin-session';
 
 const bannerEvent = {
   type: 'impression',
@@ -35,7 +36,7 @@ describe('stats panel refresh vs CSV clicks', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.unstubAllEnvs();
-    vi.stubEnv('VITE_ADMIN_ACTION_SECRET', '');
+    clearAdminSessionToken();
     anchorClick = vi.fn();
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(anchorClick);
     createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');

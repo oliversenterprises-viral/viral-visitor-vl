@@ -18,10 +18,12 @@ import {
   isFunnelNotifyImportantOnly,
   isFunnelOffsiteNotifyEnabled,
 } from '../_shared/funnel-notify.ts';
+import { mintAdminSessionToken, verifyAdminSessionToken } from '../_shared/admin-session.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-admin-secret',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-admin-secret, x-admin-session',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -166,17 +168,33 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('ADMIN_OWNER_PASSWORD') ||
       Deno.env.get('VITE_ADMIN_PASSWORD') ||
       '';
+    const actionSecret = Deno.env.get('ADMIN_ACTION_SECRET') || '';
     const ok = !!expected && timingSafeEqual(password, expected);
-    return new Response(JSON.stringify({ success: ok }), {
+    const sessionToken =
+      ok && actionSecret ? await mintAdminSessionToken(actionSecret) : undefined;
+    return new Response(JSON.stringify({ success: ok, session_token: sessionToken }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
-  // Bridge auth: require the shared admin secret header (Phase 1)
+  // Bridge auth: x-admin-secret (scripts/cron) OR x-admin-session (browser after password verify)
   const adminSecretHeader = req.headers.get('x-admin-secret') || '';
+  const adminSessionHeader = req.headers.get('x-admin-session') || '';
   const expectedSecret = Deno.env.get('ADMIN_ACTION_SECRET') || '';
 
-  if (!expectedSecret || !timingSafeEqual(adminSecretHeader, expectedSecret)) {
+  let authorized = false;
+  if (expectedSecret) {
+    if (timingSafeEqual(adminSecretHeader, expectedSecret)) {
+      authorized = true;
+    } else if (
+      adminSessionHeader &&
+      (await verifyAdminSessionToken(expectedSecret, adminSessionHeader))
+    ) {
+      authorized = true;
+    }
+  }
+
+  if (!authorized) {
     return new Response(JSON.stringify({ success: false, error: 'Admin privileges required' }), {
       status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

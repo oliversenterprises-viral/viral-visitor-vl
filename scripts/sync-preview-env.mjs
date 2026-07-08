@@ -77,7 +77,6 @@ async function addPreviewEnv(token, key, value) {
 }
 
 const VARS = {
-  VITE_ADMIN_ACTION_SECRET: await extractAdminSecret(),
   VITE_TURNSTILE_SITEKEY: '0x4AAAAAADbxoHgHBgOr7tC9',
 };
 

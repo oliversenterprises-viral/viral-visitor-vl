@@ -2,7 +2,8 @@
  * Read-only status for server-side funnel alerts (Telegram or webhook in Supabase secrets).
  */
 
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { invokeAdminAction } from '../lib/admin-action-client';
 
 export type FunnelOffsiteNotifyChannel = 'telegram' | 'webhook' | null;
 
@@ -14,24 +15,20 @@ export interface FunnelOffsiteNotifyStatus {
 
 export async function fetchFunnelOffsiteNotifyStatus(): Promise<FunnelOffsiteNotifyStatus | null> {
   if (!isSupabaseConfigured || import.meta.env.MODE === 'test') return null;
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) return null;
 
-  try {
-    const { data, error } = await supabase.functions.invoke('admin-action', {
-      body: { action: 'get_funnel_notify_status' },
-      headers: { 'x-admin-secret': adminSecret },
-    });
-    if (error || !data?.success || !data?.data) return null;
-    const channel = data.data.channel;
-    return {
-      enabled: Boolean(data.data.enabled),
-      importantOnly: Boolean(data.data.importantOnly),
-      channel: channel === 'telegram' || channel === 'webhook' ? channel : null,
-    };
-  } catch {
-    return null;
-  }
+  const result = await invokeAdminAction<{
+    enabled?: boolean;
+    importantOnly?: boolean;
+    channel?: string;
+  }>('get_funnel_notify_status');
+  if (!result.success || !result.data) return null;
+
+  const channel = result.data.channel;
+  return {
+    enabled: Boolean(result.data.enabled),
+    importantOnly: Boolean(result.data.importantOnly),
+    channel: channel === 'telegram' || channel === 'webhook' ? channel : null,
+  };
 }
 
 export function funnelOffsiteNotifyStatusLabel(status: FunnelOffsiteNotifyStatus | null): string {

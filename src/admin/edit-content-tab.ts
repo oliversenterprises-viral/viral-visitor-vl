@@ -43,17 +43,10 @@ const BANNER_PRESETS = [
 ] as const;
 
 async function saveSiteContentEntry(key: string, value: unknown): Promise<boolean> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
   try {
-    const invokeOpts: {
-      body: { action: string; payload: { key: string; value: unknown } };
-      headers?: Record<string, string>;
-    } = {
-      body: { action: 'update_site_content', payload: { key, value } },
-    };
-    if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
-    const { data, error } = await supabase.functions.invoke('admin-action', invokeOpts);
-    if (!error && data?.success) return true;
+    const { invokeAdminAction } = await import('../lib/admin-action-client');
+    const result = await invokeAdminAction('update_site_content', { key, value });
+    if (result.success) return true;
   } catch {
     // fall through to direct upsert
   }
@@ -512,16 +505,9 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
 
       let deleted = false;
       try {
-        const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-        const invokeOpts: {
-          body: { action: string; payload: { key: string } };
-          headers?: Record<string, string>;
-        } = {
-          body: { action: 'delete_site_content', payload: { key: id } },
-        };
-        if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
-        const { data, error } = await supabase.functions.invoke('admin-action', invokeOpts);
-        if (!error && data?.success) {
+        const { invokeAdminAction } = await import('../lib/admin-action-client');
+        const result = await invokeAdminAction('delete_site_content', { key: id });
+        if (result.success) {
           deleted = true;
         } else {
           const { error: delErr } = await supabase.from('site_content').delete().eq('key', id);

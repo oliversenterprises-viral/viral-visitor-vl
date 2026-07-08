@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { invokeAdminAction } from '../lib/admin-action-client';
 import { registerAdminLiveRefresh } from './admin-live-hub';
 import { formatError } from '../lib';
 import { showToast, updatePendingClaimsBadge } from '../ui';
@@ -113,21 +114,11 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
 
     // Prefer Edge Function (service_role) so the full list (including pending) is visible
     // even for password-only admin (no real auth session) or when RLS own/approved policies would hide data.
-    try {
-      const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-      const invokeOpts: { body: { action: string }; headers?: Record<string, string> } = {
-        body: { action: 'get_claims' },
-      };
-      if (adminSecret) invokeOpts.headers = { 'x-admin-secret': adminSecret };
-      const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', invokeOpts);
-      if (!edgeErr && edgeData?.success && Array.isArray(edgeData.data)) {
-        rows = edgeData.data;
-      } else {
-        throw edgeErr || new Error('Edge get_claims did not return data');
-      }
-    } catch (edgeError) {
-      throw edgeError || new Error('get_claims failed — configure VITE_ADMIN_ACTION_SECRET');
+    const claimsResult = await invokeAdminAction<AdminClaimRow[]>('get_claims');
+    if (!claimsResult.success || !Array.isArray(claimsResult.data)) {
+      throw new Error(claimsResult.success ? 'Invalid get_claims response' : claimsResult.error);
     }
+    rows = claimsResult.data;
 
     replaceClaimsCache(rows);
     updatePendingClaimsBadge(countPendingClaims(adminClaimsCache));
@@ -550,21 +541,14 @@ function attachClaimsListeners(content: HTMLElement, statusFilter: ClaimStatusFi
       btnEl.disabled = true;
 
       try {
-        const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-        const { data, error } = await supabase.functions.invoke('admin-action', {
-          body: {
-            action: 'update_claim_status',
-            payload: {
-              claimId: claim.id,
-              status: newStatus,
-              note: null
-            }
-          },
-          headers: adminSecret ? { 'x-admin-secret': adminSecret } : {}
+        const updateResult = await invokeAdminAction('update_claim_status', {
+          claimId: claim.id,
+          status: newStatus,
+          note: null,
         });
-
-        if (error) throw error;
-        if (!data?.success) throw new Error(data?.error || 'Edge Function failed');
+        if (!updateResult.success) {
+          throw new Error(updateResult.error || 'Edge Function failed');
+        }
 
         updateClaimInCache(cacheIdx, {
           status: newStatus,

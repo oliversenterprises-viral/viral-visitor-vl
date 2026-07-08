@@ -1,4 +1,5 @@
-import { supabase, fetchSiteContent } from '../lib/supabase';
+import { fetchSiteContent } from '../lib/supabase';
+import { invokeAdminAction } from '../lib/admin-action-client';
 import { formatAutopilotCronLabel, AUTOPILOT_CRON_PATH } from '../lib/autopilot-schedule';
 import { escapeHtml } from '../content';
 import { showToast } from '../ui';
@@ -43,142 +44,67 @@ async function fetchInteractions(): Promise<{
   fetchError?: string;
 }> {
   const local = getLocalInteractionEvents() as InteractionRow[];
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) {
-    return { rows: local, source: 'local', fetchError: 'Admin secret not configured' };
-  }
-  try {
-    const { data, error } = await supabase.functions.invoke('admin-action', {
-      body: { action: 'get_interaction_stats' },
-      headers: { 'x-admin-secret': adminSecret },
-    });
-    if (error || !data?.success || !Array.isArray(data.data)) {
-      return {
-        rows: local,
-        source: 'local',
-        fetchError: String(data?.error || error?.message || 'get_interaction_stats failed'),
-      };
-    }
-    return { rows: data.data as InteractionRow[], source: 'server' };
-  } catch (err) {
+  const result = await invokeAdminAction<InteractionRow[]>('get_interaction_stats');
+  if (!result.success || !Array.isArray(result.data)) {
     return {
       rows: local,
       source: 'local',
-      fetchError: err instanceof Error ? err.message : 'Network error',
+      fetchError: result.success ? 'Invalid get_interaction_stats response' : result.error,
     };
   }
+  return { rows: result.data, source: 'server' };
 }
 
 async function fetchShares(): Promise<ShareEvent[]> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) return [];
-  try {
-    const { data, error } = await supabase.functions.invoke('admin-action', {
-      body: { action: 'get_shares' },
-      headers: { 'x-admin-secret': adminSecret },
-    });
-    if (error || !data?.success || !Array.isArray(data.data)) return [];
-    return data.data.map((row: Record<string, unknown>) => normalizeShareRow(row));
-  } catch {
-    return [];
-  }
+  const result = await invokeAdminAction<Record<string, unknown>[]>('get_shares');
+  if (!result.success || !Array.isArray(result.data)) return [];
+  return result.data.map((row) => normalizeShareRow(row));
 }
 
 async function fetchReferralCounts(): Promise<Record<string, number>> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) return {};
-  try {
-    const { data, error } = await supabase.functions.invoke('admin-action', {
-      body: { action: 'get_referral_counts' },
-      headers: { 'x-admin-secret': adminSecret },
-    });
-    if (error || !data?.success) return {};
-    return (data.data as Record<string, number>) || {};
-  } catch {
-    return {};
-  }
+  const result = await invokeAdminAction<Record<string, number>>('get_referral_counts');
+  if (!result.success || !result.data) return {};
+  return result.data;
 }
 
 async function fetchExperiments(): Promise<OptimizerExperiment[]> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) return [];
-  try {
-    const { data, error } = await supabase.functions.invoke('admin-action', {
-      body: { action: 'get_optimizer_experiments' },
-      headers: { 'x-admin-secret': adminSecret },
-    });
-    if (error || !data?.success || !Array.isArray(data.data)) return [];
-    return data.data as OptimizerExperiment[];
-  } catch {
-    return [];
-  }
+  const result = await invokeAdminAction<OptimizerExperiment[]>('get_optimizer_experiments');
+  if (!result.success || !Array.isArray(result.data)) return [];
+  return result.data;
 }
 
 async function runAutopilotFromAdmin(dryRun: boolean): Promise<string | null> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) return 'Admin secret not configured';
-  try {
-    const { data, error } = await supabase.functions.invoke('admin-action', {
-      body: { action: 'run_optimizer_autopilot', payload: { dry_run: dryRun } },
-      headers: { 'x-admin-secret': adminSecret },
-    });
-    if (error || !data?.success) {
-      return String(data?.error || error?.message || 'Autopilot failed');
-    }
-    const decision = data.data?.decision;
-    return decision?.reason || (dryRun ? 'Dry run complete' : 'Autopilot complete');
-  } catch (err) {
-    return err instanceof Error ? err.message : 'Network error';
+  const result = await invokeAdminAction<{ decision?: { reason?: string } }>('run_optimizer_autopilot', {
+    dry_run: dryRun,
+  });
+  if (!result.success) {
+    return result.error || 'Autopilot failed';
   }
+  const decision = result.data?.decision;
+  return decision?.reason || (dryRun ? 'Dry run complete' : 'Autopilot complete');
 }
 
 async function saveOptimizerFlagsToServer(flags: OptimizerFlags): Promise<boolean> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) {
-    showToast('Admin secret required to apply flags', 'info');
-    return false;
-  }
   const value = serializeOptimizerFlags(flags);
-  try {
-    const { data, error } = await supabase.functions.invoke('admin-action', {
-      body: {
-        action: 'update_site_content',
-        payload: { key: siteContentKeyForOptimizerFlags(), value },
-      },
-      headers: { 'x-admin-secret': adminSecret },
-    });
-    if (error || !data?.success) {
-      showToast(String(data?.error || error?.message || 'Flag save failed'), 'info');
-      return false;
-    }
-    setOptimizerFlags(value);
-    return true;
-  } catch {
-    showToast('Network error saving optimizer flags', 'info');
+  const result = await invokeAdminAction('update_site_content', {
+    key: siteContentKeyForOptimizerFlags(),
+    value,
+  });
+  if (!result.success) {
+    showToast(result.error || 'Flag save failed', 'info');
     return false;
   }
+  setOptimizerFlags(value);
+  return true;
 }
 
 async function saveExperiment(experiment: Partial<OptimizerExperiment>): Promise<boolean> {
-  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
-  if (!adminSecret) {
-    showToast('Admin secret required to save experiments', 'info');
+  const result = await invokeAdminAction('upsert_optimizer_experiment', { experiment });
+  if (!result.success) {
+    showToast(result.error || 'Save failed', 'info');
     return false;
   }
-  try {
-    const { data, error } = await supabase.functions.invoke('admin-action', {
-      body: { action: 'upsert_optimizer_experiment', payload: { experiment } },
-      headers: { 'x-admin-secret': adminSecret },
-    });
-    if (error || !data?.success) {
-      showToast(String(data?.error || error?.message || 'Save failed'), 'info');
-      return false;
-    }
-    return true;
-  } catch {
-    showToast('Network error saving experiment', 'info');
-    return false;
-  }
+  return true;
 }
 
 function priorityBadge(priority: string): string {
