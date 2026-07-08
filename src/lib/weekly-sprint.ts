@@ -13,6 +13,14 @@ function escapeHtml(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
+/** One-line hero social proof for weekly sprint leader. */
+export function formatSprintHeroLine(entries: readonly LeaderboardEntry[]): string {
+  const leader = entries[0];
+  if (!leader) return '';
+  const n = leader.referral_count;
+  return `Weekly sprint: ${leader.referrer_code} leads with ${n} referral${n === 1 ? '' : 's'} (7 days)`;
+}
+
 export function buildWeeklySprintHtml(
   entries: readonly LeaderboardEntry[],
   myCode?: string | null,
@@ -41,7 +49,13 @@ export function buildWeeklySprintHtml(
       </div>`;
   });
 
-  html += '</div>';
+  html += `</div>
+    <p class="text-center text-[11px] text-cyan-300/80 mt-3">
+      <button type="button" onclick="document.getElementById('referral-section').scrollIntoView({behavior:'smooth'})"
+        class="underline underline-offset-2 decoration-cyan-500/40 hover:text-cyan-200 font-semibold">
+        Join the weekly sprint →
+      </button>
+    </p>`;
   return html;
 }
 

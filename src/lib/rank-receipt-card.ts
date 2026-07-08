@@ -223,3 +223,11 @@ export async function offerRankReceipt(spec: RankReceiptSpec): Promise<void> {
     });
   }
 }
+
+/** Light nudge after a share — points visitors to rank receipt asset. */
+export function nudgeReceiptAfterShare(): void {
+  if (!getViralLoopsConfig().receipt_enabled || !latestReceiptSpec) return;
+  void import('../ui').then(({ showToast }) => {
+    showToast('Flex your rank — download your receipt card below', 'info');
+  });
+}

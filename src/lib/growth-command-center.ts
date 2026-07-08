@@ -22,6 +22,7 @@ import {
   resolveGrowthNextAction,
   type GrowthNextActionKind,
 } from './growth-next-action';
+import { resolveDuelRivalCode, shouldShowDuelInviteStrip } from './duel-invite';
 import { computePersonalKScore } from './growth-k-score';
 
 function hasReferralLink(): boolean {
@@ -47,6 +48,9 @@ function runGrowthAction(kind: GrowthNextActionKind): void {
       break;
     case 'whatsapp_boost':
       w.boostShareWhatsApp?.();
+      break;
+    case 'duel_invite':
+      (w.boostDuelShareWhatsApp as (() => void) | undefined)?.() ?? w.boostShareWhatsApp?.();
       break;
     case 'native_share':
       w.nativeShare?.();
@@ -114,6 +118,8 @@ export function syncGrowthCommandCenter(): void {
     shareStreak: getShareStreakCount(),
     isMobile: isMobileShareContext(),
     nativeShareAvailable: isNativeShareSupported(),
+    duelInviteEligible: shouldShowDuelInviteStrip(),
+    landingRef: resolveDuelRivalCode(),
   });
 
   const scoreEl = root.querySelector('[data-growth-power-score]');

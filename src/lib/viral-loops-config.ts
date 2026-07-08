@@ -17,7 +17,7 @@ export const DEFAULT_VIRAL_LOOPS_CONFIG: ViralLoopsConfig = {
   anxiety_enabled: true,
   sprint_enabled: true,
   community_enabled: true,
-  community_goal_weekly: 100,
+  community_goal_weekly: 25,
 };
 
 let cached: ViralLoopsConfig = { ...DEFAULT_VIRAL_LOOPS_CONFIG };

@@ -10,7 +10,7 @@ SELECT
     "anxiety_enabled": true,
     "sprint_enabled": true,
     "community_enabled": true,
-    "community_goal_weekly": 100
+    "community_goal_weekly": 25
   }'::jsonb,
   'Viral loops toggles and weekly community goal — editable in Admin without migration'
 WHERE NOT EXISTS (SELECT 1 FROM public.site_content WHERE key = 'viral_loops_config');

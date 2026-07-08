@@ -80,11 +80,19 @@ describe('community-unlock', () => {
   });
 
   it('formats together label', () => {
-    expect(communityUnlockLabel(42, 100)).toBe('Together: 42 / 100 referrals this week');
+    expect(communityUnlockLabel(42, 25)).toBe('Together: 42 / 25 referrals this week');
   });
 });
 
 describe('weekly-sprint', () => {
+  it('formats sprint hero line', async () => {
+    const { formatSprintHeroLine } = await import('../../src/lib/weekly-sprint');
+    expect(formatSprintHeroLine([{ referrer_code: 'VIRAL-1', referral_count: 4, rank: 1 }])).toContain(
+      'VIRAL-1',
+    );
+    expect(formatSprintHeroLine([])).toBe('');
+  });
+
   it('renders sprint rows', () => {
     const html = buildWeeklySprintHtml([
       { referrer_code: 'VIRAL-1', referral_count: 4, rank: 1 },

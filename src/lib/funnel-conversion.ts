@@ -3,6 +3,7 @@
  */
 
 import { getStoredLandingRef, parseRefFromLocation } from './referral-url';
+import { triggerDuelInviteMoment } from './duel-invite';
 import { initFunnelCoachChat } from './funnel-coach-chat';
 import { initFunnelGuide, syncFunnelGuide } from './funnel-guide';
 
@@ -185,10 +186,13 @@ export function onReferralCredited(): void {
   const title = document.getElementById('funnel-credit-gate-title');
   if (title) title.textContent = 'Referral credited — you counted!';
 
-  updateCreditGate(
-    'credited',
-    'Step 1 complete. Now COPY your link (Step 2), then SHARE (Step 3).',
-  );
+  const ref = resolveLandingReferrerCode();
+  const creditMsg = ref
+    ? `Step 1 done! Send a duel invite to beat ${ref} — tap Duel invite below.`
+    : 'Step 1 complete. Now COPY your link (Step 2), then SHARE (Step 3).';
+
+  updateCreditGate('credited', creditMsg);
+  triggerDuelInviteMoment(ref);
 
   window.setTimeout(() => {
     const gate = document.getElementById('funnel-credit-gate');
@@ -223,6 +227,7 @@ export function onReferralLinkReady(): void {
   document.documentElement.removeAttribute('data-vr-credit-pending');
   setFunnelStep(2);
   highlightCopyButton();
+  triggerDuelInviteMoment(resolveLandingReferrerCode());
   import('./visitor-slim').then((m) => m.refreshVisitorSlimState()).catch(() => {});
 }
 

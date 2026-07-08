@@ -35,6 +35,8 @@ import { incrementShareStreak } from '../lib/share-streak';
 import { refreshShareStreakUI, setShareAbVariant, setSharePreviewPlatform } from '../lib/share-ui';
 import { onShareReminderCompleted } from '../lib/share-reminder-ui';
 import { onViralLoopShare } from '../lib/viral-loop-ui';
+import { trackDuelInviteShared } from '../lib/duel-invite';
+import { nudgeReceiptAfterShare } from '../lib/rank-receipt-card';
 import {
   ensureTurnstileReady,
   getTurnstileSiteKey,
@@ -80,6 +82,7 @@ function logShare(platform: string, code: string, link: string): void {
   onShareReminderCompleted();
   celebrateShareIfFirst();
   onViralLoopShare();
+  nudgeReceiptAfterShare();
 }
 
 async function copyTextToClipboard(text: string, successToast: string): Promise<boolean> {
@@ -149,6 +152,24 @@ export const boostShareWhatsApp = () => {
   })();
 };
 registerGlobal('boostShareWhatsApp', boostShareWhatsApp);
+
+/** Duel invite — WhatsApp with challenge link + rivalry copy (highest viral loop). */
+export const boostDuelShareWhatsApp = () => {
+  void (async () => {
+    const ctx = await resolveShareContext();
+    if (!ctx) return;
+
+    const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions('boost', ctx.link));
+    const tracked = buildTrackedShareLink(ctx.link, 'boost');
+    const url = buildPlatformShareUrl('whatsapp', tracked, text);
+    if (url) openShareIntent(url);
+    showToast('Duel invite ready — send to friends who want to beat you', 'success');
+    logShare('boost-whatsapp', ctx.code, tracked);
+    trackDuelInviteShared('whatsapp');
+    onFunnelShareComplete();
+  })();
+};
+registerGlobal('boostDuelShareWhatsApp', boostDuelShareWhatsApp);
 
 /** One-tap native share sheet (mobile + supported desktop browsers). */
 export const nativeShare = () => {

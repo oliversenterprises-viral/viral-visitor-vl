@@ -34,4 +34,15 @@ describe('growth-next-action', () => {
     const a = resolveGrowthNextAction({ ...base, dailyShares: 1 });
     expect(a.headline).toMatch(/daily boost/i);
   });
+
+  it('prioritizes duel invite for referred/challenge sessions', () => {
+    const a = resolveGrowthNextAction({
+      ...base,
+      duelInviteEligible: true,
+      landingRef: 'VIRAL-RIVAL',
+    });
+    expect(a.kind).toBe('duel_invite');
+    expect(a.urgency).toBe('critical');
+    expect(a.headline).toContain('VIRAL-RIVAL');
+  });
 });

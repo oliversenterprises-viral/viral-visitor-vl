@@ -173,6 +173,7 @@
                 </div>
                 <div id="hero-stats-subtext" class="mt-1 text-sm text-zinc-400 tracking-wide">
                     <span id="total-referrers" aria-live="polite">—</span><span id="hero-stats-suffix"> referrers and counting • Early spots on the leaderboard are wide open</span>
+                    <p id="hero-sprint-line" class="hidden text-sm text-cyan-300/90 mt-2 font-medium" aria-live="polite"></p>
                 </div>
             </div>
         </div>
@@ -481,6 +482,16 @@
                                 class="hidden mb-3 w-full sm:w-auto font-mono text-sm font-bold text-violet-300 bg-violet-500/10 border border-violet-400/25 rounded-xl px-4 py-2 hover:bg-violet-500/20 transition-all"
                                 title="Copy your referral code only"
                                 aria-label="Copy referral code"></button>
+
+                        <div id="duel-invite-strip" data-vr-zone="duel-invite" class="hidden duel-invite-strip mb-3 rounded-2xl border border-rose-400/35 bg-gradient-to-r from-rose-500/12 to-orange-500/8 px-4 py-3" role="region" aria-label="Duel invite">
+                            <div data-duel-headline class="text-sm font-bold text-rose-100">Send a duel invite</div>
+                            <div data-duel-subline class="text-[11px] text-zinc-400 mt-0.5 mb-2">Challenge link with ?challenge=1 — highest viral conversion.</div>
+                            <button type="button" onclick="boostDuelShareWhatsApp()"
+                                    class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white py-3.5 px-5 rounded-2xl font-bold text-sm shadow-lg shadow-rose-900/25 ring-2 ring-rose-300/30 transition-all active:scale-[0.98]">
+                                <i class="fa-solid fa-fire"></i>
+                                <span>Duel invite — WhatsApp</span>
+                            </button>
+                        </div>
 
                         <button id="boost-whatsapp-btn" type="button" onclick="boostShareWhatsApp()"
                                 class="hidden w-full mb-3 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white py-4 px-6 rounded-2xl font-bold text-base shadow-lg shadow-emerald-900/25 ring-2 ring-emerald-300/40"

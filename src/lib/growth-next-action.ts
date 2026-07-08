@@ -8,6 +8,7 @@ export type GrowthNextActionKind =
   | 'get_link'
   | 'copy_link'
   | 'whatsapp_boost'
+  | 'duel_invite'
   | 'native_share'
   | 'copy_message'
   | 'open_share_panel';
@@ -24,6 +25,9 @@ export interface GrowthNextActionInput {
   shareStreak: number;
   isMobile: boolean;
   nativeShareAvailable: boolean;
+  /** Referred or ?challenge=1 session with a known rival code */
+  duelInviteEligible?: boolean;
+  landingRef?: string | null;
 }
 
 export interface GrowthNextAction {
@@ -45,6 +49,18 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
       urgency: 'high',
       icon: 'fa-gift',
       ctaLabel: 'Get my referral link',
+    };
+  }
+
+  if (input.duelInviteEligible && input.landingRef) {
+    const rival = input.landingRef.trim().toUpperCase();
+    return {
+      kind: 'duel_invite',
+      headline: `Send duel invite — beat ${rival}`,
+      subline: 'Challenge link opens with rivalry stats. Highest viral conversion path.',
+      urgency: 'critical',
+      icon: 'fa-fire',
+      ctaLabel: 'Duel invite — WhatsApp',
     };
   }
 

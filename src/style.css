@@ -2182,3 +2182,8 @@ html[data-vr-growth-hub] #boost-whatsapp-btn {
 .weekly-sprint-row:hover {
   background: rgba(255, 255, 255, 0.04);
 }
+
+.duel-invite-strip--pulse {
+  animation: vr-viral-rush-pulse 1.8s ease-in-out 2;
+  border-color: rgba(251, 113, 133, 0.55) !important;
+}

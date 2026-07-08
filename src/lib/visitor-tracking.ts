@@ -62,6 +62,8 @@ export type VisitorFunnelEvent =
 export type ViralLoopEvent =
   | 'ChallengeLanding'
   | 'ChallengeLinkReady'
+  | 'DuelInviteShown'
+  | 'ChallengeDuelShared'
   | 'ReceiptGenerated'
   | 'ReceiptShared'
   | 'AnxietyBarShown'
@@ -74,6 +76,8 @@ export type ViralLoopEvent =
 export const VIRAL_LOOP_EVENT_ORDER: ViralLoopEvent[] = [
   'ChallengeLanding',
   'ChallengeLinkReady',
+  'DuelInviteShown',
+  'ChallengeDuelShared',
   'ReceiptGenerated',
   'ReceiptShared',
   'AnxietyBarShown',

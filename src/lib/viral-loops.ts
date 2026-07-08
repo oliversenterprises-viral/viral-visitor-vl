@@ -4,10 +4,11 @@
 
 import { getMyReferralCode } from '../public/globals';
 import { initChallengeLanding, onChallengeLinkReady } from './challenge-mode';
+import { syncDuelInviteStrip, triggerDuelInviteMoment } from './duel-invite';
 import { syncCatchUpAnxietyBar } from './catch-up-anxiety';
 import { renderCommunityUnlockMeter } from './community-unlock';
 import { offerRankReceipt } from './rank-receipt-card';
-import { renderWeeklySprintBoard } from './weekly-sprint';
+import { formatSprintHeroLine, renderWeeklySprintBoard } from './weekly-sprint';
 import {
   fetchWeeklyReferralCount,
   fetchWeeklySprintLeaderboard,
@@ -34,6 +35,7 @@ export async function loadPublicViralLoops(myCode?: string | null): Promise<void
     ]);
     renderWeeklySprintBoard(sprint, code);
     renderCommunityUnlockMeter(weeklyCount);
+    paintSprintHeroLine(sprint);
   } catch {
     // non-fatal
   }
@@ -48,6 +50,7 @@ export function syncUserViralLoops(
   link?: string,
 ): void {
   syncCatchUpAnxietyBar(count, rank, board, hasReferralLink());
+  syncDuelInviteStrip();
 
   if (myCode && link) {
     void offerRankReceipt({ code: myCode, link, rank, referrals: count });
@@ -64,4 +67,18 @@ export function onViralLoopsLinkReady(
 ): void {
   onChallengeLinkReady();
   syncUserViralLoops(myCode, count, rank, board, link);
+  triggerDuelInviteMoment();
+}
+
+function paintSprintHeroLine(sprint: import('./types').LeaderboardEntry[]): void {
+  const el = document.getElementById('hero-sprint-line');
+  if (!el) return;
+  const line = formatSprintHeroLine(sprint);
+  if (!line) {
+    el.classList.add('hidden');
+    el.textContent = '';
+    return;
+  }
+  el.textContent = line;
+  el.classList.remove('hidden');
 }
