@@ -37,6 +37,26 @@ describe('visitor-tracking stats', () => {
     expect(stats.bySource).toEqual({ reddit: 2, '(direct)': 1 });
   });
 
+  it('excludes passive viral impressions from engaged + recent events', () => {
+    const events = [
+      { event_name: 'SiteLanding', visitor_id: 'a', created_at: '2026-07-01T12:00:00Z' },
+      { event_name: 'SprintBoardView', visitor_id: 'a', created_at: '2026-07-01T12:00:01Z' },
+      { event_name: 'CommunityUnlockView', visitor_id: 'a', created_at: '2026-07-01T12:00:02Z' },
+      { event_name: 'GetReferralLink', visitor_id: 'b', created_at: '2026-07-01T12:00:03Z' },
+      { event_name: 'ChallengeDuelShared', visitor_id: 'c', created_at: '2026-07-01T12:00:04Z' },
+    ];
+    const stats = computeVisitorFunnelStats(events);
+    expect(stats.uniqueVisitorsLanding).toBe(1);
+    expect(stats.uniqueVisitorsAny).toBe(2);
+    expect(stats.funnelEventCount).toBe(2);
+    expect(stats.viralLoopEventCount).toBe(3);
+    expect(stats.lastEvents.map((e) => e.event_name)).toEqual([
+      'ChallengeDuelShared',
+      'GetReferralLink',
+      'SiteLanding',
+    ]);
+  });
+
   it('groups country breakdown by landing unique visitors', () => {
     const events = [
       { event_name: 'SiteLanding', visitor_id: 'a', country_code: 'US' },

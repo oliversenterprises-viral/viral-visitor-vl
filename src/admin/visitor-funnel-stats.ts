@@ -226,28 +226,34 @@ function renderVisitorFunnelView(
     2,
   );
 
+  const funnelEventCount = stats.funnelEventCount ?? rangeFiltered.length;
+  const viralLoopEventCount = stats.viralLoopEventCount ?? 0;
+
   reportTrackingHubSummary({
     claimConversion: totals.conversion,
     sessions: uniqueSessions,
     engaged: stats.uniqueVisitorsAny,
     landings: stats.uniqueVisitorsLanding,
     visitorSource: source,
-    visitorEvents: rangeFiltered.length,
+    visitorEvents: funnelEventCount,
   });
 
   const rangeNote =
     getTrackingTimeRange() === 'all'
       ? ''
-      : ` · Range ${getTrackingTimeRange().toUpperCase()} (${rangeFiltered.length} events)`;
+      : ` · Range ${getTrackingTimeRange().toUpperCase()}`;
+  const eventMixNote =
+    viralLoopEventCount > 0
+      ? `${funnelEventCount} funnel + ${viralLoopEventCount} loop events`
+      : `${funnelEventCount} funnel event${funnelEventCount === 1 ? '' : 's'}`;
 
   let html = `
     <div class="flex flex-wrap items-center gap-2 mb-2">
-      <div class="text-[10px] font-semibold text-violet-300">Site Visitor Funnel</div>
       ${isServer ? '<span class="px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-200 text-[8px]">SERVER</span>' : '<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[8px]">LOCAL</span>'}
       <span id="visitor-live-indicator" class="hidden text-[9px] text-emerald-400/90"><i class="fa-solid fa-circle text-[5px] mr-0.5"></i>live</span>
-      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''}${rangeNote}</span>
+      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest ${escapeHtml(latestLabel)}` : ''}${rangeNote} · ${escapeHtml(eventMixNote)}</span>
     </div>
-    <div class="text-[9px] text-zinc-400 mb-2">Landing → get link → copy → share → claim. Unique = distinct browsers · Sessions = distinct tabs.</div>
+    <div class="text-[9px] text-zinc-400 mb-2">Landing → get link → copy → share → claim. Engaged = took action beyond landing · Sessions = distinct tabs.</div>
   `;
 
   if (excludedCount > 0) {
@@ -304,17 +310,14 @@ function renderVisitorFunnelView(
 
   const viralLoops = stats.viralLoops || [];
   const viralTotal = viralLoops.reduce((s, r) => s + r.count, 0);
-  if (viralLoops.length) {
+  const viralRowsWithData = viralLoops.filter((r) => r.count > 0 || r.unique > 0);
+  if (viralTotal > 0 && viralRowsWithData.length) {
     html += `<div class="text-[9px] font-semibold text-cyan-300 mt-2 mb-1">Viral loops (engagement)</div>`;
     html += `<table class="w-full text-[8px] text-zinc-200 border border-white/10 mb-2"><thead><tr class="bg-white/5 text-cyan-200"><th class="text-left p-1">Loop event</th><th class="p-1 text-right">Events</th><th class="p-1 text-right">Unique</th></tr></thead><tbody>`;
-    for (const row of viralLoops) {
-      if (!row.count && !row.unique) continue;
+    for (const row of viralRowsWithData) {
       html += `<tr class="border-t border-white/5"><td class="p-1 text-zinc-100">${escapeHtml(row.name)}</td><td class="p-1 text-right tabular-nums">${row.count}</td><td class="p-1 text-right tabular-nums text-cyan-200/90">${row.unique > 0 ? row.unique : '—'}</td></tr>`;
     }
     html += `</tbody></table>`;
-    if (viralTotal === 0) {
-      html += `<div class="text-[8px] text-zinc-500 mb-2">No viral loop events in range yet — challenge links, receipts, sprint board, etc.</div>`;
-    }
   }
 
   const countryRows = topCountries(filterCountryRowsForDisplay(stats.byCountry));

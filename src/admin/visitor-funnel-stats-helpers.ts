@@ -60,11 +60,18 @@ export function shouldShowUtmSources(bySource: Record<string, number>): boolean 
 /** Exported for testability (pure function). */
 export function computeFunnelTotals(funnel: readonly FunnelRow[]) {
   const totalEvents = funnel.reduce((s, r) => s + r.count, 0);
-  const landings = funnel.find((r) => r.name === 'SiteLanding')?.count ?? 0;
-  const claims = funnel.find((r) => r.name === 'SubmitPrizeClaim')?.count ?? 0;
+  const landingUnique = funnel.find((r) => r.name === 'SiteLanding')?.unique ?? 0;
+  const claimUnique = funnel.find((r) => r.name === 'SubmitPrizeClaim')?.unique ?? 0;
   const conversion =
-    landings > 0 ? `${((claims / landings) * 100).toFixed(1)}%` : '—';
-  return { totalEvents, landings, claims, conversion };
+    landingUnique > 0
+      ? `${((claimUnique / landingUnique) * 100).toFixed(1)}%`
+      : '—';
+  return {
+    totalEvents,
+    landings: landingUnique,
+    claims: claimUnique,
+    conversion,
+  };
 }
 
 /** Exported for testability (pure function). */

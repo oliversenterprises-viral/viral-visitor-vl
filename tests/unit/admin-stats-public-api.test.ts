@@ -53,13 +53,13 @@ describe('admin stats public API (shipped render/wire)', () => {
     const el = document.createElement('div');
     await renderVisitorFunnelStats(el, [visitorEvent, { ...visitorEvent, event_name: 'SubmitPrizeClaim' }]);
     expect(el.classList.contains('visitor-funnel-stats-panel')).toBe(true);
-    expect(el.innerHTML).toContain('Site Visitor Funnel');
+    expect(el.innerHTML).toContain('Landings');
     expect(el.innerHTML).toContain('LOCAL');
     expect(el.innerHTML).toContain('Landings');
     expect(el.innerHTML).toContain('data-visitor-stats-autorefresh');
     expect(el.innerHTML).toContain('data-visitor-stats-copy');
     expect(el.innerHTML).toContain('Step conv.');
-    expect(el.innerHTML).toContain('Latest event');
+    expect(el.innerHTML).toContain('Latest');
     expect(el.innerHTML).toContain('Recent events');
     expect(el.innerHTML).toContain('8.8.8.8');
   });
@@ -78,7 +78,7 @@ describe('admin stats public API (shipped render/wire)', () => {
     const root = editContentQuickStatsRoot();
     await expect(wireVisitorFunnelStatsQuick(root)).resolves.toBeUndefined();
     const panel = root.querySelector('#visitor-stats-quick') as HTMLElement;
-    expect(panel.innerHTML).toContain('Site Visitor Funnel');
+    expect(panel.innerHTML).toContain('Landings');
     expect(panel.innerHTML).not.toContain('skeleton');
   });
 
@@ -88,7 +88,7 @@ describe('admin stats public API (shipped render/wire)', () => {
     const root = editContentQuickStatsRoot();
     await wireVisitorFunnelStatsQuick(root);
     await wireBannerStatsQuick(root);
-    expect(root.querySelector('#visitor-stats-quick')!.innerHTML).toContain('Site Visitor Funnel');
+    expect(root.querySelector('#visitor-stats-quick')!.innerHTML).toContain('Landings');
     expect(root.querySelector('#banner-stats-quick')!.innerHTML).toContain('Banner Performance');
   });
 });

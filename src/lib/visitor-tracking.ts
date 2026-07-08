@@ -88,6 +88,39 @@ export const VIRAL_LOOP_EVENT_ORDER: ViralLoopEvent[] = [
   'CommunityUnlockCelebration',
 ];
 
+/** Passive impressions — excluded from Engaged + Recent events (pollutes funnel readability). */
+export const PASSIVE_VIRAL_LOOP_EVENTS: ReadonlySet<ViralLoopEvent> = new Set([
+  'SprintBoardView',
+  'CommunityUnlockView',
+  'DuelInviteShown',
+  'AnxietyBarShown',
+]);
+
+const FUNNEL_EVENT_ORDER: VisitorFunnelEvent[] = [
+  'SiteLanding',
+  'GetReferralLink',
+  'CopyReferralLink',
+  'ShareReferral',
+  'OpenPrizeClaim',
+  'SubmitPrizeClaim',
+];
+
+function isViralLoopEventName(name: string): name is ViralLoopEvent {
+  return (VIRAL_LOOP_EVENT_ORDER as readonly string[]).includes(name);
+}
+
+function isFunnelEventName(name: string): name is VisitorFunnelEvent {
+  return (FUNNEL_EVENT_ORDER as readonly string[]).includes(name);
+}
+
+/** Events shown in admin Recent events (funnel steps + meaningful viral actions). */
+export function isVisitorStatsRecentEvent(event: Record<string, unknown>): boolean {
+  const name = eventName(event);
+  if (isFunnelEventName(name)) return true;
+  if (isViralLoopEventName(name)) return !PASSIVE_VIRAL_LOOP_EVENTS.has(name);
+  return false;
+}
+
 function resolveRefCode(): string | undefined {
   const utm = getStoredUtmAttribution();
   return utm?.ref || getStoredLandingRef() || undefined;
@@ -174,14 +207,34 @@ function eventVisitorId(e: Record<string, unknown>): string | null {
   return id || null;
 }
 
-function uniqueVisitorsFor(events: Array<Record<string, unknown>>, eventName?: string): number {
+function uniqueVisitorsFor(events: Array<Record<string, unknown>>, filterName?: string): number {
   const ids = new Set<string>();
   for (const e of events) {
-    if (eventName && String(e.event_name || e.eventName) !== eventName) continue;
+    if (filterName && eventName(e) !== filterName) continue;
     const id = eventVisitorId(e);
     if (id) ids.add(id);
   }
   return ids.size;
+}
+
+/** Unique visitors who took action beyond landing (excludes passive viral impressions). */
+function uniqueEngagedVisitors(events: Array<Record<string, unknown>>): number {
+  const ids = new Set<string>();
+  for (const e of events) {
+    const name = eventName(e);
+    if (name === 'SiteLanding') continue;
+    if (isViralLoopEventName(name) && PASSIVE_VIRAL_LOOP_EVENTS.has(name)) continue;
+    const id = eventVisitorId(e);
+    if (id) ids.add(id);
+  }
+  return ids.size;
+}
+
+function countEventsMatching(
+  events: Array<Record<string, unknown>>,
+  predicate: (name: string) => boolean,
+): number {
+  return events.filter((e) => predicate(eventName(e))).length;
 }
 
 function uniqueByCountry(
@@ -209,15 +262,7 @@ export function computeVisitorFunnelStats(events: Array<Record<string, any>>) {
     const name = eventName(e);
     counts[name] = (counts[name] || 0) + 1;
   }
-  const funnelOrder: VisitorFunnelEvent[] = [
-    'SiteLanding',
-    'GetReferralLink',
-    'CopyReferralLink',
-    'ShareReferral',
-    'OpenPrizeClaim',
-    'SubmitPrizeClaim',
-  ];
-  const funnel = funnelOrder.map((name) => ({
+  const funnel = FUNNEL_EVENT_ORDER.map((name) => ({
     name,
     count: counts[name] || 0,
     unique: uniqueVisitorsFor(events, name),
@@ -227,14 +272,17 @@ export function computeVisitorFunnelStats(events: Array<Record<string, any>>) {
     count: counts[name] || 0,
     unique: uniqueVisitorsFor(events, name),
   }));
+  const recentPool = events.filter(isVisitorStatsRecentEvent);
 
   return {
     funnel,
     viralLoops,
     total: events.length,
+    funnelEventCount: countEventsMatching(events, isFunnelEventName),
+    viralLoopEventCount: countEventsMatching(events, isViralLoopEventName),
     uniqueVisitorsLanding: uniqueVisitorsFor(events, 'SiteLanding'),
-    uniqueVisitorsAny: uniqueVisitorsFor(events),
-    lastEvents: latestEvents(events, 8),
+    uniqueVisitorsAny: uniqueEngagedVisitors(events),
+    lastEvents: latestEvents(recentPool, 8),
     bySource: groupBy(
       events.filter((e) => eventName(e) === 'SiteLanding'),
       (e) => String(e.utm_source || e.utmSource || '(direct)'),

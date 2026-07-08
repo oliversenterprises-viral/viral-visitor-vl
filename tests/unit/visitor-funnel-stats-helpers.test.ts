@@ -54,17 +54,17 @@ describe('visitor funnel stats helpers (pure)', () => {
     expect(shouldShowUtmSources({ reddit: 1 })).toBe(true);
   });
 
-  it('computeFunnelTotals sums events and computes conversion', () => {
+  it('computeFunnelTotals uses unique visitors for conversion', () => {
     const funnel = [
-      funnelRow('SiteLanding', 100),
-      funnelRow('SubmitPrizeClaim', 25),
-      funnelRow('Other', 10),
+      funnelRow('SiteLanding', 100, 50),
+      funnelRow('SubmitPrizeClaim', 25, 10),
+      funnelRow('Other', 10, 8),
     ];
     const totals = computeFunnelTotals(funnel);
     expect(totals.totalEvents).toBe(135);
-    expect(totals.landings).toBe(100);
-    expect(totals.claims).toBe(25);
-    expect(totals.conversion).toBe('25.0%');
+    expect(totals.landings).toBe(50);
+    expect(totals.claims).toBe(10);
+    expect(totals.conversion).toBe('20.0%');
   });
 
   it('topCountries returns at most limit rows', () => {
