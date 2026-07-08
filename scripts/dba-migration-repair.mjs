@@ -22,7 +22,15 @@ const files = readdirSync(MIGRATIONS_DIR)
   .filter((f) => f.endsWith('.sql'))
   .sort();
 
-const versions = files.map((f) => f.replace(/\.sql$/, ''));
+// Supabase CLI expects numeric version ids (e.g. 0016), not full migration filenames.
+const versions = [
+  ...new Set(
+    files.map((f) => {
+      const m = f.match(/^(\d+)/);
+      return m ? m[1] : f.replace(/\.sql$/, '');
+    }),
+  ),
+].sort();
 
 console.log('=== DBA migration history repair ===');
 console.log(`Found ${versions.length} local migration(s).\n`);
