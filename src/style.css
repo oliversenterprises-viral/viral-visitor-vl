@@ -2187,3 +2187,118 @@ html[data-vr-growth-hub] #boost-whatsapp-btn {
   animation: vr-viral-rush-pulse 1.8s ease-in-out 2;
   border-color: rgba(251, 113, 133, 0.55) !important;
 }
+
+/* ============================================
+   PUBLIC POLISH — skeletons, reveals, a11y, nav
+   ============================================ */
+
+.public-skeleton-stack {
+  pointer-events: none;
+}
+
+.public-skeleton-row {
+  overflow: hidden;
+}
+
+.vr-nav--scrolled {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  border-bottom-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+@keyframes vr-reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vr-reveal-row {
+  animation: vr-reveal-in 0.45s cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-delay: calc(var(--vr-stagger, 0) * 55ms);
+}
+
+html[data-vr-reduced-motion] .vr-reveal-row,
+html[data-vr-reduced-motion] .leaderboard-row--pulse,
+html[data-vr-reduced-motion] .activity-row--fresh,
+html[data-vr-reduced-motion] .share-combo-badge,
+html[data-vr-reduced-motion] .challenge-duel-banner,
+html[data-vr-reduced-motion] .duel-invite-strip--pulse,
+html[data-vr-reduced-motion] .viral-power-meter--rush,
+html[data-vr-reduced-motion] .growth-command-center--rush,
+html[data-vr-reduced-motion] .growth-command-cta--critical,
+html[data-vr-reduced-motion] .catch-up-anxiety-bar--critical,
+html[data-vr-reduced-motion] .hero-get-link-pulse,
+html[data-vr-reduced-motion] .skeleton {
+  animation: none !important;
+  transition: none !important;
+}
+
+html[data-vr-reduced-motion] .animate-pulse {
+  animation: none !important;
+}
+
+.community-unlock-meter--half {
+  border-color: rgba(34, 211, 238, 0.35) !important;
+}
+
+.community-unlock-meter--near {
+  border-color: rgba(34, 211, 238, 0.45) !important;
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.12);
+}
+
+.community-unlock-meter--near [data-community-pct] {
+  color: #67e8f9;
+}
+
+.community-unlock-meter--near [data-community-status] {
+  color: #a5f3fc;
+  font-weight: 600;
+}
+
+.copy-btn--success {
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.45), 0 0 20px rgba(52, 211, 153, 0.25) !important;
+  transform: scale(1.02);
+}
+
+html[data-vr-ready] .tail-container {
+  animation: vr-page-ready 0.35s ease-out both;
+}
+
+@keyframes vr-page-ready {
+  from {
+    opacity: 0.97;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+html[data-vr-has-link] #referral-section .glass {
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.2), 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.public-empty-state button:focus-visible,
+#vr-nav a:focus-visible,
+#vr-nav button:focus-visible,
+.share-btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.copy-btn:focus-visible,
+.funnel-step-cta:focus-visible,
+.growth-command-cta:focus-visible {
+  outline: 2px solid rgba(192, 132, 252, 0.75);
+  outline-offset: 2px;
+}
+
+#stats-content .grid > div {
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+#stats-content .grid > div:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(24, 24, 27, 0.85);
+}

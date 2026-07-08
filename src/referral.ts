@@ -31,6 +31,7 @@ import { syncSharePowerUI } from './lib/share-ui';
 import { buildQrImageUrl } from './lib/share-power';
 import { initShareRemindersOnLinkReady } from './lib/share-reminder-ui';
 import { refreshPublicClarityState } from './lib/public-clarity';
+import { flashCopySuccess } from './lib/public-polish';
 
 // Track attribution for the current page load
 let pendingReferrerCode: string | null = null;
@@ -380,6 +381,7 @@ function performCopyToClipboard(link: string): void {
 
       btn.innerHTML = '<i class="fa-solid fa-check"></i> COPIED!';
       btn.setAttribute('aria-label', 'Copied to clipboard');
+      flashCopySuccess(btn);
 
       setTimeout(() => {
         if (btn) {

@@ -4,6 +4,7 @@
 
 import type { LeaderboardEntry } from './types';
 import { getViralLoopsConfig } from './viral-loops-config';
+import { staggerReveal } from './public-polish';
 import { trackViralLoopEvent } from './visitor-tracking';
 
 function escapeHtml(text: string): string {
@@ -26,21 +27,28 @@ export function buildWeeklySprintHtml(
   myCode?: string | null,
 ): string {
   if (!entries.length) {
-    return `<div class="text-center py-6 text-zinc-400 text-sm">No sprint referrals yet this week — be the first!</div>`;
+    return `<div class="text-center py-6 text-zinc-400 text-sm public-empty-state">
+      <p class="font-medium text-zinc-300 mb-1">Weekly sprint just started</p>
+      <p class="mb-3">No 7-day referrals yet — first share wins the sprint board.</p>
+      <button type="button" onclick="getMyReferralLinkInstant()"
+        class="text-xs font-semibold px-4 py-2 rounded-xl bg-cyan-600/80 hover:bg-cyan-600 text-white">
+        Join the sprint
+      </button>
+    </div>`;
   }
 
   const me = (myCode || '').trim().toUpperCase();
   let html = '<div class="space-y-2" id="weekly-sprint-rows">';
 
-  entries.slice(0, 8).forEach((e) => {
+  entries.slice(0, 8).forEach((e, index) => {
     const isMe = me && (e.referrer_code || '').toUpperCase() === me;
     const isTop = e.rank === 1;
     html += `
-      <div class="weekly-sprint-row flex justify-between items-center px-4 py-2.5 rounded-xl border transition-all ${
+      <div class="weekly-sprint-row vr-reveal-row flex justify-between items-center px-4 py-2.5 rounded-xl border transition-all ${
         isTop
           ? 'border-cyan-400/35 bg-cyan-500/10'
           : 'border-white/10 bg-zinc-900/60'
-      } ${isMe ? 'ring-1 ring-emerald-400/40' : ''}" data-sprint-rank="${e.rank}">
+      } ${isMe ? 'ring-1 ring-emerald-400/40' : ''}" data-sprint-rank="${e.rank}" style="--vr-stagger:${index}">
         <div class="flex items-center gap-2.5">
           <span class="w-6 h-6 rounded-full ${isTop ? 'bg-cyan-400 text-zinc-900' : 'bg-violet-600 text-white'} text-[10px] font-bold flex items-center justify-center">${e.rank}</span>
           <span class="font-mono text-sm ${isTop ? 'text-cyan-200' : 'text-emerald-400'}">${escapeHtml(e.referrer_code)}${isMe ? ' <span class="text-[9px] text-emerald-300/80">(you)</span>' : ''}</span>
@@ -76,6 +84,8 @@ export function renderWeeklySprintBoard(
   }
 
   container.innerHTML = buildWeeklySprintHtml(entries, myCode);
+  staggerReveal(container, '.weekly-sprint-row');
+  container.setAttribute('aria-busy', 'false');
   root.classList.remove('hidden');
 
   if (!sprintTracked) {

@@ -3,6 +3,12 @@
  */
 
 import { getViralLoopsConfig } from './viral-loops-config';
+import {
+  COMMUNITY_HALF_UNLOCK_PCT,
+  COMMUNITY_NEAR_UNLOCK_PCT,
+  communityUnlockPctLabel,
+  communityUnlockStatusText,
+} from './public-polish';
 import { trackViralLoopEvent } from './visitor-tracking';
 
 const CELEBRATED_KEY = 'vr_community_unlock_celebrated_week';
@@ -75,15 +81,19 @@ export function renderCommunityUnlockMeter(weeklyCount: number): void {
 
   if (labelEl) labelEl.textContent = label;
   if (fillEl) fillEl.style.width = `${pct}%`;
-  if (pctEl) pctEl.textContent = `${pct}%`;
-  if (statusEl) {
-    statusEl.textContent = unlocked
-      ? 'Community goal unlocked — keep the momentum!'
-      : `${(goal - weeklyCount).toLocaleString()} more to unlock this week`;
-  }
+  if (pctEl) pctEl.textContent = communityUnlockPctLabel(weeklyCount, goal);
+  if (statusEl) statusEl.textContent = communityUnlockStatusText(weeklyCount, goal);
 
   root.classList.remove('hidden');
   root.classList.toggle('community-unlock-meter--unlocked', unlocked);
+  root.classList.toggle(
+    'community-unlock-meter--near',
+    !unlocked && pct >= COMMUNITY_NEAR_UNLOCK_PCT,
+  );
+  root.classList.toggle(
+    'community-unlock-meter--half',
+    !unlocked && pct >= COMMUNITY_HALF_UNLOCK_PCT && pct < COMMUNITY_NEAR_UNLOCK_PCT,
+  );
 
   if (!communityTracked) {
     communityTracked = true;

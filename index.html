@@ -632,8 +632,8 @@
                     LIVE
                 </div>
             </div>
-            <div id="stats-content">
-                <!-- Populated by JS -->
+            <div id="stats-content" aria-busy="true">
+                <!-- Skeleton seeded by public-polish.ts until stats load -->
             </div>
         </div>
 
@@ -650,8 +650,8 @@
                     LIVE
                 </div>
             </div>
-            <div id="recent-activity" class="space-y-3 min-h-[120px]">
-                <!-- Populated by JS -->
+            <div id="recent-activity" class="space-y-3 min-h-[120px]" aria-busy="true">
+                <!-- Skeleton seeded by public-polish.ts until activity loads -->
             </div>
         </div>
 
@@ -769,8 +769,8 @@
                 <span class="px-2.5 py-0.5 bg-cyan-500/15 text-cyan-300 text-[10px] font-bold uppercase tracking-wide rounded-full border border-cyan-400/30">7-day board</span>
             </div>
             <p class="text-sm text-zinc-400 mb-4">Mini-leaderboard for referrals in the last 7 days — separate from the main prize race.</p>
-            <div id="weekly-sprint-container" class="min-h-[120px]">
-                <div class="text-center py-6 text-zinc-500 text-sm">Loading sprint board…</div>
+            <div id="weekly-sprint-container" class="min-h-[120px]" aria-busy="true">
+                <!-- Skeleton seeded by public-polish.ts until sprint loads -->
             </div>
         </div>
 
@@ -795,8 +795,8 @@
                 </button>
             </div>
             
-            <div id="leaderboard-container" class="min-h-[280px]">
-                <div class="text-center py-8 text-zinc-400" data-vr-loading>Loading leaderboard…</div>
+            <div id="leaderboard-container" class="min-h-[280px]" aria-busy="true">
+                <!-- Skeleton seeded by public-polish.ts until leaderboard loads -->
             </div>
         </div>
     </div>

@@ -43,6 +43,12 @@ import { enrichClientReferralOgMeta } from './lib/client-og-meta';
 import { syncSharePowerUI } from './lib/share-ui';
 import { buildLeaderboardHtml, buildRankGapSummary, pulseLeaderboardActivity } from './lib/leaderboard-ui';
 import { buildRecentActivityHtml, pulseRecentActivity } from './lib/activity-ui';
+import {
+  activitySkeletonHtml,
+  leaderboardSkeletonHtml,
+  statsSkeletonHtml,
+  staggerReveal,
+} from './lib/public-polish';
 import { celebrateMilestonesIfAny } from './lib/referral-milestones';
 
 import { initGrowthCommandCenter } from './lib/growth-command-center';
@@ -104,10 +110,15 @@ function updateActivityVelocity(count: number): void {
 async function renderRecentActivity(options: { pulse?: boolean } = {}) {
   const actEl = document.getElementById('recent-activity');
   if (!actEl) return;
+  if (!actEl.querySelector('.activity-row')) {
+    actEl.innerHTML = activitySkeletonHtml();
+  }
   try {
     const { rows, velocityLastHour } = await fetchPublicRecentActivity(10);
     const merged = mergePublicActivityWithRankMoves(rows, getEphemeralRankMoves(), 8);
     actEl.innerHTML = buildRecentActivityHtml(merged);
+    staggerReveal(actEl, '.activity-row');
+    actEl.setAttribute('aria-busy', 'false');
     updateActivityVelocity(velocityLastHour);
     const leaderCount = cachedLeaderboard[0]?.referral_count ?? 0;
     renderHeroSocialProof(merged, velocityLastHour, cachedUniqueReferrers, leaderCount);
@@ -175,12 +186,18 @@ export async function loadLeaderboard(options: { pulseCode?: string } = {}) {
   const container = document.getElementById('leaderboard-container');
   if (!container) return;
 
+  if (!container.querySelector('.leaderboard-row')) {
+    container.innerHTML = leaderboardSkeletonHtml();
+  }
+
   try {
     const entries = await fetchLeaderboard(0);
     cachedLeaderboard = entries || [];
     container.innerHTML = buildLeaderboardHtml(cachedLeaderboard, {
       myCode: getMyReferralCode(),
     });
+    staggerReveal(container, '.leaderboard-row');
+    container.setAttribute('aria-busy', 'false');
     if (options.pulseCode) pulseLeaderboardActivity(options.pulseCode);
     renderHeroTrustPack(cachedLeaderboard);
     applyHeroStatsSubtext(
@@ -283,6 +300,7 @@ async function renderMyStats(myCode: string | null): Promise<void> {
   if (!container) return;
 
   if (!myCode) {
+    container.classList.remove('stats-content--loading');
     container.innerHTML = `
       <div class="text-center py-4">
         <div class="text-4xl mb-3">📈</div>
@@ -297,6 +315,9 @@ async function renderMyStats(myCode: string | null): Promise<void> {
     `;
     return;
   }
+
+  container.innerHTML = statsSkeletonHtml();
+  container.classList.add('stats-content--loading');
 
   const [count, rank] = await Promise.all([
     fetchMyReferralCount(myCode),
@@ -326,8 +347,10 @@ async function renderMyStats(myCode: string | null): Promise<void> {
         : '';
   const gapSummary = buildRankGapSummary(myCode, count, rank, cachedLeaderboard);
 
+  container.classList.remove('stats-content--loading');
+  container.setAttribute('aria-busy', 'false');
   container.innerHTML = `
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 vr-reveal-row" style="--vr-stagger:0">
       <div class="bg-zinc-900/70 border border-white/10 rounded-2xl p-4 text-center">
         <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Your Referrals</div>
         <div class="text-4xl font-bold text-emerald-400 tabular-nums">${count}</div>

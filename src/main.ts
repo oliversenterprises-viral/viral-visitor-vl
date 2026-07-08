@@ -10,6 +10,7 @@ import { initInteractionTracking } from './lib/interaction-tracking';
 import { initVisitorSlim } from './lib/visitor-slim';
 import { initMobileOptimize } from './lib/mobile-optimize';
 import { initPublicClarity, refreshPublicClarityState } from './lib/public-clarity';
+import { initPublicPolish } from './lib/public-polish';
 import { initEmbedMode } from './lib/embed-mode';
 import { initViralLoops } from './lib/viral-loops';
 
@@ -24,6 +25,7 @@ import { seedDefaultTextColors } from './colors';
 seedDefaultTextColors();
 initEmbedMode();
 initMobileOptimize();
+initPublicPolish();
 initPublicClarity();
 
 // console.log('%c[ViralRefer] main.ts module loaded', 'color:#64748b'); // silenced for prod (audit cleanup)

@@ -19,13 +19,21 @@ export function buildLeaderboardHtml(
   options: { myCode?: string | null; highlightCode?: string | null } = {},
 ): string {
   if (!entries.length) {
-    return `<div class="text-center py-8 text-zinc-400">The leaderboard is just getting started.<br>Be one of the first to get on it!</div>`;
+    return `<div class="text-center py-8 text-zinc-400 public-empty-state">
+      <div class="text-3xl mb-2" aria-hidden="true">🏆</div>
+      <p class="font-medium text-zinc-300 mb-1">The board is wide open</p>
+      <p class="text-sm mb-4">Be the first referrer on the live leaderboard.</p>
+      <button type="button" onclick="getMyReferralLinkInstant()"
+        class="text-sm font-semibold px-5 py-2.5 rounded-2xl bg-violet-600 hover:bg-violet-500 text-white transition-all">
+        Get my link — claim #1
+      </button>
+    </div>`;
   }
 
   const myCode = (options.myCode || options.highlightCode || '').trim().toUpperCase();
   let html = '<div class="space-y-2" id="leaderboard-rows">';
 
-  entries.slice(0, 12).forEach((e) => {
+  entries.slice(0, 12).forEach((e, index) => {
     const isLeader = e.rank === 1;
     const isMe = myCode && (e.referrer_code || '').toUpperCase() === myCode;
     const rowClass = [
@@ -43,7 +51,7 @@ export function buildLeaderboardHtml(
       : `<div class="w-7 h-7 rounded-full bg-violet-600 flex items-center justify-center text-xs font-bold">${e.rank}</div>`;
 
     html += `
-      <div class="${rowClass}" data-rank="${e.rank}" data-code="${escapeHtml(e.referrer_code)}">
+      <div class="${rowClass} vr-reveal-row" data-rank="${e.rank}" data-code="${escapeHtml(e.referrer_code)}" style="--vr-stagger:${index}">
         <div class="flex items-center gap-3">
           ${rankBadge}
           <div class="font-mono ${isLeader ? 'text-amber-200' : 'text-emerald-400'}">${escapeHtml(e.referrer_code)}${isMe ? ' <span class="text-[10px] text-emerald-300/80">(you)</span>' : ''}</div>
