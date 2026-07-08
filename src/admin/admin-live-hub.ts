@@ -50,7 +50,7 @@ let activeTab = 0;
 let lastToastAt = 0;
 let feedPaused = false;
 let hubRunning = false;
-let hubSubscribed = false;
+
 let feedFilters: AdminLiveFeedFilters = { ...DEFAULT_ADMIN_LIVE_FILTERS };
 
 function isAdminOpen(): boolean {
@@ -215,7 +215,6 @@ function setLiveStatus(
   channelStatus?: string,
   channelError?: Error,
 ): void {
-  hubSubscribed = subscribed;
   const status = document.getElementById('admin-live-status');
   const hub = document.getElementById('admin-live-hub');
   const statusText = document.getElementById('admin-live-status-text');
@@ -268,7 +267,18 @@ function seedEventsFromRows(
 
 async function seedAdminLiveFeed(): Promise<void> {
   const result = await invokeAdminAction<AdminLiveSeed>('get_admin_live_seed');
-  if (!result.success) return;
+  if (!result.success) {
+    if (feed.length === 0) {
+      const el = document.getElementById('admin-live-feed');
+      if (el) {
+        const msg = result.error?.includes('Admin session')
+          ? 'Sign in to load live activity — polling every 20s'
+          : `Live seed unavailable (${result.error || 'error'}) — retrying…`;
+        el.innerHTML = buildAdminLiveFeedHtml([], Date.now(), msg);
+      }
+    }
+    return;
+  }
 
   const data = result.data || {};
   const seeded = [
@@ -313,7 +323,7 @@ function stopAdminLivePolling(): void {
 
 /** Re-apply live dot visibility after tab panels re-render their HTML. */
 export function refreshAdminLiveIndicators(): void {
-  const show = hubRunning && hubSubscribed;
+  const show = hubRunning;
   for (const id of ['visitor-live-indicator', 'banner-live-indicator', 'content-live-indicator']) {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('hidden', !show);
@@ -409,8 +419,11 @@ export function startAdminLiveHub(): void {
   );
 
   hubChannel.subscribe((status, err) => {
-    setLiveStatus(true, status, err);
-    void seedAdminLiveFeed();
+    const realtime = status === 'SUBSCRIBED';
+    setLiveStatus(realtime, status, err);
+    if (realtime || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      void seedAdminLiveFeed();
+    }
   });
 
   startAdminLivePolling();
@@ -418,7 +431,6 @@ export function startAdminLiveHub(): void {
 
 export function stopAdminLiveHub(): void {
   hubRunning = false;
-  hubSubscribed = false;
   feed.length = 0;
   stopAdminLivePolling();
 

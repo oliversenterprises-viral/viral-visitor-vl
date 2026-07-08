@@ -145,6 +145,18 @@ describe('admin-live-helpers', () => {
   it('isNoisyVisitorFunnelStep detects SiteLanding', () => {
     expect(isNoisyVisitorFunnelStep('SiteLanding')).toBe(true);
     expect(isNoisyVisitorFunnelStep('GetReferralLink')).toBe(false);
+    expect(isNoisyVisitorFunnelStep('SprintBoardView')).toBe(true);
+    expect(isNoisyVisitorFunnelStep('ChallengeDuelShared')).toBe(false);
+  });
+
+  it('parseAdminLiveEvent labels viral loop steps as Loop', () => {
+    const ev = parseAdminLiveEvent('visitor_events', 'INSERT', {
+      id: 3,
+      event_name: 'ChallengeDuelShared',
+      created_at: '2026-06-30T12:00:00Z',
+    });
+    expect(ev?.label).toContain('Loop');
+    expect(ev?.label).toContain('ChallengeDuelShared');
   });
 
   it('shouldShowAdminLiveEvent hides landings by default', () => {

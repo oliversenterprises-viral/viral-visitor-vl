@@ -363,7 +363,9 @@ Deno.serve(async (req: Request) => {
             shares: shares.data || [],
             prize_claims: claims.data || [],
             visitor_events: visitorEvents.data || [],
-            banner_events: bannerEvents.data || [],
+            banner_events: (bannerEvents.data || []).map((row: Record<string, unknown>) =>
+              normalizeBannerEventRow(row),
+            ),
             site_content: siteContent.data || [],
           },
         }),

@@ -2,6 +2,8 @@
  * Pure helpers for the admin live activity hub — event parsing, feed HTML, tab badges.
  */
 
+import { isPassiveViralLoopStep, isViralLoopStep } from '../lib/visitor-tracking';
+
 export type AdminLiveEventKind =
   | 'referral'
   | 'share'
@@ -145,18 +147,19 @@ export function parseAdminLiveEvent(
   }
 
   if (table === 'visitor_events' && eventType === 'INSERT') {
-    const step = str(row.event_name, 24) || 'event';
+    const step = str(row.event_name, 32) || 'event';
     const src = str(row.utm_source, 16);
     const refCode = str(row.ref_code, 16);
     const detailParts: string[] = [];
     if (refCode) detailParts.push(`ref:${refCode}`);
     else detailParts.push('direct');
     if (src) detailParts.push(src);
+    const prefix = isViralLoopStep(step) ? 'Loop' : 'Funnel';
     return {
       id,
       kind: 'visitor',
       ...pickMeta('visitor'),
-      label: `Funnel · ${step}`,
+      label: `${prefix} · ${step}`,
       detail: detailParts.join(' · ') || 'visitor',
       funnelStep: step,
       refCode: refCode || undefined,
@@ -165,8 +168,9 @@ export function parseAdminLiveEvent(
   }
 
   if (table === 'banner_events' && eventType === 'INSERT') {
-    const type = str(row.type, 12) || 'event';
-    const label = str(row.label, 20) || str(row.key, 20) || 'banner';
+    const type = str(row.type || row.event_type, 12) || 'event';
+    const label =
+      str(row.label || row.banner_label, 20) || str(row.key || row.banner_key, 20) || 'banner';
     return {
       id,
       kind: 'banner',
@@ -199,10 +203,12 @@ function pickMeta(kind: AdminLiveEventKind): Pick<AdminLiveEvent, 'tab' | 'icon'
   return { tab: m.tab, icon: m.icon };
 }
 
-/** True for high-volume passive funnel steps (SiteLanding). */
+/** True for high-volume passive funnel/loop impressions hidden by default. */
 export function isNoisyVisitorFunnelStep(step: string | undefined): boolean {
-  const s = (step || '').trim().toLowerCase();
-  return s === 'sitelanding' || s === 'landing';
+  const s = (step || '').trim();
+  if (!s) return false;
+  if (s.toLowerCase() === 'sitelanding' || s.toLowerCase() === 'landing') return true;
+  return isPassiveViralLoopStep(s);
 }
 
 const TRAFFIC_SEGMENTS: AdminLiveTrafficSegment[] = ['all', 'referred', 'direct'];

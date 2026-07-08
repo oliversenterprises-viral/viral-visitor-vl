@@ -121,6 +121,51 @@ export function isVisitorStatsRecentEvent(event: Record<string, unknown>): boole
   return false;
 }
 
+export function isViralLoopStep(name: string): boolean {
+  return isViralLoopEventName(name.trim());
+}
+
+export function isPassiveViralLoopStep(name: string): boolean {
+  const step = name.trim() as ViralLoopEvent;
+  return isViralLoopEventName(step) && PASSIVE_VIRAL_LOOP_EVENTS.has(step);
+}
+
+const FUNNEL_EVENT_LABELS: Record<VisitorFunnelEvent, string> = {
+  SiteLanding: 'Landing',
+  GetReferralLink: 'Get link',
+  CopyReferralLink: 'Copy link',
+  ShareReferral: 'Share',
+  OpenPrizeClaim: 'Open claim',
+  SubmitPrizeClaim: 'Submit claim',
+};
+
+/** Human-readable label for admin recent-events + live feed. */
+export function formatVisitorEventDisplayName(name: string): string {
+  const step = name.trim();
+  if (isFunnelEventName(step)) return FUNNEL_EVENT_LABELS[step];
+  if (isViralLoopStep(step)) return `Loop: ${step}`;
+  return step;
+}
+
+/** Parse metadata from JSONB object or legacy JSON string rows. */
+export function parseVisitorEventMetadata(event: Record<string, unknown>): Record<string, unknown> {
+  const meta = event.metadata;
+  if (meta && typeof meta === 'object' && !Array.isArray(meta)) {
+    return meta as Record<string, unknown>;
+  }
+  if (typeof meta === 'string' && meta.trim()) {
+    try {
+      const parsed = JSON.parse(meta) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return {};
+}
+
 function resolveRefCode(): string | undefined {
   const utm = getStoredUtmAttribution();
   return utm?.ref || getStoredLandingRef() || undefined;
@@ -322,7 +367,7 @@ export async function getVisitorEventsForStats(): Promise<{
       utm_content: row.utm_content,
       utm_medium: row.utm_medium,
       ref_code: row.ref_code,
-      metadata: row.metadata,
+      metadata: parseVisitorEventMetadata(row),
       created_at: row.created_at,
     }));
     return { events: serverEvents, source: 'server' };

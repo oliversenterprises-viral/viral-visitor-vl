@@ -1,5 +1,9 @@
 /** Premium visitor funnel quick-stats panel (admin audit). */
-import { computeVisitorFunnelStats, getLocalVisitorEvents, getVisitorEventsForStats } from '../lib/visitor-tracking';
+import {
+  computeVisitorFunnelStats,
+  formatVisitorEventDisplayName,
+  getVisitorEventsForStats,
+} from '../lib/visitor-tracking';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { invokeAdminAction } from '../lib/admin-action-client';
 import { escapeHtml } from '../content';
@@ -27,7 +31,7 @@ import {
   filterCountryRowsForDisplay,
   filterExcludedVisitorFunnelEvents,
   formatRecentVisitorEventDetail,
-  getReferralNotifierIp,
+  formatReferralNotifierLine,
   isRecentReferralNotifier,
   shouldShowUtmSources,
   sortSourceEntries,
@@ -204,7 +208,12 @@ function renderVisitorFunnelView(
   const uniqueSessions = countUniqueSessions(rangeFiltered);
   const isServer = source === 'server';
   const refreshedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const latestTs = latestEventTimestamp(rangeFiltered);
+  const latestTs = stats.lastEvents.length
+    ? eventTimestamp(stats.lastEvents[0]!)
+    : latestEventTimestamp(rangeFiltered.filter((e) => {
+        const name = String(e.event_name || e.eventName || '');
+        return name && name !== 'SprintBoardView' && name !== 'CommunityUnlockView';
+      }));
   const latestLabel = latestTs ? formatEventTimestampLabel(latestTs) : '';
 
   container.dataset.visitorCsvPayload = buildVisitorCsv(stats.funnel);
@@ -350,15 +359,17 @@ function renderVisitorFunnelView(
   html += `</div>`;
   html += `<div class="font-mono text-[8px] text-zinc-300 bg-emerald-950/30 border border-emerald-500/25 p-1.5 rounded max-h-20 overflow-y-auto mb-2">`;
   if (referralFetchError) {
-    html += `<div class="text-amber-400/90">Could not load referrals (${escapeHtml(referralFetchError)}) — click Refresh.</div>`;
+    const hint = referralFetchError.includes('Admin session')
+      ? 'Log in with the owner password, then Refresh.'
+      : 'Click Refresh to retry.';
+    html += `<div class="text-amber-400/90">Referral notifier unavailable (${escapeHtml(referralFetchError)}). ${escapeHtml(hint)}</div>`;
   } else if (!recentReferrals.length) {
-    html += `<div class="text-zinc-500">No credited referrals yet.</div>`;
+    html += `<div class="text-zinc-500">No credited referrals in range — real signups appear here with referrer code and visitor IP.</div>`;
   } else {
     for (const row of recentReferrals) {
       const ts = row.created_at || '';
       const when = ts ? formatEventTimestampLabel(ts) : '';
-      const code = String(row.referrer_code || '—');
-      const ip = getReferralNotifierIp(row) || '—';
+      const { code, ipLabel } = formatReferralNotifierLine(row);
       const isNew = isRecentReferralNotifier(ts, 60);
       const dot = isNew
         ? '<span class="text-emerald-400" title="Last hour">●</span> '
@@ -366,7 +377,7 @@ function renderVisitorFunnelView(
       const timePrefix = when
         ? `<span class="text-zinc-500">${escapeHtml(when)}</span> · `
         : '';
-      html += `<div class="mb-0.5 ${isNew ? 'text-emerald-100' : ''}">${dot}${timePrefix}<span class="text-violet-200">${escapeHtml(code)}</span> ← <span class="text-zinc-200">${escapeHtml(ip)}</span></div>`;
+      html += `<div class="mb-0.5 ${isNew ? 'text-emerald-100' : ''}">${dot}${timePrefix}<span class="text-violet-200">${escapeHtml(code)}</span> <span class="text-zinc-500">credited</span> <span class="text-zinc-500">←</span> <span class="text-zinc-200">${escapeHtml(ipLabel)}</span></div>`;
     }
   }
   html += `</div>`;
@@ -376,19 +387,20 @@ function renderVisitorFunnelView(
     for (const e of stats.lastEvents) {
       const ts = eventTimestamp(e);
       const when = ts ? formatEventTimestampLabel(ts) : '';
-      const src = e.utm_source ? ` [${e.utm_source}]` : '';
+      const rawName = String(e.event_name || e.eventName || '');
+      const displayName = formatVisitorEventDisplayName(rawName);
+      const utm = String(e.utm_source || e.utmSource || '').trim();
       const detail = formatRecentVisitorEventDetail(e);
-      const geo =
-        e.country_code && !detail.includes(String(e.country_code))
-          ? ` ${countryLabel(String(e.country_code))}`
-          : '';
       const timePrefix = when
         ? `<span class="text-zinc-500">${escapeHtml(when)}</span> · `
+        : '';
+      const utmSuffix = utm && utm !== '(direct)'
+        ? ` <span class="text-zinc-500">[${escapeHtml(utm)}]</span>`
         : '';
       const detailSuffix = detail
         ? ` <span class="text-zinc-400">(${escapeHtml(detail)})</span>`
         : '';
-      html += `<div class="mb-0.5">${timePrefix}${escapeHtml(String(e.event_name || ''))}${escapeHtml(geo)}${escapeHtml(String(src))}${detailSuffix}</div>`;
+      html += `<div class="mb-0.5">${timePrefix}<span class="text-zinc-100">${escapeHtml(displayName)}</span>${utmSuffix}${detailSuffix}</div>`;
     }
     html += `</div>`;
   } else {
@@ -445,12 +457,7 @@ export async function wireVisitorFunnelStatsQuick(root: HTMLElement) {
     }
   });
   bindVisitorStatsRefresh(el);
-  const local = getLocalVisitorEvents();
-  if (local.length) {
-    renderVisitorFunnelView(el, local, 'local');
-  } else {
-    el.innerHTML = SKELETON;
-  }
+  el.innerHTML = SKELETON;
   try {
     const [res, referralNotifier] = await Promise.all([
       getVisitorEventsForStats(),
@@ -465,8 +472,6 @@ export async function wireVisitorFunnelStatsQuick(root: HTMLElement) {
       referralNotifier.error,
     );
   } catch {
-    if (!local.length) {
-      el.innerHTML = `<div class="text-[9px] text-amber-400">Could not load visitor stats. Click Refresh.</div>`;
-    }
+    el.innerHTML = `<div class="text-[9px] text-amber-400">Could not load visitor stats. Click Refresh.</div>`;
   }
 }

@@ -16,6 +16,7 @@ import {
   filterTestVisitorFunnelEvents,
   getVisitorEventIp,
 } from '../../supabase/functions/_shared/visitor-funnel-test';
+import { parseVisitorEventMetadata } from '../lib/visitor-tracking';
 
 export interface FunnelRow {
   name: string;
@@ -87,10 +88,7 @@ export interface RecentReferralNotifierRow {
 }
 
 function metadataRecord(event: Record<string, unknown>): Record<string, unknown> {
-  const meta = event.metadata;
-  return meta && typeof meta === 'object' && !Array.isArray(meta)
-    ? (meta as Record<string, unknown>)
-    : {};
+  return parseVisitorEventMetadata(event);
 }
 
 /** Drop owner/smoke/test rows from admin funnel panels — does not affect server recording. */
@@ -141,6 +139,19 @@ export function formatRecentVisitorEventDetail(event: Record<string, unknown>): 
 export function getReferralNotifierIp(row: RecentReferralNotifierRow): string {
   const ip = row.referred_ip ?? row.ip_address;
   return typeof ip === 'string' ? ip.trim() : '';
+}
+
+/** Label for referral notifier rows (credited referrer ← visitor IP). */
+export function formatReferralNotifierLine(row: RecentReferralNotifierRow): {
+  code: string;
+  ipLabel: string;
+} {
+  const code = String(row.referrer_code || '—').trim() || '—';
+  const ip = getReferralNotifierIp(row);
+  return {
+    code,
+    ipLabel: ip || 'IP withheld',
+  };
 }
 
 /** True when referral landed within the last N minutes (for notifier highlight). */

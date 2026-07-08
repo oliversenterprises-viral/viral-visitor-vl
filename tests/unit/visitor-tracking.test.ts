@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { computeVisitorFunnelStats } from '../../src/lib/visitor-tracking';
+import {
+  computeVisitorFunnelStats,
+  formatVisitorEventDisplayName,
+  parseVisitorEventMetadata,
+} from '../../src/lib/visitor-tracking';
 
 describe('visitor-tracking stats', () => {
   it('counts unique visitors per funnel step', () => {
@@ -55,6 +59,19 @@ describe('visitor-tracking stats', () => {
       'GetReferralLink',
       'SiteLanding',
     ]);
+  });
+
+  it('formatVisitorEventDisplayName humanizes funnel and loop steps', () => {
+    expect(formatVisitorEventDisplayName('GetReferralLink')).toBe('Get link');
+    expect(formatVisitorEventDisplayName('ChallengeDuelShared')).toContain('Loop:');
+  });
+
+  it('parseVisitorEventMetadata reads JSON string metadata', () => {
+    const meta = parseVisitorEventMetadata({
+      metadata: '{"client_ip":"203.0.113.1","platform":"x"}',
+    });
+    expect(meta.client_ip).toBe('203.0.113.1');
+    expect(meta.platform).toBe('x');
   });
 
   it('groups country breakdown by landing unique visitors', () => {

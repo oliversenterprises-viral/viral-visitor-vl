@@ -12,6 +12,7 @@ import {
   getVisitorEventIp,
   isExcludedVisitorFunnelEvent,
   isTestVisitorFunnelRefCode,
+  formatReferralNotifierLine,
   getReferralNotifierIp,
   isRecentReferralNotifier,
   countRecentReferralNotifiers,
@@ -152,6 +153,17 @@ describe('visitor funnel stats helpers (pure)', () => {
     expect(detail).toContain('ref:VIRAL-ABC');
     expect(detail).toContain('US');
     expect(detail).toContain('x');
+  });
+
+  it('formatReferralNotifierLine falls back when IP missing', () => {
+    expect(formatReferralNotifierLine({ referrer_code: 'VIRAL-A' })).toEqual({
+      code: 'VIRAL-A',
+      ipLabel: 'IP withheld',
+    });
+    expect(formatReferralNotifierLine({ referrer_code: 'VIRAL-B', referred_ip: '9.9.9.9' })).toEqual({
+      code: 'VIRAL-B',
+      ipLabel: '9.9.9.9',
+    });
   });
 
   it('referral notifier helpers detect recent rows and IPs', () => {
