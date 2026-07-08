@@ -21,7 +21,7 @@ const SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxYmVmanpwZ3Nlenp3ZHJ2dnVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTMyNDAsImV4cCI6MjA4OTUyOTI0MH0.pVHqeG0sGPgpUlOlskf7rOvnAsdrzrv5govZXcyxEdk';
 const LIVE_SITE = (process.env.SMOKE_LIVE_URL || 'https://www.viralrefer.app').replace(/\/$/, '');
 const REFERRER_CODE = process.env.VERIFY_REFERRER_CODE || 'VIRAL-97UWEGZ';
-const ADMIN_PASSWORD = process.env.VITE_ADMIN_PASSWORD || process.env.ADMIN_TEST_PASSWORD || 'nova2026$';
+const ADMIN_PASSWORD = process.env.ADMIN_TEST_PASSWORD || process.env.ADMIN_OWNER_PASSWORD || '';
 
 const report = {
   generatedAt: new Date().toISOString(),

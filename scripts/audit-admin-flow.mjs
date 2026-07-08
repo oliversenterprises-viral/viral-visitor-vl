@@ -15,7 +15,7 @@ try {
   results.push({ check: 'Password modal opens', pass: pwModalVisible });
 
   // Submit password
-  const adminPassword = process.env.ADMIN_TEST_PASSWORD || process.env.VITE_ADMIN_PASSWORD || '';
+  const adminPassword = process.env.ADMIN_TEST_PASSWORD || '';
   if (!adminPassword) {
     results.push({ check: 'Admin password configured', pass: false, detail: 'Set ADMIN_TEST_PASSWORD' });
     throw new Error('ADMIN_TEST_PASSWORD not set');

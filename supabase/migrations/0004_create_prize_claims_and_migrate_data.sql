@@ -1,5 +1,6 @@
 -- ============================================================================
--- MIGRATION 0004: Create `prize_claims` table + Migrate data from `claims`
+-- MIGRATION 0004 (canonical): Create `prize_claims` table + Migrate data from `claims`
+-- Alternate rename-only path archived at supabase/migrations-archive/0004_align_claims_to_prize_claims.sql
 -- Strategy: Safe, reversible approach for Option 1
 -- - We do NOT modify or delete the existing `claims` table.
 -- - We create a new `prize_claims` table with the correct structure.

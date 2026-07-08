@@ -1,6 +1,6 @@
 /**
  * Set ADMIN_TEST_PASSWORD GitHub Actions secret (CI-only).
- * Does NOT modify Vercel VITE_ADMIN_PASSWORD or Supabase ADMIN_OWNER_PASSWORD.
+ * Does NOT modify Supabase ADMIN_OWNER_PASSWORD (production owner password).
  */
 import { spawnSync } from 'child_process';
 import { readFileSync } from 'fs';

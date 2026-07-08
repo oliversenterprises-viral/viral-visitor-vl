@@ -164,10 +164,7 @@ Deno.serve(async (req: Request) => {
       });
     }
     const password = String(payload?.password || '');
-    const expected =
-      Deno.env.get('ADMIN_OWNER_PASSWORD') ||
-      Deno.env.get('VITE_ADMIN_PASSWORD') ||
-      '';
+    const expected = Deno.env.get('ADMIN_OWNER_PASSWORD') || '';
     const actionSecret = Deno.env.get('ADMIN_ACTION_SECRET') || '';
     const ok = !!expected && timingSafeEqual(password, expected);
     const sessionToken =
