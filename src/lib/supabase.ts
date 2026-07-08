@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { LeaderboardEntry, RecentActivityItem } from './types';
 import { createSupabaseStub } from './supabase-stub';
-import { isTestReferralRecord, isTestReferrerCode } from './test-referral';
+import type { PublicActivityRow } from './public-activity';
 
 // CRITICAL: Secrets must come ONLY from Vite env vars (VITE_*).
 // Production deploys (Vercel) inject real values at build time.
@@ -36,42 +36,18 @@ export const supabase: SupabaseClient = isSupabaseConfigured
     })
   : createSupabaseStub();
 
-// Client-side fallback (pre-0005 or if RPC unavailable)
-async function fetchLeaderboardFallback(minReferrals: number): Promise<LeaderboardEntry[]> {
-  if (!isSupabaseConfigured) return [];
-  const { data, error } = await supabase
-    .from('referrals')
-    .select('referrer_code')
-    .order('created_at', { ascending: false })
-    .limit(5000);
-
-  if (error) return [];
-
-  const counts: Record<string, number> = {};
-  (data as Array<{ referrer_code: string }> | null)?.forEach((row) => {
-    counts[row.referrer_code] = (counts[row.referrer_code] || 0) + 1;
-  });
-
-  return Object.entries(counts)
-    .filter(([code, count]) => count >= minReferrals && !isTestReferrerCode(code))
-    .map(([code, count]) => ({ referrer_code: code, referral_count: count, rank: 0 }))
-    .sort((a, b) => b.referral_count - a.referral_count)
-    .slice(0, 50)
-    .map((entry, idx) => ({ ...entry, rank: idx + 1 })) as LeaderboardEntry[];
-}
-
-// Typed query helpers — prefer 0005 RPCs, fall back safely
+// Typed query helpers — prefer SECURITY DEFINER RPCs (no direct referrals table reads)
 export async function fetchLeaderboard(minReferrals: number = 1): Promise<LeaderboardEntry[]> {
   if (!isSupabaseConfigured) return [];
   try {
     const { data, error } = await supabase.rpc('get_leaderboard', { min_referrals: minReferrals });
-    if (!error && Array.isArray(data) && data.length >= 0) {
+    if (!error && Array.isArray(data)) {
       return data as LeaderboardEntry[];
     }
   } catch {
-    // RPC not deployed yet
+    // RPC unavailable
   }
-  return fetchLeaderboardFallback(minReferrals);
+  return [];
 }
 
 export async function fetchTotalReferrers(): Promise<number> {
@@ -80,11 +56,39 @@ export async function fetchTotalReferrers(): Promise<number> {
     const { data, error } = await supabase.rpc('get_total_referral_count');
     if (!error && typeof data === 'number') return data;
   } catch {
-    // fallback
+    // RPC unavailable
   }
-  const { count, error } = await supabase.from('referrals').select('*', { count: 'exact', head: true });
-  if (error) return 0;
-  return count || 0;
+  return 0;
+}
+
+/** Distinct real referrers (Phase 3 trust pack). Falls back to leaderboard size. */
+export async function fetchUniqueReferrerCount(): Promise<number> {
+  if (!isSupabaseConfigured) return 0;
+  try {
+    const { data, error } = await supabase.rpc('get_unique_referrer_count');
+    if (!error && typeof data === 'number') return data;
+  } catch {
+    // RPC may not exist until migration 0018
+  }
+  try {
+    const board = await fetchLeaderboard(1);
+    return board.length;
+  } catch {
+    return 0;
+  }
+}
+
+/** Public leaderboard rank for a referrer (null if not on board). */
+export async function fetchMyLeaderboardRank(referrerCode: string): Promise<number | null> {
+  if (!referrerCode || !isSupabaseConfigured) return null;
+  try {
+    const board = await fetchLeaderboard(1);
+    const code = referrerCode.trim().toUpperCase();
+    const entry = board.find((e) => (e.referrer_code || '').toUpperCase() === code);
+    return entry?.rank ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchMyReferralCount(referrerCode: string): Promise<number> {
@@ -93,27 +97,58 @@ export async function fetchMyReferralCount(referrerCode: string): Promise<number
     const { data, error } = await supabase.rpc('get_my_referral_count', { p_referrer_code: referrerCode });
     if (!error && typeof data === 'number') return data;
   } catch {
-    // fallback
+    // RPC unavailable
   }
-  const { count, error } = await supabase
-    .from('referrals')
-    .select('*', { count: 'exact', head: true })
-    .eq('referrer_code', referrerCode);
-  if (error) return 0;
-  return count || 0;
+  return 0;
 }
 
 export async function fetchRecentActivity(limit = 8): Promise<RecentActivityItem[]> {
-  if (!isSupabaseConfigured) return [];
-  const { data } = await supabase
-    .from('referrals')
-    .select('referrer_code, created_at')
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  const { rows } = await fetchPublicRecentActivity(limit);
+  return rows;
+}
 
-  return ((data as RecentActivityItem[]) || []).filter(
-    (row) => !isTestReferralRecord(row as unknown as Record<string, unknown>),
-  );
+/** Public feed via get_public_recent_activity RPC (no anon table SELECT). */
+export async function fetchPublicRecentActivity(limit = 8): Promise<{
+  rows: PublicActivityRow[];
+  velocityLastHour: number;
+}> {
+  if (!isSupabaseConfigured) return { rows: [], velocityLastHour: 0 };
+
+  const fetchLimit = Math.max(limit * 2, 12);
+
+  try {
+    const { data, error } = await supabase.rpc('get_public_recent_activity', {
+      p_limit: fetchLimit,
+    });
+    if (!error && data && typeof data === 'object') {
+      const payload = data as {
+        rows?: Array<{
+          kind?: string;
+          referrer_code?: string;
+          platform?: string | null;
+          created_at?: string;
+        }>;
+        velocity_last_hour?: number;
+      };
+      const rows = (payload.rows || [])
+        .filter((row) => row.referrer_code && row.created_at)
+        .map((row) => ({
+          kind: (row.kind === 'share' ? 'share' : 'referral') as PublicActivityRow['kind'],
+          referrer_code: String(row.referrer_code),
+          created_at: String(row.created_at),
+          platform: row.platform || undefined,
+        }));
+      return {
+        rows: rows.slice(0, limit),
+        velocityLastHour:
+          typeof payload.velocity_last_hour === 'number' ? payload.velocity_last_hour : 0,
+      };
+    }
+  } catch {
+    // RPC not deployed yet
+  }
+
+  return { rows: [], velocityLastHour: 0 };
 }
 
 export async function fetchSiteContent(): Promise<Record<string, unknown>> {

@@ -1,25 +1,68 @@
 import {
   fetchLeaderboard,
   fetchTotalReferrers,
-  fetchRecentActivity,
+  fetchPublicRecentActivity,
   fetchSiteContent,
   fetchMyReferralCount,
+  fetchMyLeaderboardRank,
   isSupabaseConfigured,
   supabase,
 } from './lib/supabase';
 import { applyExistingReferralLink, syncMobileReferralCta } from './referral';
-import { isTestReferralRecord } from './lib/test-referral';
+import { buildActivityVelocityHtml } from './lib/public-activity';
+import { renderHeroSocialProof } from './lib/referred-landing-social-proof';
+import { applyHeroStatsSubtext } from './lib/public-clarity';
+import { renderHeroTrustPack } from './lib/referred-landing-trust-pack';
+import {
+  applyReferredLandingOverrides,
+  initDirectLandingConversionBoost,
+  isReferredLanding,
+  type FunnelStep,
+} from './lib/funnel-conversion';
+import { applyHeroCtaVariant } from './lib/hero-cta-variant';
+import { applyUtmHeroCopy } from './lib/utm-hero-copy';
+import { syncFunnelGuide } from './lib/funnel-guide';
+import { initFunnelCopyFromContent } from './lib/funnel-copy';
+import { registerGlobal } from './lib/global';
+import { initOptimizerFlagsFromContent } from './lib/optimizer-flags';
+import { applyVisitorSlimFromFlags } from './lib/visitor-slim';
+import {
+  getEphemeralRankMoves,
+  mergePublicActivityWithRankMoves,
+  recordLeaderboardRankMoves,
+} from './lib/rank-move-activity';
 
 import { updatePublicContent } from './content';
 import { getMyReferralCode } from './public/globals';
+import {
+  setShareGapToNextRank,
+  setShareReferralCount,
+  setShareLeaderboardRank,
+} from './lib/share-context';
+import { enrichClientReferralOgMeta } from './lib/client-og-meta';
+import { syncSharePowerUI } from './lib/share-ui';
+import { buildLeaderboardHtml, buildRankGapSummary, pulseLeaderboardActivity } from './lib/leaderboard-ui';
+import { buildRecentActivityHtml, pulseRecentActivity } from './lib/activity-ui';
+import { celebrateMilestonesIfAny } from './lib/referral-milestones';
+
+import { initGrowthCommandCenter } from './lib/growth-command-center';
+import { initViralLoopUI, syncViralLoopUI } from './lib/viral-loop-ui';
+import { referralsToNextRank } from './lib/share-gap';
+import type { LeaderboardEntry } from './lib/types';
+
+let cachedUniqueReferrers = 0;
 
 // ------------------ PUBLIC SITE INITIALIZATION ------------------
 // Central place for bootstrapping the public-facing homepage.
 // Handles loading dynamic content, leaderboard, referral link prefill, etc.
 
 let referralsChannel: any = null;
+let siteContentChannel: any = null;
+let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
+let cachedLeaderboard: LeaderboardEntry[] = [];
 
 const INIT_FETCH_TIMEOUT_MS = 12_000;
+const PUBLIC_ACTIVITY_POLL_MS = 45_000;
 
 async function withInitTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
   return Promise.race([
@@ -43,58 +86,82 @@ function updateRealtimeStatus(status: string) {
   }
 }
 
-async function renderRecentActivity() {
+function updateActivityVelocity(count: number): void {
+  const el = document.getElementById('recent-activity-velocity');
+  if (!el) return;
+  const html = buildActivityVelocityHtml(count);
+  if (html) {
+    el.innerHTML = html;
+    el.classList.remove('hidden');
+  } else {
+    el.innerHTML = '';
+    el.classList.add('hidden');
+  }
+}
+
+async function renderRecentActivity(options: { pulse?: boolean } = {}) {
   const actEl = document.getElementById('recent-activity');
   if (!actEl) return;
   try {
-    const recent = await fetchRecentActivity(6);
-    if (recent.length) {
-      actEl.innerHTML = recent.map((a) => `
-        <div class="flex justify-between text-xs bg-zinc-900/70 px-4 py-2 rounded-2xl">
-          <span class="font-mono text-emerald-400">${a.referrer_code}</span>
-          <span class="text-zinc-400">${new Date(a.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-        </div>`).join('');
-    } else {
-      actEl.innerHTML = `<div class="text-center py-4 text-zinc-400 text-sm">Early activity from the first participants will appear here.</div>`;
-    }
+    const { rows, velocityLastHour } = await fetchPublicRecentActivity(10);
+    const merged = mergePublicActivityWithRankMoves(rows, getEphemeralRankMoves(), 8);
+    actEl.innerHTML = buildRecentActivityHtml(merged);
+    updateActivityVelocity(velocityLastHour);
+    const leaderCount = cachedLeaderboard[0]?.referral_count ?? 0;
+    renderHeroSocialProof(merged, velocityLastHour, cachedUniqueReferrers, leaderCount);
+    if (options.pulse) pulseRecentActivity();
   } catch {
     actEl.innerHTML = `<div class="text-center py-4 text-zinc-400 text-sm">Unable to load activity.</div>`;
   }
 }
 
+function initSiteContentRealtime() {
+  if (siteContentChannel || !isSupabaseConfigured) return;
+
+  siteContentChannel = supabase
+    .channel('public-site-content-live')
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'site_content',
+    }, () => {
+      void loadSiteContent();
+    })
+    .subscribe();
+}
+
+function startPublicActivityPolling() {
+  if (publicActivityPollTimer || !isSupabaseConfigured) return;
+  publicActivityPollTimer = setInterval(() => {
+    void (async () => {
+      const boardBefore = [...cachedLeaderboard];
+      await loadLeaderboard();
+      recordLeaderboardRankMoves(boardBefore, cachedLeaderboard);
+      await renderRecentActivity();
+      const myCode = getMyReferralCode();
+      if (myCode) await renderMyStats(myCode);
+    })();
+  }, PUBLIC_ACTIVITY_POLL_MS);
+}
+
 function initRealtimeSubscriptions() {
   if (referralsChannel) return;
 
-  referralsChannel = supabase
-    .channel('referrals-live')
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'referrals',
-    }, async (payload) => {
-      if (payload.new && isTestReferralRecord(payload.new as Record<string, unknown>)) {
-        return;
-      }
-
-      // Live refresh all public views
-      await loadLeaderboard();
-      await renderRecentActivity();
-
-      // Personal stats only for the affected referrer
-      const myCode = getMyReferralCode();
-      if (myCode && payload.new && payload.new.referrer_code === myCode) {
-        await renderMyStats(myCode);
-      }
-    })
-    .subscribe((status) => {
-      updateRealtimeStatus(status);
-    });
+  initSiteContentRealtime();
+  referralsChannel = { unsubscribe: () => {} };
+  updateRealtimeStatus('SUBSCRIBED');
+  startPublicActivityPolling();
 }
 
 function cleanupRealtimeSubscriptions() {
-  if (referralsChannel) {
-    supabase.removeChannel(referralsChannel);
-    referralsChannel = null;
+  if (publicActivityPollTimer) {
+    clearInterval(publicActivityPollTimer);
+    publicActivityPollTimer = null;
+  }
+  referralsChannel = null;
+  if (siteContentChannel) {
+    supabase.removeChannel(siteContentChannel);
+    siteContentChannel = null;
   }
 }
 
@@ -102,29 +169,22 @@ function cleanupRealtimeSubscriptions() {
  * Loads and renders the public leaderboard.
  * Fetches the top referrers and displays them on the homepage.
  */
-export async function loadLeaderboard() {
+export async function loadLeaderboard(options: { pulseCode?: string } = {}) {
   const container = document.getElementById('leaderboard-container');
   if (!container) return;
 
   try {
     const entries = await fetchLeaderboard(0);
-    if (!entries || entries.length === 0) {
-      container.innerHTML = `<div class="text-center py-8 text-zinc-400">The leaderboard is just getting started.<br>Be one of the first to get on it!</div>`;
-      return;
-    }
-    let h = '<div class="space-y-2">';
-    entries.slice(0, 12).forEach((e) => {
-      h += `
-        <div class="leaderboard-row flex justify-between items-center px-5 py-3 bg-zinc-900/70 border border-white/10 rounded-2xl hover:bg-primary/8 transition-colors">
-          <div class="flex items-center gap-3">
-            <div class="w-7 h-7 rounded-full bg-violet-600 flex items-center justify-center text-xs font-bold">${e.rank}</div>
-            <div class="font-mono text-emerald-400">${e.referrer_code}</div>
-          </div>
-          <div class="font-semibold text-emerald-400">${e.referral_count} <span class="text-xs text-zinc-400">refs</span></div>
-        </div>`;
+    cachedLeaderboard = entries || [];
+    container.innerHTML = buildLeaderboardHtml(cachedLeaderboard, {
+      myCode: getMyReferralCode(),
     });
-    h += '</div>';
-    container.innerHTML = h;
+    if (options.pulseCode) pulseLeaderboardActivity(options.pulseCode);
+    renderHeroTrustPack(cachedLeaderboard);
+    applyHeroStatsSubtext(
+      cachedUniqueReferrers,
+      cachedLeaderboard[0]?.referral_count ?? 0,
+    );
   } catch {
     container.innerHTML = `<div class="text-zinc-400">Leaderboard temporarily unavailable.</div>`;
   }
@@ -137,11 +197,28 @@ export async function loadLeaderboard() {
 export async function loadSiteContent() {
   try {
     const content = await fetchSiteContent();
+    initOptimizerFlagsFromContent(content);
+    initFunnelCopyFromContent(content);
+    applyVisitorSlimFromFlags();
     await updatePublicContent(content);
+    if (isReferredLanding()) {
+      applyReferredLandingOverrides();
+    } else {
+      applyHeroCtaVariant();
+      applyUtmHeroCopy();
+      initDirectLandingConversionBoost();
+    }
+
+    const guideStep = document.documentElement.getAttribute('data-vr-funnel-guide-step');
+    if (guideStep && !document.documentElement.hasAttribute('data-vr-funnel-complete')) {
+      syncFunnelGuide(Number(guideStep) as FunnelStep);
+    }
   } catch (err) {
     console.warn('[ViralRefer] Failed to load site_content, using static defaults:', err);
   }
 }
+
+registerGlobal('loadSiteContent', loadSiteContent);
 
 /**
  * Main public site initializer.
@@ -162,6 +239,7 @@ export async function initApp() {
       const totalEl = document.getElementById('total-referrers');
       if (totalEl) {
         const count = await withInitTimeout(fetchTotalReferrers(), 0);
+        cachedUniqueReferrers = count;
         totalEl.textContent = count.toLocaleString();
       }
     } catch {
@@ -178,6 +256,8 @@ export async function initApp() {
     }
 
     await withInitTimeout(renderMyStats(myReferralCode), undefined);
+    initViralLoopUI();
+    initGrowthCommandCenter();
 
     if (isSupabaseConfigured) {
       initRealtimeSubscriptions();
@@ -214,9 +294,28 @@ async function renderMyStats(myCode: string | null): Promise<void> {
     return;
   }
 
-  const count = await fetchMyReferralCount(myCode);
+  const [count, rank] = await Promise.all([
+    fetchMyReferralCount(myCode),
+    fetchMyLeaderboardRank(myCode),
+  ]);
+  const gap = referralsToNextRank(myCode, count, cachedLeaderboard);
+  setShareReferralCount(count);
+  setShareLeaderboardRank(rank);
+  setShareGapToNextRank(gap);
+  celebrateMilestonesIfAny(count, rank);
+  void enrichClientReferralOgMeta(myCode);
+  const linkInput = document.getElementById('ref-link') as HTMLInputElement | null;
+  if (linkInput?.value?.trim()) syncSharePowerUI(linkInput.value.trim());
+  syncViralLoopUI();
   const progress = Math.min(Math.floor((count / 10) * 100), 100);
   const isOnLeaderboard = count >= 1;
+  const rankBadge =
+    rank === 1
+      ? `<div class="text-3xl font-black text-amber-300 tabular-nums">#1 👑</div>`
+      : rank
+        ? `<div class="text-3xl font-bold text-violet-300 tabular-nums">#${rank}</div>`
+        : '';
+  const gapSummary = buildRankGapSummary(myCode, count, rank, cachedLeaderboard);
 
   container.innerHTML = `
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -224,22 +323,24 @@ async function renderMyStats(myCode: string | null): Promise<void> {
         <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Your Referrals</div>
         <div class="text-4xl font-bold text-emerald-400 tabular-nums">${count}</div>
         <div class="text-xs text-zinc-500 mt-0.5">signups via your link</div>
+        ${gapSummary}
       </div>
       <div class="bg-zinc-900/70 border border-white/10 rounded-2xl p-4 text-center">
         <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Progress to Prize</div>
         <div class="text-4xl font-bold text-amber-400 tabular-nums">${count}/10</div>
-        <div class="text-xs text-zinc-500 mt-0.5">referrals needed</div>
+        <div class="text-xs text-zinc-500 mt-0.5">referrals for homepage + $10</div>
         <div class="mt-2 h-2 bg-white/10 rounded-full overflow-hidden">
           <div class="h-full bg-gradient-to-r from-emerald-400 to-amber-400 transition-all" style="width: ${progress}%"></div>
         </div>
       </div>
-      <div class="bg-zinc-900/70 border border-white/10 rounded-2xl p-4 flex flex-col justify-center text-center sm:text-left">
-        <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Status</div>
-        ${count === 0 
-          ? `<div class="text-sm text-emerald-400 font-medium">Ready to go live!<br><span class="text-zinc-400 text-xs">Share your link anywhere to get your first referral.</span></div>`
-          : isOnLeaderboard 
-            ? `<div class="text-sm text-emerald-400 font-medium">You're on the leaderboard!<br><span class="text-zinc-400 text-xs">Keep sharing to climb higher.</span></div>`
-            : `<div class="text-sm text-amber-400 font-medium">First referral incoming.<br><span class="text-zinc-400 text-xs">You're in the race.</span></div>`
+      <div class="bg-zinc-900/70 border border-white/10 rounded-2xl p-4 flex flex-col justify-center text-center sm:text-left ${rank === 1 ? 'border-amber-400/30 bg-amber-500/5' : ''}">
+        <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Leaderboard Rank</div>
+        ${rankBadge || `<div class="text-sm text-zinc-400">Share to rank</div>`}
+        ${count === 0
+          ? `<div class="text-xs text-zinc-500 mt-2">Get your first referral to appear here.</div>`
+          : isOnLeaderboard
+            ? `<div class="text-xs text-emerald-400/90 mt-2">Live on the public board</div>`
+            : `<div class="text-xs text-amber-400/90 mt-2">Almost on the board</div>`
         }
         <button onclick="document.getElementById('referral-section').scrollIntoView({behavior:'smooth'})" 
                 class="mt-3 text-xs px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 rounded-xl text-white self-center sm:self-start">
@@ -249,4 +350,8 @@ async function renderMyStats(myCode: string | null): Promise<void> {
     </div>
     ${count === 0 ? `<p class="text-center text-xs text-emerald-400 mt-3">Next step: share your link to start seeing real numbers here.</p>` : ''}
   `;
+
+  if (isReferredLanding()) {
+    renderHeroTrustPack(cachedLeaderboard);
+  }
 }

@@ -135,6 +135,37 @@ async function checkEdgeFunctionContract() {
   );
 }
 
+async function checkRlsLockdown() {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const sensitiveTables = ['referrals', 'shares', 'visitor_events', 'banner_events', 'prize_claims'];
+  for (const table of sensitiveTables) {
+    const { data, error } = await supabase.from(table).select('id').limit(1);
+    const blocked =
+      Boolean(error) ||
+      (Array.isArray(data) && data.length === 0);
+    record(
+      `rls: anon blocked from ${table} SELECT`,
+      blocked,
+      error?.message || `${data?.length ?? 0} row(s) returned`,
+    );
+  }
+
+  const { data: activity, error: activityErr } = await supabase.rpc('get_public_recent_activity', {
+    p_limit: 3,
+  });
+  const activityOk =
+    !activityErr &&
+    activity &&
+    typeof activity === 'object' &&
+    Array.isArray(activity.rows);
+  record(
+    'rls: get_public_recent_activity RPC reachable',
+    activityOk,
+    activityErr?.message || `${activity?.rows?.length ?? 0} row(s)`,
+  );
+}
+
 async function checkLeaderboardRpc() {
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const { data, error } = await supabase.rpc('get_leaderboard', { min_referrals: 1 });
@@ -164,6 +195,33 @@ async function checkLiveSiteFetch() {
     'live: page contains referral CTA',
     /get my referral link|refer friends/i.test(html),
     'hero CTA present in HTML',
+  );
+
+  const homeFrame = res.headers.get('x-frame-options') || '';
+  const homeCsp = res.headers.get('content-security-policy') || '';
+  record(
+    'live: homepage blocks iframe embedding',
+    homeFrame.toUpperCase().includes('DENY') || /frame-ancestors\s+'none'/i.test(homeCsp),
+    `x-frame-options=${homeFrame || '(none)'} frame-ancestors=${/frame-ancestors[^;]+/i.exec(homeCsp)?.[0] || '(none)'}`,
+  );
+}
+
+async function checkEmbedRoute() {
+  const res = await fetch(`${LIVE_SITE}/embed?utm_source=smoke`, { redirect: 'follow' });
+  const html = await res.text();
+  record('live: /embed HTTP 200', res.ok, `status=${res.status}`);
+  record(
+    'live: /embed contains referral CTA',
+    /get my referral link|refer friends/i.test(html),
+    'embed shell serves SPA',
+  );
+
+  const csp = res.headers.get('content-security-policy') || '';
+  const xfo = (res.headers.get('x-frame-options') || '').toUpperCase();
+  record(
+    'live: /embed allows iframe embedding',
+    /frame-ancestors\s+\*/i.test(csp) && !xfo.includes('DENY'),
+    `csp frame-ancestors *; x-frame-options=${xfo || '(none)'}`,
   );
 }
 
@@ -213,8 +271,39 @@ async function checkLiveSitePlaywright() {
   }
 }
 
+async function checkOgImages() {
+  const svgUrl = `${LIVE_SITE}/api/og-image?code=VIRAL-TEST01`;
+  const pngUrl = `${svgUrl}&format=png`;
+
+  try {
+    const svgRes = await fetch(svgUrl);
+    const svgType = svgRes.headers.get('content-type') || '';
+    record(
+      'live: OG image SVG endpoint',
+      svgRes.ok && svgType.includes('svg'),
+      `status=${svgRes.status} type=${svgType}`,
+    );
+  } catch (err) {
+    record('live: OG image SVG endpoint', false, err?.message || String(err));
+  }
+
+  try {
+    const pngRes = await fetch(pngUrl);
+    const pngType = pngRes.headers.get('content-type') || '';
+    record(
+      'live: OG image PNG fallback',
+      pngRes.ok && pngType.includes('png'),
+      `status=${pngRes.status} type=${pngType}`,
+    );
+  } catch (err) {
+    record('live: OG image PNG fallback', false, err?.message || String(err));
+  }
+}
+
 async function checkLiveSite() {
   await checkLiveSiteFetch();
+  await checkEmbedRoute();
+  await checkOgImages();
   try {
     await checkLiveSitePlaywright();
   } catch (err) {
@@ -240,6 +329,7 @@ async function main() {
 
   checkSourceGuards();
   await checkEdgeFunctionContract();
+  await checkRlsLockdown();
   await checkLeaderboardRpc();
   await checkLiveSite();
 

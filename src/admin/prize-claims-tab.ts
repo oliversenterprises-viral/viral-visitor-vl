@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { registerAdminLiveRefresh } from './admin-live-hub';
 import { formatError } from '../lib';
 import { showToast, updatePendingClaimsBadge } from '../ui';
 import { adminClaimsCache, replaceClaimsCache, updateClaimInCache, type AdminClaimRow } from './state';
@@ -14,6 +15,7 @@ const STATUS_PRIORITY: Record<string, number> = {
 };
 
 let currentClaimStatusFilter: ClaimStatusFilter = 'all';
+let unregisterClaimsLive: (() => void) | null = null;
 
 function getClaimsTabRoot(from: HTMLElement): HTMLElement {
   return (from.closest('#admin-content') as HTMLElement) || from;
@@ -123,15 +125,8 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
       } else {
         throw edgeErr || new Error('Edge get_claims did not return data');
       }
-    } catch (_edgeError) {
-      // Fallback to direct (works well once owner is signed in via the tools above or real auth)
-      const { data, error } = await supabase
-        .from('prize_claims')
-        .select('id, created_at, referrer_code, website, cashtag, message, status, paid_at')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      if (error) throw error;
-      rows = data || [];
+    } catch (edgeError) {
+      throw edgeError || new Error('get_claims failed — configure VITE_ADMIN_ACTION_SECRET');
     }
 
     replaceClaimsCache(rows);
@@ -145,14 +140,14 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
           <p class="text-sm text-zinc-500 mt-2 max-w-sm">Use Owner Test Tools above to submit test claims, or wait for the real #1 referrer to claim.</p>
           <button onclick="window.switchAdminTab(3)" class="mt-4 px-5 py-2 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">Refresh</button>
         </div>`;
-      setupSafeClaimsRealtime(content);
+      wireClaimsLiveRefresh(content);
       return;
     }
 
     renderClaimsList(mainArea, currentClaimStatusFilter);
 
     // Safe realtime so new claims or status changes appear without manual refresh
-    setupSafeClaimsRealtime(content);
+    wireClaimsLiveRefresh(content);
 
   } catch (e) {
     mainArea.innerHTML = `<div class="p-6 text-amber-400">Unable to load prize claims. ${formatError(e)}</div>`;
@@ -340,45 +335,14 @@ function wireOwnerTestTools(content: HTMLElement) {
   }
 }
 
-/**
- * Safe realtime subscription for prize_claims.
- * Unsubscribes any previous channel first to avoid the "cannot add postgres_changes after subscribe" lifecycle bug.
- * On any change we simply refresh the tab (simple, reliable, and re-uses the Edge/direct fetch logic).
- */
-let claimsChannel: any = null;
-
-function setupSafeClaimsRealtime(container: HTMLElement) {
-  // Clean previous subscription to prevent the channel bug
-  if (claimsChannel) {
-    try { claimsChannel.unsubscribe(); } catch { /* channel already closed */ }
-    claimsChannel = null;
-  }
-
-  claimsChannel = supabase
-    .channel('prize-claims-admin-live')
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'prize_claims' },
-      (_payload) => {
-        // Lightweight: re-render the tab so list + caches stay consistent
-        // (could do optimistic patch but full refresh is robust and cheap at current scale)
-        const main = container.querySelector('#prize-claims-main') || container;
-        // Only refresh if the tab is still mounted
-        if (main && document.body.contains(main)) {
-          // Use the existing render which handles owner tools + list + re-sub
-          renderPrizeClaimsTab(container).catch(() => {});
-        }
-      }
-    )
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        const ts = document.getElementById('claims-last-updated');
-        if (ts) ts.textContent = (ts.textContent || '') + ' • live';
-      }
-    });
-
-  // Best-effort cleanup when tab is re-rendered or admin closes (helps across switches)
-  // The next render will call this again and clean first.
+function wireClaimsLiveRefresh(container: HTMLElement) {
+  if (unregisterClaimsLive) unregisterClaimsLive();
+  unregisterClaimsLive = registerAdminLiveRefresh('claim', () => {
+    const main = container.querySelector('#prize-claims-main') || container;
+    if (main && document.body.contains(main)) {
+      void renderPrizeClaimsTab(container).catch(() => {});
+    }
+  });
 }
 
 function renderClaimsList(mainArea: HTMLElement, statusFilter: ClaimStatusFilter) {

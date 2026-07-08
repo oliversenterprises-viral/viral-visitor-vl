@@ -1,6 +1,7 @@
 /** Premium visitor funnel quick-stats panel (admin audit). */
 import { computeVisitorFunnelStats, getLocalVisitorEvents, getVisitorEventsForStats } from '../lib/visitor-tracking';
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { invokeAdminAction } from '../lib/admin-action-client';
 import { escapeHtml } from '../content';
 import { showToast } from '../ui';
 import {
@@ -12,6 +13,11 @@ import {
   buildAutorefreshSelectHtml,
   wireAdminStatsAutorefresh,
 } from '../lib/admin-stats-autorefresh';
+import { buildAutoClearTestSelectHtml } from '../lib/admin-stats-auto-clear-test';
+import {
+  resolveEditContentRoot,
+  runClearTestAdminStatsForEditContent,
+} from './edit-content-clear-test';
 import { withAdminStatsReadOnlyRefresh } from '../lib/admin-stats-refresh-guard';
 import {
   countryLabel,
@@ -28,8 +34,18 @@ import {
   topCountries,
   type RecentReferralNotifierRow,
 } from './visitor-funnel-stats-helpers';
-import { clearTestAdminStatsFromServer } from './clear-test-admin-stats';
+import {
+  computeFunnelStepConversions,
+  countUniqueSessions,
+  filterEventsByTrackingRange,
+  getTrackingTimeRange,
+  reportTrackingHubSummary,
+} from './edit-content-tracking-helpers';
+
 import { isTestReferralRecord } from '../lib/test-referral';
+import { registerAdminLiveRefresh, refreshAdminLiveIndicators } from './admin-live-hub';
+
+let unregisterVisitorLive: (() => void) | null = null;
 
 const SKELETON = `<div class="space-y-2 py-1"><div class="h-4 w-56 skeleton rounded"></div><div class="h-16 skeleton rounded"></div></div>`;
 const VISITOR_AUTOREFRESH_KEY = 'vr_admin_autorefresh_visitor_ms';
@@ -55,7 +71,16 @@ function bindVisitorStatsRefresh(container: HTMLElement) {
   container.addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest('button[data-visitor-stats-refresh]');
     const clearBtn = (e.target as HTMLElement).closest('button[data-visitor-stats-clear-test]');
+    const copyBtn = (e.target as HTMLElement).closest('button[data-visitor-stats-copy]');
     const csvBtn = (e.target as HTMLElement).closest('button[data-visitor-stats-csv]');
+    if (copyBtn && container.contains(copyBtn)) {
+      e.preventDefault();
+      const payload = container.dataset.visitorStatsCopy;
+      if (payload) {
+        navigator.clipboard.writeText(payload).then(() => showToast('Copied visitor funnel JSON', 'success'));
+      }
+      return;
+    }
     if (csvBtn && container.contains(csvBtn)) {
       e.preventDefault();
       const csv = container.dataset.visitorCsvPayload;
@@ -86,15 +111,9 @@ function bindVisitorStatsRefresh(container: HTMLElement) {
         button.disabled = true;
         button.textContent = 'Clearing…';
         try {
-          const { visitorDeleted, bannerDeleted } = await clearTestAdminStatsFromServer();
-          await renderVisitorFunnelStats(container);
-          const total = visitorDeleted + bannerDeleted;
-          showToast(
-            total > 0
-              ? `Removed ${visitorDeleted} funnel + ${bannerDeleted} banner test event${total === 1 ? '' : 's'}`
-              : 'No test events to remove',
-            total > 0 ? 'success' : 'info',
-          );
+          const root = resolveEditContentRoot(container);
+          if (!root) throw new Error('Edit content root not found');
+          await runClearTestAdminStatsForEditContent(root, { toastWhenEmpty: true });
         } catch {
           showToast('Could not clear test funnel events', 'info');
         } finally {
@@ -156,13 +175,9 @@ interface ReferralNotifierFetchResult {
 async function fetchRecentReferralsForNotifier(limit = 6): Promise<ReferralNotifierFetchResult> {
   if (!isSupabaseConfigured || import.meta.env.MODE === 'test') return { rows: [] };
   try {
-    const { data, error } = await supabase
-      .from('referrals')
-      .select('referrer_code, referred_ip, created_at')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    if (error) return { rows: [], error: error.message };
-    const rows = ((data || []) as RecentReferralNotifierRow[]).filter(
+    const result = await invokeAdminAction<RecentReferralNotifierRow[]>('get_referrals', { limit });
+    if (!result.success) return { rows: [], error: result.error };
+    const rows = (result.data || []).filter(
       (row) => !isTestReferralRecord(row as Record<string, unknown>),
     );
     return { rows };
@@ -181,23 +196,57 @@ function renderVisitorFunnelView(
   referralFetchError?: string,
 ) {
   const visibleEvents = filterExcludedVisitorFunnelEvents(events);
+  const rangeFiltered = filterEventsByTrackingRange(visibleEvents, getTrackingTimeRange());
   const excludedCount = countTestVisitorFunnelEvents(events);
-  const stats = computeVisitorFunnelStats(visibleEvents);
+  const stats = computeVisitorFunnelStats(rangeFiltered);
   const totals = computeFunnelTotals(stats.funnel);
+  const stepConversions = computeFunnelStepConversions(stats.funnel);
+  const uniqueSessions = countUniqueSessions(rangeFiltered);
   const isServer = source === 'server';
   const refreshedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const latestTs = latestEventTimestamp(visibleEvents);
+  const latestTs = latestEventTimestamp(rangeFiltered);
   const latestLabel = latestTs ? formatEventTimestampLabel(latestTs) : '';
 
   container.dataset.visitorCsvPayload = buildVisitorCsv(stats.funnel);
+  container.dataset.visitorStatsCopy = JSON.stringify(
+    {
+      generated: new Date().toISOString(),
+      source,
+      range: getTrackingTimeRange(),
+      totals,
+      funnel: stats.funnel,
+      stepConversions,
+      uniqueSessions,
+      byCountry: stats.byCountry,
+      bySource: stats.bySource,
+      lastEvents: stats.lastEvents,
+    },
+    null,
+    2,
+  );
+
+  reportTrackingHubSummary({
+    claimConversion: totals.conversion,
+    sessions: uniqueSessions,
+    engaged: stats.uniqueVisitorsAny,
+    landings: stats.uniqueVisitorsLanding,
+    visitorSource: source,
+    visitorEvents: rangeFiltered.length,
+  });
+
+  const rangeNote =
+    getTrackingTimeRange() === 'all'
+      ? ''
+      : ` · Range ${getTrackingTimeRange().toUpperCase()} (${rangeFiltered.length} events)`;
 
   let html = `
     <div class="flex flex-wrap items-center gap-2 mb-2">
       <div class="text-[10px] font-semibold text-violet-300">Site Visitor Funnel</div>
       ${isServer ? '<span class="px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-200 text-[8px]">SERVER</span>' : '<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[8px]">LOCAL</span>'}
-      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''}</span>
+      <span id="visitor-live-indicator" class="hidden text-[9px] text-emerald-400/90"><i class="fa-solid fa-circle text-[5px] mr-0.5"></i>live</span>
+      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''}${rangeNote}</span>
     </div>
-    <div class="text-[9px] text-zinc-400 mb-2">Landing → get link → copy → share → claim. Unique = distinct browsers.</div>
+    <div class="text-[9px] text-zinc-400 mb-2">Landing → get link → copy → share → claim. Unique = distinct browsers · Sessions = distinct tabs.</div>
   `;
 
   if (excludedCount > 0) {
@@ -212,22 +261,43 @@ function renderVisitorFunnelView(
     <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
       <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Landings</div><div class="text-lg font-bold text-white tabular-nums">${stats.uniqueVisitorsLanding}</div></div>
       <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Engaged</div><div class="text-lg font-bold text-violet-300 tabular-nums">${stats.uniqueVisitorsAny}</div></div>
-      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Events</div><div class="text-lg font-bold text-white tabular-nums">${stats.total}</div></div>
+      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Sessions</div><div class="text-lg font-bold text-white tabular-nums">${uniqueSessions || '—'}</div></div>
       <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Claim conv.</div><div class="text-lg font-bold text-emerald-300 tabular-nums">${totals.conversion}</div></div>
     </div>
     <div class="flex flex-wrap items-center gap-2 mb-2">
       <button type="button" data-visitor-stats-refresh class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded disabled:opacity-50">↻ Refresh</button>
       ${buildAutorefreshSelectHtml('data-visitor-stats-autorefresh', VISITOR_AUTOREFRESH_KEY)}
+      <button type="button" data-visitor-stats-copy class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">⎘ Copy JSON</button>
       <button type="button" data-visitor-stats-csv class="text-[9px] px-2 py-0.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded">⬇ CSV</button>
       <button type="button" data-visitor-stats-clear-test title="Deletes owner IP, smoke automation, and E2E test rows from visitor_events and banner_events"
         class="text-[9px] px-2 py-0.5 bg-amber-600/80 hover:bg-amber-600 text-white rounded disabled:opacity-50">Clear test events${excludedCount > 0 ? ` (${excludedCount})` : ''}</button>
+      ${buildAutoClearTestSelectHtml()}
     </div>
     <table class="w-full text-[9px] text-zinc-200 border border-white/10 mb-2">
-      <thead><tr class="bg-white/5 text-violet-200"><th class="text-left p-1.5">Step</th><th class="p-1.5 text-right">Events</th><th class="p-1.5 text-right">Unique</th></tr></thead><tbody>
+      <thead><tr class="bg-white/5 text-violet-200"><th class="text-left p-1.5">Step</th><th class="p-1.5 text-right">Events</th><th class="p-1.5 text-right">Unique</th><th class="p-1.5 text-right">Step conv.</th><th class="p-1.5 text-right">From landing</th></tr></thead><tbody>
   `;
 
-  for (const row of stats.funnel) {
-    html += `<tr class="border-t border-white/5"><td class="p-1.5 text-zinc-100">${escapeHtml(row.name)}</td><td class="p-1.5 text-right tabular-nums text-zinc-300">${row.count}</td><td class="p-1.5 text-right tabular-nums text-violet-200/90">${row.unique > 0 ? row.unique : '—'}</td></tr>`;
+  for (let i = 0; i < stats.funnel.length; i++) {
+    const row = stats.funnel[i];
+    const conv = stepConversions[i];
+    const barPct =
+      row.name === 'SiteLanding'
+        ? 100
+        : Math.min(100, Math.round(parseFloat(conv.overallRate) || 0));
+    html += `<tr class="border-t border-white/5">
+      <td class="p-1.5 text-zinc-100">
+        <div class="flex items-center gap-1.5">
+          <span>${escapeHtml(row.name)}</span>
+          <span class="inline-block h-1 flex-1 max-w-[48px] rounded bg-violet-900/60 overflow-hidden" title="Share of landings">
+            <span class="block h-full bg-violet-500/70" style="width:${barPct}%"></span>
+          </span>
+        </div>
+      </td>
+      <td class="p-1.5 text-right tabular-nums text-zinc-300">${row.count}</td>
+      <td class="p-1.5 text-right tabular-nums text-violet-200/90">${row.unique > 0 ? row.unique : '—'}</td>
+      <td class="p-1.5 text-right tabular-nums text-zinc-400">${conv.stepRate}</td>
+      <td class="p-1.5 text-right tabular-nums text-emerald-300/90">${conv.overallRate}</td>
+    </tr>`;
   }
   html += `</tbody></table>`;
 
@@ -308,6 +378,7 @@ function renderVisitorFunnelView(
 
   container.innerHTML = html;
   wireVisitorAutorefresh(container);
+  refreshAdminLiveIndicators();
 }
 
 export async function renderVisitorFunnelStats(
@@ -347,6 +418,13 @@ export async function renderVisitorFunnelStats(
 export async function wireVisitorFunnelStatsQuick(root: HTMLElement) {
   const el = root.querySelector('#visitor-stats-quick') as HTMLElement | null;
   if (!el) return;
+  if (unregisterVisitorLive) unregisterVisitorLive();
+  unregisterVisitorLive = registerAdminLiveRefresh('visitor', () => {
+    const panel = root.querySelector('#visitor-stats-quick') as HTMLElement | null;
+    if (panel && document.body.contains(panel)) {
+      void silentRefreshVisitorFunnelStats(panel);
+    }
+  });
   bindVisitorStatsRefresh(el);
   const local = getLocalVisitorEvents();
   if (local.length) {

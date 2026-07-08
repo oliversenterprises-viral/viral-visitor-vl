@@ -13,6 +13,11 @@ import {
   isTestBannerEvent,
   isTestVisitorFunnelEvent,
 } from '../_shared/admin-stats-test.ts';
+import {
+  getFunnelNotifyChannel,
+  isFunnelNotifyImportantOnly,
+  isFunnelOffsiteNotifyEnabled,
+} from '../_shared/funnel-notify.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -92,6 +97,29 @@ function normalizeBannerEventRow(row: Record<string, unknown>) {
   };
 }
 
+const PASSWORD_RATE_WINDOW_MS = 60_000;
+const PASSWORD_RATE_MAX = 10;
+const passwordAttemptsByIp = new Map<string, { count: number; windowStart: number }>();
+
+function clientIp(req: Request): string {
+  return (
+    req.headers.get('cf-connecting-ip')?.trim() ||
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown'
+  );
+}
+
+function isPasswordRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = passwordAttemptsByIp.get(ip);
+  if (!entry || now - entry.windowStart > PASSWORD_RATE_WINDOW_MS) {
+    passwordAttemptsByIp.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > PASSWORD_RATE_MAX;
+}
+
 // Constant-time string comparison to prevent timing attacks
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) {
@@ -115,11 +143,24 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const body = await req.json();
+  let body: { action?: string; payload?: Record<string, unknown> };
+  try {
+    body = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ success: false, error: 'Invalid JSON body' }), {
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
   const { action, payload } = body;
 
   // Owner password verify — no admin secret required (password never stored in client bundle logic alone)
   if (action === 'verify_owner_password') {
+    const ip = clientIp(req);
+    if (isPasswordRateLimited(ip)) {
+      return new Response(JSON.stringify({ success: false, error: 'Too many attempts — try again shortly' }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const password = String(payload?.password || '');
     const expected =
       Deno.env.get('ADMIN_OWNER_PASSWORD') ||
@@ -210,16 +251,109 @@ Deno.serve(async (req: Request) => {
 
       const normalized = (data || []).map((row: Record<string, unknown>) => {
         const referral_link = row.referral_link ?? row.referralLink ?? null;
+        const rawVariant = String(row.ab_variant ?? row.abVariant ?? '').toLowerCase().trim();
         return {
           platform: row.platform,
           referrer_code: resolveShareReferrerCode(row),
           referral_link,
+          ab_variant: rawVariant === 'a' || rawVariant === 'b' ? rawVariant : null,
           created_at: row.created_at,
         };
       });
       return new Response(JSON.stringify({ success: true, data: normalized }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
+    }
+
+    if (action === 'get_referral_counts') {
+      const { data, error } = await supabaseAdmin
+        .from('referrals')
+        .select('referrer_code')
+        .limit(50000);
+      if (error) throw error;
+
+      const counts: Record<string, number> = {};
+      for (const row of data || []) {
+        const code = String(row.referrer_code || '').trim().toUpperCase();
+        if (!code || isTestShareReferrerCode(code)) continue;
+        counts[code] = (counts[code] || 0) + 1;
+      }
+
+      return new Response(JSON.stringify({ success: true, data: counts }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'get_referrals') {
+      const limit = Math.min(Math.max(Number(payload?.limit) || 2000, 1), 5000);
+      const { data, error } = await supabaseAdmin
+        .from('referrals')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'get_admin_live_seed') {
+      const [referrals, shares, claims, visitorEvents, bannerEvents, siteContent] = await Promise.all([
+        supabaseAdmin
+          .from('referrals')
+          .select('id, referrer_code, created_at')
+          .order('created_at', { ascending: false })
+          .limit(6),
+        supabaseAdmin
+          .from('shares')
+          .select('id, platform, referrer_code, created_at')
+          .order('created_at', { ascending: false })
+          .limit(6),
+        supabaseAdmin
+          .from('prize_claims')
+          .select('id, status, prize_name, prize_id, created_at, updated_at')
+          .order('created_at', { ascending: false })
+          .limit(4),
+        supabaseAdmin
+          .from('visitor_events')
+          .select('id, event_name, utm_source, ref_code, created_at')
+          .order('created_at', { ascending: false })
+          .limit(8),
+        supabaseAdmin
+          .from('banner_events')
+          .select('id, type, label, key, created_at')
+          .order('created_at', { ascending: false })
+          .limit(6),
+        supabaseAdmin
+          .from('site_content')
+          .select('key, updated_at')
+          .order('updated_at', { ascending: false })
+          .limit(4),
+      ]);
+
+      const firstError =
+        referrals.error ||
+        shares.error ||
+        claims.error ||
+        visitorEvents.error ||
+        bannerEvents.error ||
+        siteContent.error;
+      if (firstError) throw firstError;
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            referrals: referrals.data || [],
+            shares: shares.data || [],
+            prize_claims: claims.data || [],
+            visitor_events: visitorEvents.data || [],
+            banner_events: bannerEvents.data || [],
+            site_content: siteContent.data || [],
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
     if (action === 'clear_test_shares') {
@@ -495,6 +629,81 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    if (action === 'get_interaction_stats') {
+      const { data, error } = await supabaseAdmin
+        .from('interaction_events')
+        .select(
+          'event_type, zone_id, path, x, y, viewport_w, viewport_h, scroll_y, scroll_depth_pct, visitor_id, session_id, ref_code, ab_variant, is_referred, metadata, created_at',
+        )
+        .order('created_at', { ascending: false })
+        .limit(3000);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'get_optimizer_experiments') {
+      const { data, error } = await supabaseAdmin
+        .from('optimizer_experiments')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'run_optimizer_autopilot') {
+      const { runOptimizerAutopilotCycle } = await import('../_shared/optimizer-autopilot-run.ts');
+      const dryRun = payload?.dry_run === true || payload?.dryRun === true;
+      const result = await runOptimizerAutopilotCycle(supabaseAdmin, { dryRun });
+      return new Response(JSON.stringify({ success: true, data: result }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'upsert_optimizer_experiment') {
+      const row = payload?.experiment;
+      if (!row || typeof row !== 'object') {
+        return new Response(JSON.stringify({ success: false, error: 'experiment payload required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const name = String(row.name || '').trim();
+      if (!name) {
+        return new Response(JSON.stringify({ success: false, error: 'name required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const upsertRow = {
+        id: row.id || undefined,
+        name: name.slice(0, 120),
+        hypothesis: row.hypothesis ? String(row.hypothesis).slice(0, 500) : null,
+        status: String(row.status || 'draft'),
+        segment: String(row.segment || 'all').slice(0, 64),
+        primary_metric: String(row.primary_metric || 'ShareReferral').slice(0, 64),
+        guard_metric: String(row.guard_metric || 'GetReferralLink').slice(0, 64),
+        started_at: row.started_at || null,
+        ended_at: row.ended_at || null,
+        winner: row.winner ? String(row.winner).slice(0, 32) : null,
+        notes: row.notes ? String(row.notes).slice(0, 1000) : null,
+        updated_at: new Date().toISOString(),
+      };
+      const { data, error } = await supabaseAdmin
+        .from('optimizer_experiments')
+        .upsert(upsertRow, { onConflict: 'id' })
+        .select('*')
+        .single();
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'upload_banner_image') {
       const fileName = sanitizeBannerFileName(String(payload?.fileName || 'banner'));
       const contentType = String(payload?.contentType || '').toLowerCase();
@@ -529,6 +738,56 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ success: true, url: publicData.publicUrl, path: storagePath }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    if (action === 'get_funnel_notify_status') {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            enabled: isFunnelOffsiteNotifyEnabled(),
+            importantOnly: isFunnelNotifyImportantOnly(),
+            channel: getFunnelNotifyChannel(),
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (action === 'post_telegram_marketing') {
+      const { postTelegramMarketing, getGrowthPostTelegramChatId, isTelegramMarketingConfigured } =
+        await import('../_shared/telegram-marketing.ts');
+      if (!isTelegramMarketingConfigured()) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Telegram bot token not configured' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+      const text = String(payload?.text || '').trim();
+      if (!text) {
+        return new Response(JSON.stringify({ success: false, error: 'text required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const result = await postTelegramMarketing({
+        text,
+        chatId: payload?.chatId ? String(payload.chatId) : undefined,
+        imageBase64: payload?.imageBase64 ? String(payload.imageBase64) : undefined,
+        imageMime: payload?.imageMime ? String(payload.imageMime) : undefined,
+      });
+      return new Response(
+        JSON.stringify({
+          success: result.ok,
+          data: {
+            messageId: result.messageId,
+            chatId: result.chatId || getGrowthPostTelegramChatId(),
+            channelUrl: 'https://t.me/viralrefer',
+          },
+          error: result.error,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
     return new Response(JSON.stringify({ success: false, error: 'Unknown action' }), {

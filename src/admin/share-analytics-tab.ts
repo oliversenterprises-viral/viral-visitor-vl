@@ -1,5 +1,6 @@
 import type { Chart } from 'chart.js';
 import { supabase } from '../lib/supabase';
+import { registerAdminLiveRefresh } from './admin-live-hub';
 import { showToast } from '../ui';
 import { escapeHtml } from '../content';
 import {
@@ -14,12 +15,31 @@ import {
   countTestShares,
   listTestShareCodes,
 } from './share-analytics-helpers';
+import {
+  computeVariantConversion,
+  type ShareConversionSummary,
+} from '../lib/share-conversion';
+import {
+  computeShareTrackingSummary,
+  getStoredAdminTabDaysFilter,
+  parseAdminTabDaysFilter,
+  SHARES_DAYS_STORAGE_KEY,
+  storeAdminTabDaysFilter,
+  type AdminTabDaysFilter,
+} from './admin-tab-tracking-helpers';
+import {
+  buildShareTrackingShellOpenHtml,
+  reportShareTrackingSummary,
+  SHARE_TRACKING_SHELL_CLOSE,
+  wireShareTrackingHub,
+} from './share-analytics-tracking';
 
 let allSharesCache: ShareEvent[] = [];
-let currentFilterDays = 0;
+let referralCountsCache: Record<string, number> = {};
+let currentFilterDays = getStoredAdminTabDaysFilter(SHARES_DAYS_STORAGE_KEY);
 let currentSearch = '';
 let currentPlatformFilter = 'all';
-let sharesChannel: ReturnType<typeof supabase.channel> | null = null;
+let unregisterSharesLive: (() => void) | null = null;
 let shareBarChart: Chart | null = null;
 let shareTrendChart: Chart | null = null;
 
@@ -78,6 +98,21 @@ async function fetchSharesData(): Promise<ShareEvent[]> {
   return edgeData.data.map((row: Record<string, unknown>) => normalizeShareRow(row));
 }
 
+async function fetchReferralCounts(): Promise<Record<string, number>> {
+  const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
+  if (!adminSecret) return {};
+
+  const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('admin-action', {
+    body: { action: 'get_referral_counts' },
+    headers: { 'x-admin-secret': adminSecret },
+  });
+
+  if (edgeErr || !edgeData?.success || !edgeData.data || typeof edgeData.data !== 'object') {
+    return {};
+  }
+  return edgeData.data as Record<string, number>;
+}
+
 async function clearTestSharesFromServer(): Promise<{ deleted: number; codes: string[] }> {
   const adminSecret = import.meta.env.VITE_ADMIN_ACTION_SECRET || '';
   if (!adminSecret) {
@@ -106,7 +141,7 @@ async function clearTestSharesFromServer(): Promise<{ deleted: number; codes: st
 function exportSharesCSV(shares: readonly ShareEvent[]) {
   if (!shares.length) return;
 
-  const headers = ['created_at', 'referrer_code', 'platform'];
+  const headers = ['created_at', 'referrer_code', 'platform', 'ab_variant'];
   const csvRows = [headers.join(',')];
 
   shares.forEach((s) => {
@@ -115,6 +150,7 @@ function exportSharesCSV(shares: readonly ShareEvent[]) {
         s.created_at || '',
         `"${(s.referrer_code || '').replace(/"/g, '""')}"`,
         s.platform || '',
+        s.ab_variant || '',
       ].join(','),
     );
   });
@@ -137,6 +173,7 @@ function buildAnalyticsHTML(
   platforms: string[],
   activePlatform: string,
   testShareCount: number,
+  conversion: ShareConversionSummary,
 ): string {
   const platformChip = (value: string, label: string) => {
     const active = activePlatform === value;
@@ -266,7 +303,56 @@ function buildAnalyticsHTML(
       </button>`;
   });
 
-  html += `</div></div><div><h4 class="text-sm font-semibold text-zinc-300 mb-3">Platform Breakdown</h4><div class="space-y-2">`;
+  if (viewData.abVariantBreakdown.some((r) => r.count > 0)) {
+    html += `</div></div><div><h4 class="text-sm font-semibold text-zinc-300 mb-3">A/B Message Variants</h4><div class="space-y-2">`;
+    viewData.abVariantBreakdown.forEach((row) => {
+      if (row.count === 0 && row.variant === 'unknown') return;
+      const label =
+        row.variant === 'a'
+          ? 'Variant A — prize focus'
+          : row.variant === 'b'
+            ? 'Variant B — contest urgency'
+            : 'Untagged (legacy)';
+      html += `
+      <div class="flex items-center justify-between table-row bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm">
+        <div class="font-medium text-violet-200">${escapeHtml(label)}</div>
+        <div class="flex items-center gap-4">
+          <div class="text-zinc-400">${row.count} shares</div>
+          <div class="font-semibold text-emerald-400 w-12 text-right">${row.percentage}%</div>
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  } else {
+    html += `</div></div>`;
+  }
+
+  const convRows = conversion.rows.filter((r) => r.shareCount > 0);
+  html += `<div><h4 class="text-sm font-semibold text-zinc-300 mb-2">A/B → Signup Conversion (proxy)</h4>`;
+  html += `<p class="text-[11px] text-zinc-500 mb-3">Referrals ÷ tagged shares per variant cohort (excludes test codes).</p>`;
+  if (convRows.length === 0) {
+    html += `<div class="text-xs text-zinc-500 bg-zinc-900/80 border border-white/10 rounded-xl px-4 py-3">${escapeHtml(conversion.insight)}</div>`;
+  } else {
+    html += `<div class="space-y-2 mb-2">`;
+    convRows.forEach((row) => {
+      const label = row.variant === 'a' ? 'Variant A' : 'Variant B';
+      const lead =
+        conversion.leaderVariant === row.variant && convRows.length >= 2
+          ? ' <span class="text-amber-400 text-[10px]">LEADS</span>'
+          : '';
+      html += `
+      <div class="flex items-center justify-between table-row bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm">
+        <div class="font-medium text-emerald-200">${escapeHtml(label)}${lead}</div>
+        <div class="flex items-center gap-3 text-xs">
+          <span class="text-zinc-400">${row.shareCount} shares</span>
+          <span class="text-zinc-400">${row.totalReferrals} signups</span>
+          <span class="font-bold text-violet-300">${row.referralsPerShare}/share</span>
+        </div>
+      </div>`;
+    });
+    html += `</div><p class="text-[11px] text-zinc-500">${escapeHtml(conversion.insight)}</p>`;
+  }
+  html += `</div><div><h4 class="text-sm font-semibold text-zinc-300 mb-3">Platform Breakdown</h4><div class="space-y-2">`;
 
   viewData.sortedPlatforms.forEach(([platform, count]) => {
     const percentage = Math.round((count / viewData.total) * 100);
@@ -358,6 +444,7 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
     ChartCtor = Chart;
 
     allSharesCache = await fetchSharesData();
+    referralCountsCache = await fetchReferralCounts();
 
     if (!allSharesCache.length) {
       destroyCharts();
@@ -373,13 +460,50 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
       document.getElementById('shares-empty-refresh')?.addEventListener('click', () => {
         renderShareAnalyticsTab(getShareAnalyticsTabRoot(content));
       });
-      setupSafeSharesRealtime(getShareAnalyticsTabRoot(content), () => {
+      wireSharesLiveRefresh(getShareAnalyticsTabRoot(content), () => {
         renderShareAnalyticsTab(getShareAnalyticsTabRoot(content)).catch(() => {});
       });
       return;
     }
 
     const tabRoot = getShareAnalyticsTabRoot(content);
+
+    const buildShareCopyPayload = (
+      filtered: ShareEvent[],
+      viewData: AnalyticsViewData,
+      conversion: ShareConversionSummary,
+      testShareCount: number,
+    ): string => {
+      const summary = computeShareTrackingSummary(
+        allSharesCache,
+        filtered,
+        viewData,
+        conversion,
+        testShareCount,
+        currentFilterDays as AdminTabDaysFilter,
+      );
+      return JSON.stringify(
+        {
+          generated: new Date().toISOString(),
+          filterDays: currentFilterDays,
+          platformFilter: currentPlatformFilter,
+          search: currentSearch,
+          summary,
+          viewData,
+          conversion,
+          shares: filtered,
+        },
+        null,
+        2,
+      );
+    };
+
+    const refreshShareData = async (toastOnSuccess = false) => {
+      allSharesCache = await fetchSharesData();
+      referralCountsCache = await fetchReferralCounts();
+      if (toastOnSuccess) showToast('Share analytics refreshed', 'success');
+      renderView();
+    };
 
     const renderView = () => {
       const filtered = applyShareFilters(allSharesCache, currentFilterDays, currentSearch, currentPlatformFilter);
@@ -388,15 +512,32 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
         filterByDays(allSharesCache, currentFilterDays),
       );
       const testShareCount = countTestShares(allSharesCache);
+      const conversion = computeVariantConversion(filtered, referralCountsCache);
 
       destroyCharts();
-      content.innerHTML = buildAnalyticsHTML(
-        viewData,
-        allSharesCache.length,
-        filtered.length,
-        platforms,
-        currentPlatformFilter,
-        testShareCount,
+      content.dataset.vrShareTrackingRoot = '1';
+      content.innerHTML =
+        buildShareTrackingShellOpenHtml() +
+        buildAnalyticsHTML(
+          viewData,
+          allSharesCache.length,
+          filtered.length,
+          platforms,
+          currentPlatformFilter,
+          testShareCount,
+          conversion,
+        ) +
+        SHARE_TRACKING_SHELL_CLOSE;
+
+      reportShareTrackingSummary(
+        computeShareTrackingSummary(
+          allSharesCache,
+          filtered,
+          viewData,
+          conversion,
+          testShareCount,
+          currentFilterDays as AdminTabDaysFilter,
+        ),
       );
 
       if (viewData.total > 0) {
@@ -417,15 +558,28 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
             : `Showing ${formatNumber(filtered.length)} of ${formatNumber(allSharesCache.length)}`;
       }
 
-      syncShareFilterButtons();
-      attachShareAnalyticsListeners(content, tabRoot, ChartCtor, renderView);
+      syncShareFilterButtons(content);
+
+      const trackingHub = content.querySelector('[data-vr-share-tracking-hub]') as HTMLElement | null;
+      if (trackingHub) {
+        wireShareTrackingHub(trackingHub, {
+          onRefresh: () => refreshShareData(true),
+          onRangeChange: (days) => {
+            currentFilterDays = parseAdminTabDaysFilter(String(days));
+            storeAdminTabDaysFilter(SHARES_DAYS_STORAGE_KEY, currentFilterDays);
+            renderView();
+          },
+          getCopyPayload: () => buildShareCopyPayload(filtered, viewData, conversion, testShareCount),
+        });
+      }
+
+      attachShareAnalyticsListeners(content, tabRoot, ChartCtor, renderView, refreshShareData);
     };
 
     renderView();
-    setupSafeSharesRealtime(tabRoot, async () => {
+    wireSharesLiveRefresh(tabRoot, async () => {
       try {
-        allSharesCache = await fetchSharesData();
-        renderView();
+        await refreshShareData(false);
       } catch {
         /* keep current view on background refresh failure */
       }
@@ -443,7 +597,7 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
   }
 }
 
-function syncShareFilterButtons() {
+function syncShareFilterButtons(root?: HTMLElement) {
   document.querySelectorAll('.share-time-filter').forEach((btn) => {
     const days = parseInt((btn as HTMLElement).dataset.days || '0', 10);
     const active = days === currentFilterDays;
@@ -451,6 +605,12 @@ function syncShareFilterButtons() {
     btn.classList.toggle('text-white', active);
     btn.classList.toggle('border-white/20', !active);
   });
+
+  const hub =
+    root?.querySelector('[data-vr-share-tracking-hub]') ??
+    document.querySelector('[data-vr-share-tracking-hub]');
+  const rangeSelect = hub?.querySelector<HTMLSelectElement>('[data-share-tracking-range]');
+  if (rangeSelect) rangeSelect.value = String(currentFilterDays);
 
   const clearBtn = document.getElementById('share-search-clear');
   if (clearBtn) clearBtn.classList.toggle('hidden', !currentSearch.trim());
@@ -461,6 +621,7 @@ function attachShareAnalyticsListeners(
   _tabRoot: HTMLElement,
   _ChartCtor: typeof Chart,
   renderView: () => void,
+  refreshShareData: (toastOnSuccess?: boolean) => Promise<void>,
 ) {
   const searchInput = document.getElementById('share-search') as HTMLInputElement | null;
   const searchClear = document.getElementById('share-search-clear');
@@ -490,7 +651,8 @@ function attachShareAnalyticsListeners(
 
   document.querySelectorAll('.share-time-filter').forEach((btn) => {
     btn.addEventListener('click', () => {
-      currentFilterDays = parseInt((btn as HTMLElement).dataset.days || '0', 10);
+      currentFilterDays = parseAdminTabDaysFilter((btn as HTMLElement).dataset.days || '0');
+      storeAdminTabDaysFilter(SHARES_DAYS_STORAGE_KEY, currentFilterDays);
       renderView();
     });
   });
@@ -524,9 +686,7 @@ function attachShareAnalyticsListeners(
     if (icon) icon.classList.add('fa-spin');
     refreshBtn.disabled = true;
     try {
-      allSharesCache = await fetchSharesData();
-      showToast('Share analytics refreshed', 'success');
-      renderView();
+      await refreshShareData(true);
     } catch (err) {
       showToast(`Refresh failed: ${String(err)}`, 'info');
     } finally {
@@ -558,6 +718,7 @@ function attachShareAnalyticsListeners(
       try {
         const { deleted, codes: removed } = await clearTestSharesFromServer();
         allSharesCache = await fetchSharesData();
+    referralCountsCache = await fetchReferralCounts();
         showToast(
           deleted > 0
             ? `Cleared ${deleted} test share(s): ${removed.join(', ')}`
@@ -574,28 +735,16 @@ function attachShareAnalyticsListeners(
   });
 }
 
-function setupSafeSharesRealtime(tabRoot: HTMLElement, onRefresh: () => void) {
-  if (sharesChannel) {
-    try {
-      sharesChannel.unsubscribe();
-    } catch {
-      /* channel already closed */
+function wireSharesLiveRefresh(tabRoot: HTMLElement, onRefresh: () => void) {
+  if (unregisterSharesLive) unregisterSharesLive();
+  unregisterSharesLive = registerAdminLiveRefresh('share', () => {
+    const adminModal = document.getElementById('admin-modal');
+    if (document.body.contains(tabRoot) && adminModal && !adminModal.classList.contains('hidden')) {
+      onRefresh();
     }
-    sharesChannel = null;
-  }
-
-  sharesChannel = supabase
-    .channel('shares-admin-live')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'shares' }, () => {
-      const adminModal = document.getElementById('admin-modal');
-      if (document.body.contains(tabRoot) && adminModal && !adminModal.classList.contains('hidden')) {
-        onRefresh();
-      }
-    })
-    .subscribe((status) => {
-      const liveEl = document.getElementById('shares-live-indicator');
-      if (liveEl) liveEl.classList.toggle('hidden', status !== 'SUBSCRIBED');
-    });
+  });
+  const liveEl = document.getElementById('shares-live-indicator');
+  if (liveEl) liveEl.classList.remove('hidden');
 }
 
 export { renderShareAnalyticsTab };

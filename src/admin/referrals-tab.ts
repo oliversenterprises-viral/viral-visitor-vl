@@ -1,13 +1,28 @@
-import { supabase } from '../lib/supabase';
+import { invokeAdminAction } from '../lib/admin-action-client';
+import { registerAdminLiveRefresh } from './admin-live-hub';
 import { showToast } from '../ui';
 import { escapeHtml } from '../content';
 import { adminReferralsCache, replaceReferralsCache, type AdminReferralRow } from './state';
 import { isTestReferralRecord } from '../lib/test-referral';
+import {
+  computeReferralTrackingSummary,
+  getStoredAdminTabDaysFilter,
+  parseAdminTabDaysFilter,
+  REFERRALS_DAYS_STORAGE_KEY,
+  storeAdminTabDaysFilter,
+  type AdminTabDaysFilter,
+} from './admin-tab-tracking-helpers';
+import {
+  buildReferralsTrackingShellOpenHtml,
+  REFERRALS_TRACKING_SHELL_CLOSE,
+  reportReferralsTrackingSummary,
+  wireReferralsTrackingHub,
+} from './referrals-tracking';
 
 type RiskFilter = 'all' | 'high-risk';
 
 let currentRiskFilter: RiskFilter = 'all';
-let referralsChannel: ReturnType<typeof supabase.channel> | null = null;
+let unregisterReferralsLive: (() => void) | null = null;
 
 function getReferralsTabRoot(from: HTMLElement): HTMLElement {
   return (from.closest('#admin-content') as HTMLElement) || from;
@@ -105,7 +120,9 @@ export function applyReferralFilters(
  * top-referrer insights, high-risk IP detection, detail modals, and CSV export.
  */
 async function renderReferralsTab(content: HTMLElement) {
+  content.dataset.vrReferralsTrackingRoot = '1';
   content.innerHTML = `
+    ${buildReferralsTrackingShellOpenHtml()}
     <div class="flex items-center justify-between mb-4">
       <div>
         <div class="text-2xl font-bold">Referrals</div>
@@ -180,6 +197,7 @@ async function renderReferralsTab(content: HTMLElement) {
         <div class="h-12 skeleton"></div>
       </div>
     </div>
+    ${REFERRALS_TRACKING_SHELL_CLOSE}
   `;
 
   const searchInput = document.getElementById('referral-search') as HTMLInputElement;
@@ -189,8 +207,68 @@ async function renderReferralsTab(content: HTMLElement) {
   const refreshBtn = document.getElementById('referrals-refresh-btn') as HTMLButtonElement;
   const riskStatCard = document.getElementById('stat-risk-card');
 
-  let currentFilterDays = 0;
+  let currentFilterDays = getStoredAdminTabDaysFilter(REFERRALS_DAYS_STORAGE_KEY);
   let currentSearch = '';
+
+  function syncTimeFilterButtons() {
+    document.querySelectorAll('.time-filter').forEach((btn) => {
+      const days = parseInt((btn as HTMLElement).dataset.days || '0', 10);
+      const active = days === currentFilterDays;
+      btn.classList.toggle('bg-violet-600', active);
+      btn.classList.toggle('text-white', active);
+      btn.classList.toggle('border-white/20', !active);
+    });
+    const hub = content.querySelector('[data-vr-referrals-tracking-hub]') as HTMLElement | null;
+    const rangeSelect = hub?.querySelector<HTMLSelectElement>('[data-referrals-tracking-range]');
+    if (rangeSelect) rangeSelect.value = String(currentFilterDays);
+  }
+
+  function reportTrackingFromCache() {
+    const realRows = filterTestReferralsFromAdmin(adminReferralsCache);
+    const { filtered } = applyReferralFilters(
+      adminReferralsCache,
+      currentFilterDays,
+      currentSearch,
+      currentRiskFilter,
+    );
+    const riskIPs = computeHighRiskIPs(realRows);
+    reportReferralsTrackingSummary(
+      computeReferralTrackingSummary(
+        realRows.length,
+        riskIPs.size,
+        filtered,
+        currentFilterDays as AdminTabDaysFilter,
+      ),
+    );
+  }
+
+  function buildReferralsCopyPayload(): string {
+    const { filtered } = applyReferralFilters(
+      adminReferralsCache,
+      currentFilterDays,
+      currentSearch,
+      currentRiskFilter,
+    );
+    const realRows = filterTestReferralsFromAdmin(adminReferralsCache);
+    const summary = computeReferralTrackingSummary(
+      realRows.length,
+      computeHighRiskIPs(realRows).size,
+      filtered,
+      currentFilterDays as AdminTabDaysFilter,
+    );
+    return JSON.stringify(
+      {
+        generated: new Date().toISOString(),
+        filterDays: currentFilterDays,
+        riskFilter: currentRiskFilter,
+        search: currentSearch,
+        summary,
+        referrals: filtered,
+      },
+      null,
+      2,
+    );
+  }
 
   function updateGlobalStats(rows: readonly AdminReferralRow[]) {
     const total = rows.length;
@@ -277,6 +355,7 @@ async function renderReferralsTab(content: HTMLElement) {
     attachReferralTableListeners(tableContainer, filtered, riskIPs);
     updateTopReferrersPanel(filtered);
     updateResultCount(filtered.length, filterTestReferralsFromAdmin(adminReferralsCache).length);
+    reportTrackingFromCache();
   }
 
   function applyFilters() {
@@ -291,14 +370,9 @@ async function renderReferralsTab(content: HTMLElement) {
   }
 
   async function loadReferralsData() {
-    const { data, error } = await supabase
-      .from('referrals')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(2000);
-
-    if (error) throw error;
-    replaceReferralsCache(data || []);
+    const result = await invokeAdminAction<AdminReferralRow[]>('get_referrals', { limit: 2000 });
+    if (!result.success) throw new Error(result.error);
+    replaceReferralsCache(result.data || []);
     updateGlobalStats(filterTestReferralsFromAdmin(adminReferralsCache));
 
     const tsEl = document.getElementById('referrals-last-updated');
@@ -310,9 +384,42 @@ async function renderReferralsTab(content: HTMLElement) {
     applyFilters();
   }
 
+  const trackingHub = content.querySelector('[data-vr-referrals-tracking-hub]') as HTMLElement | null;
+  if (trackingHub) {
+    wireReferralsTrackingHub(trackingHub, {
+      onRefresh: async () => {
+        const icon = refreshBtn?.querySelector('i');
+        if (icon) icon.classList.add('fa-spin');
+        if (refreshBtn) refreshBtn.disabled = true;
+        try {
+          await loadReferralsData();
+          showToast('Referrals refreshed', 'success');
+        } catch (e) {
+          showToast(`Refresh failed: ${String(e)}`, 'info');
+        } finally {
+          if (refreshBtn) refreshBtn.disabled = false;
+          if (icon) icon.classList.remove('fa-spin');
+        }
+      },
+      onRangeChange: (days) => {
+        currentFilterDays = parseAdminTabDaysFilter(String(days)) as AdminTabDaysFilter;
+        storeAdminTabDaysFilter(REFERRALS_DAYS_STORAGE_KEY, currentFilterDays);
+        syncTimeFilterButtons();
+        applyFilters();
+      },
+      getCopyPayload: buildReferralsCopyPayload,
+    });
+  }
+
   try {
+    syncTimeFilterButtons();
     await loadReferralsData();
-    setupSafeReferralsRealtime(getReferralsTabRoot(content), () => loadReferralsData().catch(() => {}));
+    if (unregisterReferralsLive) unregisterReferralsLive();
+    unregisterReferralsLive = registerAdminLiveRefresh('referral', () => {
+      void loadReferralsData().catch(() => {});
+    });
+    const liveEl = document.getElementById('referrals-live-indicator');
+    if (liveEl) liveEl.classList.remove('hidden');
 
     let searchTimeout: number;
     searchInput?.addEventListener('input', () => {
@@ -334,9 +441,9 @@ async function renderReferralsTab(content: HTMLElement) {
 
     document.querySelectorAll('.time-filter').forEach((btn) => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.time-filter').forEach((b) => b.classList.remove('bg-violet-600', 'text-white'));
-        (btn as HTMLElement).classList.add('bg-violet-600', 'text-white');
-        currentFilterDays = parseInt((btn as HTMLElement).dataset.days || '0', 10);
+        currentFilterDays = parseAdminTabDaysFilter((btn as HTMLElement).dataset.days || '0');
+        storeAdminTabDaysFilter(REFERRALS_DAYS_STORAGE_KEY, currentFilterDays);
+        syncTimeFilterButtons();
         applyFilters();
       });
     });
@@ -404,29 +511,6 @@ async function renderReferralsTab(content: HTMLElement) {
       `;
     }
   }
-}
-
-function setupSafeReferralsRealtime(tabRoot: HTMLElement, onRefresh: () => void) {
-  if (referralsChannel) {
-    try {
-      referralsChannel.unsubscribe();
-    } catch {
-      /* channel already closed */
-    }
-    referralsChannel = null;
-  }
-
-  referralsChannel = supabase
-    .channel('referrals-admin-live')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'referrals' }, () => {
-      if (document.body.contains(tabRoot) && !tabRoot.closest('#admin-modal')?.classList.contains('hidden')) {
-        onRefresh();
-      }
-    })
-    .subscribe((status) => {
-      const liveEl = document.getElementById('referrals-live-indicator');
-      if (liveEl) liveEl.classList.toggle('hidden', status !== 'SUBSCRIBED');
-    });
 }
 
 function getRelativeTime(iso: string): string {
