@@ -16,6 +16,11 @@ export const VIRAL_ZONE_IDS = [
   'share-panel',
   'share-x',
   'share-whatsapp',
+  'challenge-duel',
+  'catch-up-anxiety',
+  'rank-receipt',
+  'weekly-sprint',
+  'community-unlock',
 ] as const;
 
 export type ViralZoneId = (typeof VIRAL_ZONE_IDS)[number];
@@ -33,6 +38,11 @@ export const VIRAL_ZONE_LABELS: Record<ViralZoneId, string> = {
   'share-panel': 'Share panel (any button)',
   'share-x': 'Share — X / Twitter',
   'share-whatsapp': 'Share — WhatsApp',
+  'challenge-duel': 'Challenge duel banner',
+  'catch-up-anxiety': 'Catch-up anxiety bar',
+  'rank-receipt': 'Rank receipt card',
+  'weekly-sprint': 'Weekly sprint board',
+  'community-unlock': 'Community unlock meter',
 };
 
 /** Funnel step each zone most directly supports. */
@@ -49,6 +59,11 @@ export const VIRAL_ZONE_FUNNEL_STEP: Record<ViralZoneId, string> = {
   'share-panel': 'ShareReferral',
   'share-x': 'ShareReferral',
   'share-whatsapp': 'ShareReferral',
+  'challenge-duel': 'ChallengeLanding',
+  'catch-up-anxiety': 'AnxietyBarAction',
+  'rank-receipt': 'ReceiptShared',
+  'weekly-sprint': 'SprintBoardView',
+  'community-unlock': 'CommunityUnlockView',
 };
 
 export function isViralZoneId(value: string): value is ViralZoneId {

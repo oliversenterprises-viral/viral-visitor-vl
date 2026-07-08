@@ -11,6 +11,7 @@ import { initVisitorSlim } from './lib/visitor-slim';
 import { initMobileOptimize } from './lib/mobile-optimize';
 import { initPublicClarity, refreshPublicClarityState } from './lib/public-clarity';
 import { initEmbedMode } from './lib/embed-mode';
+import { initViralLoops } from './lib/viral-loops';
 
 // Public layer (all onclick handlers, modals, debug, etc.)
 import { initPublic } from './public';
@@ -42,6 +43,7 @@ captureReferralAttribution();
 captureUtmAttribution();
 revealReferralAttributionBanner();
 initFunnelConversion();
+initViralLoops();
 initVisitorSlim();
 initAttributedReferralRecording();
 initVisitorTracking();

@@ -210,6 +210,9 @@
             </div>
         </div>
 
+        <!-- CHALLENGE DUEL BANNER (?challenge=1 referred landings) -->
+        <div id="challenge-duel-banner" class="hidden mt-6 max-w-2xl mx-auto" data-vr-zone="challenge-duel" aria-live="polite"></div>
+
         <!-- REFERRAL ATTRIBUTION BANNER -->
         <div id="referral-attribution" class="hidden mt-6 max-w-2xl mx-auto">
             <div class="glass border border-emerald-500/30 bg-emerald-500/5 rounded-3xl px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -347,6 +350,45 @@
                         </div>
                        
                         <p data-vr-slim-share-meta class="text-xs text-zinc-500 -mt-2 mb-2">Every share moves you up • <strong class="text-violet-300/90">A/B</strong> tracked in analytics • <strong class="text-violet-300/90">/r/CODE</strong> OG cards show rank + QR • Growth Engine below</p>
+
+                        <div id="catch-up-anxiety-bar" data-vr-zone="catch-up-anxiety" class="hidden catch-up-anxiety-bar mb-4 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-500/10 to-rose-500/5 px-4 py-3" role="status" aria-live="polite">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-fire text-amber-300 text-sm" aria-hidden="true"></i>
+                                    <span class="text-[10px] uppercase tracking-wider font-bold text-amber-200">Catch-up meter</span>
+                                </div>
+                                <span data-anxiety-gap class="text-lg font-black text-amber-300 tabular-nums">0</span>
+                            </div>
+                            <p data-anxiety-line class="text-sm text-zinc-100 leading-snug">Share to close the gap to #1.</p>
+                            <div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden my-2">
+                                <div data-anxiety-fill class="catch-up-anxiety-bar__fill h-full bg-gradient-to-r from-amber-400 to-rose-400 transition-all duration-500" style="width:0%"></div>
+                            </div>
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <label class="flex items-center gap-2 text-[11px] text-zinc-400 cursor-pointer">
+                                    <input id="anxiety-notify-toggle" type="checkbox" class="rounded border-amber-400/40 bg-zinc-900 text-amber-400 focus:ring-amber-400/30" />
+                                    Notify if my rank slips
+                                </label>
+                                <button type="button" id="anxiety-share-cta" class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 border border-amber-400/30">Share to catch up</button>
+                            </div>
+                        </div>
+
+                        <div id="rank-receipt-cta" data-vr-zone="rank-receipt" class="hidden rank-receipt-cta mb-4 rounded-2xl border border-violet-400/25 bg-zinc-900/70 px-4 py-3" role="region" aria-label="Rank receipt card">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <div data-receipt-headline class="text-sm font-bold text-white">Your rank receipt is ready</div>
+                                    <div data-receipt-subline class="text-[11px] text-zinc-400 mt-0.5">Shareable proof with QR link.</div>
+                                    <div class="flex items-center gap-3 mt-2 text-xs">
+                                        <span class="text-zinc-500">Rank <strong data-receipt-rank class="text-violet-300">—</strong></span>
+                                        <span class="text-zinc-500">Refs <strong data-receipt-refs class="text-emerald-300">0</strong></span>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 shrink-0">
+                                    <button type="button" id="rank-receipt-download" class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-violet-600/80 hover:bg-violet-600 text-white">Download</button>
+                                    <button type="button" id="rank-receipt-share" class="hidden text-xs font-semibold px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-zinc-200 border border-white/20">Share image</button>
+                                </div>
+                            </div>
+                            <canvas id="rank-receipt-canvas" class="hidden" width="1080" height="1350" aria-hidden="true"></canvas>
+                        </div>
 
                         <div id="growth-command-center" data-vr-zone="growth-command" class="hidden growth-command-center mb-4 rounded-2xl border border-violet-400/30 bg-gradient-to-br from-violet-500/10 via-zinc-900/80 to-emerald-500/5 px-4 py-4" role="region" aria-label="Growth command center">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -690,6 +732,34 @@
                         <div class="mt-4 text-xs text-zinc-400">Your website featured on the ViralRefer homepage for 30 days.</div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- COMMUNITY UNLOCK METER -->
+        <div id="community-unlock-meter" data-vr-zone="community-unlock" class="hidden community-unlock-meter mt-12 rounded-3xl border border-cyan-400/25 bg-gradient-to-br from-cyan-500/10 via-zinc-900/80 to-violet-500/5 px-6 py-5" role="status" aria-live="polite">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-users text-cyan-300 text-sm" aria-hidden="true"></i>
+                    <span class="text-xs uppercase tracking-wider font-bold text-cyan-200">Community unlock</span>
+                </div>
+                <span data-community-pct class="text-sm font-bold text-cyan-300 tabular-nums">0%</span>
+            </div>
+            <p data-community-label class="text-sm text-zinc-100">Together: 0 / 100 referrals this week</p>
+            <div class="h-2.5 bg-zinc-800 rounded-full overflow-hidden my-3">
+                <div data-community-fill class="community-unlock-meter__fill h-full bg-gradient-to-r from-cyan-400 to-violet-400 transition-all duration-700" style="width:0%"></div>
+            </div>
+            <p data-community-status class="text-[11px] text-zinc-400">Hit the weekly goal together — everyone wins momentum.</p>
+        </div>
+
+        <!-- WEEKLY SPRINT BOARD -->
+        <div id="weekly-sprint-board" data-vr-zone="weekly-sprint" class="hidden mt-8">
+            <div class="flex items-center gap-3 mb-4">
+                <h2 class="text-3xl font-bold tracking-tight text-white">Weekly Sprint</h2>
+                <span class="px-2.5 py-0.5 bg-cyan-500/15 text-cyan-300 text-[10px] font-bold uppercase tracking-wide rounded-full border border-cyan-400/30">7-day board</span>
+            </div>
+            <p class="text-sm text-zinc-400 mb-4">Mini-leaderboard for referrals in the last 7 days — separate from the main prize race.</p>
+            <div id="weekly-sprint-container" class="min-h-[120px]">
+                <div class="text-center py-6 text-zinc-500 text-sm">Loading sprint board…</div>
             </div>
         </div>
 

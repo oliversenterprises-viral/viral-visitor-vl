@@ -3,7 +3,10 @@
  * Pure functions (testable); side effects live in public/handlers.ts.
  */
 
+import { appendChallengeParam, formatChallengeSharePrefix } from './challenge-mode';
+import { getStoredLandingRef } from './referral-url';
 import { formatShareGapNudge } from './share-gap';
+import { getViralLoopsConfig } from './viral-loops-config';
 
 export type SharePlatform =
   | 'x'
@@ -72,14 +75,15 @@ const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
 
 /** Append UTM params so you can see which platform drove each visit. */
 export function buildTrackedShareLink(link: string, platform: SharePlatform): string {
+  const challengeLink = appendChallengeParam(link);
   try {
-    const url = new URL(link);
+    const url = new URL(challengeLink);
     url.searchParams.set('utm_source', platform);
     url.searchParams.set('utm_medium', 'referral_share');
     url.searchParams.set('utm_campaign', 'viralrefer');
     return url.toString();
   } catch {
-    return link;
+    return challengeLink;
   }
 }
 
@@ -116,6 +120,13 @@ function applySharePlaceholders(
     const combined = `${prefixParts.join(' — ')} — `;
     const alreadyPrefixed = prefixParts.some((p) => out.includes(p));
     if (!alreadyPrefixed && !out.startsWith(combined)) out = combined + out;
+  }
+
+  if (getViralLoopsConfig().challenge_enabled) {
+    const duelPrefix = formatChallengeSharePrefix(getStoredLandingRef());
+    if (duelPrefix && !out.includes(duelPrefix.trim())) {
+      out = duelPrefix + out;
+    }
   }
 
   return out;

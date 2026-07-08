@@ -58,6 +58,32 @@ export type VisitorFunnelEvent =
   | 'OpenPrizeClaim'
   | 'SubmitPrizeClaim';
 
+/** Viral loop engagement events (admin-tracked separately from core funnel). */
+export type ViralLoopEvent =
+  | 'ChallengeLanding'
+  | 'ChallengeLinkReady'
+  | 'ReceiptGenerated'
+  | 'ReceiptShared'
+  | 'AnxietyBarShown'
+  | 'AnxietyBarAction'
+  | 'AnxietyNotification'
+  | 'SprintBoardView'
+  | 'CommunityUnlockView'
+  | 'CommunityUnlockCelebration';
+
+export const VIRAL_LOOP_EVENT_ORDER: ViralLoopEvent[] = [
+  'ChallengeLanding',
+  'ChallengeLinkReady',
+  'ReceiptGenerated',
+  'ReceiptShared',
+  'AnxietyBarShown',
+  'AnxietyBarAction',
+  'AnxietyNotification',
+  'SprintBoardView',
+  'CommunityUnlockView',
+  'CommunityUnlockCelebration',
+];
+
 function resolveRefCode(): string | undefined {
   const utm = getStoredUtmAttribution();
   return utm?.ref || getStoredLandingRef() || undefined;
@@ -114,6 +140,16 @@ export function trackVisitorFunnel(
   if (isAdminStatsReadOnlyRefresh()) return;
   pushLocalVisitorEvent(step, metadata);
   logVisitorEventServer(step, metadata);
+}
+
+/** Track viral loop engagement (same visitor_events table, distinct event names). */
+export function trackViralLoopEvent(
+  step: ViralLoopEvent,
+  metadata: Record<string, unknown> = {},
+): void {
+  if (isAdminStatsReadOnlyRefresh()) return;
+  pushLocalVisitorEvent(step, { ...metadata, loop: 'viral' });
+  logVisitorEventServer(step, { ...metadata, loop: 'viral' });
 }
 
 /** Call once at bootstrap after UTM capture — logs every landing. */
@@ -182,8 +218,15 @@ export function computeVisitorFunnelStats(events: Array<Record<string, any>>) {
     count: counts[name] || 0,
     unique: uniqueVisitorsFor(events, name),
   }));
+  const viralLoops = VIRAL_LOOP_EVENT_ORDER.map((name) => ({
+    name,
+    count: counts[name] || 0,
+    unique: uniqueVisitorsFor(events, name),
+  }));
+
   return {
     funnel,
+    viralLoops,
     total: events.length,
     uniqueVisitorsLanding: uniqueVisitorsFor(events, 'SiteLanding'),
     uniqueVisitorsAny: uniqueVisitorsFor(events),

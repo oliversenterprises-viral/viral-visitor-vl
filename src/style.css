@@ -2151,3 +2151,34 @@ html[data-vr-growth-hub] #boost-whatsapp-btn {
 .growth-command-cta--high {
   box-shadow: 0 0 18px rgba(139, 92, 246, 0.35);
 }
+
+/* Viral loops — challenge, anxiety, receipt, sprint, community */
+.catch-up-anxiety-bar__fill {
+  transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.catch-up-anxiety-bar--critical {
+  border-color: rgba(244, 63, 94, 0.45) !important;
+  animation: vr-viral-rush-pulse 1.8s ease-in-out infinite;
+}
+
+.challenge-duel-banner {
+  animation: vr-combo-flash 0.6s ease-out;
+}
+
+.community-unlock-meter__fill {
+  transition: width 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.community-unlock-meter--unlocked {
+  border-color: rgba(34, 211, 238, 0.5) !important;
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.15);
+}
+
+.rank-receipt-cta {
+  transition: border-color 0.3s ease;
+}
+
+.weekly-sprint-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}

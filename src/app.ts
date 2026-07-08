@@ -47,6 +47,8 @@ import { celebrateMilestonesIfAny } from './lib/referral-milestones';
 
 import { initGrowthCommandCenter } from './lib/growth-command-center';
 import { initViralLoopUI, syncViralLoopUI } from './lib/viral-loop-ui';
+import { initViralLoopsConfigFromContent } from './lib/viral-loops-config';
+import { loadPublicViralLoops, onViralLoopsLinkReady, syncUserViralLoops } from './lib/viral-loops';
 import { referralsToNextRank } from './lib/share-gap';
 import type { LeaderboardEntry } from './lib/types';
 
@@ -198,6 +200,7 @@ export async function loadSiteContent() {
   try {
     const content = await fetchSiteContent();
     initOptimizerFlagsFromContent(content);
+    initViralLoopsConfigFromContent(content);
     initFunnelCopyFromContent(content);
     applyVisitorSlimFromFlags();
     await updatePublicContent(content);
@@ -248,6 +251,7 @@ export async function initApp() {
 
     await withInitTimeout(loadLeaderboard(), undefined);
     await withInitTimeout(renderRecentActivity(), undefined);
+    await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
 
     if (myReferralCode) {
       applyExistingReferralLink(myReferralCode);
@@ -307,6 +311,11 @@ async function renderMyStats(myCode: string | null): Promise<void> {
   const linkInput = document.getElementById('ref-link') as HTMLInputElement | null;
   if (linkInput?.value?.trim()) syncSharePowerUI(linkInput.value.trim());
   syncViralLoopUI();
+  const link = linkInput?.value?.trim() || '';
+  syncUserViralLoops(myCode, count, rank, cachedLeaderboard, link || undefined);
+  if (link) {
+    onViralLoopsLinkReady(myCode, link, count, rank, cachedLeaderboard);
+  }
   const progress = Math.min(Math.floor((count / 10) * 100), 100);
   const isOnLeaderboard = count >= 1;
   const rankBadge =

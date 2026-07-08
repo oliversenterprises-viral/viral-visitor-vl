@@ -215,6 +215,7 @@ function renderVisitorFunnelView(
       range: getTrackingTimeRange(),
       totals,
       funnel: stats.funnel,
+      viralLoops: stats.viralLoops,
       stepConversions,
       uniqueSessions,
       byCountry: stats.byCountry,
@@ -300,6 +301,21 @@ function renderVisitorFunnelView(
     </tr>`;
   }
   html += `</tbody></table>`;
+
+  const viralLoops = stats.viralLoops || [];
+  const viralTotal = viralLoops.reduce((s, r) => s + r.count, 0);
+  if (viralLoops.length) {
+    html += `<div class="text-[9px] font-semibold text-cyan-300 mt-2 mb-1">Viral loops (engagement)</div>`;
+    html += `<table class="w-full text-[8px] text-zinc-200 border border-white/10 mb-2"><thead><tr class="bg-white/5 text-cyan-200"><th class="text-left p-1">Loop event</th><th class="p-1 text-right">Events</th><th class="p-1 text-right">Unique</th></tr></thead><tbody>`;
+    for (const row of viralLoops) {
+      if (!row.count && !row.unique) continue;
+      html += `<tr class="border-t border-white/5"><td class="p-1 text-zinc-100">${escapeHtml(row.name)}</td><td class="p-1 text-right tabular-nums">${row.count}</td><td class="p-1 text-right tabular-nums text-cyan-200/90">${row.unique > 0 ? row.unique : '—'}</td></tr>`;
+    }
+    html += `</tbody></table>`;
+    if (viralTotal === 0) {
+      html += `<div class="text-[8px] text-zinc-500 mb-2">No viral loop events in range yet — challenge links, receipts, sprint board, etc.</div>`;
+    }
+  }
 
   const countryRows = topCountries(filterCountryRowsForDisplay(stats.byCountry));
   html += `<div class="text-[9px] text-zinc-400 mb-1">By country (landings):</div>`;

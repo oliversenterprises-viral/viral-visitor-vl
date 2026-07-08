@@ -241,6 +241,65 @@ async function checkLeaderboardRpc() {
   );
 }
 
+async function checkViralLoopsRpc() {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const { data: sprint, error: sprintErr } = await supabase.rpc('get_weekly_sprint_leaderboard', {
+    p_limit: 5,
+  });
+  record(
+    'db: get_weekly_sprint_leaderboard RPC reachable',
+    !sprintErr && Array.isArray(sprint),
+    sprintErr?.message || `${sprint?.length ?? 0} row(s)`,
+  );
+
+  const { data: weekly, error: weeklyErr } = await supabase.rpc('get_weekly_referral_count');
+  record(
+    'db: get_weekly_referral_count RPC reachable',
+    !weeklyErr && typeof weekly === 'number',
+    weeklyErr?.message || `weekly=${weekly}`,
+  );
+
+  const { data: rival, error: rivalErr } = await supabase.rpc('get_referrer_public_stats', {
+    p_referrer_code: SMOKE_REF_CODE,
+  });
+  const rivalOk =
+    !rivalErr &&
+    rival &&
+    typeof rival === 'object' &&
+    typeof rival.referral_count === 'number';
+  record(
+    'db: get_referrer_public_stats RPC reachable',
+    rivalOk,
+    rivalErr?.message || JSON.stringify(rival).slice(0, 120),
+  );
+
+  const { data: configRow, error: configErr } = await supabase
+    .from('site_content')
+    .select('value')
+    .eq('key', 'viral_loops_config')
+    .maybeSingle();
+  let configValue = configRow?.value ?? null;
+  if (typeof configValue === 'string') {
+    try {
+      configValue = JSON.parse(configValue);
+    } catch {
+      configValue = null;
+    }
+  }
+  const configOk =
+    !configErr &&
+    configValue &&
+    typeof configValue === 'object' &&
+    configValue.community_goal_weekly != null;
+  record(
+    'db: viral_loops_config seeded in site_content',
+    configOk,
+    configErr?.message ||
+      (configOk ? `goal=${configValue.community_goal_weekly}` : 'missing or invalid row'),
+  );
+}
+
 async function checkLiveSiteFetch() {
   const res = await fetch(`${LIVE_SITE}/?ref=VIRAL-97UWEGZ`, { redirect: 'follow' });
   const html = await res.text();
@@ -389,6 +448,7 @@ async function main() {
   await checkEdgeFunctionContract();
   await checkRlsLockdown();
   await checkLeaderboardRpc();
+  await checkViralLoopsRpc();
   await checkLiveSite();
 
   const passed = results.filter((r) => r.ok).length;

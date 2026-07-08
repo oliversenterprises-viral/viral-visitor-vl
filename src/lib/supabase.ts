@@ -151,6 +151,66 @@ export async function fetchPublicRecentActivity(limit = 8): Promise<{
   return { rows: [], velocityLastHour: 0 };
 }
 
+export interface ReferrerPublicStats {
+  referrer_code: string;
+  referral_count: number;
+  rank: number | null;
+  on_board: boolean;
+}
+
+export async function fetchReferrerPublicStats(referrerCode: string): Promise<ReferrerPublicStats> {
+  const fallback: ReferrerPublicStats = {
+    referrer_code: referrerCode.trim().toUpperCase(),
+    referral_count: 0,
+    rank: null,
+    on_board: false,
+  };
+  if (!referrerCode || !isSupabaseConfigured) return fallback;
+  try {
+    const { data, error } = await supabase.rpc('get_referrer_public_stats', {
+      p_referrer_code: referrerCode,
+    });
+    if (!error && data && typeof data === 'object') {
+      const row = data as Record<string, unknown>;
+      return {
+        referrer_code: String(row.referrer_code || fallback.referrer_code),
+        referral_count: typeof row.referral_count === 'number' ? row.referral_count : 0,
+        rank: typeof row.rank === 'number' ? row.rank : null,
+        on_board: row.on_board === true,
+      };
+    }
+  } catch {
+    // RPC may not exist until migration 0031
+  }
+  return fallback;
+}
+
+export async function fetchWeeklySprintLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase.rpc('get_weekly_sprint_leaderboard', {
+      p_limit: limit,
+    });
+    if (!error && Array.isArray(data)) {
+      return data as LeaderboardEntry[];
+    }
+  } catch {
+    // RPC unavailable
+  }
+  return [];
+}
+
+export async function fetchWeeklyReferralCount(): Promise<number> {
+  if (!isSupabaseConfigured) return 0;
+  try {
+    const { data, error } = await supabase.rpc('get_weekly_referral_count');
+    if (!error && typeof data === 'number') return data;
+  } catch {
+    // RPC unavailable
+  }
+  return 0;
+}
+
 export async function fetchSiteContent(): Promise<Record<string, unknown>> {
   if (!isSupabaseConfigured) return {};
   const { data, error } = await supabase
