@@ -138,7 +138,15 @@ async function checkEdgeFunctionContract() {
 async function checkRlsLockdown() {
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const sensitiveTables = ['referrals', 'shares', 'visitor_events', 'banner_events', 'prize_claims'];
+  const sensitiveTables = [
+    'referrals',
+    'shares',
+    'visitor_events',
+    'banner_events',
+    'prize_claims',
+    'interaction_events',
+    'optimizer_experiments',
+  ];
   for (const table of sensitiveTables) {
     const { data, error } = await supabase.from(table).select('id').limit(1);
     const blocked =
@@ -150,6 +158,16 @@ async function checkRlsLockdown() {
       error?.message || `${data?.length ?? 0} row(s) returned`,
     );
   }
+
+  const { error: interactionInsertErr } = await supabase.from('interaction_events').insert({
+    event_type: 'click',
+    zone_id: 'smoke-test',
+  });
+  record(
+    'rls: anon blocked from interaction_events INSERT',
+    Boolean(interactionInsertErr),
+    interactionInsertErr?.message || 'insert succeeded (regression)',
+  );
 
   const { data: activity, error: activityErr } = await supabase.rpc('get_public_recent_activity', {
     p_limit: 3,
