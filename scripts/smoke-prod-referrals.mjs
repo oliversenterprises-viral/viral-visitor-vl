@@ -179,6 +179,36 @@ async function checkRlsLockdown() {
     );
   }
 
+  const { data: siteContent, error: siteContentErr } = await supabase
+    .from('site_content')
+    .select('key')
+    .limit(3);
+  record(
+    'rls: anon can read site_content SELECT',
+    !siteContentErr && Array.isArray(siteContent) && siteContent.length > 0,
+    siteContentErr?.message || `${siteContent?.length ?? 0} row(s)`,
+  );
+
+  const { error: siteContentUpdateErr } = await supabase
+    .from('site_content')
+    .update({ value: '"smoke-test"' })
+    .eq('key', 'hero_title');
+  record(
+    'rls: anon blocked from site_content UPDATE',
+    Boolean(siteContentUpdateErr),
+    siteContentUpdateErr?.message || 'update succeeded (regression)',
+  );
+
+  const { error: siteContentInsertErr } = await supabase.from('site_content').insert({
+    key: 'smoke_test_key',
+    value: '"blocked"',
+  });
+  record(
+    'rls: anon blocked from site_content INSERT',
+    Boolean(siteContentInsertErr),
+    siteContentInsertErr?.message || 'insert succeeded (regression)',
+  );
+
   const { data: activity, error: activityErr } = await supabase.rpc('get_public_recent_activity', {
     p_limit: 3,
   });
