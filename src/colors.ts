@@ -80,6 +80,12 @@ export function getColorControls(): ColorControl[] {
     { group: 'Leaderboard & Referral', key: 'color_qr_show_larger_bg', label: 'Show Larger QR Button BG', default: 'rgba(255,255,255,0.05)' },
     { group: 'Leaderboard & Referral', key: 'color_qr_show_larger_text', label: 'Show Larger QR Button Text', default: '#d4d4d8' },
 
+    // Funnel Journey
+    { group: 'Funnel Journey', key: 'color_funnel_active', label: 'Active Step Text', default: '#e9d5ff' },
+    { group: 'Funnel Journey', key: 'color_funnel_done', label: 'Completed Step Text', default: '#34d399' },
+    { group: 'Funnel Journey', key: 'color_funnel_coach', label: 'Coach Strip Text', default: '#e4e4e7' },
+    { group: 'Funnel Journey', key: 'color_funnel_arrow', label: 'Step Arrow (active flow)', default: '#a78bfa' },
+
     // Sharing & Footer
     { group: 'Sharing & Footer', key: 'color_share_label', label: 'Share Button Labels', default: '#d4d4d8' },
     { group: 'Sharing & Footer', key: 'color_footer', label: 'Footer & Legal Text', default: '#a1a1aa' },
@@ -130,6 +136,10 @@ export function getDefaultTextColorVars(): Record<string, string> {
     '--qr-show-larger-bg': 'rgba(255, 255, 255, 0.05)',
     '--qr-show-larger-text': '#d4d4d8',
     '--referral-qr-icon': '#a1a1aa',
+    '--text-funnel-active': '#e9d5ff',
+    '--text-funnel-done': '#34d399',
+    '--text-funnel-coach': '#e4e4e7',
+    '--text-funnel-arrow': '#a78bfa',
   };
 }
 

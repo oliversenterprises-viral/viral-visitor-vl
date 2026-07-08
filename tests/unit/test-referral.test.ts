@@ -22,6 +22,13 @@ describe('test-referral guards', () => {
     expect(
       shouldSkipReferralCrediting({
         referrerCode: 'VIRAL-97UWEGZ',
+        referredIp: '57.138.135.240',
+        userAgent: 'Mozilla/5.0 Chrome',
+      }),
+    ).toBe(true);
+    expect(
+      shouldSkipReferralCrediting({
+        referrerCode: 'VIRAL-97UWEGZ',
         referredIp: '1.2.3.4',
         userAgent: 'Mozilla/5.0 HeadlessChrome/149',
       }),

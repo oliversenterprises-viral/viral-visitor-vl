@@ -15,7 +15,12 @@ try {
   results.push({ check: 'Password modal opens', pass: pwModalVisible });
 
   // Submit password
-  await page.fill('#admin-password-input', 'nova2026$');
+  const adminPassword = process.env.ADMIN_TEST_PASSWORD || process.env.VITE_ADMIN_PASSWORD || '';
+  if (!adminPassword) {
+    results.push({ check: 'Admin password configured', pass: false, detail: 'Set ADMIN_TEST_PASSWORD' });
+    throw new Error('ADMIN_TEST_PASSWORD not set');
+  }
+  await page.fill('#admin-password-input', adminPassword);
   await page.click('#admin-password-submit-btn');
   await page.waitForTimeout(2500);
 
@@ -30,9 +35,9 @@ try {
   results.push({ check: 'Admin content loaded', pass: adminContent.length > 20, detail: adminContent.slice(0, 80) });
 
   // Tab smoke tests
-  for (const [tab, label] of [[1, 'Share'], [2, 'Edit'], [3, 'Prize'], [4, 'Colors']]) {
+  for (const [tab, label, waitMs] of [[1, 'Share', 4000], [2, 'Edit', 1500], [3, 'Prize', 1500], [4, 'Colors', 1500], [5, 'Optimizer', 4000]]) {
     await page.click(`#tab-${tab}`);
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(waitMs);
     const text = await page.locator('#admin-content').innerText();
     const crashed = /error loading|crash|undefined/i.test(text) && text.length < 30;
     results.push({ check: `Tab ${label} renders`, pass: !crashed && text.length > 10 });

@@ -6,12 +6,15 @@
 import { registerGlobal } from './lib';
 import { supabase } from './lib/supabase';
 import { recordShareEvent } from './lib/record-share';
+import { resolveShareAbVariant } from './lib/share-ab';
+import { getHeroCtaVariant, maybeOptimizerScrollToShare } from './lib/optimizer-flags';
 import {
   onReferralCreditFailed,
   onReferralCreditPending,
   onReferralCredited,
   onReferralLinkCopied,
   onReferralLinkReady,
+  onReferralSelfReferralBlocked,
 } from './lib/funnel-conversion';
 import { trackVisitorFunnel } from './lib/visitor-tracking';
 import {
@@ -24,6 +27,10 @@ import { tryOptionalTurnstileToken } from './lib/turnstile';
 import { escapeHtml } from './content';
 import { showToast } from './ui';
 import { getReferralBaseUrl, getQrModalTitle, getMyReferralCode, setMyReferralCode } from './public/globals';
+import { syncSharePowerUI } from './lib/share-ui';
+import { buildQrImageUrl } from './lib/share-power';
+import { initShareRemindersOnLinkReady } from './lib/share-reminder-ui';
+import { refreshPublicClarityState } from './lib/public-clarity';
 
 // Track attribution for the current page load
 let pendingReferrerCode: string | null = null;
@@ -166,7 +173,10 @@ async function runFunnelReferralRecording(): Promise<ReferralRecordOutcome> {
       onReferralCredited();
       return outcome;
     }
-    if (outcome === 'skipped') return outcome;
+    if (outcome === 'skipped') {
+      if (pendingReferrerCode) onReferralSelfReferralBlocked();
+      return outcome;
+    }
   }
 
   onReferralCreditFailed();
@@ -197,6 +207,7 @@ export function resetReferralRecordingStateForTests(): void {
   referralRecordingInFlight = false;
   referralSuccessToastShown = false;
   referralFailureToastShown = false;
+  getLinkInFlight = false;
 }
 
 /**
@@ -219,7 +230,10 @@ function populateReferralLinkUI(code: string, link: string): void {
   const sharePanel = document.getElementById('share-buttons-panel');
   if (sharePanel) sharePanel.classList.add('share-ready');
 
+  syncSharePowerUI(link);
+  initShareRemindersOnLinkReady();
   onReferralLinkReady();
+  refreshPublicClarityState();
 }
 
 /** Current value in #ref-link (empty until generated). */
@@ -247,6 +261,9 @@ export async function ensureReferralLinkReady(): Promise<string> {
 export function applyExistingReferralLink(code: string): void {
   populateReferralLinkUI(code, buildReferralLink(code));
   syncMobileReferralCta();
+  if (pendingReferrerCode && !referralRecordedThisSession) {
+    void runFunnelReferralRecording();
+  }
 }
 
 /** Sticky mobile CTA — hidden once #ref-link has a value. */
@@ -265,7 +282,12 @@ export function syncMobileReferralCta(): void {
  * Gets or generates a referral code for the current user and pre-fills the referral input.
  * Link + funnel events fire first (conversion); Turnstile recording runs in the background.
  */
+let getLinkInFlight = false;
+
 export async function getMyReferralLinkInstant(): Promise<void> {
+  if (getLinkInFlight) return;
+  getLinkInFlight = true;
+  try {
   let code = getMyReferralCode();
 
   if (!code) {
@@ -277,7 +299,17 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   const link = buildReferralLink(code);
   populateReferralLinkUI(code, link);
 
-  trackVisitorFunnel('GetReferralLink');
+  let via: string | null = null;
+  try {
+    via = sessionStorage.getItem('vr_get_link_via');
+    if (via) sessionStorage.removeItem('vr_get_link_via');
+  } catch {
+    via = null;
+  }
+  trackVisitorFunnel('GetReferralLink', {
+    hero_cta_variant: getHeroCtaVariant(),
+    ...(via ? { via } : {}),
+  });
 
   if (pendingReferrerCode) {
     showToast('Step 1 done — crediting your visit now. Next: COPY your link.', 'success');
@@ -289,9 +321,13 @@ export async function getMyReferralLinkInstant(): Promise<void> {
 
   const refSection = document.getElementById('referral-section');
   if (refSection) refSection.scrollIntoView({ behavior: 'smooth' });
+  maybeOptimizerScrollToShare();
 
   if (pendingReferrerCode && !referralRecordedThisSession) {
     void runFunnelReferralRecording();
+  }
+  } finally {
+    getLinkInFlight = false;
   }
 }
 
@@ -323,7 +359,14 @@ function performCopyToClipboard(link: string): void {
   navigator.clipboard.writeText(link).then(() => {
     showToast('Link copied — paste it anywhere to refer', 'success');
     const code = getMyReferralCode();
-    if (code) recordShareEvent({ platform: 'copy', referrer_code: code, referral_link: link });
+    if (code) {
+      recordShareEvent({
+        platform: 'copy',
+        referrer_code: code,
+        referral_link: link,
+        ab_variant: resolveShareAbVariant(code),
+      });
+    }
     trackVisitorFunnel('CopyReferralLink');
     onReferralLinkCopied();
     const btn =
@@ -354,7 +397,14 @@ function performCopyToClipboard(link: string): void {
       document.execCommand('copy');
       showToast('Link copied', 'success');
       const code = getMyReferralCode();
-      if (code) recordShareEvent({ platform: 'copy', referrer_code: code, referral_link: link });
+      if (code) {
+        recordShareEvent({
+          platform: 'copy',
+          referrer_code: code,
+          referral_link: link,
+          ab_variant: resolveShareAbVariant(code),
+        });
+      }
       trackVisitorFunnel('CopyReferralLink');
       onReferralLinkCopied();
     } catch {
@@ -397,19 +447,76 @@ export function showQRModal(): void {
 }
 
 function openQrModalWithLink(link: string): void {
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(link)}`;
+  const qrUrl = buildQrImageUrl(link, 320);
 
   const modal = document.createElement('div');
   modal.className = 'fixed inset-0 bg-black/90 z-[900] flex items-center justify-center';
   modal.innerHTML = `
-    <div onclick="event.target.remove()" class="glass border border-white/10 rounded-3xl p-8 max-w-sm w-full mx-4 text-center">
+    <div class="glass border border-white/10 rounded-3xl p-8 max-w-sm w-full mx-4 text-center" data-qr-modal-card>
       <div class="text-xl font-bold mb-4">${escapeHtml(getQrModalTitle() || 'Scan to Get Your Link')}</div>
-      <img src="${qrUrl}" class="mx-auto rounded-2xl border border-white/10" alt="QR Code" />
+      <img src="${qrUrl}" class="mx-auto rounded-2xl border border-white/10 bg-white p-2" alt="QR Code" data-qr-modal-img />
       <div class="text-xs text-zinc-400 mt-4 break-all">${escapeHtml(link)}</div>
-      <button class="mt-6 px-8 py-3 bg-white/10 hover:bg-white/20 rounded-2xl">Close</button>
+      <div class="flex flex-wrap gap-2 justify-center mt-5">
+        <button type="button" data-qr-download class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-sm font-semibold">
+          <i class="fa-solid fa-download"></i> Save QR
+        </button>
+        <button type="button" data-qr-native-share class="hidden px-5 py-2.5 bg-violet-600 hover:bg-violet-500 rounded-2xl text-sm font-semibold">
+          <i class="fa-solid fa-share-nodes"></i> Share
+        </button>
+        <button type="button" data-qr-close class="px-5 py-2.5 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">Close</button>
+      </div>
     </div>
   `;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+
+  const card = modal.querySelector('[data-qr-modal-card]');
+  card?.addEventListener('click', (e) => e.stopPropagation());
+
+  const downloadBtn = modal.querySelector('[data-qr-download]');
+  downloadBtn?.addEventListener('click', () => {
+    void downloadQrPng(link);
+  });
+
+  const nativeBtn = modal.querySelector('[data-qr-native-share]') as HTMLElement | null;
+  if (nativeBtn && typeof navigator.share === 'function') {
+    nativeBtn.classList.remove('hidden');
+    nativeBtn.addEventListener('click', () => {
+      void navigator.share({
+        title: 'ViralRefer QR',
+        text: 'Scan to join the ViralRefer leaderboard',
+        url: link,
+      }).catch(() => {});
+    });
+  }
+
+  modal.querySelector('[data-qr-close]')?.addEventListener('click', () => modal.remove());
+
   document.body.appendChild(modal);
+}
+
+/** Download QR code as PNG for offline sharing (posters, stories, etc.). */
+export async function downloadQrPng(link: string): Promise<void> {
+  const code = link.match(/\/r\/([^/?#]+)/i)?.[1] || 'share';
+  const qrUrl = buildQrImageUrl(link, 512);
+
+  try {
+    const res = await fetch(qrUrl);
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = `viralrefer-qr-${code}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objectUrl);
+    showToast('QR saved — share the image anywhere', 'success');
+  } catch {
+    showToast('Could not save QR — try Show larger QR again', 'info');
+  }
 }
 
 /**
@@ -432,6 +539,20 @@ registerGlobal('getMyReferralLinkInstant', getMyReferralLinkInstant);
 registerGlobal('generateNewCode', generateNewCode);
 registerGlobal('copyLink', copyLink);
 registerGlobal('showQRModal', showQRModal);
+registerGlobal('downloadQrPng', downloadQrPng);
+
+/** Inline QR panel — save QR without opening modal. */
+export function downloadQrFromPanel(): void {
+  void (async () => {
+    const link = await ensureReferralLinkReady();
+    if (!link) {
+      showToast('Get your referral link first', 'info');
+      return;
+    }
+    await downloadQrPng(link);
+  })();
+}
+registerGlobal('downloadQrFromPanel', downloadQrFromPanel);
 registerGlobal('debugReferral', debugReferral);
 registerGlobal('buildReferralLink', buildReferralLink);
 

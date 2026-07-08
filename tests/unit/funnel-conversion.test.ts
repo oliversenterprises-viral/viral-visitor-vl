@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
+  applyReferredLandingOverrides,
   funnelStepStates,
   initFunnelConversion,
   isReferredLanding,
@@ -64,6 +65,7 @@ describe('funnel-conversion helpers', () => {
 
     vi.stubGlobal('location', { pathname: '/r/VIRAL-GATE01', search: '' });
     initFunnelConversion();
+    applyReferredLandingOverrides();
 
     expect(document.documentElement.getAttribute('data-vr-referred-landing')).toBe('1');
     expect(document.documentElement.getAttribute('data-vr-credit-pending')).toBe('1');

@@ -26,8 +26,17 @@ export function initPublic(): void {
 // Re-export the main public action functions for programmatic use
 export {
   shareTo,
+  nativeShare,
+  copyShareMessage,
+  copyShortCode,
+  copyEmbedCode,
+  copyMarkdownShare,
+  boostShareWhatsApp,
+  generateStoryShareImage,
+  downloadSharePack,
   claimBanner,
   joinViaReferral,
+  syncSharePowerUI,
 } from './handlers';
 
 export {

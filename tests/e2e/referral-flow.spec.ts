@@ -68,14 +68,14 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await expect(page.locator('#referrer-code-display')).toHaveText(referrerCode);
   });
 
-  test('All 8 share buttons are present and functional', async ({ page }) => {
+  test('All 15 share buttons are present and functional', async ({ page }) => {
     await page.goto('/');
     await ensureReferralLink(page);
 
     const shareButtons = page.locator('#referral-section .share-btn');
-    await expect(shareButtons).toHaveCount(8);
+    await expect(shareButtons).toHaveCount(15);
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 14; i++) {
       const button = shareButtons.nth(i);
       await expect(button).toBeVisible();
 

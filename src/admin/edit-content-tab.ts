@@ -4,6 +4,12 @@ import { formatError } from '../lib';
 import { showToast } from '../ui';
 import { renderBannerStats, wireBannerStatsQuick } from './banner-stats';
 import { wireVisitorFunnelStatsQuick } from './visitor-funnel-stats';
+import { buildTrackingHubShellHtml, wireEditContentTrackingHub } from './edit-content-tracking';
+import { registerAdminLiveRefresh, refreshAdminLiveIndicators } from './admin-live-hub';
+import { wireEditContentAutoClearTest } from '../lib/admin-stats-auto-clear-test';
+import { runClearTestAdminStatsForEditContent } from './edit-content-clear-test';
+
+let unregisterContentLive: (() => void) | null = null;
 
 /** Lightweight row shape used by the Edit Content admin tab */
 interface ContentRow {
@@ -67,6 +73,7 @@ async function saveSiteContentEntry(key: string, value: unknown): Promise<boolea
  * that powers the public homepage.
  */
 async function renderEditContentTab(content: HTMLElement) {
+  content.dataset.vrEditContentRoot = '1';
   content.innerHTML = `
     <div class="flex items-center justify-between mb-4">
       <div>
@@ -110,12 +117,23 @@ async function renderEditContentTab(content: HTMLElement) {
 
       const html = buildContentListHTML(rows);
       content.innerHTML = html;
+      refreshAdminLiveIndicators();
 
       attachContentListeners(content, loadAndRenderList, rows);
       await Promise.allSettled([
         wireVisitorFunnelStatsQuick(content),
         wireBannerStatsQuick(content),
       ]);
+      wireEditContentTrackingHub(content);
+      wireEditContentAutoClearTest(content, async () => {
+        try {
+          await runClearTestAdminStatsForEditContent(content, {
+            toastPrefix: 'Auto-clear: ',
+          });
+        } catch {
+          // missing admin secret or edge error — skip noisy toasts on timer
+        }
+      });
 
   // Wire up the prominent "Create Multi-Banner Rotation (v2)" button if it exists
   const createBannersBtn = content.querySelector('#create-banners-key-btn') as HTMLButtonElement | null;
@@ -160,6 +178,14 @@ async function renderEditContentTab(content: HTMLElement) {
       content.innerHTML = `<div class="p-6 text-red-400">Error loading content: ${formatError(err)}. Please try refreshing the page.</div>`;
     }
   }
+
+  if (unregisterContentLive) unregisterContentLive();
+  unregisterContentLive = registerAdminLiveRefresh('content', () => {
+    if (!document.body.contains(content)) return;
+    const formArea = document.getElementById('content-form-area');
+    if (formArea && !formArea.classList.contains('hidden')) return;
+    void loadAndRenderList();
+  });
 
   await loadAndRenderList();
 
@@ -240,6 +266,7 @@ function buildContentListHTML(rows: ContentRow[]): string {
         <div class="text-sm text-zinc-400">Live CMS — changes are public immediately</div>
       </div>
       <div class="flex items-center gap-3">
+        <span id="content-live-indicator" class="hidden text-[10px] text-emerald-400/80"><i class="fa-solid fa-circle text-[6px] mr-1"></i>live</span>
         <span id="content-last-updated" class="text-[10px] text-zinc-500"></span>
         <input id="content-search" type="text" placeholder="Search keys..." 
                class="w-48 bg-zinc-900 border border-white/10 rounded-xl px-3 py-1.5 text-sm focus:border-violet-500" />
@@ -248,8 +275,7 @@ function buildContentListHTML(rows: ContentRow[]): string {
         </button>
       </div>
     </div>
-    <div id="visitor-stats-quick" class="mb-4 p-3 border border-violet-500/30 bg-zinc-900/50 rounded-2xl"></div>
-    <div id="banner-stats-quick" class="mb-4 p-3 border border-emerald-500/30 bg-zinc-900/50 rounded-2xl"></div>
+    ${buildTrackingHubShellHtml()}
     <div id="content-list" class="space-y-3">
   `;
 
@@ -402,6 +428,10 @@ function showContentForm(
         return;
       }
       await reloadList();
+      const reloadPublic = (window as { loadSiteContent?: () => Promise<void> }).loadSiteContent;
+      if (typeof reloadPublic === 'function') {
+        await reloadPublic().catch(() => {});
+      }
       showToast('Content saved successfully', 'success');
     };
   }

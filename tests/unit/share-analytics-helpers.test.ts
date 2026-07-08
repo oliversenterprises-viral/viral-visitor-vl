@@ -5,6 +5,7 @@ import {
   filterSharesByPlatform,
   applyShareFilters,
   computeAnalyticsData,
+  computeAbVariantBreakdown,
   getUniquePlatforms,
   extractReferrerCodeFromLink,
   normalizeShareRow,
@@ -98,6 +99,30 @@ describe('share analytics helpers (pure)', () => {
     expect(isTestShareReferrerCode('unknown')).toBe(true);
     expect(isTestShareReferrerCode('VIRAL-97UWEGZ')).toBe(false);
     expect(isTestShareReferrerCode('VIRAL-2DCURPE')).toBe(false);
+  });
+
+  it('computeAbVariantBreakdown groups a/b/unknown', () => {
+    const shares = [
+      makeShare({ ab_variant: 'a' }),
+      makeShare({ ab_variant: 'a' }),
+      makeShare({ ab_variant: 'b' }),
+      makeShare({ ab_variant: 'unknown' }),
+    ];
+    const breakdown = computeAbVariantBreakdown(shares);
+    expect(breakdown.find((r) => r.variant === 'a')?.count).toBe(2);
+    expect(breakdown.find((r) => r.variant === 'b')?.count).toBe(1);
+    expect(breakdown.find((r) => r.variant === 'unknown')?.count).toBe(1);
+  });
+
+  it('computeAnalyticsData includes A/B insight when tracked', () => {
+    const shares = [
+      makeShare({ ab_variant: 'a' }),
+      makeShare({ ab_variant: 'a' }),
+      makeShare({ ab_variant: 'b' }),
+    ];
+    const data = computeAnalyticsData(shares);
+    expect(data.abVariantBreakdown.length).toBeGreaterThan(0);
+    expect(data.insights.some((i) => i.includes('A/B'))).toBe(true);
   });
 
   it('countTestShares and listTestShareCodes', () => {

@@ -1,7 +1,10 @@
 /** Node helpers mirroring supabase/functions/_shared/admin-stats-test.ts */
 
-export const ADMIN_FUNNEL_EXCLUDED_IPS = ['161.38.136.60'];
-export const ADMIN_FUNNEL_EXCLUDED_IP_HASHES = ['d8399295624890754c844c12'];
+export const ADMIN_FUNNEL_EXCLUDED_IPS = ['161.38.136.60', '57.138.135.240'];
+export const ADMIN_FUNNEL_EXCLUDED_IP_HASHES = [
+  'd8399295624890754c844c12',
+  '717ece42045d3673ed7fb81c',
+];
 export const AZURE_SMOKE_IP_RE = /^20\.|^48\.|^52\.|^74\.|^135\./;
 
 export function getVisitorEventIp(event) {

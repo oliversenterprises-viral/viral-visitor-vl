@@ -1,4 +1,5 @@
 import { setActiveTab } from '../ui';
+import { setAdminLiveActiveTab } from './admin-live-hub';
 import {
   renderReferralsTab,
   renderEditContentTab,
@@ -46,6 +47,7 @@ export async function switchAdminTab(tab: number) {
 
   content.classList.add('admin-tab-content');
   setActiveTab(tab);
+  setAdminLiveActiveTab(tab);
   content.innerHTML = ADMIN_LOADING_SKELETON;
 
   try {
@@ -69,6 +71,11 @@ export async function switchAdminTab(tab: number) {
       const { renderTextColorsTab } = await import('./text-colors-tab');
       if (isStale(requestId)) return;
       await renderTextColorsTab(content);
+    } else if (tab === 5) {
+      if (isStale(requestId)) return;
+      const { renderViralOptimizerTab } = await import('./viral-optimizer-tab');
+      if (isStale(requestId)) return;
+      await renderViralOptimizerTab(content);
     }
   } catch (err) {
     if (isStale(requestId)) return;

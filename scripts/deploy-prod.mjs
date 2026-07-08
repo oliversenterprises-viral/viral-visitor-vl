@@ -31,6 +31,18 @@ run(
   `npx supabase functions deploy admin-action --project-ref ${PROJECT_REF} --yes`,
   'Deploy admin-action edge function',
 );
+run(
+  `npx supabase functions deploy record-share --project-ref ${PROJECT_REF} --yes`,
+  'Deploy record-share edge function',
+);
+run(
+  `npx supabase functions deploy record-visitor-event --project-ref ${PROJECT_REF} --yes`,
+  'Deploy record-visitor-event edge function',
+);
+run(
+  `npx supabase functions deploy optimizer-cron --project-ref ${PROJECT_REF} --yes`,
+  'Deploy optimizer-cron edge function',
+);
 const deployOut = execSync('npx vercel --prod --yes', { cwd: ROOT, encoding: 'utf8' });
 console.log(deployOut);
 const deployUrl = (deployOut.match(/https:\/\/viralrefer-premium-\S+\.vercel\.app/) || [])[0];

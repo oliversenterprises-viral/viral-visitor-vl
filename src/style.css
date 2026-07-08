@@ -215,13 +215,6 @@ h3 { font-size: 1.35rem; }
   transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* Room for sticky mobile referral CTA */
-@media (max-width: 767px) {
-  body:has(#mobile-referral-cta:not(.hidden)) {
-    padding-bottom: 5.5rem;
-  }
-}
-
 .copy-link-pulse {
   animation: vr-copy-pulse 0.6s ease-in-out 3;
   box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.5);
@@ -241,6 +234,184 @@ h3 { font-size: 1.35rem; }
 
 #share-buttons-panel:not(.share-ready) .share-btn {
   opacity: 0.72;
+}
+
+html[data-vr-share-mobile] #share-whatsapp-primary.share-btn {
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.35);
+}
+
+.share-preview-tab {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgb(161 161 170);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.share-preview-tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgb(228 228 231);
+}
+
+.share-preview-tab-active {
+  background: rgba(139, 92, 246, 0.25);
+  border-color: rgba(167, 139, 250, 0.45);
+  color: rgb(216 180 254);
+}
+
+.share-ab-tab {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  background: rgba(139, 92, 246, 0.08);
+  color: rgb(167 139 250);
+}
+
+.share-ab-tab-active {
+  background: rgba(139, 92, 246, 0.3);
+  border-color: rgba(196, 181, 253, 0.5);
+  color: rgb(237 233 254);
+}
+
+.share-rank-cta--gold {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(251, 191, 36, 0.06));
+}
+
+.share-rank-cta--emerald {
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.share-rank-cta--violet {
+  border-color: rgba(167, 139, 250, 0.25);
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.share-rank-cta--amber {
+  border-color: rgba(251, 191, 36, 0.28);
+  background: rgba(245, 158, 11, 0.07);
+}
+
+.leaderboard-row--pulse {
+  animation: vr-leaderboard-pulse 1.2s ease-out;
+}
+
+@keyframes vr-leaderboard-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45);
+    transform: scale(1);
+  }
+  40% {
+    box-shadow: 0 0 0 10px rgba(52, 211, 153, 0);
+    transform: scale(1.01);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.activity-row--fresh {
+  animation: vr-activity-fresh 1.5s ease-out;
+  border-color: rgba(251, 191, 36, 0.35) !important;
+}
+
+.activity-row--share.activity-row--fresh {
+  border-color: rgba(167, 139, 250, 0.35) !important;
+}
+
+.activity-row--rank.activity-row--fresh {
+  border-color: rgba(251, 191, 36, 0.45) !important;
+}
+
+/* Phase 2/3: hero social proof (referred + direct) */
+#hero-referred-social-proof:not(.hidden) {
+  display: block;
+}
+
+.hero-referred-social-proof--fresh .hero-referred-social-proof {
+  animation: vr-activity-fresh 1.5s ease-out;
+}
+
+@keyframes vr-hero-social-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.25); }
+  50% { box-shadow: 0 0 20px 2px rgba(167, 139, 250, 0.2); }
+}
+
+.hero-referred-social-proof--fresh {
+  animation: vr-hero-social-pulse 1.6s ease-out;
+}
+
+.referred-trust-pack {
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.06);
+}
+
+@keyframes vr-activity-fresh {
+  from {
+    background: rgba(251, 191, 36, 0.12);
+  }
+  to {
+    background: rgba(24, 24, 27, 0.7);
+  }
+}
+
+.share-winner-pack-btn {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.85), rgba(16, 185, 129, 0.75)) !important;
+  border-color: rgba(251, 191, 36, 0.45) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+.share-rank-boost-pulse {
+  animation: vr-share-boost-pulse 2s ease-in-out infinite;
+}
+
+@keyframes vr-share-boost-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(52, 211, 153, 0);
+  }
+}
+
+#share-reminder-banner {
+  animation: vr-share-reminder-in 0.35s ease-out;
+}
+
+@keyframes vr-share-reminder-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.share-native-btn {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.share-native-btn:hover {
+  transform: translateY(-1px);
+}
+
+#share-preview-wrap {
+  transition: opacity 0.25s ease;
+}
+
+#share-message-preview:empty::before {
+  content: 'Generate your link to see your optimized share message.';
+  color: rgb(113 113 122);
 }
 
 .share-primary-pulse {
@@ -343,11 +514,81 @@ html[data-vr-credit-pending] #share-buttons-panel .share-btn {
   pointer-events: none;
 }
 
+/* Above-fold funnel journey card */
+.funnel-journey-card {
+  border-radius: 1.5rem;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  background: linear-gradient(145deg, rgba(24, 24, 27, 0.92), rgba(39, 39, 42, 0.75));
+  padding: 1.25rem 1.35rem 1.1rem;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.35),
+    0 0 40px rgba(139, 92, 246, 0.08);
+}
+
+.funnel-journey-header {
+  text-align: center;
+  margin-bottom: 0.85rem;
+}
+
+.funnel-journey-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: rgba(139, 92, 246, 0.12);
+}
+
+.funnel-steps-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem 0.55rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.78rem;
+}
+
+@media (min-width: 640px) {
+  .funnel-steps-row {
+    font-size: 0.85rem;
+    gap: 0.5rem 0.65rem;
+  }
+}
+
+.funnel-step-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.6rem;
+  margin-right: 0.35rem;
+}
+
+.funnel-step-active .funnel-step-icon {
+  background: rgba(139, 92, 246, 0.35);
+  color: #e9d5ff;
+}
+
+.funnel-step-done .funnel-step-icon {
+  background: rgba(52, 211, 153, 0.2);
+  color: #6ee7b7;
+}
+
 /* Guided funnel steps */
 .funnel-step {
   display: inline-flex;
   align-items: center;
-  padding: 0.35rem 0.75rem;
+  padding: 0.4rem 0.8rem;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #a1a1aa;
@@ -356,20 +597,402 @@ html[data-vr-credit-pending] #share-buttons-panel .share-btn {
 }
 
 .funnel-step-active {
-  color: #e9d5ff;
+  color: var(--text-funnel-active, #e9d5ff);
   border-color: rgba(139, 92, 246, 0.55);
   background: rgba(139, 92, 246, 0.15);
   box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+  cursor: pointer;
+}
+
+.funnel-step-active:hover {
+  filter: brightness(1.08);
 }
 
 .funnel-step-done {
-  color: #34d399;
+  color: var(--text-funnel-done, #34d399);
   border-color: rgba(52, 211, 153, 0.4);
   background: rgba(52, 211, 153, 0.08);
 }
 
 .funnel-step-pending {
   opacity: 0.75;
+}
+
+/* Animated connectors between funnel steps */
+.funnel-step-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  color: #52525b;
+  font-size: 0.65rem;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.funnel-step-arrow--flow {
+  color: var(--text-funnel-arrow, #a78bfa);
+  animation: vr-funnel-arrow-flow 1.2s ease-in-out infinite;
+}
+
+.funnel-step-arrow--done {
+  color: var(--text-funnel-done, #34d399);
+}
+
+.funnel-step-arrow--idle {
+  opacity: 0.45;
+}
+
+@keyframes vr-funnel-arrow-flow {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateX(3px);
+    opacity: 1;
+  }
+}
+
+/* Coach strip — points visitor to the next action */
+.funnel-guide-coach {
+  border-radius: 1rem;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(52, 211, 153, 0.08));
+  padding: 0.65rem 0.85rem;
+}
+
+.funnel-guide-coach-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  justify-content: center;
+  text-align: left;
+}
+
+.funnel-guide-coach-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background: rgba(139, 92, 246, 0.25);
+  color: #c4b5fd;
+  flex-shrink: 0;
+  animation: vr-funnel-coach-bounce 1.4s ease-in-out infinite;
+}
+
+.funnel-guide-coach-text {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--text-funnel-coach, #e4e4e7);
+  font-weight: 500;
+}
+
+#funnel-journey .funnel-guide-coach {
+  margin-top: 0.15rem;
+  margin-bottom: 0;
+}
+
+html[data-vr-funnel-guide-step='2'] .funnel-guide-coach-icon,
+html[data-vr-funnel-guide-step='3'] .funnel-guide-coach-icon {
+  background: rgba(52, 211, 153, 0.2);
+  color: #6ee7b7;
+}
+
+html[data-vr-funnel-complete] .funnel-guide-coach {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(52, 211, 153, 0.12);
+}
+
+@keyframes vr-funnel-coach-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.funnel-guide-target-ring {
+  animation: vr-funnel-target-ring 1.1s ease-in-out 5;
+  outline: 2px solid rgba(167, 139, 250, 0.85);
+  outline-offset: 3px;
+}
+
+html[data-vr-funnel-guide-step='2'] .funnel-guide-target-ring {
+  outline-color: rgba(52, 211, 153, 0.9);
+}
+
+html[data-vr-funnel-guide-step='3'] .funnel-guide-target-ring {
+  outline-color: rgba(52, 211, 153, 0.95);
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.2);
+}
+
+@keyframes vr-funnel-target-ring {
+  0%,
+  100% {
+    outline-offset: 3px;
+  }
+  50% {
+    outline-offset: 6px;
+  }
+}
+
+/* Funnel coach chat — floating AI-style guide */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.funnel-coach-chat {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 45;
+  font-family: inherit;
+}
+
+.funnel-coach-chat-toggle {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.95), rgba(79, 70, 229, 0.95));
+  color: #fff;
+  box-shadow: 0 8px 28px rgba(124, 58, 237, 0.45);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  position: relative;
+}
+
+.funnel-coach-chat-toggle--pulse {
+  animation: vr-coach-toggle-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes vr-coach-toggle-pulse {
+  0%,
+  100% {
+    box-shadow: 0 8px 28px rgba(124, 58, 237, 0.45);
+  }
+  50% {
+    box-shadow: 0 8px 36px rgba(167, 139, 250, 0.75);
+    transform: scale(1.04);
+  }
+}
+
+.funnel-coach-chat-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 9999px;
+  background: #f43f5e;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.2rem;
+}
+
+.funnel-coach-chat-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.65rem);
+  width: min(22rem, calc(100vw - 2rem));
+  max-height: min(28rem, 70vh);
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(9, 9, 11, 0.96);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.funnel-coach-chat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.funnel-coach-chat-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #fafafa;
+}
+
+.funnel-coach-chat-sub {
+  font-size: 0.7rem;
+  color: #a1a1aa;
+  margin-top: 0.15rem;
+}
+
+.funnel-coach-chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.funnel-coach-chat-hide {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(39, 39, 42, 0.8);
+  color: #a1a1aa;
+  cursor: pointer;
+}
+
+.funnel-coach-chat-hide:hover {
+  color: #fafafa;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.funnel-coach-chat-close {
+  background: transparent;
+  border: none;
+  color: #a1a1aa;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.15rem;
+}
+
+.funnel-coach-restore {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 44;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: rgba(9, 9, 11, 0.92);
+  color: #ddd6fe;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.funnel-coach-restore:hover {
+  border-color: rgba(167, 139, 250, 0.55);
+  color: #f5f3ff;
+}
+
+.funnel-coach-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.funnel-coach-chat-bubble {
+  max-width: 92%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.funnel-coach-chat-bubble--coach {
+  align-self: flex-start;
+  background: rgba(124, 58, 237, 0.2);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  color: #e4e4e7;
+}
+
+.funnel-coach-chat-bubble--visitor {
+  align-self: flex-end;
+  background: rgba(39, 39, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f4f4f5;
+}
+
+.funnel-coach-chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0 0.75rem 0.5rem;
+}
+
+.funnel-coach-chat-chip {
+  font-size: 0.68rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: rgba(124, 58, 237, 0.15);
+  color: #ddd6fe;
+  cursor: pointer;
+}
+
+.funnel-coach-chat-chip:hover {
+  background: rgba(124, 58, 237, 0.28);
+}
+
+.funnel-coach-chat-form {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.65rem 0.75rem 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.funnel-coach-chat-input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(24, 24, 27, 0.9);
+  color: #fafafa;
+  font-size: 0.78rem;
+  padding: 0.5rem 0.65rem;
+}
+
+.funnel-coach-chat-send {
+  width: 2.25rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: #7c3aed;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .funnel-coach-chat {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+
+  .funnel-coach-restore {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
 }
 
 /* Referred landing: one-screen focus until visitor expands */
@@ -387,6 +1010,283 @@ html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) [data-vr-below-fol
 
 html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) #hero-leaderboard-btn {
   display: none;
+}
+
+/* Public clarity — direct landing: one hero CTA until link exists */
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-btn {
+  display: none !important;
+}
+
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-link {
+  display: inline;
+}
+
+html[data-vr-direct-landing][data-vr-has-link] #hero-leaderboard-link,
+html:not([data-vr-direct-landing]) #hero-leaderboard-link {
+  display: none;
+}
+
+html[data-vr-direct-landing]:not([data-vr-has-link]) .funnel-journey-card {
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.25), 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.vr-nav-link--active {
+  color: #c084fc !important;
+  font-weight: 600;
+}
+
+.funnel-step--nav.funnel-step-active,
+html[data-vr-has-link] .funnel-step-active {
+  cursor: pointer;
+}
+
+.funnel-step--nav.funnel-step-active:focus-visible {
+  outline: 2px solid rgba(192, 132, 252, 0.65);
+  outline-offset: 2px;
+}
+
+/* Exit-intent / dwell rescue panel */
+.vr-exit-rescue {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  animation: vr-exit-rescue-in 0.28s ease-out;
+}
+
+@media (min-width: 640px) {
+  .vr-exit-rescue {
+    align-items: center;
+  }
+}
+
+.vr-exit-rescue-card {
+  position: relative;
+  width: 100%;
+  max-width: 24rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  background: linear-gradient(145deg, rgba(39, 39, 42, 0.98), rgba(24, 24, 27, 0.98));
+  padding: 1.25rem 1.25rem 1rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+.vr-exit-rescue-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.65rem;
+  border: none;
+  background: transparent;
+  color: #a1a1aa;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.vr-exit-rescue-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin: 0 0 0.5rem;
+  padding-right: 1.5rem;
+}
+
+.vr-exit-rescue-body {
+  font-size: 0.875rem;
+  color: #d4d4d8;
+  margin: 0 0 1rem;
+  line-height: 1.45;
+}
+
+.vr-exit-rescue-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vr-exit-rescue-cta {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: linear-gradient(90deg, #7c3aed, #a855f7);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.vr-exit-rescue-dismiss {
+  width: 100%;
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  color: #71717a;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+@keyframes vr-exit-rescue-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Traffic-exchange iframe embed (/embed — frame-allowed route) */
+.vr-embed-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.85rem;
+  background: rgba(24, 24, 27, 0.96);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.35);
+  font-size: 0.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 850;
+}
+
+.vr-embed-bar-label {
+  color: #d4d4d8;
+  font-weight: 600;
+}
+
+.vr-embed-bar-link {
+  color: #c4b5fd;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+html[data-vr-embed] body {
+  min-height: auto;
+}
+
+html[data-vr-embed] #vr-nav,
+html[data-vr-embed] #admin-btn,
+html[data-vr-embed] #funnel-journey,
+html[data-vr-embed] #referral-attribution,
+html[data-vr-embed] #funnel-expand-wrap,
+html[data-vr-embed] #hero-leaderboard-btn,
+html[data-vr-embed] #hero-leaderboard-link,
+html[data-vr-embed] #hero-campaign-badge,
+html[data-vr-embed] #hero-stats-subtext,
+html[data-vr-embed] .funnel-coach-chat,
+html[data-vr-embed] .funnel-coach-restore,
+html[data-vr-embed] [data-vr-below-fold],
+html[data-vr-embed] #my-stats,
+html[data-vr-embed] #vr-exit-rescue {
+  display: none !important;
+}
+
+html[data-vr-embed] .pt-20,
+html[data-vr-embed] .sm\:pt-24 {
+  padding-top: 0.75rem !important;
+}
+
+html[data-vr-embed] .hero-gradient {
+  padding: 1.25rem 1rem 1.5rem !important;
+  border-radius: 1rem !important;
+}
+
+html[data-vr-embed] .vr-hero-title {
+  font-size: clamp(1.65rem, 8vw, 2.35rem) !important;
+  margin-bottom: 0.75rem !important;
+}
+
+html[data-vr-embed] #hero-subtitle {
+  font-size: 0.95rem !important;
+  margin-bottom: 1rem !important;
+}
+
+html[data-vr-embed] #hero-get-link-btn {
+  width: 100%;
+  padding-top: 0.9rem !important;
+  padding-bottom: 0.9rem !important;
+  font-size: 1rem !important;
+}
+
+html[data-vr-embed] #referral-section {
+  margin-top: 0.75rem !important;
+}
+
+html[data-vr-embed] #referral-section .glass {
+  padding: 1rem !important;
+}
+
+html[data-vr-embed] #winning-link-title {
+  font-size: 1.5rem !important;
+}
+
+html[data-vr-embed] #winning-link-description,
+html[data-vr-embed] [data-vr-slim-share-extra],
+html[data-vr-embed] #share-more-options-btn,
+html[data-vr-embed] #share-tools-row,
+html[data-vr-embed] #share-ab-wrap,
+html[data-vr-embed] #share-preview-wrap,
+html[data-vr-embed] #new-code-button {
+  display: none !important;
+}
+
+html[data-vr-embed] #share-buttons-panel .share-btn:not(#share-whatsapp-primary) {
+  display: none !important;
+}
+
+html[data-vr-embed] #mobile-referral-cta {
+  position: sticky;
+  bottom: 0;
+}
+
+/* Visitor slim — segment-aware UI reduction (optimizer-driven layout) */
+html[data-vr-visitor-slim]:not([data-vr-slim-share-expanded]) [data-vr-slim-share-extra] {
+  display: none !important;
+}
+
+html[data-vr-visitor-slim]:not([data-vr-slim-share-expanded]) #share-tools-row,
+html[data-vr-visitor-slim]:not([data-vr-slim-share-expanded]) #share-ab-wrap,
+html[data-vr-visitor-slim]:not([data-vr-slim-share-expanded]) #share-preview-wrap {
+  display: none !important;
+}
+
+html[data-vr-visitor-slim][data-vr-slim-segment='direct']:not([data-vr-has-link]) #how,
+html[data-vr-visitor-slim][data-vr-slim-segment='direct']:not([data-vr-has-link]) [data-vr-slim-defer-until-link] {
+  display: none !important;
+}
+
+html[data-vr-visitor-slim][data-vr-slim-segment='direct']:not([data-vr-has-link]) nav a[href='#how'] {
+  display: none;
+}
+
+html[data-vr-visitor-slim][data-vr-slim-segment='direct'] [data-vr-slim-redundant] {
+  display: none !important;
+}
+
+html[data-vr-visitor-slim][data-vr-slim-segment='referred'] #funnel-credit-gate[data-status='required'] {
+  display: none !important;
+}
+
+html[data-vr-visitor-slim][data-vr-slim-segment='referred'] [data-vr-slim-redundant] {
+  display: none !important;
+}
+
+html[data-vr-visitor-slim][data-vr-slim-segment='referred']:not([data-vr-slim-share-expanded]) [data-vr-slim-share-meta] {
+  display: none !important;
+}
+
+html[data-vr-visitor-slim] #share-more-options-btn:not(.hidden) {
+  display: block;
 }
 
 .btn-secondary:hover {
@@ -427,7 +1327,7 @@ html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) #hero-leaderboard-
    HERO GRADIENT (rich original ViralRefer hero)
    ============================================ */
 .hero-gradient {
-  background: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 50%, #302b63 100%);
+  background: linear-gradient(145deg, #0a0a12 0%, #151528 38%, #1e1b4b 72%, #312e81 100%);
   position: relative;
   overflow: hidden;
 }
@@ -701,8 +1601,197 @@ input, select, textarea {
   height: 4px;
 }
 
+/* Admin live activity hub */
+.admin-live-feed {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.admin-live-hub--connected .admin-live-dot {
+  animation: admin-live-dot-pulse 2s ease-in-out infinite;
+}
+
+.admin-live-filter-chip {
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgb(161 161 170);
+  background: rgba(24, 24, 27, 0.6);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.admin-live-filter-chip:hover {
+  color: rgb(228 228 231);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.admin-live-filter-chip--on {
+  color: rgb(216 180 254);
+  border-color: rgba(167, 139, 250, 0.45);
+  background: rgba(139, 92, 246, 0.15);
+}
+
+.admin-live-filter-chip[data-live-filter="showLandings"].admin-live-filter-chip--on {
+  color: rgb(251 191 36);
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.admin-live-filter-divider {
+  width: 1px;
+  height: 14px;
+  margin: 0 2px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.admin-live-offsite-status--on {
+  color: rgb(52 211 153);
+}
+
+.admin-live-sound-btn {
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.admin-live-sound-btn--on {
+  color: rgb(52 211 153);
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.admin-live-sound-btn--off {
+  color: rgb(161 161 170);
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(24, 24, 27, 0.5);
+}
+
+.admin-live-sound-history-toggle {
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-live-sound-history-count {
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.25rem;
+  border-radius: 9999px;
+  background: rgba(139, 92, 246, 0.35);
+  color: #ede9fe;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1rem;
+  text-align: center;
+}
+
+.admin-live-sound-history-list {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.admin-sound-history-row {
+  display: grid;
+  grid-template-columns: 5.5rem 3.5rem 1fr auto;
+  gap: 0.35rem 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 10px;
+}
+
+.admin-sound-history-row:last-child {
+  border-bottom: none;
+}
+
+.admin-sound-history-row--fresh {
+  animation: vr-activity-fresh 1.5s ease-out;
+}
+
+.admin-sound-history-time {
+  color: #a1a1aa;
+}
+
+.admin-sound-history-profile {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.03em;
+}
+
+.admin-sound-history-profile--funnel {
+  color: #7dd3fc;
+}
+
+.admin-sound-history-profile--referral {
+  color: #6ee7b7;
+}
+
+.admin-sound-history-profile--share {
+  color: #c4b5fd;
+}
+
+.admin-sound-history-profile--claim {
+  color: #fcd34d;
+}
+
+.admin-sound-history-label {
+  color: #e4e4e7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-sound-history-detail {
+  color: #71717a;
+  font-size: 9px;
+}
+
+@media (max-width: 640px) {
+  .admin-sound-history-row {
+    grid-template-columns: 4.5rem 3rem 1fr;
+  }
+
+  .admin-sound-history-detail {
+    grid-column: 1 / -1;
+    padding-left: 0.25rem;
+  }
+}
+
+.admin-live-chip--fresh {
+  animation: vr-activity-fresh 1.5s ease-out;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+
+.admin-tab-badge {
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  background: rgb(139 92 246);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.admin-tab-badge--pulse {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes admin-live-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
 /* Pending claims badge pulse when visible */
 #tab-3-badge:not(.hidden) {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+#tab-3-live-badge:not(.hidden) {
+  right: -0.25rem;
   animation: badge-pulse 2s ease-in-out infinite;
 }
 
@@ -835,4 +1924,230 @@ input, select, textarea {
 @keyframes toastSlideOut {
   from { opacity: 1; transform: translateX(0); }
   to { opacity: 0; transform: translateX(20px); }
+}
+
+/* ============================================
+   MOBILE OPTIMIZATION — safe areas, touch, stacking
+   ============================================ */
+
+html {
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(4.5rem + env(safe-area-inset-top, 0px));
+}
+
+body {
+  overflow-x: clip;
+  min-height: 100vh;
+  min-height: var(--vr-vh, 100vh);
+  min-height: 100dvh;
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+#vr-nav {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.vr-hero-title,
+#hero-title {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+html[data-vr-touch] button,
+html[data-vr-touch] a,
+html[data-vr-touch] .funnel-step,
+html[data-vr-touch] .share-btn {
+  touch-action: manipulation;
+}
+
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select,
+  .funnel-coach-chat-input {
+    font-size: 16px !important;
+  }
+
+  .funnel-coach-chat-toggle {
+    width: 3.5rem;
+    height: 3.5rem;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .funnel-coach-chat-chip,
+  .funnel-coach-chat-send {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  #mobile-referral-cta button {
+    min-height: 48px;
+  }
+
+  .funnel-coach-chat {
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    z-index: 750;
+  }
+
+  body:has(#mobile-referral-cta:not(.hidden)) {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  body:has(#mobile-referral-cta:not(.hidden)) .funnel-coach-chat {
+    bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  body:has(#mobile-referral-cta:not(.hidden)) .funnel-coach-restore {
+    bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  #toast-container {
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    left: 1rem;
+    right: 1rem;
+    align-items: stretch;
+  }
+
+  body:has(#mobile-referral-cta:not(.hidden)) #toast-container {
+    bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  #toast-container .toast {
+    max-width: none;
+  }
+
+  .vr-modal-overlay {
+    align-items: stretch;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  }
+
+  .vr-modal-overlay > .vr-modal-panel {
+    max-width: none !important;
+    max-height: none !important;
+    height: 100%;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-left: none;
+    border-right: none;
+  }
+
+  #admin-modal .px-8,
+  #admin-modal .p-8 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  #admin-modal .admin-tab {
+    min-height: 44px;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .admin-tab-content .view-claim-btn,
+  .admin-tab-content .action-claim-btn,
+  .admin-tab-content .view-referral-btn,
+  .admin-tab-content .copy-code-btn,
+  .admin-tab-content .copy-cashtag-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 639px) {
+  .funnel-steps-row {
+    gap: 0.35rem 0.4rem;
+  }
+
+  .funnel-step {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.72rem;
+  }
+
+  .funnel-step-label {
+    max-width: 5.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Viral Loop — power meter, daily quest, share combo */
+.viral-power-meter__fill {
+  transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.viral-power-meter--rush {
+  border-color: rgba(251, 191, 36, 0.45) !important;
+  background: rgba(245, 158, 11, 0.08) !important;
+  animation: vr-viral-rush-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes vr-viral-rush-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(251, 191, 36, 0);
+  }
+}
+
+.daily-share-quest--complete {
+  border-color: rgba(52, 211, 153, 0.45) !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+}
+
+.daily-share-quest__fill {
+  transition: width 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.share-combo-badge {
+  animation: vr-combo-flash 0.6s ease-out;
+}
+
+@keyframes vr-combo-flash {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+html[data-vr-viral-tier='legend'] #viral-power-meter {
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+/* Growth Command Center — unified viral hub (replaces scattered widgets) */
+html[data-vr-growth-hub] #viral-power-meter,
+html[data-vr-growth-hub] #daily-share-quest,
+html[data-vr-growth-hub] #share-rank-cta,
+html[data-vr-growth-hub] #boost-whatsapp-btn {
+  display: none !important;
+}
+
+.growth-command-center__power-fill {
+  transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.growth-command-center--rush {
+  border-color: rgba(251, 191, 36, 0.45) !important;
+  animation: vr-viral-rush-pulse 1.8s ease-in-out infinite;
+}
+
+.growth-command-cta--critical {
+  background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.35);
+  animation: vr-viral-rush-pulse 1.8s ease-in-out infinite;
+}
+
+.growth-command-cta--high {
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.35);
 }

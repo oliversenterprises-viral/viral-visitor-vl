@@ -5,9 +5,12 @@
 
 import { ViralRefer, registerGlobal } from '../lib/global';
 import { switchAdminTab } from '../admin';
+import { startAdminLiveHub, stopAdminLiveHub } from '../admin/admin-live-hub';
+import { unlockAdminLiveSound } from '../admin/admin-live-sound';
 import { supabase } from '../lib/supabase';
 
 registerGlobal('closeAdminPanel', () => {
+  stopAdminLiveHub();
   const modal = document.getElementById('admin-modal');
   if (modal) modal.classList.add('hidden');
 });
@@ -27,6 +30,7 @@ registerGlobal('openAdminPanel', async () => {
   const modal = document.getElementById('admin-modal');
   if (modal) {
     modal.classList.remove('hidden');
+    startAdminLiveHub();
     await ViralRefer.switchAdminTab(0);
   }
 });
@@ -108,6 +112,7 @@ const submitAdminPassword = async () => {
     const pwModal = document.getElementById('admin-password-modal');
     if (pwModal) pwModal.classList.add('hidden');
     input.value = '';
+    void unlockAdminLiveSound();
     await ViralRefer.openAdminPanel();
   } else {
     if (errorEl) errorEl.classList.remove('hidden');

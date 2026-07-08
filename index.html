@@ -3,26 +3,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     
-    <!-- SEO -->
+    <!-- SEO (organic Google + social) -->
     <title>ViralRefer • Earn Rewards by Referring Friends</title>
     <meta name="description" content="Get your free ViralRefer link in 30 seconds — no signup. Share it and climb the live leaderboard. #1 wins homepage feature + $10 Cash App.">
-    <meta name="keywords" content="referral program, viral marketing, earn cash, homepage banner, referral rewards, cash app">
+    <meta name="keywords" content="referral program, viral marketing, earn cash, homepage banner, referral rewards, cash app, free referral link">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="googlebot" content="index, follow">
+    <link rel="canonical" href="https://www.viralrefer.app/">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://viralrefer.app">
+    <meta property="og:site_name" content="ViralRefer">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://www.viralrefer.app/">
     <meta property="og:title" content="ViralRefer • Earn Rewards by Referring Friends">
     <meta property="og:description" content="Free link in ~30 seconds. #1 referrer wins homepage feature + $10 Cash App. Share and climb the live leaderboard.">
-    <meta property="og:image" content="https://viralrefer.app/assets/hero.png">
+    <meta property="og:image" content="https://www.viralrefer.app/assets/hero.png">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://viralrefer.app">
+    <meta name="twitter:url" content="https://www.viralrefer.app/">
     <meta name="twitter:title" content="ViralRefer • Earn Rewards by Referring Friends">
     <meta name="twitter:description" content="Get your link in 30 seconds — free, no signup. Win homepage feature + $10 Cash App.">
-    <meta name="twitter:image" content="https://viralrefer.app/assets/hero.png">
+    <meta name="twitter:image" content="https://www.viralrefer.app/assets/hero.png">
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -31,14 +36,62 @@
     <!-- PRODUCTION SECURITY & PWA (will be hardened in build) -->
     <link rel="manifest" href="/manifest.json">
 
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "ViralRefer",
-      "url": "https://viralrefer.app",
-      "description": "Get your free referral link in 30 seconds. #1 wins homepage feature + $10 Cash App. Live leaderboard."
-    }
+    <script type="application/ld+json" id="vr-organic-jsonld">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ViralRefer",
+        "url": "https://www.viralrefer.app",
+        "description": "Get your free ViralRefer link in 30 seconds — no signup. Share it and climb the live leaderboard. #1 wins homepage feature + $10 Cash App.",
+        "inLanguage": "en-US",
+        "publisher": { "@type": "Organization", "name": "ViralRefer", "url": "https://www.viralrefer.app" }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "ViralRefer",
+        "url": "https://www.viralrefer.app",
+        "logo": "https://www.viralrefer.app/favicon.svg",
+        "description": "Get your free ViralRefer link in 30 seconds — no signup. Share it and climb the live leaderboard. #1 wins homepage feature + $10 Cash App."
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "ViralRefer",
+        "url": "https://www.viralrefer.app",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "description": "Get your free ViralRefer link in 30 seconds — no signup. Share it and climb the live leaderboard. #1 wins homepage feature + $10 Cash App."
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do I get a ViralRefer referral link?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Click \"Get my referral link\" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is ViralRefer free to use?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. ViralRefer is completely free. There is no payment, no email signup, and no catch — just copy your link and share it." }
+          },
+          {
+            "@type": "Question",
+            "name": "What does the #1 referrer win?",
+            "acceptedAnswer": { "@type": "Answer", "text": "The top referrer on the live leaderboard wins a homepage banner feature for their site plus a $10 Cash App payout after verification (minimum 10 verified referrals)." }
+          },
+          {
+            "@type": "Question",
+            "name": "How does the ViralRefer leaderboard work?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Every person who signs up through your unique referral link counts toward your total. Share on X, WhatsApp, LinkedIn, Telegram, SMS, or anywhere — then watch your rank climb on the live board." }
+          }
+        ]
+      }
+    ]
     </script>
 
     <link rel="stylesheet" href="/src/style.css">
@@ -49,65 +102,110 @@
 </head>
 <body class="tail-container bg-zinc-950 text-zinc-100 min-h-screen">
     <!-- NAVBAR -->
-    <nav class="border-b border-white/10 bg-zinc-950/80 backdrop-blur-lg fixed w-full z-50">
-        <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-violet-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl logo-font">V</div>
-                <span class="text-3xl font-semibold tracking-tighter logo-font">ViralRefer</span>
-            </div>
-            <div class="flex items-center gap-8 text-sm font-medium">
-                <a href="#how" class="text-zinc-300 hover:text-violet-400 transition-colors">How it works</a>
-                <a href="#leaderboard" class="text-zinc-300 hover:text-violet-400 transition-colors">Leaderboard</a>
-                <button id="admin-btn" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-3xl text-sm font-semibold flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved"></i> ADMIN
+    <nav id="vr-nav" class="border-b border-white/10 bg-zinc-950/80 backdrop-blur-lg fixed w-full z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between gap-2">
+            <a href="#" class="flex items-center gap-2 sm:gap-3 min-w-0 shrink" aria-label="ViralRefer home">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-violet-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl logo-font shrink-0">V</div>
+                <span class="text-xl sm:text-3xl font-semibold tracking-tighter logo-font truncate">ViralRefer</span>
+            </a>
+            <div class="vr-nav-links flex items-center gap-2 sm:gap-6 text-sm font-medium shrink-0">
+                <a href="#how" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">How</a>
+                <a href="#prize" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">Prize</a>
+                <a href="#leaderboard" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">Board</a>
+                <button type="button" id="nav-get-link-btn" data-vr-zone="nav-get-link" class="sm:hidden px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl text-xs font-semibold min-h-[44px]">
+                    Get link
+                </button>
+                <button id="admin-btn" class="px-3 py-2 sm:px-6 sm:py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-3xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2 min-h-[44px] min-w-[44px] sm:min-w-0 justify-center" aria-label="Admin dashboard">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span class="hidden sm:inline">ADMIN</span>
                 </button>
             </div>
         </div>
     </nav>
 
-    <div class="pt-24 pb-16 max-w-6xl mx-auto px-6">
+    <div class="pt-20 sm:pt-24 pb-12 sm:pb-16 max-w-6xl mx-auto px-4 sm:px-6">
        
         <!-- HERO -->
-        <div class="rounded-3xl p-12 md:p-20 text-center hero-gradient shadow-2xl">
+        <div class="rounded-2xl sm:rounded-3xl p-6 sm:p-12 md:p-20 text-center hero-gradient shadow-2xl">
             <div class="max-w-3xl mx-auto">
                 <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-xs font-medium px-4 py-2 rounded-3xl mb-8 border border-white/20" style="color: var(--text-hero-badge, #e0e7ff)">
-                    LIVE VIRAL CAMPAIGN • 2026
+                    <i class="fa-solid fa-bolt text-amber-300/90" aria-hidden="true"></i>
+                    LIVE CONTEST &bull; FREE TO JOIN
                 </div>
                
-                <h1 id="hero-title" class="text-[58px] sm:text-[72px] md:text-[88px] font-bold tracking-[-0.05em] logo-font leading-none mb-6" style="color: var(--text-hero-title, #ffffff); text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-                    <span id="hero-title-line1">Get your link in 30 seconds.</span><br>
-                    <span id="hero-title-accent" class="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-cyan-400 drop-shadow-[0_4px_20px_rgba(192,132,252,0.5)]">
-                        Win homepage feature + $10.
+                <h1 id="hero-title" class="vr-hero-title text-[2.25rem] sm:text-[58px] md:text-[72px] lg:text-[88px] font-bold tracking-[-0.05em] logo-font leading-[1.05] mb-4 sm:mb-6" style="color: var(--text-hero-title, #ffffff); text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                    <span id="hero-title-line1">Get your winning link in 30 seconds.</span><br>
+                    <span id="hero-title-accent" class="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-cyan-400 drop-shadow-[0_4px_20px_rgba(192,132,252,0.5)]" style="color: var(--text-hero-accent, #c084fc);">
+                        Climb to #1 &mdash; win homepage + $10.
                     </span>
                 </h1>
                
-                <p id="hero-subtitle" class="text-xl md:text-2xl text-zinc-200 max-w-2xl mx-auto mb-10 leading-relaxed">
-                    Free — no signup. Tap the button, copy your link, and share anywhere.
-                    #1 referrer wins a full homepage banner + $10 Cash App.
+                <p id="hero-subtitle" class="text-base sm:text-xl md:text-2xl text-zinc-200 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed px-1">
+                    Free. No signup. Copy your link and share anywhere &mdash; every referral moves you up the live board.
                 </p>
 
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button id="hero-get-link-btn" onclick="getMyReferralLinkInstant()" 
-                            class="btn-primary px-12 py-6 text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/30">
-                        <i class="fa-solid fa-gift"></i>
+                <div id="hero-referred-social-proof" class="hidden mb-4" role="status" aria-live="polite"></div>
+                <div id="hero-referred-trust-pack" class="hidden mb-8 mx-auto max-w-xl" role="status" aria-live="polite" data-vr-zone="trust-pack"></div>
+
+                <div class="flex flex-col items-stretch justify-center gap-3 w-full max-w-md sm:max-w-lg mx-auto">
+                    <button id="hero-get-link-btn" data-vr-zone="hero-get-link" onclick="getMyReferralLinkInstant()" 
+                            class="btn-primary w-full px-8 py-4 sm:px-12 sm:py-6 text-lg sm:text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/30 min-h-[48px]">
+                        <i class="fa-solid fa-gift" aria-hidden="true"></i>
                         <span>Get my referral link</span>
                     </button>
                    
-                    <button id="hero-leaderboard-btn" onclick="document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth' })" 
-                            class="btn-secondary px-10 py-6 text-xl flex items-center justify-center gap-3">
+                    <button id="hero-leaderboard-btn" data-vr-zone="hero-leaderboard" onclick="document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth' })" 
+                            class="btn-secondary w-full sm:w-auto px-8 py-4 sm:px-10 sm:py-6 text-lg sm:text-xl flex items-center justify-center gap-3 min-h-[48px]">
                         See leaderboard
                     </button>
                 </div>
 
                 <p id="hero-trust-line" class="mt-5 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
-                    No email &bull; No signup &bull; No payment info &bull; Your link in ~5 seconds
+                    No email &bull; No payment &bull; No catch &bull; Your link in ~5 seconds
+                </p>
+                <p class="mt-3">
+                    <a href="#leaderboard" id="hero-leaderboard-link" data-vr-zone="hero-leaderboard-link" class="hero-leaderboard-text-link text-sm text-violet-300/90 hover:text-violet-200 underline underline-offset-4 decoration-violet-500/40">
+                        See who&rsquo;s winning on the live board &darr;
+                    </a>
                 </p>
 
-                <div id="hero-campaign-badge" class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-xs font-medium px-3 py-1 rounded-3xl mb-3 mt-4">
-                    FREE • NO SIGNUP • ~30 SEC
+                <div id="hero-campaign-badge" data-vr-slim-redundant class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-xs font-medium px-3 py-1 rounded-3xl mb-3 mt-4">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> FREE &bull; NO SIGNUP &bull; ~30 SEC
                 </div>
                 <div id="hero-stats-subtext" class="mt-1 text-sm text-zinc-400 tracking-wide">
-                    <span id="total-referrers" aria-live="polite">—</span> referrers and counting • Early spots on the leaderboard are wide open
+                    <span id="total-referrers" aria-live="polite">—</span><span id="hero-stats-suffix"> referrers and counting • Early spots on the leaderboard are wide open</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FUNNEL JOURNEY — above fold: 3-step path + live coach (admin-editable via Edit Content) -->
+        <div id="funnel-journey" class="funnel-journey-card mt-8 max-w-3xl mx-auto" data-vr-zone="funnel-journey">
+            <div class="funnel-journey-header">
+                <span class="funnel-journey-badge">
+                    <i class="fa-solid fa-route" aria-hidden="true"></i>
+                    <span id="funnel-journey-badge">YOUR 3-STEP PATH TO #1</span>
+                </span>
+            </div>
+            <div id="funnel-steps" class="funnel-steps-row" aria-label="Your steps — tap the active step to jump">
+                <span data-funnel-step="1" class="funnel-step funnel-step-active funnel-step--nav" title="Step 1 — tap to jump to Get my link">
+                    <span class="funnel-step-icon" aria-hidden="true"><i class="fa-solid fa-link"></i></span>
+                    <span id="funnel-step1-label" class="funnel-step-label">1. Get link</span>
+                    <span class="funnel-step-required">required</span>
+                </span>
+                <span class="funnel-step-arrow funnel-step-arrow--flow" data-funnel-arrow="1" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+                <span data-funnel-step="2" class="funnel-step funnel-step-pending" title="Step 2 — copy your link">
+                    <span class="funnel-step-icon" aria-hidden="true"><i class="fa-solid fa-copy"></i></span>
+                    <span id="funnel-step2-label" class="funnel-step-label">2. Copy</span>
+                </span>
+                <span class="funnel-step-arrow funnel-step-arrow--idle" data-funnel-arrow="2" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+                <span data-funnel-step="3" class="funnel-step funnel-step-pending" title="Step 3 — share to win">
+                    <span class="funnel-step-icon" aria-hidden="true"><i class="fa-solid fa-share-nodes"></i></span>
+                    <span id="funnel-step3-label" class="funnel-step-label">3. Share &amp; win</span>
+                </span>
+            </div>
+            <div id="funnel-guide-coach" class="funnel-guide-coach" role="status" aria-live="polite">
+                <div class="funnel-guide-coach-inner">
+                    <span class="funnel-guide-coach-icon" aria-hidden="true"><i class="fa-solid fa-arrow-up"></i></span>
+                    <span id="funnel-guide-coach-text" class="funnel-guide-coach-text">Step 1: tap Get my referral link to start.</span>
                 </div>
             </div>
         </div>
@@ -122,12 +220,14 @@
                     <div>
                         <div id="referrer-invite-headline" class="text-sm font-semibold text-emerald-400">You&rsquo;re in the same contest</div>
                         <p id="referrer-invite-hint" class="text-xs text-zinc-300 mt-1 leading-relaxed">Get YOUR link in one tap — same leaderboard, ~30 seconds.</p>
-                        <div class="text-[11px] text-zinc-500 mt-2">You landed via <span id="referrer-code-inline" class="font-mono text-emerald-400/90"></span></div>
-                        <div class="text-[11px] text-zinc-500 mt-0.5">Referred by</div>
-                        <div id="referrer-code-display" class="font-mono text-lg font-semibold text-white"></div>
+                        <div data-vr-slim-redundant class="text-[11px] text-zinc-500 mt-2">You landed via <span id="referrer-code-inline" class="font-mono text-emerald-400/90"></span></div>
+                        <div data-vr-slim-redundant>
+                            <div class="text-[11px] text-zinc-500 mt-0.5">Referred by</div>
+                            <div id="referrer-code-display" class="font-mono text-lg font-semibold text-white"></div>
+                        </div>
                     </div>
                 </div>
-                <button id="attribution-get-link-btn" onclick="joinViaReferral()" 
+                <button id="attribution-get-link-btn" data-vr-zone="attribution-get-link" onclick="joinViaReferral()" 
                         class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-2xl text-sm flex items-center justify-center gap-2 transition-all shrink-0 w-full sm:w-auto funnel-step-cta">
                     <i class="fa-solid fa-circle-1"></i>
                     <span>Step 1: Get my link</span>
@@ -136,11 +236,339 @@
         </div>
 
         <div id="funnel-expand-wrap" class="text-center mt-6">
-            <button type="button" id="funnel-expand-btn"
+            <button type="button" id="funnel-expand-btn" data-vr-zone="funnel-expand"
                     class="text-sm text-violet-300 hover:text-violet-200 underline underline-offset-4 decoration-violet-500/50">
                 See prize details &amp; leaderboard &darr;
             </button>
         </div>
+
+        <!-- REFERRAL LINK + SOCIAL SHARING -->
+        <div id="referral-section" class="mt-6" data-vr-zone="referral-section">
+            <div class="max-w-2xl mx-auto">
+                <div class="text-center mb-8">
+                    <h2 id="winning-link-title" class="text-5xl font-bold tracking-tighter mb-3" style="color: var(--text-referral-heading, #ffffff)">Your winning link</h2>
+                    <p id="winning-link-description" class="text-xl text-zinc-300">Copy below and share on Reddit, X, WhatsApp, or anywhere — every click counts toward #1.</p>
+                </div>
+               
+                <div class="glass border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl">
+                    <div id="funnel-credit-gate" class="hidden funnel-credit-gate mb-6 rounded-2xl border px-5 py-4 text-left" role="status" aria-live="polite">
+                        <div class="flex items-start gap-3">
+                            <div class="funnel-gate-icon w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 font-bold text-lg">1</div>
+                            <div>
+                                <p id="funnel-credit-gate-title" class="font-semibold text-amber-200">Complete Step 1 to count as a real referral</p>
+                                <p id="funnel-credit-gate-desc" class="text-sm text-zinc-300 mt-1 leading-relaxed">
+                                    Just visiting does not credit <span id="funnel-gate-ref" class="font-mono text-emerald-400"></span>.
+                                    Tap <strong class="text-white">Get my referral link</strong> — that is the only way this visit counts.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-link text-violet-400 text-2xl"></i>
+                            <h3 id="unique-referral-link-title" class="text-2xl font-semibold" style="color: var(--text-referral-heading, #ffffff)">Your unique referral link</h3>
+                        </div>
+                        <button id="new-code-button" onclick="generateNewCode()" 
+                                class="text-xs font-semibold text-violet-400 hover:text-violet-300 px-3 py-1.5 rounded-xl border border-violet-400/30 hover:bg-violet-400/10 transition-all">
+                            NEW CODE
+                        </button>
+                    </div>
+                   
+                    <div class="relative mb-8">
+                        <div class="flex items-center bg-zinc-900 border focus-within:border-violet-500 rounded-2xl px-5 py-4 transition-all" style="border-color: var(--referral-input-border)">
+                            <i id="ref-link-icon" class="fa-solid fa-link mr-3" style="color: var(--text-referral-link-icon, #a1a1aa)"></i>
+                            <input id="ref-link" readonly 
+                                   placeholder="Your link appears here — tap Get my referral link above"
+                                   class="flex-1 bg-transparent text-lg font-mono tracking-tight focus:outline-none placeholder:text-zinc-500 placeholder:text-sm placeholder:font-sans"
+                                   style="color: var(--text-referral-link, #34d399)">
+                            <button id="copy-link-btn" data-vr-zone="share-copy" onclick="copyLink()" 
+                                    class="copy-btn ml-3 px-6 py-2.5 hover:bg-violet-500 font-semibold rounded-xl flex items-center gap-2 text-sm shadow-lg shadow-violet-500/30"
+                                    style="background-color: var(--referral-copy-btn-bg); color: var(--referral-copy-btn-text);">
+                                <i class="fa-solid fa-copy"></i> 
+                                <span>COPY</span>
+                            </button>
+
+                            <!-- Small QR icon button for quick access to QR modal -->
+                            <button onclick="showQRModal()" 
+                                    class="ml-2 px-3 py-2 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all"
+                                    title="Show QR Code"
+                                    style="color: var(--referral-qr-icon)">
+                                <i class="fa-solid fa-qrcode text-lg"></i>
+                            </button>
+                        </div>
+
+                        <!-- Small next step hint for new users -->
+                        <p id="referral-next-step" class="hidden mt-3 text-sm text-emerald-400 font-medium">
+                            Step 2: tap COPY — then share your link below.
+                        </p>
+
+                        <button id="copy-message-btn" type="button" onclick="copyShareMessage()"
+                                class="hidden mt-3 w-full sm:w-auto px-5 py-2.5 rounded-2xl text-sm font-semibold border border-violet-400/30 bg-violet-500/10 hover:bg-violet-500/20 text-violet-200 transition-all"
+                                title="Copy the full share message with your link"
+                                aria-label="Copy full share message">
+                            <i class="fa-solid fa-message"></i> Copy full message
+                        </button>
+                    </div>
+
+                    <!-- QR Code -->
+                    <div class="flex flex-col sm:flex-row items-center gap-4 bg-zinc-900/60 border border-white/10 rounded-2xl p-4 mb-8">
+                        <div class="flex-shrink-0">
+                            <!-- White background wrapper for excellent QR contrast and scannability -->
+                            <div class="bg-white p-2 rounded-2xl shadow-inner ring-1" style="--tw-ring-color: var(--referral-qr-border)">
+                                <img id="qr-code" 
+                                     class="w-24 h-24 sm:w-20 sm:h-20 rounded-xl cursor-pointer hover:scale-105 transition-transform"
+                                     alt="QR Code for your referral link"
+                                     onclick="showQRModal()">
+                            </div>
+                        </div>
+                        <div class="text-center sm:text-left">
+                            <div id="qr-scan-text" class="text-sm font-semibold" style="color: var(--qr-scan-text)">Scan to share</div>
+                            <div id="qr-mobile-text" class="text-xs text-zinc-400 mt-0.5">Perfect for mobile — friends can scan and join instantly</div>
+                            <div class="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">
+                                <button id="qr-show-larger" onclick="showQRModal()" 
+                                        class="text-xs px-3 py-1 hover:bg-white/10 border border-white/20 rounded-xl font-medium"
+                                        style="background-color: var(--qr-show-larger-bg); color: var(--qr-show-larger-text)">
+                                    Show larger QR
+                                </button>
+                                <button type="button" onclick="downloadQrFromPanel()"
+                                        class="text-xs px-3 py-1 hover:bg-emerald-500/20 border border-emerald-400/30 rounded-xl font-medium text-emerald-300"
+                                        title="Save QR image for stories, posters, or group chats"
+                                        aria-label="Download QR code image">
+                                    <i class="fa-solid fa-download"></i> Save QR
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                   
+                    <div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fa-solid fa-share-alt text-violet-400"></i>
+                            <span id="share-link-heading" class="font-semibold text-lg" style="color: var(--text-referral-heading, #ffffff)">Share your link</span>
+                        </div>
+                       
+                        <p data-vr-slim-share-meta class="text-xs text-zinc-500 -mt-2 mb-2">Every share moves you up • <strong class="text-violet-300/90">A/B</strong> tracked in analytics • <strong class="text-violet-300/90">/r/CODE</strong> OG cards show rank + QR • Growth Engine below</p>
+
+                        <div id="growth-command-center" data-vr-zone="growth-command" class="hidden growth-command-center mb-4 rounded-2xl border border-violet-400/30 bg-gradient-to-br from-violet-500/10 via-zinc-900/80 to-emerald-500/5 px-4 py-4" role="region" aria-label="Growth command center">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-rocket text-violet-300 text-sm" aria-hidden="true"></i>
+                                    <span class="text-[10px] uppercase tracking-wider font-bold text-violet-200">Growth Engine</span>
+                                </div>
+                                <span data-growth-boost-badge class="hidden text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border border-emerald-400/40 text-emerald-300 bg-emerald-500/10">Site boost active</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+                                <div class="rounded-xl border border-white/10 bg-zinc-950/50 px-2 py-2">
+                                    <div class="text-[9px] uppercase text-zinc-500 tracking-wide">Power</div>
+                                    <div class="flex items-baseline justify-center gap-1">
+                                        <span data-growth-power-score class="text-lg font-black text-white tabular-nums">0</span>
+                                        <span data-growth-power-tier class="text-[8px] text-violet-300 uppercase">Spark</span>
+                                    </div>
+                                    <div class="h-1 bg-zinc-800 rounded-full mt-1 overflow-hidden">
+                                        <div data-growth-power-fill class="growth-command-center__power-fill h-full" style="width:0%"></div>
+                                    </div>
+                                </div>
+                                <div class="rounded-xl border border-white/10 bg-zinc-950/50 px-2 py-2">
+                                    <div class="text-[9px] uppercase text-zinc-500 tracking-wide">Viral K</div>
+                                    <div data-growth-k-display class="text-lg font-black text-emerald-300 tabular-nums">—</div>
+                                    <div data-growth-k-tip class="text-[8px] text-zinc-500 leading-tight mt-0.5 line-clamp-2">Share to unlock</div>
+                                </div>
+                                <div class="rounded-xl border border-white/10 bg-zinc-950/50 px-2 py-2">
+                                    <div data-growth-quest-label class="text-[9px] uppercase text-emerald-400/90 tracking-wide">Quest 0/3</div>
+                                    <div class="h-1 bg-zinc-800 rounded-full mt-2 overflow-hidden">
+                                        <div data-growth-quest-fill class="h-full bg-gradient-to-r from-emerald-400 to-violet-400" style="width:0%"></div>
+                                    </div>
+                                    <div data-growth-combo class="hidden text-[8px] text-amber-300 font-bold mt-1"></div>
+                                </div>
+                            </div>
+                            <div class="rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2.5 mb-3">
+                                <div data-growth-action-headline class="text-sm font-bold text-white">Your next viral push</div>
+                                <div data-growth-action-subline class="text-[11px] text-zinc-400 mt-0.5">One tap to climb the board.</div>
+                            </div>
+                            <button type="button" id="growth-command-cta" class="growth-command-cta w-full py-3.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 shadow-lg shadow-violet-500/25 transition-all active:scale-[0.98]">
+                                Quick Boost — WhatsApp
+                            </button>
+                        </div>
+
+                        <div id="viral-power-meter" data-vr-zone="viral-power" class="hidden viral-power-meter mb-3 rounded-2xl border border-violet-400/25 bg-violet-500/5 px-4 py-3" role="status" aria-live="polite">
+                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-bolt text-amber-300 text-sm" aria-hidden="true"></i>
+                                    <span class="text-[10px] uppercase tracking-wider text-violet-300/90 font-bold">Viral Power</span>
+                                </div>
+                                <div class="flex items-baseline gap-1.5">
+                                    <span data-viral-power-score class="text-xl font-black text-white tabular-nums">0</span>
+                                    <span data-viral-power-label class="text-[10px] font-semibold text-violet-300 uppercase">Spark</span>
+                                </div>
+                            </div>
+                            <div class="h-2 bg-zinc-800 rounded-full overflow-hidden mb-1.5">
+                                <div data-viral-power-fill class="viral-power-meter__fill h-full bg-gradient-to-r from-zinc-500 to-violet-400 transition-all duration-500" style="width:0%"></div>
+                            </div>
+                            <p data-viral-power-tip class="text-[11px] text-zinc-400 leading-snug">Share to build momentum.</p>
+                        </div>
+
+                        <div id="daily-share-quest" data-vr-zone="daily-quest" class="hidden daily-share-quest mb-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 px-4 py-2.5" role="status">
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <span data-daily-quest-label class="text-[11px] font-semibold text-emerald-300/90">Daily quest: 0/3 shares</span>
+                                <i class="fa-solid fa-trophy text-emerald-400/70 text-xs" aria-hidden="true"></i>
+                            </div>
+                            <div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                                <div data-daily-quest-fill class="daily-share-quest__fill h-full bg-gradient-to-r from-emerald-400 to-violet-400 transition-all duration-400" style="width:0%"></div>
+                            </div>
+                        </div>
+
+                        <div id="share-rank-cta" data-vr-zone="share-rank-cta" class="hidden share-rank-cta share-rank-cta--violet mb-3 rounded-2xl border px-4 py-3" role="status" aria-live="polite">
+                            <div data-share-rank-headline class="text-sm font-bold text-white"></div>
+                            <div data-share-rank-subline class="text-xs text-zinc-400 mt-0.5"></div>
+                        </div>
+
+                        <div id="share-reminder-banner" class="hidden mb-3 rounded-2xl border border-amber-400/30 bg-amber-500/10 px-4 py-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                                <p data-share-reminder-text class="text-sm text-amber-100/90 flex-1">Your link is ready — share it to climb the board!</p>
+                                <div class="flex gap-2 shrink-0">
+                                    <button id="share-reminder-action" type="button" class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/30">Share now</button>
+                                    <button id="share-reminder-snooze" type="button" class="text-xs px-3 py-1.5 rounded-xl text-zinc-400 hover:text-amber-200 border border-amber-400/20" aria-label="Remind me in one hour">1h</button>
+                                    <button id="share-reminder-dismiss" type="button" class="text-xs px-3 py-1.5 rounded-xl text-zinc-400 hover:text-zinc-200" aria-label="Dismiss share reminder">Later</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="share-combo-badge" class="hidden share-combo-badge mb-2 text-xs font-bold text-amber-200 bg-amber-500/15 border border-amber-400/30 rounded-xl px-3 py-2 text-center"></div>
+                        <div id="share-streak-badge" class="hidden mb-3 text-xs font-semibold text-emerald-400/90 bg-emerald-500/10 border border-emerald-400/20 rounded-xl px-3 py-2 text-center"></div>
+
+                        <button id="share-short-code" type="button" onclick="copyShortCode()"
+                                class="hidden mb-3 w-full sm:w-auto font-mono text-sm font-bold text-violet-300 bg-violet-500/10 border border-violet-400/25 rounded-xl px-4 py-2 hover:bg-violet-500/20 transition-all"
+                                title="Copy your referral code only"
+                                aria-label="Copy referral code"></button>
+
+                        <button id="boost-whatsapp-btn" type="button" onclick="boostShareWhatsApp()"
+                                class="hidden w-full mb-3 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white py-4 px-6 rounded-2xl font-bold text-base shadow-lg shadow-emerald-900/25 ring-2 ring-emerald-300/40"
+                                title="Fastest mobile share — opens WhatsApp with your tracked message"
+                                aria-label="Quick boost share on WhatsApp">
+                            <i class="fa-brands fa-whatsapp text-2xl"></i>
+                            <span>Quick Boost — WhatsApp</span>
+                        </button>
+
+                        <button id="native-share-btn" type="button" onclick="nativeShare()"
+                                class="hidden share-native-btn w-full mb-4 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-violet-600 hover:from-emerald-500 hover:to-violet-500 text-white py-4 px-6 rounded-2xl font-bold text-base shadow-lg shadow-emerald-900/30"
+                                title="Open your device share sheet — fastest on mobile"
+                                aria-label="Share via device share sheet">
+                            <i class="fa-solid fa-share-nodes text-xl"></i>
+                            <span>Share everywhere (one tap)</span>
+                        </button>
+
+                        <div id="share-ab-wrap" class="hidden mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-violet-400/20 bg-violet-500/5 px-3 py-2">
+                            <div class="text-[10px] uppercase tracking-wider text-violet-300/80 font-semibold">A/B message test</div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="button" data-share-ab-tab="a" class="share-ab-tab share-ab-tab-active" aria-selected="true">A</button>
+                                <button type="button" data-share-ab-tab="b" class="share-ab-tab" aria-selected="false">B</button>
+                                <span id="share-ab-label" class="text-[10px] text-zinc-500 hidden sm:inline">Variant A — prize focus</span>
+                            </div>
+                        </div>
+
+                        <div id="share-preview-wrap" class="mb-4 rounded-2xl border border-white/10 bg-zinc-900/50 p-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Message preview by platform</div>
+                                <div id="share-preview-tabs" class="flex flex-wrap gap-1" role="tablist" aria-label="Share message preview platforms">
+                                    <button type="button" data-share-preview-tab="whatsapp" class="share-preview-tab share-preview-tab-active" role="tab" aria-selected="true">WA</button>
+                                    <button type="button" data-share-preview-tab="tiktok" class="share-preview-tab" role="tab" aria-selected="false">TikTok</button>
+                                    <button type="button" data-share-preview-tab="x" class="share-preview-tab" role="tab" aria-selected="false">X</button>
+                                    <button type="button" data-share-preview-tab="reddit" class="share-preview-tab" role="tab" aria-selected="false">Reddit</button>
+                                    <button type="button" data-share-preview-tab="sms" class="share-preview-tab" role="tab" aria-selected="false">SMS</button>
+                                    <button type="button" data-share-preview-tab="bluesky" class="share-preview-tab" role="tab" aria-selected="false">Bsky</button>
+                                </div>
+                            </div>
+                            <p id="share-message-preview" class="text-sm text-zinc-300 whitespace-pre-wrap break-words leading-relaxed">Generate your link to see your optimized share message.</p>
+                        </div>
+
+                        <div id="share-tools-row" class="hidden flex flex-wrap gap-2 mb-4">
+                            <button type="button" onclick="downloadSharePack()"
+                                    class="text-xs px-3 py-2 rounded-xl font-semibold bg-gradient-to-r from-violet-600/80 to-emerald-600/80 hover:from-violet-500 hover:to-emerald-500 text-white border border-white/10"
+                                    title="Download square + story share images"
+                                    aria-label="Download share pack">
+                                <i class="fa-solid fa-box-archive"></i> Share pack
+                            </button>
+                            <button type="button" onclick="copyEmbedCode()"
+                                    class="text-xs px-3 py-2 rounded-xl font-semibold bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-zinc-200"
+                                    title="Copy HTML button for your blog or newsletter"
+                                    aria-label="Copy embed code">
+                                <i class="fa-solid fa-code"></i> Embed
+                            </button>
+                            <button type="button" onclick="copyMarkdownShare()"
+                                    class="text-xs px-3 py-2 rounded-xl font-semibold bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-zinc-200"
+                                    title="Copy Markdown for Reddit, GitHub, Notion"
+                                    aria-label="Copy Markdown share">
+                                <i class="fa-brands fa-markdown text-base"></i> Markdown
+                            </button>
+                            <button type="button" onclick="shareTo('snapchat')"
+                                    class="text-xs px-3 py-2 rounded-xl font-semibold bg-yellow-400/15 hover:bg-yellow-400/25 border border-yellow-300/30 text-yellow-200"
+                                    title="Copy Snapchat caption"
+                                    aria-label="Copy Snapchat caption">
+                                <i class="fa-solid fa-ghost"></i> Snapchat
+                            </button>
+                        </div>
+
+                        <div id="share-buttons-panel" data-vr-zone="share-panel" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                            <button data-vr-zone="share-x" onclick="shareTo('x')" class="share-btn flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 border border-white/20 text-white p-4 rounded-2xl font-medium text-sm" title="Share text to X (may be filtered)" aria-label="Share to X">
+                                <span class="text-xl">𝕏</span> <span id="share-x-label">X</span>
+                            </button>
+                            <button data-vr-slim-share-extra onclick="generateXShareImage()" class="share-btn flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 border border-emerald-400/40 text-white p-4 rounded-2xl font-medium text-sm" title="Generate promo image + open X (recommended for X)" aria-label="Generate image for X">
+                                <span class="text-xl">𝕏</span> <span>Img</span>
+                            </button>
+                            <button onclick="generateStoryShareImage()" class="share-btn flex items-center justify-center gap-2 bg-gradient-to-br from-fuchsia-600 to-orange-500 hover:from-fuchsia-500 hover:to-orange-400 text-white p-4 rounded-2xl font-medium text-sm ring-2 ring-fuchsia-400/30" title="Download 9:16 story image for Instagram, TikTok, Snapchat" aria-label="Generate story share image">
+                                <i class="fa-solid fa-mobile-screen text-xl"></i> <span>Story</span>
+                            </button>
+                            <button id="share-whatsapp-primary" data-vr-zone="share-whatsapp" onclick="shareTo('whatsapp')" class="share-btn flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-2xl font-medium text-sm ring-2 ring-emerald-400/30" title="Recommended — fastest way to share">
+                                <i class="fa-brands fa-whatsapp text-xl"></i> <span id="share-whatsapp-label">WhatsApp</span>
+                            </button>
+                            <button data-vr-slim-share-extra onclick="shareTo('linkedin')" class="share-btn flex items-center justify-center gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white p-4 rounded-2xl font-medium text-sm">
+                                <i class="fa-brands fa-linkedin-in text-xl"></i> <span id="share-linkedin-label">LinkedIn</span>
+                            </button>
+                            <button data-vr-slim-share-extra onclick="shareTo('facebook')" class="share-btn flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#0d5fcc] text-white p-4 rounded-2xl font-medium text-sm">
+                                <i class="fa-brands fa-facebook-f text-xl"></i> <span id="share-facebook-label">Facebook</span>
+                            </button>
+                            <button data-vr-slim-share-extra onclick="shareTo('telegram')" class="share-btn flex items-center justify-center gap-2 bg-[#0088cc] hover:bg-[#006699] text-white p-4 rounded-2xl font-medium text-sm">
+                                <i class="fa-brands fa-telegram-plane text-xl"></i> <span id="share-telegram-label">Telegram</span>
+                            </button>
+                            <button onclick="shareTo('sms')" class="share-btn flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-2xl font-medium text-sm">
+                                <i class="fa-solid fa-sms text-xl"></i> <span id="share-sms-label">SMS</span>
+                            </button>
+                            <button data-vr-slim-share-extra onclick="shareTo('email')" class="share-btn flex items-center justify-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-white p-4 rounded-2xl font-medium text-sm" title="Share via email" aria-label="Share via email">
+                                <i class="fa-solid fa-envelope text-xl"></i> <span id="share-email-label">Email</span>
+                            </button>
+                            <button onclick="shareTo('reddit')" class="share-btn flex items-center justify-center gap-2 bg-[#FF4500] hover:bg-[#cc3700] text-white p-4 rounded-2xl font-medium text-sm" title="Post to Reddit" aria-label="Share to Reddit">
+                                <i class="fa-brands fa-reddit-alien text-xl"></i> <span id="share-reddit-label">Reddit</span>
+                            </button>
+                            <button data-vr-slim-share-extra onclick="shareTo('bluesky')" class="share-btn flex items-center justify-center gap-2 bg-[#1185fe] hover:bg-[#0d6bcc] text-white p-4 rounded-2xl font-medium text-sm" title="Share on Bluesky" aria-label="Share to Bluesky">
+                                <i class="fa-solid fa-cloud text-xl"></i> <span id="share-bluesky-label">Bluesky</span>
+                            </button>
+                            <button data-vr-slim-share-extra onclick="shareTo('threads')" class="share-btn flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-white/20 text-white p-4 rounded-2xl font-medium text-sm" title="Share on Threads" aria-label="Share to Threads">
+                                <i class="fa-brands fa-threads text-xl"></i> <span>Threads</span>
+                            </button>
+                            <button data-vr-slim-share-extra onclick="shareTo('pinterest')" class="share-btn flex items-center justify-center gap-2 bg-[#E60023] hover:bg-[#bd001c] text-white p-4 rounded-2xl font-medium text-sm" title="Pin to Pinterest" aria-label="Share to Pinterest">
+                                <i class="fa-brands fa-pinterest-p text-xl"></i> <span>Pinterest</span>
+                            </button>
+                            <button data-vr-slim-share-extra onclick="shareTo('discord')" class="share-btn flex items-center justify-center gap-2 bg-[#5865F2] hover:bg-[#4752c4] text-white p-4 rounded-2xl font-medium text-sm" title="Copy message for Discord" aria-label="Copy message for Discord">
+                                <i class="fa-brands fa-discord text-xl"></i> <span>Discord</span>
+                            </button>
+                            <button data-vr-slim-share-extra onclick="shareTo('tiktok')" class="share-btn flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 border border-white/20 text-white p-4 rounded-2xl font-medium text-sm ring-2 ring-fuchsia-400/25" title="Copy TikTok caption with hashtags" aria-label="Copy TikTok caption">
+                                <i class="fa-brands fa-tiktok text-xl"></i> <span>TikTok</span>
+                            </button>
+                        </div>
+
+                        <button id="share-more-options-btn" type="button"
+                                class="hidden mt-4 w-full text-sm font-semibold text-violet-300 hover:text-violet-200 px-4 py-3 rounded-2xl border border-violet-400/25 bg-violet-500/5 hover:bg-violet-500/10 transition-all"
+                                aria-expanded="false"
+                                aria-controls="share-buttons-panel">
+                            More share options
+                        </button>
+                    </div>
+
+                    <!-- PRODUCTION-READY DEBUG CONTAINER (hidden by default; used by ?debug=1 Test Real Referral flow + future claim flow) -->
+                    <!-- Minimal + safe for live site. JS only shows widget when explicitly triggered. -->
+                </div>
+            </div>
+        </div>
+
 
         <!-- MY STATS -->
         <div id="my-stats" data-vr-below-fold class="mt-8 glass border border-white/10 rounded-3xl p-8">
@@ -161,7 +589,8 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 id="recent-activity-title" class="text-2xl font-semibold" style="color: var(--text-activity-title, #ffffff)">Recent Activity</h2>
-                    <p id="recent-activity-description" class="text-sm text-zinc-400">Early activity from the first participants</p>
+                    <p id="recent-activity-description" class="text-sm text-zinc-400">Live referrals and shares from participants</p>
+                    <div id="recent-activity-velocity" class="hidden" aria-live="polite"></div>
                 </div>
                 <div class="text-xs text-emerald-400 flex items-center gap-1">
                     <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
@@ -174,14 +603,14 @@
         </div>
 
         <!-- HOW IT WORKS -->
-        <div id="how" data-vr-below-fold class="mt-12">
+        <div id="how" data-vr-below-fold data-vr-slim-defer-until-link class="mt-12">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">
                     <i class="fa-solid fa-lightbulb"></i>
                     <span id="how-it-works-badge" style="color: var(--text-how-badge, #a5b4fc)">3 SIMPLE STEPS</span>
                 </div>
                 <h2 id="how-it-works-title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-how-title, #ffffff)">How ViralRefer Works</h2>
-                <p id="how-it-works-subtitle" class="text-xl text-zinc-400 mt-2 max-w-md mx-auto">Earn the ultimate prize in under 10 minutes of sharing.</p>
+                <p id="how-it-works-subtitle" class="text-xl text-zinc-400 mt-2 max-w-md mx-auto">Three steps. Under ten minutes. Real prizes.</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -205,138 +634,6 @@
                     </div>
                     <div id="how-step3-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">3. Win the prize</div>
                     <p id="how-it-works-step3" class="text-zinc-400 leading-relaxed">Reach the top of the leaderboard (10+ referrals) and claim the homepage banner + <span class="font-semibold text-emerald-400">$10 Cash App</span>.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- REFERRAL LINK + SOCIAL SHARING -->
-        <div id="referral-section" class="mt-12">
-            <div class="max-w-2xl mx-auto">
-                <div class="text-center mb-8">
-                    <h2 id="winning-link-title" class="text-5xl font-bold tracking-tighter mb-3" style="color: var(--text-referral-heading, #ffffff)">Your winning link</h2>
-                    <p id="winning-link-description" class="text-xl text-zinc-300">Copy your link below and share on Reddit, X, or anywhere — every click counts toward #1.</p>
-                </div>
-               
-                <div class="glass border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl">
-                    <div id="funnel-credit-gate" class="hidden funnel-credit-gate mb-6 rounded-2xl border px-5 py-4 text-left" role="status" aria-live="polite">
-                        <div class="flex items-start gap-3">
-                            <div class="funnel-gate-icon w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 font-bold text-lg">1</div>
-                            <div>
-                                <p id="funnel-credit-gate-title" class="font-semibold text-amber-200">Complete Step 1 to count as a real referral</p>
-                                <p id="funnel-credit-gate-desc" class="text-sm text-zinc-300 mt-1 leading-relaxed">
-                                    Just visiting does not credit <span id="funnel-gate-ref" class="font-mono text-emerald-400"></span>.
-                                    Tap <strong class="text-white">Get my referral link</strong> — that is the only way this visit counts.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="funnel-steps" class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 text-xs sm:text-sm" aria-label="Your steps">
-                        <span data-funnel-step="1" class="funnel-step funnel-step-active">1. Get link <span class="funnel-step-required">required</span></span>
-                        <span class="text-zinc-600" aria-hidden="true">→</span>
-                        <span data-funnel-step="2" class="funnel-step funnel-step-pending">2. Copy</span>
-                        <span class="text-zinc-600" aria-hidden="true">→</span>
-                        <span data-funnel-step="3" class="funnel-step funnel-step-pending">3. Share</span>
-                    </div>
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-link text-violet-400 text-2xl"></i>
-                            <h3 id="unique-referral-link-title" class="text-2xl font-semibold" style="color: var(--text-referral-heading, #ffffff)">Your unique referral link</h3>
-                        </div>
-                        <button id="new-code-button" onclick="generateNewCode()" 
-                                class="text-xs font-semibold text-violet-400 hover:text-violet-300 px-3 py-1.5 rounded-xl border border-violet-400/30 hover:bg-violet-400/10 transition-all">
-                            NEW CODE
-                        </button>
-                    </div>
-                   
-                    <div class="relative mb-8">
-                        <div class="flex items-center bg-zinc-900 border focus-within:border-violet-500 rounded-2xl px-5 py-4 transition-all" style="border-color: var(--referral-input-border)">
-                            <i id="ref-link-icon" class="fa-solid fa-link mr-3" style="color: var(--text-referral-link-icon, #a1a1aa)"></i>
-                            <input id="ref-link" readonly 
-                                   placeholder="Your link appears here — tap Get my referral link above"
-                                   class="flex-1 bg-transparent text-lg font-mono tracking-tight focus:outline-none placeholder:text-zinc-500 placeholder:text-sm placeholder:font-sans"
-                                   style="color: var(--text-referral-link, #34d399)">
-                            <button id="copy-link-btn" onclick="copyLink()" 
-                                    class="copy-btn ml-3 px-6 py-2.5 hover:bg-violet-500 font-semibold rounded-xl flex items-center gap-2 text-sm shadow-lg shadow-violet-500/30"
-                                    style="background-color: var(--referral-copy-btn-bg); color: var(--referral-copy-btn-text);">
-                                <i class="fa-solid fa-copy"></i> 
-                                <span>COPY</span>
-                            </button>
-
-                            <!-- Small QR icon button for quick access to QR modal -->
-                            <button onclick="showQRModal()" 
-                                    class="ml-2 px-3 py-2 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all"
-                                    title="Show QR Code"
-                                    style="color: var(--referral-qr-icon)">
-                                <i class="fa-solid fa-qrcode text-lg"></i>
-                            </button>
-                        </div>
-
-                        <!-- Small next step hint for new users -->
-                        <p id="referral-next-step" class="hidden mt-3 text-sm text-emerald-400 font-medium">
-                            Step 2: tap COPY — then share your link below.
-                        </p>
-                    </div>
-
-                    <!-- QR Code -->
-                    <div class="flex flex-col sm:flex-row items-center gap-4 bg-zinc-900/60 border border-white/10 rounded-2xl p-4 mb-8">
-                        <div class="flex-shrink-0">
-                            <!-- White background wrapper for excellent QR contrast and scannability -->
-                            <div class="bg-white p-2 rounded-2xl shadow-inner ring-1" style="--tw-ring-color: var(--referral-qr-border)">
-                                <img id="qr-code" 
-                                     class="w-24 h-24 sm:w-20 sm:h-20 rounded-xl cursor-pointer hover:scale-105 transition-transform"
-                                     alt="QR Code for your referral link"
-                                     onclick="showQRModal()">
-                            </div>
-                        </div>
-                        <div class="text-center sm:text-left">
-                            <div id="qr-scan-text" class="text-sm font-semibold" style="color: var(--qr-scan-text)">Scan to share</div>
-                            <div id="qr-mobile-text" class="text-xs text-zinc-400 mt-0.5">Perfect for mobile — friends can scan and join instantly</div>
-                            <button id="qr-show-larger" onclick="showQRModal()" 
-                                    class="mt-2 text-xs px-3 py-1 hover:bg-white/10 border border-white/20 rounded-xl font-medium"
-                                    style="background-color: var(--qr-show-larger-bg); color: var(--qr-show-larger-text)">
-                                Show larger QR
-                            </button>
-                        </div>
-                    </div>
-                   
-                    <div>
-                        <div class="flex items-center gap-2 mb-4">
-                            <i class="fa-solid fa-share-alt text-violet-400"></i>
-                            <span id="share-link-heading" class="font-semibold text-lg" style="color: var(--text-referral-heading, #ffffff)">Share your link</span>
-                        </div>
-                       
-                        <p class="text-xs text-zinc-500 -mt-2 mb-2">Every share moves you up • Use <strong class="text-emerald-400/90">X Img</strong> on X to bypass link filters (downloads your promo card)</p>
-
-                        <div id="share-buttons-panel" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
-                            <button onclick="shareTo('x')" class="share-btn flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 border border-white/20 text-white p-4 rounded-2xl font-medium text-sm" title="Share text to X (may be filtered)" aria-label="Share to X">
-                                <span class="text-xl">𝕏</span> <span id="share-x-label">X</span>
-                            </button>
-                            <button onclick="generateXShareImage()" class="share-btn flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 border border-emerald-400/40 text-white p-4 rounded-2xl font-medium text-sm" title="Generate promo image + open X (recommended for X)" aria-label="Generate image for X">
-                                <span class="text-xl">𝕏</span> <span>Img</span>
-                            </button>
-                            <button id="share-whatsapp-primary" onclick="shareTo('whatsapp')" class="share-btn flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-2xl font-medium text-sm ring-2 ring-emerald-400/30" title="Recommended — fastest way to share">
-                                <i class="fa-brands fa-whatsapp text-xl"></i> <span id="share-whatsapp-label">WhatsApp</span>
-                            </button>
-                            <button onclick="shareTo('linkedin')" class="share-btn flex items-center justify-center gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white p-4 rounded-2xl font-medium text-sm">
-                                <i class="fa-brands fa-linkedin-in text-xl"></i> <span id="share-linkedin-label">LinkedIn</span>
-                            </button>
-                            <button onclick="shareTo('facebook')" class="share-btn flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#0d5fcc] text-white p-4 rounded-2xl font-medium text-sm">
-                                <i class="fa-brands fa-facebook-f text-xl"></i> <span id="share-facebook-label">Facebook</span>
-                            </button>
-                            <button onclick="shareTo('telegram')" class="share-btn flex items-center justify-center gap-2 bg-[#0088cc] hover:bg-[#006699] text-white p-4 rounded-2xl font-medium text-sm">
-                                <i class="fa-brands fa-telegram-plane text-xl"></i> <span id="share-telegram-label">Telegram</span>
-                            </button>
-                            <button onclick="shareTo('sms')" class="share-btn flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-2xl font-medium text-sm">
-                                <i class="fa-solid fa-sms text-xl"></i> <span id="share-sms-label">SMS</span>
-                            </button>
-                            <button onclick="shareTo('email')" class="share-btn flex items-center justify-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-white p-4 rounded-2xl font-medium text-sm">
-                                <i class="fa-solid fa-envelope text-xl"></i> <span id="share-email-label">Email</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- PRODUCTION-READY DEBUG CONTAINER (hidden by default; used by ?debug=1 Test Real Referral flow + future claim flow) -->
-                    <!-- Minimal + safe for live site. JS only shows widget when explicitly triggered. -->
                 </div>
             </div>
         </div>
@@ -481,19 +778,69 @@
     </div>
 
     <!-- Admin Dashboard Modal -->
-    <div id="admin-modal" onclick="closeAdminPanel()" class="hidden fixed inset-0 bg-black/90 z-[400] flex items-center justify-center">
-        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-6xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+    <div id="admin-modal" onclick="closeAdminPanel()" class="hidden fixed inset-0 bg-black/90 z-[400] flex items-center justify-center vr-modal-overlay">
+        <div onclick="event.stopImmediatePropagation()" class="vr-modal-panel glass border border-white/10 rounded-3xl w-full max-w-6xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             <div class="px-8 py-6 border-b border-white/10 flex items-center justify-between">
                 <div class="font-bold text-2xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-rose-400"></i> Admin Dashboard</div>
                 <button onclick="closeAdminPanel()" class="text-3xl text-zinc-400 hover:text-white">✕</button>
             </div>
+
+            <div id="admin-live-hub" class="hidden px-8 py-3 border-b border-white/10 bg-zinc-950/60">
+                <div class="flex items-center justify-between gap-3 mb-2">
+                    <div class="flex items-center gap-2 text-sm font-semibold text-emerald-400">
+                        <span id="admin-live-status" class="hidden admin-live-dot text-emerald-400"><i class="fa-solid fa-circle text-[6px] mr-1"></i></span>
+                        <span>Live Activity</span>
+                        <span id="admin-live-count" class="text-[10px] text-zinc-500 font-normal"></span>
+                        <span id="admin-live-status-text" class="hidden text-[10px] text-amber-400/90 font-normal"></span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" id="admin-live-sound-btn" class="admin-live-sound-btn admin-live-sound-btn--on text-[10px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 min-h-[32px] px-2 rounded-lg border border-white/10" aria-pressed="true" title="Sound alerts on — click to mute funnel chimes">
+                            <i class="fa-solid fa-volume-high" aria-hidden="true"></i><span data-sound-label>Sound on</span>
+                        </button>
+                        <button type="button" id="admin-live-sound-history-toggle" class="admin-live-sound-history-toggle text-[10px] text-zinc-400 hover:text-violet-300 flex items-center gap-1 min-h-[32px] px-2 rounded-lg border border-white/10" aria-expanded="false" aria-controls="admin-live-sound-history" title="Sound alert history">
+                            <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span>History</span><span id="admin-live-sound-history-count" class="admin-live-sound-history-count hidden">0</span>
+                        </button>
+                        <button type="button" id="admin-live-pause-btn" class="text-[10px] text-zinc-500 hover:text-white min-h-[32px]">Pause feed</button>
+                    </div>
+                </div>
+                <div id="admin-live-filters" class="flex flex-wrap items-center gap-1.5 mb-2" role="group" aria-label="Live feed filters">
+                    <button type="button" data-live-filter="referral" class="admin-live-filter-chip admin-live-filter-chip--on">Referrals</button>
+                    <button type="button" data-live-filter="share" class="admin-live-filter-chip admin-live-filter-chip--on">Shares</button>
+                    <button type="button" data-live-filter="visitor" class="admin-live-filter-chip admin-live-filter-chip--on">Funnel</button>
+                    <button type="button" data-live-filter="banner" class="admin-live-filter-chip admin-live-filter-chip--on">Banners</button>
+                    <button type="button" data-live-filter="claim" class="admin-live-filter-chip admin-live-filter-chip--on">Claims</button>
+                    <button type="button" data-live-filter="content" class="admin-live-filter-chip admin-live-filter-chip--on">CMS</button>
+                    <button type="button" data-live-filter="showLandings" class="admin-live-filter-chip" title="Include SiteLanding funnel events (noisy)">Landings</button>
+                    <span class="admin-live-filter-divider" aria-hidden="true"></span>
+                    <span class="text-[9px] text-zinc-600 uppercase tracking-wide">Traffic</span>
+                    <button type="button" data-live-segment="all" class="admin-live-filter-chip admin-live-filter-chip--on" title="Show referred and direct funnel events">All</button>
+                    <button type="button" data-live-segment="referred" class="admin-live-filter-chip" title="Only visitors who landed via a referral link">Referred</button>
+                    <button type="button" data-live-segment="direct" class="admin-live-filter-chip" title="Only visitors without a landing referral code">Direct</button>
+                </div>
+                <p id="admin-live-offsite-status" class="admin-live-offsite-status text-[9px] text-zinc-600 mb-1.5" title="Server webhook alerts work even when this panel is closed"></p>
+                <div id="admin-live-feed" class="admin-live-feed flex gap-2 overflow-x-auto pb-1">
+                    <div class="admin-live-feed-empty text-[10px] text-zinc-500 py-1">Waiting for live events…</div>
+                </div>
+                <div id="admin-live-sound-history" class="hidden admin-live-sound-history mt-2 rounded-xl border border-white/10 bg-zinc-900/70" role="region" aria-label="Sound alert history">
+                    <div class="flex items-center justify-between gap-2 px-3 py-2 border-b border-white/10">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-violet-300/90">Sound alert log</span>
+                        <button type="button" id="admin-live-sound-history-clear" class="text-[10px] text-zinc-500 hover:text-rose-300">Clear</button>
+                    </div>
+                    <div id="admin-live-sound-history-list" class="admin-live-sound-history-list max-h-36 overflow-y-auto px-2 py-1.5"></div>
+                </div>
+            </div>
+
+            <div id="admin-pending-banner" class="hidden px-8 py-2 bg-amber-500/15 border-b border-amber-500/30 text-sm text-amber-200">
+                <i class="fa-solid fa-bell mr-2"></i><span id="admin-pending-count">0</span> pending prize claim(s) need review
+            </div>
            
-            <div class="flex border-b border-white/10 px-8">
-                <button onclick="switchAdminTab(0)" id="tab-0" class="admin-tab px-6 py-4 font-semibold border-b-2 border-violet-500 text-violet-400">REFERRALS</button>
-                <button onclick="switchAdminTab(1)" id="tab-1" class="admin-tab px-6 py-4 font-semibold text-zinc-400 hover:text-white">SHARE ANALYTICS</button>
-                <button onclick="switchAdminTab(2)" id="tab-2" class="admin-tab px-6 py-4 font-semibold text-zinc-400 hover:text-white">EDIT CONTENT</button>
-                <button onclick="switchAdminTab(3)" id="tab-3" class="admin-tab px-6 py-4 font-semibold text-zinc-400 hover:text-white">PRIZE CLAIMS</button>
-                <button onclick="switchAdminTab(4)" id="tab-4" class="admin-tab px-6 py-4 font-semibold text-zinc-400 hover:text-white">TEXT COLORS</button>
+            <div class="flex border-b border-white/10 px-8 admin-tab-bar overflow-x-auto">
+                <button onclick="switchAdminTab(0)" id="tab-0" class="admin-tab relative px-6 py-4 font-semibold border-b-2 border-violet-500 text-violet-400 whitespace-nowrap">REFERRALS<span id="tab-0-badge" class="admin-tab-badge hidden">0</span></button>
+                <button onclick="switchAdminTab(1)" id="tab-1" class="admin-tab relative px-6 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap">SHARE ANALYTICS<span id="tab-1-badge" class="admin-tab-badge hidden">0</span></button>
+                <button onclick="switchAdminTab(2)" id="tab-2" class="admin-tab relative px-6 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap">EDIT CONTENT<span id="tab-2-badge" class="admin-tab-badge hidden">0</span></button>
+                <button onclick="switchAdminTab(3)" id="tab-3" class="admin-tab relative px-6 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap">PRIZE CLAIMS<span id="tab-3-badge" class="admin-tab-badge hidden">0</span><span id="tab-3-live-badge" class="admin-tab-badge hidden">0</span></button>
+                <button onclick="switchAdminTab(4)" id="tab-4" class="admin-tab relative px-6 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap">TEXT COLORS<span id="tab-4-badge" class="admin-tab-badge hidden">0</span></button>
+                <button onclick="switchAdminTab(5)" id="tab-5" class="admin-tab relative px-6 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap">VIRAL OPTIMIZER<span id="tab-5-badge" class="admin-tab-badge hidden">0</span></button>
             </div>
            
             <div class="p-8 overflow-auto flex-1" id="admin-content"></div>
@@ -501,8 +848,8 @@
     </div>
 
     <!-- Winner / Public Prize Claim Modal -->
-    <div id="winner-modal" onclick="closeWinnerModal()" class="hidden fixed inset-0 bg-black/90 z-[700] flex items-center justify-center">
-        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-lg mx-4 p-8">
+    <div id="winner-modal" onclick="closeWinnerModal()" class="hidden fixed inset-0 bg-black/90 z-[700] flex items-center justify-center vr-modal-overlay">
+        <div onclick="event.stopImmediatePropagation()" class="vr-modal-panel glass border border-white/10 rounded-3xl w-full max-w-lg mx-4 p-6 sm:p-8">
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <div class="font-bold text-2xl">Claim Your Prize</div>
@@ -541,8 +888,8 @@
     </div>
 
     <!-- Claim Details Modal -->
-    <div id="claim-details-modal" onclick="closeClaimDetailsModal()" class="hidden fixed inset-0 bg-black/90 z-[700] flex items-center justify-center">
-        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-2xl mx-4 p-8">
+    <div id="claim-details-modal" onclick="closeClaimDetailsModal()" class="hidden fixed inset-0 bg-black/90 z-[700] flex items-center justify-center vr-modal-overlay">
+        <div onclick="event.stopImmediatePropagation()" class="vr-modal-panel glass border border-white/10 rounded-3xl w-full max-w-2xl mx-4 p-6 sm:p-8">
             <div class="flex items-center justify-between mb-6">
                 <div class="font-bold text-2xl">Claim Details</div>
                 <button onclick="closeClaimDetailsModal()" class="text-3xl text-zinc-400 hover:text-white">✕</button>
@@ -562,8 +909,8 @@
     </div>
 
     <!-- Referral Details Modal (for improved Referrals tab - modeled exactly on claim-details-modal) -->
-    <div id="referral-details-modal" onclick="closeReferralDetailsModal()" class="hidden fixed inset-0 bg-black/90 z-[700] flex items-center justify-center">
-        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-2xl mx-4 p-8">
+    <div id="referral-details-modal" onclick="closeReferralDetailsModal()" class="hidden fixed inset-0 bg-black/90 z-[700] flex items-center justify-center vr-modal-overlay">
+        <div onclick="event.stopImmediatePropagation()" class="vr-modal-panel glass border border-white/10 rounded-3xl w-full max-w-2xl mx-4 p-6 sm:p-8">
             <div class="flex items-center justify-between mb-6">
                 <div class="font-bold text-2xl">Referral Details</div>
                 <button onclick="closeReferralDetailsModal()" class="text-3xl text-zinc-400 hover:text-white">✕</button>
@@ -584,8 +931,8 @@
 
     <!-- BATCH 5: Rules modal (simple, clean, reusable style modeled on claim-details-modal). Displays rules_full from site_content. -->
     <!-- Triggered by footer "Official Rules & Full Disclaimers" link (now opens modal instead of #rules anchor) -->
-    <div id="rules-modal" onclick="closeRulesModal()" class="hidden fixed inset-0 bg-black/90 z-[710] flex items-center justify-center">
-        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-3xl mx-4 p-8 max-h-[82vh] overflow-auto">
+    <div id="rules-modal" onclick="closeRulesModal()" class="hidden fixed inset-0 bg-black/90 z-[710] flex items-center justify-center vr-modal-overlay">
+        <div onclick="event.stopImmediatePropagation()" class="vr-modal-panel glass border border-white/10 rounded-3xl w-full max-w-3xl mx-4 p-6 sm:p-8 max-h-[82vh] overflow-auto">
             <div class="flex items-center justify-between mb-6">
                 <div class="font-bold text-2xl">Official Rules &amp; Full Disclaimers</div>
                 <button onclick="closeRulesModal()" class="text-3xl text-zinc-400 hover:text-white">✕</button>

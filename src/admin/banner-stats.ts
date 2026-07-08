@@ -16,6 +16,11 @@ import {
   buildAutorefreshSelectHtml,
   wireAdminStatsAutorefresh,
 } from '../lib/admin-stats-autorefresh';
+import { buildAutoClearTestSelectHtml } from '../lib/admin-stats-auto-clear-test';
+import {
+  resolveEditContentRoot,
+  runClearTestAdminStatsForEditContent,
+} from './edit-content-clear-test';
 import { withAdminStatsReadOnlyRefresh } from '../lib/admin-stats-refresh-guard';
 import {
   type BannerStatRow,
@@ -27,7 +32,15 @@ import {
   sortBannerRows,
 } from './banner-stats-helpers';
 import { countTestBannerEvents, filterTestBannerEvents } from './banner-stats-test-helpers';
-import { clearTestAdminStatsFromServer } from './clear-test-admin-stats';
+import {
+  filterEventsByTrackingRange,
+  getTrackingTimeRange,
+  reportTrackingHubSummary,
+} from './edit-content-tracking-helpers';
+
+import { registerAdminLiveRefresh, refreshAdminLiveIndicators } from './admin-live-hub';
+
+let unregisterBannerLive: (() => void) | null = null;
 
 let currentBannerSearch = '';
 let currentBannerSort: BannerSortKey = 'impressions';
@@ -91,15 +104,9 @@ function bindBannerStatsActions(container: HTMLElement) {
         button.disabled = true;
         button.textContent = 'Clearing…';
         try {
-          const { visitorDeleted, bannerDeleted } = await clearTestAdminStatsFromServer();
-          await renderBannerStats(container);
-          const total = visitorDeleted + bannerDeleted;
-          showToast(
-            total > 0
-              ? `Removed ${visitorDeleted} funnel + ${bannerDeleted} banner test event${total === 1 ? '' : 's'}`
-              : 'No test events to remove',
-            total > 0 ? 'success' : 'info',
-          );
+          const root = resolveEditContentRoot(container);
+          if (!root) throw new Error('Edit content root not found');
+          await runClearTestAdminStatsForEditContent(root, { toastWhenEmpty: true });
         } catch {
           showToast('Could not clear test admin stats', 'info');
         } finally {
@@ -245,12 +252,13 @@ function renderBannerStatsView(
   container.classList.add('banner-stats-panel');
   const excludedCount = countTestBannerEvents(events);
   const visibleEvents = filterTestBannerEvents(events);
+  const rangeFiltered = filterEventsByTrackingRange(visibleEvents, getTrackingTimeRange());
   container.dataset.bannerStatsEvents = JSON.stringify(visibleEvents);
   container.dataset.bannerStatsSource = source;
   if (fetchError) container.dataset.bannerStatsFetchError = fetchError;
   else delete container.dataset.bannerStatsFetchError;
 
-  const stats = computeBannerStats(visibleEvents);
+  const stats = computeBannerStats(rangeFiltered);
   const rows = stats.perBanner as BannerStatRow[];
   const filtered = filterBannerRowsBySearch(rows, currentBannerSearch);
   const sorted = sortBannerRows(filtered, currentBannerSort);
@@ -276,8 +284,20 @@ function renderBannerStatsView(
     minute: '2-digit',
     second: '2-digit',
   });
-  const latestTs = latestEventTimestamp(visibleEvents);
+  const latestTs = latestEventTimestamp(rangeFiltered);
   const latestLabel = latestTs ? formatEventTimestampLabel(latestTs) : '';
+  const rangeNote =
+    getTrackingTimeRange() === 'all'
+      ? ''
+      : ` · Range ${getTrackingTimeRange().toUpperCase()} (${rangeFiltered.length} events)`;
+
+  reportTrackingHubSummary({
+    bannerImpressions: totals.impressions,
+    bannerClicks: totals.clicks,
+    bannerCtr: totals.ctr,
+    bannerSource: source,
+    bannerEvents: rangeFiltered.length,
+  });
 
   const copyPayload = JSON.stringify(
     { generated: new Date().toISOString(), source, totals, stats: sorted, rawEvents: stats.lastEvents },
@@ -298,7 +318,8 @@ function renderBannerStatsView(
     <div class="flex flex-wrap items-center gap-2 mb-2">
       <div class="text-[10px] font-semibold text-emerald-400">Banner Performance</div>
       ${sourceBadge}
-      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''} · ${stats.total} events${isServer ? ' (latest 500)' : ''}</span>
+      <span id="banner-live-indicator" class="hidden text-[9px] text-emerald-400/90"><i class="fa-solid fa-circle text-[5px] mr-0.5"></i>live</span>
+      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''}${rangeNote} · ${stats.total} events${isServer ? ' (latest 500)' : ''}</span>
     </div>
   `;
 
@@ -335,6 +356,7 @@ function renderBannerStatsView(
       ${buildAutorefreshSelectHtml('data-banner-stats-autorefresh', BANNER_AUTOREFRESH_KEY)}
       <button type="button" data-banner-stats-clear-test title="Deletes owner IP and smoke automation rows from visitor_events and banner_events"
         class="text-[9px] px-2 py-0.5 bg-amber-600/80 hover:bg-amber-600 text-white rounded disabled:opacity-50">Clear test events${excludedCount > 0 ? ` (${excludedCount})` : ''}</button>
+      ${buildAutoClearTestSelectHtml()}
       <button type="button" data-banner-stats-clear class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">🗑 Clear Local</button>
       <button type="button" data-banner-stats-copy class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">⎘ Copy JSON</button>
       <button type="button" data-banner-stats-csv class="text-[9px] px-2 py-0.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded">⬇ CSV</button>
@@ -418,6 +440,7 @@ function renderBannerStatsView(
   html += `</tbody></table>`;
   container.innerHTML = html;
   wireBannerAutorefresh(container);
+  refreshAdminLiveIndicators();
 }
 
 /**
@@ -440,6 +463,14 @@ export async function renderBannerStats(container: HTMLElement, preloadedEvents?
 export async function wireBannerStatsQuick(root: HTMLElement) {
   const el = root.querySelector('#banner-stats-quick') as HTMLElement | null;
   if (!el) return;
+
+  if (unregisterBannerLive) unregisterBannerLive();
+  unregisterBannerLive = registerAdminLiveRefresh('banner', () => {
+    const panel = root.querySelector('#banner-stats-quick') as HTMLElement | null;
+    if (panel && document.body.contains(panel)) {
+      void silentRefreshBannerStats(panel);
+    }
+  });
 
   bindBannerStatsActions(el);
   const local = getLocalBannerEvents();

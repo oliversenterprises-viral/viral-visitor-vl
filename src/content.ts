@@ -9,6 +9,7 @@ import { registerGlobal } from './lib/global';
 import { applyTextColors } from './colors';
 import { supabase } from './lib/supabase';
 import { latestEvents } from './lib/stats-helpers';
+import { normalizeSiteContentText } from './lib/site-content-value';
 
 export const BANNER_EVENTS_KEY = 'viralrefer_banner_events';
 
@@ -287,19 +288,26 @@ export async function updatePublicContent(content: Record<string, any>) {
   const apply = (elId: string, dbKey: string) => {
     const el = document.getElementById(elId);
     if (!el) return;
-    const val = content[dbKey];
-    if (val != null && val !== '') {
-      // Safe display: primitives as string, objects/arrays as JSON (for future complex content like prize json)
-      const display = (typeof val === 'object' && val !== null) ? JSON.stringify(val) : String(val);
-      el.textContent = display;
-    }
+    const display = normalizeSiteContentText(content[dbKey]);
+    if (display != null) el.textContent = display;
+  };
+
+  const applyButtonLabel = (buttonId: string, dbKey: string) => {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+    const display = normalizeSiteContentText(content[dbKey]);
+    if (display == null) return;
+    const span = btn.querySelector('span');
+    if (span) span.textContent = display;
+    else btn.textContent = display;
   };
 
   // HERO batch (granular ids added for safe dynamic updates without breaking gradient/branding)
   apply('hero-badge', 'hero_badge');
   apply('hero-title-line1', 'hero_title_line1');
   apply('hero-title-accent', 'hero_title_accent');
-  apply('hero-subtitle', 'hero_subtitle');    // Note: overrides whole p (flattens inner <span>s for styled words; future batch can split)
+  apply('hero-subtitle', 'hero_subtitle');
+  apply('hero-trust-line', 'hero_trust_line');
 
   // HOW IT WORKS batch (high priority)
   apply('how-it-works-title', 'how_it_works_title');
@@ -390,6 +398,15 @@ export async function updatePublicContent(content: Record<string, any>) {
   apply('hero-campaign-badge', 'hero_campaign_badge');
   apply('hero-stats-subtext', 'hero_stats_subtext');
   apply('footer-credit', 'footer_credit');
+  applyButtonLabel('hero-get-link-btn', 'cta_button_text');
+  applyButtonLabel('hero-leaderboard-btn', 'leaderboard_button_text');
+
+  // Funnel journey (above-fold) — editable in Admin → Edit Content
+  apply('funnel-journey-badge', 'funnel_journey_badge');
+  apply('funnel-step1-label', 'funnel_step1_label');
+  apply('funnel-step2-label', 'funnel_step2_label');
+  apply('funnel-step3-label', 'funnel_step3_label');
+  apply('funnel-credit-gate-title', 'funnel_credit_gate_title');
 
   // First-time visitor focused messaging (wired for Admin control)
   apply('referral-next-step', 'referral_next_step_hint');
@@ -430,11 +447,11 @@ export async function updatePublicContent(content: Record<string, any>) {
   apply('rules-full-content', 'rules_full');
 
   // Back-compat wiring for existing seeded keys in 0001_init_rls.sql (hero_title, hero_subtitle, min_referrals_for_claim, prize_pool, rules_text)
-  // These provide immediate value on first load even before new granular keys are added via Admin → Edit Content
-  apply('hero-title-accent', 'hero_title');
+  // hero_title was seeded as "Homepage headline" — maps to line 1, not the gradient accent span
+  apply('hero-title-line1', 'hero_title');
   apply('hero-subtitle', 'hero_subtitle');
   apply('min-referrals-value', 'min_referrals_for_claim');
-  // Back-compat for older seeded keys
+  apply('min-referrals-value', 'min_referrals');
 
   // Note: if value is JSONB object, String() will be "[object Object]" — handle json types in future batch
 

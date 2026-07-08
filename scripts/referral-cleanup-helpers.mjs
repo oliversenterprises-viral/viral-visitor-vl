@@ -6,7 +6,7 @@
 /** Funnel-gated crediting deploy — commit 67cc22d (2026-06-26 18:36:09 UTC). */
 export const FUNNEL_GATE_DEPLOY_ISO = '2026-06-26T18:36:09Z';
 
-export const ADMIN_FUNNEL_EXCLUDED_IPS = ['161.38.136.60'];
+export const ADMIN_FUNNEL_EXCLUDED_IPS = ['161.38.136.60', '57.138.135.240'];
 
 const LEGACY_DEMO_CODES = new Set([
   'sarah_m', 'james_t', 'maria_k', 'david_r', 'emma_l', 'noah_p',

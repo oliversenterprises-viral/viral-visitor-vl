@@ -57,6 +57,8 @@ describe('admin stats public API (shipped render/wire)', () => {
     expect(el.innerHTML).toContain('LOCAL');
     expect(el.innerHTML).toContain('Landings');
     expect(el.innerHTML).toContain('data-visitor-stats-autorefresh');
+    expect(el.innerHTML).toContain('data-visitor-stats-copy');
+    expect(el.innerHTML).toContain('Step conv.');
     expect(el.innerHTML).toContain('Latest event');
     expect(el.innerHTML).toContain('Recent events');
     expect(el.innerHTML).toContain('8.8.8.8');

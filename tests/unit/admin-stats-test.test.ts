@@ -29,6 +29,13 @@ describe('admin-stats-test', () => {
         event_type: 'impression',
       }),
     ).toBe(false);
+    expect(
+      isTestBannerEvent({
+        ip: '57.138.135.240',
+        user_agent: 'Mozilla/5.0 Chrome',
+        event_type: 'impression',
+      }),
+    ).toBe(true);
   });
 
   it('filters test banner events for admin display', () => {

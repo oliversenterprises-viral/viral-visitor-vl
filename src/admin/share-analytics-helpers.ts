@@ -1,9 +1,12 @@
 /** Shape of a single share event as used by this analytics tab */
+export type ShareAbVariantTag = 'a' | 'b' | 'unknown';
+
 export interface ShareEvent {
   platform: string;
   referrer_code: string;
   created_at: string;
   referral_link?: string;
+  ab_variant?: ShareAbVariantTag;
 }
 
 const REF_CODE_FROM_LINK_RE = /\/r\/([A-Za-z0-9_-]+)/i;
@@ -52,19 +55,31 @@ export function normalizeShareRow(row: Record<string, unknown>): ShareEvent {
     fromLink ||
     'unknown';
 
+  const rawVariant = String(row.ab_variant || row.abVariant || '').toLowerCase().trim();
+  const ab_variant: ShareAbVariantTag =
+    rawVariant === 'a' || rawVariant === 'b' ? rawVariant : 'unknown';
+
   return {
     platform: String(row.platform || 'unknown').toLowerCase(),
     referrer_code,
     referral_link: referralLink || undefined,
     created_at: String(row.created_at || row.createdAt || new Date().toISOString()),
+    ab_variant,
   };
 }
 
 /** Internal view model returned by the computation layer */
+export interface AbVariantBreakdown {
+  variant: ShareAbVariantTag;
+  count: number;
+  percentage: number;
+}
+
 export interface AnalyticsViewData {
   total: number;
   sortedPlatforms: Array<[string, number]>;
   topReferrers: Array<[string, number]>;
+  abVariantBreakdown: AbVariantBreakdown[];
   trendLabels: string[];
   trendData: number[];
   uniqueSharers: number;
@@ -126,6 +141,24 @@ export function getUniquePlatforms(shares: readonly ShareEvent[]): string[] {
     .map(([p]) => p);
 }
 
+/** Count shares by A/B variant (unknown = legacy rows without ab_variant). */
+export function computeAbVariantBreakdown(
+  shares: readonly ShareEvent[],
+): AbVariantBreakdown[] {
+  const counts: Record<ShareAbVariantTag, number> = { a: 0, b: 0, unknown: 0 };
+  shares.forEach((s) => {
+    const tag = s.ab_variant === 'a' || s.ab_variant === 'b' ? s.ab_variant : 'unknown';
+    counts[tag] += 1;
+  });
+  const total = shares.length;
+  const order: ShareAbVariantTag[] = ['a', 'b', 'unknown'];
+  return order.map((variant) => ({
+    variant,
+    count: counts[variant],
+    percentage: total > 0 ? Math.round((counts[variant] / total) * 100) : 0,
+  }));
+}
+
 /**
  * Computes all analytics data needed for the Share Analytics tab.
  * Pure function — no side effects.
@@ -165,6 +198,10 @@ export function computeAnalyticsData(filteredShares: readonly ShareEvent[]): Ana
 
   const avgPerDay = trendData.length > 0 ? Math.round(total / trendData.length) : 0;
 
+  const abVariantBreakdown = computeAbVariantBreakdown(filteredShares);
+  const trackedAb = abVariantBreakdown.filter((r) => r.variant !== 'unknown');
+  const trackedAbTotal = trackedAb.reduce((sum, r) => sum + r.count, 0);
+
   const insights: string[] = [];
   if (total === 0) {
     insights.push('No shares in the current view — try widening your filters.');
@@ -184,12 +221,27 @@ export function computeAnalyticsData(filteredShares: readonly ShareEvent[]): Ana
       else if (secondHalf < firstHalf * 0.6) insights.push('Shares have <strong>declined</strong> recently');
     }
     insights.push(`Peak day: <strong>${peakDay.day}</strong> with ${peakDay.count} shares`);
+    if (uniqueSharers > 0 && total >= 3) {
+      const avg = Math.round((total / uniqueSharers) * 10) / 10;
+      insights.push(`Share momentum: <strong>${avg}</strong> shares per unique sharer on average`);
+    }
+    if (trackedAbTotal >= 2 && trackedAb.length >= 2) {
+      const leader = [...trackedAb].sort((a, b) => b.count - a.count)[0];
+      insights.push(
+        `A/B test: <strong>Variant ${leader.variant.toUpperCase()}</strong> leads (${leader.percentage}% of ${trackedAbTotal} tracked shares)`,
+      );
+    } else if (trackedAbTotal === 1 && trackedAb[0]) {
+      insights.push(
+        `A/B tracking: <strong>Variant ${trackedAb[0].variant.toUpperCase()}</strong> has the only tagged share so far`,
+      );
+    }
   }
 
   return {
     total,
     sortedPlatforms,
     topReferrers,
+    abVariantBreakdown,
     trendLabels,
     trendData,
     uniqueSharers,

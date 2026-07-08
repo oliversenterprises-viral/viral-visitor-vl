@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { dispatchFunnelOffsiteNotify } from '../_shared/funnel-notify.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -123,6 +124,10 @@ Deno.serve(async (req: Request) => {
 
     const { error } = await supabaseAdmin.from('visitor_events').insert(row);
     if (error) throw error;
+
+    dispatchFunnelOffsiteNotify(row).catch((notifyErr) => {
+      console.error('[record-visitor-event] funnel notify:', notifyErr);
+    });
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

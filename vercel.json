@@ -1,7 +1,24 @@
 {
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/embed",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://wqbefjzpgsezzwdrvvua.supabase.co wss://wqbefjzpgsezzwdrvvua.supabase.co https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; frame-ancestors *; upgrade-insecure-requests;"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" }
+      ]
+    },
+    {
+      "source": "/((?!embed$).*)",
       "headers": [
         {
           "key": "Content-Security-Policy",
@@ -16,6 +33,35 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/r/:code",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|Googlebot|bingbot|Applebot|Pinterest|Embedly|redditbot)"
+        }
+      ],
+      "destination": "/api/og-referral?code=:code"
+    },
+    {
+      "source": "/join/r/:code",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|Googlebot|bingbot|Applebot|Pinterest|Embedly|redditbot)"
+        }
+      ],
+      "destination": "/api/og-referral?code=:code&path=join"
+    },
+    { "source": "/embed", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron-optimizer",
+      "schedule": "0 6 * * *"
+    }
   ]
 }

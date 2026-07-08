@@ -30,4 +30,24 @@ describe('loadSiteContent (fetchSiteContent → updatePublicContent → referral
     const link = buildReferralLinkFromBase('VIRAL-LOAD', getReferralBaseUrl());
     expect(parseRefFromLocation(locationFromUrl(link))).toBe('VIRAL-LOAD');
   });
+
+  it('maps legacy hero_title to hero-title-line1 and unwraps quoted values', async () => {
+    vi.spyOn(supabaseMod, 'fetchSiteContent').mockResolvedValue({
+      hero_title: '"Custom headline from admin"',
+      hero_subtitle: '"Custom subtitle"',
+      cta_button_text: 'Tap for your link',
+    });
+
+    document.body.innerHTML = `
+      <span id="hero-title-line1"></span>
+      <p id="hero-subtitle"></p>
+      <button id="hero-get-link-btn"><span>Get my referral link</span></button>
+    `;
+
+    await loadSiteContent();
+
+    expect(document.getElementById('hero-title-line1')?.textContent).toBe('Custom headline from admin');
+    expect(document.getElementById('hero-subtitle')?.textContent).toBe('Custom subtitle');
+    expect(document.querySelector('#hero-get-link-btn span')?.textContent).toBe('Tap for your link');
+  });
 });

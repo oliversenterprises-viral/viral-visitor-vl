@@ -5,11 +5,36 @@
 
 import { ViralRefer, registerGlobal } from '../lib/global';
 import { ensureReferralLinkReady } from '../referral';
-import { getShareMessageTemplate, getMyReferralCode } from './globals';
+import { getMyReferralCode } from './globals';
 import { supabase } from '../lib/supabase';
 import { showToast } from '../ui';
 import { recordShareEvent } from '../lib/record-share';
 import { trackVisitorFunnel } from '../lib/visitor-tracking';
+import { onFunnelShareComplete } from '../lib/funnel-guide';
+import {
+  buildShareMessage,
+  buildPlatformShareUrl,
+  buildEmbedCode,
+  buildMarkdownShareMessage,
+  buildTrackedShareLink,
+  extractReferralCodeFromLink,
+  isNativeShareSupported,
+  shouldCopyShareMessage,
+  type SharePlatform,
+} from '../lib/share-power';
+import { resolveShareMessageBuildOptions } from '../lib/share-message-options';
+import { resolveShareAbVariant } from '../lib/share-ab';
+import { getShareLeaderboardRank } from '../lib/share-context';
+import { celebrateShareIfFirst } from '../lib/share-celebrate';
+import {
+  downloadCanvasPng,
+  renderShareCard,
+  shareCardFilename,
+} from '../lib/share-cards';
+import { incrementShareStreak } from '../lib/share-streak';
+import { refreshShareStreakUI, setShareAbVariant, setSharePreviewPlatform } from '../lib/share-ui';
+import { onShareReminderCompleted } from '../lib/share-reminder-ui';
+import { onViralLoopShare } from '../lib/viral-loop-ui';
 import {
   ensureTurnstileReady,
   getTurnstileSiteKey,
@@ -23,6 +48,51 @@ function escapeHtml(text: string): string {
   div.textContent = text;
   return div.innerHTML;
 }
+
+async function resolveShareContext(): Promise<{ link: string; code: string } | null> {
+  const link = await ensureReferralLinkReady();
+  if (!link) {
+    showToast('Generate your link first, then share', 'info');
+    return null;
+  }
+  const code = getMyReferralCode();
+  if (!code) return null;
+  return { link, code };
+}
+
+function openShareIntent(url: string): void {
+  window.open(url, '_blank', 'noopener');
+}
+
+function clipboardShareToast(platform: SharePlatform): string {
+  if (platform === 'tiktok') return 'TikTok caption copied — paste in bio or post';
+  if (platform === 'snapchat') return 'Snapchat caption copied — paste in chat or story';
+  if (platform === 'discord') return 'Message copied — paste in Discord';
+  return 'Message copied — paste anywhere';
+}
+
+function logShare(platform: string, code: string, link: string): void {
+  const abVariant = resolveShareAbVariant(code);
+  recordShareEvent({ platform, referrer_code: code, referral_link: link, ab_variant: abVariant });
+  trackVisitorFunnel('ShareReferral', { platform });
+  incrementShareStreak();
+  refreshShareStreakUI();
+  onShareReminderCompleted();
+  celebrateShareIfFirst();
+  onViralLoopShare();
+}
+
+async function copyTextToClipboard(text: string, successToast: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(successToast, 'success');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export { syncSharePowerUI } from '../lib/share-ui';
 
 export const closeWinnerModal = () => {
   const modal = document.getElementById('winner-modal');
@@ -39,69 +109,148 @@ registerGlobal('closeWinnerModal', closeWinnerModal);
  */
 export const shareTo = (platform: string) => {
   void (async () => {
-    const link = await ensureReferralLinkReady();
-    if (!link) {
-      showToast('Generate your link first, then share', 'info');
-      return;
+    const ctx = await resolveShareContext();
+    if (!ctx) return;
+
+    const sharePlatform = platform as SharePlatform;
+    const trackedLink = buildTrackedShareLink(ctx.link, sharePlatform);
+    const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions(sharePlatform, ctx.link));
+
+    const url = buildPlatformShareUrl(sharePlatform, trackedLink, text);
+    if (url) {
+      openShareIntent(url);
+    } else if (shouldCopyShareMessage(sharePlatform)) {
+      const copied = await copyTextToClipboard(text, clipboardShareToast(sharePlatform));
+      if (!copied) showToast('Copy failed — try Copy full message', 'info');
+    } else {
+      const copied = await copyTextToClipboard(ctx.link, 'Link copied for sharing');
+      if (!copied) showToast('Copy failed — try the COPY button', 'info');
     }
 
-    let text =
-      getShareMessageTemplate() ||
-      'Free to join — grab your link in ~30 sec. #1 wins homepage feature + $10 Cash App. {link}';
-    text = text.replace(/\{link\}/g, link);
-
-    let url = '';
-    if (platform === 'x') url = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
-    else if (platform === 'whatsapp') url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    else if (platform === 'linkedin') url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`;
-    else if (platform === 'facebook') url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
-    else if (platform === 'telegram') url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
-    else if (platform === 'sms') url = `sms:?body=${encodeURIComponent(text)}`;
-    else if (platform === 'email') url = `mailto:?subject=Check%20out%20ViralRefer&body=${encodeURIComponent(text)}`;
-    else {
-      await navigator.clipboard.writeText(link);
-      showToast('Link copied for sharing', 'success');
-    }
-
-    if (url) window.open(url, '_blank', 'noopener');
-
-    const myCode = getMyReferralCode();
-    if (myCode) {
-      recordShareEvent({ platform, referrer_code: myCode, referral_link: link });
-    }
-
-    trackVisitorFunnel('ShareReferral', { platform });
+    logShare(platform, ctx.code, trackedLink);
+    onFunnelShareComplete();
   })();
 };
 registerGlobal('shareTo', shareTo);
 
-function drawWrappedCanvasText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  startY: number,
-  maxWidth: number,
-  lineHeight: number,
-): number {
-  let line = '';
-  let y = startY;
-  for (const ch of text) {
-    const testLine = line + ch;
-    if (ctx.measureText(testLine).width > maxWidth && line.length > 0) {
-      ctx.fillText(line, x, y);
-      line = ch;
-      y += lineHeight;
-    } else {
-      line = testLine;
-    }
-  }
-  if (line) ctx.fillText(line, x, y);
-  return y;
-}
+/** Mobile-first one-tap: open WhatsApp with tracked message (highest-converting channel). */
+export const boostShareWhatsApp = () => {
+  void (async () => {
+    const ctx = await resolveShareContext();
+    if (!ctx) return;
 
-function referralCodeFromLink(link: string): string {
-  const match = link.match(/\/r\/([^/?#]+)/i);
-  return match?.[1] || 'share';
+    const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions('boost', ctx.link));
+    const tracked = buildTrackedShareLink(ctx.link, 'boost');
+    const url = buildPlatformShareUrl('whatsapp', tracked, text);
+    if (url) openShareIntent(url);
+    showToast('Opening WhatsApp — send to friends & groups', 'success');
+    logShare('boost-whatsapp', ctx.code, tracked);
+    onFunnelShareComplete();
+  })();
+};
+registerGlobal('boostShareWhatsApp', boostShareWhatsApp);
+
+/** One-tap native share sheet (mobile + supported desktop browsers). */
+export const nativeShare = () => {
+  void (async () => {
+    if (!isNativeShareSupported()) {
+      showToast('Native share not available — pick a platform below', 'info');
+      return;
+    }
+
+    const ctx = await resolveShareContext();
+    if (!ctx) return;
+
+    const tracked = buildTrackedShareLink(ctx.link, 'native');
+    const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions('native', ctx.link));
+
+    try {
+      await navigator.share({
+        title: 'ViralRefer — Live Referral Leaderboard',
+        text,
+        url: tracked,
+      });
+      showToast('Shared — thanks for spreading the word!', 'success');
+      logShare('native', ctx.code, tracked);
+      onFunnelShareComplete();
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return;
+      showToast('Could not open share sheet — try a platform button', 'info');
+    }
+  })();
+};
+registerGlobal('nativeShare', nativeShare);
+
+/** Copy the full platform-optimized share message (not just the URL). */
+export const copyShareMessage = () => {
+  void (async () => {
+    const ctx = await resolveShareContext();
+    if (!ctx) return;
+
+    const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions('whatsapp', ctx.link));
+
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Full message copied — paste anywhere', 'success');
+      logShare('copy-message', ctx.code, buildTrackedShareLink(ctx.link, 'copy'));
+    } catch {
+      showToast('Copy failed — try the COPY link button', 'info');
+    }
+  })();
+};
+registerGlobal('copyShareMessage', copyShareMessage);
+
+/** Copy referral code only (VIRAL-XXXX) for verbal / DM sharing. */
+export const copyShortCode = () => {
+  void (async () => {
+    const ctx = await resolveShareContext();
+    if (!ctx) return;
+    const code = extractReferralCodeFromLink(ctx.link) || ctx.code;
+    const copied = await copyTextToClipboard(code, `Code ${code} copied`);
+    if (copied) logShare('copy-code', ctx.code, ctx.link);
+  })();
+};
+registerGlobal('copyShortCode', copyShortCode);
+
+/** Copy HTML embed button for blogs and newsletters. */
+export const copyEmbedCode = () => {
+  void (async () => {
+    const ctx = await resolveShareContext();
+    if (!ctx) return;
+    const embed = buildEmbedCode(ctx.link);
+    const copied = await copyTextToClipboard(embed, 'Embed code copied — paste into your site');
+    if (copied) logShare('embed', ctx.code, ctx.link);
+  })();
+};
+registerGlobal('copyEmbedCode', copyEmbedCode);
+
+/** Copy Markdown share blurb for Reddit, GitHub, Notion. */
+export const copyMarkdownShare = () => {
+  void (async () => {
+    const ctx = await resolveShareContext();
+    if (!ctx) return;
+    const opts = resolveShareMessageBuildOptions('copy', ctx.link);
+    const md = buildMarkdownShareMessage(ctx.link, {
+      referralCount: opts.referralCount,
+      leaderboardRank: opts.leaderboardRank,
+    });
+    const copied = await copyTextToClipboard(md, 'Markdown copied — paste on Reddit, GitHub, Notion');
+    if (copied) logShare('markdown', ctx.code, buildTrackedShareLink(ctx.link, 'copy'));
+  })();
+};
+registerGlobal('copyMarkdownShare', copyMarkdownShare);
+
+function downloadShareCard(link: string, code: string, format: 'square' | 'story'): boolean {
+  const canvas = document.createElement('canvas');
+  const ok = renderShareCard(canvas, {
+    link,
+    code,
+    format,
+    rank: getShareLeaderboardRank(),
+  });
+  if (!ok) return false;
+  downloadCanvasPng(canvas, shareCardFilename(code, format));
+  return true;
 }
 
 /**
@@ -110,88 +259,73 @@ function referralCodeFromLink(link: string): string {
  */
 export const generateXShareImage = () => {
   void (async () => {
-    const link = await ensureReferralLinkReady();
-    if (!link || !/\/r\/VIRAL-/i.test(link)) {
-      showToast('Generate your link first, then share', 'info');
-      return;
-    }
+    const ctx = await resolveShareContext();
+    if (!ctx || !/\/r\/VIRAL-/i.test(ctx.link)) return;
 
-    const canvas = document.createElement('canvas');
-    canvas.width = 1080;
-    canvas.height = 1080;
-    const ctx = canvas.getContext('2d', { alpha: true });
-    if (!ctx) {
+    if (!downloadShareCard(ctx.link, ctx.code, 'square')) {
       showToast('Could not create share image — try again', 'info');
       return;
     }
 
-    ctx.fillStyle = '#0a0a0a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
-    grad.addColorStop(0, '#7c3aed');
-    grad.addColorStop(1, '#c026d3');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, canvas.width, 90);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 64px system-ui, -apple-system, sans-serif';
-    ctx.fillText('ViralRefer', 80, 130);
-
-    ctx.fillStyle = '#a1a1aa';
-    ctx.font = '32px system-ui, sans-serif';
-    ctx.fillText('LIVE REFERRAL LEADERBOARD', 80, 175);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 48px system-ui, sans-serif';
-    ctx.fillText('My Referral Link', 80, 280);
-
-    ctx.fillStyle = '#34d399';
-    ctx.font = 'bold 36px ui-monospace, monospace';
-    const linkBottomY = drawWrappedCanvasText(ctx, link, 80, 360, 920, 48);
-
-    ctx.fillStyle = '#e4e4e7';
-    ctx.font = '36px system-ui, sans-serif';
-    ctx.fillText('Join the real-time leaderboard.', 80, linkBottomY + 80);
-
-    ctx.fillStyle = '#a1a1aa';
-    ctx.font = '28px system-ui, sans-serif';
-    ctx.fillText('Free to join — scan or type the link in the image.', 80, linkBottomY + 125);
-
-    ctx.fillStyle = '#18181b';
-    ctx.fillRect(0, 960, canvas.width, 120);
-
-    ctx.fillStyle = '#7c3aed';
-    ctx.font = 'bold 32px system-ui, sans-serif';
-    ctx.fillText('viralrefer.app', 80, 1015);
-
-    ctx.fillStyle = '#71717a';
-    ctx.font = '24px system-ui, sans-serif';
-    ctx.fillText('Attach this image to your post on X', 80, 1050);
-
-    const code = referralCodeFromLink(link);
-    const a = document.createElement('a');
-    a.download = `viralrefer-${code}.png`;
-    a.href = canvas.toDataURL('image/png');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
     const safeXText =
       'Live referral leaderboard on ViralRefer. Real-time status and rewards. (See image for my link)';
-    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(safeXText)}`, '_blank', 'noopener');
+    openShareIntent(`https://x.com/intent/tweet?text=${encodeURIComponent(safeXText)}`);
 
     showToast('Share image downloaded — attach it to your X post', 'success');
-
-    const myCode = getMyReferralCode();
-    if (myCode) {
-      recordShareEvent({ platform: 'x', referrer_code: myCode, referral_link: link });
-    }
-
-    trackVisitorFunnel('ShareReferral', { platform: 'x-image' });
+    logShare('x-image', ctx.code, ctx.link);
   })();
 };
 registerGlobal('generateXShareImage', generateXShareImage);
+
+/** Vertical 9:16 story card for Instagram, TikTok, Snapchat Stories. */
+export const generateStoryShareImage = () => {
+  void (async () => {
+    const ctx = await resolveShareContext();
+    if (!ctx || !/\/r\/VIRAL-/i.test(ctx.link)) return;
+
+    if (!downloadShareCard(ctx.link, ctx.code, 'story')) {
+      showToast('Could not create story image — try again', 'info');
+      return;
+    }
+
+    await copyTextToClipboard(ctx.link, 'Story image saved + link copied for your caption');
+    logShare('story-image', ctx.code, ctx.link);
+  })();
+};
+registerGlobal('generateStoryShareImage', generateStoryShareImage);
+
+/** Download square + story share images in one action. */
+export const downloadSharePack = () => {
+  void (async () => {
+    const ctx = await resolveShareContext();
+    if (!ctx || !/\/r\/VIRAL-/i.test(ctx.link)) return;
+
+    const squareOk = downloadShareCard(ctx.link, ctx.code, 'square');
+    window.setTimeout(() => {
+      const storyOk = downloadShareCard(ctx.link, ctx.code, 'story');
+      if (squareOk && storyOk) {
+        const isWinner = getShareLeaderboardRank() === 1;
+        showToast(
+          isWinner
+            ? 'Winner share pack downloaded — gold #1 cards'
+            : 'Share pack downloaded — square + story images',
+          'success',
+        );
+        logShare(isWinner ? 'winner-pack' : 'share-pack', ctx.code, ctx.link);
+      } else {
+        showToast('Could not create full share pack — try individual buttons', 'info');
+      }
+    }, 400);
+  })();
+};
+registerGlobal('downloadSharePack', downloadSharePack);
+
+registerGlobal('setSharePreviewPlatform', (platform: string) => {
+  setSharePreviewPlatform(platform as SharePlatform);
+});
+registerGlobal('setShareAbVariant', (variant: string) => {
+  if (variant === 'a' || variant === 'b') setShareAbVariant(variant);
+});
 
 /**
  * Opens the production claim form and submits via submit-claim Edge Function.
@@ -286,7 +420,7 @@ export const submitPrizeClaim = async () => {
     if (resultEl) {
       resultEl.innerHTML = `<span class="text-emerald-400">${escapeHtml(data.message || 'Claim submitted! We will review within 48 hours.')}</span>`;
     }
-    showToast('Claim submitted — check Admin → Prize Claims', 'success');
+    showToast('Claim submitted — we\'ll review within 48 hours.', 'success');
     trackVisitorFunnel('SubmitPrizeClaim');
 
     import('canvas-confetti').then(({ default: confetti }) => {

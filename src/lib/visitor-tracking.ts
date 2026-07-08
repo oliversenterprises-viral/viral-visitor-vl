@@ -13,6 +13,16 @@ const VISITOR_EVENTS_KEY = 'viralrefer_visitor_events';
 const VISITOR_ID_KEY = 'vr_visitor_id';
 const VISITOR_SESSION_KEY = 'vr_visitor_session_id';
 
+/** Stable anonymous visitor id (exported for interaction-tracking). */
+export function getVisitorId(): string {
+  return getOrCreateVisitorId();
+}
+
+/** Per-tab session id (exported for interaction-tracking). */
+export function getVisitorSessionId(): string {
+  return getOrCreateSessionId();
+}
+
 function getOrCreateVisitorId(): string {
   try {
     let id = localStorage.getItem(VISITOR_ID_KEY);

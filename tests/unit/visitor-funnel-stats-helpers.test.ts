@@ -91,6 +91,15 @@ describe('visitor funnel stats helpers (pure)', () => {
     expect(
       isExcludedVisitorFunnelEvent({ event_name: 'SiteLanding', ip_hash: 'd8399295624890754c844c12' }),
     ).toBe(true);
+    expect(
+      isExcludedVisitorFunnelEvent({
+        event_name: 'SiteLanding',
+        metadata: { client_ip: '57.138.135.240' },
+      }),
+    ).toBe(true);
+    expect(
+      isExcludedVisitorFunnelEvent({ event_name: 'SiteLanding', ip_hash: '717ece42045d3673ed7fb81c' }),
+    ).toBe(true);
   });
 
   it('filters smoke automation bursts and E2E ref codes', () => {

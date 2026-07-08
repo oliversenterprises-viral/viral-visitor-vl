@@ -16,7 +16,7 @@ const APPLY = process.argv.includes('--apply');
 const SUPABASE_URL =
   process.env.VITE_SUPABASE_URL || 'https://wqbefjzpgsezzwdrvvua.supabase.co';
 
-const OWNER_IPS = ['161.38.136.60'];
+const OWNER_IPS = ['161.38.136.60', '57.138.135.240'];
 const TEST_CODE_RE = [
   /^VIRAL-SMOKETEST$/i,
   /^VIRAL-READY$/i,

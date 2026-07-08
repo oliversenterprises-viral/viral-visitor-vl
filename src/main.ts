@@ -1,9 +1,16 @@
 import { initApp } from './app';
+import { applyClientReferralOgMeta, scheduleReferralOgEnrichment } from './lib/client-og-meta';
+import { initOrganicSeo } from './lib/organic-seo';
 import { captureReferralAttribution, revealReferralAttributionBanner } from './lib/referral-url';
 import { initFunnelConversion } from './lib/funnel-conversion';
 import { initAttributedReferralRecording, syncMobileReferralCta } from './referral';
 import { captureUtmAttribution } from './lib/utm-attribution';
 import { initVisitorTracking } from './lib/visitor-tracking';
+import { initInteractionTracking } from './lib/interaction-tracking';
+import { initVisitorSlim } from './lib/visitor-slim';
+import { initMobileOptimize } from './lib/mobile-optimize';
+import { initPublicClarity, refreshPublicClarityState } from './lib/public-clarity';
+import { initEmbedMode } from './lib/embed-mode';
 
 // Public layer (all onclick handlers, modals, debug, etc.)
 import { initPublic } from './public';
@@ -14,6 +21,9 @@ import { initPublic } from './public';
 // even if Supabase fetch is slow, fails, or no color_* keys exist yet in site_content.
 import { seedDefaultTextColors } from './colors';
 seedDefaultTextColors();
+initEmbedMode();
+initMobileOptimize();
+initPublicClarity();
 
 // console.log('%c[ViralRefer] main.ts module loaded', 'color:#64748b'); // silenced for prod (audit cleanup)
 
@@ -32,12 +42,18 @@ captureReferralAttribution();
 captureUtmAttribution();
 revealReferralAttributionBanner();
 initFunnelConversion();
+initVisitorSlim();
 initAttributedReferralRecording();
 initVisitorTracking();
+initInteractionTracking();
+initOrganicSeo();
+applyClientReferralOgMeta();
+scheduleReferralOgEnrichment();
 initPublic();
 initApp().catch((err) => {
   console.warn('[ViralRefer] initApp failed (degraded mode):', err);
 }).finally(() => {
   document.documentElement.setAttribute('data-vr-ready', '1');
   syncMobileReferralCta();
+  refreshPublicClarityState();
 });

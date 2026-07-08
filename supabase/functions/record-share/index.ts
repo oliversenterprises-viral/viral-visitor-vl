@@ -26,6 +26,11 @@ function extractReferrerCode(link: string, explicit?: string): string | null {
   return match?.[1] ? match[1].toUpperCase() : null;
 }
 
+function normalizeAbVariant(raw: unknown): string | null {
+  const v = String(raw || '').toLowerCase().trim();
+  return v === 'a' || v === 'b' ? v : null;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -58,7 +63,11 @@ Deno.serve(async (req: Request) => {
     }
 
     const created_at = body.timestamp || new Date().toISOString();
+    const ab_variant = normalizeAbVariant(body.ab_variant || body.abVariant);
     const attempts: Record<string, unknown>[] = [
+      ...(ab_variant
+        ? [{ platform, referrer_code, referral_link, ab_variant, created_at }]
+        : []),
       { platform, referrer_code, referral_link, created_at },
       { platform, referrer_code, created_at },
       { platform, referral_link, created_at },

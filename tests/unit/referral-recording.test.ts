@@ -12,6 +12,7 @@ vi.mock('../../src/lib/supabase', () => ({
 }));
 
 import {
+  applyExistingReferralLink,
   detectAndStoreAttribution,
   getMyReferralLinkInstant,
   hasPendingReferrerAttribution,
@@ -96,6 +97,25 @@ describe('referral recording (funnel-gated Step 1)', () => {
     expect(invokeMock).not.toHaveBeenCalled();
     expect(hasPendingReferrerAttribution()).toBe(true);
     expect(isReferralCreditedThisSession()).toBe(false);
+  });
+
+  it('applyExistingReferralLink invokes record-referral for returning attributed visitors', async () => {
+    invokeMock.mockResolvedValue({ data: { success: true }, error: null });
+
+    vi.stubGlobal('location', {
+      pathname: '/r/VIRAL-RETURN',
+      search: '',
+      href: 'http://localhost/r/VIRAL-RETURN',
+    } as Location);
+
+    detectAndStoreAttribution();
+    localStorage.setItem('vr_my_ref_code', 'VIRAL-EXISTING');
+    applyExistingReferralLink('VIRAL-EXISTING');
+    await waitForRecordReferralCount(1);
+
+    const call = recordReferralCalls()[0];
+    expect((call[1] as { body: Record<string, string> }).body.referrerCode).toBe('VIRAL-RETURN');
+    expect(isReferralCreditedThisSession()).toBe(true);
   });
 
   it('getMyReferralLinkInstant invokes record-referral for attributed visitors', async () => {

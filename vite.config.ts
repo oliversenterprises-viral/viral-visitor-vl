@@ -23,7 +23,11 @@ function spaFallback() {
       pathname === '/index.html';
     const isAsset = pathname.startsWith('/assets/') || /\.[a-zA-Z0-9]{2,8}$/.test(pathname);
     if (!isViteInternal && !isAsset) {
+      const embedPath = pathname === '/embed' || pathname === '/embed/';
       req.url = search ? `/index.html?${search}` : '/index.html';
+      if (embedPath && !search.includes('embed=')) {
+        req.url = `/index.html?embed=1${search ? `&${search.replace(/^\?/, '')}` : ''}`;
+      }
     }
     next();
   };
@@ -38,9 +42,23 @@ function spaFallback() {
   };
 }
 
+/** Inject Google Search Console verification into static HTML at build time (crawler-visible). */
+function injectGoogleSiteVerification() {
+  return {
+    name: 'inject-google-site-verification',
+    transformIndexHtml(html: string) {
+      const token = process.env.VITE_GOOGLE_SITE_VERIFICATION?.trim();
+      if (!token) return html;
+      if (html.includes('google-site-verification')) return html;
+      const tag = `    <meta name="google-site-verification" content="${token}">`;
+      return html.replace('</head>', `${tag}\n</head>`);
+    },
+  };
+}
+
 export default defineConfig({
   base: '/',
-  plugins: [tailwindcss(), spaFallback()],
+  plugins: [tailwindcss(), spaFallback(), injectGoogleSiteVerification()],
 
   resolve: {
     alias: {

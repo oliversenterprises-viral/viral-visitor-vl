@@ -1,9 +1,12 @@
 /** Shared test/owner/smoke detection for visitor_events — client + admin-action edge. */
 
-export const ADMIN_FUNNEL_EXCLUDED_IPS = ['161.38.136.60'] as const;
+export const ADMIN_FUNNEL_EXCLUDED_IPS = ['161.38.136.60', '57.138.135.240'] as const;
 
-/** ip_hash for 161.38.136.60 (VISITOR_IP_HASH_SALT viralrefer-visitor-v1). */
-export const ADMIN_FUNNEL_EXCLUDED_IP_HASHES = ['d8399295624890754c844c12'] as const;
+/** ip_hash values (VISITOR_IP_HASH_SALT viralrefer-visitor-v1). */
+export const ADMIN_FUNNEL_EXCLUDED_IP_HASHES = [
+  'd8399295624890754c844c12', // 161.38.136.60
+  '717ece42045d3673ed7fb81c', // 57.138.135.240
+] as const;
 
 function metadataRecord(event: Record<string, unknown>): Record<string, unknown> {
   const meta = event.metadata;

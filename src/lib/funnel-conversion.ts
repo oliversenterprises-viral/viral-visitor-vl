@@ -3,6 +3,8 @@
  */
 
 import { getStoredLandingRef, parseRefFromLocation } from './referral-url';
+import { initFunnelCoachChat } from './funnel-coach-chat';
+import { initFunnelGuide, syncFunnelGuide } from './funnel-guide';
 
 export type FunnelStep = 1 | 2 | 3;
 
@@ -88,11 +90,18 @@ function revealFunnelCreditGate(ref: string): void {
   if (gateRef) gateRef.textContent = ref;
 }
 
-function highlightHeroGetLink(): void {
+/** Pulse the primary hero CTA — referred (step 1) and direct (P1 conversion boost). */
+export function highlightHeroGetLink(): void {
   const btn = document.getElementById('hero-get-link-btn');
   if (!btn) return;
   btn.classList.add('hero-get-link-pulse');
   window.setTimeout(() => btn.classList.remove('hero-get-link-pulse'), 12_000);
+}
+
+/** Direct landing: draw attention to get-link without funnel credit gate. */
+export function initDirectLandingConversionBoost(loc: Location = location): void {
+  if (resolveLandingReferrerCode(loc)) return;
+  highlightHeroGetLink();
 }
 
 function scrollToReferralSection(): void {
@@ -106,18 +115,26 @@ function scrollToReferralSection(): void {
 /** Call at bootstrap after attribution banner is revealed. */
 export function initFunnelConversion(loc: Location = location): void {
   setFunnelStep(1);
+  initFunnelGuide();
+  initFunnelCoachChat();
 
   const ref = resolveLandingReferrerCode(loc);
   if (!ref) return;
 
   document.documentElement.setAttribute('data-vr-referred-landing', '1');
   document.documentElement.setAttribute('data-vr-credit-pending', '1');
-  tuneHeroForReferred(ref);
-  tuneAttributionBanner(ref);
   revealFunnelCreditGate(ref);
   highlightHeroGetLink();
   wireExpandToggle();
   scrollToReferralSection();
+}
+
+/** Referred-landing copy overrides — run after CMS content is applied. */
+export function applyReferredLandingOverrides(loc: Location = location): void {
+  const ref = resolveLandingReferrerCode(loc);
+  if (!ref) return;
+  tuneHeroForReferred(ref);
+  tuneAttributionBanner(ref);
 }
 
 /** Update the 1 → 2 → 3 progress strip in #referral-section. */
@@ -131,6 +148,7 @@ export function setFunnelStep(active: FunnelStep): void {
     if (isActive) el.setAttribute('aria-current', 'step');
     else el.removeAttribute('aria-current');
   }
+  syncFunnelGuide(active);
 }
 
 function highlightPrimaryShare(): void {
@@ -190,11 +208,22 @@ export function onReferralCreditFailed(): void {
   );
 }
 
+/** Server rejected credit (e.g. self-referral on same code). */
+export function onReferralSelfReferralBlocked(): void {
+  document.documentElement.setAttribute('data-vr-credit-status', 'failed');
+  document.documentElement.removeAttribute('data-vr-credit-pending');
+  updateCreditGate(
+    'failed',
+    'You cannot credit a visit to your own link. Share with someone else or use a fresh browser.',
+  );
+}
+
 /** After #ref-link is populated — guide visitor to COPY. */
 export function onReferralLinkReady(): void {
   document.documentElement.removeAttribute('data-vr-credit-pending');
   setFunnelStep(2);
   highlightCopyButton();
+  import('./visitor-slim').then((m) => m.refreshVisitorSlimState()).catch(() => {});
 }
 
 /** After successful clipboard copy — guide visitor to SHARE. */

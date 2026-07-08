@@ -16,8 +16,11 @@ const APPLY = process.argv.includes('--apply');
 const SUPABASE_URL =
   process.env.VITE_SUPABASE_URL || 'https://wqbefjzpgsezzwdrvvua.supabase.co';
 
-const ADMIN_FUNNEL_EXCLUDED_IPS = ['161.38.136.60'];
-const ADMIN_FUNNEL_EXCLUDED_IP_HASHES = ['d8399295624890754c844c12'];
+const ADMIN_FUNNEL_EXCLUDED_IPS = ['161.38.136.60', '57.138.135.240'];
+const ADMIN_FUNNEL_EXCLUDED_IP_HASHES = [
+  'd8399295624890754c844c12',
+  '717ece42045d3673ed7fb81c',
+];
 
 function getServiceRoleKey() {
   if (process.env.SUPABASE_SERVICE_ROLE_KEY) return process.env.SUPABASE_SERVICE_ROLE_KEY;
