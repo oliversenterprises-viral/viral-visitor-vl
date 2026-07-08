@@ -169,6 +169,16 @@ async function checkRlsLockdown() {
     interactionInsertErr?.message || 'insert succeeded (regression)',
   );
 
+  for (const table of ['visits', 'reddit_events', 'site_analytics']) {
+    const { data, error } = await supabase.from(table).select('id').limit(1);
+    const blocked = Boolean(error) || (Array.isArray(data) && data.length === 0);
+    record(
+      `rls: anon blocked from ${table} SELECT`,
+      blocked,
+      error?.message || `${data?.length ?? 0} row(s) returned`,
+    );
+  }
+
   const { data: activity, error: activityErr } = await supabase.rpc('get_public_recent_activity', {
     p_limit: 3,
   });
