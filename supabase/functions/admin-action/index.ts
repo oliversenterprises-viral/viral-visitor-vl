@@ -506,45 +506,16 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get_visitor_stats') {
-      // Prod columns verified — keep transform minimal to avoid edge runtime TypeErrors
+      // Return rows as-is (prod columns). Client normalizes; avoid edge transform bugs.
       const { data, error } = await supabaseAdmin
         .from('visitor_events')
         .select(
           'event_name, utm_source, utm_campaign, utm_content, utm_medium, ref_code, visitor_id, session_id, country_code, ip_hash, metadata, created_at',
         )
         .order('created_at', { ascending: false })
-        .limit(1500);
+        .limit(1000);
       if (error) throw error;
-      const rows = Array.isArray(data) ? data : [];
-      const lean = [];
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i] as Record<string, unknown>;
-        let meta: Record<string, unknown> = {};
-        const rawMeta = row.metadata;
-        if (rawMeta && typeof rawMeta === 'object' && !Array.isArray(rawMeta)) {
-          meta = rawMeta as Record<string, unknown>;
-        }
-        const slimMeta: Record<string, unknown> = {};
-        if (meta.client_ip != null) slimMeta.client_ip = meta.client_ip;
-        else if (meta.clientIp != null) slimMeta.client_ip = meta.clientIp;
-        if (meta.path != null) slimMeta.path = meta.path;
-        if (meta.platform != null) slimMeta.platform = meta.platform;
-        lean.push({
-          event_name: row.event_name ?? null,
-          utm_source: row.utm_source ?? null,
-          utm_campaign: row.utm_campaign ?? null,
-          utm_content: row.utm_content ?? null,
-          utm_medium: row.utm_medium ?? null,
-          ref_code: row.ref_code ?? null,
-          visitor_id: row.visitor_id ?? null,
-          session_id: row.session_id ?? null,
-          country_code: row.country_code ?? null,
-          ip_hash: row.ip_hash ?? null,
-          metadata: slimMeta,
-          created_at: row.created_at ?? null,
-        });
-      }
-      return new Response(JSON.stringify({ success: true, data: lean }), {
+      return new Response(JSON.stringify({ success: true, data: data || [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

@@ -337,43 +337,12 @@ export function computeVisitorFunnelStats(events: Array<Record<string, any>>) {
   };
 }
 
+/** @deprecated Prefer fetchVisitorFunnelEvents from visitor-funnel-fetch.ts */
 export async function getVisitorEventsForStats(): Promise<{
   events: Array<Record<string, any>>;
   source: 'server' | 'local';
   fetchError?: string;
 }> {
-  const local = getLocalVisitorEvents();
-  try {
-    const { invokeAdminAction } = await import('./admin-action-client');
-    const result = await invokeAdminAction<Array<Record<string, unknown>>>('get_visitor_stats');
-    if (!result.success) {
-      return {
-        events: local,
-        source: 'local',
-        fetchError: result.error || 'Admin session required',
-      };
-    }
-    if (!Array.isArray(result.data)) {
-      return { events: local, source: 'local', fetchError: 'Invalid server response' };
-    }
-
-    const serverEvents = result.data.map((row: Record<string, any>) => ({
-      event_name: row.event_name,
-      visitor_id: row.visitor_id,
-      session_id: row.session_id,
-      country_code: row.country_code,
-      ip_hash: row.ip_hash,
-      utm_source: row.utm_source,
-      utm_campaign: row.utm_campaign,
-      utm_content: row.utm_content,
-      utm_medium: row.utm_medium,
-      ref_code: row.ref_code,
-      metadata: parseVisitorEventMetadata(row),
-      created_at: row.created_at,
-    }));
-    return { events: serverEvents, source: 'server' };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Network error';
-    return { events: local, source: 'local', fetchError: msg };
-  }
+  const { fetchVisitorFunnelEvents } = await import('./visitor-funnel-fetch');
+  return fetchVisitorFunnelEvents();
 }
