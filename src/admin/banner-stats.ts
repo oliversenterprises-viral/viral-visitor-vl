@@ -2,10 +2,10 @@
 import {
   clearBannerEvents,
   computeBannerStats,
-  escapeHtml,
   getBannerEventsForStats,
   getLocalBannerEvents,
 } from '../content';
+import { escapeHtml } from '../lib/escape-html';
 import {
   eventTimestamp,
   formatEventTimestampLabel,

@@ -176,7 +176,14 @@ export function getTrackingHubSummary(): TrackingHubSummary | null {
 
 export function reportTrackingHubSummary(partial: Partial<TrackingHubSummary>): void {
   lastSummary = { ...(lastSummary ?? emptySummary()), ...partial, range: currentRange };
-  onSummaryChange?.(lastSummary);
+  // Guard: optional-call on a non-function throws "t is not a function" in minified prod
+  if (typeof onSummaryChange === 'function') {
+    try {
+      onSummaryChange(lastSummary);
+    } catch {
+      /* hub chrome refresh must never break stats panels */
+    }
+  }
 }
 
 export function onTrackingHubSummaryChange(

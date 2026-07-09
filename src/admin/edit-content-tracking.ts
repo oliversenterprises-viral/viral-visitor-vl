@@ -2,7 +2,7 @@
  * Unified Edit Content tracking hub — wraps visitor funnel + banner performance panels.
  */
 
-import { escapeHtml } from '../content';
+import { escapeHtml } from '../lib/escape-html';
 import { showToast } from '../ui';
 import { refreshEditContentStatsPanels } from './edit-content-clear-test';
 import { withAdminStatsReadOnlyRefresh } from '../lib/admin-stats-refresh-guard';

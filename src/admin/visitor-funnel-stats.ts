@@ -6,7 +6,7 @@ import {
 } from '../lib/visitor-tracking';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { invokeAdminAction } from '../lib/admin-action-client';
-import { escapeHtml } from '../content';
+import { escapeHtml } from '../lib/escape-html';
 import { showToast } from '../ui';
 import {
   eventTimestamp,
@@ -200,14 +200,30 @@ function renderVisitorFunnelView(
   referralFetchError?: string,
 ) {
   const safeEvents = Array.isArray(events) ? events : [];
-  const visibleEvents = filterExcludedVisitorFunnelEvents(safeEvents);
-  const rangeFiltered = filterEventsByTrackingRange(visibleEvents, getTrackingTimeRange());
-  const excludedCount = countTestVisitorFunnelEvents(safeEvents);
-  const stats = computeVisitorFunnelStats(rangeFiltered);
-  const totals = computeFunnelTotals(stats.funnel);
-  const stepConversions = computeFunnelStepConversions(stats.funnel);
-  const uniqueSessions = countUniqueSessions(rangeFiltered);
-  const isServer = source === 'server';
+  let visibleEvents: Array<Record<string, unknown>> = safeEvents;
+  let rangeFiltered: Array<Record<string, unknown>> = safeEvents;
+  let excludedCount = 0;
+  let stats: ReturnType<typeof computeVisitorFunnelStats> = computeVisitorFunnelStats([]);
+  let totals = computeFunnelTotals(stats.funnel);
+  let stepConversions = computeFunnelStepConversions(stats.funnel);
+  let uniqueSessions = 0;
+  let effectiveSource = source;
+  let effectiveError = fetchError;
+  try {
+    visibleEvents = filterExcludedVisitorFunnelEvents(safeEvents);
+    rangeFiltered = filterEventsByTrackingRange(visibleEvents, getTrackingTimeRange());
+    excludedCount = countTestVisitorFunnelEvents(safeEvents);
+    stats = computeVisitorFunnelStats(rangeFiltered);
+    totals = computeFunnelTotals(stats.funnel);
+    stepConversions = computeFunnelStepConversions(stats.funnel);
+    uniqueSessions = countUniqueSessions(rangeFiltered);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[visitor-funnel] compute failed:', err);
+    effectiveError = effectiveError || `Stats compute error: ${msg}`;
+    effectiveSource = 'local';
+  }
+  const isServer = effectiveSource === 'server';
   const refreshedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const latestTs = stats.lastEvents.length
     ? eventTimestamp(stats.lastEvents[0]!)
@@ -218,23 +234,27 @@ function renderVisitorFunnelView(
   const latestLabel = latestTs ? formatEventTimestampLabel(latestTs) : '';
 
   container.dataset.visitorCsvPayload = buildVisitorCsv(stats.funnel);
-  container.dataset.visitorStatsCopy = JSON.stringify(
-    {
-      generated: new Date().toISOString(),
-      source,
-      range: getTrackingTimeRange(),
-      totals,
-      funnel: stats.funnel,
-      viralLoops: stats.viralLoops,
-      stepConversions,
-      uniqueSessions,
-      byCountry: stats.byCountry,
-      bySource: stats.bySource,
-      lastEvents: stats.lastEvents,
-    },
-    null,
-    2,
-  );
+  try {
+    container.dataset.visitorStatsCopy = JSON.stringify(
+      {
+        generated: new Date().toISOString(),
+        source: effectiveSource,
+        range: getTrackingTimeRange(),
+        totals,
+        funnel: stats.funnel,
+        viralLoops: stats.viralLoops,
+        stepConversions,
+        uniqueSessions,
+        byCountry: stats.byCountry,
+        bySource: stats.bySource,
+        lastEvents: stats.lastEvents,
+      },
+      null,
+      2,
+    );
+  } catch {
+    delete container.dataset.visitorStatsCopy;
+  }
 
   const funnelEventCount = stats.funnelEventCount ?? rangeFiltered.length;
   const viralLoopEventCount = stats.viralLoopEventCount ?? 0;
@@ -244,7 +264,7 @@ function renderVisitorFunnelView(
     sessions: uniqueSessions,
     engaged: stats.uniqueVisitorsAny,
     landings: stats.uniqueVisitorsLanding,
-    visitorSource: source,
+    visitorSource: effectiveSource,
     visitorEvents: funnelEventCount,
   });
 
@@ -270,11 +290,11 @@ function renderVisitorFunnelView(
     html += `<div class="text-[9px] text-zinc-500 mb-2">Filtered ${excludedCount} owner/smoke/test event${excludedCount === 1 ? '' : 's'} from this view.</div>`;
   }
 
-  if (fetchError && !isServer) {
-    const needsLogin = /session required|privileges required|re-login/i.test(fetchError);
+  if (effectiveError && !isServer) {
+    const needsLogin = /session required|privileges required|re-login/i.test(effectiveError);
     html += `<div class="text-[9px] text-amber-400/90 mb-2 border border-amber-500/30 bg-amber-950/30 rounded-lg px-2 py-1.5">
       <div class="font-semibold text-amber-300">Server data unavailable</div>
-      <div class="mt-0.5">${escapeHtml(fetchError)}</div>
+      <div class="mt-0.5">${escapeHtml(effectiveError)}</div>
       <div class="mt-1 text-zinc-400">${
         needsLogin
           ? 'Close admin, click ADMIN, enter the owner password again, then open Edit Content and click ↻ Refresh.'

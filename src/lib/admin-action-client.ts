@@ -95,7 +95,11 @@ export async function invokeAdminAction<T = unknown>(
     };
   }
 
-  // Primary: supabase-js invoke (sends token in header + body for resilience)
+  // Prefer direct fetch first — more reliable for large admin stats + custom session headers
+  const viaFetch = await invokeAdminActionViaFetch<T>(action, payload, token);
+  if (viaFetch.success) return viaFetch;
+
+  // Fallback: supabase-js invoke
   try {
     const { data, error } = await supabase.functions.invoke('admin-action', {
       body: {
@@ -108,59 +112,39 @@ export async function invokeAdminAction<T = unknown>(
       },
     });
 
-    if (!error && data && typeof data === 'object') {
+    if (!error && data && typeof data === 'object' && !Array.isArray(data)) {
       const envelope = data as Record<string, unknown>;
-      if (envelope.success) {
+      if (envelope.success === true) {
         return {
           success: true,
           data: (envelope.data ?? null) as T,
           envelope,
         };
       }
-      // Business / auth rejection with HTTP 200
       if (envelope.error) {
-        const msg = String(envelope.error);
-        // Fall through to fetch if it looks like a gateway/header issue
-        if (!/privileges required|session required|re-login/i.test(msg)) {
-          return { success: false, error: msg };
-        }
+        return { success: false, error: String(envelope.error) };
       }
     }
 
-    // Non-2xx or empty body — try direct fetch before giving up
     if (error) {
-      const viaFetch = await invokeAdminActionViaFetch<T>(action, payload, token);
-      if (viaFetch.success) return viaFetch;
-      // Prefer structured body error over generic FunctionsHttpError
-      if (data && typeof data === 'object' && (data as { error?: unknown }).error) {
-        return {
-          success: false,
-          error: String((data as { error: unknown }).error),
-        };
+      // Prefer the clearer fetch error when invoke only returns a generic FunctionsHttpError
+      const invokeMsg = error.message || 'Request failed';
+      if (viaFetch.error && !/Failed to send a request/i.test(viaFetch.error)) {
+        return { success: false, error: viaFetch.error };
       }
-      return {
-        success: false,
-        error: viaFetch.success === false ? viaFetch.error : error.message || 'Request failed',
-      };
+      return { success: false, error: invokeMsg };
     }
 
-    // success:false with re-login message — try fetch once more
-    if (data && typeof data === 'object' && !(data as { success?: boolean }).success) {
-      const viaFetch = await invokeAdminActionViaFetch<T>(action, payload, token);
-      if (viaFetch.success) return viaFetch;
-      return {
-        success: false,
-        error: String((data as { error?: unknown }).error || viaFetch.error || 'Action rejected'),
-      };
-    }
-
-    return { success: false, error: 'Empty admin-action response' };
-  } catch (err) {
-    const viaFetch = await invokeAdminActionViaFetch<T>(action, payload, token);
-    if (viaFetch.success) return viaFetch;
     return {
       success: false,
-      error: err instanceof Error ? err.message : String(err),
+      error: viaFetch.error || 'Empty admin-action response',
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error:
+        viaFetch.error ||
+        (err instanceof Error ? err.message : String(err)),
     };
   }
 }

@@ -114,15 +114,8 @@ export async function getBannerEventsForStats(): Promise<{
   }
 }
 
-// Simple escaping helper to mitigate XSS in user-controlled content (banner, claims)
-export function escapeHtml(str: string): string {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+// Re-export from leaf module (admin panels should import escape-html directly to avoid cycles)
+export { escapeHtml } from './lib/escape-html';
 
 /**
  * Basic banner event tracking (Phase 2 MVP)
