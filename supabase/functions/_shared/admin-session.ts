@@ -36,17 +36,24 @@ export async function mintAdminSessionToken(secret: string): Promise<string> {
   return `${payloadB64}.${sig}`;
 }
 
+function fromBase64Url(b64url: string): string {
+  const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = b64.length % 4 === 0 ? '' : '='.repeat(4 - (b64.length % 4));
+  return atob(b64 + pad);
+}
+
 export async function verifyAdminSessionToken(secret: string, token: string): Promise<boolean> {
   if (!secret || !token) return false;
-  const dot = token.indexOf('.');
+  const cleaned = String(token).trim();
+  const dot = cleaned.indexOf('.');
   if (dot <= 0) return false;
-  const payloadB64 = token.slice(0, dot);
-  const sig = token.slice(dot + 1);
+  const payloadB64 = cleaned.slice(0, dot);
+  const sig = cleaned.slice(dot + 1);
+  if (!payloadB64 || !sig) return false;
   const expected = await hmacSign(secret, payloadB64);
   if (!timingSafeEqual(sig, expected)) return false;
   try {
-    const padded = payloadB64.replace(/-/g, '+').replace(/_/g, '/');
-    const payload = JSON.parse(atob(padded)) as { exp?: number };
+    const payload = JSON.parse(fromBase64Url(payloadB64)) as { exp?: number };
     return typeof payload.exp === 'number' && payload.exp > Date.now();
   } catch {
     return false;

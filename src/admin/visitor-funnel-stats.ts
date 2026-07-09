@@ -271,7 +271,16 @@ function renderVisitorFunnelView(
   }
 
   if (fetchError && !isServer) {
-    html += `<div class="text-[9px] text-amber-400/90 mb-2">Server unavailable (${escapeHtml(fetchError)}) — local data shown.</div>`;
+    const needsLogin = /session required|privileges required|re-login/i.test(fetchError);
+    html += `<div class="text-[9px] text-amber-400/90 mb-2 border border-amber-500/30 bg-amber-950/30 rounded-lg px-2 py-1.5">
+      <div class="font-semibold text-amber-300">Server data unavailable</div>
+      <div class="mt-0.5">${escapeHtml(fetchError)}</div>
+      <div class="mt-1 text-zinc-400">${
+        needsLogin
+          ? 'Close admin, click ADMIN, enter the owner password again, then open Edit Content and click ↻ Refresh.'
+          : 'Click ↻ Refresh. If this persists, hard-refresh the page (Ctrl+Shift+R) and re-login.'
+      }</div>
+    </div>`;
   }
 
   html += `

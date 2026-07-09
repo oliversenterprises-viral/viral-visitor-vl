@@ -174,27 +174,45 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Bridge auth: x-admin-secret (scripts/cron) OR x-admin-session (browser after password verify)
+  // Bridge auth (any one is enough):
+  // 1) x-admin-secret (scripts/cron)
+  // 2) x-admin-session header (browser after password verify)
+  // 3) body.session_token / payload.session_token (fallback when gateways strip custom headers)
   const adminSecretHeader = req.headers.get('x-admin-secret') || '';
   const adminSessionHeader = req.headers.get('x-admin-session') || '';
+  const bodySessionToken = String(
+    (body as { session_token?: unknown }).session_token ||
+      payload?.session_token ||
+      '',
+  ).trim();
   const expectedSecret = Deno.env.get('ADMIN_ACTION_SECRET') || '';
 
   let authorized = false;
   if (expectedSecret) {
     if (timingSafeEqual(adminSecretHeader, expectedSecret)) {
       authorized = true;
-    } else if (
-      adminSessionHeader &&
-      (await verifyAdminSessionToken(expectedSecret, adminSessionHeader))
-    ) {
-      authorized = true;
+    } else {
+      const sessionCandidates = [adminSessionHeader, bodySessionToken].filter(Boolean);
+      for (const candidate of sessionCandidates) {
+        if (await verifyAdminSessionToken(expectedSecret, candidate)) {
+          authorized = true;
+          break;
+        }
+      }
     }
   }
 
   if (!authorized) {
-    return new Response(JSON.stringify({ success: false, error: 'Admin privileges required' }), {
-      status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    // HTTP 200 so supabase.functions.invoke surfaces error JSON (non-2xx becomes a generic invoke error)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: expectedSecret
+          ? 'Admin privileges required — re-login with owner password'
+          : 'Server misconfiguration: ADMIN_ACTION_SECRET not set',
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
   }
 
   const supabaseAdmin = createClient(
