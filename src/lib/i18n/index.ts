@@ -77,8 +77,26 @@ export function getLocale(): Locale {
   return current;
 }
 
-export function t(key: MessageKey, locale: Locale = current): string {
-  return MESSAGES[locale]?.[key] ?? en[key] ?? key;
+export function t(
+  key: MessageKey,
+  localeOrVars?: Locale | Record<string, string | number>,
+  maybeVars?: Record<string, string | number>,
+): string {
+  let locale: Locale = current;
+  let vars: Record<string, string | number> | undefined;
+  if (typeof localeOrVars === 'string' && isLocale(localeOrVars)) {
+    locale = localeOrVars;
+    vars = maybeVars;
+  } else if (localeOrVars && typeof localeOrVars === 'object') {
+    vars = localeOrVars;
+  }
+  let out = MESSAGES[locale]?.[key] ?? en[key] ?? key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      out = out.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
+    }
+  }
+  return out;
 }
 
 /** Apply all [data-i18n] / [data-i18n-attr] / [data-i18n-placeholder] under root. */

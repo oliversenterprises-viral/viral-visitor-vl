@@ -5,6 +5,7 @@
 import { isReferredLanding } from './funnel-conversion';
 import { hasReferralLinkInUI } from './visitor-slim';
 import { initExitIntentRescue } from './exit-intent-rescue';
+import { t, type MessageKey } from './i18n';
 
 const NAV_SECTIONS = [
   { id: 'how', href: '#how' },
@@ -20,38 +21,40 @@ export function formatHeroStatsSubtext(
   if (leaderCount > 0 && uniqueReferrers <= 3) {
     const refLabel =
       leaderCount === 1 ? '1 referral' : `${leaderCount.toLocaleString()} referrals`;
-    return `#1 has only ${refLabel} — board is wide open`;
+    return t('proof.stats_thin' as MessageKey, { n: refLabel });
   }
   if (uniqueReferrers <= 1) {
-    return 'be among the first on the live board';
+    return t('proof.stats_first' as MessageKey);
   }
-  return 'early spots still open';
+  return t('proof.stats_open' as MessageKey);
 }
 
 /** Live segment of the global proof strip under hero subtitle. */
 export function formatHeroGlobalProofLive(uniqueReferrers: number): string {
-  if (uniqueReferrers <= 0) return 'Live free leaderboard';
-  if (uniqueReferrers === 1) return '1 person on the live board';
-  return `${uniqueReferrers.toLocaleString()} on the live board`;
+  if (uniqueReferrers <= 0) return t('proof.live_default' as MessageKey);
+  if (uniqueReferrers === 1) return t('proof.live_one' as MessageKey);
+  return t('proof.live_n' as MessageKey, { n: uniqueReferrers.toLocaleString() });
 }
 
 export function applyHeroStatsSubtext(uniqueReferrers: number, leaderCount: number): void {
+  const people = t('proof.stats_people' as MessageKey);
   const suffixEl = document.getElementById('hero-stats-suffix');
   if (suffixEl) {
-    suffixEl.textContent = ` people on the board · ${formatHeroStatsSubtext(uniqueReferrers, leaderCount)}`;
+    suffixEl.textContent = `${people}${formatHeroStatsSubtext(uniqueReferrers, leaderCount)}`;
   } else {
     const el = document.getElementById('hero-stats-subtext');
     if (el) {
       const countEl = document.getElementById('total-referrers');
       const countPart = countEl?.textContent?.trim() || '—';
       const suffix = formatHeroStatsSubtext(uniqueReferrers, leaderCount);
-      el.innerHTML = `<span id="total-referrers" aria-live="polite">${countPart}</span> people on the board · ${suffix}`;
+      el.innerHTML = `<span id="total-referrers" aria-live="polite">${countPart}</span>${people}${suffix}`;
     }
   }
 
   const globalLive = document.getElementById('hero-global-proof-live');
   if (globalLive) {
     globalLive.textContent = formatHeroGlobalProofLive(uniqueReferrers);
+    globalLive.removeAttribute('data-i18n');
   }
 }
 
@@ -78,7 +81,8 @@ function wireNavGetLink(): void {
   btn.dataset.vrNavBound = '1';
   btn.addEventListener('click', () => {
     if (!hasReferralLinkInUI()) {
-      const getLinkInstant = (window as unknown as { getMyReferralLinkInstant?: () => void }).getMyReferralLinkInstant;
+      const getLinkInstant = (window as unknown as { getMyReferralLinkInstant?: () => void })
+        .getMyReferralLinkInstant;
       if (getLinkInstant) {
         void getLinkInstant();
         return;
@@ -145,4 +149,10 @@ export function initPublicClarity(): void {
   wireNavScrollSpy();
   wireHeroLeaderboardLink();
   initExitIntentRescue();
+
+  window.addEventListener('vr:locale-change', () => {
+    const totalEl = document.getElementById('total-referrers');
+    const n = Number(String(totalEl?.textContent || '').replace(/[^\d]/g, '')) || 0;
+    applyHeroStatsSubtext(n, 0);
+  });
 }

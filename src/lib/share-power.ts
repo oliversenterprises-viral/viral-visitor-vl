@@ -4,6 +4,7 @@
  */
 
 import { appendChallengeParam, formatChallengeSharePrefix } from './challenge-mode';
+import { t } from './i18n';
 import { getStoredLandingRef } from './referral-url';
 import { formatShareGapNudge } from './share-gap';
 import { getViralLoopsConfig } from './viral-loops-config';
@@ -45,8 +46,9 @@ export const CLIPBOARD_SHARE_PLATFORMS: ReadonlySet<SharePlatform> = new Set([
   'snapchat',
 ]);
 
-const DEFAULT_TEMPLATE =
-  'Worldwide free leaderboard — grab your link in ~30 sec. #1 can claim a homepage feature. {link}';
+function defaultShareTemplate(): string {
+  return t('share.default');
+}
 
 const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
   whatsapp:
@@ -154,7 +156,7 @@ export function buildShareMessage(
     adminTemplate ||
     abTemplate ||
     PLATFORM_MESSAGE_OVERRIDES[platform] ||
-    DEFAULT_TEMPLATE;
+    defaultShareTemplate();
   if (adminTemplate && PLATFORM_MESSAGE_OVERRIDES[platform] && !adminTemplate.includes('{link}')) {
     raw = PLATFORM_MESSAGE_OVERRIDES[platform]!;
   }

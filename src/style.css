@@ -398,6 +398,93 @@ html[data-vr-embed] .vr-lang-picker {
   margin-right: auto;
 }
 
+.hero-global-regions {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.75);
+}
+
+.hero-live-dot,
+.hero-global-proof-live::after {
+  content: '';
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: 0.35rem;
+  border-radius: 9999px;
+  background: #34d399;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55);
+  animation: vr-live-pulse 1.6s ease-in-out infinite;
+  vertical-align: middle;
+}
+
+.hero-live-dot {
+  margin-left: 0;
+}
+
+@keyframes vr-live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+    opacity: 0.85;
+  }
+}
+
+/* Primary CTA owns the fold */
+.hero-primary-cta {
+  position: relative;
+  z-index: 1;
+  box-shadow:
+    0 12px 40px rgba(124, 58, 237, 0.45),
+    0 0 0 1px rgba(167, 139, 250, 0.25);
+}
+
+html[data-vr-direct-landing]:not([data-vr-has-link]) .hero-primary-cta {
+  animation: vr-cta-glow 2.8s ease-in-out infinite;
+}
+
+@keyframes vr-cta-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 12px 40px rgba(124, 58, 237, 0.4),
+      0 0 0 1px rgba(167, 139, 250, 0.25);
+  }
+  50% {
+    box-shadow:
+      0 16px 48px rgba(167, 139, 250, 0.55),
+      0 0 0 2px rgba(192, 132, 252, 0.35);
+  }
+}
+
+.hero-stats-quiet {
+  opacity: 0.75;
+}
+
+/* Funnel card quieter until user has a link */
+html[data-vr-direct-landing]:not([data-vr-has-link]) .funnel-journey-quiet {
+  opacity: 0.82;
+  transform: scale(0.99);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+html[data-vr-direct-landing]:not([data-vr-has-link]) .funnel-journey-quiet .funnel-guide-coach {
+  display: none;
+}
+
+html[data-vr-has-link] .funnel-journey-quiet,
+html[data-vr-referred-landing] .funnel-journey-quiet {
+  opacity: 1;
+  transform: none;
+}
+
 .hero-global-proof-item {
   display: inline-flex;
   align-items: center;

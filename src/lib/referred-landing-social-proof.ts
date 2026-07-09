@@ -11,6 +11,7 @@ import {
 
 function paintHeroSocialProof(el: HTMLElement, html: string): void {
   if (!html) {
+    // Keep container available for FOMO re-paint; do not leave a dead hole
     el.classList.add('hidden');
     el.innerHTML = '';
     return;

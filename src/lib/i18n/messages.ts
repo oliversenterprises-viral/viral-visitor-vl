@@ -83,6 +83,55 @@ export const en = {
   'footer.terms': 'Terms',
 
   'lang.hint': 'Page language',
+
+  // Social proof / liveliness
+  'proof.fomo_empty': 'Board is open worldwide — first movers can claim #1',
+  'proof.fomo_thin': '#1 has only {n} referral(s) — wide open board',
+  'proof.competing_one': '1 referrer competing now',
+  'proof.competing_n': '{n} referrers competing now',
+  'proof.velocity_one': '1 referral in the last hour',
+  'proof.velocity_n': '{n} referrals in the last hour',
+  'proof.just_shared': '{code} just shared on {platform}',
+  'proof.just_joined': '{code} just joined',
+  'proof.live_n': '{n} on the live board',
+  'proof.live_one': '1 person on the live board',
+  'proof.live_default': 'Live free leaderboard',
+  'proof.stats_people': ' people on the board · ',
+  'proof.stats_thin': '#1 has only {n} — board is wide open',
+  'proof.stats_first': 'be among the first on the live board',
+  'proof.stats_open': 'early spots still open',
+
+  'global.regions': 'Americas · Europe · Asia · Africa · Anywhere',
+  'global.join': 'Join from any country',
+
+  // Exit intent
+  'exit.title': 'Wait — free worldwide link',
+  'exit.body': 'One tap (~30 sec). Open worldwide. No signup. Get your link and climb the live board.',
+  'exit.cta': 'Get my free link',
+
+  // Coach
+  'coach.greet_direct':
+    'Hi — free worldwide link in ~30 seconds. Share to climb; #1 claims a homepage feature. Tap Get my link to start.',
+  'coach.greet_referred':
+    'Hi — you landed via {code}. {credit} I will walk you through: get link → copy → share.',
+  'coach.credit_ok': 'Your visit is credited.',
+  'coach.credit_need': 'Tap Get my link first so your visit counts for them.',
+  'coach.act_get_link': 'Get my link',
+  'coach.act_copy': 'Copy my link',
+  'coach.act_share': 'Share now',
+  'coach.act_board': 'See leaderboard',
+  'coach.act_prize': 'What do I get?',
+  'coach.act_help': 'Where am I?',
+  'coach.prize_reply':
+    'Open worldwide (18+). Top referrer can claim a homepage banner feature after verification. No cash prize — pure visibility. Live board updates in real time.',
+  'coach.free_reply':
+    'Totally free — no email signup, no payment. Tap Get my link, copy it, and share anywhere.',
+  'coach.fallback':
+    "I'm your funnel coach — ask about getting your link, copying, sharing, or the homepage feature.",
+
+  // Share (default template)
+  'share.default':
+    'Worldwide free leaderboard — grab your link in ~30 sec. #1 can claim a homepage feature. {link}',
 } as const;
 
 export type MessageKey = keyof typeof en;
@@ -149,6 +198,46 @@ const es = dict({
   'footer.privacy': 'Privacidad',
   'footer.terms': 'Términos',
   'lang.hint': 'Idioma de la página',
+  'proof.fomo_empty': 'El ranking está abierto en todo el mundo — los primeros pueden llegar al #1',
+  'proof.fomo_thin': 'El #1 solo tiene {n} referido(s) — ranking muy abierto',
+  'proof.competing_one': '1 referente compitiendo ahora',
+  'proof.competing_n': '{n} referentes compitiendo ahora',
+  'proof.velocity_one': '1 referido en la última hora',
+  'proof.velocity_n': '{n} referidos en la última hora',
+  'proof.just_shared': '{code} acaba de compartir en {platform}',
+  'proof.just_joined': '{code} acaba de unirse',
+  'proof.live_n': '{n} en el ranking en vivo',
+  'proof.live_one': '1 persona en el ranking en vivo',
+  'proof.live_default': 'Ranking en vivo gratis',
+  'proof.stats_people': ' personas en el ranking · ',
+  'proof.stats_thin': 'El #1 solo tiene {n} — ranking muy abierto',
+  'proof.stats_first': 'sé de los primeros en el ranking en vivo',
+  'proof.stats_open': 'puestos iniciales aún abiertos',
+  'global.regions': 'Américas · Europa · Asia · África · Donde sea',
+  'global.join': 'Únete desde cualquier país',
+  'exit.title': 'Espera — enlace gratis mundial',
+  'exit.body': 'Un toque (~30 seg). Abierto en todo el mundo. Sin registro. Consigue tu enlace y sube en el ranking.',
+  'exit.cta': 'Obtener mi enlace gratis',
+  'coach.greet_direct':
+    'Hola — enlace gratis mundial en ~30 segundos. Comparte para subir; el #1 reclama el destacado. Toca Obtener mi enlace.',
+  'coach.greet_referred':
+    'Hola — llegaste con {code}. {credit} Te guío: enlace → copiar → compartir.',
+  'coach.credit_ok': 'Tu visita está acreditada.',
+  'coach.credit_need': 'Toca Obtener mi enlace primero para que cuente para ellos.',
+  'coach.act_get_link': 'Obtener mi enlace',
+  'coach.act_copy': 'Copiar mi enlace',
+  'coach.act_share': 'Compartir ahora',
+  'coach.act_board': 'Ver ranking',
+  'coach.act_prize': '¿Qué obtengo?',
+  'coach.act_help': '¿Dónde estoy?',
+  'coach.prize_reply':
+    'Abierto en todo el mundo (18+). El top puede reclamar un banner en la web tras verificación. Sin premio en efectivo. El ranking se actualiza en vivo.',
+  'coach.free_reply':
+    'Totalmente gratis — sin email ni pago. Toca Obtener mi enlace, cópialo y comparte.',
+  'coach.fallback':
+    'Soy tu coach — pregunta por el enlace, copiar, compartir o el destacado en la web.',
+  'share.default':
+    'Ranking gratis mundial — tu enlace en ~30 seg. El #1 puede reclamar un destacado. {link}',
 });
 
 const fr = dict({

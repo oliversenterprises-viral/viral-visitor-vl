@@ -4,6 +4,7 @@
 
 import type { FunnelStep } from './funnel-conversion';
 import { getFunnelGuideCopy } from './funnel-guide-helpers';
+import { t, type MessageKey } from './i18n';
 
 export type CoachChatStep = FunnelStep | 'complete' | null;
 
@@ -56,6 +57,10 @@ export function readCoachChatContext(doc: Document = document): CoachChatContext
   };
 }
 
+function tr(key: string, vars?: Record<string, string | number>): string {
+  return t(key as MessageKey, vars);
+}
+
 export function getCoachGreeting(ctx: CoachChatContext): CoachChatMessage {
   if (ctx.step === 'complete') {
     return coachMsg(
@@ -67,21 +72,15 @@ export function getCoachGreeting(ctx: CoachChatContext): CoachChatMessage {
 
   if (ctx.isReferred && ctx.referrerCode) {
     const credit =
-      ctx.creditStatus === 'credited'
-        ? 'Your visit is credited.'
-        : 'Tap Get my link first so your visit counts for them.';
+      ctx.creditStatus === 'credited' ? tr('coach.credit_ok') : tr('coach.credit_need');
     return coachMsg(
       'greet-referred',
-      `Hi — I'm your ViralRefer coach. You landed via ${ctx.referrerCode}. ${credit} I'll walk you through all 3 steps: get link → copy → share.`,
+      tr('coach.greet_referred', { code: ctx.referrerCode, credit }),
       quickActions(ctx),
     );
   }
 
-  return coachMsg(
-    'greet-direct',
-    "Hi — free worldwide link in ~30 seconds. Share to climb; #1 claims a homepage feature. Tap Get my link to start.",
-    quickActions(ctx),
-  );
+  return coachMsg('greet-direct', tr('coach.greet_direct'), quickActions(ctx));
 }
 
 export function getCoachStepNudge(ctx: CoachChatContext): CoachChatMessage | null {
@@ -99,20 +98,20 @@ export function quickActions(ctx: CoachChatContext): CoachChatAction[] {
   const actions: CoachChatAction[] = [];
 
   if (step === 1 || step === null) {
-    actions.push({ id: 'act-get-link', label: 'Get my link', kind: 'get-link' });
+    actions.push({ id: 'act-get-link', label: tr('coach.act_get_link'), kind: 'get-link' });
   }
   if (step === 2) {
-    actions.push({ id: 'act-copy', label: 'Copy my link', kind: 'copy-link' });
+    actions.push({ id: 'act-copy', label: tr('coach.act_copy'), kind: 'copy-link' });
   }
   if (step === 3) {
-    actions.push({ id: 'act-share', label: 'Share now', kind: 'share' });
+    actions.push({ id: 'act-share', label: tr('coach.act_share'), kind: 'share' });
   }
   if (step === 'complete') {
-    actions.push({ id: 'act-leaderboard', label: 'See leaderboard', kind: 'leaderboard' });
+    actions.push({ id: 'act-leaderboard', label: tr('coach.act_board'), kind: 'leaderboard' });
   }
 
-  actions.push({ id: 'act-prize', label: 'What do I get?', kind: 'prize' });
-  actions.push({ id: 'act-help', label: 'Where am I?', kind: 'help' });
+  actions.push({ id: 'act-prize', label: tr('coach.act_prize'), kind: 'prize' });
+  actions.push({ id: 'act-help', label: tr('coach.act_help'), kind: 'help' });
   return actions;
 }
 
@@ -131,22 +130,14 @@ export function resolveCoachReply(input: string, ctx: CoachChatContext): CoachCh
   }
 
   if (/win|prize|reward|\$10|cash|banner|#1|leader|feature/.test(q)) {
-    return coachMsg(
-      'prize',
-      'Open worldwide (18+). Top referrer can claim a homepage banner feature after verification (min. referrals as shown on site). No cash prize — pure visibility and social proof. The live board updates in real time.',
-      [
-        { id: 'act-leaderboard', label: 'See leaderboard', kind: 'leaderboard' },
-        ...quickActions(ctx).filter((a) => a.kind !== 'prize'),
-      ],
-    );
+    return coachMsg('prize', tr('coach.prize_reply'), [
+      { id: 'act-leaderboard', label: tr('coach.act_board'), kind: 'leaderboard' },
+      ...quickActions(ctx).filter((a) => a.kind !== 'prize'),
+    ]);
   }
 
   if (/free|cost|signup|email|pay/.test(q)) {
-    return coachMsg(
-      'free',
-      'Totally free — no email signup, no payment. Tap Get my link, copy it, and share anywhere.',
-      quickActions(ctx),
-    );
+    return coachMsg('free', tr('coach.free_reply'), quickActions(ctx));
   }
 
   if (/get link|referral link|my link|step 1/.test(q)) {
@@ -187,11 +178,7 @@ export function resolveCoachReply(input: string, ctx: CoachChatContext): CoachCh
     );
   }
 
-  return coachMsg(
-    'fallback',
-    "I'm your funnel coach — ask about getting your link, copying, sharing, or the homepage feature. Or tap a button below.",
-    quickActions(ctx),
-  );
+  return coachMsg('fallback', tr('coach.fallback'), quickActions(ctx));
 }
 
 function describeStepStatus(ctx: CoachChatContext): string {

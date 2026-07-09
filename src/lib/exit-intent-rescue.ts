@@ -5,6 +5,7 @@
 import { isEmbedMode } from './embed-mode';
 import { isReferredLanding } from './funnel-conversion';
 import { hasReferralLinkInUI } from './visitor-slim';
+import { t } from './i18n';
 
 
 const SESSION_KEY = 'vr_exit_rescue_done';
@@ -27,9 +28,9 @@ export function shouldShowExitRescue(opts: ExitRescueEligibility): boolean {
 
 export function buildExitRescueMessage(): { title: string; body: string; cta: string } {
   return {
-    title: 'Wait — free worldwide link',
-    body: 'One tap (~30 sec). Open worldwide. No signup. Get your link and climb the live board.',
-    cta: 'Get my free link',
+    title: t('exit.title'),
+    body: t('exit.body'),
+    cta: t('exit.cta'),
   };
 }
 

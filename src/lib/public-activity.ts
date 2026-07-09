@@ -5,6 +5,7 @@
 import { isTestShareReferrerCode } from '../admin/share-analytics-helpers';
 import { formatRankMoveLabel, type RankMoveActivityRow } from './rank-move-activity';
 import { isTestReferralRecord } from './test-referral';
+import { t, type MessageKey } from './i18n';
 
 function asRankMove(row: PublicActivityRow): RankMoveActivityRow | null {
   if (row.kind !== 'rank_move' || row.new_rank == null) return null;
@@ -152,7 +153,7 @@ export function buildReferredHeroSocialProofText(
   return parts.join(' · ');
 }
 
-/** One-line social proof for direct homepage landings (P1). */
+/** One-line social proof for direct homepage landings (P1). Always returns FOMO if board quiet. */
 export function buildDirectHeroSocialProofText(
   rows: readonly PublicActivityRow[],
   velocityLastHour: number,
@@ -162,25 +163,17 @@ export function buildDirectHeroSocialProofText(
   const parts: string[] = [];
 
   if (leaderCount > 0 && uniqueReferrers <= 3) {
-    parts.push(
-      leaderCount === 1
-        ? '#1 has only 1 referral — wide open board'
-        : `#1 has only ${leaderCount} referrals — wide open board`,
-    );
-  } else if (uniqueReferrers > 0) {
-    parts.push(
-      uniqueReferrers === 1
-        ? '1 referrer competing now'
-        : `${uniqueReferrers} referrers competing now`,
-    );
+    parts.push(t('proof.fomo_thin' as MessageKey, { n: leaderCount }));
+  } else if (uniqueReferrers === 1) {
+    parts.push(t('proof.competing_one' as MessageKey));
+  } else if (uniqueReferrers > 1) {
+    parts.push(t('proof.competing_n' as MessageKey, { n: uniqueReferrers }));
   }
 
-  if (velocityLastHour > 0) {
-    parts.push(
-      velocityLastHour === 1
-        ? '1 referral in the last hour'
-        : `${velocityLastHour} referrals in the last hour`,
-    );
+  if (velocityLastHour === 1) {
+    parts.push(t('proof.velocity_one' as MessageKey));
+  } else if (velocityLastHour > 1) {
+    parts.push(t('proof.velocity_n' as MessageKey, { n: velocityLastHour }));
   }
 
   const rankLatest = rows.map(asRankMove).find((r) => r != null);
@@ -190,21 +183,28 @@ export function buildDirectHeroSocialProofText(
     const latest = rows[0];
     if (latest?.kind === 'share') {
       const platform = formatSharePlatformLabel(latest.platform);
-      parts.push(`${latest.referrer_code} just shared on ${platform}`);
+      parts.push(
+        t('proof.just_shared' as MessageKey, {
+          code: latest.referrer_code,
+          platform,
+        }),
+      );
     } else if (latest?.kind === 'referral') {
-      parts.push(`${latest.referrer_code} just joined`);
+      parts.push(t('proof.just_joined' as MessageKey, { code: latest.referrer_code }));
     }
   }
 
+  // Never return empty — thin boards need FOMO, not silence
+  if (!parts.length) return t('proof.fomo_empty' as MessageKey);
   return parts.join(' · ');
 }
 
 function buildHeroSocialProofHtml(line: string): string {
   if (!line) return '';
-  return `<div class="hero-referred-social-proof inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2.5 rounded-2xl border border-violet-400/30 bg-violet-500/10 text-sm text-violet-100/95 max-w-xl mx-auto">
+  return `<div class="hero-referred-social-proof inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2.5 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 text-sm text-emerald-50/95 max-w-xl mx-auto shadow-[0_0_24px_rgba(16,185,129,0.12)]">
     <span class="text-amber-400 shrink-0" aria-hidden="true">⚡</span>
     <span class="text-center leading-snug">${escapeHtml(line)}</span>
-    <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shrink-0" aria-hidden="true"></span>
+    <span class="hero-live-dot shrink-0" aria-hidden="true"></span>
   </div>`;
 }
 
