@@ -124,55 +124,66 @@
 
     <div class="pt-20 sm:pt-24 pb-12 sm:pb-16 max-w-6xl mx-auto px-4 sm:px-6">
        
-        <!-- HERO -->
-        <div class="rounded-2xl sm:rounded-3xl p-6 sm:p-12 md:p-20 text-center hero-gradient shadow-2xl">
+        <!-- HERO — conversion polish: one primary action, global proof, quiet first paint -->
+        <div class="rounded-2xl sm:rounded-3xl p-6 sm:p-12 md:p-16 text-center hero-gradient shadow-2xl">
             <div class="max-w-3xl mx-auto">
-                <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-xs font-medium px-4 py-2 rounded-3xl mb-8 border border-white/20" style="color: var(--text-hero-badge, #e0e7ff)">
-                    <i class="fa-solid fa-bolt text-amber-300/90" aria-hidden="true"></i>
-                    WORLDWIDE &bull; FREE TO JOIN
+                <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-xs font-medium px-4 py-2 rounded-3xl mb-5 sm:mb-6 border border-white/20" style="color: var(--text-hero-badge, #e0e7ff)">
+                    <i class="fa-solid fa-globe text-emerald-300/90" aria-hidden="true"></i>
+                    WORLDWIDE &bull; FREE
                 </div>
                
-                <h1 id="hero-title" class="vr-hero-title text-[2.25rem] sm:text-[58px] md:text-[72px] lg:text-[88px] font-bold tracking-[-0.05em] logo-font leading-[1.05] mb-4 sm:mb-6" style="color: var(--text-hero-title, #ffffff); text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                <h1 id="hero-title" class="vr-hero-title text-[2.25rem] sm:text-[52px] md:text-[64px] lg:text-[76px] font-bold tracking-[-0.05em] logo-font leading-[1.05] mb-3 sm:mb-4" style="color: var(--text-hero-title, #ffffff); text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
                     <span id="hero-title-line1">Get your free link in 30 seconds.</span><br>
                     <span id="hero-title-accent" class="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-cyan-400 drop-shadow-[0_4px_20px_rgba(192,132,252,0.5)]" style="color: var(--text-hero-accent, #c084fc);">
                         Climb to #1 &mdash; claim homepage feature.
                     </span>
                 </h1>
                
-                <p id="hero-subtitle" class="text-base sm:text-xl md:text-2xl text-zinc-200 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed px-1">
-                    Free worldwide. No signup. Copy your link and share anywhere &mdash; every referral moves you up the live board.
+                <p id="hero-subtitle" class="text-base sm:text-lg md:text-xl text-zinc-200 max-w-xl mx-auto mb-5 sm:mb-6 leading-relaxed px-1">
+                    Open worldwide. No signup. One tap, then share anywhere.
                 </p>
 
-                <div id="hero-referred-social-proof" class="hidden mb-4" role="status" aria-live="polite"></div>
-                <div id="hero-referred-trust-pack" class="hidden mb-8 mx-auto max-w-xl" role="status" aria-live="polite" data-vr-zone="trust-pack"></div>
+                <!-- Global proof strip (static + live count) -->
+                <div id="hero-global-proof" class="hero-global-proof mb-5 sm:mb-6" role="status" aria-live="polite">
+                    <span class="hero-global-proof-item"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i> Open worldwide</span>
+                    <span class="hero-global-proof-sep" aria-hidden="true">·</span>
+                    <span class="hero-global-proof-item">18+</span>
+                    <span class="hero-global-proof-sep" aria-hidden="true">·</span>
+                    <span class="hero-global-proof-item">No email</span>
+                    <span class="hero-global-proof-sep" aria-hidden="true">·</span>
+                    <span class="hero-global-proof-item" id="hero-global-proof-live">Live free leaderboard</span>
+                </div>
 
-                <div class="flex flex-col items-stretch justify-center gap-3 w-full max-w-md sm:max-w-lg mx-auto">
+                <div id="hero-referred-social-proof" class="hidden mb-4" role="status" aria-live="polite"></div>
+                <div id="hero-referred-trust-pack" class="hidden mb-6 mx-auto max-w-xl" role="status" aria-live="polite" data-vr-zone="trust-pack"></div>
+
+                <div class="flex flex-col items-stretch justify-center gap-2.5 w-full max-w-md sm:max-w-lg mx-auto">
                     <button id="hero-get-link-btn" data-vr-zone="hero-get-link" onclick="getMyReferralLinkInstant()" 
-                            class="btn-primary w-full px-8 py-4 sm:px-12 sm:py-6 text-lg sm:text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/30 min-h-[48px]">
-                        <i class="fa-solid fa-gift" aria-hidden="true"></i>
+                            class="btn-primary w-full px-8 py-4 sm:px-12 sm:py-5 text-lg sm:text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/30 min-h-[48px]">
+                        <i class="fa-solid fa-link" aria-hidden="true"></i>
                         <span>Get my referral link</span>
                     </button>
                    
                     <button id="hero-leaderboard-btn" data-vr-zone="hero-leaderboard" onclick="document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth' })" 
-                            class="btn-secondary w-full sm:w-auto px-8 py-4 sm:px-10 sm:py-6 text-lg sm:text-xl flex items-center justify-center gap-3 min-h-[48px]">
+                            class="hero-secondary-cta w-full px-6 py-2.5 text-sm sm:text-base flex items-center justify-center gap-2 min-h-[40px]">
                         See leaderboard
                     </button>
                 </div>
 
-                <p id="hero-trust-line" class="mt-5 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
-                    Open worldwide &bull; No email &bull; No payment &bull; Your link in ~5 seconds
+                <p id="hero-trust-line" class="mt-4 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
+                    Free recognition for #1 &bull; Your link in ~5 seconds
                 </p>
-                <p class="mt-3">
+                <p class="mt-2">
                     <a href="#leaderboard" id="hero-leaderboard-link" data-vr-zone="hero-leaderboard-link" class="hero-leaderboard-text-link text-sm text-violet-300/90 hover:text-violet-200 underline underline-offset-4 decoration-violet-500/40">
-                        See who&rsquo;s winning on the live board &darr;
+                        See who&rsquo;s on the live board &darr;
                     </a>
                 </p>
 
-                <div id="hero-campaign-badge" data-vr-slim-redundant class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-xs font-medium px-3 py-1 rounded-3xl mb-3 mt-4">
-                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> WORLDWIDE &bull; FREE &bull; NO SIGNUP
+                <div id="hero-campaign-badge" data-vr-slim-redundant class="hidden" aria-hidden="true">
+                    WORLDWIDE &bull; FREE &bull; NO SIGNUP
                 </div>
-                <div id="hero-stats-subtext" class="mt-1 text-sm text-zinc-400 tracking-wide">
-                    <span id="total-referrers" aria-live="polite">—</span><span id="hero-stats-suffix"> referrers and counting • Early spots on the leaderboard are wide open</span>
+                <div id="hero-stats-subtext" class="mt-4 text-sm text-zinc-400 tracking-wide">
+                    <span id="total-referrers" aria-live="polite">—</span><span id="hero-stats-suffix"> people on the board · early spots still open</span>
                     <p id="hero-sprint-line" class="hidden text-sm text-cyan-300/90 mt-2 font-medium" aria-live="polite"></p>
                 </div>
             </div>

@@ -30,7 +30,7 @@ describe('funnel-coach-chat-helpers', () => {
       referrerCode: null,
       creditStatus: null,
     });
-    expect(direct.text).toMatch(/ViralRefer coach/i);
+    expect(direct.text).toMatch(/free worldwide|homepage feature|Get my link/i);
   });
 
   it('getCoachStepNudge returns step-specific copy', () => {

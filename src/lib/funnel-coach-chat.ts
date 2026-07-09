@@ -189,7 +189,7 @@ function buildShell(): void {
       <div id="funnel-coach-chat-messages" class="funnel-coach-chat-messages" aria-live="polite"></div>
       <div id="funnel-coach-chat-actions" class="funnel-coach-chat-actions"></div>
       <form id="funnel-coach-chat-form" class="funnel-coach-chat-form">
-        <input type="text" id="funnel-coach-chat-input" class="funnel-coach-chat-input" placeholder="Ask how to win, share, or get your link…" autocomplete="off" maxlength="200" />
+        <input type="text" id="funnel-coach-chat-input" class="funnel-coach-chat-input" placeholder="Ask about your link, share, or homepage feature…" autocomplete="off" maxlength="200" />
         <button type="submit" class="funnel-coach-chat-send" aria-label="Send">↑</button>
       </form>
     </div>`;
@@ -282,9 +282,15 @@ export function initFunnelCoachChat(): void {
     pushMessage(resolveCoachReply(text, readCoachChatContext()));
   });
 
-  pushMessage(getCoachGreeting(readCoachChatContext()));
+  // Conversion polish: stay closed on first paint. Seed unread badge only —
+  // greeting loads when the visitor opens the panel (see toggle handler).
+  setPanelOpen(false);
+  document.getElementById('funnel-coach-chat-badge')?.classList.remove('hidden');
 
   const onFunnelAttrChange = (): void => {
+    // Only nudge while panel is open — avoid hijacking first paint
+    const panel = document.getElementById('funnel-coach-chat-panel');
+    if (!panel || panel.classList.contains('hidden')) return;
     const ctx = readCoachChatContext();
     const stepKey = ctx.step === null ? 'none' : String(ctx.step);
     if (stepKey === lastNudgeStep) return;
@@ -305,10 +311,9 @@ export function initFunnelCoachChat(): void {
 
   lastNudgeStep = readCoachChatContext().step === null ? 'none' : String(readCoachChatContext().step);
 
+  // Soft pulse on the closed FAB so help is discoverable without opening the panel
   window.setTimeout(() => {
-    if (document.documentElement.hasAttribute('data-vr-referred-landing')) {
-      toggle?.classList.add('funnel-coach-chat-toggle--pulse');
-      window.setTimeout(() => toggle?.classList.remove('funnel-coach-chat-toggle--pulse'), 8000);
-    }
-  }, 2500);
+    toggle?.classList.add('funnel-coach-chat-toggle--pulse');
+    window.setTimeout(() => toggle?.classList.remove('funnel-coach-chat-toggle--pulse'), 5000);
+  }, 4000);
 }

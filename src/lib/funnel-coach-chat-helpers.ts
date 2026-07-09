@@ -79,7 +79,7 @@ export function getCoachGreeting(ctx: CoachChatContext): CoachChatMessage {
 
   return coachMsg(
     'greet-direct',
-    "Hi — I'm your ViralRefer coach. Open worldwide. Free link in ~30 seconds, then share to climb the leaderboard. #1 can claim a homepage feature. Where should we start?",
+    "Hi — free worldwide link in ~30 seconds. Share to climb; #1 claims a homepage feature. Tap Get my link to start.",
     quickActions(ctx),
   );
 }

@@ -331,6 +331,64 @@ html[data-vr-share-mobile] #share-whatsapp-primary.share-btn {
   border-color: rgba(251, 191, 36, 0.45) !important;
 }
 
+/* Conversion polish: global proof strip under hero subtitle */
+.hero-global-proof {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.55rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(52, 211, 153, 0.22);
+  background: rgba(16, 185, 129, 0.08);
+  color: #d1fae5;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-global-proof-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.hero-global-proof-item i {
+  color: #6ee7b7;
+  font-size: 0.85em;
+}
+
+.hero-global-proof-sep {
+  color: rgba(167, 243, 208, 0.45);
+  font-weight: 400;
+  user-select: none;
+}
+
+/* Demote secondary hero CTA so Get link owns the fold */
+.hero-secondary-cta {
+  color: #c4b5fd;
+  background: transparent;
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.hero-secondary-cta:hover {
+  background: rgba(124, 58, 237, 0.12);
+  border-color: rgba(167, 139, 250, 0.45);
+  color: #ede9fe;
+}
+
+html[data-vr-direct-landing]:not([data-vr-has-link]) .hero-secondary-cta {
+  opacity: 0.85;
+}
+
 /* Phase 2/3: hero social proof (referred + direct) */
 #hero-referred-social-proof:not(.hidden) {
   display: block;
@@ -816,7 +874,7 @@ html[data-vr-funnel-guide-step='3'] .funnel-guide-target-ring {
   bottom: calc(100% + 0.65rem);
   width: min(22rem, calc(100vw - 2rem));
   max-height: min(28rem, 70vh);
-  display: flex;
+  /* flex only when open — do not set display:flex here or it overrides .hidden */
   flex-direction: column;
   border-radius: 1.25rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -824,6 +882,14 @@ html[data-vr-funnel-guide-step='3'] .funnel-guide-target-ring {
   backdrop-filter: blur(12px);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
   overflow: hidden;
+}
+
+.funnel-coach-chat-panel:not(.hidden) {
+  display: flex;
+}
+
+.funnel-coach-chat-panel.hidden {
+  display: none !important;
 }
 
 .funnel-coach-chat-header {

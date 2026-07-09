@@ -15,22 +15,22 @@ export interface HeroCtaCopy {
   buttonLabel: string;
 }
 
+/** Tight conversion copy — one action, worldwide, no cash spam. */
 export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
   control: {
+    badge: 'WORLDWIDE • FREE',
     titleLine1: 'Get your free link in 30 seconds.',
     titleAccent: 'Climb to #1 — claim homepage feature.',
-    subtitle:
-      'Free worldwide. No signup. Copy your link and share anywhere — every referral moves you up the live board.',
-    trustLine: 'Open worldwide • No email • No payment • Your link in ~5 seconds',
+    subtitle: 'Open worldwide. No signup. One tap, then share anywhere.',
+    trustLine: 'Free recognition for #1 • Your link in ~5 seconds',
     buttonLabel: 'Get my referral link',
   },
   prize: {
-    badge: 'WORLDWIDE • FREE LEADERBOARD',
-    titleLine1: 'Claim a homepage feature for your site.',
-    titleAccent: 'Get your link in 30 seconds — climb to #1.',
-    subtitle:
-      'Open worldwide. Free forever. No signup. Tap below, copy your link, share once — every friend who visits moves you up the live board.',
-    trustLine: 'Worldwide 18+ • Homepage feature for #1 • No cash prize',
+    badge: 'WORLDWIDE • FREE',
+    titleLine1: 'Get your free link in 30 seconds.',
+    titleAccent: 'Climb to #1 — claim homepage feature.',
+    subtitle: 'Open worldwide. Free forever. Tap below, then share once.',
+    trustLine: 'Homepage feature for #1 • No email • ~5 seconds',
     buttonLabel: 'Get my free link',
   },
 };
@@ -63,6 +63,7 @@ export function applyHeroCtaVariant(): void {
   if (isReferredLanding()) return;
 
   const variant = getHeroCtaVariant();
+  // control = static HTML / CMS; prize = conversion-optimized paint
   if (variant !== 'prize') return;
 
   applyHeroCopyToDom(HERO_CTA_COPY.prize);
