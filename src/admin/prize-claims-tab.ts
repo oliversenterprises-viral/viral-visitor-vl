@@ -172,7 +172,7 @@ export function showClaimDetails(claim: AdminClaimRow) {
       <div><span class="text-zinc-400">Paid At</span><div class="text-xs">${paidAt}</div></div>
       <div><span class="text-zinc-400">Website</span><div class="break-all">${safeWebsite}</div></div>
       <div>
-        <span class="text-zinc-400">Cash App Cashtag</span>
+        <span class="text-zinc-400">Cashtag (legacy)</span>
         <div class="flex items-center gap-2">
           <div class="font-mono">${safeCashtag}</div>
           ${claim.cashtag ? `

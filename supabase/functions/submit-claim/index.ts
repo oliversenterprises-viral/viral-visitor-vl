@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
-import { computeClaimLeader, isSafeHttpUrl, isValidCashtag } from '../_shared/claim-leader.ts';
+import { computeClaimLeader, isSafeHttpUrl } from '../_shared/claim-leader.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -72,21 +72,17 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Require at least one contact method for payout/review
+  // Homepage feature claim — website required (no cash prize on public product)
   const websiteTrim = website.trim();
-  const cashtagTrim = cashtag.trim();
-  if (!websiteTrim && !cashtagTrim) {
-    return new Response(JSON.stringify({ success: false, error: 'Cashtag or website is required' }), {
+  // Ignore leftover cashtag payloads from old clients
+  void cashtag;
+  if (!websiteTrim) {
+    return new Response(JSON.stringify({ success: false, error: 'Website is required for homepage feature claim' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-  if (websiteTrim && !isSafeHttpUrl(websiteTrim)) {
+  if (!isSafeHttpUrl(websiteTrim)) {
     return new Response(JSON.stringify({ success: false, error: 'Website must be a valid http(s) URL' }), {
-      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-  if (cashtagTrim && !isValidCashtag(cashtagTrim)) {
-    return new Response(JSON.stringify({ success: false, error: 'Invalid Cash App cashtag format' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
@@ -287,7 +283,7 @@ Deno.serve(async (req: Request) => {
       referrer_code: userReferrerCode,
       user_id: claimUserId,
       website: websiteTrim || null,
-      cashtag: cashtagTrim || null,
+      cashtag: null, // cash removed from public product
       message: message.trim() || null,
       status: 'pending',
       rank_at_claim: 1,

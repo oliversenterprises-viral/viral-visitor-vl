@@ -1,5 +1,5 @@
 /**
- * P1 conversion — hero CTA A/B (prize vs control) for direct landings.
+ * P1 conversion — hero CTA A/B (feature vs control) for direct landings.
  * Referred landings keep funnel-conversion overrides.
  */
 
@@ -17,21 +17,21 @@ export interface HeroCtaCopy {
 
 export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
   control: {
-    titleLine1: 'Get your winning link in 30 seconds.',
-    titleAccent: 'Climb to #1 — win homepage + $10.',
+    titleLine1: 'Get your free link in 30 seconds.',
+    titleAccent: 'Climb to #1 — claim homepage feature.',
     subtitle:
       'Free. No signup. Copy your link and share anywhere — every referral moves you up the live board.',
     trustLine: 'No email • No payment • No catch • Your link in ~5 seconds',
     buttonLabel: 'Get my referral link',
   },
   prize: {
-    badge: '2026 CASH PRIZE • FREE TO JOIN',
-    titleLine1: 'Win homepage feature + $10 Cash App.',
+    badge: 'FREE LEADERBOARD • NO SIGNUP',
+    titleLine1: 'Claim a homepage feature for your site.',
     titleAccent: 'Get your link in 30 seconds — climb to #1.',
     subtitle:
-      'Free contest. No signup. Tap below, copy your link, share once — every friend who visits moves you up the live board.',
-    trustLine: 'Real Cash App prize • No email • Your link in ~5 seconds',
-    buttonLabel: 'Get my free contest link',
+      'Free forever. No signup. Tap below, copy your link, share once — every friend who visits moves you up the live board.',
+    trustLine: 'Homepage feature for #1 • No email • Your link in ~5 seconds',
+    buttonLabel: 'Get my free link',
   },
 };
 
@@ -58,7 +58,7 @@ export function applyHeroCopyToDom(copy: HeroCtaCopy): void {
   setButtonLabel('hero-get-link-btn', copy.buttonLabel);
 }
 
-/** Apply prize-variant hero copy on direct landings (control leaves CMS/static defaults). */
+/** Apply feature-variant hero copy on direct landings (control leaves CMS/static defaults). */
 export function applyHeroCtaVariant(): void {
   if (isReferredLanding()) return;
 

@@ -301,7 +301,7 @@ function renderActiveFlags(flags: OptimizerFlags): string {
     : 'Share-first on referred mobile: OFF';
   const heroCta =
     flags.hero_cta_variant === 'prize'
-      ? 'Hero CTA: prize variant (Cash App + homepage)'
+      ? 'Hero CTA: feature variant (homepage claim)'
       : 'Hero CTA: control (CMS/static copy)';
   const visitorSlim =
     flags.visitor_slim === false

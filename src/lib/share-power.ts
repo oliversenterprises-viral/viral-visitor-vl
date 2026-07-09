@@ -46,29 +46,29 @@ export const CLIPBOARD_SHARE_PLATFORMS: ReadonlySet<SharePlatform> = new Set([
 ]);
 
 const DEFAULT_TEMPLATE =
-  'Free to join — grab your link in ~30 sec. #1 wins homepage feature + $10 Cash App. {link}';
+  'Free to join — grab your link in ~30 sec. Climb the live leaderboard. #1 can claim a homepage feature. {link}';
 
 const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
   whatsapp:
-    '🏆 ViralRefer — climb the live leaderboard!\nFree to join in ~30 sec. #1 wins homepage feature + $10 Cash App.\n\n{link}',
+    '🏆 ViralRefer — climb the live leaderboard!\nFree to join in ~30 sec. #1 can claim a homepage feature.\n\n{link}',
   boost:
-    '🚀 Join me on ViralRefer — live leaderboard, free in ~30 sec!\n#1 wins homepage + $10 Cash App.\n\n{link}',
-  reddit: 'ViralRefer — live referral leaderboard. Free to join. #1 wins homepage feature + $10 Cash App',
+    '🚀 Join me on ViralRefer — live leaderboard, free in ~30 sec!\n#1 can claim a homepage feature.\n\n{link}',
+  reddit: 'ViralRefer — live referral leaderboard. Free to join. #1 can claim a homepage feature.',
   bluesky:
-    'Join the ViralRefer leaderboard — free, ~30 sec setup. #1 wins homepage + $10 Cash App 🏆\n\n{link}',
-  sms: 'Join me on ViralRefer — free leaderboard contest. #1 wins homepage + $10. {link}',
+    'Join the ViralRefer leaderboard — free, ~30 sec setup. #1 can claim a homepage feature 🏆\n\n{link}',
+  sms: 'Join me on ViralRefer — free live leaderboard. #1 claims homepage feature. {link}',
   email:
-    'Hey! I joined ViralRefer — a live referral leaderboard where #1 wins homepage feature + $10 Cash App.\n\nGrab your free link in ~30 sec:\n{link}',
+    'Hey! I joined ViralRefer — a free live referral leaderboard where #1 can claim a homepage feature.\n\nGrab your free link in ~30 sec:\n{link}',
   linkedin:
     'Join the ViralRefer live referral leaderboard — free to start, real-time rankings. {link}',
-  telegram: 'ViralRefer leaderboard — free to join, #1 wins homepage + $10 Cash App. {link}',
+  telegram: 'ViralRefer leaderboard — free to join, #1 can claim a homepage feature. {link}',
   threads: 'Climbing the ViralRefer leaderboard — free to join in ~30 sec 🏆\n\n{link}',
-  pinterest: 'ViralRefer — live referral leaderboard. #1 wins homepage feature + $10 Cash App',
+  pinterest: 'ViralRefer — live referral leaderboard. #1 can claim a homepage feature',
   discord:
-    '**ViralRefer** — live referral leaderboard\nFree to join in ~30 sec. #1 wins homepage + $10 Cash App\n\n{link}',
-  x: 'Live referral leaderboard on ViralRefer — free to join. #1 wins homepage + $10 Cash App 🏆\n\n{link}',
+    '**ViralRefer** — live referral leaderboard\nFree to join in ~30 sec. #1 can claim a homepage feature\n\n{link}',
+  x: 'Live referral leaderboard on ViralRefer — free to join. #1 can claim a homepage feature 🏆\n\n{link}',
   tiktok:
-    'POV: climbing the ViralRefer leaderboard 🏆 Free to join in ~30 sec — link in bio vibes\n\n{link}\n\n#referral #giveaway #viral #fyp #leaderboard',
+    'POV: climbing the ViralRefer leaderboard 🏆 Free to join in ~30 sec — link in bio vibes\n\n{link}\n\n#referral #leaderboard #viral #fyp #marketing',
   snapchat:
     'Join me on ViralRefer — live referral leaderboard 🏆 Free link in ~30 sec\n\n{link}\n\nAdd to your story or send to friends!',
 };

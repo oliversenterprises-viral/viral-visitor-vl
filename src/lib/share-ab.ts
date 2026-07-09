@@ -9,8 +9,8 @@ export type ShareAbVariant = 'a' | 'b';
 const STORAGE_KEY = 'vr_share_ab_variant';
 
 export const SHARE_AB_TEMPLATES: Record<ShareAbVariant, string> = {
-  a: 'Free to join in ~30 sec — climb the live leaderboard. #1 wins homepage feature + $10 Cash App. {link}',
-  b: 'Real-time referral contest — grab your free link in ~30 sec. Top referrer wins homepage + $10 Cash App. {link}',
+  a: 'Free to join in ~30 sec — climb the live leaderboard. #1 can claim a homepage feature. {link}',
+  b: 'Real-time referral leaderboard — grab your free link in ~30 sec. Top referrer claims homepage feature. {link}',
 };
 
 /** Stable default variant from referral code (50/50 split). */
@@ -53,5 +53,5 @@ export function getShareAbTemplate(variant: ShareAbVariant): string {
 }
 
 export function shareAbVariantLabel(variant: ShareAbVariant): string {
-  return variant === 'a' ? 'Variant A — prize focus' : 'Variant B — contest urgency';
+  return variant === 'a' ? 'Variant A — feature focus' : 'Variant B — board urgency';
 }

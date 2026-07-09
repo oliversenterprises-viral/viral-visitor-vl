@@ -28,7 +28,7 @@ export function buildShareRankCta(
   if (rank != null && rank >= 2 && rank <= 3) {
     return {
       headline: `You're #${rank} — one push to #1!`,
-      subline: 'Share now while momentum is hot. Top spot wins homepage + $10.',
+      subline: 'Share now while momentum is hot. Top spot claims homepage feature.',
       tone: 'emerald',
       emphasizeBoost: true,
     };

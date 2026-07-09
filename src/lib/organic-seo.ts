@@ -8,11 +8,11 @@ import { parseRefFromLocation } from './referral-url';
 export const SEO_SITE_ORIGIN = 'https://www.viralrefer.app';
 
 export const HOMEPAGE_SEO = {
-  title: 'ViralRefer • Earn Rewards by Referring Friends',
+  title: 'ViralRefer • Free Referral Leaderboard',
   description:
-    'Get your free ViralRefer link in 30 seconds — no signup. Share it and climb the live leaderboard. #1 wins homepage feature + $10 Cash App.',
+    'Get your free ViralRefer link in 30 seconds — no signup. Share it and climb the live leaderboard. #1 can claim a homepage feature for their site.',
   keywords:
-    'referral program, viral marketing, earn cash, homepage banner, referral rewards, cash app, free referral link',
+    'referral program, viral marketing, free referral link, live leaderboard, homepage feature, no signup',
 } as const;
 
 export interface FaqEntry {
@@ -33,9 +33,9 @@ export const HOMEPAGE_FAQ: readonly FaqEntry[] = [
       'Yes. ViralRefer is completely free. There is no payment, no email signup, and no catch — just copy your link and share it.',
   },
   {
-    question: 'What does the #1 referrer win?',
+    question: 'What does the #1 referrer get?',
     answer:
-      'The top referrer on the live leaderboard wins a homepage banner feature for their site plus a $10 Cash App payout after verification (minimum 10 verified referrals).',
+      'The top referrer on the live leaderboard can claim a homepage banner feature for their website after verification (minimum referrals as shown on site). There is no cash prize.',
   },
   {
     question: 'How does the ViralRefer leaderboard work?',

@@ -79,7 +79,7 @@ export function getCoachGreeting(ctx: CoachChatContext): CoachChatMessage {
 
   return coachMsg(
     'greet-direct',
-    "Hi — I'm your ViralRefer coach. Free link in ~30 seconds, then share to climb the leaderboard. #1 wins homepage feature + $10 Cash App. Where should we start?",
+    "Hi — I'm your ViralRefer coach. Free link in ~30 seconds, then share to climb the leaderboard. #1 can claim a homepage feature for their site. Where should we start?",
     quickActions(ctx),
   );
 }
@@ -111,7 +111,7 @@ export function quickActions(ctx: CoachChatContext): CoachChatAction[] {
     actions.push({ id: 'act-leaderboard', label: 'See leaderboard', kind: 'leaderboard' });
   }
 
-  actions.push({ id: 'act-prize', label: 'What do I win?', kind: 'prize' });
+  actions.push({ id: 'act-prize', label: 'What do I get?', kind: 'prize' });
   actions.push({ id: 'act-help', label: 'Where am I?', kind: 'help' });
   return actions;
 }
@@ -130,10 +130,10 @@ export function resolveCoachReply(input: string, ctx: CoachChatContext): CoachCh
     return coachMsg('status', describeStepStatus(ctx), quickActions(ctx));
   }
 
-  if (/win|prize|reward|\$10|cash|banner|#1|leader/.test(q)) {
+  if (/win|prize|reward|\$10|cash|banner|#1|leader|feature/.test(q)) {
     return coachMsg(
       'prize',
-      'Top referrer wins a homepage banner feature for their site (30 days) plus $10 Cash App after verification. You need 10+ verified referrals to claim. The live board updates in real time.',
+      'Top referrer can claim a homepage banner feature for their website after verification (min. referrals as shown on site). No cash prize — pure visibility and social proof. The live board updates in real time.',
       [
         { id: 'act-leaderboard', label: 'See leaderboard', kind: 'leaderboard' },
         ...quickActions(ctx).filter((a) => a.kind !== 'prize'),
@@ -189,7 +189,7 @@ export function resolveCoachReply(input: string, ctx: CoachChatContext): CoachCh
 
   return coachMsg(
     'fallback',
-    "I'm your funnel coach — ask about getting your link, copying, sharing, or the prize. Or tap a button below.",
+    "I'm your funnel coach — ask about getting your link, copying, sharing, or the homepage feature. Or tap a button below.",
     quickActions(ctx),
   );
 }

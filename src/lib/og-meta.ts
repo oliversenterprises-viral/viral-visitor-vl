@@ -72,11 +72,11 @@ export function buildReferralOgMeta(
   const rank = options.rank ?? null;
   const referrals = options.referrals ?? 0;
 
-  let description = `${code} invited you — free link in ~30 sec. Scan the QR or tap to join. #1 wins homepage feature + $10 Cash App.`;
+  let description = `${code} invited you — free link in ~30 sec. Scan the QR or tap to join. Climb the live leaderboard. #1 can claim a homepage feature.`;
   if (rank === 1) {
-    description = `${code} is #1 on the live leaderboard — join via QR in ~30 sec. Climb the board. #1 wins homepage + $10 Cash App.`;
+    description = `${code} is #1 on the live leaderboard — join via QR in ~30 sec. Climb the board. #1 can claim a homepage feature.`;
   } else if (rank != null && rank >= 2) {
-    description = `${code} is #${rank} on the live leaderboard — join via QR in ~30 sec. #1 wins homepage + $10 Cash App.`;
+    description = `${code} is #${rank} on the live leaderboard — join via QR in ~30 sec. #1 can claim a homepage feature.`;
   } else if (referrals > 0) {
     description = `${code} has ${referrals} referral${referrals === 1 ? '' : 's'} — join via QR in ~30 sec. Climb the live leaderboard.`;
   }
@@ -134,7 +134,7 @@ export function buildReferralOgSvg(meta: ReferralOgMeta): string {
   <text x="64" y="${rank != null ? 260 : 230}" fill="#ffffff" font-family="system-ui,sans-serif" font-size="38" font-weight="600">Join via ${code}</text>
   <text x="64" y="${rank != null ? 320 : 290}" fill="#34d399" font-family="ui-monospace,monospace" font-size="32" font-weight="700">${code}</text>
   <text x="64" y="${rank != null ? 380 : 350}" fill="#e4e4e7" font-family="system-ui,sans-serif" font-size="28">${escapeHtmlAttr(statsLine)}</text>
-  <text x="64" y="${rank != null ? 425 : 395}" fill="#a1a1aa" font-family="system-ui,sans-serif" font-size="24">#1 wins homepage feature + $10 Cash App</text>
+  <text x="64" y="${rank != null ? 425 : 395}" fill="#a1a1aa" font-family="system-ui,sans-serif" font-size="24">#1 can claim a homepage feature</text>
   <rect x="856" y="155" width="280" height="280" rx="16" fill="#ffffff"/>
   <image href="${qrUrl}" x="876" y="175" width="240" height="240"/>
   <text x="64" y="580" fill="#71717a" font-family="system-ui,sans-serif" font-size="22">viralrefer.app</text>

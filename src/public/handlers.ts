@@ -399,13 +399,16 @@ export const submitPrizeClaim = async () => {
   }
 
   const website = (document.getElementById('claim-website') as HTMLInputElement)?.value.trim() || '';
-  const cashtag = (document.getElementById('claim-cashtag') as HTMLInputElement)?.value.trim() || '';
   const message = (document.getElementById('claim-message') as HTMLTextAreaElement)?.value.trim() || '';
   const resultEl = document.getElementById('claim-form-result');
   const submitBtn = document.getElementById('submit-claim-form') as HTMLButtonElement | null;
 
-  if (!cashtag && !website) {
-    if (resultEl) resultEl.innerHTML = '<span class="text-amber-400">Please enter your Cash App cashtag or website.</span>';
+  // Homepage feature claim — website required; no monetary fields on public product
+  if (!website) {
+    if (resultEl) {
+      resultEl.innerHTML =
+        '<span class="text-amber-400">Please enter the website you want featured on the homepage.</span>';
+    }
     return;
   }
 
@@ -423,7 +426,6 @@ export const submitPrizeClaim = async () => {
     const body: Record<string, string> = {
       turnstileToken,
       website,
-      cashtag,
       message,
       referrerCode: myCode,
     };

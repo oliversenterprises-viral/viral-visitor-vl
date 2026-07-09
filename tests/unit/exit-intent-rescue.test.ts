@@ -4,7 +4,7 @@ import { shouldShowExitRescue, buildExitRescueMessage } from '../../src/lib/exit
 describe('exit-intent-rescue', () => {
   it('buildExitRescueMessage is concise and action-oriented', () => {
     const msg = buildExitRescueMessage();
-    expect(msg.title).toContain('$10');
+    expect(msg.title).toMatch(/free|leaderboard/i);
     expect(msg.cta.toLowerCase()).toContain('link');
   });
 

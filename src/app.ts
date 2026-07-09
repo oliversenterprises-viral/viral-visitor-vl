@@ -358,9 +358,9 @@ async function renderMyStats(myCode: string | null): Promise<void> {
         ${gapSummary}
       </div>
       <div class="bg-zinc-900/70 border border-white/10 rounded-2xl p-4 text-center">
-        <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Progress to Prize</div>
+        <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Progress to Feature</div>
         <div class="text-4xl font-bold text-amber-400 tabular-nums">${count}/10</div>
-        <div class="text-xs text-zinc-500 mt-0.5">referrals for homepage + $10</div>
+        <div class="text-xs text-zinc-500 mt-0.5">referrals for homepage feature</div>
         <div class="mt-2 h-2 bg-white/10 rounded-full overflow-hidden">
           <div class="h-full bg-gradient-to-r from-emerald-400 to-amber-400 transition-all" style="width: ${progress}%"></div>
         </div>

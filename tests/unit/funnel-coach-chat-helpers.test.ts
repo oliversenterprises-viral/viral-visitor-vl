@@ -50,7 +50,7 @@ describe('funnel-coach-chat-helpers', () => {
       referrerCode: null,
       creditStatus: null,
     });
-    expect(prize.text).toMatch(/\$10|Cash App/i);
+    expect(prize.text).toMatch(/homepage|feature|no cash/i);
 
     const status = resolveCoachReply('where am I', {
       step: 3,

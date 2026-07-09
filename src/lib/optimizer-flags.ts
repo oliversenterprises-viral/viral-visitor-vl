@@ -12,7 +12,7 @@ export interface OptimizerFlags {
   share_ab_default?: ShareAbVariant | null;
   /** On referred landings, scroll to share panel after get-link on mobile. */
   referred_share_first?: boolean;
-  /** Hero headline/CTA emphasis — prize variant leads with Cash App + homepage win. */
+  /** Hero headline/CTA emphasis — prize variant leads with homepage feature claim. */
   hero_cta_variant?: HeroCtaVariant | null;
   /** Visitor slim layout — reduces noise per segment (default on). */
   visitor_slim?: boolean;

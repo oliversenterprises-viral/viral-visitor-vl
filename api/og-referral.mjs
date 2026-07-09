@@ -28,7 +28,7 @@ function buildReferralOgMeta(rawCode, subpath = '') {
     code,
     canonicalUrl,
     title: `Join ViralRefer via ${code} — Live Referral Leaderboard`,
-    description: `${code} invited you — free link in ~30 sec. Climb the live leaderboard. #1 wins homepage feature + $10 Cash App.`,
+    description: `${code} invited you — free link in ~30 sec. Climb the live leaderboard. #1 can claim a homepage feature.`,
     image: `${SITE_ORIGIN}/api/og-image?code=${encodeURIComponent(code)}&format=png`,
   };
 }

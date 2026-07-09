@@ -80,7 +80,7 @@ function buildOgSvg(code, canonicalUrl, rank, referrals) {
   <text x="64" y="${yJoin}" fill="#ffffff" font-family="system-ui,sans-serif" font-size="38" font-weight="600">Join via ${safeCode}</text>
   <text x="64" y="${yCode}" fill="#34d399" font-family="ui-monospace,monospace" font-size="32" font-weight="700">${safeCode}</text>
   <text x="64" y="${yStats}" fill="#e4e4e7" font-family="system-ui,sans-serif" font-size="28">${escapeXml(statsLine)}</text>
-  <text x="64" y="${yPrize}" fill="#a1a1aa" font-family="system-ui,sans-serif" font-size="24">#1 wins homepage feature + $10 Cash App</text>
+  <text x="64" y="${yPrize}" fill="#a1a1aa" font-family="system-ui,sans-serif" font-size="24">#1 can claim a homepage feature</text>
   <rect x="856" y="155" width="280" height="280" rx="16" fill="#ffffff"/>
   <image href="${qrUrl}" x="876" y="175" width="240" height="240"/>
   <text x="64" y="580" fill="#71717a" font-family="system-ui,sans-serif" font-size="22">viralrefer.app</text>

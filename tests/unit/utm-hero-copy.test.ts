@@ -36,7 +36,8 @@ describe('utm-hero-copy', () => {
   it('resolveUtmHeroCopy returns tailored button for trafficadbar', () => {
     const copy = resolveUtmHeroCopy('trafficadbar', 'traffic_exchange');
     expect(copy?.buttonLabel).toBe('Get my free link now');
-    expect(copy?.titleLine1).toContain('$10');
+    expect(copy?.titleLine1).toMatch(/free|leaderboard/i);
+    expect(copy?.titleLine1).not.toMatch(/\$10|Cash App/i);
   });
 
   it('applyUtmHeroCopy paints DOM from stored UTM', () => {
@@ -46,7 +47,8 @@ describe('utm-hero-copy', () => {
     });
     captureUtmAttribution();
     expect(applyUtmHeroCopy()).toBe(true);
-    expect(document.getElementById('hero-title-line1')?.textContent).toContain('$10');
+    expect(document.getElementById('hero-title-line1')?.textContent).toMatch(/free|leaderboard/i);
+    expect(document.getElementById('hero-title-line1')?.textContent).not.toMatch(/\$10|Cash App/i);
     expect(document.documentElement.getAttribute('data-vr-utm-source')).toBe('trafficadbar');
   });
 

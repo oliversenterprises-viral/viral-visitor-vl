@@ -57,7 +57,7 @@ export function getColorControls(): ColorControl[] {
     { group: 'Prize Cards', key: 'color_prize_title', label: 'Left Prize Title', default: '#ffffff' },
     { group: 'Prize Cards', key: 'color_prize_banner_title', label: 'Right Banner Title', default: '#ffffff' },
     { group: 'Prize Cards', key: 'color_minimum_label', label: 'Minimum / Referrals Labels', default: '#c4b4ff' },
-    { group: 'Prize Cards', key: 'color_instant_label', label: 'Instant / Cash App Labels', default: '#34d399' },
+    { group: 'Prize Cards', key: 'color_instant_label', label: 'Feature / Instant Labels', default: '#34d399' },
 
     // How it Works
     { group: 'How it Works', key: 'color_how_badge', label: 'How it Works Badge', default: '#a5b4fc' },

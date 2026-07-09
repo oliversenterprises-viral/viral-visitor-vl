@@ -18,48 +18,48 @@ const TRAFFIC_EXCHANGE_SOURCES = new Set([
 
 const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
   traffic_exchange: {
-    badge: 'FREE $10 CONTEST • 30 SECONDS',
-    titleLine1: 'Free $10 contest — one tap, get your link.',
+    badge: 'FREE LEADERBOARD • 30 SECONDS',
+    titleLine1: 'Free leaderboard — one tap, get your link.',
     titleAccent: 'No signup. No email. Climb the live board.',
     subtitle:
       'Tap below — your unique link appears in seconds. Share anywhere to compete for #1 and a homepage feature.',
-    trustLine: 'Real Cash App prize · Board wide open · Your link in ~5 seconds',
+    trustLine: 'Homepage feature for #1 · Board wide open · Your link in ~5 seconds',
     buttonLabel: 'Get my free link now',
   },
   linkedin: {
-    badge: 'LIVE REFERRAL CONTEST',
-    titleLine1: 'No-signup referral contest — try it in 30 seconds.',
-    titleAccent: 'Free link, live leaderboard, real $10 Cash App prize.',
+    badge: 'LIVE REFERRAL LEADERBOARD',
+    titleLine1: 'No-signup referral board — try it in 30 seconds.',
+    titleAccent: 'Free link, live rankings, homepage feature for #1.',
     subtitle:
       'Built for builders and marketers: tap once, copy your link, share anywhere. Every visit moves you up the board.',
-    trustLine: 'No email wall · Skill-based contest · US 18+',
-    buttonLabel: 'Get my free contest link',
+    trustLine: 'No email wall · Free forever · US 18+',
+    buttonLabel: 'Get my free link',
   },
   reddit: {
-    badge: 'BUILDER-FRIENDLY CONTEST',
+    badge: 'BUILDER-FRIENDLY LEADERBOARD',
     titleLine1: 'Free referral leaderboard — no signup friction.',
     titleAccent: 'Get your link in ~30 sec, then share to climb.',
     subtitle:
       'We optimized step 1 (get link) on purpose. Tap below, copy your URL, share once — watch the live board move.',
-    trustLine: 'Transparent contest · $10 + homepage for #1 · Rules on site',
+    trustLine: 'Transparent board · Homepage feature for #1 · Rules on site',
     buttonLabel: 'Get my link — 30 seconds',
   },
   telegram: {
-    badge: '🏆 VIRALREFER CONTEST',
+    badge: '🏆 VIRALREFER LEADERBOARD',
     titleLine1: 'Free link in ~30 seconds — climb to #1.',
-    titleAccent: 'Win homepage feature + $10 Cash App.',
+    titleAccent: 'Claim a homepage feature for your site.',
     subtitle:
       'Tap below to generate your unique link. Share in chats or channels — every referral counts on the live board.',
     trustLine: 'No signup · Instant link · Board still wide open',
-    buttonLabel: 'Get my free contest link',
+    buttonLabel: 'Get my free link',
   },
   social: {
-    badge: '2026 CASH PRIZE • FREE TO JOIN',
-    titleLine1: 'Win $10 Cash App + homepage feature.',
+    badge: 'FREE LEADERBOARD • NO SIGNUP',
+    titleLine1: 'Climb the live board — claim a homepage feature.',
     titleAccent: 'Get your free link in 30 seconds.',
     subtitle:
-      'Free contest. Tap below, copy your link, share once — every friend who visits moves you up the live board.',
-    trustLine: 'Real prize · No email · ~5 sec to your link',
+      'Free forever. Tap below, copy your link, share once — every friend who visits moves you up the live board.',
+    trustLine: 'No cash prize · No email · ~5 sec to your link',
     buttonLabel: 'Get my free link',
   },
 };

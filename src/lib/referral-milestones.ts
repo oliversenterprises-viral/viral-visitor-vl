@@ -39,7 +39,7 @@ export function detectMilestones(
       } else if (m === 10) {
         events.push({
           kind: 'prize_threshold',
-          message: '10 referrals — prize threshold reached!',
+          message: '10 referrals — feature claim threshold reached!',
           confettiColors: ['#fbbf24', '#f59e0b', '#34d399'],
           particleCount: 120,
         });
