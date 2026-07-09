@@ -206,16 +206,39 @@ Deno.serve(async (req: Request) => {
   try {
     if (action === 'update_claim_status') {
       const { claimId, status, note } = payload;
-      const { error } = await supabaseAdmin
+      const ALLOWED_CLAIM_STATUS = new Set(['pending', 'approved', 'rejected', 'paid']);
+      if (!claimId || typeof claimId !== 'string') {
+        return new Response(JSON.stringify({ success: false, error: 'claimId required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (!status || !ALLOWED_CLAIM_STATUS.has(String(status))) {
+        return new Response(JSON.stringify({ success: false, error: 'Invalid claim status' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const statusStr = String(status);
+      const updatePayload: Record<string, unknown> = {
+        status: statusStr,
+        reviewed_at: new Date().toISOString(),
+        review_note: note || null,
+      };
+      if (statusStr === 'paid') {
+        updatePayload.paid_at = new Date().toISOString();
+      }
+      const { data: updated, error } = await supabaseAdmin
         .from('prize_claims')
-        .update({
-          status,
-          reviewed_at: new Date().toISOString(),
-          review_note: note || null,
-        })
-        .eq('id', claimId);
+        .update(updatePayload)
+        .eq('id', claimId)
+        .select('id')
+        .maybeSingle();
 
       if (error) throw error;
+      if (!updated) {
+        return new Response(JSON.stringify({ success: false, error: 'Claim not found' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 

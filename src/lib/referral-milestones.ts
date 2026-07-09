@@ -125,15 +125,15 @@ const SEEDED_KEY = 'vr_milestone_seeded';
 
 /** Celebrate milestones if count/rank improved since last baseline (skips initial page load). */
 export function celebrateMilestonesIfAny(count: number, rank: number | null): void {
-  let seeded = false;
+  let alreadySeeded = false;
   try {
-    seeded = sessionStorage.getItem(SEEDED_KEY) === '1';
+    alreadySeeded = sessionStorage.getItem(SEEDED_KEY) === '1';
   } catch {
-    seeded = false;
+    // sessionStorage unavailable — treat as not seeded
   }
 
   const baseline = getStoredMilestoneBaseline();
-  if (!seeded) {
+  if (!alreadySeeded) {
     storeMilestoneBaseline(count, rank);
     try {
       sessionStorage.setItem(SEEDED_KEY, '1');

@@ -13,10 +13,10 @@ test.describe('ViralRefer - Prize Claim Flow & Admin', () => {
     // Click and wait for any modal or message (more resilient, no force if possible)
     await claimBtn.click().catch(() => claimBtn.click({ force: true }));
     
-    // More tolerant expectation for winner modal or claim UI
+    // Hard assert: claim path must open modal or show ineligible feedback (no soft-pass)
     await expect(
-      page.locator('#winner-modal, text=Claim Your Prize, text=You are not yet eligible')
-    ).toBeVisible({ timeout: 6000 }).catch(() => {});
+      page.locator('#winner-modal, text=Claim Your Prize, text=You are not yet eligible, text=not currently the #1')
+    ).toBeVisible({ timeout: 8000 });
   });
 
   test('Admin button opens password modal', async ({ page }) => {

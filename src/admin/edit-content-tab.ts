@@ -17,6 +17,16 @@ interface ContentRow {
   value?: unknown;
 }
 
+/** Escape text for safe insertion into admin innerHTML templates. */
+function escapeHtml(text: string): string {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /** Serialize site_content values for the edit textarea (handles JSONB objects/arrays). */
 function formatValueForInput(value: unknown): string {
   if (value == null) return '';
@@ -279,7 +289,8 @@ function buildContentListHTML(rows: ContentRow[]): string {
   } else {
     rows.forEach((row: ContentRow) => {
       const valStr = String(row.value ?? '');
-      const valPreview = valStr.slice(0, 80);
+      const valPreview = escapeHtml(valStr.slice(0, 80));
+      const safeId = escapeHtml(row.id);
 
       if (row.id === 'banners') {
         // Special prominent card for Multi-Banner Rotation v2
@@ -294,20 +305,20 @@ function buildContentListHTML(rows: ContentRow[]): string {
               <div class="text-xs text-emerald-400/70 mt-1">Current value: ${valPreview}...</div>
             </div>
             <div class="flex gap-2 flex-shrink-0">
-              <button data-id="${row.id}" class="edit-btn px-5 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 font-semibold rounded-2xl">Edit Banners (Rich Editor)</button>
-              <button data-id="${row.id}" class="delete-btn px-4 py-2 text-sm bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-2xl">Delete</button>
+              <button data-id="${safeId}" class="edit-btn px-5 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 font-semibold rounded-2xl">Edit Banners (Rich Editor)</button>
+              <button data-id="${safeId}" class="delete-btn px-4 py-2 text-sm bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-2xl">Delete</button>
             </div>
           </div>`;
       } else {
         html += `
           <div class="bg-zinc-900 border border-white/10 rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-4">
             <div class="flex-1 min-w-0">
-              <div class="font-mono text-emerald-400 text-sm">${row.id}</div>
-              <div class="text-sm mt-2 text-zinc-300 break-all">${valPreview}${valPreview.length > 79 ? '…' : ''}</div>
+              <div class="font-mono text-emerald-400 text-sm">${safeId}</div>
+              <div class="text-sm mt-2 text-zinc-300 break-all">${valPreview}${valStr.length > 79 ? '…' : ''}</div>
             </div>
             <div class="flex gap-2 flex-shrink-0">
-              <button data-id="${row.id}" class="edit-btn px-4 py-1.5 text-sm bg-white/10 hover:bg-white/20 rounded-xl">Edit</button>
-              <button data-id="${row.id}" class="delete-btn px-4 py-1.5 text-sm bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-xl">Delete</button>
+              <button data-id="${safeId}" class="edit-btn px-4 py-1.5 text-sm bg-white/10 hover:bg-white/20 rounded-xl">Edit</button>
+              <button data-id="${safeId}" class="delete-btn px-4 py-1.5 text-sm bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-xl">Delete</button>
             </div>
           </div>`;
       }
@@ -644,11 +655,15 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
       card.className = `bg-zinc-950 border rounded-xl p-3 ${(!hasImg || !hasRedirect) ? 'border-red-500/60' : 'border-white/10'}`;
       card.draggable = true;
 
+      const safeImageUrl = escapeHtml(b.imageUrl || '');
+      const safeRedirectUrl = escapeHtml(b.redirectUrl || '');
+      const safeLabel = escapeHtml(b.label || '');
+
       card.innerHTML = `
         <div class="flex gap-3">
           <div class="w-14 h-14 flex-shrink-0 bg-zinc-900 rounded overflow-hidden border border-white/10 flex items-center justify-center">
             ${hasImg 
-              ? `<img src="${b.imageUrl}" class="max-w-full max-h-full object-contain" onerror="this.parentElement.innerHTML='<div class=\\'text-[9px] text-red-400 text-center\\'>Bad image</div>'">` 
+              ? `<img src="${safeImageUrl}" class="max-w-full max-h-full object-contain" onerror="this.parentElement.innerHTML='<div class=\\'text-[9px] text-red-400 text-center\\'>Bad image</div>'">` 
               : `<div class="text-[10px] text-zinc-500 text-center leading-[14px] p-1">No image</div>`}
           </div>
 
@@ -656,7 +671,7 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
             <div>
               <div class="text-zinc-400 text-[10px]">Image URL ${!hasImg ? '<span class="text-red-400">(required)</span>' : ''}</div>
               <div class="flex gap-1.5 items-center">
-                <input data-idx="${i}" data-field="imageUrl" value="${b.imageUrl || ''}" class="flex-1 min-w-0 bg-zinc-900 border border-white/20 rounded px-2 py-1 text-xs" placeholder="https://...jpg or upload below">
+                <input data-idx="${i}" data-field="imageUrl" value="${safeImageUrl}" class="flex-1 min-w-0 bg-zinc-900 border border-white/20 rounded px-2 py-1 text-xs" placeholder="https://...jpg or upload below">
                 <input type="file" accept="${BANNER_UPLOAD_ACCEPT}" data-idx="${i}" data-field="file" class="hidden banner-file-input">
                 <button type="button" data-idx="${i}" data-action="upload" class="text-[10px] px-2 py-1 bg-emerald-600/80 hover:bg-emerald-500 rounded-lg font-semibold whitespace-nowrap">Upload</button>
               </div>
@@ -664,11 +679,11 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
             </div>
             <div>
               <div class="text-zinc-400 text-[10px]">Redirect URL ${!hasRedirect ? '<span class="text-red-400">(required)</span>' : ''}</div>
-              <input data-idx="${i}" data-field="redirectUrl" value="${b.redirectUrl || ''}" class="w-full bg-zinc-900 border border-white/20 rounded px-2 py-1 text-xs" placeholder="https://...">
+              <input data-idx="${i}" data-field="redirectUrl" value="${safeRedirectUrl}" class="w-full bg-zinc-900 border border-white/20 rounded px-2 py-1 text-xs" placeholder="https://...">
             </div>
             <div>
               <div class="text-zinc-400 text-[10px]">Label</div>
-              <input data-idx="${i}" data-field="label" value="${b.label || ''}" class="w-full bg-zinc-900 border border-white/20 rounded px-2 py-1 text-xs" placeholder="Optional label">
+              <input data-idx="${i}" data-field="label" value="${safeLabel}" class="w-full bg-zinc-900 border border-white/20 rounded px-2 py-1 text-xs" placeholder="Optional label">
             </div>
 
             <div>

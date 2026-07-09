@@ -294,30 +294,34 @@ function wireOwnerTestTools(content: HTMLElement) {
   }
 
   if (testBtn && resultEl) {
+    // Public submit-claim no longer allows owner Turnstile bypass (security).
+    // This button only probes edge health + expected eligibility rejection shape.
     testBtn.addEventListener('click', async () => {
-      resultEl.textContent = 'Submitting test claim via owner bypass...';
+      resultEl.textContent = 'Probing submit-claim edge (expects eligibility/auth response)...';
+      resultEl.className = 'mt-1 text-xs text-zinc-400';
       testBtn.disabled = true;
       try {
         const { data, error } = await supabase.functions.invoke('submit-claim', {
           body: {
-            turnstileToken: 'owner-bypass-test',
-            website: 'https://oliversenterprises.test',
-            cashtag: '$owner-test',
-            message: 'Owner test claim from Admin Owner Test Tools (bypass)',
-          }
+            turnstileToken: 'dev-bypass-token',
+            website: 'https://www.viralrefer.app',
+            cashtag: '$ViralReferProbe',
+            message: 'Admin edge health probe — should not create a claim without eligibility',
+            referrerCode: 'VIRAL-SMOKETEST',
+          },
         });
         if (error) throw error;
         if (data?.success) {
-          resultEl.innerHTML = `<span class="text-emerald-400">Success! Claim ID: ${escapeHtml(String(data.claimId || ''))}. Bypass used: ${data.bypassUsed ? 'yes' : 'no'}</span>`;
-          showToast('Test claim submitted (owner bypass)', 'success');
-          // Re-render the tab so the new claim appears in the list (realtime will also catch it)
+          resultEl.innerHTML = `<span class="text-amber-400">Unexpected success (claim created). ID: ${escapeHtml(String(data.claimId || ''))} — review claims list.</span>`;
+          showToast('Probe created a claim — review Prize Claims', 'info');
           setTimeout(() => renderPrizeClaimsTab(content), 600);
         } else {
-          resultEl.textContent = `Server said: ${data?.error || 'Unknown error'}`;
-          resultEl.className = 'mt-1 text-xs text-red-400';
+          // Expected: bot check, not #1, or test code filtered
+          resultEl.innerHTML = `<span class="text-emerald-400">Edge OK — rejected as expected: ${escapeHtml(String(data?.error || 'unknown'))}</span>`;
+          showToast('submit-claim edge healthy (rejected probe)', 'success');
         }
       } catch (e: any) {
-        resultEl.textContent = `Failed: ${e?.message || e}`;
+        resultEl.textContent = `Edge probe failed: ${e?.message || e}`;
         resultEl.className = 'mt-1 text-xs text-red-400';
       } finally {
         testBtn.disabled = false;

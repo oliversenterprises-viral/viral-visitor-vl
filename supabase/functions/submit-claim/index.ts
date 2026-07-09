@@ -1,10 +1,11 @@
 // ============================================================================
 // supabase/functions/submit-claim/index.ts
 // ViralRefer Premium — Production Edge Function: Submit Prize Claim
-// Fully implemented with server-side #1 verification (Sentinel requirements)
+// Server-side #1 verification with test-traffic filters + safe response path
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { computeClaimLeader, isSafeHttpUrl, isValidCashtag } from '../_shared/claim-leader.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -35,6 +36,10 @@ async function verifyTurnstile(token: string, ip: string): Promise<{ success: bo
   return { success: !!outcome.success, error: outcome.success ? undefined : (outcome['error-codes'] || 'failed') };
 }
 
+function allowDevTurnstileBypass(): boolean {
+  return Deno.env.get('ALLOW_TURNSTILE_DEV_BYPASS') === 'true';
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -46,8 +51,7 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Parse payload
-  let payload: any;
+  let payload: Record<string, unknown>;
   try {
     payload = await req.json();
   } catch {
@@ -56,17 +60,52 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const { turnstileToken, website, cashtag, message, referrerCode: bodyReferrerCode } = payload;
+  const turnstileToken = String(payload.turnstileToken ?? '');
+  const website = payload.website != null ? String(payload.website) : '';
+  const cashtag = payload.cashtag != null ? String(payload.cashtag) : '';
+  const message = payload.message != null ? String(payload.message) : '';
+  const bodyReferrerCode = payload.referrerCode != null ? String(payload.referrerCode) : '';
+
   if (!turnstileToken) {
     return new Response(JSON.stringify({ success: false, error: 'Missing turnstileToken' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
+  // Require at least one contact method for payout/review
+  const websiteTrim = website.trim();
+  const cashtagTrim = cashtag.trim();
+  if (!websiteTrim && !cashtagTrim) {
+    return new Response(JSON.stringify({ success: false, error: 'Cashtag or website is required' }), {
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  if (websiteTrim && !isSafeHttpUrl(websiteTrim)) {
+    return new Response(JSON.stringify({ success: false, error: 'Website must be a valid http(s) URL' }), {
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  if (cashtagTrim && !isValidCashtag(cashtagTrim)) {
+    return new Response(JSON.stringify({ success: false, error: 'Invalid Cash App cashtag format' }), {
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  if (message.trim().length > 2000) {
+    return new Response(JSON.stringify({ success: false, error: 'Message too long' }), {
+      status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   const ip = getClientIp(req);
 
-  // 1. Turnstile bot protection (skip only for explicit local dev token)
-  if (turnstileToken !== 'dev-bypass-token') {
+  // Turnstile: real tokens always verified. dev-bypass-token only when explicitly enabled (local/staging).
+  if (turnstileToken === 'dev-bypass-token') {
+    if (!allowDevTurnstileBypass()) {
+      return new Response(JSON.stringify({ success: false, error: 'Bot check failed' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+  } else {
     const turnstileOk = await verifyTurnstile(turnstileToken, ip);
     if (!turnstileOk.success) {
       return new Response(JSON.stringify({ success: false, error: 'Bot check failed' }), {
@@ -81,7 +120,6 @@ Deno.serve(async (req: Request) => {
     { auth: { persistSession: false, autoRefreshToken: false } }
   );
 
-  // 2. Resolve referrer code: authenticated profile OR explicit code from public form
   let userReferrerCode = '';
   let claimUserId: string | null = null;
 
@@ -135,36 +173,63 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // 4. SERVER-SIDE TOP-1 CALCULATION (the security guarantee)
-  // We compute the true current leader from the referrals table using service_role
-  const { data: topRows, error: topErr } = await supabaseAdmin
-    .from('referrals')
-    .select('referrer_code')
-    .order('created_at', { ascending: true }); // for stable tie-break
+  // SERVER-SIDE TOP-1: prefer get_leaderboard RPC (same filters/tie-break as public board)
+  let topReferrerCode = '';
+  let topCount = 0;
+  let counts: Record<string, number> = {};
 
-  if (topErr || !topRows || topRows.length === 0) {
-    return new Response(JSON.stringify({ success: false, error: 'No referrals yet' }), {
+  const { data: board, error: boardErr } = await supabaseAdmin.rpc('get_leaderboard', {
+    min_referrals: 1,
+  });
+
+  if (!boardErr && Array.isArray(board) && board.length > 0) {
+    for (const row of board as { referrer_code?: string; referral_count?: number; rank?: number }[]) {
+      const code = String(row.referrer_code || '').trim();
+      const cnt = Number(row.referral_count) || 0;
+      if (code) counts[code] = cnt;
+      if (Number(row.rank) === 1 || (!topReferrerCode && code)) {
+        topReferrerCode = code;
+        topCount = cnt;
+      }
+    }
+    // Ensure rank-1 is authoritative
+    const rank1 = (board as { referrer_code?: string; referral_count?: number; rank?: number }[])
+      .find((r) => Number(r.rank) === 1);
+    if (rank1?.referrer_code) {
+      topReferrerCode = String(rank1.referrer_code).trim();
+      topCount = Number(rank1.referral_count) || 0;
+    }
+  } else {
+    // Fallback: in-memory aggregate (small DBs / RPC unavailable)
+    const { data: topRows, error: topErr } = await supabaseAdmin
+      .from('referrals')
+      .select('referrer_code, referred_ip, user_agent, created_at')
+      .order('created_at', { ascending: true })
+      .limit(5000);
+
+    if (topErr || !topRows || topRows.length === 0) {
+      return new Response(JSON.stringify({ success: false, error: 'No referrals yet' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const leader = computeClaimLeader(topRows);
+    if (!leader) {
+      return new Response(JSON.stringify({ success: false, error: 'No eligible referrals yet' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    topReferrerCode = leader.topReferrerCode;
+    topCount = leader.topCount;
+    counts = leader.counts;
+  }
+
+  if (!topReferrerCode || topCount <= 0) {
+    return new Response(JSON.stringify({ success: false, error: 'No eligible referrals yet' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
-  // Count per referrer_code (in-memory aggregate — fast for current scale)
-  const counts: Record<string, number> = {};
-  for (const r of topRows) {
-    counts[r.referrer_code] = (counts[r.referrer_code] || 0) + 1;
-  }
-
-  // Find current #1 (highest count, earliest created_at wins ties)
-  let topReferrerCode = '';
-  let topCount = 0;
-  for (const [code, cnt] of Object.entries(counts)) {
-    if (cnt > topCount) {
-      topCount = cnt;
-      topReferrerCode = code;
-    }
-  }
-
-  // 5. Get min referrals threshold from site_content (default 10)
   let minReferrals = 10;
   const { data: contentRows } = await supabaseAdmin
     .from('site_content')
@@ -187,7 +252,6 @@ Deno.serve(async (req: Request) => {
     minReferrals = Number((rawMin as { minReferrals: number }).minReferrals) || 10;
   }
 
-  // 6. Eligibility checks (server-enforced — never trust client)
   if (userReferrerCode !== topReferrerCode) {
     return new Response(JSON.stringify({
       success: false,
@@ -205,7 +269,6 @@ Deno.serve(async (req: Request) => {
     }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  // 7. Check for existing pending/approved claim by this user
   const { count: existingClaims } = await supabaseAdmin
     .from('prize_claims')
     .select('*', { count: 'exact', head: true })
@@ -218,15 +281,14 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // 8. Insert the claim (service_role — trusted)
   const { data: newClaim, error: insertErr } = await supabaseAdmin
     .from('prize_claims')
     .insert({
       referrer_code: userReferrerCode,
       user_id: claimUserId,
-      website: website?.trim() || null,
-      cashtag: cashtag?.trim() || null,
-      message: message?.trim() || null,
+      website: websiteTrim || null,
+      cashtag: cashtagTrim || null,
+      message: message.trim() || null,
       status: 'pending',
       rank_at_claim: 1,
       created_at: new Date().toISOString(),
@@ -235,21 +297,25 @@ Deno.serve(async (req: Request) => {
     .single();
 
   if (insertErr) {
+    // Unique violation = concurrent double-submit (if partial unique index applied)
+    if ((insertErr as { code?: string }).code === '23505') {
+      return new Response(JSON.stringify({ success: false, error: 'You already have an active claim' }), {
+        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     console.error('Claim insert failed:', insertErr);
     return new Response(JSON.stringify({ success: false, error: 'Failed to submit claim' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
-  const bypassNote = isOwnerBypass ? ' (owner test bypass used)' : '';
-  console.log(`[submit-claim] Claim created id=${newClaim.id} referrer=${userReferrerCode}${bypassNote}`);
+  console.log(`[submit-claim] Claim created id=${newClaim.id} referrer=${userReferrerCode}`);
 
   return new Response(JSON.stringify({
     success: true,
     claimId: newClaim.id,
     rank: 1,
     referralCount: topCount,
-    bypassUsed: isOwnerBypass,
-    message: `Claim submitted successfully. We will review within 48 hours.${bypassNote}`,
+    message: 'Claim submitted successfully. We will review within 48 hours.',
   }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 });

@@ -8,6 +8,7 @@
  * overridden in tests without a full DI container.
  */
 
-export const DEFAULT_REFERRAL_BASE_URL = 'https://viralrefer.app';
+/** Canonical public origin (www). Apex redirects here in production. */
+export const DEFAULT_REFERRAL_BASE_URL = 'https://www.viralrefer.app';
 
 export const APP_NAME = 'ViralRefer';

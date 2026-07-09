@@ -37,14 +37,13 @@ export function isMobileShareContext(): boolean {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent || '';
   const mobileUa = /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-  let narrow = false;
+  let isNarrowViewport = false;
   try {
-    narrow =
-      typeof window !== 'undefined' &&
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(max-width: 640px)').matches;
+    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+      isNarrowViewport = window.matchMedia('(max-width: 640px)').matches;
+    }
   } catch {
-    narrow = false;
+    // matchMedia unavailable
   }
-  return mobileUa || narrow;
+  return mobileUa || isNarrowViewport;
 }

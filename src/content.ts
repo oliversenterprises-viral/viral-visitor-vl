@@ -330,7 +330,16 @@ export async function updatePublicContent(content: Record<string, any>) {
         logBannerEvent('impression', activeBanner);
 
         const link = document.createElement('a');
-        link.href = activeBanner.redirectUrl || '#';
+        // Only allow http(s) banner targets — block javascript:/data: open redirects
+        const rawRedirect = String(activeBanner.redirectUrl || '').trim();
+        let safeHref = '#';
+        try {
+          const u = new URL(rawRedirect);
+          if (u.protocol === 'https:' || u.protocol === 'http:') safeHref = u.toString();
+        } catch {
+          safeHref = '#';
+        }
+        link.href = safeHref;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         // LCP/hero-area paint isolation + transform hints (consistent with premium card strategy)

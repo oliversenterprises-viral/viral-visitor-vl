@@ -127,7 +127,12 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
       .gte('created_at', windowStart);
 
     if (rateError) {
+      // Fail closed: do not credit when rate-limit DB is degraded
       console.error('[record-referral] Rate limit query error:', rateError);
+      return jsonResponse(
+        { success: false, error: 'Temporarily unavailable. Please try again.' },
+        503,
+      );
     } else if ((count ?? 0) >= rateMax) {
       return jsonResponse(
         { success: false, error: 'Rate limit exceeded. Please wait before trying again.' },
@@ -136,6 +141,10 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
     }
   } catch (rateErr) {
     console.error('[record-referral] Rate limiting exception:', rateErr);
+    return jsonResponse(
+      { success: false, error: 'Temporarily unavailable. Please try again.' },
+      503,
+    );
   }
 
   if (ip !== 'unknown') {
@@ -158,6 +167,10 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
 
       if (dailyError) {
         console.error('[record-referral] Daily IP cap query error:', dailyError);
+        return jsonResponse(
+          { success: false, error: 'Temporarily unavailable. Please try again.' },
+          503,
+        );
       } else if ((dailyCount ?? 0) >= GLOBAL_IP_DAILY_MAX) {
         return jsonResponse(
           { success: false, error: 'Daily referral limit reached for this network. Try again tomorrow.' },
@@ -166,6 +179,10 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
       }
     } catch (dailyErr) {
       console.error('[record-referral] Daily IP cap exception:', dailyErr);
+      return jsonResponse(
+        { success: false, error: 'Temporarily unavailable. Please try again.' },
+        503,
+      );
     }
   }
 

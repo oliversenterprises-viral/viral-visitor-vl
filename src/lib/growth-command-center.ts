@@ -49,9 +49,12 @@ function runGrowthAction(kind: GrowthNextActionKind): void {
     case 'whatsapp_boost':
       w.boostShareWhatsApp?.();
       break;
-    case 'duel_invite':
-      (w.boostDuelShareWhatsApp as (() => void) | undefined)?.() ?? w.boostShareWhatsApp?.();
+    case 'duel_invite': {
+      const duelShare = w.boostDuelShareWhatsApp as (() => void) | undefined;
+      if (typeof duelShare === 'function') duelShare();
+      else w.boostShareWhatsApp?.();
       break;
+    }
     case 'native_share':
       w.nativeShare?.();
       break;

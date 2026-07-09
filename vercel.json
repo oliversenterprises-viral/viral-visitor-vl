@@ -7,10 +7,6 @@
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://wqbefjzpgsezzwdrvvua.supabase.co wss://wqbefjzpgsezzwdrvvua.supabase.co https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; frame-ancestors *; upgrade-insecure-requests;"
         },
-        {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
@@ -39,7 +35,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|Googlebot|bingbot|Applebot|Pinterest|Embedly|redditbot)"
+          "value": "(?i).*(facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|whatsapp|telegrambot|googlebot|bingbot|applebot|pinterest|embedly|redditbot).*"
         }
       ],
       "destination": "/api/og-referral?code=:code"
@@ -50,13 +46,13 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|Googlebot|bingbot|Applebot|Pinterest|Embedly|redditbot)"
+          "value": "(?i).*(facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|whatsapp|telegrambot|googlebot|bingbot|applebot|pinterest|embedly|redditbot).*"
         }
       ],
       "destination": "/api/og-referral?code=:code&path=join"
     },
     { "source": "/embed", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "crons": [
     {

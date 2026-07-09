@@ -1,11 +1,36 @@
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 // ESM-compatible __dirname (required for Vite config with "type": "module")
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/** Stamp dist/version.json with commit SHA + deploy time (replaces public placeholders). */
+function stampVersionJson() {
+  return {
+    name: 'stamp-version-json',
+    writeBundle(options: { dir?: string }) {
+      const outDir = options.dir || path.resolve(__dirname, 'dist');
+      const version = {
+        version:
+          process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ||
+          process.env.npm_package_version ||
+          'dev',
+        deployed_at: new Date().toISOString(),
+        commit: process.env.VERCEL_GIT_COMMIT_SHA || null,
+      };
+      try {
+        fs.mkdirSync(outDir, { recursive: true });
+        fs.writeFileSync(path.join(outDir, 'version.json'), JSON.stringify(version, null, 2));
+      } catch (err) {
+        console.warn('[stamp-version-json] failed:', err);
+      }
+    },
+  };
+}
 
 /** SPA fallback — match vercel.json catch-all for non-asset routes in dev + preview. */
 function spaFallback() {
@@ -58,7 +83,7 @@ function injectGoogleSiteVerification() {
 
 export default defineConfig({
   base: '/',
-  plugins: [tailwindcss(), spaFallback(), injectGoogleSiteVerification()],
+  plugins: [tailwindcss(), spaFallback(), injectGoogleSiteVerification(), stampVersionJson()],
 
   resolve: {
     alias: {

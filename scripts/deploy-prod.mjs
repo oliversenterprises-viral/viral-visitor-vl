@@ -23,26 +23,24 @@ function run(cmd, label) {
 console.log('=== ViralRefer production deploy (with smoke gate) ===');
 console.log('Vercel project: viralrefer-premium → https://www.viralrefer.app\n');
 
-run(
-  `npx supabase functions deploy record-referral --project-ref ${PROJECT_REF} --yes`,
-  'Deploy record-referral edge function',
-);
-run(
-  `npx supabase functions deploy admin-action --project-ref ${PROJECT_REF} --yes`,
-  'Deploy admin-action edge function',
-);
-run(
-  `npx supabase functions deploy record-share --project-ref ${PROJECT_REF} --yes`,
-  'Deploy record-share edge function',
-);
-run(
-  `npx supabase functions deploy record-visitor-event --project-ref ${PROJECT_REF} --yes`,
-  'Deploy record-visitor-event edge function',
-);
-run(
-  `npx supabase functions deploy optimizer-cron --project-ref ${PROJECT_REF} --yes`,
-  'Deploy optimizer-cron edge function',
-);
+/** All production edge entrypoints — keep in sync with supabase/functions/* (exclude empty/archived). */
+const EDGE_FUNCTIONS = [
+  'record-referral',
+  'admin-action',
+  'record-share',
+  'record-visitor-event',
+  'record-banner-event',
+  'record-interaction',
+  'submit-claim',
+  'optimizer-cron',
+];
+
+for (const name of EDGE_FUNCTIONS) {
+  run(
+    `npx supabase functions deploy ${name} --project-ref ${PROJECT_REF} --yes`,
+    `Deploy ${name} edge function`,
+  );
+}
 const deployOut = execSync('npx vercel --prod --yes', { cwd: ROOT, encoding: 'utf8' });
 console.log(deployOut);
 const deployUrl = (deployOut.match(/https:\/\/viralrefer-premium-\S+\.vercel\.app/) || [])[0];
