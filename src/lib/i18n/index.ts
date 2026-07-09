@@ -153,9 +153,10 @@ export function applyI18n(locale: Locale = current, root: ParentNode = document)
     el.setAttribute('aria-label', t(key, locale));
   });
 
-  // Sync language picker if present
-  const select = document.getElementById('vr-lang-select') as HTMLSelectElement | null;
-  if (select && select.value !== locale) select.value = locale;
+  // Sync any language pickers (nav + embed)
+  document.querySelectorAll<HTMLSelectElement>('.vr-lang-select').forEach((select) => {
+    if (select.value !== locale) select.value = locale;
+  });
 
   applied = true;
 }
@@ -172,37 +173,74 @@ export function setLocale(locale: Locale): void {
   }
 }
 
-function buildLangPicker(): void {
-  if (document.getElementById('vr-lang-select')) return;
-  const navLinks = document.querySelector('.vr-nav-links');
-  if (!navLinks) return;
+function wireLangSelect(select: HTMLSelectElement): void {
+  if (select.dataset.vrLangBound === '1') return;
+  select.dataset.vrLangBound = '1';
+  select.value = current;
+  select.addEventListener('change', () => {
+    const next = select.value;
+    setLocale(isLocale(next) ? next : 'en');
+  });
+}
 
+function createLangPickerWrap(selectId: string, extraClass = ''): HTMLLabelElement {
   const wrap = document.createElement('label');
-  wrap.className = 'vr-lang-picker';
+  wrap.className = `vr-lang-picker ${extraClass}`.trim();
   wrap.setAttribute('title', t('lang.hint'));
   wrap.innerHTML = `
     <span class="sr-only">${t('nav.lang')}</span>
-    <select id="vr-lang-select" class="vr-lang-select" aria-label="${t('nav.lang')}">
+    <select id="${selectId}" class="vr-lang-select" aria-label="${t('nav.lang')}">
       ${SUPPORTED_LOCALES.map(
         (loc) => `<option value="${loc}">${LOCALE_LABELS[loc]}</option>`,
       ).join('')}
     </select>
   `;
+  const select = wrap.querySelector('select') as HTMLSelectElement;
+  wireLangSelect(select);
+  return wrap;
+}
 
-  // Insert before admin button if present
+/** Compact language control for /embed traffic-exchange layout. */
+export function mountEmbedLangPicker(): void {
+  if (typeof document === 'undefined') return;
+  if (!document.documentElement.hasAttribute('data-vr-embed')) return;
+
+  const slot = document.getElementById('vr-embed-lang-slot');
+  if (!slot) return;
+  if (slot.querySelector('.vr-lang-select')) {
+    const existing = slot.querySelector('.vr-lang-select') as HTMLSelectElement;
+    wireLangSelect(existing);
+    existing.value = current;
+    return;
+  }
+
+  const wrap = createLangPickerWrap('vr-lang-select-embed', 'vr-lang-picker--embed');
+  slot.appendChild(wrap);
+}
+
+function buildLangPicker(): void {
+  // Embed: mount into top embed bar (nav is hidden on /embed)
+  if (document.documentElement.hasAttribute('data-vr-embed')) {
+    mountEmbedLangPicker();
+    // Bar may inject slightly later — retry briefly
+    if (!document.getElementById('vr-lang-select-embed')) {
+      window.setTimeout(() => mountEmbedLangPicker(), 80);
+      window.setTimeout(() => mountEmbedLangPicker(), 300);
+    }
+    return;
+  }
+
+  if (document.getElementById('vr-lang-select')) return;
+  const navLinks = document.querySelector('.vr-nav-links');
+  if (!navLinks) return;
+
+  const wrap = createLangPickerWrap('vr-lang-select');
   const adminBtn = document.getElementById('admin-btn');
   if (adminBtn?.parentElement === navLinks) {
     navLinks.insertBefore(wrap, adminBtn);
   } else {
     navLinks.appendChild(wrap);
   }
-
-  const select = wrap.querySelector('#vr-lang-select') as HTMLSelectElement;
-  select.value = current;
-  select.addEventListener('change', () => {
-    const next = select.value;
-    setLocale(isLocale(next) ? next : 'en');
-  });
 }
 
 /** Footer language row (desktop-friendly secondary control). */
@@ -228,6 +266,15 @@ export function initI18n(): void {
   applyI18n(current);
   buildLangPicker();
   buildFooterLangNote();
+
+  // Embed chrome may mount after i18n — attach picker when bar is ready
+  if (!document.documentElement.dataset.vrEmbedLangListen) {
+    document.documentElement.dataset.vrEmbedLangListen = '1';
+    window.addEventListener('vr:embed-chrome-ready', () => {
+      mountEmbedLangPicker();
+    });
+  }
+
   applied = true;
 }
 
@@ -238,6 +285,7 @@ export function reapplyI18n(): void {
     return;
   }
   applyI18n(current);
+  mountEmbedLangPicker();
   const footerLabel = document.getElementById('vr-lang-footer-label');
   if (footerLabel) footerLabel.textContent = LOCALE_LABELS[current];
 }

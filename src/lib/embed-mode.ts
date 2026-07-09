@@ -35,12 +35,22 @@ function injectEmbedChrome(): void {
   bar.id = 'vr-embed-bar';
   bar.className = 'vr-embed-bar';
   bar.innerHTML = `
-    <span class="vr-embed-bar-label">ViralRefer contest</span>
-    <a class="vr-embed-bar-link" href="https://www.viralrefer.app/?utm_source=traffic_exchange&utm_medium=iframe_exit&utm_campaign=embed" target="_top" rel="noopener">
-      Open full site ↗
-    </a>
+    <span class="vr-embed-bar-label">ViralRefer</span>
+    <div class="vr-embed-bar-actions">
+      <span id="vr-embed-lang-slot" class="vr-embed-lang-slot" aria-live="polite"></span>
+      <a class="vr-embed-bar-link" href="https://www.viralrefer.app/?utm_source=traffic_exchange&utm_medium=iframe_exit&utm_campaign=embed" target="_top" rel="noopener">
+        Open full site ↗
+      </a>
+    </div>
   `;
   document.body.prepend(bar);
+
+  // Let i18n mount the compact language control (picker needs the slot in DOM)
+  try {
+    window.dispatchEvent(new CustomEvent('vr:embed-chrome-ready'));
+  } catch {
+    /* non-fatal */
+  }
 }
 
 /** Bootstrap embed layout (call before UTM capture). */

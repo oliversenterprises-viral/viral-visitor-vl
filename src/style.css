@@ -366,8 +366,34 @@ html[data-vr-share-mobile] #share-whatsapp-primary.share-btn {
   color: #fafafa;
 }
 
-html[data-vr-embed] .vr-lang-picker {
-  display: none;
+/* Nav is hidden on embed — embed uses .vr-lang-picker--embed in the top bar instead */
+html[data-vr-embed] .vr-nav-links .vr-lang-picker {
+  display: none !important;
+}
+
+html[data-vr-embed] .vr-lang-picker--embed {
+  display: inline-flex !important;
+}
+
+.vr-lang-picker--embed .vr-lang-select {
+  font-size: 0.65rem;
+  min-height: 28px;
+  padding: 0.2rem 1.25rem 0.2rem 0.45rem;
+  max-width: 5.75rem;
+  background-color: rgba(0, 0, 0, 0.35);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+.vr-embed-bar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.vr-embed-lang-slot {
+  display: inline-flex;
+  align-items: center;
 }
 
 @media (max-width: 640px) {
