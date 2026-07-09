@@ -77,15 +77,26 @@ export async function getBannerEventsForStats(): Promise<{
   }
 
   try {
-    const serverEvents = result.data.map((row: Record<string, any>) => ({
-      type: row.type || row.event_type,
-      label: row.label || row.banner_label,
-      redirectUrl: row.redirect_url || row.redirectUrl,
-      key: row.key || row.banner_key || (row.additional?.key ?? row.additional?.Key),
-      ip: row.ip || row.ip_address || row.additional?.ip,
-      user_agent: row.user_agent || row.additional?.user_agent,
-      timestamp: row.created_at || row.timestamp,
-    }));
+    const serverEvents = result.data.map((row: Record<string, any>) => {
+      const label = String(row.label || row.banner_label || '').trim();
+      const redirectUrl = row.redirect_url || row.redirectUrl || '';
+      const additional =
+        row.additional && typeof row.additional === 'object' ? row.additional : {};
+      const keyFromAdditional = String(additional.key || additional.Key || '').trim();
+      const key =
+        String(row.key || row.banner_key || keyFromAdditional || '').trim() ||
+        (label && redirectUrl ? `${label}|${redirectUrl}` : label || redirectUrl || 'unknown');
+      return {
+        type: row.type || row.event_type,
+        label: label || 'untitled',
+        redirectUrl,
+        key,
+        ip: row.ip || row.ip_address || additional.ip,
+        user_agent: row.user_agent || additional.user_agent,
+        timestamp: row.created_at || row.timestamp,
+        created_at: row.created_at || row.timestamp,
+      };
+    });
     if (serverEvents.length > 0) {
       return { events: serverEvents, source: 'server' };
     }

@@ -336,61 +336,94 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get_admin_live_seed') {
+      // Partial success: one bad column must not blank the entire Live Activity feed.
+      // Use select('*') + normalize for tables with schema drift (banner_events, prize_claims).
+      type SeedPart = { data: Record<string, unknown>[]; error: string | null };
+      const safe = async (
+        label: string,
+        run: () => PromiseLike<{ data: unknown; error: { message?: string } | null }>,
+      ): Promise<SeedPart> => {
+        try {
+          const { data, error } = await run();
+          if (error) {
+            console.error(`[admin-action] live seed ${label}:`, error.message);
+            return { data: [], error: error.message || label };
+          }
+          return { data: (data as Record<string, unknown>[]) || [], error: null };
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          console.error(`[admin-action] live seed ${label} exception:`, msg);
+          return { data: [], error: msg };
+        }
+      };
+
       const [referrals, shares, claims, visitorEvents, bannerEvents, siteContent] = await Promise.all([
-        supabaseAdmin
-          .from('referrals')
-          .select('id, referrer_code, created_at')
-          .order('created_at', { ascending: false })
-          .limit(6),
-        supabaseAdmin
-          .from('shares')
-          .select('id, platform, referrer_code, created_at')
-          .order('created_at', { ascending: false })
-          .limit(6),
-        // Prod prize_claims columns (Cash App claims) — no prize_name/prize_id
-        supabaseAdmin
-          .from('prize_claims')
-          .select('id, status, referrer_code, cashtag, website, message, created_at, reviewed_at, paid_at')
-          .order('created_at', { ascending: false })
-          .limit(4),
-        supabaseAdmin
-          .from('visitor_events')
-          .select('id, event_name, utm_source, ref_code, created_at')
-          .order('created_at', { ascending: false })
-          .limit(8),
-        supabaseAdmin
-          .from('banner_events')
-          .select('id, type, label, key, created_at')
-          .order('created_at', { ascending: false })
-          .limit(6),
-        supabaseAdmin
-          .from('site_content')
-          .select('key, updated_at')
-          .order('updated_at', { ascending: false })
-          .limit(4),
+        safe('referrals', () =>
+          supabaseAdmin
+            .from('referrals')
+            .select('id, referrer_code, created_at')
+            .order('created_at', { ascending: false })
+            .limit(8),
+        ),
+        safe('shares', () =>
+          supabaseAdmin
+            .from('shares')
+            .select('id, platform, referrer_code, created_at')
+            .order('created_at', { ascending: false })
+            .limit(8),
+        ),
+        // Cash App claims schema — no prize_name/prize_id
+        safe('prize_claims', () =>
+          supabaseAdmin
+            .from('prize_claims')
+            .select('id, status, referrer_code, cashtag, website, message, created_at, reviewed_at, paid_at')
+            .order('created_at', { ascending: false })
+            .limit(6),
+        ),
+        safe('visitor_events', () =>
+          supabaseAdmin
+            .from('visitor_events')
+            .select('id, event_name, utm_source, ref_code, visitor_id, created_at')
+            .order('created_at', { ascending: false })
+            .limit(12),
+        ),
+        // Prod columns: event_type, banner_label (not type/label/key) — select * + normalize
+        safe('banner_events', () =>
+          supabaseAdmin
+            .from('banner_events')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(8),
+        ),
+        safe('site_content', () =>
+          supabaseAdmin
+            .from('site_content')
+            .select('key, updated_at')
+            .order('updated_at', { ascending: false })
+            .limit(4),
+        ),
       ]);
 
-      const firstError =
-        referrals.error ||
-        shares.error ||
-        claims.error ||
-        visitorEvents.error ||
-        bannerEvents.error ||
-        siteContent.error;
-      if (firstError) throw firstError;
+      const warnings = [
+        referrals.error && `referrals: ${referrals.error}`,
+        shares.error && `shares: ${shares.error}`,
+        claims.error && `prize_claims: ${claims.error}`,
+        visitorEvents.error && `visitor_events: ${visitorEvents.error}`,
+        bannerEvents.error && `banner_events: ${bannerEvents.error}`,
+        siteContent.error && `site_content: ${siteContent.error}`,
+      ].filter(Boolean) as string[];
 
       return new Response(
         JSON.stringify({
           success: true,
           data: {
-            referrals: referrals.data || [],
-            shares: shares.data || [],
-            prize_claims: claims.data || [],
-            visitor_events: visitorEvents.data || [],
-            banner_events: (bannerEvents.data || []).map((row: Record<string, unknown>) =>
-              normalizeBannerEventRow(row),
-            ),
-            site_content: siteContent.data || [],
+            referrals: referrals.data,
+            shares: shares.data,
+            prize_claims: claims.data,
+            visitor_events: visitorEvents.data,
+            banner_events: bannerEvents.data.map((row) => normalizeBannerEventRow(row)),
+            site_content: siteContent.data,
+            warnings: warnings.length ? warnings : undefined,
           },
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
@@ -446,7 +479,7 @@ Deno.serve(async (req: Request) => {
         .from('banner_events')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(500);
+        .limit(2000);
       if (error) throw error;
       const normalized = (data || []).map((row: Record<string, unknown>) => normalizeBannerEventRow(row));
       return new Response(JSON.stringify({ success: true, data: normalized }), {
@@ -455,13 +488,12 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get_visitor_stats') {
+      // select('*') is schema-safe if columns are added/renamed later
       const { data, error } = await supabaseAdmin
         .from('visitor_events')
-        .select(
-          'event_name, utm_source, utm_campaign, utm_content, utm_medium, ref_code, visitor_id, session_id, country_code, ip_hash, metadata, created_at',
-        )
+        .select('*')
         .order('created_at', { ascending: false })
-        .limit(2000);
+        .limit(5000);
       if (error) throw error;
       return new Response(JSON.stringify({ success: true, data: data || [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

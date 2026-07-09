@@ -290,7 +290,19 @@ async function seedAdminLiveFeed(): Promise<void> {
     ...seedEventsFromRows('site_content', 'UPDATE', data.site_content || []),
   ];
 
-  if (!seeded.length) return;
+  if (!seeded.length) {
+    if (feed.length === 0) {
+      const el = document.getElementById('admin-live-feed');
+      if (el) {
+        el.innerHTML = buildAdminLiveFeedHtml(
+          [],
+          Date.now(),
+          'No recent activity yet — waiting for live events…',
+        );
+      }
+    }
+    return;
+  }
   feed.length = 0;
   feed.push(...mergeAdminLiveEvents([seeded], MAX_FEED));
   renderFeed();

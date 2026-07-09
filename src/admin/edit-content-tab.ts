@@ -123,11 +123,12 @@ async function renderEditContentTab(content: HTMLElement) {
       refreshAdminLiveIndicators();
 
       attachContentListeners(content, loadAndRenderList, rows);
+      // Wire hub first so KPI summary updates as each panel finishes loading
+      wireEditContentTrackingHub(content);
       await Promise.allSettled([
         wireVisitorFunnelStatsQuick(content),
         wireBannerStatsQuick(content),
       ]);
-      wireEditContentTrackingHub(content);
       wireEditContentAutoClearTest(content, async () => {
         try {
           await runClearTestAdminStatsForEditContent(content, {

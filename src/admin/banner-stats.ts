@@ -319,7 +319,7 @@ function renderBannerStatsView(
       <div class="text-[10px] font-semibold text-emerald-400">Banner Performance</div>
       ${sourceBadge}
       <span id="banner-live-indicator" class="hidden text-[9px] text-emerald-400/90"><i class="fa-solid fa-circle text-[5px] mr-0.5"></i>live</span>
-      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''}${rangeNote} · ${stats.total} events${isServer ? ' (latest 500)' : ''}</span>
+      <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''}${rangeNote} · ${stats.total} events${isServer ? ' (latest 2k)' : ''}</span>
     </div>
   `;
 
