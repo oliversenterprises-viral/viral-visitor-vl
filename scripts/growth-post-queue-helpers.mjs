@@ -21,7 +21,7 @@ export const TELEGRAM_CHANNEL = '@viralrefer';
 export const TELEGRAM_CHANNEL_URL = 'https://t.me/viralrefer';
 
 export const COMPLIANCE_FOOTER =
-  'US residents 18+. No purchase necessary. Skill-based contest — see rules on site.';
+  'Open worldwide, 18+. No purchase necessary. Free leaderboard — see rules on site.';
 
 export const X_LEADERBOARD_IMAGE = resolve(
   ROOT,
@@ -33,7 +33,7 @@ export const X_QR_IMAGE = resolve(ROOT, 'marketing/x-launch/viralrefer-qr-VIRAL-
 export const X_LINK_POLICY = 'no-url';
 export const X_NO_URL_CTA = 'SCAN THE QR image — or search Google: ViralRefer';
 export const X_SAFE_BIO =
-  'Refer friends → win $10 + homepage banner | Search Google: ViralRefer | Scan QR on pinned post';
+  'Free referral leaderboard → #1 claims homepage feature | Search Google: ViralRefer | Scan QR on pinned post';
 
 const URL_IN_TEXT_RE = /https?:\/\/|viralrefer\.app|utm_/i;
 
@@ -158,9 +158,9 @@ export const TRAFFICADBAR_LISTING = {
 
 export function appendCompliance(text, { short = false } = {}) {
   const footer = short
-    ? 'US 18+. No purchase necessary.'
+    ? 'Worldwide 18+. No purchase necessary.'
     : `${COMPLIANCE_FOOTER} ${RULES_URL}`;
-  if (text.includes('US 18') || text.includes('18+')) return text;
+  if (text.includes('Worldwide 18') || text.includes('US 18') || text.includes('18+')) return text;
   return `${text.trim()}\n\n${footer}`;
 }
 
@@ -334,8 +334,8 @@ export function buildWeekQueue(stats) {
           `Body:\n` +
           `Most referral traffic (${stats.landings7d} landings / 7d) arrives via shared links — but only ~${stats.getLinkRatePct}% tap "Get my link." ` +
           `The viral loop dies at step 1, not step 3.\n\n` +
-          `ViralRefer is a free contest: 30-sec link, live board, $10 Cash App + homepage for #1 (US 18+, rules on site).\n\n` +
-          `Happy to share what we're testing (hero social proof, prize-forward CTA) if useful for other builders.\n\n` +
+          `ViralRefer is a free worldwide leaderboard: 30-sec link, live board, homepage feature for #1 (18+, no cash prize, rules on site).\n\n` +
+          `Happy to share what we're testing (hero social proof, feature-forward CTA) if useful for other builders.\n\n` +
           `${buildUtmUrl({ source: 'reddit', campaign: 'referral-automation', content: 'value-post' })}\n\n` +
           `Post manually to a value-friendly sub — never spam.`,
       },

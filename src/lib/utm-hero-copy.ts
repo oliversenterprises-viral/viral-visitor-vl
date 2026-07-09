@@ -32,7 +32,7 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
     titleAccent: 'Free link, live rankings, homepage feature for #1.',
     subtitle:
       'Built for builders and marketers: tap once, copy your link, share anywhere. Every visit moves you up the board.',
-    trustLine: 'No email wall · Free forever · US 18+',
+    trustLine: 'No email wall · Free forever · Worldwide 18+',
     buttonLabel: 'Get my free link',
   },
   reddit: {

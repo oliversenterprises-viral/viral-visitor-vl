@@ -1,15 +1,15 @@
 # ViralRefer — Official Rules & Disclaimers
 
 **Last Updated:** 2026-07-09  
-**Product:** Free live referral leaderboard. No cash prizes.
+**Product:** Free live referral leaderboard. No cash prizes. Open worldwide.
 
 ## NO PURCHASE NECESSARY
 
 **THIS IS A FREE, SKILL-BASED REFERRAL LEADERBOARD. NO PURCHASE, PAYMENT, OR DONATION OF ANY KIND IS NECESSARY TO ENTER OR PARTICIPATE.**  
-**VOID WHERE PROHIBITED BY LAW OR REGULATION.**  
+**OPEN WORLDWIDE. VOID WHERE PROHIBITED BY LAW OR REGULATION.**  
 **THERE ARE NO CASH PRIZES.**
 
-- **Eligibility:** Open only to natural persons who are legal residents of the 50 United States and the District of Columbia, and who are at least eighteen (18) years of age at the time of entry. Employees, officers, directors, agents, and representatives of ViralRefer, its affiliates, and their immediate family members and household members are not eligible.
+- **Eligibility:** Open worldwide to natural persons who are at least eighteen (18) years of age, or the age of majority in their jurisdiction if higher, at the time of entry. Employees, officers, directors, agents, and representatives of ViralRefer, its affiliates, and their immediate family members and household members are not eligible. Participation is void where prohibited or restricted by local law.
 - **Entry Method:** Entry occurs by generating a unique personal referral link and successfully referring new users who complete valid actions tracked server-side. Each unique, verified referral awards progress toward leaderboard ranking. Automated, robotic, or fraudulent entries are invalid.
 - **#1 Determination:** Top referrers (highest verified referral counts, minimum threshold as shown on site / configurable in `site_content`) may claim a **homepage banner feature** for their website after verification. Rankings computed from the `referrals` table via secure server-side queries. Ties broken by earliest timestamp. Client-side claims are never trusted.
 - **Homepage feature (not cash):** The only recognition offered is a homepage banner / feature slot subject to eligibility verification and final admin approval. Features are non-transferable. There is no cash prize, Cash App payout, or monetary award.
