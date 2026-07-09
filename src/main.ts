@@ -13,6 +13,7 @@ import { initPublicClarity, refreshPublicClarityState } from './lib/public-clari
 import { initPublicPolish } from './lib/public-polish';
 import { initEmbedMode } from './lib/embed-mode';
 import { initViralLoops } from './lib/viral-loops';
+import { initI18n } from './lib/i18n';
 
 // Public layer (all onclick handlers, modals, debug, etc.)
 import { initPublic } from './public';
@@ -27,6 +28,12 @@ initEmbedMode();
 initMobileOptimize();
 initPublicPolish();
 initPublicClarity();
+// Phase 1 i18n — browser language + picker (English fallback; never blocks)
+try {
+  initI18n();
+} catch (err) {
+  console.warn('[ViralRefer] i18n init skipped:', err);
+}
 
 // console.log('%c[ViralRefer] main.ts module loaded', 'color:#64748b'); // silenced for prod (audit cleanup)
 

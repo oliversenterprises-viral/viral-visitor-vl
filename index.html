@@ -109,10 +109,10 @@
                 <span class="text-xl sm:text-3xl font-semibold tracking-tighter logo-font truncate">ViralRefer</span>
             </a>
             <div class="vr-nav-links flex items-center gap-2 sm:gap-6 text-sm font-medium shrink-0">
-                <a href="#how" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">How</a>
-                <a href="#prize" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">Feature</a>
-                <a href="#leaderboard" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">Board</a>
-                <button type="button" id="nav-get-link-btn" data-vr-zone="nav-get-link" class="sm:hidden px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl text-xs font-semibold min-h-[44px]">
+                <a href="#how" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.how">How</a>
+                <a href="#prize" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.feature">Feature</a>
+                <a href="#leaderboard" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.board">Board</a>
+                <button type="button" id="nav-get-link-btn" data-vr-zone="nav-get-link" class="sm:hidden px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl text-xs font-semibold min-h-[44px]" data-i18n="nav.get_link">
                     Get link
                 </button>
                 <button id="admin-btn" class="px-3 py-2 sm:px-6 sm:py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-3xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2 min-h-[44px] min-w-[44px] sm:min-w-0 justify-center" aria-label="Admin dashboard">
@@ -127,31 +127,31 @@
         <!-- HERO — conversion polish: one primary action, global proof, quiet first paint -->
         <div class="rounded-2xl sm:rounded-3xl p-6 sm:p-12 md:p-16 text-center hero-gradient shadow-2xl">
             <div class="max-w-3xl mx-auto">
-                <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-xs font-medium px-4 py-2 rounded-3xl mb-5 sm:mb-6 border border-white/20" style="color: var(--text-hero-badge, #e0e7ff)">
+                <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-xs font-medium px-4 py-2 rounded-3xl mb-5 sm:mb-6 border border-white/20" style="color: var(--text-hero-badge, #e0e7ff)" data-i18n="hero.badge">
                     <i class="fa-solid fa-globe text-emerald-300/90" aria-hidden="true"></i>
-                    WORLDWIDE &bull; FREE
+                    <span data-i18n-text>WORLDWIDE &bull; FREE</span>
                 </div>
                
                 <h1 id="hero-title" class="vr-hero-title text-[2.25rem] sm:text-[52px] md:text-[64px] lg:text-[76px] font-bold tracking-[-0.05em] logo-font leading-[1.05] mb-3 sm:mb-4" style="color: var(--text-hero-title, #ffffff); text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-                    <span id="hero-title-line1">Get your free link in 30 seconds.</span><br>
-                    <span id="hero-title-accent" class="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-cyan-400 drop-shadow-[0_4px_20px_rgba(192,132,252,0.5)]" style="color: var(--text-hero-accent, #c084fc);">
+                    <span id="hero-title-line1" data-i18n="hero.title_line1">Get your free link in 30 seconds.</span><br>
+                    <span id="hero-title-accent" data-i18n="hero.title_accent" class="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-cyan-400 drop-shadow-[0_4px_20px_rgba(192,132,252,0.5)]" style="color: var(--text-hero-accent, #c084fc);">
                         Climb to #1 &mdash; claim homepage feature.
                     </span>
                 </h1>
                
-                <p id="hero-subtitle" class="text-base sm:text-lg md:text-xl text-zinc-200 max-w-xl mx-auto mb-5 sm:mb-6 leading-relaxed px-1">
+                <p id="hero-subtitle" data-i18n="hero.subtitle" class="text-base sm:text-lg md:text-xl text-zinc-200 max-w-xl mx-auto mb-5 sm:mb-6 leading-relaxed px-1">
                     Open worldwide. No signup. One tap, then share anywhere.
                 </p>
 
                 <!-- Global proof strip (static + live count) -->
                 <div id="hero-global-proof" class="hero-global-proof mb-5 sm:mb-6" role="status" aria-live="polite">
-                    <span class="hero-global-proof-item"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i> Open worldwide</span>
+                    <span class="hero-global-proof-item" data-i18n="hero.proof_worldwide"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i><span data-i18n-text> Open worldwide</span></span>
                     <span class="hero-global-proof-sep" aria-hidden="true">·</span>
-                    <span class="hero-global-proof-item">18+</span>
+                    <span class="hero-global-proof-item" data-i18n="hero.proof_age">18+</span>
                     <span class="hero-global-proof-sep" aria-hidden="true">·</span>
-                    <span class="hero-global-proof-item">No email</span>
+                    <span class="hero-global-proof-item" data-i18n="hero.proof_no_email">No email</span>
                     <span class="hero-global-proof-sep" aria-hidden="true">·</span>
-                    <span class="hero-global-proof-item" id="hero-global-proof-live">Live free leaderboard</span>
+                    <span class="hero-global-proof-item" id="hero-global-proof-live" data-i18n="hero.proof_live">Live free leaderboard</span>
                 </div>
 
                 <div id="hero-referred-social-proof" class="hidden mb-4" role="status" aria-live="polite"></div>
@@ -161,20 +161,20 @@
                     <button id="hero-get-link-btn" data-vr-zone="hero-get-link" onclick="getMyReferralLinkInstant()" 
                             class="btn-primary w-full px-8 py-4 sm:px-12 sm:py-5 text-lg sm:text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/30 min-h-[48px]">
                         <i class="fa-solid fa-link" aria-hidden="true"></i>
-                        <span>Get my referral link</span>
+                        <span data-i18n="hero.cta">Get my referral link</span>
                     </button>
                    
                     <button id="hero-leaderboard-btn" data-vr-zone="hero-leaderboard" onclick="document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth' })" 
-                            class="hero-secondary-cta w-full px-6 py-2.5 text-sm sm:text-base flex items-center justify-center gap-2 min-h-[40px]">
+                            class="hero-secondary-cta w-full px-6 py-2.5 text-sm sm:text-base flex items-center justify-center gap-2 min-h-[40px]" data-i18n="hero.cta_secondary">
                         See leaderboard
                     </button>
                 </div>
 
-                <p id="hero-trust-line" class="mt-4 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
+                <p id="hero-trust-line" data-i18n="hero.trust" class="mt-4 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
                     Free recognition for #1 &bull; Your link in ~5 seconds
                 </p>
                 <p class="mt-2">
-                    <a href="#leaderboard" id="hero-leaderboard-link" data-vr-zone="hero-leaderboard-link" class="hero-leaderboard-text-link text-sm text-violet-300/90 hover:text-violet-200 underline underline-offset-4 decoration-violet-500/40">
+                    <a href="#leaderboard" id="hero-leaderboard-link" data-vr-zone="hero-leaderboard-link" data-i18n="hero.board_link" class="hero-leaderboard-text-link text-sm text-violet-300/90 hover:text-violet-200 underline underline-offset-4 decoration-violet-500/40">
                         See who&rsquo;s on the live board &darr;
                     </a>
                 </p>
@@ -194,30 +194,30 @@
             <div class="funnel-journey-header">
                 <span class="funnel-journey-badge">
                     <i class="fa-solid fa-route" aria-hidden="true"></i>
-                    <span id="funnel-journey-badge">YOUR 3-STEP PATH TO #1</span>
+                    <span id="funnel-journey-badge" data-i18n="funnel.badge">YOUR 3-STEP PATH TO #1</span>
                 </span>
             </div>
             <div id="funnel-steps" class="funnel-steps-row" aria-label="Your steps — tap the active step to jump">
                 <span data-funnel-step="1" class="funnel-step funnel-step-active funnel-step--nav" title="Step 1 — tap to jump to Get my link">
                     <span class="funnel-step-icon" aria-hidden="true"><i class="fa-solid fa-link"></i></span>
-                    <span id="funnel-step1-label" class="funnel-step-label">1. Get link</span>
+                    <span id="funnel-step1-label" class="funnel-step-label" data-i18n="funnel.step1">1. Get link</span>
                     <span class="funnel-step-required">required</span>
                 </span>
                 <span class="funnel-step-arrow funnel-step-arrow--flow" data-funnel-arrow="1" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
                 <span data-funnel-step="2" class="funnel-step funnel-step-pending" title="Step 2 — copy your link">
                     <span class="funnel-step-icon" aria-hidden="true"><i class="fa-solid fa-copy"></i></span>
-                    <span id="funnel-step2-label" class="funnel-step-label">2. Copy</span>
+                    <span id="funnel-step2-label" class="funnel-step-label" data-i18n="funnel.step2">2. Copy</span>
                 </span>
                 <span class="funnel-step-arrow funnel-step-arrow--idle" data-funnel-arrow="2" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
                 <span data-funnel-step="3" class="funnel-step funnel-step-pending" title="Step 3 — share to win">
                     <span class="funnel-step-icon" aria-hidden="true"><i class="fa-solid fa-share-nodes"></i></span>
-                    <span id="funnel-step3-label" class="funnel-step-label">3. Share &amp; climb</span>
+                    <span id="funnel-step3-label" class="funnel-step-label" data-i18n="funnel.step3">3. Share &amp; climb</span>
                 </span>
             </div>
             <div id="funnel-guide-coach" class="funnel-guide-coach" role="status" aria-live="polite">
                 <div class="funnel-guide-coach-inner">
                     <span class="funnel-guide-coach-icon" aria-hidden="true"><i class="fa-solid fa-arrow-up"></i></span>
-                    <span id="funnel-guide-coach-text" class="funnel-guide-coach-text">Step 1: tap Get my referral link to start.</span>
+                    <span id="funnel-guide-coach-text" class="funnel-guide-coach-text" data-i18n="funnel.coach">Step 1: tap Get my referral link to start.</span>
                 </div>
             </div>
         </div>
@@ -671,10 +671,10 @@
             <div class="text-center mb-8">
                 <div class="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">
                     <i class="fa-solid fa-lightbulb"></i>
-                    <span id="how-it-works-badge" style="color: var(--text-how-badge, #a5b4fc)">3 SIMPLE STEPS</span>
+                    <span id="how-it-works-badge" data-i18n="how.badge" style="color: var(--text-how-badge, #a5b4fc)">3 SIMPLE STEPS</span>
                 </div>
-                <h2 id="how-it-works-title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-how-title, #ffffff)">How ViralRefer Works</h2>
-                <p id="how-it-works-subtitle" class="text-xl text-zinc-400 mt-2 max-w-md mx-auto">Three steps. Under ten minutes. Free forever.</p>
+                <h2 id="how-it-works-title" data-i18n="how.title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-how-title, #ffffff)">How ViralRefer Works</h2>
+                <p id="how-it-works-subtitle" data-i18n="how.subtitle" class="text-xl text-zinc-400 mt-2 max-w-md mx-auto">Three steps. Under ten minutes. Free forever.</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -682,22 +682,22 @@
                     <div class="mx-auto w-14 h-14 bg-violet-600/20 text-violet-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-link"></i>
                     </div>
-                    <div id="how-step1-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">1. Get your link</div>
-                    <p id="how-step1-desc" class="text-zinc-400 leading-relaxed">Click the button below and instantly receive your unique, trackable referral link.</p>
+                    <div id="how-step1-title" data-i18n="how.step1_title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">1. Get your link</div>
+                    <p id="how-step1-desc" data-i18n="how.step1_desc" class="text-zinc-400 leading-relaxed">Tap the button — free, no signup, unique trackable link in seconds.</p>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-violet-500/50 transition-all">
                     <div class="mx-auto w-14 h-14 bg-violet-600/20 text-violet-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-share-alt"></i>
                     </div>
-                    <div id="how-step2-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">2. Share everywhere</div>
-                    <p id="how-step2-desc" class="text-zinc-400 leading-relaxed">Post on X, WhatsApp, LinkedIn, Telegram, SMS — every click through your link counts toward your total.</p>
+                    <div id="how-step2-title" data-i18n="how.step2_title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">2. Share anywhere</div>
+                    <p id="how-step2-desc" data-i18n="how.step2_desc" class="text-zinc-400 leading-relaxed">Copy and paste on social, chat, email — every visit can count.</p>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-amber-400/50 transition-all">
                     <div class="mx-auto w-14 h-14 bg-amber-400/20 text-amber-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-trophy"></i>
                     </div>
-                    <div id="how-step3-title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">3. Climb &amp; get featured</div>
-                    <p id="how-it-works-step3" class="text-zinc-400 leading-relaxed">Reach the top of the leaderboard (min. referrals on site) and claim a <span class="font-semibold text-emerald-400">homepage feature</span> for your site — no cash prize.</p>
+                    <div id="how-step3-title" data-i18n="how.step3_title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">3. Climb &amp; get featured</div>
+                    <p id="how-it-works-step3" data-i18n="how.step3_desc" class="text-zinc-400 leading-relaxed">Reach the top of the leaderboard and claim a homepage feature for your site — no cash prize.</p>
                 </div>
             </div>
         </div>
@@ -707,36 +707,36 @@
             <div class="text-center mb-8">
                 <div class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">
                     <i class="fa-solid fa-trophy"></i>
-                    <span id="prize-badge">HOMEPAGE FEATURE</span>
+                    <span id="prize-badge" data-i18n="prize.badge">HOMEPAGE FEATURE</span>
                 </div>
-                <h2 id="prize-title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-prize-title)">Homepage Banner Feature</h2>
-                <p id="prize-subtitle" class="text-xl text-zinc-300 mt-2">Open worldwide. #1 on the live board can claim a homepage feature for their website — free recognition, no cash prize.</p>
+                <h2 id="prize-title" data-i18n="prize.title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-prize-title)">Homepage Banner Feature</h2>
+                <p id="prize-subtitle" data-i18n="prize.subtitle" class="text-xl text-zinc-300 mt-2">Open worldwide. #1 on the live board can claim a homepage feature for their website — free recognition, no cash prize.</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 <div class="glass border border-white/10 rounded-3xl p-6 text-center">
                     <div class="text-4xl mb-2">🏆</div>
-                    <div class="text-lg font-semibold mb-1" style="color: var(--text-prize-title)">Homepage Banner</div>
-                    <div class="text-sm text-zinc-400">Your website + custom banner featured on our homepage.</div>
+                    <div class="text-lg font-semibold mb-1" style="color: var(--text-prize-title)" data-i18n="prize.card1_title">Homepage Banner</div>
+                    <div class="text-sm text-zinc-400" data-i18n="prize.card1_desc">Your website + custom banner featured on our homepage.</div>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-6 text-center">
                     <div class="text-4xl mb-2">✨</div>
-                    <div class="text-lg font-semibold mb-1" style="color: var(--text-prize-title)">Free recognition</div>
-                    <div class="text-sm text-zinc-400">No cash payout — pure visibility &amp; social proof.</div>
+                    <div class="text-lg font-semibold mb-1" style="color: var(--text-prize-title)" data-i18n="prize.card2_title">Free recognition</div>
+                    <div class="text-sm text-zinc-400" data-i18n="prize.card2_desc">No cash payout — pure visibility &amp; social proof.</div>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-6 text-center">
                     <div class="text-4xl mb-2">📈</div>
-                    <div class="text-lg font-semibold mb-1" style="color: var(--text-prize-title)">Minimum referrals</div>
-                    <div class="text-sm text-zinc-400">Unique, verified signups only (see threshold on site).</div>
+                    <div class="text-lg font-semibold mb-1" style="color: var(--text-prize-title)" data-i18n="prize.card3_title">Minimum referrals</div>
+                    <div class="text-sm text-zinc-400" data-i18n="prize.card3_desc">Unique, verified signups only (see threshold on site).</div>
                 </div>
             </div>
 
             <div class="mt-8 text-center">
                 <button onclick="claimBanner()" 
                         class="px-10 py-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-extrabold tracking-tight text-lg rounded-2xl shadow-2xl shadow-amber-500/30 active:scale-[0.985] transition-all">
-                    <span>I'm #1 — Claim <span class="font-extrabold tracking-tight">Homepage Feature</span></span>
+                    <span data-i18n="prize.cta">I'm #1 — Claim Homepage Feature</span>
                 </button>
-                <div id="current-winner-badge" class="inline-flex items-center gap-2 bg-white/10 text-white px-4 py-1.5 rounded-3xl text-xs font-semibold mb-6">
+                <div id="current-winner-badge" data-i18n="prize.winner_badge" class="inline-flex items-center gap-2 bg-white/10 text-white px-4 py-1.5 rounded-3xl text-xs font-semibold mb-6">
                     CURRENT #1 CAN CLAIM THIS
                 </div>
 
@@ -828,9 +828,9 @@
               <span class="font-semibold text-zinc-300">Key Rules:</span> <span id="rules-text">No self-referrals. Unique IPs only. Fair play enforced. Turnstile protected.</span>
             </div>
             <div class="pt-1">
-                <a id="footer-link-rules" href="#rules" onclick="showRulesModal(); return false;" class="underline hover:text-white transition-colors">Official Rules &amp; Full Disclaimers</a> • 
-                <a id="footer-link-privacy" href="#privacy" class="underline hover:text-white transition-colors">Privacy Policy</a> • 
-                <a id="footer-link-terms" href="#terms" class="underline hover:text-white transition-colors">Terms</a> •
+                <a id="footer-link-rules" href="#rules" onclick="showRulesModal(); return false;" class="underline hover:text-white transition-colors" data-i18n="footer.rules_link">Official Rules &amp; Full Disclaimers</a> • 
+                <a id="footer-link-privacy" href="#privacy" class="underline hover:text-white transition-colors" data-i18n="footer.privacy">Privacy Policy</a> • 
+                <a id="footer-link-terms" href="#terms" class="underline hover:text-white transition-colors" data-i18n="footer.terms">Terms</a> •
                 <a href="#" onclick="openTimer(); return false;" class="underline hover:text-white transition-colors" title="Elite focus timer">Focus Timer</a>
             </div>
         </div>
@@ -944,8 +944,8 @@
         <div onclick="event.stopImmediatePropagation()" class="vr-modal-panel glass border border-white/10 rounded-3xl w-full max-w-lg mx-4 p-6 sm:p-8">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <div class="font-bold text-2xl">Claim Homepage Feature</div>
-                    <div class="text-sm text-zinc-400">Verified #1 only — no cash prize; website for the banner slot</div>
+                    <div class="font-bold text-2xl" data-i18n="claim.modal_title">Claim Homepage Feature</div>
+                    <div class="text-sm text-zinc-400" data-i18n="claim.modal_sub">Verified #1 only — no cash prize; website for the banner slot</div>
                 </div>
                 <button onclick="closeWinnerModal()" class="text-3xl text-zinc-400 hover:text-white leading-none" aria-label="Close">×</button>
             </div>
@@ -957,21 +957,21 @@
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs text-zinc-400 mb-1">Website to feature (required)</label>
+                    <label class="block text-xs text-zinc-400 mb-1" data-i18n="claim.website_label">Website to feature (required)</label>
                     <input id="claim-website" type="text" class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl px-4 py-2 text-sm" placeholder="https://your-site.com" />
                 </div>
                 <!-- Legacy optional contact field (unused; kept for form API shape) -->
                 <input id="claim-legacy-contact" type="hidden" value="" />
                 <div>
-                    <label class="block text-xs text-zinc-400 mb-1">Short message (optional)</label>
+                    <label class="block text-xs text-zinc-400 mb-1" data-i18n="claim.message_label">Short message (optional)</label>
                     <textarea id="claim-message" rows="2" class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl px-4 py-2 text-sm" placeholder="Thanks! Excited to be featured."></textarea>
                 </div>
                 <div id="claim-turnstile-container" class="flex justify-center min-h-[65px]"></div>
             </div>
 
             <div class="mt-6 flex gap-3">
-                <button onclick="closeWinnerModal()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/20 rounded-2xl font-semibold text-sm">Cancel</button>
-                <button id="submit-claim-form" onclick="submitPrizeClaim()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-semibold text-sm text-white">Submit Feature Request</button>
+                <button onclick="closeWinnerModal()" class="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/20 rounded-2xl font-semibold text-sm" data-i18n="claim.cancel">Cancel</button>
+                <button id="submit-claim-form" onclick="submitPrizeClaim()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-semibold text-sm text-white" data-i18n="claim.submit">Submit Feature Request</button>
             </div>
             <div id="claim-form-result" class="mt-3 text-xs text-center text-zinc-400"></div>
         </div>

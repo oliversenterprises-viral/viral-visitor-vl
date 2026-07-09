@@ -20,6 +20,7 @@ import {
   type FunnelStep,
 } from './lib/funnel-conversion';
 import { applyHeroCtaVariant } from './lib/hero-cta-variant';
+import { reapplyI18n } from './lib/i18n';
 import { applyUtmHeroCopy } from './lib/utm-hero-copy';
 import { syncFunnelGuide } from './lib/funnel-guide';
 import { initFunnelCopyFromContent } from './lib/funnel-copy';
@@ -229,12 +230,24 @@ export async function loadSiteContent() {
       initDirectLandingConversionBoost();
     }
 
+    // Re-apply visitor language after CMS/hero A/B paint English over static HTML
+    try {
+      reapplyI18n();
+    } catch {
+      /* non-fatal */
+    }
+
     const guideStep = document.documentElement.getAttribute('data-vr-funnel-guide-step');
     if (guideStep && !document.documentElement.hasAttribute('data-vr-funnel-complete')) {
       syncFunnelGuide(Number(guideStep) as FunnelStep);
     }
   } catch (err) {
     console.warn('[ViralRefer] Failed to load site_content, using static defaults:', err);
+    try {
+      reapplyI18n();
+    } catch {
+      /* non-fatal */
+    }
   }
 }
 

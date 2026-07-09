@@ -331,6 +331,53 @@ html[data-vr-share-mobile] #share-whatsapp-primary.share-btn {
   border-color: rgba(251, 191, 36, 0.45) !important;
 }
 
+/* Phase 1 language picker */
+.vr-lang-picker {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+}
+
+.vr-lang-select {
+  appearance: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e4e4e7;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  padding: 0.4rem 1.6rem 0.4rem 0.7rem;
+  min-height: 36px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.55rem center;
+  max-width: 7.5rem;
+}
+
+.vr-lang-select:hover,
+.vr-lang-select:focus {
+  border-color: rgba(167, 139, 250, 0.45);
+  outline: none;
+}
+
+.vr-lang-select option {
+  background: #18181b;
+  color: #fafafa;
+}
+
+html[data-vr-embed] .vr-lang-picker {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .vr-lang-select {
+    font-size: 0.65rem;
+    padding: 0.35rem 1.35rem 0.35rem 0.5rem;
+    max-width: 5.5rem;
+  }
+}
+
 /* Conversion polish: global proof strip under hero subtitle */
 .hero-global-proof {
   display: flex;
