@@ -488,14 +488,44 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get_visitor_stats') {
-      // select('*') is schema-safe if columns are added/renamed later
+      // Explicit columns (prod-verified) + lean metadata (client_ip only) for fast admin panel
       const { data, error } = await supabaseAdmin
         .from('visitor_events')
-        .select('*')
+        .select(
+          'event_name, utm_source, utm_campaign, utm_content, utm_medium, ref_code, visitor_id, session_id, country_code, ip_hash, metadata, created_at',
+        )
         .order('created_at', { ascending: false })
-        .limit(5000);
+        .limit(2500);
       if (error) throw error;
-      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+      const lean = (data || []).map((row: Record<string, unknown>) => {
+        const meta =
+          row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
+            ? (row.metadata as Record<string, unknown>)
+            : {};
+        const clientIp = meta.client_ip || meta.clientIp || null;
+        const path = meta.path || null;
+        const platform = meta.platform || null;
+        return {
+          event_name: row.event_name,
+          utm_source: row.utm_source,
+          utm_campaign: row.utm_campaign,
+          utm_content: row.utm_content,
+          utm_medium: row.utm_medium,
+          ref_code: row.ref_code,
+          visitor_id: row.visitor_id,
+          session_id: row.session_id,
+          country_code: row.country_code,
+          ip_hash: row.ip_hash,
+          // Keep only fields the admin funnel UI needs (privacy + payload size)
+          metadata: {
+            ...(clientIp ? { client_ip: clientIp } : {}),
+            ...(path ? { path } : {}),
+            ...(platform ? { platform } : {}),
+          },
+          created_at: row.created_at,
+        };
+      });
+      return new Response(JSON.stringify({ success: true, data: lean }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

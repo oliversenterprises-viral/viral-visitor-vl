@@ -308,8 +308,13 @@ async function seedAdminLiveFeed(): Promise<void> {
   renderFeed();
 }
 
+/**
+ * Poll refresh scopes — do NOT include `content`.
+ * Full Edit Content re-render was wiping Site Visitor Funnel mid-fetch every 20s
+ * ("Could not load visitor stats"). Content updates still arrive via realtime payload.
+ */
 function dispatchAdminLiveRefreshScopes(): void {
-  for (const scope of ['referral', 'share', 'claim', 'visitor', 'banner', 'content', 'optimizer']) {
+  for (const scope of ['referral', 'share', 'claim', 'visitor', 'banner', 'optimizer']) {
     dispatchRefresh(scope);
   }
 }

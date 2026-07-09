@@ -241,7 +241,8 @@ export function initVisitorTracking(): void {
 
 export function getLocalVisitorEvents(): Array<Record<string, unknown>> {
   try {
-    return JSON.parse(localStorage.getItem(VISITOR_EVENTS_KEY) || '[]');
+    const parsed = JSON.parse(localStorage.getItem(VISITOR_EVENTS_KEY) || '[]');
+    return Array.isArray(parsed) ? (parsed as Array<Record<string, unknown>>) : [];
   } catch {
     return [];
   }
@@ -342,20 +343,20 @@ export async function getVisitorEventsForStats(): Promise<{
   fetchError?: string;
 }> {
   const local = getLocalVisitorEvents();
-  const { invokeAdminAction } = await import('./admin-action-client');
-  const result = await invokeAdminAction<Array<Record<string, unknown>>>('get_visitor_stats');
-  if (!result.success) {
-    return {
-      events: local,
-      source: 'local',
-      fetchError: result.error || 'Admin session required',
-    };
-  }
-  if (!Array.isArray(result.data)) {
-    return { events: local, source: 'local', fetchError: 'Invalid server response' };
-  }
-
   try {
+    const { invokeAdminAction } = await import('./admin-action-client');
+    const result = await invokeAdminAction<Array<Record<string, unknown>>>('get_visitor_stats');
+    if (!result.success) {
+      return {
+        events: local,
+        source: 'local',
+        fetchError: result.error || 'Admin session required',
+      };
+    }
+    if (!Array.isArray(result.data)) {
+      return { events: local, source: 'local', fetchError: 'Invalid server response' };
+    }
+
     const serverEvents = result.data.map((row: Record<string, any>) => ({
       event_name: row.event_name,
       visitor_id: row.visitor_id,

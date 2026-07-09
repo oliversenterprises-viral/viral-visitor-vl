@@ -104,11 +104,19 @@ async function renderEditContentTab(content: HTMLElement) {
     </div>
   `;
 
+  // Guard concurrent full reloads (live poll used to stack loadAndRenderList and race stats panels)
+  let loadGeneration = 0;
+  let loadInFlight = false;
+
   // Thin reload function: fetch → build HTML → attach listeners
   async function loadAndRenderList() {
+    if (loadInFlight) return;
+    loadInFlight = true;
+    const gen = ++loadGeneration;
     try {
       const { data, error } = await supabase.from('site_content').select('*');
       if (error) throw error;
+      if (gen !== loadGeneration) return;
 
       const rows = (data || [])
         .map((row: { key?: string; id?: string; value?: unknown }) => ({
@@ -129,6 +137,7 @@ async function renderEditContentTab(content: HTMLElement) {
         wireVisitorFunnelStatsQuick(content),
         wireBannerStatsQuick(content),
       ]);
+      if (gen !== loadGeneration) return;
       wireEditContentAutoClearTest(content, async () => {
         try {
           await runClearTestAdminStatsForEditContent(content, {
@@ -180,14 +189,18 @@ async function renderEditContentTab(content: HTMLElement) {
 
     } catch (err) {
       content.innerHTML = `<div class="p-6 text-red-400">Error loading content: ${formatError(err)}. Please try refreshing the page.</div>`;
+    } finally {
+      loadInFlight = false;
     }
   }
 
   if (unregisterContentLive) unregisterContentLive();
+  // Soft: only full-reload when CMS form is closed; avoid stacking reloads mid-stats-fetch
   unregisterContentLive = registerAdminLiveRefresh('content', () => {
     if (!document.body.contains(content)) return;
     const formArea = document.getElementById('content-form-area');
     if (formArea && !formArea.classList.contains('hidden')) return;
+    // Debounce: live poll no longer dispatches content; realtime CMS edits still do
     void loadAndRenderList();
   });
 

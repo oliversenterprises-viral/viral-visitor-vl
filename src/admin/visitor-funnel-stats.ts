@@ -199,9 +199,10 @@ function renderVisitorFunnelView(
   recentReferrals: RecentReferralNotifierRow[] = [],
   referralFetchError?: string,
 ) {
-  const visibleEvents = filterExcludedVisitorFunnelEvents(events);
+  const safeEvents = Array.isArray(events) ? events : [];
+  const visibleEvents = filterExcludedVisitorFunnelEvents(safeEvents);
   const rangeFiltered = filterEventsByTrackingRange(visibleEvents, getTrackingTimeRange());
-  const excludedCount = countTestVisitorFunnelEvents(events);
+  const excludedCount = countTestVisitorFunnelEvents(safeEvents);
   const stats = computeVisitorFunnelStats(rangeFiltered);
   const totals = computeFunnelTotals(stats.funnel);
   const stepConversions = computeFunnelStepConversions(stats.funnel);
@@ -459,19 +460,39 @@ export async function wireVisitorFunnelStatsQuick(root: HTMLElement) {
   bindVisitorStatsRefresh(el);
   el.innerHTML = SKELETON;
   try {
-    const [res, referralNotifier] = await Promise.all([
-      getVisitorEventsForStats(),
-      fetchRecentReferralsForNotifier(),
-    ]);
+    // Fetch funnel + notifier independently so one failure never blanks the panel
+    const res = await getVisitorEventsForStats().catch((err) => ({
+      events: [] as Array<Record<string, unknown>>,
+      source: 'local' as const,
+      fetchError: err instanceof Error ? err.message : 'Failed to load visitor events',
+    }));
+    const referralNotifier = await fetchRecentReferralsForNotifier().catch((err) => ({
+      rows: [] as RecentReferralNotifierRow[],
+      error: err instanceof Error ? err.message : 'Failed to load referrals',
+    }));
+    // Re-query panel in case live refresh replaced the DOM during fetch
+    const panel =
+      (root.querySelector('#visitor-stats-quick') as HTMLElement | null) || el;
+    if (!document.body.contains(panel)) return;
+    const events = Array.isArray(res.events) ? res.events : [];
     renderVisitorFunnelView(
-      el,
-      res.events,
-      res.source,
+      panel,
+      events,
+      res.source || 'local',
       res.fetchError,
-      referralNotifier.rows,
+      referralNotifier.rows || [],
       referralNotifier.error,
     );
-  } catch {
-    el.innerHTML = `<div class="text-[9px] text-amber-400">Could not load visitor stats. Click Refresh.</div>`;
+  } catch (err) {
+    const panel =
+      (root.querySelector('#visitor-stats-quick') as HTMLElement | null) || el;
+    const msg = err instanceof Error ? err.message : String(err);
+    try {
+      // Last resort: empty funnel UI so Refresh button still exists
+      renderVisitorFunnelView(panel, [], 'local', msg, [], undefined);
+    } catch {
+      panel.innerHTML = `<div class="text-[9px] text-amber-400">Could not load visitor stats (${escapeHtml(msg)}). <button type="button" data-visitor-stats-refresh class="underline">Click Refresh</button>.</div>`;
+      bindVisitorStatsRefresh(panel);
+    }
   }
 }
