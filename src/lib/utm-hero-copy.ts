@@ -18,48 +18,48 @@ const TRAFFIC_EXCHANGE_SOURCES = new Set([
 
 const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
   traffic_exchange: {
-    badge: 'FREE LEADERBOARD • 30 SECONDS',
-    titleLine1: 'Free leaderboard — one tap, get your link.',
+    badge: 'WORLDWIDE LEADERBOARD • 30 SECONDS',
+    titleLine1: 'Worldwide free leaderboard — one tap, get your link.',
     titleAccent: 'No signup. No email. Climb the live board.',
     subtitle:
       'Tap below — your unique link appears in seconds. Share anywhere to compete for #1 and a homepage feature.',
-    trustLine: 'Homepage feature for #1 · Board wide open · Your link in ~5 seconds',
+    trustLine: 'Open worldwide · Homepage feature for #1 · No cash prize',
     buttonLabel: 'Get my free link now',
   },
   linkedin: {
-    badge: 'LIVE REFERRAL LEADERBOARD',
+    badge: 'WORLDWIDE REFERRAL LEADERBOARD',
     titleLine1: 'No-signup referral board — try it in 30 seconds.',
-    titleAccent: 'Free link, live rankings, homepage feature for #1.',
+    titleAccent: 'Free worldwide, live rankings, homepage feature for #1.',
     subtitle:
       'Built for builders and marketers: tap once, copy your link, share anywhere. Every visit moves you up the board.',
     trustLine: 'No email wall · Free forever · Worldwide 18+',
     buttonLabel: 'Get my free link',
   },
   reddit: {
-    badge: 'BUILDER-FRIENDLY LEADERBOARD',
+    badge: 'WORLDWIDE · BUILDER-FRIENDLY',
     titleLine1: 'Free referral leaderboard — no signup friction.',
     titleAccent: 'Get your link in ~30 sec, then share to climb.',
     subtitle:
       'We optimized step 1 (get link) on purpose. Tap below, copy your URL, share once — watch the live board move.',
-    trustLine: 'Transparent board · Homepage feature for #1 · Rules on site',
+    trustLine: 'Open worldwide · Homepage feature for #1 · No cash prize',
     buttonLabel: 'Get my link — 30 seconds',
   },
   telegram: {
-    badge: '🏆 VIRALREFER LEADERBOARD',
+    badge: '🏆 WORLDWIDE LEADERBOARD',
     titleLine1: 'Free link in ~30 seconds — climb to #1.',
     titleAccent: 'Claim a homepage feature for your site.',
     subtitle:
       'Tap below to generate your unique link. Share in chats or channels — every referral counts on the live board.',
-    trustLine: 'No signup · Instant link · Board still wide open',
+    trustLine: 'Open worldwide · No signup · No cash prize',
     buttonLabel: 'Get my free link',
   },
   social: {
-    badge: 'FREE LEADERBOARD • NO SIGNUP',
+    badge: 'WORLDWIDE • FREE • NO SIGNUP',
     titleLine1: 'Climb the live board — claim a homepage feature.',
     titleAccent: 'Get your free link in 30 seconds.',
     subtitle:
-      'Free forever. Tap below, copy your link, share once — every friend who visits moves you up the live board.',
-    trustLine: 'No cash prize · No email · ~5 sec to your link',
+      'Open worldwide. Free forever. Tap below, copy your link, share once — every friend who visits moves you up the live board.',
+    trustLine: 'Worldwide 18+ · No cash prize · ~5 sec to your link',
     buttonLabel: 'Get my free link',
   },
 };

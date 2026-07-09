@@ -9,8 +9,8 @@ export type ShareAbVariant = 'a' | 'b';
 const STORAGE_KEY = 'vr_share_ab_variant';
 
 export const SHARE_AB_TEMPLATES: Record<ShareAbVariant, string> = {
-  a: 'Free to join in ~30 sec — climb the live leaderboard. #1 can claim a homepage feature. {link}',
-  b: 'Real-time referral leaderboard — grab your free link in ~30 sec. Top referrer claims homepage feature. {link}',
+  a: 'Worldwide free leaderboard — join in ~30 sec. #1 can claim a homepage feature. {link}',
+  b: 'Open worldwide — real-time referral board. Grab your free link in ~30 sec. Top referrer claims homepage feature. {link}',
 };
 
 /** Stable default variant from referral code (50/50 split). */

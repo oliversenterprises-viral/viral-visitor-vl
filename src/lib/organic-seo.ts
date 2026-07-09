@@ -8,11 +8,11 @@ import { parseRefFromLocation } from './referral-url';
 export const SEO_SITE_ORIGIN = 'https://www.viralrefer.app';
 
 export const HOMEPAGE_SEO = {
-  title: 'ViralRefer • Free Referral Leaderboard',
+  title: 'ViralRefer • Free Worldwide Referral Leaderboard',
   description:
-    'Get your free ViralRefer link in 30 seconds — no signup. Share it and climb the live leaderboard. #1 can claim a homepage feature for their site.',
+    'Worldwide free referral leaderboard. Get your link in 30 seconds — no signup. #1 can claim a homepage feature for their site. No cash prizes.',
   keywords:
-    'referral program, viral marketing, free referral link, live leaderboard, homepage feature, no signup',
+    'referral program, viral marketing, free referral link, live leaderboard, homepage feature, worldwide, no signup',
 } as const;
 
 export interface FaqEntry {
@@ -35,7 +35,7 @@ export const HOMEPAGE_FAQ: readonly FaqEntry[] = [
   {
     question: 'What does the #1 referrer get?',
     answer:
-      'The top referrer on the live leaderboard can claim a homepage banner feature for their website after verification (minimum referrals as shown on site). There is no cash prize.',
+      'Open worldwide. The top referrer on the live leaderboard can claim a homepage banner feature for their website after verification (minimum referrals as shown on site). There is no cash prize.',
   },
   {
     question: 'How does the ViralRefer leaderboard work?',

@@ -18,8 +18,8 @@
   <text x="250" y="225" text-anchor="middle" fill="#ffffff" font-family="system-ui,Segoe UI,sans-serif" font-size="64" font-weight="800">★</text>
   <text x="250" y="330" text-anchor="middle" fill="#ffffff" font-family="system-ui,Segoe UI,sans-serif" font-size="28" font-weight="700">Your Brand</text>
   <text x="250" y="368" text-anchor="middle" fill="#c084fc" font-family="system-ui,Segoe UI,sans-serif" font-size="18" font-weight="600">yourwebsite.com</text>
-  <text x="250" y="420" text-anchor="middle" fill="#a1a1aa" font-family="system-ui,Segoe UI,sans-serif" font-size="15">Shown on the ViralRefer prize card</text>
+  <text x="250" y="420" text-anchor="middle" fill="#a1a1aa" font-family="system-ui,Segoe UI,sans-serif" font-size="15">Shown on the ViralRefer feature card</text>
   <rect x="100" y="450" width="300" height="48" rx="14" fill="#7c3aed"/>
   <text x="250" y="481" text-anchor="middle" fill="#ffffff" font-family="system-ui,Segoe UI,sans-serif" font-size="16" font-weight="700">Tap to visit →</text>
-  <text x="250" y="530" text-anchor="middle" fill="#52525b" font-family="system-ui,Segoe UI,sans-serif" font-size="12">ViralRefer • Refer friends. Get featured + cash.</text>
+  <text x="250" y="530" text-anchor="middle" fill="#52525b" font-family="system-ui,Segoe UI,sans-serif" font-size="12">ViralRefer • Worldwide free leaderboard</text>
 </svg>

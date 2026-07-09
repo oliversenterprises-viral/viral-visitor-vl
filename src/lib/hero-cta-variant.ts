@@ -20,17 +20,17 @@ export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
     titleLine1: 'Get your free link in 30 seconds.',
     titleAccent: 'Climb to #1 — claim homepage feature.',
     subtitle:
-      'Free. No signup. Copy your link and share anywhere — every referral moves you up the live board.',
-    trustLine: 'No email • No payment • No catch • Your link in ~5 seconds',
+      'Free worldwide. No signup. Copy your link and share anywhere — every referral moves you up the live board.',
+    trustLine: 'Open worldwide • No email • No payment • Your link in ~5 seconds',
     buttonLabel: 'Get my referral link',
   },
   prize: {
-    badge: 'FREE LEADERBOARD • NO SIGNUP',
+    badge: 'WORLDWIDE • FREE LEADERBOARD',
     titleLine1: 'Claim a homepage feature for your site.',
     titleAccent: 'Get your link in 30 seconds — climb to #1.',
     subtitle:
-      'Free forever. No signup. Tap below, copy your link, share once — every friend who visits moves you up the live board.',
-    trustLine: 'Homepage feature for #1 • No email • Your link in ~5 seconds',
+      'Open worldwide. Free forever. No signup. Tap below, copy your link, share once — every friend who visits moves you up the live board.',
+    trustLine: 'Worldwide 18+ • Homepage feature for #1 • No cash prize',
     buttonLabel: 'Get my free link',
   },
 };

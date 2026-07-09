@@ -114,8 +114,8 @@ export function buildEmbedAdUrl({
 
 /** PageRankCafe traffic-exchange listing (paste at https://pagerankcafe.com/links/add). */
 export const PAGERANKCAFE_LISTING = {
-  title: 'Free Referral Contest — Get Your Link in 30 Sec + Win $10 Cash App',
-  titleSticky: '#1 Board Wide Open — Free Link in 30 Sec · Real $10 Cash App Prize',
+  title: 'Worldwide Free Leaderboard — Get Your Link in 30 Sec · Homepage Feature',
+  titleSticky: '#1 Board Wide Open Worldwide — Free Link in 30 Sec · Homepage Feature',
   url: buildOwnerAdUrl({
     source: 'pagerankcafe',
     medium: 'traffic_exchange',
@@ -136,8 +136,8 @@ export const PAGERANKCAFE_LISTING = {
 
 /** Traffic Ad Bar listing (paste at https://trafficadbar.com/). */
 export const TRAFFICADBAR_LISTING = {
-  title: 'Free Referral Contest — Get Your Link in 30 Sec + Win $10 Cash App',
-  titleFeatured: '#1 Board Wide Open — Free Link in 30 Sec · Real $10 Cash App Prize',
+  title: 'Worldwide Free Leaderboard — Get Your Link in 30 Sec · Homepage Feature',
+  titleFeatured: '#1 Board Wide Open Worldwide — Free Link in 30 Sec · Homepage Feature',
   url: buildOwnerAdUrl({
     source: 'trafficadbar',
     medium: 'traffic_exchange',
@@ -255,12 +255,12 @@ export function buildWeekQueue(stats) {
       copy: {
         text: buildXSafeTweet(
           `#1 on ViralRefer is still within reach 🏆\n\n` +
-            `Free contest — get your link in ~30 sec, climb the live board, win homepage feature + $10 Cash App.\n\n` +
+            `Worldwide free leaderboard — get your link in ~30 sec, climb the live board, claim a homepage feature.\n\n` +
             `${boardLine}`,
         ),
         bio: X_SAFE_BIO,
       },
-      tags: ['leaderboard', 'prize', 'week1', 'x-no-url'],
+      tags: ['leaderboard', 'feature', 'week1', 'x-no-url'],
     },
     {
       id: makePostId('x', 'how-it-works'),
@@ -295,7 +295,7 @@ export function buildWeekQueue(stats) {
       copy: {
         text:
           `Case study: no-signup referral contests in 2026\n\n` +
-          `We built ViralRefer — free link, live leaderboard, real Cash App prize for #1.\n\n` +
+          `We built ViralRefer — free worldwide leaderboard, homepage feature for #1 (no cash prize).\n\n` +
           `Last 7 days: ${stats.landings7d} landings, ${stats.getLink7d} links created (${stats.getLinkRatePct}% get-link rate). ` +
           `Biggest leak is step 1 (tap "Get my link") — we're optimizing hero + social proof.\n\n` +
           `If you run community or side-hustle audiences: try the 30-second loop yourself.\n\n` +
@@ -354,9 +354,9 @@ export function buildWeekQueue(stats) {
       }),
       copy: {
         text: appendCompliance(
-          `🏆 ViralRefer live contest\n\n` +
+          `🏆 ViralRefer worldwide free leaderboard\n\n` +
             `Get your free referral link in ~30 seconds. Every share moves you up the board.\n\n` +
-            `#1 → homepage feature + $10 Cash App (2026)\n\n` +
+            `#1 → homepage feature (no cash prize)\n\n` +
             `${boardLine}\n\n` +
             buildOwnerAdUrl({
               source: 'telegram',

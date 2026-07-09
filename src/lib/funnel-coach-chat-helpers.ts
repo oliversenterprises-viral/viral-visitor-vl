@@ -79,7 +79,7 @@ export function getCoachGreeting(ctx: CoachChatContext): CoachChatMessage {
 
   return coachMsg(
     'greet-direct',
-    "Hi — I'm your ViralRefer coach. Free link in ~30 seconds, then share to climb the leaderboard. #1 can claim a homepage feature for their site. Where should we start?",
+    "Hi — I'm your ViralRefer coach. Open worldwide. Free link in ~30 seconds, then share to climb the leaderboard. #1 can claim a homepage feature. Where should we start?",
     quickActions(ctx),
   );
 }
@@ -133,7 +133,7 @@ export function resolveCoachReply(input: string, ctx: CoachChatContext): CoachCh
   if (/win|prize|reward|\$10|cash|banner|#1|leader|feature/.test(q)) {
     return coachMsg(
       'prize',
-      'Top referrer can claim a homepage banner feature for their website after verification (min. referrals as shown on site). No cash prize — pure visibility and social proof. The live board updates in real time.',
+      'Open worldwide (18+). Top referrer can claim a homepage banner feature after verification (min. referrals as shown on site). No cash prize — pure visibility and social proof. The live board updates in real time.',
       [
         { id: 'act-leaderboard', label: 'See leaderboard', kind: 'leaderboard' },
         ...quickActions(ctx).filter((a) => a.kind !== 'prize'),

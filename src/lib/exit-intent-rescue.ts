@@ -27,8 +27,8 @@ export function shouldShowExitRescue(opts: ExitRescueEligibility): boolean {
 
 export function buildExitRescueMessage(): { title: string; body: string; cta: string } {
   return {
-    title: 'Wait — free leaderboard link',
-    body: 'One tap (~30 sec). No signup. No email. Get your link and climb the live board.',
+    title: 'Wait — free worldwide link',
+    body: 'One tap (~30 sec). Open worldwide. No signup. Get your link and climb the live board.',
     cta: 'Get my free link',
   };
 }
