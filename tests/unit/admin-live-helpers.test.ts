@@ -41,6 +41,20 @@ describe('admin-live-helpers', () => {
     expect(ev?.label).toContain('twitter');
   });
 
+  it('parseAdminLiveEvent maps prize_claims with prod columns (no prize_name)', () => {
+    const ev = parseAdminLiveEvent('prize_claims', 'INSERT', {
+      id: 'c1',
+      status: 'pending',
+      referrer_code: 'VIRAL-97UWEGZ',
+      cashtag: '$Olive',
+      created_at: '2026-07-09T12:00:00Z',
+    });
+    expect(ev?.kind).toBe('claim');
+    expect(ev?.label).toBe('Prize claim');
+    expect(ev?.detail).toContain('VIRAL-97UWEGZ');
+    expect(ev?.detail).toContain('$Olive');
+  });
+
   it('parseAdminLiveEvent maps visitor funnel insert', () => {
     const ev = parseAdminLiveEvent('visitor_events', 'INSERT', {
       id: 1,

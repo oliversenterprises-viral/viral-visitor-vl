@@ -347,9 +347,10 @@ Deno.serve(async (req: Request) => {
           .select('id, platform, referrer_code, created_at')
           .order('created_at', { ascending: false })
           .limit(6),
+        // Prod prize_claims columns (Cash App claims) — no prize_name/prize_id
         supabaseAdmin
           .from('prize_claims')
-          .select('id, status, prize_name, prize_id, created_at, updated_at')
+          .select('id, status, referrer_code, cashtag, website, message, created_at, reviewed_at, paid_at')
           .order('created_at', { ascending: false })
           .limit(4),
         supabaseAdmin

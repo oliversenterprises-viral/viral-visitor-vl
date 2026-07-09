@@ -135,13 +135,19 @@ export function parseAdminLiveEvent(
 
   if (table === 'prize_claims') {
     const status = str(row.status, 16) || 'updated';
-    const prize = str(row.prize_name || row.prize_id, 24);
+    // Prod schema: referrer_code + cashtag/website (not prize_name/prize_id)
+    const code = str(row.referrer_code, 16);
+    const cashtag = str(row.cashtag, 20);
+    const website = str(row.website, 28);
+    const prizeLegacy = str(row.prize_name || row.prize_id, 24);
+    const detail =
+      [code, cashtag || website || prizeLegacy].filter(Boolean).join(' · ') || 'submitted';
     return {
       id,
       kind: 'claim',
       ...pickMeta('claim'),
       label: eventType === 'INSERT' ? 'Prize claim' : `Claim ${status}`,
-      detail: prize || 'submitted',
+      detail,
       at,
     };
   }
