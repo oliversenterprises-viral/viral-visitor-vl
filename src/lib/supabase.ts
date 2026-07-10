@@ -2,6 +2,10 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { LeaderboardEntry, RecentActivityItem } from './types';
 import { createSupabaseStub } from './supabase-stub';
 import type { PublicActivityRow } from './public-activity';
+import {
+  normalizeFunnelTickerRows,
+  type FunnelTickerRow,
+} from './funnel-ticker';
 
 // CRITICAL: Secrets must come ONLY from Vite env vars (VITE_*).
 // Production deploys (Vercel) inject real values at build time.
@@ -149,6 +153,28 @@ export async function fetchPublicRecentActivity(limit = 8): Promise<{
   }
 
   return { rows: [], velocityLastHour: 0 };
+}
+
+/**
+ * Worldwide FOMO ticker via get_public_funnel_ticker RPC.
+ * Returns [] when RPC not deployed yet (caller should fall back to public activity).
+ */
+export async function fetchPublicFunnelTicker(limit = 24): Promise<FunnelTickerRow[]> {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase.rpc('get_public_funnel_ticker', {
+      p_limit: Math.max(limit, 8),
+    });
+    if (error || data == null) return [];
+    // RPC returns a JSON array directly
+    if (Array.isArray(data)) return normalizeFunnelTickerRows(data);
+    if (typeof data === 'object' && Array.isArray((data as { rows?: unknown }).rows)) {
+      return normalizeFunnelTickerRows((data as { rows: unknown }).rows);
+    }
+    return normalizeFunnelTickerRows(data);
+  } catch {
+    return [];
+  }
 }
 
 export interface ReferrerPublicStats {

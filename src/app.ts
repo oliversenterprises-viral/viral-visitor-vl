@@ -2,6 +2,7 @@ import {
   fetchLeaderboard,
   fetchTotalReferrers,
   fetchPublicRecentActivity,
+  fetchPublicFunnelTicker,
   fetchSiteContent,
   fetchMyReferralCount,
   fetchMyLeaderboardRank,
@@ -9,7 +10,15 @@ import {
   supabase,
 } from './lib/supabase';
 import { applyExistingReferralLink, syncMobileReferralCta } from './referral';
-import { buildActivityVelocityHtml } from './lib/public-activity';
+import { buildActivityVelocityHtml, type PublicActivityRow } from './lib/public-activity';
+import {
+  ensureFunnelTickerDom,
+  mergeFunnelTickerRows,
+  publicActivityToTickerRows,
+  renderFunnelTickerRows,
+  setFunnelTickerVisible,
+  shouldShowFunnelTicker,
+} from './lib/funnel-ticker';
 import { renderHeroSocialProof } from './lib/referred-landing-social-proof';
 import { applyHeroStatsSubtext } from './lib/public-clarity';
 import { renderHeroTrustPack } from './lib/referred-landing-trust-pack';
@@ -109,6 +118,36 @@ function updateActivityVelocity(count: number): void {
   }
 }
 
+async function refreshFunnelTicker(activityRows?: PublicActivityRow[]): Promise<void> {
+  const myCode = getMyReferralCode();
+  if (!shouldShowFunnelTicker(myCode)) {
+    setFunnelTickerVisible(false);
+    return;
+  }
+  ensureFunnelTickerDom();
+  setFunnelTickerVisible(true);
+  try {
+    const tickerRows = await fetchPublicFunnelTicker(24);
+    let fallbackSource = activityRows;
+    if (!fallbackSource?.length) {
+      const activity = await fetchPublicRecentActivity(12);
+      fallbackSource = activity.rows;
+    }
+    const rankRows = publicActivityToTickerRows(
+      mergePublicActivityWithRankMoves(fallbackSource || [], getEphemeralRankMoves(), 8),
+    );
+    const merged = mergeFunnelTickerRows(tickerRows, rankRows, 24);
+    renderFunnelTickerRows(merged);
+  } catch {
+    /* non-fatal FOMO chrome */
+  }
+}
+
+/** Call after GetReferralLink so the ticker appears immediately for new participants. */
+export function onReferralLinkReadyForTicker(): void {
+  void refreshFunnelTicker();
+}
+
 async function renderRecentActivity(options: { pulse?: boolean } = {}) {
   const actEl = document.getElementById('recent-activity');
   if (!actEl) return;
@@ -125,6 +164,8 @@ async function renderRecentActivity(options: { pulse?: boolean } = {}) {
     const leaderCount = cachedLeaderboard[0]?.referral_count ?? 0;
     renderHeroSocialProof(merged, velocityLastHour, cachedUniqueReferrers, leaderCount);
     if (options.pulse) pulseRecentActivity();
+    // Reuse activity rows so ticker refresh does not double-hit the public activity RPC
+    void refreshFunnelTicker(rows);
   } catch {
     actEl.innerHTML = `<div class="text-center py-4 text-zinc-400 text-sm">Unable to load activity.</div>`;
   }
@@ -297,8 +338,10 @@ export async function initApp() {
 
     if (myReferralCode) {
       applyExistingReferralLink(myReferralCode);
+      void withInitTimeout(refreshFunnelTicker(), undefined);
     } else {
       syncMobileReferralCta();
+      setFunnelTickerVisible(false);
     }
 
     await withInitTimeout(renderMyStats(myReferralCode), undefined);
