@@ -1,28 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { BANNER_EVENTS_KEY } from '../../src/content';
+import { BANNER_EVENTS_KEY } from '../../src/lib/banner-events';
 import { setAdminSessionToken, clearAdminSessionToken } from '../../src/lib/admin-session';
 
-const invokeMock = vi.fn();
-
-vi.mock('../../src/lib/supabase', () => ({
-  isSupabaseConfigured: true,
-  supabase: {
-    functions: {
-      invoke: (...args: unknown[]) => invokeMock(...args),
-    },
-  },
-}));
-
-describe('getBannerEventsForStats', () => {
+describe('getBannerEventsForStats (content re-export / isolated fetch)', () => {
   afterEach(() => {
     localStorage.clear();
     clearAdminSessionToken();
     vi.unstubAllEnvs();
+    vi.restoreAllMocks();
     vi.resetModules();
-    invokeMock.mockReset();
   });
 
   it('falls back to local events when server returns an empty array', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key');
     setAdminSessionToken('test-admin-session-token');
     localStorage.setItem(
       BANNER_EVENTS_KEY,
@@ -36,9 +27,15 @@ describe('getBannerEventsForStats', () => {
         },
       ]),
     );
-    invokeMock.mockResolvedValue({ data: { success: true, data: [] }, error: null });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        status: 200,
+        text: async () => JSON.stringify({ success: true, data: [] }),
+      })),
+    );
 
-    const { getBannerEventsForStats } = await import('../../src/content');
+    const { getBannerEventsForStats } = await import('../../src/lib/banner-stats-fetch');
     const res = await getBannerEventsForStats();
 
     expect(res.source).toBe('local');
@@ -48,25 +45,31 @@ describe('getBannerEventsForStats', () => {
   });
 
   it('prefers server events when server has rows', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key');
     setAdminSessionToken('test-admin-session-token');
     localStorage.setItem(BANNER_EVENTS_KEY, JSON.stringify([{ type: 'click', label: 'Local only' }]));
-    invokeMock.mockResolvedValue({
-      data: {
-        success: true,
-        data: [
-          {
-            event_type: 'impression',
-            banner_label: 'Server Banner',
-            redirect_url: 'https://example.com',
-            additional: { key: 'Server Banner|https://example.com' },
-            created_at: '2026-06-22T13:00:00Z',
-          },
-        ],
-      },
-      error: null,
-    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        status: 200,
+        text: async () =>
+          JSON.stringify({
+            success: true,
+            data: [
+              {
+                event_type: 'impression',
+                banner_label: 'Server Banner',
+                redirect_url: 'https://example.com',
+                additional: { key: 'Server Banner|https://example.com' },
+                created_at: '2026-06-22T13:00:00Z',
+              },
+            ],
+          }),
+      })),
+    );
 
-    const { getBannerEventsForStats } = await import('../../src/content');
+    const { getBannerEventsForStats } = await import('../../src/lib/banner-stats-fetch');
     const res = await getBannerEventsForStats();
 
     expect(res.source).toBe('server');

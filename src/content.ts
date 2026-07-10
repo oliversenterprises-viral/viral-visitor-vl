@@ -8,111 +8,23 @@ import { isAdminStatsReadOnlyRefresh } from './lib/admin-stats-refresh-guard';
 import { registerGlobal } from './lib/global';
 import { applyTextColors } from './colors';
 import { supabase } from './lib/supabase';
-import { latestEvents } from './lib/stats-helpers';
 import { normalizeSiteContentText } from './lib/site-content-value';
 
-export const BANNER_EVENTS_KEY = 'viralrefer_banner_events';
+// Banner helpers live in leaf modules so admin panels avoid circular imports via content.ts
+export {
+  BANNER_EVENTS_KEY,
+  clearBannerEvents,
+  computeBannerStats,
+  getBannerKey,
+  getLocalBannerEvents,
+} from './lib/banner-events';
+export { getBannerEventsForStats } from './lib/banner-stats-fetch';
 
-export function getBannerKey(banner: { label?: string; redirectUrl?: string }): string {
-  const lab = (banner.label || '').trim();
-  const u = (banner.redirectUrl || '').trim();
-  return lab && u ? `${lab}|${u}` : (u || lab || 'unknown');
-}
-
-export function getLocalBannerEvents(): Array<Record<string, unknown>> {
-  try {
-    return JSON.parse(localStorage.getItem(BANNER_EVENTS_KEY) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-export function clearBannerEvents(): void {
-  localStorage.removeItem(BANNER_EVENTS_KEY);
-}
-
-export function computeBannerStats(events: Array<Record<string, any>>) {
-  const perBannerMap: Record<string, { key: string; label: string; redirectUrl: string; impressions: number; clicks: number }> = {};
-
-  for (const e of events) {
-    const key = e.key || getBannerKey(e);
-    if (!perBannerMap[key]) {
-      perBannerMap[key] = {
-        key,
-        label: e.label || key.split('|')[0] || 'untitled',
-        redirectUrl: e.redirectUrl || e.redirect_url || '',
-        impressions: 0,
-        clicks: 0,
-      };
-    }
-    const eventType = String(e.type || e.event_type || '').toLowerCase();
-    if (eventType === 'impression') perBannerMap[key].impressions++;
-    else if (eventType === 'click') perBannerMap[key].clicks++;
-  }
-
-  return {
-    perBanner: Object.values(perBannerMap),
-    lastEvents: latestEvents(events, 5),
-    total: events.length,
-  };
-}
-
-export async function getBannerEventsForStats(): Promise<{
-  events: Array<Record<string, any>>;
-  source: 'server' | 'local';
-  fetchError?: string;
-}> {
-  const local = getLocalBannerEvents();
-  const { invokeAdminAction } = await import('./lib/admin-action-client');
-  const result = await invokeAdminAction<Array<Record<string, unknown>>>('get_banner_stats');
-  if (!result.success) {
-    return {
-      events: local,
-      source: 'local',
-      fetchError: result.error || 'Admin session required',
-    };
-  }
-  if (!Array.isArray(result.data)) {
-    return { events: local, source: 'local', fetchError: 'Invalid server response' };
-  }
-
-  try {
-    const serverEvents = result.data.map((row: Record<string, any>) => {
-      const label = String(row.label || row.banner_label || '').trim();
-      const redirectUrl = row.redirect_url || row.redirectUrl || '';
-      const additional =
-        row.additional && typeof row.additional === 'object' ? row.additional : {};
-      const keyFromAdditional = String(additional.key || additional.Key || '').trim();
-      const key =
-        String(row.key || row.banner_key || keyFromAdditional || '').trim() ||
-        (label && redirectUrl ? `${label}|${redirectUrl}` : label || redirectUrl || 'unknown');
-      return {
-        type: row.type || row.event_type,
-        label: label || 'untitled',
-        redirectUrl,
-        key,
-        ip: row.ip || row.ip_address || additional.ip,
-        user_agent: row.user_agent || additional.user_agent,
-        timestamp: row.created_at || row.timestamp,
-        created_at: row.created_at || row.timestamp,
-      };
-    });
-    if (serverEvents.length > 0) {
-      return { events: serverEvents, source: 'server' };
-    }
-    if (local.length > 0) {
-      return {
-        events: local,
-        source: 'local',
-        fetchError: 'Server has no banner events yet — showing this browser',
-      };
-    }
-    return { events: serverEvents, source: 'server' };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Network error';
-    return { events: local, source: 'local', fetchError: msg };
-  }
-}
+import {
+  BANNER_EVENTS_KEY,
+  getBannerKey,
+  getLocalBannerEvents,
+} from './lib/banner-events';
 
 // Re-export from leaf module (admin panels should import escape-html directly to avoid cycles)
 export { escapeHtml } from './lib/escape-html';

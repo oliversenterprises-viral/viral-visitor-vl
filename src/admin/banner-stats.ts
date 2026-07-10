@@ -1,10 +1,13 @@
-/** Premium banner quick-stats panel (admin audit). */
+/**
+ * Premium banner quick-stats panel (admin audit).
+ * Production-safe: never throws out of the panel; server fetch is isolated from content.ts.
+ */
 import {
   clearBannerEvents,
   computeBannerStats,
-  getBannerEventsForStats,
   getLocalBannerEvents,
-} from '../content';
+} from '../lib/banner-events';
+import { fetchBannerStatsEvents } from '../lib/banner-stats-fetch';
 import { escapeHtml } from '../lib/escape-html';
 import {
   eventTimestamp,
@@ -203,8 +206,10 @@ async function refreshBannerStats(
   btn?: HTMLButtonElement,
   options: { silent?: boolean } = {},
 ) {
-  const refreshBtn =
-    btn || (container.querySelector('[data-banner-stats-refresh]') as HTMLButtonElement | null);
+  // Re-query after render — innerHTML rebuilds buttons, so the clicked node may be detached.
+  const labelBtn = () =>
+    (container.querySelector('[data-banner-stats-refresh]') as HTMLButtonElement | null) || btn || null;
+  let refreshBtn = labelBtn();
   const originalLabel = refreshBtn?.textContent || '↻ Refresh';
   if (refreshBtn) {
     refreshBtn.disabled = true;
@@ -217,11 +222,13 @@ async function refreshBannerStats(
     if (!options.silent) {
       showToast('Banner stats refreshed', 'success');
     }
-  } catch {
+  } catch (err) {
+    console.error('[banner-stats] refresh failed', err);
     if (!options.silent) {
       showToast('Could not refresh banner stats', 'info');
     }
   } finally {
+    refreshBtn = labelBtn();
     if (refreshBtn) {
       refreshBtn.disabled = false;
       refreshBtn.textContent = originalLabel;
@@ -250,20 +257,41 @@ function renderBannerStatsView(
   fetchError?: string,
 ) {
   container.classList.add('banner-stats-panel');
-  const excludedCount = countTestBannerEvents(events);
-  const visibleEvents = filterTestBannerEvents(events);
-  const rangeFiltered = filterEventsByTrackingRange(visibleEvents, getTrackingTimeRange());
-  container.dataset.bannerStatsEvents = JSON.stringify(visibleEvents);
-  container.dataset.bannerStatsSource = source;
-  if (fetchError) container.dataset.bannerStatsFetchError = fetchError;
-  else delete container.dataset.bannerStatsFetchError;
+  const safeEvents = Array.isArray(events) ? events : [];
 
-  const stats = computeBannerStats(rangeFiltered);
-  const rows = stats.perBanner as BannerStatRow[];
-  const filtered = filterBannerRowsBySearch(rows, currentBannerSearch);
-  const sorted = sortBannerRows(filtered, currentBannerSort);
-  const totals = computeBannerTotals(sorted);
-  const topPerformer = findTopPerformer(sorted, 3);
+  let excludedCount = 0;
+  let visibleEvents: Array<Record<string, unknown>> = safeEvents;
+  let rangeFiltered: Array<Record<string, unknown>> = safeEvents;
+  let stats = computeBannerStats([]);
+  let rows: BannerStatRow[] = [];
+  let filtered: BannerStatRow[] = [];
+  let sorted: BannerStatRow[] = [];
+  let totals = computeBannerTotals([]);
+  let topPerformer: BannerStatRow | null = null;
+  let effectiveSource = source;
+  let effectiveError = fetchError;
+
+  try {
+    excludedCount = countTestBannerEvents(safeEvents);
+    visibleEvents = filterTestBannerEvents(safeEvents);
+    rangeFiltered = filterEventsByTrackingRange(visibleEvents, getTrackingTimeRange());
+    stats = computeBannerStats(rangeFiltered);
+    rows = stats.perBanner as BannerStatRow[];
+    filtered = filterBannerRowsBySearch(rows, currentBannerSearch);
+    sorted = sortBannerRows(filtered, currentBannerSort);
+    totals = computeBannerTotals(sorted);
+    topPerformer = findTopPerformer(sorted, 3);
+  } catch (err) {
+    console.error('[banner-stats] compute failed', err);
+    effectiveError =
+      effectiveError || (err instanceof Error ? err.message : 'Stats compute failed');
+    effectiveSource = source === 'server' ? 'server' : 'local';
+  }
+
+  container.dataset.bannerStatsEvents = JSON.stringify(visibleEvents);
+  container.dataset.bannerStatsSource = effectiveSource;
+  if (effectiveError) container.dataset.bannerStatsFetchError = effectiveError;
+  else delete container.dataset.bannerStatsFetchError;
 
   const currentBanners = (window as unknown as { __currentBannersForStats?: Array<Record<string, unknown>> })
     .__currentBannersForStats || [];
@@ -275,7 +303,7 @@ function renderBannerStatsView(
     }),
   );
 
-  const isServer = source === 'server';
+  const isServer = effectiveSource === 'server';
   const sourceBadge = isServer
     ? '<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[8px]">SERVER</span>'
     : '<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[8px]">LOCAL</span>';
@@ -291,16 +319,26 @@ function renderBannerStatsView(
       ? ''
       : ` · Range ${getTrackingTimeRange().toUpperCase()} (${rangeFiltered.length} events)`;
 
-  reportTrackingHubSummary({
-    bannerImpressions: totals.impressions,
-    bannerClicks: totals.clicks,
-    bannerCtr: totals.ctr,
-    bannerSource: source,
-    bannerEvents: rangeFiltered.length,
-  });
+  try {
+    reportTrackingHubSummary({
+      bannerImpressions: totals.impressions,
+      bannerClicks: totals.clicks,
+      bannerCtr: totals.ctr,
+      bannerSource: effectiveSource,
+      bannerEvents: rangeFiltered.length,
+    });
+  } catch {
+    /* KPI strip must never break this panel */
+  }
 
   const copyPayload = JSON.stringify(
-    { generated: new Date().toISOString(), source, totals, stats: sorted, rawEvents: stats.lastEvents },
+    {
+      generated: new Date().toISOString(),
+      source: effectiveSource,
+      totals,
+      stats: sorted,
+      rawEvents: stats.lastEvents,
+    },
     null,
     2,
   );
@@ -327,8 +365,8 @@ function renderBannerStatsView(
     html += `<div class="text-[9px] text-zinc-500 mb-2">Filtered ${excludedCount} owner/smoke/test banner event${excludedCount === 1 ? '' : 's'} from this view.</div>`;
   }
 
-  if (fetchError && !isServer) {
-    html += `<div class="text-[9px] text-amber-400/90 mb-2">Server unavailable (${escapeHtml(fetchError)}) — showing local data.</div>`;
+  if (effectiveError && !isServer) {
+    html += `<div class="text-[9px] text-amber-400/90 mb-2">Server unavailable (${escapeHtml(effectiveError)}) — showing local data.</div>`;
   }
 
   html += `
@@ -446,17 +484,35 @@ function renderBannerStatsView(
 /**
  * Renders the Banner Performance stats UI into the given container.
  * Supports preloaded local events for immediate render (banner-stats-quick at tab top).
+ * Never throws — failures fall back to local/empty shell.
  */
 export async function renderBannerStats(container: HTMLElement, preloadedEvents?: Array<Record<string, unknown>>) {
-  bindBannerStatsActions(container);
+  try {
+    bindBannerStatsActions(container);
 
-  if (preloadedEvents) {
-    renderBannerStatsView(container, preloadedEvents, 'local');
-    return;
+    if (preloadedEvents) {
+      renderBannerStatsView(container, preloadedEvents, 'local');
+      return;
+    }
+
+    const res = await fetchBannerStatsEvents();
+    renderBannerStatsView(container, res.events, res.source, res.fetchError);
+  } catch (err) {
+    console.error('[banner-stats] render failed', err);
+    const local = getLocalBannerEvents();
+    try {
+      renderBannerStatsView(
+        container,
+        local,
+        'local',
+        err instanceof Error ? err.message : 'Could not load banner stats',
+      );
+    } catch {
+      container.innerHTML = `<div class="text-[9px] text-amber-400">Could not load banner stats. Click Refresh to retry.</div>
+        <button type="button" data-banner-stats-refresh class="text-[9px] px-2 py-0.5 mt-1 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">↻ Refresh</button>`;
+      bindBannerStatsActions(container);
+    }
   }
-
-  const res = await getBannerEventsForStats();
-  renderBannerStatsView(container, res.events, res.source, res.fetchError);
 }
 
 /** Quick panel at Edit Content tab top: local first, then server upgrade. */
@@ -486,11 +542,14 @@ export async function wireBannerStatsQuick(root: HTMLElement) {
   }
 
   try {
-    const res = await getBannerEventsForStats();
+    const res = await fetchBannerStatsEvents();
     renderBannerStatsView(el, res.events, res.source, res.fetchError);
-  } catch {
+  } catch (err) {
+    console.error('[banner-stats] quick wire server upgrade failed', err);
     if (!local.length) {
-      el.innerHTML = `<div class="text-[9px] text-amber-400">Could not load banner stats. Click Refresh to retry.</div>`;
+      el.innerHTML = `<div class="text-[9px] text-amber-400">Could not load banner stats. Click Refresh to retry.</div>
+        <button type="button" data-banner-stats-refresh class="text-[9px] px-2 py-0.5 mt-1 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">↻ Refresh</button>`;
+      bindBannerStatsActions(el);
     }
   }
 }
