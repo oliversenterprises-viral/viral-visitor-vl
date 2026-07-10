@@ -549,7 +549,7 @@ html[data-vr-embed] .vr-lang-picker--embed {
 .vr-funnel-ticker-track {
   display: flex;
   width: max-content;
-  animation: vr-funnel-ticker-scroll 40s linear infinite;
+  animation: vr-funnel-ticker-scroll 55s linear infinite;
 }
 
 .vr-funnel-ticker-seq {
