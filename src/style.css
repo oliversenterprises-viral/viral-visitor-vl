@@ -667,6 +667,100 @@ html[data-vr-direct-landing]:not([data-vr-has-link]) .hero-primary-cta {
   opacity: 0.75;
 }
 
+/* ── Verified worldwide referral total (everyone sees this) ── */
+.vr-verified-total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.vr-verified-total-inner {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  padding: 0.75rem 1.15rem 0.85rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  background: linear-gradient(
+    145deg,
+    rgba(16, 185, 129, 0.14) 0%,
+    rgba(76, 29, 149, 0.22) 55%,
+    rgba(9, 9, 11, 0.55) 100%
+  );
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.vr-verified-total-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #6ee7b7;
+  text-transform: uppercase;
+}
+
+.vr-verified-total-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 9999px;
+  background: #34d399;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55);
+  animation: vr-live-pulse 1.6s ease-in-out infinite;
+}
+
+.vr-verified-total-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35rem 0.5rem;
+  text-align: center;
+}
+
+.vr-verified-total-num {
+  font-size: clamp(1.75rem, 5vw, 2.35rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 12px rgba(52, 211, 153, 0.35);
+}
+
+.vr-verified-total-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #d1fae5;
+  letter-spacing: 0.01em;
+}
+
+.vr-verified-total-meta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  text-align: center;
+  max-width: 22rem;
+  line-height: 1.35;
+}
+
+.vr-verified-total--ready .vr-verified-total-num {
+  color: #ecfdf5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vr-verified-total-dot {
+    animation: none;
+  }
+}
+
 /* Funnel card quieter until user has a link */
 html[data-vr-direct-landing]:not([data-vr-has-link]) .funnel-journey-quiet {
   opacity: 0.82;

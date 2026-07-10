@@ -1,6 +1,7 @@
 import {
   fetchLeaderboard,
   fetchTotalReferrers,
+  fetchUniqueReferrerCount,
   fetchPublicRecentActivity,
   fetchPublicFunnelTicker,
   fetchSiteContent,
@@ -19,6 +20,7 @@ import {
   setFunnelTickerVisible,
   shouldShowFunnelTicker,
 } from './lib/funnel-ticker';
+import { applyWorldwideReferralTotal } from './lib/worldwide-referral-total';
 import { renderHeroSocialProof } from './lib/referred-landing-social-proof';
 import { applyHeroStatsSubtext } from './lib/public-clarity';
 import { renderHeroTrustPack } from './lib/referred-landing-trust-pack';
@@ -68,7 +70,10 @@ import { loadPublicViralLoops, onViralLoopsLinkReady, syncUserViralLoops } from 
 import { referralsToNextRank } from './lib/share-gap';
 import type { LeaderboardEntry } from './lib/types';
 
+/** Distinct people on the live board (unique referrer codes with ≥1 verified referral). */
 let cachedUniqueReferrers = 0;
+/** Sum of all verified worldwide referrals (excludes owner/smoke/test). */
+let cachedTotalVerifiedReferrals = 0;
 
 // ------------------ PUBLIC SITE INITIALIZATION ------------------
 // Central place for bootstrapping the public-facing homepage.
@@ -186,11 +191,37 @@ function initSiteContentRealtime() {
     .subscribe();
 }
 
+/** Refresh verified worldwide total + unique board size (cheap RPCs; called on poll). */
+async function refreshWorldwideReferralTotals(): Promise<void> {
+  try {
+    const [total, unique] = await Promise.all([
+      fetchTotalReferrers(),
+      fetchUniqueReferrerCount(),
+    ]);
+    cachedTotalVerifiedReferrals = total;
+    // Prefer RPC unique count; fall back to leaderboard length when RPC empty
+    cachedUniqueReferrers =
+      unique > 0 ? unique : Math.max(cachedLeaderboard.length, cachedUniqueReferrers);
+    paintWorldwideReferralTotal();
+  } catch {
+    /* non-critical social proof */
+  }
+}
+
+function paintWorldwideReferralTotal(): void {
+  applyWorldwideReferralTotal({
+    total: cachedTotalVerifiedReferrals,
+    uniqueReferrers: cachedUniqueReferrers,
+    leaderCount: cachedLeaderboard[0]?.referral_count ?? 0,
+  });
+}
+
 async function tickPublicActivityRefresh(): Promise<void> {
   if (typeof document !== 'undefined' && document.hidden) return;
   const boardBefore = [...cachedLeaderboard];
   await loadLeaderboard();
   recordLeaderboardRankMoves(boardBefore, cachedLeaderboard);
+  await refreshWorldwideReferralTotals();
   await renderRecentActivity();
   const myCode = getMyReferralCode();
   if (myCode) await renderMyStats(myCode);
@@ -254,6 +285,8 @@ export async function loadLeaderboard(options: { pulseCode?: string } = {}) {
     container.setAttribute('aria-busy', 'false');
     if (options.pulseCode) pulseLeaderboardActivity(options.pulseCode);
     renderHeroTrustPack(cachedLeaderboard);
+    paintWorldwideReferralTotal();
+    // Keep legacy helper in sync for any i18n listeners still using board-size FOMO
     applyHeroStatsSubtext(
       cachedUniqueReferrers,
       cachedLeaderboard[0]?.referral_count ?? 0,
@@ -321,18 +354,12 @@ export async function initApp() {
   try {
     await withInitTimeout(loadSiteContent(), undefined);
 
-    try {
-      const totalEl = document.getElementById('total-referrers');
-      if (totalEl) {
-        const count = await withInitTimeout(fetchTotalReferrers(), 0);
-        cachedUniqueReferrers = count;
-        totalEl.textContent = count.toLocaleString();
-      }
-    } catch {
-      /* best-effort, non-critical */
-    }
+    // Verified worldwide total first so the number is never a mystery on first paint
+    await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
 
     await withInitTimeout(loadLeaderboard(), undefined);
+    // Re-paint total with leader #1 context after board loads
+    paintWorldwideReferralTotal();
     await withInitTimeout(renderRecentActivity(), undefined);
     await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
 

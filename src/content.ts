@@ -311,7 +311,8 @@ export async function updatePublicContent(content: Record<string, any>) {
 
   // Newly wired for hero campaign copy + footer credit (enables instant Admin-driven updates, no deploy needed for these strings)
   apply('hero-campaign-badge', 'hero_campaign_badge');
-  apply('hero-stats-subtext', 'hero_stats_subtext');
+  // Do NOT apply hero_stats_subtext over #hero-stats-subtext — it hosts the live
+  // verified worldwide total (#total-referrers). CMS copy would wipe that counter.
   apply('footer-credit', 'footer_credit');
   applyButtonLabel('hero-get-link-btn', 'cta_button_text');
   applyButtonLabel('hero-leaderboard-btn', 'leaderboard_button_text');

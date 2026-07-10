@@ -36,23 +36,33 @@ export function formatHeroGlobalProofLive(uniqueReferrers: number): string {
   return t('proof.live_n' as MessageKey, { n: uniqueReferrers.toLocaleString() });
 }
 
+/**
+ * Secondary FOMO line under the verified total.
+ * Does NOT overwrite the verified worldwide total label (that is owned by worldwide-referral-total).
+ */
 export function applyHeroStatsSubtext(uniqueReferrers: number, leaderCount: number): void {
+  const metaEl = document.getElementById('hero-board-meta');
+  if (metaEl) {
+    const fomo = formatHeroStatsSubtext(uniqueReferrers, leaderCount);
+    const board =
+      uniqueReferrers === 1
+        ? '1 person on the live board'
+        : uniqueReferrers > 1
+          ? `${uniqueReferrers.toLocaleString()} people on the live board`
+          : '';
+    metaEl.textContent = [board, fomo].filter(Boolean).join(' · ') || fomo;
+    return;
+  }
+
+  // Legacy fallback if new DOM not present
   const people = t('proof.stats_people' as MessageKey);
   const suffixEl = document.getElementById('hero-stats-suffix');
-  if (suffixEl) {
+  if (suffixEl && !document.getElementById('vr-verified-total')) {
     suffixEl.textContent = `${people}${formatHeroStatsSubtext(uniqueReferrers, leaderCount)}`;
-  } else {
-    const el = document.getElementById('hero-stats-subtext');
-    if (el) {
-      const countEl = document.getElementById('total-referrers');
-      const countPart = countEl?.textContent?.trim() || '—';
-      const suffix = formatHeroStatsSubtext(uniqueReferrers, leaderCount);
-      el.innerHTML = `<span id="total-referrers" aria-live="polite">${countPart}</span>${people}${suffix}`;
-    }
   }
 
   const globalLive = document.getElementById('hero-global-proof-live');
-  if (globalLive) {
+  if (globalLive && !document.getElementById('vr-verified-total')) {
     globalLive.textContent = formatHeroGlobalProofLive(uniqueReferrers);
     globalLive.removeAttribute('data-i18n');
   }
@@ -152,7 +162,12 @@ export function initPublicClarity(): void {
 
   window.addEventListener('vr:locale-change', () => {
     const totalEl = document.getElementById('total-referrers');
-    const n = Number(String(totalEl?.textContent || '').replace(/[^\d]/g, '')) || 0;
-    applyHeroStatsSubtext(n, 0);
+    const total =
+      Number(totalEl?.getAttribute('data-vr-total-verified')) ||
+      Number(String(totalEl?.textContent || '').replace(/[^\d]/g, '')) ||
+      0;
+    void import('./worldwide-referral-total').then(({ applyWorldwideReferralTotal }) => {
+      applyWorldwideReferralTotal({ total, uniqueReferrers: 0, leaderCount: 0 });
+    });
   });
 }
