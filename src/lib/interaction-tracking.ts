@@ -13,7 +13,8 @@ import { getVisitorSessionId, getVisitorId } from './visitor-tracking';
 import { resolveViralZoneFromTarget, type ViralZoneId } from './viral-zones';
 
 const LOCAL_KEY = 'viralrefer_interaction_events';
-const SCROLL_MILESTONES = [25, 50, 75, 100] as const;
+/** Disk IO: fewer scroll writes (was 25/50/75/100). */
+const SCROLL_MILESTONES = [50, 100] as const;
 const MAX_LOCAL = 80;
 
 let bound = false;

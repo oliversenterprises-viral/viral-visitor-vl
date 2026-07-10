@@ -231,6 +231,9 @@ export function trackViralLoopEvent(
 ): void {
   if (isAdminStatsReadOnlyRefresh()) return;
   pushLocalVisitorEvent(step, { ...metadata, loop: 'viral' });
+  // Disk IO: passive impressions (sprint/community/duel/anxiety shown) stay local-only.
+  // Server write only for meaningful actions (share, receipt, unlock celebrate, etc.).
+  if (PASSIVE_VIRAL_LOOP_EVENTS.has(step)) return;
   logVisitorEventServer(step, { ...metadata, loop: 'viral' });
 }
 

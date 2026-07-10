@@ -38,7 +38,8 @@ import {
 
 const MAX_FEED = 24;
 const TOAST_COOLDOWN_MS = 2500;
-const ADMIN_LIVE_POLL_MS = 20_000;
+/** Disk IO: admin live seed hits multiple tables — 45s is enough for live feel. */
+const ADMIN_LIVE_POLL_MS = 45_000;
 
 const feed: AdminLiveEvent[] = [];
 const tabPulseCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -272,7 +273,7 @@ async function seedAdminLiveFeed(): Promise<void> {
       const el = document.getElementById('admin-live-feed');
       if (el) {
         const msg = result.error?.includes('Admin session')
-          ? 'Sign in to load live activity — polling every 20s'
+          ? 'Sign in to load live activity — polling every 45s'
           : `Live seed unavailable (${result.error || 'error'}) — retrying…`;
         el.innerHTML = buildAdminLiveFeedHtml([], Date.now(), msg);
       }
@@ -321,6 +322,7 @@ function dispatchAdminLiveRefreshScopes(): void {
 
 async function pollAdminLiveFeed(): Promise<void> {
   if (!hubRunning || !isAdminOpen()) return;
+  if (typeof document !== 'undefined' && document.hidden) return;
   await seedAdminLiveFeed();
   dispatchAdminLiveRefreshScopes();
 }

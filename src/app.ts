@@ -71,7 +71,8 @@ let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
 const INIT_FETCH_TIMEOUT_MS = 12_000;
-const PUBLIC_ACTIVITY_POLL_MS = 45_000;
+/** Disk IO: slower poll + pause when tab hidden (was 45s always-on). */
+const PUBLIC_ACTIVITY_POLL_MS = 90_000;
 
 async function withInitTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
   return Promise.race([
@@ -144,18 +145,29 @@ function initSiteContentRealtime() {
     .subscribe();
 }
 
+async function tickPublicActivityRefresh(): Promise<void> {
+  if (typeof document !== 'undefined' && document.hidden) return;
+  const boardBefore = [...cachedLeaderboard];
+  await loadLeaderboard();
+  recordLeaderboardRankMoves(boardBefore, cachedLeaderboard);
+  await renderRecentActivity();
+  const myCode = getMyReferralCode();
+  if (myCode) await renderMyStats(myCode);
+}
+
 function startPublicActivityPolling() {
   if (publicActivityPollTimer || !isSupabaseConfigured) return;
   publicActivityPollTimer = setInterval(() => {
-    void (async () => {
-      const boardBefore = [...cachedLeaderboard];
-      await loadLeaderboard();
-      recordLeaderboardRankMoves(boardBefore, cachedLeaderboard);
-      await renderRecentActivity();
-      const myCode = getMyReferralCode();
-      if (myCode) await renderMyStats(myCode);
-    })();
+    void tickPublicActivityRefresh();
   }, PUBLIC_ACTIVITY_POLL_MS);
+
+  // Resume with a single refresh when user returns (avoids IO while tab backgrounded)
+  if (typeof document !== 'undefined' && !document.documentElement.dataset.vrPollVisBound) {
+    document.documentElement.dataset.vrPollVisBound = '1';
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) void tickPublicActivityRefresh();
+    });
+  }
 }
 
 function initRealtimeSubscriptions() {
