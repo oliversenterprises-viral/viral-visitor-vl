@@ -202,7 +202,7 @@ export function mergeFunnelTickerRows(
 /** Build marquee HTML (duplicated track for seamless loop). */
 export function buildFunnelTickerHtml(rows: readonly FunnelTickerRow[]): string {
   if (!rows.length) {
-    return `<span class="vr-funnel-ticker-item">⚡ The worldwide board is live — share your link to climb</span>`;
+    return `<span class="vr-funnel-ticker-item"><span class="vr-funnel-ticker-icon" aria-hidden="true">⚡</span>The worldwide board is live — share your link to climb</span>`;
   }
   const items = rows
     .map((row) => {
@@ -236,7 +236,7 @@ export function ensureFunnelTickerDom(): HTMLElement | null {
   el.setAttribute('hidden', '');
   el.innerHTML = `
     <div class="vr-funnel-ticker-bar">
-      <span class="vr-funnel-ticker-live" aria-hidden="true"><i class="fa-solid fa-bolt"></i> LIVE</span>
+      <span class="vr-funnel-ticker-live" aria-hidden="true"><i class="fa-solid fa-bolt"></i> LIVE WORLDWIDE</span>
       <div class="vr-funnel-ticker-viewport">
         <div class="vr-funnel-ticker-track" id="vr-funnel-ticker-track"></div>
       </div>

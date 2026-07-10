@@ -464,18 +464,19 @@ html[data-vr-embed] .vr-lang-picker--embed {
 }
 
 /* ── Worldwide FOMO funnel ticker (participants with a referral link only) ── */
+/* High-visibility full-bleed bar under fixed nav */
 .vr-funnel-ticker {
   position: fixed;
-  top: 3.25rem; /* below mobile nav */
+  top: 3.35rem; /* below mobile nav */
   left: 0;
   right: 0;
-  z-index: 45;
+  z-index: 55; /* above hero glass, below modals */
   pointer-events: none;
 }
 
 @media (min-width: 640px) {
   .vr-funnel-ticker {
-    top: 4.25rem;
+    top: 4.35rem;
   }
 }
 
@@ -486,72 +487,106 @@ html[data-vr-embed] .vr-lang-picker--embed {
 .vr-funnel-ticker-bar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0 auto;
-  max-width: 72rem;
-  padding: 0.35rem 0.75rem;
+  gap: 0.65rem;
+  width: 100%;
+  margin: 0;
+  max-width: none;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.85rem;
   background: linear-gradient(
     90deg,
-    rgba(24, 24, 27, 0.92) 0%,
-    rgba(76, 29, 149, 0.55) 40%,
-    rgba(6, 78, 59, 0.45) 100%
+    #1e1038 0%,
+    #4c1d95 28%,
+    #6d28d9 52%,
+    #065f46 100%
   );
-  border-bottom: 1px solid rgba(167, 139, 250, 0.25);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(10px);
+  border-bottom: 2px solid rgba(251, 191, 36, 0.65);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(139, 92, 246, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .vr-funnel-ticker-live {
   flex-shrink: 0;
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: #fbbf24;
-  background: rgba(251, 191, 36, 0.12);
-  border: 1px solid rgba(251, 191, 36, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #18181b;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border: 1px solid #fde68a;
   border-radius: 9999px;
-  padding: 0.2rem 0.45rem;
+  padding: 0.28rem 0.55rem;
   white-space: nowrap;
+  box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55);
+  animation: vr-funnel-ticker-live-pulse 1.8s ease-in-out infinite;
+}
+
+.vr-funnel-ticker-live i {
+  color: #18181b;
+}
+
+@keyframes vr-funnel-ticker-live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(251, 191, 36, 0);
+  }
 }
 
 .vr-funnel-ticker-viewport {
   overflow: hidden;
   flex: 1;
   min-width: 0;
-  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 2%, #000 98%, transparent);
 }
 
 .vr-funnel-ticker-track {
   display: flex;
   width: max-content;
-  animation: vr-funnel-ticker-scroll 48s linear infinite;
+  animation: vr-funnel-ticker-scroll 40s linear infinite;
 }
 
 .vr-funnel-ticker-seq {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding-right: 1.5rem;
+  gap: 0.65rem;
+  padding-right: 1.25rem;
   white-space: nowrap;
 }
 
 .vr-funnel-ticker-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.7rem;
-  color: #e4e4e7;
-  font-weight: 500;
+  gap: 0.4rem;
+  font-size: 0.8125rem; /* 13px — readable on mobile */
+  line-height: 1.25;
+  color: #ffffff;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  padding: 0.28rem 0.7rem;
 }
 
 .vr-funnel-ticker-icon {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
 }
 
 .vr-funnel-ticker-sep {
-  color: rgba(167, 139, 250, 0.55);
-  font-weight: 700;
-  padding: 0 0.15rem;
+  color: rgba(253, 224, 71, 0.9);
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 0 0.1rem;
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
 }
 
 @keyframes vr-funnel-ticker-scroll {
@@ -563,20 +598,40 @@ html[data-vr-embed] .vr-lang-picker--embed {
   }
 }
 
+/* Extra top padding so hero content is not covered by taller ticker */
 html.vr-has-funnel-ticker body > div.pt-20,
 html.vr-has-funnel-ticker body > .pt-20 {
-  padding-top: 6.5rem !important;
+  padding-top: 7.25rem !important;
 }
 
 @media (min-width: 640px) {
   html.vr-has-funnel-ticker body > div.pt-20,
   html.vr-has-funnel-ticker body > .pt-20 {
-    padding-top: 7.5rem !important;
+    padding-top: 8.25rem !important;
+  }
+
+  .vr-funnel-ticker-bar {
+    min-height: 2.75rem;
+    padding: 0.55rem 1.25rem;
+    gap: 0.85rem;
+  }
+
+  .vr-funnel-ticker-item {
+    font-size: 0.875rem; /* 14px desktop */
+    padding: 0.32rem 0.85rem;
+  }
+
+  .vr-funnel-ticker-live {
+    font-size: 0.75rem;
+    padding: 0.32rem 0.65rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .vr-funnel-ticker-track {
+    animation: none;
+  }
+  .vr-funnel-ticker-live {
     animation: none;
   }
 }
