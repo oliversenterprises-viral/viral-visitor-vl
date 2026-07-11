@@ -2,6 +2,7 @@ import {
   fetchLeaderboard,
   fetchTotalReferrers,
   fetchUniqueReferrerCount,
+  fetchPublicGetLinkStats,
   fetchPublicRecentActivity,
   fetchPublicFunnelTicker,
   fetchSiteContent,
@@ -74,6 +75,8 @@ import type { LeaderboardEntry } from './lib/types';
 let cachedUniqueReferrers = 0;
 /** Sum of all verified worldwide referrals (excludes owner/smoke/test). */
 let cachedTotalVerifiedReferrals = 0;
+/** Unique people who tapped Get my referral link in the last 24h. */
+let cachedPeopleGotLinkToday = 0;
 
 // ------------------ PUBLIC SITE INITIALIZATION ------------------
 // Central place for bootstrapping the public-facing homepage.
@@ -191,17 +194,19 @@ function initSiteContentRealtime() {
     .subscribe();
 }
 
-/** Refresh verified worldwide total + unique board size (cheap RPCs; called on poll). */
+/** Refresh verified total + get-link-today + unique board size (cheap RPCs; called on poll). */
 async function refreshWorldwideReferralTotals(): Promise<void> {
   try {
-    const [total, unique] = await Promise.all([
+    const [total, unique, getLink] = await Promise.all([
       fetchTotalReferrers(),
       fetchUniqueReferrerCount(),
+      fetchPublicGetLinkStats(24),
     ]);
     cachedTotalVerifiedReferrals = total;
     // Prefer RPC unique count; fall back to leaderboard length when RPC empty
     cachedUniqueReferrers =
       unique > 0 ? unique : Math.max(cachedLeaderboard.length, cachedUniqueReferrers);
+    cachedPeopleGotLinkToday = getLink.uniquePeople;
     paintWorldwideReferralTotal();
   } catch {
     /* non-critical social proof */
@@ -213,6 +218,7 @@ function paintWorldwideReferralTotal(): void {
     total: cachedTotalVerifiedReferrals,
     uniqueReferrers: cachedUniqueReferrers,
     leaderCount: cachedLeaderboard[0]?.referral_count ?? 0,
+    peopleGotLinkToday: cachedPeopleGotLinkToday,
   });
 }
 

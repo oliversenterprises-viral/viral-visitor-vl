@@ -751,6 +751,23 @@ html[data-vr-direct-landing]:not([data-vr-has-link]) .hero-primary-cta {
   line-height: 1.35;
 }
 
+/* Second line: get-link activity (admin funnel "Get link") */
+.vr-got-link-today {
+  margin: 0.15rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fde68a;
+  text-align: center;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 8px rgba(251, 191, 36, 0.35);
+  line-height: 1.3;
+  max-width: 22rem;
+}
+
+.vr-got-link-today--active {
+  color: #fef08a;
+}
+
 .vr-verified-total--ready .vr-verified-total-num {
   color: #ecfdf5;
 }

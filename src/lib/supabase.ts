@@ -82,6 +82,38 @@ export async function fetchUniqueReferrerCount(): Promise<number> {
   }
 }
 
+export type PublicGetLinkStats = {
+  uniquePeople: number;
+  events: number;
+  windowHours: number;
+};
+
+/**
+ * How many unique people tapped Get my referral link recently (default last 24h).
+ * Additive public RPC — returns zeros if not deployed yet.
+ */
+export async function fetchPublicGetLinkStats(hours = 24): Promise<PublicGetLinkStats> {
+  if (!isSupabaseConfigured) {
+    return { uniquePeople: 0, events: 0, windowHours: hours };
+  }
+  try {
+    const { data, error } = await supabase.rpc('get_public_get_link_stats', {
+      p_hours: hours,
+    });
+    if (error || data == null) {
+      return { uniquePeople: 0, events: 0, windowHours: hours };
+    }
+    const payload = typeof data === 'object' ? (data as Record<string, unknown>) : {};
+    return {
+      uniquePeople: Number(payload.unique_people) || 0,
+      events: Number(payload.events) || 0,
+      windowHours: Number(payload.window_hours) || hours,
+    };
+  } catch {
+    return { uniquePeople: 0, events: 0, windowHours: hours };
+  }
+}
+
 /** Public leaderboard rank for a referrer (null if not on board). */
 export async function fetchMyLeaderboardRank(referrerCode: string): Promise<number | null> {
   if (!referrerCode || !isSupabaseConfigured) return null;

@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import {
   applyWorldwideReferralTotal,
+  formatPeopleGotLinkToday,
   formatVerifiedReferralTotalLabel,
   formatVerifiedReferralTotalLive,
   formatVerifiedReferralTotalMeta,
@@ -12,11 +13,13 @@ describe('worldwide-referral-total', () => {
       <div id="vr-verified-total">
         <span id="total-referrers">—</span>
         <span id="hero-stats-suffix"></span>
+        <p id="hero-got-link-today"></p>
         <p id="hero-board-meta"></p>
       </div>
       <span id="hero-global-proof-live"></span>
       <span id="leaderboard-total-referrals">—</span>
       <span id="leaderboard-total-label"></span>
+      <span id="leaderboard-got-link-today"></span>
     `;
   });
 
@@ -31,20 +34,39 @@ describe('worldwide-referral-total', () => {
     expect(formatVerifiedReferralTotalLive(12)).toBe('12 verified referrals worldwide');
   });
 
+  it('formats people got a link today', () => {
+    expect(formatPeopleGotLinkToday(0)).toMatch(/first to get a link/i);
+    expect(formatPeopleGotLinkToday(1)).toBe('1 person got a link today');
+    expect(formatPeopleGotLinkToday(15)).toBe('15 people got a link today');
+  });
+
   it('formats meta with board + leader', () => {
     expect(formatVerifiedReferralTotalMeta(3, 5)).toMatch(/3 people/);
     expect(formatVerifiedReferralTotalMeta(3, 5)).toMatch(/#1 has 5/);
   });
 
-  it('applyWorldwideReferralTotal paints all surfaces', () => {
-    applyWorldwideReferralTotal({ total: 6, uniqueReferrers: 2, leaderCount: 4 });
+  it('applyWorldwideReferralTotal paints verified + got-link lines', () => {
+    applyWorldwideReferralTotal({
+      total: 6,
+      uniqueReferrers: 2,
+      leaderCount: 4,
+      peopleGotLinkToday: 15,
+    });
     expect(document.getElementById('total-referrers')!.textContent).toBe('6');
     expect(document.getElementById('total-referrers')!.getAttribute('data-vr-total-verified')).toBe(
       '6',
     );
     expect(document.getElementById('hero-stats-suffix')!.textContent).toMatch(/verified referrals worldwide/);
-    expect(document.getElementById('hero-global-proof-live')!.textContent).toMatch(/6 verified/);
+    expect(document.getElementById('hero-got-link-today')!.textContent).toBe(
+      '15 people got a link today',
+    );
+    expect(document.getElementById('hero-global-proof-live')!.textContent).toMatch(
+      /15 people got a link/,
+    );
     expect(document.getElementById('leaderboard-total-referrals')!.textContent).toBe('6');
+    expect(document.getElementById('leaderboard-got-link-today')!.textContent).toBe(
+      '15 people got a link today',
+    );
     expect(document.getElementById('vr-verified-total')!.classList.contains('vr-verified-total--ready')).toBe(
       true,
     );
