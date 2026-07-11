@@ -17,6 +17,18 @@ export function getShareReferralCount(): number {
 export function setShareLeaderboardRank(rank: number | null): void {
   shareLeaderboardRank =
     rank != null && Number.isFinite(rank) && rank >= 1 ? Math.floor(rank) : null;
+  // Public quiet-mode attr: rank receipt / on-board chrome only when ranked
+  try {
+    if (typeof document !== 'undefined') {
+      if (shareLeaderboardRank != null) {
+        document.documentElement.setAttribute('data-vr-on-board', '1');
+      } else {
+        document.documentElement.removeAttribute('data-vr-on-board');
+      }
+    }
+  } catch {
+    /* ignore non-DOM / restricted environments */
+  }
 }
 
 export function getShareLeaderboardRank(): number | null {

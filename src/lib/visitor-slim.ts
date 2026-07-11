@@ -43,11 +43,17 @@ function updateMoreShareButtonLabel(): void {
   const expanded = document.documentElement.hasAttribute('data-vr-slim-share-expanded');
   const hiddenExtras = document.querySelectorAll('[data-vr-slim-share-extra]').length;
   btn.textContent = expanded
-    ? 'Fewer platforms'
+    ? 'Fewer platforms & tools'
     : hiddenExtras > 0
       ? `More platforms & tools (${hiddenExtras})`
       : 'More platforms & tools';
   btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  btn.setAttribute(
+    'title',
+    expanded
+      ? 'Hide extra platforms, message preview, and share tools'
+      : 'Show extra platforms, message preview, and share tools',
+  );
 }
 
 function wireMoreShareOptions(): void {

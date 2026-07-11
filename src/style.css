@@ -2755,13 +2755,53 @@ html[data-vr-viral-tier='legend'] #viral-power-meter {
   border-color: rgba(251, 191, 36, 0.35);
 }
 
-/* Growth Command Center — unified viral hub (replaces scattered widgets) */
+/* ═══════════════════════════════════════════════════════════
+   Post-link quiet mode — one race, one challenge path
+   Keeps: deadline · Share Command Center · platforms · sticky
+   Hides: lab controls, duplicate CTAs, secondary growth chrome
+   Expand via “More platforms & tools” (data-vr-slim-share-expanded)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Public A/B lab never belongs on the consumer share path */
+html[data-vr-has-link] #share-ab-wrap {
+  display: none !important;
+}
+
+/*
+ * Preview + tools stay under “More” after link (slim default).
+ * Scoped to visitor-slim so non-slim still sees tools without the expand toggle.
+ * (Slim already hides these pre-expand; restate post-link for clarity.)
+ */
+html[data-vr-visitor-slim][data-vr-has-link]:not([data-vr-slim-share-expanded]) #share-preview-wrap,
+html[data-vr-visitor-slim][data-vr-has-link]:not([data-vr-slim-share-expanded]) #share-tools-row {
+  display: none !important;
+}
+
+/* Growth Command Center — suppress legacy + duplicate widgets */
 html[data-vr-growth-hub] #viral-power-meter,
 html[data-vr-growth-hub] #daily-share-quest,
 html[data-vr-growth-hub] #share-rank-cta,
 html[data-vr-growth-hub] #boost-whatsapp-btn,
-html[data-vr-growth-hub] #distance-glory-meter {
+html[data-vr-growth-hub] #distance-glory-meter,
+html[data-vr-growth-hub] #duel-invite-strip,
+html[data-vr-growth-hub] #share-reminder-banner,
+html[data-vr-growth-hub] #rank-receipt-cta {
   display: none !important;
+}
+
+/* Catch-up anxiety: only when truly critical (near-miss), else quiet */
+html[data-vr-has-link] #catch-up-anxiety-bar:not(.catch-up-anxiety-bar--critical) {
+  display: none !important;
+}
+
+/* Rank receipt stays off until visitor is on the public board */
+html[data-vr-has-link]:not([data-vr-on-board]) #rank-receipt-cta {
+  display: none !important;
+}
+
+/* Soften funnel journey chrome post-link (guidance stays, less bulk) */
+html[data-vr-has-link] #funnel-guide-coach:not([data-guide-step='complete']) {
+  opacity: 0.92;
 }
 
 /* Hide sticky distance bar while pre-link mobile CTA is showing */

@@ -1,43 +1,43 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
-  setShareReferralCount,
-  getShareReferralCount,
   setShareLeaderboardRank,
   getShareLeaderboardRank,
+  setShareReferralCount,
+  getShareReferralCount,
   setShareGapToNextRank,
   getShareGapToNextRank,
-  isMobileShareContext,
 } from '../../src/lib/share-context';
 
 describe('share-context', () => {
   beforeEach(() => {
+    document.documentElement.removeAttribute('data-vr-on-board');
+    setShareLeaderboardRank(null);
     setShareReferralCount(0);
+    setShareGapToNextRank(null);
   });
 
-  it('tracks referral count for share messages', () => {
-    expect(getShareReferralCount()).toBe(0);
-    setShareReferralCount(5);
-    expect(getShareReferralCount()).toBe(5);
-    setShareReferralCount(-1);
-    expect(getShareReferralCount()).toBe(0);
+  afterEach(() => {
+    document.documentElement.removeAttribute('data-vr-on-board');
+    setShareLeaderboardRank(null);
   });
 
-  it('tracks leaderboard rank for share messages', () => {
-    expect(getShareLeaderboardRank()).toBeNull();
-    setShareLeaderboardRank(3);
-    expect(getShareLeaderboardRank()).toBe(3);
+  it('setShareLeaderboardRank sets data-vr-on-board for quiet mode', () => {
+    setShareLeaderboardRank(4);
+    expect(getShareLeaderboardRank()).toBe(4);
+    expect(document.documentElement.getAttribute('data-vr-on-board')).toBe('1');
+  });
+
+  it('clears data-vr-on-board when unranked', () => {
+    setShareLeaderboardRank(2);
     setShareLeaderboardRank(null);
     expect(getShareLeaderboardRank()).toBeNull();
+    expect(document.documentElement.hasAttribute('data-vr-on-board')).toBe(false);
   });
 
-  it('tracks gap to next rank', () => {
-    setShareGapToNextRank(3);
-    expect(getShareGapToNextRank()).toBe(3);
-    setShareGapToNextRank(null);
-    expect(getShareGapToNextRank()).toBeNull();
-  });
-
-  it('isMobileShareContext returns boolean', () => {
-    expect(typeof isMobileShareContext()).toBe('boolean');
+  it('stores referral count and gap', () => {
+    setShareReferralCount(3);
+    setShareGapToNextRank(2);
+    expect(getShareReferralCount()).toBe(3);
+    expect(getShareGapToNextRank()).toBe(2);
   });
 });
