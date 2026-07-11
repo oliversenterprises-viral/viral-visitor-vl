@@ -289,51 +289,161 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   if (getLinkInFlight) return;
   getLinkInFlight = true;
   try {
-  let code = getMyReferralCode();
+    let code = getMyReferralCode();
 
-  if (!code) {
-    code = 'VIRAL-' + Math.random().toString(36).substring(2, 9).toUpperCase();
-    localStorage.setItem('vr_my_ref_code', code);
-    setMyReferralCode(code);
-  }
+    if (!code) {
+      code = 'VIRAL-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+      localStorage.setItem('vr_my_ref_code', code);
+      setMyReferralCode(code);
+    }
 
-  const link = buildReferralLink(code);
-  populateReferralLinkUI(code, link);
+    const link = buildReferralLink(code);
+    populateReferralLinkUI(code, link);
 
-  let via: string | null = null;
-  try {
-    via = sessionStorage.getItem('vr_get_link_via');
-    if (via) sessionStorage.removeItem('vr_get_link_via');
-  } catch {
-    via = null;
-  }
-  trackVisitorFunnel('GetReferralLink', {
-    hero_cta_variant: getHeroCtaVariant(),
-    ...(via ? { via } : {}),
-  });
+    let via: string | null = null;
+    try {
+      via = sessionStorage.getItem('vr_get_link_via');
+      if (via) sessionStorage.removeItem('vr_get_link_via');
+    } catch {
+      via = null;
+    }
+    trackVisitorFunnel('GetReferralLink', {
+      hero_cta_variant: getHeroCtaVariant(),
+      ...(via ? { via } : {}),
+    });
 
-  if (pendingReferrerCode) {
-    showToast('Step 1 done — next: COPY your link, then SHARE it.', 'success');
-  } else {
-    showToast('Link ready — tap COPY, then share to climb the board', 'success');
-  }
+    // Same user gesture → auto-copy (biggest leak was GetLink without Copy/Share).
+    // Clipboard API requires a transient activation; Get-link click provides it.
+    const autoCopied = await tryAutoCopyAfterGetLink(link);
 
-  // FOMO ticker unlocks once this visitor has a referral link
-  void import('./app')
-    .then((m) => m.onReferralLinkReadyForTicker?.())
-    .catch(() => {});
+    if (autoCopied) {
+      showToast(
+        pendingReferrerCode
+          ? 'Link ready & copied — share it now (WhatsApp is fastest)'
+          : 'Link copied! Share it now to climb the board',
+        'success',
+      );
+    } else {
+      showToast(
+        pendingReferrerCode
+          ? 'Step 1 done — tap COPY, then SHARE your link'
+          : 'Link ready — tap COPY, then share to climb the board',
+        'success',
+      );
+    }
 
-  syncMobileReferralCta();
+    // FOMO ticker unlocks once this visitor has a referral link
+    void import('./app')
+      .then((m) => m.onReferralLinkReadyForTicker?.())
+      .catch(() => {});
 
-  const refSection = document.getElementById('referral-section');
-  if (refSection) refSection.scrollIntoView({ behavior: 'smooth' });
-  maybeOptimizerScrollToShare();
+    syncMobileReferralCta();
+    updateHeroCtaAfterLinkReady(autoCopied);
 
-  if (pendingReferrerCode && !referralRecordedThisSession) {
-    void runFunnelReferralRecording();
-  }
+    // Wait a frame so share-power-block (was display:none) is laid out, then
+    // land the viewport on share actions — not the section title / QR.
+    scrollToPostGetLinkActions(autoCopied);
+
+    if (pendingReferrerCode && !referralRecordedThisSession) {
+      void runFunnelReferralRecording();
+    }
   } finally {
     getLinkInFlight = false;
+  }
+}
+
+/** Auto-copy on Get link (same gesture). Returns true when clipboard wrote. */
+async function tryAutoCopyAfterGetLink(link: string): Promise<boolean> {
+  const ok = await writeLinkToClipboard(link);
+  if (!ok) return false;
+
+  const code = getMyReferralCode();
+  if (code) {
+    recordShareEvent({
+      platform: 'copy',
+      referrer_code: code,
+      referral_link: link,
+      ab_variant: resolveShareAbVariant(code),
+    });
+  }
+  trackVisitorFunnel('CopyReferralLink', { via: 'auto_after_get_link' });
+  onReferralLinkCopied();
+  flashCopyButtonBriefly();
+  return true;
+}
+
+function flashCopyButtonBriefly(): void {
+  const btn = document.getElementById('copy-link-btn') as HTMLElement | null;
+  if (!btn) return;
+  const origHTML = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-check"></i> COPIED!';
+  btn.setAttribute('aria-label', 'Copied to clipboard');
+  flashCopySuccess(btn);
+  window.setTimeout(() => {
+    btn.innerHTML = origHTML || 'COPY';
+    btn.removeAttribute('aria-label');
+  }, 1600);
+}
+
+/** Prefer WhatsApp (share-first); fall back to COPY if auto-copy failed. */
+function scrollToPostGetLinkActions(autoCopied: boolean): void {
+  const targetId = autoCopied ? 'share-whatsapp-primary' : 'copy-link-btn';
+  const run = () => {
+    const el =
+      document.getElementById(targetId) ||
+      document.getElementById('share-buttons-panel') ||
+      document.getElementById('referral-section');
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    maybeOptimizerScrollToShare();
+  };
+  // Double-rAF + short delay: share block becomes display:block only after has-link attr.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      window.setTimeout(run, 80);
+    });
+  });
+}
+
+/** After get-link, hero CTA becomes a one-tap share/copy action. */
+function updateHeroCtaAfterLinkReady(autoCopied: boolean): void {
+  const btn = document.getElementById('hero-get-link-btn');
+  const label = btn?.querySelector('span');
+  if (!btn || !label) return;
+  if (btn.dataset.vrPostLinkCta === '1') return;
+  btn.dataset.vrPostLinkCta = '1';
+  label.textContent = autoCopied ? 'Share on WhatsApp' : 'Copy & share my link';
+  btn.onclick = (e) => {
+    e.preventDefault();
+    if (autoCopied) {
+      document.getElementById('share-whatsapp-primary')?.click();
+      document
+        .getElementById('share-whatsapp-primary')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      copyLink();
+    }
+  };
+}
+
+async function writeLinkToClipboard(link: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(link);
+      return true;
+    }
+  } catch {
+    /* fall through */
+  }
+  const input = document.getElementById('ref-link') as HTMLInputElement | null;
+  if (!input) return false;
+  try {
+    input.value = link;
+    input.focus();
+    input.select();
+    const ok = document.execCommand('copy');
+    return !!ok;
+  } catch {
+    return false;
   }
 }
 
@@ -360,9 +470,12 @@ export async function generateNewCode(): Promise<void> {
  * instead of fragile sibling traversal.
  */
 function performCopyToClipboard(link: string): void {
-  const input = document.getElementById('ref-link') as HTMLInputElement | null;
-
-  navigator.clipboard.writeText(link).then(() => {
+  void (async () => {
+    const ok = await writeLinkToClipboard(link);
+    if (!ok) {
+      alert('Copy failed. Link: ' + link);
+      return;
+    }
     showToast('Copied! Now share it (WhatsApp or any button below)', 'success');
     const code = getMyReferralCode();
     if (code) {
@@ -375,49 +488,14 @@ function performCopyToClipboard(link: string): void {
     }
     trackVisitorFunnel('CopyReferralLink');
     onReferralLinkCopied();
-    const btn =
-      (document.getElementById('copy-link-btn') as HTMLElement | null) ||
-      (input?.parentElement?.querySelector('button') as HTMLElement | null) ||
-      (input?.nextElementSibling as HTMLElement | null);
-
-    if (btn) {
-      const origHTML = btn.innerHTML;
-      const origText = btn.textContent;
-
-      btn.innerHTML = '<i class="fa-solid fa-check"></i> COPIED!';
-      btn.setAttribute('aria-label', 'Copied to clipboard');
-      flashCopySuccess(btn);
-
-      setTimeout(() => {
-        if (btn) {
-          btn.innerHTML = origHTML || 'COPY';
-          if (origText) btn.textContent = origText;
-          btn.removeAttribute('aria-label');
-        }
-      }, 1400);
-    }
-  }).catch(() => {
-    if (!input) return;
-    try {
-      input.value = link;
-      input.select();
-      document.execCommand('copy');
-      showToast('Copied! Now share it (WhatsApp or any button below)', 'success');
-      const code = getMyReferralCode();
-      if (code) {
-        recordShareEvent({
-          platform: 'copy',
-          referrer_code: code,
-          referral_link: link,
-          ab_variant: resolveShareAbVariant(code),
-        });
-      }
-      trackVisitorFunnel('CopyReferralLink');
-      onReferralLinkCopied();
-    } catch {
-      alert('Copy failed. Link: ' + link);
-    }
-  });
+    flashCopyButtonBriefly();
+    // Land on share after manual copy too
+    requestAnimationFrame(() => {
+      document
+        .getElementById('share-whatsapp-primary')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  })();
 }
 
 export function copyLink(): void {

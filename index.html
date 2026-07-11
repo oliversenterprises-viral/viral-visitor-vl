@@ -339,37 +339,7 @@
                         </button>
                     </div>
 
-                    <!-- QR Code — deferred until visitor has a link -->
-                    <div id="referral-qr-block" class="flex flex-col sm:flex-row items-center gap-4 bg-zinc-900/60 border border-white/10 rounded-2xl p-4 mb-8" data-vr-declutter-post-link>
-                        <div class="flex-shrink-0">
-                            <!-- White background wrapper for excellent QR contrast and scannability -->
-                            <div class="bg-white p-2 rounded-2xl shadow-inner ring-1" style="--tw-ring-color: var(--referral-qr-border)">
-                                <img id="qr-code" 
-                                     class="w-24 h-24 sm:w-20 sm:h-20 rounded-xl cursor-pointer hover:scale-105 transition-transform"
-                                     alt="QR Code for your referral link"
-                                     onclick="showQRModal()">
-                            </div>
-                        </div>
-                        <div class="text-center sm:text-left">
-                            <div id="qr-scan-text" class="text-sm font-semibold" style="color: var(--qr-scan-text)">Scan to share</div>
-                            <div id="qr-mobile-text" class="text-xs text-zinc-400 mt-0.5">Perfect for mobile — friends can scan and join instantly</div>
-                            <div class="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">
-                                <button id="qr-show-larger" onclick="showQRModal()" 
-                                        class="text-xs px-3 py-1 hover:bg-white/10 border border-white/20 rounded-xl font-medium"
-                                        style="background-color: var(--qr-show-larger-bg); color: var(--qr-show-larger-text)">
-                                    Show larger QR
-                                </button>
-                                <button type="button" onclick="downloadQrFromPanel()"
-                                        class="text-xs px-3 py-1 hover:bg-emerald-500/20 border border-emerald-400/30 rounded-xl font-medium text-emerald-300"
-                                        title="Save QR image for stories, posters, or group chats"
-                                        aria-label="Download QR code image">
-                                    <i class="fa-solid fa-download"></i> Save QR
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                   
-                    <div id="share-power-block" data-vr-declutter-post-link>
+<div id="share-power-block" data-vr-declutter-post-link>
                         <div class="flex items-center gap-2 mb-3">
                             <i class="fa-solid fa-share-alt text-violet-400"></i>
                             <span id="share-link-heading" class="font-semibold text-lg" style="color: var(--text-referral-heading, #ffffff)">Share — climb the board</span>
@@ -641,6 +611,38 @@
                             More platforms &amp; tools
                         </button>
                     </div>
+
+                    <!-- QR Code — deferred until visitor has a link -->
+                    <div id="referral-qr-block" class="flex flex-col sm:flex-row items-center gap-4 bg-zinc-900/60 border border-white/10 rounded-2xl p-4 mb-8" data-vr-declutter-post-link>
+                        <div class="flex-shrink-0">
+                            <!-- White background wrapper for excellent QR contrast and scannability -->
+                            <div class="bg-white p-2 rounded-2xl shadow-inner ring-1" style="--tw-ring-color: var(--referral-qr-border)">
+                                <img id="qr-code" 
+                                     class="w-24 h-24 sm:w-20 sm:h-20 rounded-xl cursor-pointer hover:scale-105 transition-transform"
+                                     alt="QR Code for your referral link"
+                                     onclick="showQRModal()">
+                            </div>
+                        </div>
+                        <div class="text-center sm:text-left">
+                            <div id="qr-scan-text" class="text-sm font-semibold" style="color: var(--qr-scan-text)">Scan to share</div>
+                            <div id="qr-mobile-text" class="text-xs text-zinc-400 mt-0.5">Perfect for mobile — friends can scan and join instantly</div>
+                            <div class="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">
+                                <button id="qr-show-larger" onclick="showQRModal()" 
+                                        class="text-xs px-3 py-1 hover:bg-white/10 border border-white/20 rounded-xl font-medium"
+                                        style="background-color: var(--qr-show-larger-bg); color: var(--qr-show-larger-text)">
+                                    Show larger QR
+                                </button>
+                                <button type="button" onclick="downloadQrFromPanel()"
+                                        class="text-xs px-3 py-1 hover:bg-emerald-500/20 border border-emerald-400/30 rounded-xl font-medium text-emerald-300"
+                                        title="Save QR image for stories, posters, or group chats"
+                                        aria-label="Download QR code image">
+                                    <i class="fa-solid fa-download"></i> Save QR
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                   
+                    
 
                     <!-- PRODUCTION-READY DEBUG CONTAINER (hidden by default; used by ?debug=1 Test Real Referral flow + future claim flow) -->
                     <!-- Minimal + safe for live site. JS only shows widget when explicitly triggered. -->

@@ -239,8 +239,9 @@ export function onReferralLinkCopied(): void {
   const hint = document.getElementById('referral-next-step');
   if (hint) {
     hint.classList.remove('hidden');
+    hint.dataset.vrSharePrompted = '1';
     hint.textContent =
-      'Step 3 of 3: share now — WhatsApp is fastest. Every click climbs the live board.';
+      'Link is ready — tap WhatsApp below (fastest). Every open climbs the live board.';
   }
 
   // Keep progressive share reminders in sync (toast/banner after copy)
@@ -260,8 +261,11 @@ function highlightCopyButton(): void {
   const hint = document.getElementById('referral-next-step');
   if (hint) {
     hint.classList.remove('hidden');
-    hint.textContent =
-      'Next: tap COPY (Step 2), then share your link (Step 3) to climb the leaderboard.';
+    // Default Step-2 prompt; auto-copy path upgrades this via onReferralLinkCopied
+    if (!hint.dataset.vrSharePrompted) {
+      hint.textContent =
+        'Next: tap COPY, then WhatsApp (or any share button) — every open climbs the board.';
+    }
   }
 
   // Soft-highlight the share row so the full path is visible after get-link
