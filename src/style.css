@@ -1806,6 +1806,78 @@ html[data-vr-visitor-slim] #share-more-options-btn:not(.hidden) {
   display: block;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Competitive public declutter (first paint sharp, power after link)
+   Keeps hero CTA + FOMO proof; stages secondary chrome until engaged.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Direct first paint: one path — Get link. Hide multi-step card until they have a link. */
+html[data-vr-direct-landing]:not([data-vr-has-link]) #funnel-journey {
+  display: none !important;
+}
+
+/* Secondary hero chrome (regions, legal-ish meta) — less noise on fold */
+html[data-vr-direct-landing]:not([data-vr-has-link]) [data-vr-declutter-secondary] {
+  display: none !important;
+}
+
+/* Post-link power tools (QR, share grid, funnel coach strip) — hide empty shells pre-link */
+html:not([data-vr-has-link]) #referral-qr-block,
+html:not([data-vr-has-link]) #share-power-block {
+  display: none !important;
+}
+
+/* Empty stats before a personal link are pure noise */
+html:not([data-vr-has-link]) #my-stats {
+  display: none !important;
+}
+
+/* NEW CODE only after they have a code */
+html:not([data-vr-has-link]) #new-code-button {
+  display: none !important;
+}
+
+/* Floating coach: appear after engagement (keeps fold clean, still powerful post-link) */
+html[data-vr-direct-landing]:not([data-vr-has-link]) #funnel-coach-chat,
+html[data-vr-direct-landing]:not([data-vr-has-link]) #funnel-coach-restore {
+  display: none !important;
+}
+
+/* After link: compact funnel journey (still visible guidance, less card chrome) */
+html[data-vr-has-link] .funnel-journey-card {
+  padding: 0.85rem 1rem;
+  max-width: 36rem;
+}
+
+html[data-vr-has-link] .funnel-journey-header {
+  margin-bottom: 0.45rem;
+}
+
+html[data-vr-has-link] .funnel-journey-badge {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+}
+
+html[data-vr-has-link] .funnel-step-label {
+  font-size: 0.75rem;
+}
+
+/* Share panel: punchier primary grid when slim (4 viral platforms) */
+html[data-vr-visitor-slim]:not([data-vr-slim-share-expanded]) #share-buttons-panel {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  html[data-vr-visitor-slim]:not([data-vr-slim-share-expanded]) #share-buttons-panel {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Defer “How it works” for all pre-link visitors (direct already handled above) */
+html:not([data-vr-has-link]):not([data-vr-referred-landing]) #how {
+  display: none !important;
+}
+
 .btn-secondary:hover {
   background: rgba(255,255,255,0.14);
   border-color: rgba(255,255,255,0.35);

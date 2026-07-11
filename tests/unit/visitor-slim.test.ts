@@ -73,12 +73,14 @@ describe('visitor-slim', () => {
   it('more-share toggle expands and collapses extras', () => {
     initVisitorSlim();
     const btn = document.getElementById('share-more-options-btn') as HTMLButtonElement;
+    expect(btn.textContent || '').toMatch(/More platforms/i);
     btn.click();
     expect(document.documentElement.hasAttribute('data-vr-slim-share-expanded')).toBe(true);
     expect(btn.getAttribute('aria-expanded')).toBe('true');
+    expect(btn.textContent || '').toMatch(/Fewer/i);
     btn.click();
     expect(document.documentElement.hasAttribute('data-vr-slim-share-expanded')).toBe(false);
-    expect(btn.textContent).toMatch(/More share options/);
+    expect(btn.textContent || '').toMatch(/More platforms/i);
   });
 
   it('applyVisitorSlimFromFlags re-enables after flag cleared', () => {

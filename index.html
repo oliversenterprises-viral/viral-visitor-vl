@@ -153,7 +153,7 @@
                     <span class="hero-global-proof-sep" aria-hidden="true">·</span>
                     <span class="hero-global-proof-item hero-global-proof-live" id="hero-global-proof-live" data-i18n="hero.proof_live">Live free leaderboard</span>
                 </div>
-                <p id="hero-global-regions" class="hero-global-regions mb-4 sm:mb-5" data-i18n="global.regions">Americas · Europe · Asia · Africa · Anywhere</p>
+                <p id="hero-global-regions" class="hero-global-regions mb-4 sm:mb-5" data-i18n="global.regions" data-vr-declutter-secondary>Americas · Europe · Asia · Africa · Anywhere</p>
 
                 <!-- Live social proof (always paints FOMO when board is quiet) -->
                 <div id="hero-referred-social-proof" class="mb-4" role="status" aria-live="polite"></div>
@@ -196,19 +196,19 @@
                             <span id="hero-stats-suffix" class="vr-verified-total-label"> verified referrals worldwide</span>
                         </div>
                         <p id="hero-got-link-today" class="vr-got-link-today">— people got a link today</p>
-                        <p id="hero-board-meta" class="vr-verified-total-meta">Verified credits · test traffic excluded</p>
+                        <p id="hero-board-meta" class="vr-verified-total-meta" data-vr-declutter-secondary>Verified credits · test traffic excluded</p>
                     </div>
                     <p id="hero-sprint-line" class="hidden text-sm text-cyan-300/90 mt-2 font-medium" aria-live="polite"></p>
                 </div>
             </div>
         </div>
 
-        <!-- FUNNEL JOURNEY — demoted until after primary CTA (conversion hierarchy) -->
-        <div id="funnel-journey" class="funnel-journey-card funnel-journey-quiet mt-6 max-w-3xl mx-auto" data-vr-zone="funnel-journey">
+        <!-- FUNNEL JOURNEY — hidden on quiet first paint; expands after get-link (competitive guidance) -->
+        <div id="funnel-journey" class="funnel-journey-card funnel-journey-quiet mt-6 max-w-3xl mx-auto" data-vr-zone="funnel-journey" data-vr-declutter-post-link>
             <div class="funnel-journey-header">
                 <span class="funnel-journey-badge">
                     <i class="fa-solid fa-route" aria-hidden="true"></i>
-                    <span id="funnel-journey-badge" data-i18n="funnel.badge">YOUR 3-STEP PATH TO #1</span>
+                    <span id="funnel-journey-badge" data-i18n="funnel.badge">3 STEPS TO #1</span>
                 </span>
             </div>
             <div id="funnel-steps" class="funnel-steps-row" aria-label="Your steps — tap the active step to jump">
@@ -274,9 +274,9 @@
         <!-- REFERRAL LINK + SOCIAL SHARING -->
         <div id="referral-section" class="mt-6" data-vr-zone="referral-section">
             <div class="max-w-2xl mx-auto">
-                <div class="text-center mb-8">
-                    <h2 id="winning-link-title" class="text-5xl font-bold tracking-tighter mb-3" style="color: var(--text-referral-heading, #ffffff)">Your winning link</h2>
-                    <p id="winning-link-description" class="text-xl text-zinc-300">Copy below and share on Reddit, X, WhatsApp, or anywhere — every click counts toward #1.</p>
+                <div class="text-center mb-6 sm:mb-8">
+                    <h2 id="winning-link-title" class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter mb-2 sm:mb-3" style="color: var(--text-referral-heading, #ffffff)">Your winning link</h2>
+                    <p id="winning-link-description" class="text-base sm:text-lg text-zinc-300 max-w-lg mx-auto" data-vr-declutter-secondary>Copy → share → climb. Every click counts toward #1.</p>
                 </div>
                
                 <div class="glass border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl">
@@ -339,8 +339,8 @@
                         </button>
                     </div>
 
-                    <!-- QR Code -->
-                    <div class="flex flex-col sm:flex-row items-center gap-4 bg-zinc-900/60 border border-white/10 rounded-2xl p-4 mb-8">
+                    <!-- QR Code — deferred until visitor has a link -->
+                    <div id="referral-qr-block" class="flex flex-col sm:flex-row items-center gap-4 bg-zinc-900/60 border border-white/10 rounded-2xl p-4 mb-8" data-vr-declutter-post-link>
                         <div class="flex-shrink-0">
                             <!-- White background wrapper for excellent QR contrast and scannability -->
                             <div class="bg-white p-2 rounded-2xl shadow-inner ring-1" style="--tw-ring-color: var(--referral-qr-border)">
@@ -369,13 +369,13 @@
                         </div>
                     </div>
                    
-                    <div>
-                        <div class="flex items-center gap-2 mb-4">
+                    <div id="share-power-block" data-vr-declutter-post-link>
+                        <div class="flex items-center gap-2 mb-3">
                             <i class="fa-solid fa-share-alt text-violet-400"></i>
-                            <span id="share-link-heading" class="font-semibold text-lg" style="color: var(--text-referral-heading, #ffffff)">Share your link</span>
+                            <span id="share-link-heading" class="font-semibold text-lg" style="color: var(--text-referral-heading, #ffffff)">Share — climb the board</span>
                         </div>
                        
-                        <p data-vr-slim-share-meta class="text-xs text-zinc-500 -mt-2 mb-2">Every share moves you up • <strong class="text-violet-300/90">A/B</strong> tracked in analytics • <strong class="text-violet-300/90">/r/CODE</strong> OG cards show rank + QR • Growth Engine below</p>
+                        <p data-vr-slim-share-meta class="text-xs text-zinc-500 -mt-1 mb-3">Every open of your link moves you up. WhatsApp is fastest.</p>
 
                         <div id="catch-up-anxiety-bar" data-vr-zone="catch-up-anxiety" class="hidden catch-up-anxiety-bar mb-4 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-500/10 to-rose-500/5 px-4 py-3" role="status" aria-live="polite">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -585,18 +585,25 @@
                             </button>
                         </div>
 
-                        <div id="share-buttons-panel" data-vr-zone="share-panel" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-                            <button data-vr-zone="share-x" onclick="shareTo('x')" class="share-btn flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 border border-white/20 text-white p-4 rounded-2xl font-medium text-sm" title="Share text to X (may be filtered)" aria-label="Share to X">
+                        <!-- Primary viral platforms only; extras behind More (visitor-slim) -->
+                        <div id="share-buttons-panel" data-vr-zone="share-panel" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <button id="share-whatsapp-primary" data-vr-zone="share-whatsapp" onclick="shareTo('whatsapp')" class="share-btn flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-2xl font-medium text-sm ring-2 ring-emerald-400/30 order-1" title="Recommended — fastest way to share">
+                                <i class="fa-brands fa-whatsapp text-xl"></i> <span id="share-whatsapp-label">WhatsApp</span>
+                            </button>
+                            <button data-vr-zone="share-x" onclick="shareTo('x')" class="share-btn flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 border border-white/20 text-white p-4 rounded-2xl font-medium text-sm order-2" title="Share text to X (may be filtered)" aria-label="Share to X">
                                 <span class="text-xl">𝕏</span> <span id="share-x-label">X</span>
+                            </button>
+                            <button onclick="shareTo('sms')" class="share-btn flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-2xl font-medium text-sm order-3">
+                                <i class="fa-solid fa-sms text-xl"></i> <span id="share-sms-label">SMS</span>
+                            </button>
+                            <button onclick="shareTo('reddit')" class="share-btn flex items-center justify-center gap-2 bg-[#FF4500] hover:bg-[#cc3700] text-white p-4 rounded-2xl font-medium text-sm order-4" title="Post to Reddit" aria-label="Share to Reddit">
+                                <i class="fa-brands fa-reddit-alien text-xl"></i> <span id="share-reddit-label">Reddit</span>
+                            </button>
+                            <button data-vr-slim-share-extra onclick="generateStoryShareImage()" class="share-btn flex items-center justify-center gap-2 bg-gradient-to-br from-fuchsia-600 to-orange-500 hover:from-fuchsia-500 hover:to-orange-400 text-white p-4 rounded-2xl font-medium text-sm ring-2 ring-fuchsia-400/30" title="Download 9:16 story image for Instagram, TikTok, Snapchat" aria-label="Generate story share image">
+                                <i class="fa-solid fa-mobile-screen text-xl"></i> <span>Story</span>
                             </button>
                             <button data-vr-slim-share-extra onclick="generateXShareImage()" class="share-btn flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 border border-emerald-400/40 text-white p-4 rounded-2xl font-medium text-sm" title="Generate promo image + open X (recommended for X)" aria-label="Generate image for X">
                                 <span class="text-xl">𝕏</span> <span>Img</span>
-                            </button>
-                            <button onclick="generateStoryShareImage()" class="share-btn flex items-center justify-center gap-2 bg-gradient-to-br from-fuchsia-600 to-orange-500 hover:from-fuchsia-500 hover:to-orange-400 text-white p-4 rounded-2xl font-medium text-sm ring-2 ring-fuchsia-400/30" title="Download 9:16 story image for Instagram, TikTok, Snapchat" aria-label="Generate story share image">
-                                <i class="fa-solid fa-mobile-screen text-xl"></i> <span>Story</span>
-                            </button>
-                            <button id="share-whatsapp-primary" data-vr-zone="share-whatsapp" onclick="shareTo('whatsapp')" class="share-btn flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-2xl font-medium text-sm ring-2 ring-emerald-400/30" title="Recommended — fastest way to share">
-                                <i class="fa-brands fa-whatsapp text-xl"></i> <span id="share-whatsapp-label">WhatsApp</span>
                             </button>
                             <button data-vr-slim-share-extra onclick="shareTo('linkedin')" class="share-btn flex items-center justify-center gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white p-4 rounded-2xl font-medium text-sm">
                                 <i class="fa-brands fa-linkedin-in text-xl"></i> <span id="share-linkedin-label">LinkedIn</span>
@@ -607,14 +614,8 @@
                             <button data-vr-slim-share-extra onclick="shareTo('telegram')" class="share-btn flex items-center justify-center gap-2 bg-[#0088cc] hover:bg-[#006699] text-white p-4 rounded-2xl font-medium text-sm">
                                 <i class="fa-brands fa-telegram-plane text-xl"></i> <span id="share-telegram-label">Telegram</span>
                             </button>
-                            <button onclick="shareTo('sms')" class="share-btn flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-2xl font-medium text-sm">
-                                <i class="fa-solid fa-sms text-xl"></i> <span id="share-sms-label">SMS</span>
-                            </button>
                             <button data-vr-slim-share-extra onclick="shareTo('email')" class="share-btn flex items-center justify-center gap-2 bg-zinc-700 hover:bg-zinc-600 text-white p-4 rounded-2xl font-medium text-sm" title="Share via email" aria-label="Share via email">
                                 <i class="fa-solid fa-envelope text-xl"></i> <span id="share-email-label">Email</span>
-                            </button>
-                            <button onclick="shareTo('reddit')" class="share-btn flex items-center justify-center gap-2 bg-[#FF4500] hover:bg-[#cc3700] text-white p-4 rounded-2xl font-medium text-sm" title="Post to Reddit" aria-label="Share to Reddit">
-                                <i class="fa-brands fa-reddit-alien text-xl"></i> <span id="share-reddit-label">Reddit</span>
                             </button>
                             <button data-vr-slim-share-extra onclick="shareTo('bluesky')" class="share-btn flex items-center justify-center gap-2 bg-[#1185fe] hover:bg-[#0d6bcc] text-white p-4 rounded-2xl font-medium text-sm" title="Share on Bluesky" aria-label="Share to Bluesky">
                                 <i class="fa-solid fa-cloud text-xl"></i> <span id="share-bluesky-label">Bluesky</span>
@@ -637,7 +638,7 @@
                                 class="hidden mt-4 w-full text-sm font-semibold text-violet-300 hover:text-violet-200 px-4 py-3 rounded-2xl border border-violet-400/25 bg-violet-500/5 hover:bg-violet-500/10 transition-all"
                                 aria-expanded="false"
                                 aria-controls="share-buttons-panel">
-                            More share options
+                            More platforms &amp; tools
                         </button>
                     </div>
 
