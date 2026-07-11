@@ -222,7 +222,7 @@ export function onReferralSelfReferralBlocked(): void {
   );
 }
 
-/** After #ref-link is populated — guide visitor to COPY. */
+/** After #ref-link is populated — guide visitor to COPY, then share. */
 export function onReferralLinkReady(): void {
   document.documentElement.removeAttribute('data-vr-credit-pending');
   setFunnelStep(2);
@@ -239,19 +239,35 @@ export function onReferralLinkCopied(): void {
   const hint = document.getElementById('referral-next-step');
   if (hint) {
     hint.classList.remove('hidden');
-    hint.textContent = 'Step 3: tap WhatsApp (or any share button) to send your link.';
+    hint.textContent =
+      'Step 3 of 3: share now — WhatsApp is fastest. Every click climbs the live board.';
   }
+
+  // Keep progressive share reminders in sync (toast/banner after copy)
+  void import('./share-reminder-ui')
+    .then((m) => m.onShareReminderLinkCopied())
+    .catch(() => {});
 }
 
 function highlightCopyButton(): void {
   const btn = document.getElementById('copy-link-btn');
-  if (!btn) return;
-  btn.classList.add('copy-link-pulse');
-  window.setTimeout(() => btn.classList.remove('copy-link-pulse'), 2800);
+  if (btn) {
+    btn.classList.add('copy-link-pulse');
+    // Longer pulse so Step 2 is hard to miss after Get link
+    window.setTimeout(() => btn.classList.remove('copy-link-pulse'), 5200);
+  }
 
   const hint = document.getElementById('referral-next-step');
   if (hint) {
     hint.classList.remove('hidden');
-    hint.textContent = 'Step 2: tap COPY — then share your link below.';
+    hint.textContent =
+      'Next: tap COPY (Step 2), then share your link (Step 3) to climb the leaderboard.';
+  }
+
+  // Soft-highlight the share row so the full path is visible after get-link
+  const sharePanel = document.getElementById('share-buttons-panel');
+  if (sharePanel) {
+    sharePanel.classList.add('share-ready', 'share-panel-awaiting');
+    window.setTimeout(() => sharePanel.classList.remove('share-panel-awaiting'), 8000);
   }
 }

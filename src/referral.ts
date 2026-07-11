@@ -313,9 +313,9 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   });
 
   if (pendingReferrerCode) {
-    showToast('Step 1 done — crediting your visit now. Next: COPY your link.', 'success');
+    showToast('Step 1 done — next: COPY your link, then SHARE it.', 'success');
   } else {
-    showToast('Link ready — tap COPY to share', 'success');
+    showToast('Link ready — tap COPY, then share to climb the board', 'success');
   }
 
   // FOMO ticker unlocks once this visitor has a referral link
@@ -363,7 +363,7 @@ function performCopyToClipboard(link: string): void {
   const input = document.getElementById('ref-link') as HTMLInputElement | null;
 
   navigator.clipboard.writeText(link).then(() => {
-    showToast('Link copied — paste it anywhere to refer', 'success');
+    showToast('Copied! Now share it (WhatsApp or any button below)', 'success');
     const code = getMyReferralCode();
     if (code) {
       recordShareEvent({
@@ -402,7 +402,7 @@ function performCopyToClipboard(link: string): void {
       input.value = link;
       input.select();
       document.execCommand('copy');
-      showToast('Link copied', 'success');
+      showToast('Copied! Now share it (WhatsApp or any button below)', 'success');
       const code = getMyReferralCode();
       if (code) {
         recordShareEvent({

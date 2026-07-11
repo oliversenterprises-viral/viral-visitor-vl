@@ -28,11 +28,11 @@ const DEFAULT_GUIDE: Record<FunnelStep, FunnelGuideCopy> = {
     icon: 'up',
   },
   2: {
-    message: 'Step 2: tap COPY — your link is ready to paste anywhere.',
+    message: 'Step 2: tap COPY under your link — then you can paste and share it anywhere.',
     icon: 'down',
   },
   3: {
-    message: 'Step 3: tap WhatsApp (or any share button) — every click climbs the board.',
+    message: 'Step 3: share now (WhatsApp is fastest) — every open of your link climbs the board.',
     icon: 'down',
   },
 };

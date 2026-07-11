@@ -1,22 +1,55 @@
 /**
- * In-page share reminder banner — wired from referral link ready + share events.
+ * In-page share reminder banner + progressive copy/share nudges
+ * after the visitor gets a referral link.
  */
 
+import { showToast } from '../ui';
 import {
+  COPY_NUDGE_DELAY_MS,
+  copyNudgeMessage,
   dismissShareReminder,
+  hasLinkBeenCopied,
+  markLinkCopied,
   markReferralLinkReady,
   markShareCompleted,
+  REMINDER_DELAY_MS,
+  SHARE_NUDGE_AFTER_COPY_MS,
+  shareAfterCopyNudgeMessage,
   shareReminderMessage,
+  shouldShowCopyNudge,
+  shouldShowShareNudgeAfterCopy,
   shouldShowShareReminder,
   snoozeShareReminder,
   tryShareReminderNotification,
 } from './share-reminders';
 
 let reminderTimer: ReturnType<typeof window.setTimeout> | null = null;
+let copyNudgeTimer: ReturnType<typeof window.setTimeout> | null = null;
+let shareAfterCopyTimer: ReturnType<typeof window.setTimeout> | null = null;
 let pollTimer: ReturnType<typeof window.setInterval> | null = null;
+let copyNudgeToastShown = false;
+let shareAfterCopyToastShown = false;
 
 function getBanner(): HTMLElement | null {
   return document.getElementById('share-reminder-banner');
+}
+
+function scrollToCopy(): void {
+  document.getElementById('copy-link-btn')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('copy-link-btn')?.classList.add('copy-link-pulse');
+  window.setTimeout(() => {
+    document.getElementById('copy-link-btn')?.classList.remove('copy-link-pulse');
+  }, 2800);
+}
+
+function scrollToShare(): void {
+  document
+    .getElementById('share-buttons-panel')
+    ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('share-whatsapp-primary')?.classList.add('share-primary-pulse');
+  window.setTimeout(() => {
+    document.getElementById('share-whatsapp-primary')?.classList.remove('share-primary-pulse');
+  }, 3200);
 }
 
 function showBanner(): void {
@@ -24,11 +57,26 @@ function showBanner(): void {
   if (!banner) return;
   const msg = banner.querySelector('[data-share-reminder-text]');
   if (msg) msg.textContent = shareReminderMessage();
+  const action = document.getElementById('share-reminder-action');
+  if (action) {
+    action.textContent = hasLinkBeenCopied() ? 'Share now' : 'Copy & share';
+  }
   banner.classList.remove('hidden');
 }
 
 function hideBanner(): void {
   getBanner()?.classList.add('hidden');
+}
+
+function clearProgressTimers(): void {
+  if (reminderTimer) window.clearTimeout(reminderTimer);
+  if (copyNudgeTimer) window.clearTimeout(copyNudgeTimer);
+  if (shareAfterCopyTimer) window.clearTimeout(shareAfterCopyTimer);
+  if (pollTimer) window.clearInterval(pollTimer);
+  reminderTimer = null;
+  copyNudgeTimer = null;
+  shareAfterCopyTimer = null;
+  pollTimer = null;
 }
 
 function evaluateReminder(): void {
@@ -37,6 +85,20 @@ function evaluateReminder(): void {
     tryShareReminderNotification();
   } else {
     hideBanner();
+  }
+
+  // Soft toast if they still have not copied
+  if (!copyNudgeToastShown && shouldShowCopyNudge()) {
+    copyNudgeToastShown = true;
+    showToast(copyNudgeMessage(), 'info');
+    scrollToCopy();
+  }
+
+  // Soft toast if they copied but still have not shared
+  if (!shareAfterCopyToastShown && shouldShowShareNudgeAfterCopy()) {
+    shareAfterCopyToastShown = true;
+    showToast(shareAfterCopyNudgeMessage(), 'info');
+    scrollToShare();
   }
 }
 
@@ -57,7 +119,11 @@ function wireBannerActions(): void {
   document.getElementById('share-reminder-action')?.addEventListener('click', () => {
     dismissShareReminder();
     hideBanner();
-    document.getElementById('share-buttons-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (hasLinkBeenCopied()) {
+      scrollToShare();
+    } else {
+      scrollToCopy();
+    }
   });
 
   document.addEventListener('visibilitychange', () => {
@@ -70,20 +136,35 @@ export function initShareRemindersOnLinkReady(): void {
   wireBannerActions();
   markReferralLinkReady();
   hideBanner();
+  copyNudgeToastShown = false;
+  shareAfterCopyToastShown = false;
 
-  if (reminderTimer) window.clearTimeout(reminderTimer);
-  if (pollTimer) window.clearInterval(pollTimer);
+  clearProgressTimers();
 
-  reminderTimer = window.setTimeout(evaluateReminder, 2 * 60 * 1000);
-  pollTimer = window.setInterval(evaluateReminder, 30_000);
+  copyNudgeTimer = window.setTimeout(evaluateReminder, COPY_NUDGE_DELAY_MS);
+  reminderTimer = window.setTimeout(evaluateReminder, REMINDER_DELAY_MS);
+  pollTimer = window.setInterval(evaluateReminder, 15_000);
 }
 
-/** Call when user completes any share action. */
+/** Call when visitor copies their link (Step 2) — keep share nudges alive. */
+export function onShareReminderLinkCopied(): void {
+  markLinkCopied();
+  copyNudgeToastShown = true; // no more "please copy" toasts
+  shareAfterCopyToastShown = false;
+
+  if (shareAfterCopyTimer) window.clearTimeout(shareAfterCopyTimer);
+  shareAfterCopyTimer = window.setTimeout(evaluateReminder, SHARE_NUDGE_AFTER_COPY_MS);
+
+  // Refresh banner copy if already visible
+  const banner = getBanner();
+  if (banner && !banner.classList.contains('hidden')) {
+    showBanner();
+  }
+}
+
+/** Call when user completes any real share action (not clipboard-only). */
 export function onShareReminderCompleted(): void {
   markShareCompleted();
   hideBanner();
-  if (reminderTimer) window.clearTimeout(reminderTimer);
-  if (pollTimer) window.clearInterval(pollTimer);
-  reminderTimer = null;
-  pollTimer = null;
+  clearProgressTimers();
 }
