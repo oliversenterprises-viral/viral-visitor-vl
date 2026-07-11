@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { runOptimizerAutopilotCycle } from '../_shared/optimizer-autopilot-run.ts';
+import { expireStalePendingLinks } from '../_shared/referrer-share-deadline.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -61,10 +62,17 @@ Deno.serve(async (req: Request) => {
       // empty body ok
     }
 
+    const expiredLinks = dryRun ? 0 : await expireStalePendingLinks(supabase);
     const result = await runOptimizerAutopilotCycle(supabase, { dryRun });
-    return new Response(JSON.stringify({ success: true, data: result }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: { ...result, expired_pending_links: expiredLinks },
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    );
   } catch (err) {
     console.error('[optimizer-cron] error:', err);
     return new Response(

@@ -331,6 +331,22 @@
                             Step 2: tap COPY — then share your link below.
                         </p>
 
+                        <!-- 24h verified-share deadline (clipboard alone does not count) -->
+                        <div id="share-deadline-banner" class="hidden mt-4 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-left" role="status" aria-live="polite">
+                            <div class="flex flex-wrap items-start justify-between gap-2">
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-[10px] uppercase tracking-wider font-bold text-amber-200/90 mb-1">24-hour share rule</p>
+                                    <p id="share-deadline-title" class="text-sm text-amber-50 leading-snug">
+                                        Share this link within 24 hours or it is removed from the system (clipboard alone does not count).
+                                    </p>
+                                </div>
+                                <div class="shrink-0 text-right">
+                                    <div class="text-[10px] uppercase tracking-wider text-amber-200/70">Time left</div>
+                                    <div id="share-deadline-countdown" class="text-lg font-black tabular-nums text-amber-200">24h</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <button id="copy-message-btn" type="button" onclick="copyShareMessage()"
                                 class="hidden mt-3 w-full sm:w-auto px-5 py-2.5 rounded-2xl text-sm font-semibold border border-violet-400/30 bg-violet-500/10 hover:bg-violet-500/20 text-violet-200 transition-all"
                                 title="Copy the full share message with your link"

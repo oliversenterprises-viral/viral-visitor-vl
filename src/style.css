@@ -227,6 +227,27 @@ h3 { font-size: 1.35rem; }
   transition: box-shadow 0.4s ease;
 }
 
+#share-deadline-banner.share-deadline-banner--urgent {
+  border-color: rgba(251, 146, 60, 0.65);
+  background: rgba(249, 115, 22, 0.14);
+  animation: vr-deadline-pulse 1.8s ease-in-out infinite;
+}
+
+#share-deadline-banner.share-deadline-banner--expired {
+  border-color: rgba(248, 113, 113, 0.55);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+@keyframes vr-deadline-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(251, 146, 60, 0);
+  }
+}
+
 @keyframes vr-copy-pulse {
   0%,
   100% {

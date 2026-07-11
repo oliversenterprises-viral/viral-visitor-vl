@@ -32,6 +32,12 @@ import { buildQrImageUrl } from './lib/share-power';
 import { initShareRemindersOnLinkReady } from './lib/share-reminder-ui';
 import { refreshPublicClarityState } from './lib/public-clarity';
 import { flashCopySuccess } from './lib/public-polish';
+import {
+  enforceLocalShareDeadlineExpiry,
+  initShareDeadlineUi,
+  registerReferrerLinkDeadline,
+  renderShareDeadlineBanner,
+} from './lib/share-deadline';
 
 // Track attribution for the current page load
 let pendingReferrerCode: string | null = null;
@@ -235,6 +241,14 @@ function populateReferralLinkUI(code: string, link: string): void {
   initShareRemindersOnLinkReady();
   onReferralLinkReady();
   refreshPublicClarityState();
+  // Start / refresh 24h share-or-remove clock (server-backed when available)
+  void registerReferrerLinkDeadline(code).then((state) => {
+    if (state?.status === 'expired') {
+      enforceLocalShareDeadlineExpiry(code);
+      return;
+    }
+    renderShareDeadlineBanner();
+  });
 }
 
 /** Current value in #ref-link (empty until generated). */
@@ -260,8 +274,14 @@ export async function ensureReferralLinkReady(): Promise<string> {
 
 /** Restore UI for returning visitors who already have a code in localStorage. */
 export function applyExistingReferralLink(code: string): void {
+  // Wipe locally if 24h share deadline already passed without a verified share
+  if (enforceLocalShareDeadlineExpiry(code)) {
+    syncMobileReferralCta();
+    return;
+  }
   populateReferralLinkUI(code, buildReferralLink(code));
   syncMobileReferralCta();
+  initShareDeadlineUi();
   if (pendingReferrerCode && !referralRecordedThisSession) {
     void runFunnelReferralRecording();
   }

@@ -67,4 +67,15 @@ initApp().catch((err) => {
   document.documentElement.setAttribute('data-vr-ready', '1');
   syncMobileReferralCta();
   refreshPublicClarityState();
+  void import('./lib/share-deadline')
+    .then((m) => {
+      m.initShareDeadlineUi();
+      try {
+        const code = localStorage.getItem('vr_my_ref_code');
+        m.enforceLocalShareDeadlineExpiry(code);
+      } catch {
+        /* ignore */
+      }
+    })
+    .catch(() => {});
 });

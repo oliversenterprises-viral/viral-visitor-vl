@@ -4,6 +4,7 @@
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { markReferrerLinkShared, normalizeSharePlatform } from '../_shared/referrer-share-deadline.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,9 +15,7 @@ const corsHeaders = {
 const REF_CODE_FROM_LINK_RE = /\/r\/([A-Za-z0-9_-]+)/i;
 
 function normalizePlatform(raw: string): string {
-  const p = String(raw || 'other').toLowerCase().trim();
-  if (p === 'x') return 'twitter';
-  return p || 'other';
+  return normalizeSharePlatform(raw);
 }
 
 function extractReferrerCode(link: string, explicit?: string): string | null {
@@ -77,7 +76,9 @@ Deno.serve(async (req: Request) => {
     for (const row of attempts) {
       const { error } = await supabaseAdmin.from('shares').insert(row);
       if (!error) {
-        return new Response(JSON.stringify({ success: true }), {
+        // Verified share platforms activate the 24h share-or-expire clock
+        await markReferrerLinkShared(supabaseAdmin, referrer_code, platform);
+        return new Response(JSON.stringify({ success: true, verified_share: true }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }

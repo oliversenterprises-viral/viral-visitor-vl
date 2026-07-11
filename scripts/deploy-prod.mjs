@@ -33,6 +33,7 @@ const EDGE_FUNCTIONS = [
   'record-interaction',
   'submit-claim',
   'optimizer-cron',
+  'register-referrer-link',
 ];
 
 for (const name of EDGE_FUNCTIONS) {

@@ -2,6 +2,7 @@
 
 import { isSelfReferral, parseRecordReferralRequest } from './record-referral-request.ts';
 import { shouldSkipReferralCrediting } from './test-referral.ts';
+import { assertReferrerLinkAllowsReferrals } from './referrer-share-deadline.ts';
 
 export const RECORD_REFERRAL_CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -86,6 +87,23 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
       },
       200,
     );
+  }
+
+  // 24h verified-share deadline — expired codes cannot earn new referrals
+  try {
+    const gate = await assertReferrerLinkAllowsReferrals(deps.supabaseAdmin as never, referrerCode);
+    if (!gate.allowed) {
+      return jsonResponse(
+        {
+          success: false,
+          error: gate.reason || 'This referral link is no longer active.',
+          code_status: gate.status,
+        },
+        410,
+      );
+    }
+  } catch (gateErr) {
+    console.warn('[record-referral] share-deadline gate skipped:', gateErr);
   }
 
   const rateLimitWindowMs = deps.rateLimitWindowMs ?? DEFAULT_RATE_LIMIT_WINDOW_MS;

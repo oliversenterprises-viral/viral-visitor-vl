@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { isVerifiedSharePlatform, markLocalVerifiedShare } from './share-deadline';
 
 export interface RecordSharePayload {
   platform: string;
@@ -11,6 +12,11 @@ export interface RecordSharePayload {
 /** Best-effort server log when a user shares or copies their referral link. */
 export function recordShareEvent(payload: RecordSharePayload): void {
   if (!payload.referrer_code || !payload.referral_link) return;
+
+  // Verified platforms (not clipboard) clear the 24h removal clock locally
+  if (isVerifiedSharePlatform(payload.platform)) {
+    markLocalVerifiedShare(payload.platform);
+  }
 
   supabase.functions
     .invoke('record-share', {
