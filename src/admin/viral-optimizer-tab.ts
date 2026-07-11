@@ -1,9 +1,9 @@
 import { fetchSiteContent } from '../lib/supabase';
 import { invokeAdminAction } from '../lib/admin-action-client';
 import { formatAutopilotCronLabel, AUTOPILOT_CRON_PATH } from '../lib/autopilot-schedule';
-import { escapeHtml } from '../content';
+import { escapeHtml } from '../lib/escape-html';
 import { showToast } from '../ui';
-import { getVisitorEventsForStats } from '../lib/visitor-tracking';
+import { fetchVisitorFunnelEvents } from '../lib/visitor-funnel-fetch';
 import { getLocalInteractionEvents } from '../lib/interaction-tracking';
 import {
   computeDataReadiness,
@@ -609,7 +609,7 @@ export async function renderViralOptimizerTab(container: HTMLElement): Promise<v
 
   const [visitorResult, interactionResult, shares, referralCounts, experiments, siteContent] =
     await Promise.all([
-      getVisitorEventsForStats(),
+      fetchVisitorFunnelEvents(),
       fetchInteractions(),
       fetchShares(),
       fetchReferralCounts(),

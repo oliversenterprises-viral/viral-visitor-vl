@@ -45,6 +45,25 @@ async function deleteSiteContentKey(key: string): Promise<boolean> {
   }
 }
 
+/** HTML color inputs only accept #rrggbb — coerce rgba/named/css values safely. */
+function toColorInputValue(raw: unknown, fallback = '#ffffff'): string {
+  const s = String(raw ?? '').trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(s)) return s;
+  if (/^#[0-9a-fA-F]{3}$/.test(s)) {
+    const r = s[1],
+      g = s[2],
+      b = s[3];
+    return `#${r}${r}${g}${g}${b}${b}`;
+  }
+  // Keep non-hex for text field only; picker gets a safe default
+  if (/^#[0-9a-fA-F]{6}$/.test(fallback)) return fallback;
+  return '#ffffff';
+}
+
+function escapeAttr(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
 export async function renderTextColorsTab(container: HTMLElement) {
   container.innerHTML = `
     <div class="flex items-center justify-between mb-6">
@@ -113,7 +132,10 @@ export async function renderTextColorsTab(container: HTMLElement) {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
 
       groups[groupName].forEach((ctrl: ColorControl) => {
-        const currentValue = currentContent[ctrl.key] || ctrl.default;
+        const stored = String(currentContent[ctrl.key] ?? ctrl.default ?? '#ffffff');
+        const pickerValue = toColorInputValue(stored, toColorInputValue(ctrl.default));
+        // Hex text field shows stored value (incl. rgba); color picker always gets valid #rrggbb
+        const textValue = stored.trim() || ctrl.default;
         const safeId = ctrl.key.replace(/[^a-z0-9]/gi, '_');
 
         html += `
@@ -123,8 +145,8 @@ export async function renderTextColorsTab(container: HTMLElement) {
               <div class="text-[10px] text-zinc-500 font-mono mt-0.5">${ctrl.key}</div>
             </div>
             <div class="flex items-center gap-3">
-              <input type="color" id="picker_${safeId}" value="${currentValue}" class="w-12 h-10 bg-transparent border border-white/20 rounded-xl cursor-pointer p-1" />
-              <input type="text" id="hex_${safeId}" value="${currentValue}" class="w-28 bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm font-mono focus:border-violet-500" placeholder="#ffffff" />
+              <input type="color" id="picker_${safeId}" value="${escapeAttr(pickerValue)}" class="w-12 h-10 bg-transparent border border-white/20 rounded-xl cursor-pointer p-1" />
+              <input type="text" id="hex_${safeId}" value="${escapeAttr(textValue)}" class="w-28 bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm font-mono focus:border-violet-500" placeholder="#ffffff" />
             </div>
           </div>`;
       });

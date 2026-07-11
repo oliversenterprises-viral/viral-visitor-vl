@@ -80,9 +80,20 @@ export async function switchAdminTab(tab: number) {
   } catch (err) {
     if (isStale(requestId)) return;
     console.error('[Admin] Tab render failed:', err);
+    const msg = err instanceof Error ? err.message : String(err);
+    // Avoid nested HTML injection from error strings
+    const safe = msg.replace(/[<>&"']/g, (c) =>
+      ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c] || c,
+    );
     content.innerHTML = `
-      <div class="p-6 text-amber-400">Unable to load this tab. ${String(err)}</div>
-      <button onclick="window.switchAdminTab(${tab})" class="mt-3 px-4 py-2 text-sm bg-white/10 rounded-2xl">Retry</button>
+      <div class="p-6 text-amber-400 border border-amber-500/30 rounded-2xl">
+        <div class="font-semibold mb-1">Unable to load this tab</div>
+        <div class="text-sm text-zinc-400">${safe}</div>
+        <button type="button" data-admin-tab-retry="${tab}" class="mt-3 px-4 py-2 text-sm bg-white/10 rounded-2xl">Retry</button>
+      </div>
     `;
+    content.querySelector<HTMLButtonElement>('[data-admin-tab-retry]')?.addEventListener('click', () => {
+      void switchAdminTab(tab);
+    });
   }
 }

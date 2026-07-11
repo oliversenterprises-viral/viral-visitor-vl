@@ -2,7 +2,7 @@ import type { Chart } from 'chart.js';
 import { invokeAdminAction } from '../lib/admin-action-client';
 import { registerAdminLiveRefresh } from './admin-live-hub';
 import { showToast } from '../ui';
-import { escapeHtml } from '../content';
+import { escapeHtml } from '../lib/escape-html';
 import {
   type ShareEvent,
   type AnalyticsViewData,
@@ -54,15 +54,15 @@ function destroyCharts() {
   shareTrendChart = null;
 }
 
-async function fetchSharesData(): Promise<ShareEvent[]> {
+async function fetchSharesData(): Promise<{ shares: ShareEvent[]; fetchError?: string }> {
   const result = await invokeAdminAction<Record<string, unknown>[]>('get_shares');
   if (!result.success) {
-    throw new Error(result.error || 'get_shares failed');
+    return { shares: [], fetchError: result.error || 'get_shares failed' };
   }
   if (!Array.isArray(result.data)) {
-    throw new Error('Invalid get_shares response');
+    return { shares: [], fetchError: 'Invalid get_shares response' };
   }
-  return result.data.map((row) => normalizeShareRow(row));
+  return { shares: result.data.map((row) => normalizeShareRow(row)) };
 }
 
 async function fetchReferralCounts(): Promise<Record<string, number>> {
@@ -391,18 +391,28 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
     Chart.register(...registerables);
     ChartCtor = Chart;
 
-    allSharesCache = await fetchSharesData();
+    const initial = await fetchSharesData();
+    allSharesCache = initial.shares;
     referralCountsCache = await fetchReferralCounts();
+    let lastFetchError = initial.fetchError;
 
     if (!allSharesCache.length) {
       destroyCharts();
+      const errLine = lastFetchError
+        ? `<p class="text-sm text-amber-400/90 mt-2 max-w-md">${escapeHtml(lastFetchError)}</p>`
+        : '';
       content.innerHTML = `
         <div class="flex flex-col items-center justify-center py-12 text-center">
           <i class="fa-solid fa-share-alt text-5xl text-zinc-600 mb-4 opacity-60"></i>
-          <div class="text-xl font-semibold text-zinc-300">No shares yet</div>
+          <div class="text-xl font-semibold text-zinc-300">${lastFetchError ? 'Share analytics unavailable' : 'No shares yet'}</div>
           <p class="text-sm text-zinc-500 mt-2 max-w-md">
-            When users share their referral links on social media, detailed analytics and insights will appear here automatically.
+            ${
+              lastFetchError
+                ? 'Sign in with the admin password, then hit Refresh. The tab shell loads even when the server is unreachable.'
+                : 'When users share their referral links on social media, detailed analytics and insights will appear here automatically.'
+            }
           </p>
+          ${errLine}
           <button id="shares-empty-refresh" class="mt-4 px-5 py-2 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">Refresh</button>
         </div>`;
       document.getElementById('shares-empty-refresh')?.addEventListener('click', () => {
@@ -447,7 +457,15 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
     };
 
     const refreshShareData = async (toastOnSuccess = false) => {
-      allSharesCache = await fetchSharesData();
+      const next = await fetchSharesData();
+      if (next.fetchError && next.shares.length === 0) {
+        // Keep previous cache so a transient auth/network blip does not wipe the view
+        lastFetchError = next.fetchError;
+        showToast(next.fetchError, 'info');
+        return;
+      }
+      allSharesCache = next.shares;
+      lastFetchError = next.fetchError;
       referralCountsCache = await fetchReferralCounts();
       if (toastOnSuccess) showToast('Share analytics refreshed', 'success');
       renderView();
@@ -665,8 +683,9 @@ function attachShareAnalyticsListeners(
       clearTestBtn.disabled = true;
       try {
         const { deleted, codes: removed } = await clearTestSharesFromServer();
-        allSharesCache = await fetchSharesData();
-    referralCountsCache = await fetchReferralCounts();
+        const next = await fetchSharesData();
+        allSharesCache = next.shares;
+        referralCountsCache = await fetchReferralCounts();
         showToast(
           deleted > 0
             ? `Cleared ${deleted} test share(s): ${removed.join(', ')}`
