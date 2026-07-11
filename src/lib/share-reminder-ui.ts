@@ -4,6 +4,7 @@
  */
 
 import { showToast } from '../ui';
+import { playFunnelNudgeSound, unlockFunnelNudgeAudio } from './funnel-nudge-sound';
 import {
   COPY_NUDGE_DELAY_MS,
   copyNudgeMessage,
@@ -55,6 +56,7 @@ function scrollToShare(): void {
 function showBanner(): void {
   const banner = getBanner();
   if (!banner) return;
+  const wasHidden = banner.classList.contains('hidden');
   const msg = banner.querySelector('[data-share-reminder-text]');
   if (msg) msg.textContent = shareReminderMessage();
   const action = document.getElementById('share-reminder-action');
@@ -62,6 +64,8 @@ function showBanner(): void {
     action.textContent = hasLinkBeenCopied() ? 'Share now' : 'Copy & share';
   }
   banner.classList.remove('hidden');
+  // Audible only when the banner newly appears (not on every poll refresh)
+  if (wasHidden) void playFunnelNudgeSound('banner');
 }
 
 function hideBanner(): void {
@@ -91,6 +95,7 @@ function evaluateReminder(): void {
   if (!copyNudgeToastShown && shouldShowCopyNudge()) {
     copyNudgeToastShown = true;
     showToast(copyNudgeMessage(), 'info');
+    void playFunnelNudgeSound('copy-nudge');
     scrollToCopy();
   }
 
@@ -98,6 +103,7 @@ function evaluateReminder(): void {
   if (!shareAfterCopyToastShown && shouldShowShareNudgeAfterCopy()) {
     shareAfterCopyToastShown = true;
     showToast(shareAfterCopyNudgeMessage(), 'info');
+    void playFunnelNudgeSound('share-nudge');
     scrollToShare();
   }
 }
@@ -139,6 +145,9 @@ export function initShareRemindersOnLinkReady(): void {
   copyNudgeToastShown = false;
   shareAfterCopyToastShown = false;
 
+  // Unlock + soft success chime on the same user gesture as Get link
+  void unlockFunnelNudgeAudio().then(() => playFunnelNudgeSound('link-ready'));
+
   clearProgressTimers();
 
   copyNudgeTimer = window.setTimeout(evaluateReminder, COPY_NUDGE_DELAY_MS);
@@ -152,13 +161,19 @@ export function onShareReminderLinkCopied(): void {
   copyNudgeToastShown = true; // no more "please copy" toasts
   shareAfterCopyToastShown = false;
 
+  // Gesture unlock + soft share-invite chime after copy
+  void unlockFunnelNudgeAudio().then(() => playFunnelNudgeSound('share-nudge'));
+
   if (shareAfterCopyTimer) window.clearTimeout(shareAfterCopyTimer);
   shareAfterCopyTimer = window.setTimeout(evaluateReminder, SHARE_NUDGE_AFTER_COPY_MS);
 
   // Refresh banner copy if already visible
   const banner = getBanner();
   if (banner && !banner.classList.contains('hidden')) {
-    showBanner();
+    const msg = banner.querySelector('[data-share-reminder-text]');
+    if (msg) msg.textContent = shareReminderMessage();
+    const action = document.getElementById('share-reminder-action');
+    if (action) action.textContent = 'Share now';
   }
 }
 
