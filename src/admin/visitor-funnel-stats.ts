@@ -220,7 +220,6 @@ function renderVisitorFunnelView(
 ): void {
   const safeEvents = Array.isArray(events) ? events : [];
 
-  let visible = safeEvents;
   let ranged = safeEvents;
   let excludedCount = 0;
   let stats = computeVisitorFunnelStats([]);
@@ -231,7 +230,7 @@ function renderVisitorFunnelView(
   let effectiveError = fetchError;
 
   try {
-    visible = filterExcludedVisitorFunnelEvents(safeEvents);
+    const visible = filterExcludedVisitorFunnelEvents(safeEvents);
     ranged = filterEventsByTrackingRange(visible, getTrackingTimeRange());
     excludedCount = countTestVisitorFunnelEvents(safeEvents);
     stats = computeVisitorFunnelStats(ranged);
@@ -539,7 +538,10 @@ export async function wireVisitorFunnelStatsQuick(root: HTMLElement): Promise<vo
     ]);
     const panel =
       (root.querySelector('#visitor-stats-quick') as HTMLElement | null) || el;
-    if (!document.body.contains(panel)) return;
+    // Prefer root containment over document.body so initial paint works in tests
+    // and when the panel is still under the edit-content root. Live refresh still
+    // guards with document.body.contains above.
+    if (!root.contains(panel)) return;
     renderVisitorFunnelView(
       panel,
       funnel.events,

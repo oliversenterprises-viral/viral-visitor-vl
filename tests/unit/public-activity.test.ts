@@ -99,16 +99,17 @@ describe('public-activity', () => {
     expect(text).toContain('VIRAL-Z just shared on Reddit');
   });
 
-  it('buildDirectHeroSocialProofHtml returns empty without signal', () => {
-    expect(buildDirectHeroSocialProofHtml([], 0, 0)).toBe('');
-    expect(
-      buildDirectHeroSocialProofHtml([], 0, 5),
-    ).toContain('5 referrers competing now');
+  it('buildDirectHeroSocialProofHtml always shows FOMO when board is quiet', () => {
+    // Product rule: never silence direct hero — empty board gets open-board FOMO
+    const empty = buildDirectHeroSocialProofHtml([], 0, 0);
+    expect(empty).toContain('Board is open worldwide');
+    expect(buildDirectHeroSocialProofHtml([], 0, 5)).toContain('5 referrers competing now');
   });
 
   it('buildDirectHeroSocialProofText prefers leader FOMO on thin board', () => {
     const text = buildDirectHeroSocialProofText([], 0, 1, 6);
-    expect(text).toContain('#1 has only 6 referrals');
+    expect(text).toMatch(/#1 has only 6 referral/);
+    expect(text).toContain('wide open board');
     expect(text).not.toContain('1 referrer competing');
   });
 });

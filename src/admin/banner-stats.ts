@@ -264,7 +264,6 @@ function renderBannerStatsView(
   let rangeFiltered: Array<Record<string, unknown>> = safeEvents;
   let stats = computeBannerStats([]);
   let rows: BannerStatRow[] = [];
-  let filtered: BannerStatRow[] = [];
   let sorted: BannerStatRow[] = [];
   let totals = computeBannerTotals([]);
   let topPerformer: BannerStatRow | null = null;
@@ -277,8 +276,10 @@ function renderBannerStatsView(
     rangeFiltered = filterEventsByTrackingRange(visibleEvents, getTrackingTimeRange());
     stats = computeBannerStats(rangeFiltered);
     rows = stats.perBanner as BannerStatRow[];
-    filtered = filterBannerRowsBySearch(rows, currentBannerSearch);
-    sorted = sortBannerRows(filtered, currentBannerSort);
+    sorted = sortBannerRows(
+      filterBannerRowsBySearch(rows, currentBannerSearch),
+      currentBannerSort,
+    );
     totals = computeBannerTotals(sorted);
     topPerformer = findTopPerformer(sorted, 3);
   } catch (err) {

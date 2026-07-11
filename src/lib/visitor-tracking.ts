@@ -8,9 +8,6 @@ import { getStoredLandingRef } from './referral-url';
 import { getStoredUtmAttribution } from './utm-attribution';
 import { supabase } from './supabase';
 import { eventName, groupBy, latestEvents } from './stats-helpers';
-// Static import only — dynamic import('./visitor-funnel-fetch') was rewritten by
-// Rolldown to the main chunk without a named-export interop, crashing Viral Optimizer.
-import { fetchVisitorFunnelEvents } from './visitor-funnel-fetch';
 
 const VISITOR_EVENTS_KEY = 'viralrefer_visitor_events';
 const VISITOR_ID_KEY = 'vr_visitor_id';
@@ -343,15 +340,7 @@ export function computeVisitorFunnelStats(events: Array<Record<string, any>>) {
   };
 }
 
-/**
- * Admin stats fetch for visitor funnel events.
- * Prefer importing `fetchVisitorFunnelEvents` directly in new code.
- * Static import is required — see note above on the broken dynamic-import path.
- */
-export async function getVisitorEventsForStats(): Promise<{
-  events: Array<Record<string, any>>;
-  source: 'server' | 'local';
-  fetchError?: string;
-}> {
-  return fetchVisitorFunnelEvents();
-}
+// Admin funnel fetch lives in visitor-funnel-fetch.ts (import that module directly).
+// Do NOT re-export via dynamic import here — Rolldown broke named-export interop
+// and crashed Viral Optimizer. Do NOT static-import it here either — that creates
+// a circular dependency with visitor-funnel-fetch → visitor-tracking.
