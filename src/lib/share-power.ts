@@ -50,29 +50,34 @@ function defaultShareTemplate(): string {
   return t('share.default');
 }
 
+/** Status + near-win share copy — competition first, prize second (homepage feature, not cash). */
 const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
   whatsapp:
-    '🏆 ViralRefer — worldwide free leaderboard!\nGet your link in ~30 sec. #1 can claim a homepage feature.\n\n{link}',
+    "I'm on ViralRefer's live worldwide leaderboard 🏆\nFree link in ~30 sec · no signup · #1 can claim a homepage feature\nCan you beat me?\n\n{link}",
   boost:
-    '🚀 Join me on ViralRefer — open worldwide, free in ~30 sec!\n#1 can claim a homepage feature.\n\n{link}',
-  reddit: 'ViralRefer — worldwide free referral leaderboard. No signup. #1 can claim a homepage feature.',
+    "I just entered ViralRefer's live worldwide leaderboard 🏆\nFree, ~30 sec, no signup. #1 can claim a homepage feature.\nChallenge: can you beat my rank?\n\n{link}",
+  reddit:
+    'ViralRefer — live worldwide referral leaderboard (no signup). Climb ranks in real time; #1 can claim a homepage feature.',
   bluesky:
-    'Join ViralRefer worldwide — free, ~30 sec setup. #1 can claim a homepage feature 🏆\n\n{link}',
-  sms: 'Join me on ViralRefer — worldwide free leaderboard. #1 claims homepage feature. {link}',
+    "I'm racing the ViralRefer worldwide leaderboard 🏆 Free in ~30 sec · no signup · #1 claims a homepage feature\nCan you beat me?\n\n{link}",
+  sms: "I'm on ViralRefer's live leaderboard 🏆 Free, no signup. Can you beat me? #1 claims homepage feature. {link}",
   email:
-    'Hey! I joined ViralRefer — a free worldwide referral leaderboard where #1 can claim a homepage feature.\n\nGrab your free link in ~30 sec:\n{link}',
+    "Hey! I'm competing on ViralRefer — a free worldwide referral leaderboard with live ranks. #1 can claim a homepage feature for their site.\n\nJoin free in ~30 sec (no signup) and try to beat me:\n{link}",
   linkedin:
-    'Join the ViralRefer worldwide referral leaderboard — free to start, real-time rankings. {link}',
-  telegram: 'ViralRefer worldwide leaderboard — free to join, #1 can claim a homepage feature. {link}',
-  threads: 'Climbing the ViralRefer worldwide leaderboard — free to join in ~30 sec 🏆\n\n{link}',
-  pinterest: 'ViralRefer — worldwide free referral leaderboard. #1 can claim a homepage feature',
+    "I'm on ViralRefer's live worldwide referral leaderboard — free, no signup, real-time ranks. #1 can claim a homepage feature. Join and race me: {link}",
+  telegram:
+    "I'm on ViralRefer's live leaderboard 🏆 Free · no signup · #1 claims homepage feature. Can you beat me?\n\n{link}",
+  threads:
+    "Climbing ViralRefer's live worldwide leaderboard 🏆 Free in ~30 sec · no signup. #1 can claim a homepage feature. Race me?\n\n{link}",
+  pinterest:
+    'ViralRefer — live worldwide referral leaderboard. Free, no signup. #1 can claim a homepage feature.',
   discord:
-    '**ViralRefer** — worldwide free referral leaderboard\nFree to join in ~30 sec. #1 can claim a homepage feature\n\n{link}',
-  x: 'Worldwide free referral leaderboard on ViralRefer. #1 can claim a homepage feature 🏆\n\n{link}',
+    "**ViralRefer** — live worldwide referral leaderboard\nFree · ~30 sec · no signup · #1 can claim a homepage feature\nCan you beat my rank?\n\n{link}",
+  x: "Live referral leaderboard on ViralRefer 🏆 Free · no signup · #1 can claim a homepage feature. Can you beat me?\n\n{link}",
   tiktok:
-    'POV: climbing the ViralRefer worldwide leaderboard 🏆 Free to join in ~30 sec\n\n{link}\n\n#referral #leaderboard #viral #fyp #marketing',
+    'POV: climbing a live worldwide referral leaderboard 🏆 Free in ~30 sec · no signup · #1 claims homepage feature\n\n{link}\n\n#referral #leaderboard #viral #fyp #marketing',
   snapchat:
-    'Join me on ViralRefer — worldwide free leaderboard 🏆 Free link in ~30 sec\n\n{link}\n\nAdd to your story or send to friends!',
+    "I'm on ViralRefer's live leaderboard 🏆 Free link in ~30 sec — can you beat me?\n\n{link}\n\nAdd to your story or send to friends!",
 };
 
 /** Append UTM params so you can see which platform drove each visit. */

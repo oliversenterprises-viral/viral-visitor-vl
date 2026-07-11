@@ -74,6 +74,30 @@ describe('share-deadline', () => {
   });
 });
 
+describe('share-deadline i18n keys', () => {
+  it('exposes deadline keys in every supported locale', async () => {
+    const { MESSAGES, SUPPORTED_LOCALES } = await import('../../src/lib/i18n/messages');
+    const keys = [
+      'deadline.badge',
+      'deadline.time_left',
+      'deadline.pre_rule',
+      'deadline.pending',
+      'deadline.urgent',
+      'deadline.expired',
+      'deadline.countdown_expired',
+      'deadline.toast_removed',
+      'deadline.how_note',
+    ] as const;
+    for (const locale of SUPPORTED_LOCALES) {
+      for (const key of keys) {
+        const value = MESSAGES[locale][key];
+        expect(typeof value).toBe('string');
+        expect(value.length).toBeGreaterThan(3);
+      }
+    }
+  });
+});
+
 describe('referrer-share-deadline edge helpers', () => {
   it('isVerifiedSharePlatform matches edge module rules', async () => {
     // Mirror of edge NON_VERIFIED set — keep in sync with _shared/referrer-share-deadline.ts

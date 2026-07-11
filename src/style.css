@@ -227,9 +227,24 @@ h3 { font-size: 1.35rem; }
   transition: box-shadow 0.4s ease;
 }
 
+/* Always-visible pre-share education (above link card) */
+.share-deadline-pre-note {
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+/* Live countdown sits at share step — always urgent feel when pending */
+#share-deadline-banner.share-deadline-banner--pending {
+  border-color: rgba(251, 191, 36, 0.55);
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.16), rgba(244, 63, 94, 0.08));
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.12), 0 8px 24px rgba(245, 158, 11, 0.08);
+}
+
 #share-deadline-banner.share-deadline-banner--urgent {
-  border-color: rgba(251, 146, 60, 0.65);
-  background: rgba(249, 115, 22, 0.14);
+  border-color: rgba(251, 146, 60, 0.75);
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.2), rgba(239, 68, 68, 0.12));
   animation: vr-deadline-pulse 1.8s ease-in-out infinite;
 }
 
@@ -238,13 +253,18 @@ h3 { font-size: 1.35rem; }
   background: rgba(239, 68, 68, 0.12);
 }
 
+#share-deadline-banner.share-deadline-banner--urgent #share-deadline-countdown {
+  color: #fdba74;
+  text-shadow: 0 0 12px rgba(251, 146, 60, 0.35);
+}
+
 @keyframes vr-deadline-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.2);
+    box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.28);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(251, 146, 60, 0);
+    box-shadow: 0 0 0 8px rgba(251, 146, 60, 0);
   }
 }
 
@@ -2739,7 +2759,18 @@ html[data-vr-viral-tier='legend'] #viral-power-meter {
 html[data-vr-growth-hub] #viral-power-meter,
 html[data-vr-growth-hub] #daily-share-quest,
 html[data-vr-growth-hub] #share-rank-cta,
-html[data-vr-growth-hub] #boost-whatsapp-btn {
+html[data-vr-growth-hub] #boost-whatsapp-btn,
+html[data-vr-growth-hub] #distance-glory-meter {
+  display: none !important;
+}
+
+/* Hide sticky distance bar while pre-link mobile CTA is showing */
+html:not([data-vr-has-link]) #distance-glory-sticky {
+  display: none !important;
+}
+
+/* Avoid double bottom bars on small screens when mobile get-link CTA is active */
+#mobile-referral-cta:not(.hidden) ~ #distance-glory-sticky {
   display: none !important;
 }
 
@@ -2747,9 +2778,54 @@ html[data-vr-growth-hub] #boost-whatsapp-btn {
   transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.growth-command-center--rush {
+.growth-command-center--rush,
+.growth-command-center--near-win {
   border-color: rgba(251, 191, 36, 0.45) !important;
   animation: vr-viral-rush-pulse 1.8s ease-in-out infinite;
+}
+
+.distance-glory-meter__fill {
+  transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.distance-glory--gold {
+  border-color: rgba(251, 191, 36, 0.45) !important;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.12), rgba(24, 24, 27, 0.8), rgba(251, 191, 36, 0.08));
+}
+
+.distance-glory--critical {
+  border-color: rgba(244, 63, 94, 0.5) !important;
+  animation: vr-viral-rush-pulse 1.8s ease-in-out infinite;
+}
+
+.distance-glory--amber {
+  border-color: rgba(251, 191, 36, 0.35) !important;
+}
+
+.distance-glory--emerald {
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}
+
+.distance-glory--violet {
+  border-color: rgba(167, 139, 250, 0.3) !important;
+}
+
+.distance-glory-sticky.distance-glory-sticky--visible:not(.hidden) {
+  display: block;
+}
+
+.competitor-badge {
+  letter-spacing: 0.06em;
+}
+
+/* Room for sticky distance bar above page footer content on mobile */
+html[data-vr-distance-sticky] body {
+  padding-bottom: 5.5rem;
+}
+
+html[data-vr-distance-sticky] #mobile-referral-cta:not(.hidden) {
+  /* get-link CTA takes priority; distance sticky already hidden via sibling rule */
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
 
 .growth-command-cta--critical {
@@ -2839,6 +2915,8 @@ html[data-vr-reduced-motion] .challenge-duel-banner,
 html[data-vr-reduced-motion] .duel-invite-strip--pulse,
 html[data-vr-reduced-motion] .viral-power-meter--rush,
 html[data-vr-reduced-motion] .growth-command-center--rush,
+html[data-vr-reduced-motion] .growth-command-center--near-win,
+html[data-vr-reduced-motion] .distance-glory--critical,
 html[data-vr-reduced-motion] .growth-command-cta--critical,
 html[data-vr-reduced-motion] .catch-up-anxiety-bar--critical,
 html[data-vr-reduced-motion] .hero-get-link-pulse,

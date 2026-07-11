@@ -277,6 +277,10 @@
                 <div class="text-center mb-6 sm:mb-8">
                     <h2 id="winning-link-title" class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter mb-2 sm:mb-3" style="color: var(--text-referral-heading, #ffffff)">Your winning link</h2>
                     <p id="winning-link-description" class="text-base sm:text-lg text-zinc-300 max-w-lg mx-auto" data-vr-declutter-secondary>Copy → share → climb. Every click counts toward #1.</p>
+                    <!-- Always-visible 24h rule (i18n) — strongest pre-share education in the funnel -->
+                    <p id="share-deadline-pre-note" class="share-deadline-pre-note mt-3 max-w-lg mx-auto text-sm font-semibold text-amber-200/95 leading-snug" role="status" data-i18n="deadline.pre_rule">
+                        Share on a real platform within 24 hours or your link is removed — clipboard alone does not count.
+                    </p>
                 </div>
                
                 <div class="glass border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl">
@@ -331,22 +335,6 @@
                             Step 2: tap COPY — then share your link below.
                         </p>
 
-                        <!-- 24h verified-share deadline (clipboard alone does not count) -->
-                        <div id="share-deadline-banner" class="hidden mt-4 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-left" role="status" aria-live="polite">
-                            <div class="flex flex-wrap items-start justify-between gap-2">
-                                <div class="min-w-0 flex-1">
-                                    <p class="text-[10px] uppercase tracking-wider font-bold text-amber-200/90 mb-1">24-hour share rule</p>
-                                    <p id="share-deadline-title" class="text-sm text-amber-50 leading-snug">
-                                        Share this link within 24 hours or it is removed from the system (clipboard alone does not count).
-                                    </p>
-                                </div>
-                                <div class="shrink-0 text-right">
-                                    <div class="text-[10px] uppercase tracking-wider text-amber-200/70">Time left</div>
-                                    <div id="share-deadline-countdown" class="text-lg font-black tabular-nums text-amber-200">24h</div>
-                                </div>
-                            </div>
-                        </div>
-
                         <button id="copy-message-btn" type="button" onclick="copyShareMessage()"
                                 class="hidden mt-3 w-full sm:w-auto px-5 py-2.5 rounded-2xl text-sm font-semibold border border-violet-400/30 bg-violet-500/10 hover:bg-violet-500/20 text-violet-200 transition-all"
                                 title="Copy the full share message with your link"
@@ -356,12 +344,53 @@
                     </div>
 
 <div id="share-power-block" data-vr-declutter-post-link>
-                        <div class="flex items-center gap-2 mb-3">
+                        <!-- 24h verified-share deadline — live countdown at share step (highest urgency in funnel) -->
+                        <div id="share-deadline-banner" class="hidden mb-4 rounded-2xl border border-amber-400/50 bg-gradient-to-r from-amber-500/15 to-rose-500/10 px-4 py-3.5 text-left shadow-lg shadow-amber-500/10" role="status" aria-live="polite">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div class="min-w-0 flex-1 flex items-start gap-2.5">
+                                    <span class="share-deadline-banner__icon shrink-0 mt-0.5 w-8 h-8 rounded-xl bg-amber-500/25 text-amber-200 flex items-center justify-center" aria-hidden="true">
+                                        <i class="fa-solid fa-clock"></i>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p class="text-[10px] uppercase tracking-wider font-bold text-amber-200/95 mb-1" data-i18n="deadline.badge">24-hour share rule</p>
+                                        <p id="share-deadline-title" class="text-sm font-medium text-amber-50 leading-snug" data-i18n="deadline.pending">
+                                            Share this link within 24 hours or it is removed from the system (clipboard alone does not count).
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="shrink-0 text-right pl-1">
+                                    <div class="text-[10px] uppercase tracking-wider text-amber-200/75" data-i18n="deadline.time_left">Time left</div>
+                                    <div id="share-deadline-countdown" class="text-2xl font-black tabular-nums text-amber-100 leading-none mt-0.5">24h</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
                             <i class="fa-solid fa-share-alt text-violet-400"></i>
                             <span id="share-link-heading" class="font-semibold text-lg" style="color: var(--text-referral-heading, #ffffff)">Share — climb the board</span>
+                            <span id="competitor-badge" class="hidden competitor-badge text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full border border-emerald-400/40 text-emerald-200 bg-emerald-500/15" title="Unlocked after your first platform share">Competitor ✓</span>
                         </div>
                        
                         <p data-vr-slim-share-meta class="text-xs text-zinc-500 -mt-1 mb-3">Every open of your link moves you up. WhatsApp is fastest.</p>
+
+                        <!-- Distance to glory — always-on near-win meter (client-only) -->
+                        <div id="distance-glory-meter" data-vr-zone="distance-glory" class="hidden distance-glory-meter mb-4 rounded-2xl border border-violet-400/30 bg-gradient-to-r from-violet-500/10 via-zinc-900/70 to-emerald-500/5 px-4 py-3" role="status" aria-live="polite">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-flag-checkered text-violet-300 text-sm" aria-hidden="true"></i>
+                                    <span class="text-[10px] uppercase tracking-wider font-bold text-violet-200">Distance to glory</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-xs">
+                                    <span class="text-zinc-500">Rank <strong data-distance-rank class="text-violet-200 tabular-nums">—</strong></span>
+                                    <span class="text-zinc-500">Gap <strong data-distance-gap class="text-amber-300 tabular-nums">—</strong></span>
+                                </div>
+                            </div>
+                            <p data-distance-line class="text-sm font-bold text-white leading-snug">First referral unlocks your rank</p>
+                            <p data-distance-subline class="text-[11px] text-zinc-400 mt-0.5">You're in. Sharing is how you climb — challenge a friend.</p>
+                            <div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden mt-2">
+                                <div data-distance-fill class="distance-glory-meter__fill h-full bg-gradient-to-r from-violet-400 to-emerald-400 transition-all duration-500" style="width:6%"></div>
+                            </div>
+                        </div>
 
                         <div id="catch-up-anxiety-bar" data-vr-zone="catch-up-anxiety" class="hidden catch-up-anxiety-bar mb-4 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-500/10 to-rose-500/5 px-4 py-3" role="status" aria-live="polite">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -402,11 +431,11 @@
                             <canvas id="rank-receipt-canvas" class="hidden" width="1080" height="1350" aria-hidden="true"></canvas>
                         </div>
 
-                        <div id="growth-command-center" data-vr-zone="growth-command" class="hidden growth-command-center mb-4 rounded-2xl border border-violet-400/30 bg-gradient-to-br from-violet-500/10 via-zinc-900/80 to-emerald-500/5 px-4 py-4" role="region" aria-label="Growth command center">
+                        <div id="growth-command-center" data-vr-zone="growth-command" class="hidden growth-command-center mb-4 rounded-2xl border border-violet-400/30 bg-gradient-to-br from-violet-500/10 via-zinc-900/80 to-emerald-500/5 px-4 py-4" role="region" aria-label="Share command center">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-rocket text-violet-300 text-sm" aria-hidden="true"></i>
-                                    <span class="text-[10px] uppercase tracking-wider font-bold text-violet-200">Growth Engine</span>
+                                    <span class="text-[10px] uppercase tracking-wider font-bold text-violet-200">Share Command Center</span>
                                 </div>
                                 <span data-growth-boost-badge class="hidden text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border border-emerald-400/40 text-emerald-300 bg-emerald-500/10">Site boost active</span>
                             </div>
@@ -434,12 +463,22 @@
                                     <div data-growth-combo class="hidden text-[8px] text-amber-300 font-bold mt-1"></div>
                                 </div>
                             </div>
-                            <div class="rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2.5 mb-3">
-                                <div data-growth-action-headline class="text-sm font-bold text-white">Your next viral push</div>
-                                <div data-growth-action-subline class="text-[11px] text-zinc-400 mt-0.5">One tap to climb the board.</div>
+                            <div class="rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 mb-3 flex flex-wrap items-center justify-between gap-2">
+                                <div class="min-w-0">
+                                    <div class="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold">Distance to glory</div>
+                                    <div data-growth-distance-line class="text-xs font-bold text-white truncate">First referral unlocks rank</div>
+                                </div>
+                                <div class="flex items-center gap-3 text-[11px] shrink-0">
+                                    <span class="text-zinc-500">Rank <strong data-growth-distance-rank class="text-violet-200 tabular-nums">—</strong></span>
+                                    <span class="text-zinc-500">Gap <strong data-growth-distance-gap class="text-amber-300 tabular-nums">—</strong></span>
+                                </div>
                             </div>
-                            <button type="button" id="growth-command-cta" class="growth-command-cta w-full py-3.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 shadow-lg shadow-violet-500/25 transition-all active:scale-[0.98]">
-                                Quick Boost — WhatsApp
+                            <div class="rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2.5 mb-3">
+                                <div data-growth-action-headline class="text-sm font-bold text-white">You're in. Sharing is how you climb.</div>
+                                <div data-growth-action-subline class="text-[11px] text-zinc-400 mt-0.5">Challenge a friend — rivalry is the strongest loop.</div>
+                            </div>
+                            <button type="button" id="growth-command-cta" class="growth-command-cta w-full py-3.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 shadow-lg shadow-rose-900/25 transition-all active:scale-[0.98]">
+                                Challenge a friend
                             </button>
                         </div>
 
@@ -494,13 +533,13 @@
                                 title="Copy your referral code only"
                                 aria-label="Copy referral code"></button>
 
-                        <div id="duel-invite-strip" data-vr-zone="duel-invite" class="hidden duel-invite-strip mb-3 rounded-2xl border border-rose-400/35 bg-gradient-to-r from-rose-500/12 to-orange-500/8 px-4 py-3" role="region" aria-label="Duel invite">
-                            <div data-duel-headline class="text-sm font-bold text-rose-100">Send a duel invite</div>
-                            <div data-duel-subline class="text-[11px] text-zinc-400 mt-0.5 mb-2">Challenge link with ?challenge=1 — highest viral conversion.</div>
+                        <div id="duel-invite-strip" data-vr-zone="duel-invite" class="hidden duel-invite-strip mb-3 rounded-2xl border border-rose-400/35 bg-gradient-to-r from-rose-500/12 to-orange-500/8 px-4 py-3" role="region" aria-label="Challenge a friend">
+                            <div data-duel-headline class="text-sm font-bold text-rose-100">Challenge a friend to beat you</div>
+                            <div data-duel-subline class="text-[11px] text-zinc-400 mt-0.5 mb-2">One-tap WhatsApp duel — highest viral conversion.</div>
                             <button type="button" onclick="boostDuelShareWhatsApp()"
                                     class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white py-3.5 px-5 rounded-2xl font-bold text-sm shadow-lg shadow-rose-900/25 ring-2 ring-rose-300/30 transition-all active:scale-[0.98]">
                                 <i class="fa-solid fa-fire"></i>
-                                <span>Duel invite — WhatsApp</span>
+                                <span>Challenge a friend</span>
                             </button>
                         </div>
 
@@ -724,6 +763,7 @@
                     </div>
                     <div id="how-step2-title" data-i18n="how.step2_title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">2. Share anywhere</div>
                     <p id="how-step2-desc" data-i18n="how.step2_desc" class="text-zinc-400 leading-relaxed">Copy and paste on social, chat, email — every visit can count.</p>
+                    <p id="how-step2-deadline" data-i18n="deadline.how_note" class="text-xs font-semibold text-amber-300/90 mt-3 leading-snug">Copy is not enough: share on a real platform within 24 hours or your link is removed.</p>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-amber-400/50 transition-all">
                     <div class="mx-auto w-14 h-14 bg-amber-400/20 text-amber-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
@@ -1094,6 +1134,29 @@ No self-referrals, shared devices, bots, or fraud. All referrals verified server
             <i class="fa-solid fa-circle-1"></i>
             <span>Step 1: Get my link</span>
         </button>
+    </div>
+
+    <!-- Sticky distance-to-glory bar (visible after link ready; client-only) -->
+    <div id="distance-glory-sticky" class="hidden distance-glory-sticky fixed bottom-0 inset-x-0 z-[790] p-2.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-zinc-950/95 border-t border-violet-400/25 backdrop-blur-md" role="status" aria-live="polite">
+        <div class="max-w-3xl mx-auto flex flex-wrap items-center justify-between gap-2 px-1">
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 text-[10px] uppercase tracking-wider font-bold text-violet-300/90">
+                    <i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
+                    <span>Distance to glory</span>
+                    <span class="normal-case tracking-normal font-semibold text-zinc-400">Rank <strong data-distance-rank class="text-violet-200 tabular-nums">—</strong> · Gap <strong data-distance-gap class="text-amber-300 tabular-nums">—</strong></span>
+                </div>
+                <p data-distance-line class="text-sm font-bold text-white truncate">First referral unlocks your rank</p>
+                <p data-distance-subline class="hidden sm:block text-[11px] text-zinc-400 truncate">Challenge a friend to climb.</p>
+                <div class="h-1 bg-zinc-800 rounded-full overflow-hidden mt-1 max-w-xs">
+                    <div data-distance-fill class="distance-glory-meter__fill h-full bg-gradient-to-r from-violet-400 to-emerald-400 transition-all duration-500" style="width:6%"></div>
+                </div>
+            </div>
+            <button type="button" onclick="boostDuelShareWhatsApp()"
+                    class="shrink-0 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-lg shadow-rose-900/20 active:scale-[0.98]">
+                <i class="fa-solid fa-fire"></i>
+                Challenge
+            </button>
+        </div>
     </div>
 
     <script type="module" src="/src/main.ts"></script>

@@ -52,15 +52,16 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
     };
   }
 
+  // Named rival (referred / challenge landing) — highest conversion path
   if (input.duelInviteEligible && input.landingRef) {
     const rival = input.landingRef.trim().toUpperCase();
     return {
       kind: 'duel_invite',
-      headline: `Send duel invite — beat ${rival}`,
-      subline: 'Challenge link opens with rivalry stats. Highest viral conversion path.',
+      headline: `Challenge ${rival} to a duel`,
+      subline: 'Rivalry link with ?challenge=1 — friends race your rank.',
       urgency: 'critical',
       icon: 'fa-fire',
-      ctaLabel: 'Duel invite — WhatsApp',
+      ctaLabel: 'Challenge a friend',
     };
   }
 
@@ -79,22 +80,34 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
     return {
       kind: 'whatsapp_boost',
       headline: 'Defend your #1 throne',
-      subline: 'Every share keeps competitors off your spot.',
+      subline: 'Every share keeps competitors off the homepage feature.',
       urgency: 'high',
       icon: 'fa-crown',
       ctaLabel: 'Quick Boost — defend #1',
     };
   }
 
+  // Challenge-first for brand-new sharers (P0 share desire)
+  if (input.referrals === 0 && input.shareStreak === 0) {
+    return {
+      kind: 'duel_invite',
+      headline: "You're in. Sharing is how you climb.",
+      subline: 'Challenge a friend — rivalry is the strongest viral loop.',
+      urgency: 'high',
+      icon: 'fa-fire',
+      ctaLabel: 'Challenge a friend',
+    };
+  }
+
   if (input.dailyShares < DAILY_SHARE_QUEST_GOAL) {
     const left = DAILY_SHARE_QUEST_GOAL - input.dailyShares;
     return {
-      kind: input.isMobile && input.nativeShareAvailable ? 'native_share' : 'whatsapp_boost',
+      kind: 'duel_invite',
       headline: `Daily boost: ${left} share${left === 1 ? '' : 's'} left`,
-      subline: 'Hit 3 shares today for max viral power.',
+      subline: 'Challenge another friend — keep the race alive.',
       urgency: 'high',
       icon: 'fa-trophy',
-      ctaLabel: input.isMobile ? 'Share everywhere (1 tap)' : 'Quick Boost — WhatsApp',
+      ctaLabel: 'Challenge a friend',
     };
   }
 
@@ -102,21 +115,21 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
     return {
       kind: 'copy_link',
       headline: 'Copy your link first',
-      subline: 'Step 2 — then blast it to your network.',
+      subline: 'Step 2 — then challenge a friend to beat you.',
       urgency: 'normal',
       icon: 'fa-copy',
       ctaLabel: 'Copy my link',
     };
   }
 
-  if (input.referrals === 0 && input.shareStreak === 0) {
+  if (input.gapToNext != null && input.gapToNext > 1 && input.rank != null && input.rank > 1) {
     return {
-      kind: input.isMobile ? 'whatsapp_boost' : 'open_share_panel',
-      headline: 'Launch your first share',
-      subline: 'One share puts you on the path to the leaderboard.',
+      kind: 'duel_invite',
+      headline: `${input.gapToNext} referrals from rank #${input.rank - 1}`,
+      subline: 'Challenge friends who will actually open your link.',
       urgency: 'high',
-      icon: 'fa-share-nodes',
-      ctaLabel: input.isMobile ? 'Quick Boost — WhatsApp' : 'Open share tools',
+      icon: 'fa-fire',
+      ctaLabel: 'Challenge a friend',
     };
   }
 
@@ -124,7 +137,7 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
     return {
       kind: 'native_share',
       headline: 'Keep the momentum going',
-      subline: 'One-tap share to every app on your phone.',
+      subline: 'One-tap share — or challenge a friend below.',
       urgency: 'normal',
       icon: 'fa-share-nodes',
       ctaLabel: 'Share everywhere',
@@ -132,11 +145,11 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
   }
 
   return {
-    kind: 'whatsapp_boost',
+    kind: 'duel_invite',
     headline: 'Your next viral push',
-    subline: 'WhatsApp converts fastest — tracked in your analytics.',
+    subline: 'Challenge a friend — tracked WhatsApp duel link.',
     urgency: 'normal',
-    icon: 'fa-brands fa-whatsapp',
-    ctaLabel: 'Quick Boost — WhatsApp',
+    icon: 'fa-fire',
+    ctaLabel: 'Challenge a friend',
   };
 }

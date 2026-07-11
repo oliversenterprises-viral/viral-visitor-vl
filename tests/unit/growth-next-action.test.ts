@@ -30,9 +30,11 @@ describe('growth-next-action', () => {
     expect(a.headline).toMatch(/defend/i);
   });
 
-  it('daily quest nudge when under goal', () => {
-    const a = resolveGrowthNextAction({ ...base, dailyShares: 1 });
+  it('daily quest nudge uses challenge-first CTA', () => {
+    const a = resolveGrowthNextAction({ ...base, dailyShares: 1, shareStreak: 2, referrals: 1 });
     expect(a.headline).toMatch(/daily boost/i);
+    expect(a.kind).toBe('duel_invite');
+    expect(a.ctaLabel).toMatch(/challenge/i);
   });
 
   it('prioritizes duel invite for referred/challenge sessions', () => {
@@ -44,5 +46,18 @@ describe('growth-next-action', () => {
     expect(a.kind).toBe('duel_invite');
     expect(a.urgency).toBe('critical');
     expect(a.headline).toContain('VIRAL-RIVAL');
+  });
+
+  it('challenge-first for brand-new sharers', () => {
+    const a = resolveGrowthNextAction({
+      ...base,
+      referrals: 0,
+      shareStreak: 0,
+      dailyShares: 0,
+      gapToNext: null,
+      rank: null,
+    });
+    expect(a.kind).toBe('duel_invite');
+    expect(a.ctaLabel).toMatch(/challenge a friend/i);
   });
 });

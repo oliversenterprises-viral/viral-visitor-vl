@@ -5,9 +5,11 @@
 
 import { supabase } from './supabase';
 import { showToast } from '../ui';
+import { t } from './i18n';
 
 const STORAGE_KEY = 'vr_share_deadline_v1';
 export const SHARE_DEADLINE_MS = 24 * 60 * 60 * 1000;
+const URGENT_MS = 4 * 60 * 60 * 1000;
 
 const NON_VERIFIED = new Set(['copy', 'copy-message', 'embed', 'other', '']);
 
@@ -76,6 +78,17 @@ export function formatDeadlineCountdown(ms: number): string {
   return `${h}h ${m}m`;
 }
 
+function isExemptCode(code?: string | null): boolean {
+  try {
+    const exempt = localStorage.getItem('vr_share_deadline_exempt');
+    if (!exempt) return false;
+    if (!code) return true;
+    return exempt.toUpperCase() === code.toUpperCase();
+  } catch {
+    return false;
+  }
+}
+
 /** Register code on the server (starts the 24h clock). */
 export async function registerReferrerLinkDeadline(
   code: string,
@@ -96,6 +109,7 @@ export async function registerReferrerLinkDeadline(
     });
     if (error) {
       writeShareDeadlineState(fallback);
+      renderShareDeadlineBanner();
       return fallback;
     }
     const envelope = data as {
@@ -133,6 +147,7 @@ export async function registerReferrerLinkDeadline(
 
     if (status === 'expired') {
       clearShareDeadlineState();
+      renderShareDeadlineBanner();
       return {
         code: referrer_code,
         status: 'expired',
@@ -154,9 +169,11 @@ export async function registerReferrerLinkDeadline(
       deadlineAt: envelope?.data?.deadline_at || fallback.deadlineAt,
     };
     writeShareDeadlineState(state);
+    renderShareDeadlineBanner();
     return state;
   } catch {
     writeShareDeadlineState(fallback);
+    renderShareDeadlineBanner();
     return fallback;
   }
 }
@@ -176,14 +193,9 @@ export function markLocalVerifiedShare(platform: string): void {
  */
 export function enforceLocalShareDeadlineExpiry(myCode: string | null): boolean {
   // Owner IP exempt codes never expire client-side
-  try {
-    const exempt = localStorage.getItem('vr_share_deadline_exempt');
-    if (exempt && myCode && exempt.toUpperCase() === myCode.toUpperCase()) {
-      clearShareDeadlineState();
-      return false;
-    }
-  } catch {
-    /* ignore */
+  if (isExemptCode(myCode)) {
+    clearShareDeadlineState();
+    return false;
   }
 
   const state = readShareDeadlineState();
@@ -207,10 +219,7 @@ export function enforceLocalShareDeadlineExpiry(myCode: string | null): boolean 
   if (input) input.value = '';
 
   document.documentElement.removeAttribute('data-vr-has-link');
-  showToast(
-    'Link removed — you did not share within 24 hours. Get a new link and share it to stay in the system.',
-    'info',
-  );
+  showToast(t('deadline.toast_removed'), 'info');
   renderShareDeadlineBanner();
   return true;
 }
@@ -219,49 +228,74 @@ export function renderShareDeadlineBanner(): void {
   const banner = document.getElementById('share-deadline-banner');
   const countdown = document.getElementById('share-deadline-countdown');
   const title = document.getElementById('share-deadline-title');
-  if (!banner) return;
+  const preNote = document.getElementById('share-deadline-pre-note');
 
-  try {
-    if (localStorage.getItem('vr_share_deadline_exempt')) {
-      banner.classList.add('hidden');
-      return;
+  const hideEducation = (): void => {
+    if (preNote) preNote.classList.add('hidden');
+  };
+  const showEducation = (): void => {
+    if (preNote) {
+      preNote.classList.remove('hidden');
+      preNote.textContent = t('deadline.pre_rule');
     }
-  } catch {
-    /* ignore */
+  };
+
+  if (isExemptCode()) {
+    if (banner) banner.classList.add('hidden');
+    hideEducation();
+    return;
   }
 
   const state = readShareDeadlineState();
-  if (!state || state.status === 'active') {
+
+  // Active (verified share): hide countdown + pre-note
+  if (state?.status === 'active') {
+    if (banner) banner.classList.add('hidden');
+    hideEducation();
+    return;
+  }
+
+  // Everyone else sees the educational rule (i18n)
+  showEducation();
+
+  if (!banner) return;
+
+  // No pending state yet — keep countdown banner hidden; pre-note still shows
+  if (!state) {
     banner.classList.add('hidden');
     return;
   }
 
   banner.classList.remove('hidden');
   const ms = msUntilDeadline(state);
+  const urgent = ms > 0 && ms < URGENT_MS;
 
   if (state.status === 'expired' || ms <= 0) {
     if (title) {
-      title.textContent =
-        'Link expired — not shared within 24 hours. Get a new link and share it to rejoin.';
+      title.textContent = t('deadline.expired');
+      title.setAttribute('data-i18n', 'deadline.expired');
     }
-    if (countdown) countdown.textContent = 'Expired';
+    if (countdown) countdown.textContent = t('deadline.countdown_expired');
     banner.classList.add('share-deadline-banner--expired');
-    banner.classList.remove('share-deadline-banner--urgent');
+    banner.classList.remove('share-deadline-banner--urgent', 'share-deadline-banner--pending');
     return;
   }
 
   banner.classList.remove('share-deadline-banner--expired');
-  if (ms < 4 * 60 * 60 * 1000) banner.classList.add('share-deadline-banner--urgent');
+  banner.classList.add('share-deadline-banner--pending');
+  if (urgent) banner.classList.add('share-deadline-banner--urgent');
   else banner.classList.remove('share-deadline-banner--urgent');
 
   if (title) {
-    title.textContent =
-      'Share this link within 24 hours or it is removed from the system (clipboard alone does not count).';
+    const key = urgent ? 'deadline.urgent' : 'deadline.pending';
+    title.textContent = t(key);
+    title.setAttribute('data-i18n', key);
   }
   if (countdown) countdown.textContent = formatDeadlineCountdown(ms);
 }
 
 let countdownTimer: ReturnType<typeof setInterval> | null = null;
+let localeListenerBound = false;
 
 export function initShareDeadlineUi(): void {
   renderShareDeadlineBanner();
@@ -281,4 +315,11 @@ export function initShareDeadlineUi(): void {
       renderShareDeadlineBanner();
     }
   }, 30_000);
+
+  if (!localeListenerBound && typeof window !== 'undefined') {
+    localeListenerBound = true;
+    window.addEventListener('vr:locale-change', () => {
+      renderShareDeadlineBanner();
+    });
+  }
 }

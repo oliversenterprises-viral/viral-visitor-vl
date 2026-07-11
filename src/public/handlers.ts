@@ -24,7 +24,11 @@ import {
 } from '../lib/share-power';
 import { resolveShareMessageBuildOptions } from '../lib/share-message-options';
 import { resolveShareAbVariant } from '../lib/share-ab';
-import { getShareLeaderboardRank } from '../lib/share-context';
+import {
+  getShareGapToNextRank,
+  getShareLeaderboardRank,
+  getShareReferralCount,
+} from '../lib/share-context';
 import { celebrateShareIfFirst } from '../lib/share-celebrate';
 import {
   downloadCanvasPng,
@@ -163,7 +167,7 @@ export const boostDuelShareWhatsApp = () => {
     const tracked = buildTrackedShareLink(ctx.link, 'boost');
     const url = buildPlatformShareUrl('whatsapp', tracked, text);
     if (url) openShareIntent(url);
-    showToast('Duel invite ready — send to friends who want to beat you', 'success');
+    showToast('Challenge ready — send to friends who want to beat you', 'success');
     logShare('boost-whatsapp', ctx.code, tracked);
     trackDuelInviteShared('whatsapp');
     onFunnelShareComplete();
@@ -268,6 +272,8 @@ function downloadShareCard(link: string, code: string, format: 'square' | 'story
     code,
     format,
     rank: getShareLeaderboardRank(),
+    gapToNext: getShareGapToNextRank(),
+    referralCount: getShareReferralCount(),
   });
   if (!ok) return false;
   downloadCanvasPng(canvas, shareCardFilename(code, format));
@@ -289,7 +295,7 @@ export const generateXShareImage = () => {
     }
 
     const safeXText =
-      'Live referral leaderboard on ViralRefer. Real-time status and rewards. (See image for my link)';
+      'Live referral leaderboard on ViralRefer 🏆 Free · no signup · #1 can claim a homepage feature. Can you beat me? (See image for my link)';
     openShareIntent(`https://x.com/intent/tweet?text=${encodeURIComponent(safeXText)}`);
 
     showToast('Share image downloaded — attach it to your X post', 'success');

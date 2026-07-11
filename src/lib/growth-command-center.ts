@@ -24,6 +24,7 @@ import {
 } from './growth-next-action';
 import { resolveDuelRivalCode, shouldShowDuelInviteStrip } from './duel-invite';
 import { computePersonalKScore } from './growth-k-score';
+import { buildDistanceToGlory } from './share-gap';
 
 function hasReferralLink(): boolean {
   const input = document.getElementById('ref-link') as HTMLInputElement | null;
@@ -177,6 +178,20 @@ export function syncGrowthCommandCenter(): void {
   }
 
   document.documentElement.setAttribute('data-vr-viral-tier', power.tier);
+
+  // Distance-to-glory strip inside growth hub
+  const glory = buildDistanceToGlory(
+    getShareLeaderboardRank(),
+    getShareGapToNextRank(),
+    getShareReferralCount(),
+  );
+  const distLine = root.querySelector('[data-growth-distance-line]');
+  const distRank = root.querySelector('[data-growth-distance-rank]');
+  const distGap = root.querySelector('[data-growth-distance-gap]');
+  if (distLine) distLine.textContent = glory.line;
+  if (distRank) distRank.textContent = glory.rankLabel;
+  if (distGap) distGap.textContent = glory.gapLabel;
+  root.classList.toggle('growth-command-center--near-win', glory.tone === 'critical');
 }
 
 export function initGrowthCommandCenter(): void {

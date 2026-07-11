@@ -18,7 +18,13 @@ describe('share-rank-cta', () => {
   it('returns violet CTA when unranked with zero referrals', () => {
     const cta = buildShareRankCta(null, 0);
     expect(cta.tone).toBe('violet');
-    expect(cta.headline).toContain('leaderboard');
+    expect(cta.headline).toMatch(/in|climb/i);
+  });
+
+  it('near-win CTA when gap is 1', () => {
+    const cta = buildShareRankCta(5, 4, 1);
+    expect(cta.tone).toBe('amber');
+    expect(cta.headline).toMatch(/one referral/i);
   });
 
   it('returns amber CTA when referrals but no rank', () => {

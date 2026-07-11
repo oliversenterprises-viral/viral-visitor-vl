@@ -12,6 +12,10 @@ describe('duel-invite', () => {
 
   it('formats subline for duel links', () => {
     expect(duelInviteSubline('VIRAL-RIVAL')).toMatch(/stats|WhatsApp/i);
-    expect(duelInviteSubline(null)).toContain('challenge=1');
+    expect(duelInviteSubline(null)).toMatch(/WhatsApp|viral|rank/i);
+  });
+
+  it('challenge-first headline without rival', () => {
+    expect(duelInviteHeadline(null)).toMatch(/challenge a friend/i);
   });
 });

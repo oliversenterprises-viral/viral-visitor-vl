@@ -4,7 +4,6 @@
 
 import { getStoredLandingRef } from './referral-url';
 import { getViralLoopsConfig } from './viral-loops-config';
-import { isChallengeMode } from './challenge-mode';
 import { trackViralLoopEvent } from './visitor-tracking';
 
 function hasReferralLink(): boolean {
@@ -16,20 +15,23 @@ export function resolveDuelRivalCode(): string | null {
   return getStoredLandingRef();
 }
 
+/**
+ * Challenge-first: show duel strip for every visitor with a ready link
+ * (not only referred/challenge landings). Highest share-desire CTA.
+ */
 export function shouldShowDuelInviteStrip(): boolean {
   if (!getViralLoopsConfig().challenge_enabled) return false;
-  if (!hasReferralLink()) return false;
-  return isChallengeMode() || !!getStoredLandingRef();
+  return hasReferralLink();
 }
 
 export function duelInviteHeadline(rivalCode: string | null): string {
-  if (!rivalCode) return 'Send a duel invite';
+  if (!rivalCode) return 'Challenge a friend to beat you';
   return `Challenge ${rivalCode} — share your duel link`;
 }
 
 export function duelInviteSubline(rivalCode: string | null): string {
   if (!rivalCode) {
-    return 'Your link includes ?challenge=1 — friends see your stats and race you.';
+    return 'One-tap WhatsApp duel — friends race your live rank. Highest viral loop.';
   }
   return `Opens with your stats vs theirs. One tap to WhatsApp — fastest viral loop.`;
 }

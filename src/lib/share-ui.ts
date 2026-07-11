@@ -1,5 +1,6 @@
 /**
- * Share panel DOM sync — preview tabs, A/B variants, native-share visibility, streak badge.
+ * Share panel DOM sync — preview tabs, A/B variants, native-share visibility,
+ * streak badge, distance-to-glory meter, competitor badge.
  */
 
 import {
@@ -10,11 +11,14 @@ import {
 } from './share-power';
 import { getShareStreakCount, shareStreakLabel } from './share-streak';
 import {
+  getShareGapToNextRank,
   getShareLeaderboardRank,
   getShareReferralCount,
   isMobileShareContext,
 } from './share-context';
 import { buildShareRankCta } from './share-rank-cta';
+import { buildDistanceToGlory } from './share-gap';
+import { syncCompetitorBadgeUI } from './share-celebrate';
 import {
   resolveShareAbVariant,
   setStoredShareAbVariant,
@@ -119,7 +123,11 @@ function updateShareRankCta(): void {
     return;
   }
 
-  const cta = buildShareRankCta(getShareLeaderboardRank(), getShareReferralCount());
+  const cta = buildShareRankCta(
+    getShareLeaderboardRank(),
+    getShareReferralCount(),
+    getShareGapToNextRank(),
+  );
   banner.className = `share-rank-cta share-rank-cta--${cta.tone} mb-3 rounded-2xl border px-4 py-3`;
   banner.classList.remove('hidden');
 
@@ -131,6 +139,54 @@ function updateShareRankCta(): void {
   const boostBtn = document.getElementById('boost-whatsapp-btn');
   if (boostBtn) {
     boostBtn.classList.toggle('share-rank-boost-pulse', Boolean(cta.emphasizeBoost && isMobileShareContext()));
+  }
+}
+
+function fillDistanceMeter(root: HTMLElement, hasLink: boolean): void {
+  if (!hasLink) {
+    root.classList.add('hidden');
+    return;
+  }
+
+  const glory = buildDistanceToGlory(
+    getShareLeaderboardRank(),
+    getShareGapToNextRank(),
+    getShareReferralCount(),
+  );
+
+  root.classList.remove('hidden');
+  root.className = root.className
+    .replace(/distance-glory--\w+/g, '')
+    .trim();
+  root.classList.add(`distance-glory--${glory.tone}`);
+
+  const line = root.querySelector('[data-distance-line]');
+  const subline = root.querySelector('[data-distance-subline]');
+  const rankEl = root.querySelector('[data-distance-rank]');
+  const gapEl = root.querySelector('[data-distance-gap]');
+  const fillEl = root.querySelector('[data-distance-fill]') as HTMLElement | null;
+
+  if (line) line.textContent = glory.line;
+  if (subline) subline.textContent = glory.subline;
+  if (rankEl) rankEl.textContent = glory.rankLabel;
+  if (gapEl) gapEl.textContent = glory.gapLabel;
+  if (fillEl) fillEl.style.width = `${glory.progressPercent}%`;
+}
+
+/** In-panel + sticky "distance to glory" meters. */
+export function syncDistanceGloryUI(): void {
+  const hasLink = !!(
+    document.getElementById('ref-link') as HTMLInputElement | null
+  )?.value?.trim();
+
+  const panel = document.getElementById('distance-glory-meter');
+  if (panel) fillDistanceMeter(panel, hasLink);
+
+  const sticky = document.getElementById('distance-glory-sticky');
+  if (sticky) {
+    fillDistanceMeter(sticky, hasLink);
+    sticky.classList.toggle('distance-glory-sticky--visible', hasLink);
+    document.documentElement.toggleAttribute('data-vr-distance-sticky', hasLink);
   }
 }
 
@@ -209,7 +265,20 @@ export function syncSharePowerUI(link?: string): void {
   }
 
   updateShareRankCta();
+  syncDistanceGloryUI();
+  syncCompetitorBadgeUI();
   syncViralLoopUI();
+
+  // Post-link command center framing
+  const heading = document.getElementById('share-link-heading');
+  if (heading && resolvedLink) {
+    heading.textContent = "You're in — share to climb";
+  }
+  const meta = document.querySelector('[data-vr-slim-share-meta]');
+  if (meta && resolvedLink) {
+    meta.textContent =
+      'Sharing is how you climb. Challenge a friend first — WhatsApp is fastest.';
+  }
 
   document.documentElement.toggleAttribute('data-vr-share-mobile', isMobileShareContext());
 }

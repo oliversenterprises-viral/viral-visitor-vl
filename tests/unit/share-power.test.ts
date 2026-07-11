@@ -25,11 +25,18 @@ describe('share-power', () => {
   it('buildShareMessage uses platform-optimized defaults', () => {
     const wa = buildShareMessage(LINK, { platform: 'whatsapp' });
     expect(wa).toContain('🏆');
+    expect(wa).toMatch(/beat me|leaderboard/i);
     expect(wa).toContain(LINK);
 
     const reddit = buildShareMessage(LINK, { platform: 'reddit' });
     expect(reddit).not.toContain(LINK);
     expect(reddit).toContain('ViralRefer');
+  });
+
+  it('boost message uses challenge status language', () => {
+    const boost = buildShareMessage(LINK, { platform: 'boost', trackUtm: false });
+    expect(boost).toMatch(/challenge|beat/i);
+    expect(boost).toContain(LINK);
   });
 
   it('buildRedditShareTitle stays short and link-free', () => {

@@ -12,23 +12,35 @@ export interface ShareRankCta {
   emphasizeBoost?: boolean;
 }
 
-/** Build a contextual CTA from leaderboard rank and referral count. */
+/** Build a contextual CTA from leaderboard rank, referral count, and gap. */
 export function buildShareRankCta(
   rank: number | null | undefined,
   referrals: number,
+  gapToNext?: number | null,
 ): ShareRankCta {
   if (rank === 1) {
     return {
       headline: "You're #1 — defend your spot!",
-      subline: 'Every share keeps you on top. Quick Boost is fastest on mobile.',
+      subline: 'Every share keeps you on top. Challenge friends who might dethrone you.',
       tone: 'gold',
+      emphasizeBoost: true,
+    };
+  }
+  if (rank != null && rank >= 2 && gapToNext === 1) {
+    return {
+      headline: `You're #${rank} — one referral to climb!`,
+      subline: 'Near-win mode. Challenge a friend or Quick Boost now.',
+      tone: 'amber',
       emphasizeBoost: true,
     };
   }
   if (rank != null && rank >= 2 && rank <= 3) {
     return {
-      headline: `You're #${rank} — one push to #1!`,
-      subline: 'Share now while momentum is hot. Top spot claims homepage feature.',
+      headline: `You're #${rank} — one push toward #1!`,
+      subline:
+        gapToNext != null && gapToNext > 1
+          ? `${gapToNext} more referrals to the next rank. Top spot claims homepage feature.`
+          : 'Share now while momentum is hot. Top spot claims homepage feature.',
       tone: 'emerald',
       emphasizeBoost: true,
     };
@@ -36,20 +48,23 @@ export function buildShareRankCta(
   if (rank != null && rank >= 4) {
     return {
       headline: `You're #${rank} on the board`,
-      subline: 'A few more shares could move you up — copy or Quick Boost below.',
+      subline:
+        gapToNext != null && gapToNext >= 1
+          ? `${gapToNext} more to climb — challenge a friend who will actually join.`
+          : 'A few more shares could move you up — challenge a friend below.',
       tone: 'violet',
     };
   }
   if (referrals > 0) {
     return {
       headline: `${referrals} referral${referrals === 1 ? '' : 's'} — share to rank!`,
-      subline: 'Land on the public leaderboard with your next share.',
+      subline: 'Land on the public leaderboard. Your status card unlocks with rank.',
       tone: 'amber',
     };
   }
   return {
-    headline: 'Share to land on the leaderboard',
-    subline: 'Your link is ready — one tap to WhatsApp or copy your message.',
+    headline: "You're in. Sharing is how you climb.",
+    subline: 'Challenge a friend first — rivalry beats a cold link drop.',
     tone: 'violet',
   };
 }

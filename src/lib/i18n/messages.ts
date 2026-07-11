@@ -131,7 +131,24 @@ export const en = {
 
   // Share (default template)
   'share.default':
-    'Worldwide free leaderboard — grab your link in ~30 sec. #1 can claim a homepage feature. {link}',
+    "I'm on ViralRefer's live worldwide leaderboard 🏆 Free · no signup · ~30 sec. #1 can claim a homepage feature. Can you beat me? {link}",
+
+  // 24h verified-share deadline (clipboard alone does not count)
+  'deadline.badge': '24-hour share rule',
+  'deadline.time_left': 'Time left',
+  'deadline.pre_rule':
+    'Share on a real platform within 24 hours or your link is removed — clipboard alone does not count.',
+  'deadline.pending':
+    'Share this link within 24 hours or it is removed from the system (clipboard alone does not count).',
+  'deadline.urgent':
+    'Hurry — under 4 hours left. Share now on WhatsApp, X, SMS, or another real platform, or your link is removed.',
+  'deadline.expired':
+    'Link expired — not shared within 24 hours. Get a new link and share it to rejoin.',
+  'deadline.countdown_expired': 'Expired',
+  'deadline.toast_removed':
+    'Link removed — you did not share within 24 hours. Get a new link and share it to stay in the system.',
+  'deadline.how_note':
+    'Copy is not enough: share on a real platform within 24 hours or your link is removed.',
 } as const;
 
 export type MessageKey = keyof typeof en;
@@ -237,7 +254,22 @@ const es = dict({
   'coach.fallback':
     'Soy tu coach — pregunta por el enlace, copiar, compartir o el destacado en la web.',
   'share.default':
-    'Ranking gratis mundial — tu enlace en ~30 seg. El #1 puede reclamar un destacado. {link}',
+    'Estoy en el ranking mundial en vivo de ViralRefer 🏆 Gratis · sin registro · ~30 seg. El #1 puede reclamar un destacado. ¿Me ganas? {link}',
+  'deadline.badge': 'Regla de compartir en 24 horas',
+  'deadline.time_left': 'Tiempo restante',
+  'deadline.pre_rule':
+    'Comparte en una plataforma real en 24 horas o se elimina tu enlace — copiar solo no cuenta.',
+  'deadline.pending':
+    'Comparte este enlace en 24 horas o se elimina del sistema (copiar solo no cuenta).',
+  'deadline.urgent':
+    'Date prisa — quedan menos de 4 horas. Comparte ya en WhatsApp, X, SMS u otra plataforma real, o se elimina tu enlace.',
+  'deadline.expired':
+    'Enlace caducado — no se compartió en 24 horas. Obtén uno nuevo y compártelo para volver.',
+  'deadline.countdown_expired': 'Caducado',
+  'deadline.toast_removed':
+    'Enlace eliminado — no compartiste en 24 horas. Obtén uno nuevo y compártelo para seguir en el sistema.',
+  'deadline.how_note':
+    'Copiar no basta: comparte en una plataforma real en 24 horas o se elimina tu enlace.',
 });
 
 const fr = dict({
@@ -297,6 +329,21 @@ const fr = dict({
   'footer.privacy': 'Confidentialité',
   'footer.terms': 'Conditions',
   'lang.hint': 'Langue de la page',
+  'deadline.badge': 'Règle de partage 24 h',
+  'deadline.time_left': 'Temps restant',
+  'deadline.pre_rule':
+    'Partagez sur une vraie plateforme sous 24 h ou votre lien est retiré — copier seul ne compte pas.',
+  'deadline.pending':
+    'Partagez ce lien sous 24 h ou il est retiré du système (copier seul ne compte pas).',
+  'deadline.urgent':
+    'Dépêchez-vous — moins de 4 h. Partagez maintenant sur WhatsApp, X, SMS ou une autre vraie plateforme, sinon le lien est retiré.',
+  'deadline.expired':
+    'Lien expiré — non partagé sous 24 h. Obtenez un nouveau lien et partagez-le pour revenir.',
+  'deadline.countdown_expired': 'Expiré',
+  'deadline.toast_removed':
+    'Lien retiré — vous n’avez pas partagé sous 24 h. Obtenez un nouveau lien et partagez-le pour rester dans le système.',
+  'deadline.how_note':
+    'Copier ne suffit pas : partagez sur une vraie plateforme sous 24 h ou le lien est retiré.',
 });
 
 const pt = dict({
@@ -356,6 +403,21 @@ const pt = dict({
   'footer.privacy': 'Privacidade',
   'footer.terms': 'Termos',
   'lang.hint': 'Idioma da página',
+  'deadline.badge': 'Regra de compartilhar em 24 horas',
+  'deadline.time_left': 'Tempo restante',
+  'deadline.pre_rule':
+    'Compartilhe em uma plataforma real em 24 horas ou seu link é removido — só copiar não conta.',
+  'deadline.pending':
+    'Compartilhe este link em 24 horas ou ele é removido do sistema (só copiar não conta).',
+  'deadline.urgent':
+    'Rápido — menos de 4 horas. Compartilhe agora no WhatsApp, X, SMS ou outra plataforma real, ou o link é removido.',
+  'deadline.expired':
+    'Link expirado — não compartilhado em 24 horas. Pegue um novo e compartilhe para voltar.',
+  'deadline.countdown_expired': 'Expirado',
+  'deadline.toast_removed':
+    'Link removido — você não compartilhou em 24 horas. Pegue um novo e compartilhe para continuar no sistema.',
+  'deadline.how_note':
+    'Só copiar não basta: compartilhe em uma plataforma real em 24 horas ou o link é removido.',
 });
 
 const de = dict({
@@ -415,6 +477,21 @@ const de = dict({
   'footer.privacy': 'Datenschutz',
   'footer.terms': 'Bedingungen',
   'lang.hint': 'Seitensprache',
+  'deadline.badge': '24-Stunden-Teilen-Regel',
+  'deadline.time_left': 'Verbleibende Zeit',
+  'deadline.pre_rule':
+    'Teile innerhalb von 24 Stunden auf einer echten Plattform — sonst wird dein Link entfernt (nur Kopieren zählt nicht).',
+  'deadline.pending':
+    'Teile diesen Link innerhalb von 24 Stunden, sonst wird er aus dem System entfernt (nur Kopieren zählt nicht).',
+  'deadline.urgent':
+    'Beeil dich — unter 4 Stunden. Jetzt auf WhatsApp, X, SMS oder einer anderen echten Plattform teilen, sonst wird der Link entfernt.',
+  'deadline.expired':
+    'Link abgelaufen — nicht innerhalb von 24 Stunden geteilt. Hol einen neuen Link und teile ihn, um wieder dabei zu sein.',
+  'deadline.countdown_expired': 'Abgelaufen',
+  'deadline.toast_removed':
+    'Link entfernt — du hast nicht innerhalb von 24 Stunden geteilt. Hol einen neuen Link und teile ihn, um im System zu bleiben.',
+  'deadline.how_note':
+    'Kopieren reicht nicht: teile innerhalb von 24 Stunden auf einer echten Plattform, sonst wird der Link entfernt.',
 });
 // fix German coach (avoid bad paste)
 de['funnel.coach'] = 'Tippe auf Meinen Empfehlungslink holen, um zu starten.';
@@ -476,6 +553,21 @@ const hi = dict({
   'footer.privacy': 'गोपनीयता',
   'footer.terms': 'शर्तें',
   'lang.hint': 'पेज की भाषा',
+  'deadline.badge': '24 घंटे शेयर नियम',
+  'deadline.time_left': 'बचा समय',
+  'deadline.pre_rule':
+    '24 घंटे में असली प्लेटफ़ॉर्म पर शेयर करें वरना लिंक हट जाएगा — सिर्फ़ कॉपी गिना नहीं जाता।',
+  'deadline.pending':
+    'इस लिंक को 24 घंटे में शेयर करें वरना सिस्टम से हट जाएगा (सिर्फ़ कॉपी गिना नहीं जाता)।',
+  'deadline.urgent':
+    'जल्दी करें — 4 घंटे से कम बचे हैं। अभी WhatsApp, X, SMS या किसी असली प्लेटफ़ॉर्म पर शेयर करें, वरना लिंक हट जाएगा।',
+  'deadline.expired':
+    'लिंक समाप्त — 24 घंटे में शेयर नहीं हुआ। नया लिंक लें और फिर से जुड़ने के लिए शेयर करें।',
+  'deadline.countdown_expired': 'समाप्त',
+  'deadline.toast_removed':
+    'लिंक हटा दिया गया — आपने 24 घंटे में शेयर नहीं किया। सिस्टम में रहने के लिए नया लिंक लें और शेयर करें।',
+  'deadline.how_note':
+    'सिर्फ़ कॉपी काफ़ी नहीं: 24 घंटे में असली प्लेटफ़ॉर्म पर शेयर करें वरना लिंक हट जाएगा।',
 });
 
 // Correct German coach string (must not contain CJK)
