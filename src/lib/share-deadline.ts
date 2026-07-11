@@ -104,11 +104,33 @@ export async function registerReferrerLinkDeadline(
         status?: string;
         created_at?: string | null;
         deadline_at?: string | null;
+        share_required?: boolean;
+        exempt?: boolean;
       };
       error?: string;
     };
 
     const status = (envelope?.data?.status || 'pending_share') as ShareDeadlineStatus;
+    const exempt =
+      envelope?.data?.exempt === true || envelope?.data?.share_required === false;
+
+    // Owner IP / active / exempt: never show countdown or store a ticking deadline
+    if (exempt || status === 'active') {
+      clearShareDeadlineState();
+      try {
+        localStorage.setItem('vr_share_deadline_exempt', referrer_code);
+      } catch {
+        /* ignore */
+      }
+      renderShareDeadlineBanner();
+      return {
+        code: referrer_code,
+        status: 'active',
+        createdAt: envelope?.data?.created_at || fallback.createdAt,
+        deadlineAt: envelope?.data?.deadline_at || fallback.deadlineAt,
+      };
+    }
+
     if (status === 'expired') {
       clearShareDeadlineState();
       return {
@@ -119,9 +141,15 @@ export async function registerReferrerLinkDeadline(
       };
     }
 
+    try {
+      localStorage.removeItem('vr_share_deadline_exempt');
+    } catch {
+      /* ignore */
+    }
+
     const state: ShareDeadlineState = {
       code: referrer_code,
-      status: status === 'active' ? 'active' : status === 'unknown' ? 'pending_share' : status,
+      status: status === 'unknown' ? 'pending_share' : status,
       createdAt: envelope?.data?.created_at || fallback.createdAt,
       deadlineAt: envelope?.data?.deadline_at || fallback.deadlineAt,
     };
@@ -147,6 +175,17 @@ export function markLocalVerifiedShare(platform: string): void {
  * Returns true when the code was purged.
  */
 export function enforceLocalShareDeadlineExpiry(myCode: string | null): boolean {
+  // Owner IP exempt codes never expire client-side
+  try {
+    const exempt = localStorage.getItem('vr_share_deadline_exempt');
+    if (exempt && myCode && exempt.toUpperCase() === myCode.toUpperCase()) {
+      clearShareDeadlineState();
+      return false;
+    }
+  } catch {
+    /* ignore */
+  }
+
   const state = readShareDeadlineState();
   if (!state) return false;
   if (myCode && state.code && state.code.toUpperCase() !== myCode.toUpperCase()) {
@@ -181,6 +220,15 @@ export function renderShareDeadlineBanner(): void {
   const countdown = document.getElementById('share-deadline-countdown');
   const title = document.getElementById('share-deadline-title');
   if (!banner) return;
+
+  try {
+    if (localStorage.getItem('vr_share_deadline_exempt')) {
+      banner.classList.add('hidden');
+      return;
+    }
+  } catch {
+    /* ignore */
+  }
 
   const state = readShareDeadlineState();
   if (!state || state.status === 'active') {

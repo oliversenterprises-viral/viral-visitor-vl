@@ -10,6 +10,14 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+function getClientIp(req: Request): string {
+  const cfIp = req.headers.get('cf-connecting-ip');
+  if (cfIp) return cfIp.trim();
+  const forwarded = req.headers.get('x-forwarded-for');
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return 'unknown';
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -41,7 +49,8 @@ Deno.serve(async (req: Request) => {
       { auth: { persistSession: false } },
     );
 
-    const result = await registerReferrerLink(supabaseAdmin, code);
+    const clientIp = getClientIp(req);
+    const result = await registerReferrerLink(supabaseAdmin, code, { clientIp });
 
     return new Response(
       JSON.stringify({
@@ -50,9 +59,11 @@ Deno.serve(async (req: Request) => {
           status: result.status,
           created_at: result.created_at ?? null,
           deadline_at: result.deadline_at ?? null,
-          share_required: result.status === 'pending_share',
-          message:
-            result.status === 'expired'
+          share_required: result.exempt ? false : result.status === 'pending_share',
+          exempt: Boolean(result.exempt),
+          message: result.exempt
+            ? 'Owner IP exempt — no share deadline.'
+            : result.status === 'expired'
               ? result.error || 'Link expired — generate a new link and share within 24 hours.'
               : result.status === 'pending_share'
                 ? 'Share this link within 24 hours or it will be removed from the system.'

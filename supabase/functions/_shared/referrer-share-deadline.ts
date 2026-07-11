@@ -1,5 +1,7 @@
 /** 24h verified-share activation for referrer codes. */
 
+import { isOwnerReferralIp } from './test-referral.ts';
+
 export const SHARE_DEADLINE_MS = 24 * 60 * 60 * 1000;
 
 /** Platforms that do NOT count as a verified share attempt. */
@@ -65,19 +67,49 @@ export async function expireStalePendingLinks(supabase: Supa, now = Date.now()):
 /**
  * Ensure a pending registration exists for a new link.
  * Does not revive expired codes (caller should mint a new code).
+ * Owner IPs (ADMIN_FUNNEL_EXCLUDED_IPS) are fully exempt — no pending clock.
  */
 export async function registerReferrerLink(
   supabase: Supa,
   referrerCode: string,
+  opts?: { clientIp?: string | null },
 ): Promise<{
   ok: boolean;
   status: ReferrerLinkStatus | 'unknown';
   created_at?: string;
   deadline_at?: string;
+  exempt?: boolean;
   error?: string;
 }> {
   const code = String(referrerCode || '').trim().toUpperCase();
   if (!code) return { ok: false, status: 'unknown', error: 'Missing code' };
+
+  // Owner / admin egress IPs never enter the 24h share deadline system
+  if (isOwnerReferralIp(opts?.clientIp)) {
+    const now = new Date().toISOString();
+    try {
+      await supabase.from('referrer_links').upsert(
+        {
+          referrer_code: code,
+          created_at: now,
+          first_verified_share_at: now,
+          first_share_platform: 'owner_ip_exempt',
+          status: 'active',
+          expired_at: null,
+        },
+        { onConflict: 'referrer_code' },
+      );
+    } catch (err) {
+      console.warn('[referrer-share-deadline] owner exempt upsert failed:', err);
+    }
+    return {
+      ok: true,
+      status: 'active',
+      created_at: now,
+      deadline_at: undefined,
+      exempt: true,
+    };
+  }
 
   await expireStalePendingLinks(supabase);
 
