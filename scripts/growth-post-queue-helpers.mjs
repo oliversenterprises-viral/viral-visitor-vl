@@ -100,16 +100,41 @@ export function buildOwnerAdUrl({
 }
 
 /**
- * Iframe-friendly traffic-exchange URL (/embed allows framing — see vercel.json).
+ * Iframe-friendly traffic-exchange URL.
+ * - path `/embed` → main app embed shell
+ * - path `/embed/<slug>/` → dual-mode splash (frame-allowed; CTAs target=_top)
+ * See vercel.json + marketing/splash-pages/README.md
  */
 export function buildEmbedAdUrl({
   source,
   medium = 'traffic_exchange',
   campaign = 'embed',
   content = 'iframe',
+  /** e.g. 'makers' → /embed/makers/ (splash). Empty → /embed main app. */
+  splash = '',
 } = {}) {
   if (!source) throw new Error('buildEmbedAdUrl requires utm_source');
-  return buildUtmUrl({ source, medium, campaign, content, path: '/embed' });
+  const path = splash ? `/embed/${String(splash).replace(/^\/+|\/+$/g, '')}/` : '/embed';
+  return buildUtmUrl({ source, medium, campaign, content, path });
+}
+
+/** Full-page splash (iframe blocked). Pair with buildEmbedAdUrl({ splash }) for exchanges. */
+export function buildSplashAdUrl({
+  source,
+  medium = 'landing',
+  campaign = 'splash',
+  content = '',
+  splash = 'race',
+} = {}) {
+  if (!source) throw new Error('buildSplashAdUrl requires utm_source');
+  const slug = String(splash || 'race').replace(/^\/+|\/+$/g, '');
+  return buildUtmUrl({
+    source,
+    medium,
+    campaign,
+    content: content || slug,
+    path: `/go/${slug}/`,
+  });
 }
 
 /** PageRankCafe traffic-exchange listing (paste at https://pagerankcafe.com/links/add). */

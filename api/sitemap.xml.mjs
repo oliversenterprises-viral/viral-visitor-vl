@@ -20,6 +20,10 @@ export default function handler(_req, res) {
     { loc: `${ORIGIN}/#how`, changefreq: 'weekly', priority: '0.8' },
     { loc: `${ORIGIN}/#leaderboard`, changefreq: 'daily', priority: '0.9' },
     { loc: `${ORIGIN}/#prize`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${ORIGIN}/go/makers/`, changefreq: 'weekly', priority: '0.75' },
+    { loc: `${ORIGIN}/go/race/`, changefreq: 'weekly', priority: '0.75' },
+    { loc: `${ORIGIN}/go/feature/`, changefreq: 'weekly', priority: '0.75' },
+    { loc: `${ORIGIN}/go/challenge/`, changefreq: 'weekly', priority: '0.7' },
   ];
   const body = urls
     .map(

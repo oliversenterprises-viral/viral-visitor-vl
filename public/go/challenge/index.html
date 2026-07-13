@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Challenge a friend · Free referral duel · ViralRefer</title>
+  <meta name="description" content="Challenge a friend on ViralRefer. Both get free links, share, and climb. Highest verified referrals win bragging rights — #1 can claim homepage feature." />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#09090b" />
+  <link rel="canonical" href="https://www.viralrefer.app/go/challenge/" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <!-- EMBED_MODE=full · full=/go/challenge/ · iframe=/embed/challenge/ -->
+  
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.viralrefer.app/go/challenge/" />
+  <meta property="og:title" content="Challenge a friend · Free referral duel · ViralRefer" />
+  <meta property="og:description" content="Challenge a friend on ViralRefer. Both get free links, share, and climb. Highest verified referrals win bragging rights — #1 can claim homepage feature." />
+  <meta property="og:site_name" content="ViralRefer" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Challenge a friend · Free referral duel · ViralRefer" />
+  <meta name="twitter:description" content="Challenge a friend on ViralRefer. Both get free links, share, and climb. Highest verified referrals win bragging rights — #1 can claim homepage feature." />
+
+  <style>
+    :root {
+      --bg: #07070a;
+      --card: rgba(24, 24, 27, 0.92);
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --dim: #71717a;
+      --violet: #c4b5fd;
+      --violet-strong: #8b5cf6;
+      --cyan: #22d3ee;
+      --green: #4ade80;
+      --amber: #fbbf24;
+      --pink: #f472b6;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding-bottom: 5.5rem;
+      background-image:
+        radial-gradient(ellipse 90% 55% at 50% -18%, rgba(139, 92, 246, 0.32), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 100% 20%, rgba(34, 211, 238, 0.1), transparent),
+        radial-gradient(ellipse 40% 30% at 0% 80%, rgba(244, 114, 182, 0.08), transparent);
+    }
+    a { color: inherit; text-decoration: none; }
+
+    .mode-banner {
+      display: none;
+      text-align: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 0.35rem 0.75rem;
+      background: rgba(34, 211, 238, 0.12);
+      border-bottom: 1px solid rgba(34, 211, 238, 0.25);
+      color: #a5f3fc;
+    }
+    body.is-embed .mode-banner { display: block; }
+
+    .urgency {
+      position: sticky; top: 0; z-index: 40;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap;
+      text-align: center;
+      background: linear-gradient(90deg, rgba(109, 40, 217, 0.95), rgba(6, 78, 99, 0.95));
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 0.55rem 1rem;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em;
+      backdrop-filter: blur(10px);
+    }
+    .urgency .live {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: rgba(0, 0, 0, 0.25); border-radius: 999px;
+      padding: 0.15rem 0.55rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .dot {
+      width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--green);
+      box-shadow: 0 0 8px var(--green); animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+
+    .wrap { max-width: 28rem; margin: 0 auto; padding: 1.5rem 1.15rem 2rem; text-align: center; }
+
+    .logo {
+      display: inline-flex; align-items: center; gap: 0.55rem;
+      font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em;
+      margin-bottom: 1.1rem; opacity: 0.95;
+    }
+    .logo img { width: 1.85rem; height: 1.85rem; }
+    .logo span { color: var(--violet-strong); }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--green); background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.35); border-radius: 999px;
+      padding: 0.35rem 0.8rem; margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: clamp(1.9rem, 6.2vw, 2.65rem); font-weight: 900;
+      letter-spacing: -0.035em; line-height: 1.12; margin-bottom: 0.85rem;
+    }
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(120deg, var(--cyan), #a78bfa 55%, var(--pink));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.25));
+    }
+
+    .sub {
+      color: var(--muted); font-size: 1.02rem; max-width: 26rem;
+      margin: 0 auto 1.15rem; line-height: 1.55;
+    }
+
+    .chips {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem;
+      margin: 0 auto 1.35rem;
+    }
+    .chip {
+      font-size: 0.72rem; font-weight: 700; color: #e4e4e7;
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+      border-radius: 999px; padding: 0.3rem 0.65rem;
+    }
+    .chip strong { color: var(--cyan); font-weight: 800; }
+
+    .cta {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      width: 100%; max-width: 22rem;
+      background: linear-gradient(135deg, var(--violet-strong) 0%, #6366f1 55%, #4f46e5 100%);
+      color: #fff; font-weight: 900; font-size: 1.08rem; letter-spacing: -0.01em;
+      padding: 1.05rem 1.5rem; border-radius: 999px;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+        0 12px 36px rgba(139, 92, 246, 0.45),
+        0 0 40px rgba(99, 102, 241, 0.2);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      position: relative; overflow: hidden;
+    }
+    .cta::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%);
+      transform: translateX(-120%); animation: sheen 3.2s ease-in-out infinite;
+    }
+    @keyframes sheen {
+      0%, 55% { transform: translateX(-120%); }
+      75%, 100% { transform: translateX(120%); }
+    }
+    .cta:hover, .cta:focus-visible {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 16px 44px rgba(139, 92, 246, 0.55);
+      outline: none;
+    }
+    .cta:active { transform: scale(0.98); }
+    .cta-arrow { transition: transform 0.15s ease; }
+    .cta:hover .cta-arrow { transform: translateX(3px); }
+
+    .fine { color: var(--dim); font-size: 0.82rem; margin-top: 0.75rem; }
+    .fine span { color: var(--amber); font-weight: 700; }
+
+    .proof {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;
+      margin: 1.5rem auto 0; max-width: 24rem;
+    }
+    .proof-item {
+      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
+      border-radius: 0.85rem; padding: 0.7rem 0.4rem;
+    }
+    .proof-item b {
+      display: block; font-size: 0.95rem; font-weight: 900; color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    .proof-item span { font-size: 0.65rem; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .prize {
+      text-align: left; margin: 1.75rem auto 0; max-width: 24rem;
+      background: var(--card); border: 1px solid rgba(139, 92, 246, 0.35);
+      border-radius: 1.15rem; padding: 1.15rem 1.15rem 1.2rem;
+      box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.08), 0 24px 50px rgba(0, 0, 0, 0.4);
+      position: relative; overflow: hidden;
+    }
+    .prize::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--violet-strong), var(--pink));
+    }
+    .prize-label {
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--violet); margin-bottom: 0.35rem;
+    }
+    .prize h2 { font-size: 1.12rem; font-weight: 800; margin-bottom: 0.35rem; letter-spacing: -0.02em; }
+    .prize > p { color: var(--muted); font-size: 0.88rem; margin-bottom: 0.9rem; }
+    .prize-mock {
+      background: #0c0c10; border: 1px solid var(--border); border-radius: 0.75rem;
+      padding: 0.85rem; margin-bottom: 0.9rem;
+    }
+    .prize-mock .bar {
+      display: flex; align-items: center; gap: 0.65rem;
+      background: linear-gradient(90deg, rgba(139, 92, 246, 0.25), rgba(34, 211, 238, 0.1));
+      border: 1px solid rgba(167, 139, 250, 0.35); border-radius: 0.55rem;
+      padding: 0.55rem 0.7rem;
+    }
+    .prize-mock .icon {
+      width: 2rem; height: 2rem; border-radius: 0.45rem;
+      background: linear-gradient(135deg, var(--violet-strong), var(--cyan));
+      display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0;
+    }
+    .prize-mock .meta { min-width: 0; }
+    .prize-mock .meta b { display: block; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .prize-mock .meta span { font-size: 0.68rem; color: var(--cyan); font-weight: 700; }
+    .bullets { list-style: none; display: grid; gap: 0.45rem; }
+    .bullets li {
+      display: flex; align-items: flex-start; gap: 0.55rem;
+      color: #d4d4d8; font-size: 0.9rem;
+    }
+    .bullets li i {
+      flex-shrink: 0; width: 1.15rem; height: 1.15rem; border-radius: 50%;
+      background: rgba(34, 211, 238, 0.15); color: var(--cyan);
+      display: flex; align-items: center; justify-content: center;
+      font-style: normal; font-size: 0.7rem; font-weight: 900; margin-top: 0.1rem;
+    }
+
+    .board {
+      text-align: left; margin: 1.5rem auto 0; max-width: 24rem;
+      background: rgba(255, 255, 255, 0.025); border: 1px solid var(--border);
+      border-radius: 1.1rem; overflow: hidden;
+    }
+    .board-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim);
+    }
+    .board-head .live { color: var(--green); display: inline-flex; align-items: center; gap: 0.35rem; }
+    .row {
+      display: grid; grid-template-columns: 2.2rem 1fr auto; gap: 0.5rem; align-items: center;
+      padding: 0.7rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.88rem;
+    }
+    .row:last-child { border-bottom: none; }
+    .row.you {
+      background: linear-gradient(90deg, rgba(139, 92, 246, 0.18), transparent);
+      border-left: 2px solid var(--violet-strong);
+    }
+    .rank { font-weight: 900; color: var(--violet); font-variant-numeric: tabular-nums; }
+    .row.you .rank { color: var(--cyan); }
+    .who { font-weight: 700; }
+    .who small { display: block; font-weight: 500; color: var(--dim); font-size: 0.72rem; }
+    .refs { font-weight: 800; font-variant-numeric: tabular-nums; color: #e4e4e7; }
+    .board-foot {
+      padding: 0.75rem 1rem; font-size: 0.8rem; color: var(--muted); text-align: center;
+      background: rgba(0, 0, 0, 0.25);
+    }
+    .board-foot strong { color: var(--amber); }
+
+    .section-label {
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--dim); margin: 2rem 0 0.75rem;
+    }
+    .steps { display: grid; gap: 0.55rem; text-align: left; }
+    .step {
+      display: grid; grid-template-columns: auto 1fr; gap: 0.75rem; align-items: start;
+      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
+      border-radius: 0.9rem; padding: 0.85rem 0.95rem;
+    }
+    .n {
+      width: 1.7rem; height: 1.7rem; border-radius: 0.5rem;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(34, 211, 238, 0.15));
+      color: #fff; font-weight: 900; font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step strong { display: block; font-size: 0.92rem; margin-bottom: 0.12rem; }
+    .step p { color: var(--muted); font-size: 0.82rem; }
+
+    .faq { text-align: left; display: grid; gap: 0.45rem; margin-top: 0.25rem; }
+    details {
+      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
+      border-radius: 0.85rem; padding: 0.85rem 1rem;
+    }
+    details[open] { border-color: rgba(139, 92, 246, 0.35); }
+    summary {
+      font-weight: 800; font-size: 0.9rem; cursor: pointer; list-style: none;
+      display: flex; justify-content: space-between; gap: 0.75rem; align-items: center;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; color: var(--violet); font-size: 1.2rem; font-weight: 400; }
+    details[open] summary::after { content: "–"; }
+    details p { color: var(--muted); font-size: 0.85rem; margin-top: 0.55rem; line-height: 1.5; }
+
+    .mid-cta {
+      margin: 1.75rem auto 0; padding: 1.25rem 1rem;
+      background: linear-gradient(180deg, rgba(139, 92, 246, 0.15), rgba(24, 24, 27, 0.5));
+      border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 1.15rem;
+    }
+    .mid-cta p { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.85rem; }
+    .mid-cta p strong { color: var(--text); }
+
+    .alt-links {
+      margin-top: 1.25rem;
+      font-size: 0.75rem;
+      color: var(--dim);
+      line-height: 1.6;
+    }
+    .alt-links a { color: var(--violet); text-decoration: underline; text-underline-offset: 2px; }
+
+    .sticky {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+      padding: 0.65rem 1rem calc(0.65rem + var(--safe-bottom));
+      background: rgba(7, 7, 10, 0.88); border-top: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      transform: translateY(110%); transition: transform 0.25s ease;
+    }
+    .sticky.show { transform: translateY(0); }
+    .sticky-inner {
+      max-width: 28rem; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr auto; gap: 0.65rem; align-items: center;
+    }
+    .sticky-copy { text-align: left; min-width: 0; }
+    .sticky-copy b { display: block; font-size: 0.82rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sticky-copy span { font-size: 0.7rem; color: var(--dim); }
+    .sticky .cta {
+      width: auto; max-width: none; font-size: 0.9rem; padding: 0.75rem 1.1rem;
+      white-space: nowrap;
+    }
+
+    footer {
+      margin-top: 2.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border);
+      color: var(--dim); font-size: 0.72rem; line-height: 1.65; text-align: center;
+    }
+    footer a { color: var(--violet); text-decoration: underline; text-underline-offset: 2px; }
+
+    /* Compact layout for small traffic-exchange iframes */
+    body.is-embed {
+      padding-bottom: 4.25rem;
+    }
+    body.is-embed .wrap { padding: 0.85rem 0.85rem 1.25rem; }
+    body.is-embed h1 { font-size: clamp(1.35rem, 5vw, 1.85rem); margin-bottom: 0.5rem; }
+    body.is-embed .sub { font-size: 0.88rem; margin-bottom: 0.75rem; }
+    body.is-embed .logo { margin-bottom: 0.55rem; font-size: 1rem; }
+    body.is-embed .badge { margin-bottom: 0.55rem; transform: scale(0.95); }
+    body.is-embed .chips { margin-bottom: 0.85rem; }
+    body.is-embed .proof { margin-top: 0.85rem; }
+    body.is-embed .prize { margin-top: 1rem; padding: 0.9rem; }
+    body.is-embed .board,
+    body.is-embed .steps,
+    body.is-embed .faq,
+    body.is-embed .mid-cta,
+    body.is-embed .section-label { display: none; }
+    body.is-embed .fine { font-size: 0.75rem; }
+    body.is-embed .cta { font-size: 0.98rem; padding: 0.9rem 1.2rem; }
+    body.is-embed .sticky { transform: translateY(0); }
+    body.is-embed .sticky .sticky-copy span::after { content: " · breaks out of frame"; }
+
+    @media (min-width: 480px) {
+      .wrap { max-width: 30rem; }
+      .proof { max-width: 26rem; }
+    }
+  </style>
+</head>
+<body class="" data-mode="full" data-slug="challenge">
+  <div class="mode-banner">Iframe mode · taps open the full site (breaks out of the frame)</div>
+
+  <div class="urgency" role="status">
+    <span class="live"><span class="dot" aria-hidden="true"></span> Live</span>
+    <span>Pick a rival before they pick you</span>
+  </div>
+
+  <main class="wrap">
+    <a class="logo js-cta" data-pos="logo"  href="https://www.viralrefer.app/?utm_source=splash&utm_medium=landing&utm_campaign=challenge&utm_content=challenge-logo">
+      <img src="/favicon.svg" alt="" width="30" height="30" />
+      viralrefer<span>.app</span>
+    </a>
+
+    <div class="badge"><span class="dot" aria-hidden="true"></span> Rivalry mode · free for both</div>
+
+    <h1>Challenge a friend. <em>Outrank them.</em></h1>
+    <p class="sub">Send the race. Both get free links. Whoever brings more verified friends climbs higher. Winner energy — homepage feature for global #1.</p>
+
+    <div class="chips" aria-label="Key facts">
+      <span class="chip"><strong>30s</strong> free link</span>
+      <span class="chip"><strong>No</strong> email</span>
+      <span class="chip"><strong>#1</strong> homepage feature</span>
+      <span class="chip"><strong>18+</strong> worldwide</span>
+    </div>
+
+    <a
+      id="cta"
+      class="cta js-cta"
+      data-pos="hero"
+      
+      href="https://www.viralrefer.app/?utm_source=splash&utm_medium=landing&utm_campaign=challenge&utm_content=challenge"
+    >
+      Get my link & start the duel <span class="cta-arrow" aria-hidden="true">→</span>
+    </a>
+    <p class="fine">Free for both of you · 18+ · <span>Early ranks still open</span></p>
+
+    <div class="proof" aria-label="Why people join">
+      <div class="proof-item"><b>Free</b><span>Forever</span></div>
+      <div class="proof-item"><b>~30s</b><span>To start</span></div>
+      <div class="proof-item"><b>Live</b><span>Leaderboard</span></div>
+    </div>
+
+    <section class="prize" aria-labelledby="prize-title">
+      <div class="prize-label">The duel</div>
+      <h2 id="prize-title">Friendly competition, real ranks</h2>
+      <p>Rivalry is the strongest share loop. One message, two competitors, one live board.</p>
+      <div class="prize-mock" aria-hidden="true">
+        <div class="bar">
+          <div class="icon">🏆</div>
+          <div class="meta">
+            <b>Featured Partner · yoursite.com</b>
+            <span>Homepage banner · #1 claim</span>
+          </div>
+        </div>
+      </div>
+      <ul class="bullets">
+        <li><i>✓</i> You both start free in ~30 seconds</li>
+        <li><i>✓</i> Only friends who get their own free link count</li>
+        <li><i>✓</i> Climb the same worldwide board — no private leagues needed</li>
+      </ul>
+    </section>
+
+    <section class="board" aria-label="Leaderboard preview">
+      <div class="board-head">
+        <span>Early leaderboard</span>
+        <span class="live"><span class="dot"></span> Realtime</span>
+      </div>
+      <div class="row">
+        <span class="rank">#1</span>
+        <span class="who">Top climber<small>Verified referrals</small></span>
+        <span class="refs">Lead</span>
+      </div>
+      <div class="row">
+        <span class="rank">#2</span>
+        <span class="who">Chasing<small>Sharing hard</small></span>
+        <span class="refs">Close</span>
+      </div>
+      <div class="row you">
+        <span class="rank">#?</span>
+        <span class="who">You<small>You vs them — start now</small></span>
+        <span class="refs">Start</span>
+      </div>
+      <div class="board-foot">First verified referral unlocks your rank. <strong>Don’t show up last.</strong></div>
+    </section>
+
+    <p class="section-label">3 steps · under 10 minutes</p>
+    <div class="steps">
+      <div class="step">
+        <div class="n">1</div>
+        <div>
+          <strong>Get your free link</strong>
+          <p>One tap on the main app — unique trackable link in about 30 seconds. No email.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div>
+          <strong>Share on a real app</strong>
+          <p>WhatsApp, X, SMS, Reddit, Discord… A friend must open your link and get <em>their</em> free link.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <div>
+          <strong>Climb · claim feature</strong>
+          <p>#1 can claim a homepage banner for their website after verification. No cash prize.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mid-cta">
+      <p><strong>Text them one line: “Beat my rank.”</strong><br />Get your link first so every friend you send is already on your chain.</p>
+      <a
+        class="cta js-cta"
+        data-pos="mid"
+        
+        href="https://www.viralrefer.app/?utm_source=splash&utm_medium=landing&utm_campaign=challenge&utm_content=challenge-mid"
+      >
+        Get my link & start the duel <span class="cta-arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+
+    <p class="section-label">Straight answers</p>
+    <div class="faq">
+      <details>
+        <summary>Is this free? Any catch?</summary>
+        <p>Yes — free forever. No email wall, no purchase necessary. There is <strong>no cash prize</strong>. #1 can claim a homepage banner feature for their website after verification.</p>
+      </details>
+      <details>
+        <summary>What actually counts as a referral?</summary>
+        <p>A friend must open <strong>your</strong> link and tap <strong>Get my referral link</strong>. Just visiting or only copying does not count. Verified server-side; bots and self-referrals are blocked.</p>
+      </details>
+      <details>
+        <summary>How do I challenge someone?</summary>
+        <p>Get your free link, then share it with a competitive message (WhatsApp works best). They should also get their own link and share to their network. Compare ranks on the live leaderboard.</p>
+      </details>
+      <details>
+        <summary>Who can join?</summary>
+        <p>Open worldwide to ages <strong>18+</strong> (or majority age where higher). Void where prohibited. Full rules on the main site.</p>
+      </details>
+    </div>
+
+    <p class="alt-links">
+      <strong>Both link types (same campaign):</strong><br />
+      Full page: <a href="https://www.viralrefer.app/go/challenge/">/go/challenge/</a><br />
+      Iframe OK: <a href="https://www.viralrefer.app/embed/challenge/">/embed/challenge/</a>
+    </p>
+
+    <footer>
+      <p>
+        Open worldwide · 18+ · No purchase necessary · No cash prizes · Verified referrals only.
+        See <a class="js-cta" data-pos="footer-how"  href="https://www.viralrefer.app/#how">how it works</a>
+        and <a class="js-cta" data-pos="footer-home"  href="https://www.viralrefer.app/?utm_source=splash&utm_medium=landing&utm_campaign=challenge&utm_content=challenge-footer">viralrefer.app</a>.
+      </p>
+      <p style="margin-top: 0.55rem">
+        <a class="js-cta" data-pos="footer-board"  href="https://www.viralrefer.app/#leaderboard">Live leaderboard</a>
+      </p>
+    </footer>
+  </main>
+
+  <div class="sticky" id="sticky" aria-hidden="true">
+    <div class="sticky-inner">
+      <div class="sticky-copy">
+        <b>Start the duel</b>
+        <span>Free link · challenge mode</span>
+      </div>
+      <a
+        class="cta js-cta"
+        data-pos="sticky"
+        
+        href="https://www.viralrefer.app/?utm_source=splash&utm_medium=landing&utm_campaign=challenge&utm_content=challenge-sticky"
+      >
+        Get link →
+      </a>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var SLUG = "challenge";
+      var BUILT_EMBED = false;
+      var DEFAULT_DEST = 'https://www.viralrefer.app/';
+      var inIframe = false;
+      try { inIframe = window.self !== window.top; } catch (e) { inIframe = true; }
+
+      // If this full-page URL somehow loads in a frame, or we are embed build, force breakout UX
+      if (BUILT_EMBED || inIframe) {
+        document.body.classList.add('is-embed');
+        document.body.setAttribute('data-mode', 'embed');
+      }
+
+      function buildDest(contentSuffix) {
+        var dest = new URL(DEFAULT_DEST);
+        dest.searchParams.set('utm_source', "splash");
+        dest.searchParams.set('utm_medium', "landing");
+        dest.searchParams.set('utm_campaign', "challenge");
+        dest.searchParams.set('utm_content', contentSuffix || SLUG);
+
+        try {
+          var inbound = new URLSearchParams(window.location.search);
+          ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term'].forEach(function (k) {
+            var v = inbound.get(k);
+            if (v) dest.searchParams.set(k, v);
+          });
+          if (inbound.get('utm_content')) {
+            dest.searchParams.set('utm_content', inbound.get('utm_content'));
+          }
+          if (inbound.get('vr_src')) dest.searchParams.set('vr_src', inbound.get('vr_src'));
+        } catch (e) { /* ignore */ }
+
+        dest.searchParams.set('from', 'splash');
+        dest.searchParams.set('splash', SLUG);
+        if (BUILT_EMBED || inIframe) {
+          dest.searchParams.set('embed', '1');
+          dest.searchParams.set('utm_medium', dest.searchParams.get('utm_medium') || 'iframe');
+        }
+        return dest.toString();
+      }
+
+      function wireCtas() {
+        document.querySelectorAll('.js-cta').forEach(function (el) {
+          var pos = el.getAttribute('data-pos') || 'link';
+          var href = el.getAttribute('href') || '';
+          if (href.indexOf('viralrefer.app') === -1) return;
+
+          // Always break out of traffic-exchange iframes
+          if (BUILT_EMBED || inIframe) {
+            el.setAttribute('target', '_top');
+            el.setAttribute('rel', 'noopener');
+          }
+
+          if (href.indexOf('#leaderboard') !== -1 && href.indexOf('utm_') === -1) {
+            el.setAttribute('href', 'https://www.viralrefer.app/#leaderboard');
+            return;
+          }
+          if (href.indexOf('#how') !== -1 && href.indexOf('utm_') === -1) {
+            el.setAttribute('href', 'https://www.viralrefer.app/#how');
+            return;
+          }
+          var suffix = SLUG + (pos === 'hero' ? '' : '-' + pos);
+          el.setAttribute('href', buildDest(suffix));
+          el.addEventListener('click', function () {
+            try {
+              localStorage.setItem('vr_splash_last', JSON.stringify({
+                slug: SLUG, pos: pos, mode: BUILT_EMBED || inIframe ? 'embed' : 'full', t: Date.now()
+              }));
+            } catch (e) { /* ignore */ }
+          });
+        });
+      }
+
+      var sticky = document.getElementById('sticky');
+      var hero = document.getElementById('cta');
+      function onScroll() {
+        if (!sticky || !hero) return;
+        if (document.body.classList.contains('is-embed')) {
+          sticky.classList.add('show');
+          sticky.setAttribute('aria-hidden', 'false');
+          return;
+        }
+        var rect = hero.getBoundingClientRect();
+        var show = rect.bottom < 0;
+        sticky.classList.toggle('show', show);
+        sticky.setAttribute('aria-hidden', show ? 'false' : 'true');
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+      wireCtas();
+    })();
+  </script>
+</body>
+</html>

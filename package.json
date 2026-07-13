@@ -19,6 +19,8 @@
     "optimizer:autopilot:dry": "node scripts/run-optimizer-autopilot.mjs --dry-run",
     "growth:queue": "node scripts/generate-growth-post-queue.mjs",
     "growth:post": "node scripts/post-growth-queue.mjs",
+    "splash:create": "node scripts/create-splash.mjs",
+    "splash:list": "node scripts/create-splash.mjs --list",
     "dba:apply-migration": "node scripts/dba-apply-migration.mjs",
     "dba:migration-repair": "node scripts/dba-migration-repair.mjs",
     "dba:inventory": "node scripts/dba-inventory.mjs",
