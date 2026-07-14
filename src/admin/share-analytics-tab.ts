@@ -33,9 +33,15 @@ import {
   SHARE_TRACKING_SHELL_CLOSE,
   wireShareTrackingHub,
 } from './share-analytics-tracking';
+import {
+  buildReferrerLinkStatsHtml,
+  summarizeReferrerLinkRows,
+  type ReferrerLinkRow,
+} from './referrer-link-stats-helpers';
 
 let allSharesCache: ShareEvent[] = [];
 let referralCountsCache: Record<string, number> = {};
+let linkLockHtmlCache = '';
 let currentFilterDays = getStoredAdminTabDaysFilter(SHARES_DAYS_STORAGE_KEY);
 let currentSearch = '';
 let currentPlatformFilter = 'all';
@@ -71,6 +77,21 @@ async function fetchReferralCounts(): Promise<Record<string, number>> {
     return {};
   }
   return result.data;
+}
+
+async function fetchLinkLockHtml(): Promise<string> {
+  try {
+    const result = await invokeAdminAction<ReferrerLinkRow[]>('get_referrer_link_stats');
+    if (!result.success) {
+      return `<div class="text-xs text-amber-400/90 mb-3">Link lock stats: ${escapeHtml(result.error || 'unavailable')}</div>`;
+    }
+    const rows = Array.isArray(result.data) ? result.data : [];
+    return buildReferrerLinkStatsHtml(summarizeReferrerLinkRows(rows));
+  } catch (err) {
+    return `<div class="text-xs text-amber-400/90 mb-3">Link lock stats: ${escapeHtml(
+      err instanceof Error ? err.message : 'unavailable',
+    )}</div>`;
+  }
 }
 
 async function clearTestSharesFromServer(): Promise<{ deleted: number; codes: string[] }> {
@@ -122,6 +143,7 @@ function buildAnalyticsHTML(
   activePlatform: string,
   testShareCount: number,
   conversion: ShareConversionSummary,
+  linkLockHtml = '',
 ): string {
   const platformChip = (value: string, label: string) => {
     const active = activePlatform === value;
@@ -131,6 +153,11 @@ function buildAnalyticsHTML(
   };
 
   let html = `
+    ${linkLockHtml}
+    <div class="mb-3 text-[11px] text-zinc-400 leading-snug">
+      Shares = people opened a share path (app / sheet). That does <strong class="text-zinc-200">not</strong> lock a link.
+      Lock = a friend tapped Get my link. See the box above for waiting / locked / timed-out codes.
+    </div>
     <div class="mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
         <div class="admin-stat-card">
@@ -466,7 +493,9 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
       }
       allSharesCache = next.shares;
       lastFetchError = next.fetchError;
-      referralCountsCache = await fetchReferralCounts();
+      const [counts, lockHtml] = await Promise.all([fetchReferralCounts(), fetchLinkLockHtml()]);
+      referralCountsCache = counts;
+      linkLockHtmlCache = lockHtml;
       if (toastOnSuccess) showToast('Share analytics refreshed', 'success');
       renderView();
     };
@@ -492,6 +521,7 @@ async function renderShareAnalyticsTab(content: HTMLElement) {
           currentPlatformFilter,
           testShareCount,
           conversion,
+          linkLockHtmlCache,
         ) +
         SHARE_TRACKING_SHELL_CLOSE;
 

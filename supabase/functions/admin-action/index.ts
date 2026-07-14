@@ -520,6 +520,21 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    if (action === 'get_referrer_link_stats') {
+      // First-friend lock + grace stats for admin (service role only)
+      const { data, error } = await supabaseAdmin
+        .from('referrer_links')
+        .select(
+          'referrer_code, status, share_grace_count, created_at, deadline_at, first_share_platform, first_verified_share_at',
+        )
+        .order('created_at', { ascending: false })
+        .limit(10000);
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'clear_test_visitor_events') {
       const dryRun = payload?.dry_run === true;
       const pageSize = 1000;

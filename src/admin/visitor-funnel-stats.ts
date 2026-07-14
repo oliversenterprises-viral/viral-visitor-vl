@@ -51,6 +51,12 @@ import { isTestReferralRecord } from '../lib/test-referral';
 import { getAdminSessionToken } from '../lib/admin-session';
 import { registerAdminLiveRefresh, refreshAdminLiveIndicators } from './admin-live-hub';
 import { invokeAdminAction } from '../lib/admin-action-client';
+import {
+  buildReferrerLinkStatsHtml,
+  summarizeReferrerLinkRows,
+  type ReferrerLinkRow,
+  type ReferrerLinkStatsSummary,
+} from './referrer-link-stats-helpers';
 
 let unregisterVisitorLive: (() => void) | null = null;
 
@@ -91,6 +97,24 @@ async function fetchRecentReferrals(limit = 8): Promise<{
     return {
       rows: [],
       error: err instanceof Error ? err.message : 'Could not load referrals',
+    };
+  }
+}
+
+async function fetchReferrerLinkStats(): Promise<{
+  summary: ReferrerLinkStatsSummary | null;
+  error?: string;
+}> {
+  try {
+    if (!getAdminSessionToken()) return { summary: null, error: 'Admin session required' };
+    const result = await invokeAdminAction<ReferrerLinkRow[]>('get_referrer_link_stats');
+    if (!result.success) return { summary: null, error: result.error };
+    const rows = Array.isArray(result.data) ? result.data : [];
+    return { summary: summarizeReferrerLinkRows(rows) };
+  } catch (err) {
+    return {
+      summary: null,
+      error: err instanceof Error ? err.message : 'Could not load link lock stats',
     };
   }
 }
@@ -217,6 +241,8 @@ function renderVisitorFunnelView(
   fetchError?: string,
   recentReferrals: RecentReferralNotifierRow[] = [],
   referralFetchError?: string,
+  linkLockSummary: ReferrerLinkStatsSummary | null = null,
+  linkLockError?: string,
 ): void {
   const safeEvents = Array.isArray(events) ? events : [];
 
@@ -312,8 +338,19 @@ function renderVisitorFunnelView(
         isServer ? ` · ${safeEvents.length} rows` : ''
       }</span>
     </div>
-    <div class="text-[9px] text-zinc-400 mb-2">Landing → get link → copy → share → claim. Engaged = action beyond landing · Sessions = distinct tabs.</div>
+    <div class="text-[9px] text-zinc-400 mb-2">
+      Simple path: land → get free link → share with friends → friend taps Get my link → you climb.
+      Engaged = did more than land · Sessions = different tabs.
+    </div>
   `;
+
+  if (linkLockSummary) {
+    html += buildReferrerLinkStatsHtml(linkLockSummary);
+  } else if (linkLockError) {
+    html += `<div class="text-[9px] text-amber-400/90 mb-2 border border-amber-500/25 rounded-lg px-2 py-1.5">
+      Link lock stats: ${escapeHtml(linkLockError)}
+    </div>`;
+  }
 
   if (excludedCount > 0) {
     html += `<div class="text-[9px] text-zinc-500 mb-2">Filtered ${excludedCount} owner/smoke/test event${
@@ -489,7 +526,10 @@ export async function renderVisitorFunnelStats(
   bindVisitorStatsRefresh(container);
 
   if (preloadedEvents) {
-    const referralNotifier = await fetchRecentReferrals();
+    const [referralNotifier, linkLock] = await Promise.all([
+      fetchRecentReferrals(),
+      fetchReferrerLinkStats(),
+    ]);
     renderVisitorFunnelView(
       container,
       preloadedEvents,
@@ -497,13 +537,16 @@ export async function renderVisitorFunnelStats(
       undefined,
       referralNotifier.rows,
       referralNotifier.error,
+      linkLock.summary,
+      linkLock.error,
     );
     return;
   }
 
-  const [funnel, referralNotifier] = await Promise.all([
+  const [funnel, referralNotifier, linkLock] = await Promise.all([
     fetchVisitorFunnelEvents(),
     fetchRecentReferrals(),
+    fetchReferrerLinkStats(),
   ]);
 
   renderVisitorFunnelView(
@@ -513,6 +556,8 @@ export async function renderVisitorFunnelStats(
     funnel.fetchError,
     referralNotifier.rows,
     referralNotifier.error,
+    linkLock.summary,
+    linkLock.error,
   );
 }
 
