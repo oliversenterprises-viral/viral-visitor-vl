@@ -7,7 +7,7 @@ import { registerGlobal } from './lib';
 import { supabase } from './lib/supabase';
 import { recordShareEvent } from './lib/record-share';
 import { resolveShareAbVariant } from './lib/share-ab';
-import { getHeroCtaVariant, maybeOptimizerScrollToShare } from './lib/optimizer-flags';
+import { getHeroCtaVariant } from './lib/optimizer-flags';
 import {
   onReferralCreditFailed,
   onReferralCreditPending,
@@ -38,6 +38,8 @@ import {
   registerReferrerLinkDeadline,
   renderShareDeadlineBanner,
 } from './lib/share-deadline';
+import { activateShareFirstAfterGetLink } from './lib/share-first-ui';
+import { activateSendModeAfterGetLink } from './lib/send-mode';
 
 // Track attribution for the current page load
 let pendingReferrerCode: string | null = null;
@@ -282,6 +284,17 @@ export function applyExistingReferralLink(code: string): void {
   populateReferralLinkUI(code, buildReferralLink(code));
   syncMobileReferralCta();
   initShareDeadlineUi();
+  // Returning visitor: send mode if still pending; otherwise locked strip
+  void import('./lib/share-first-ui').then((m) => {
+    if (m.isSharePendingLocal()) {
+      void import('./lib/send-mode').then((sm) =>
+        sm.activateSendModeAfterGetLink({ autoCopied: false }),
+      );
+    } else {
+      m.markShareLocked();
+      m.renderShareFirstStrip();
+    }
+  });
   if (pendingReferrerCode && !referralRecordedThisSession) {
     void runFunnelReferralRecording();
   }
@@ -332,25 +345,12 @@ export async function getMyReferralLinkInstant(): Promise<void> {
       ...(via ? { via } : {}),
     });
 
-    // Same user gesture → auto-copy (biggest leak was GetLink without Copy/Share).
-    // Clipboard API requires a transient activation; Get-link click provides it.
+    // Same user gesture → auto-copy (helps paste into apps).
+    // Clipboard alone never locks — send-mode / share-first UI is next.
     const autoCopied = await tryAutoCopyAfterGetLink(link);
 
-    if (autoCopied) {
-      showToast(
-        pendingReferrerCode
-          ? 'Link ready & copied — share it now (WhatsApp is fastest)'
-          : 'Link copied! Share it now to climb the board',
-        'success',
-      );
-    } else {
-      showToast(
-        pendingReferrerCode
-          ? 'Step 1 done — tap COPY, then SHARE your link'
-          : 'Link ready — tap COPY, then share to climb the board',
-        'success',
-      );
-    }
+    // Clear, single next step — send to a friend (copy alone never finishes the job)
+    showToast('Link ready — send it to a friend now!', 'success');
 
     // FOMO ticker unlocks once this visitor has a referral link
     void import('./app')
@@ -358,11 +358,8 @@ export async function getMyReferralLinkInstant(): Promise<void> {
       .catch(() => {});
 
     syncMobileReferralCta();
-    updateHeroCtaAfterLinkReady(autoCopied);
-
-    // Wait a frame so share-power-block (was display:none) is laid out, then
-    // land the viewport on share actions — not the section title / QR.
-    scrollToPostGetLinkActions(autoCopied);
+    // Bulletproof send mode: one primary action, hide chrome (canonical path)
+    activateSendModeAfterGetLink({ autoCopied });
 
     if (pendingReferrerCode && !referralRecordedThisSession) {
       void runFunnelReferralRecording();
@@ -403,46 +400,6 @@ function flashCopyButtonBriefly(): void {
     btn.innerHTML = origHTML || 'COPY';
     btn.removeAttribute('aria-label');
   }, 1600);
-}
-
-/** Prefer WhatsApp (share-first); fall back to COPY if auto-copy failed. */
-function scrollToPostGetLinkActions(autoCopied: boolean): void {
-  const targetId = autoCopied ? 'share-whatsapp-primary' : 'copy-link-btn';
-  const run = () => {
-    const el =
-      document.getElementById(targetId) ||
-      document.getElementById('share-buttons-panel') ||
-      document.getElementById('referral-section');
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    maybeOptimizerScrollToShare();
-  };
-  // Double-rAF + short delay: share block becomes display:block only after has-link attr.
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      window.setTimeout(run, 80);
-    });
-  });
-}
-
-/** After get-link, hero CTA becomes a one-tap share/copy action. */
-function updateHeroCtaAfterLinkReady(autoCopied: boolean): void {
-  const btn = document.getElementById('hero-get-link-btn');
-  const label = btn?.querySelector('span');
-  if (!btn || !label) return;
-  if (btn.dataset.vrPostLinkCta === '1') return;
-  btn.dataset.vrPostLinkCta = '1';
-  label.textContent = autoCopied ? 'Share on WhatsApp' : 'Copy & share my link';
-  btn.onclick = (e) => {
-    e.preventDefault();
-    if (autoCopied) {
-      document.getElementById('share-whatsapp-primary')?.click();
-      document
-        .getElementById('share-whatsapp-primary')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else {
-      copyLink();
-    }
-  };
 }
 
 async function writeLinkToClipboard(link: string): Promise<boolean> {
@@ -496,7 +453,7 @@ function performCopyToClipboard(link: string): void {
       alert('Copy failed. Link: ' + link);
       return;
     }
-    showToast('Copied! Now share it (WhatsApp or any button below)', 'success');
+    showToast('Copied — still need to send on a real app (copy does not lock link)', 'info');
     const code = getMyReferralCode();
     if (code) {
       recordShareEvent({
@@ -509,12 +466,7 @@ function performCopyToClipboard(link: string): void {
     trackVisitorFunnel('CopyReferralLink');
     onReferralLinkCopied();
     flashCopyButtonBriefly();
-    // Land on share after manual copy too
-    requestAnimationFrame(() => {
-      document
-        .getElementById('share-whatsapp-primary')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
+    activateShareFirstAfterGetLink({ autoCopied: true });
   })();
 }
 

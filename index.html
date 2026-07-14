@@ -140,7 +140,7 @@
                 </h1>
                
                 <p id="hero-subtitle" data-i18n="hero.subtitle" class="text-base sm:text-lg md:text-xl text-zinc-200 max-w-xl mx-auto mb-5 sm:mb-6 leading-relaxed px-1">
-                    Open worldwide. No signup. One tap, then share anywhere.
+                    Open worldwide. Free link → share → climb. #1 claims a homepage banner for their website.
                 </p>
 
                 <!-- Global proof strip (static + live count) -->
@@ -173,7 +173,10 @@
                 </div>
 
                 <p id="hero-trust-line" data-i18n="hero.trust" class="mt-3 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
-                    Free recognition for #1 &bull; Your link in ~5 seconds
+                    #1 wins a homepage feature for their site &middot; Free &middot; No signup &middot; Link in ~5 sec
+                </p>
+                <p id="hero-prize-fomo" class="mt-2 text-xs sm:text-sm font-semibold text-amber-200/90 max-w-lg mx-auto leading-snug" data-i18n="share_first.fomo">
+                    Race for #1 — homepage feature for your site. Early ranks are still open.
                 </p>
                 <p class="mt-1.5">
                     <a href="#leaderboard" id="hero-leaderboard-link" data-vr-zone="hero-leaderboard-link" data-i18n="hero.board_link" class="hero-leaderboard-text-link text-xs text-violet-300/80 hover:text-violet-200 underline underline-offset-4 decoration-violet-500/40">
@@ -276,10 +279,10 @@
             <div class="max-w-2xl mx-auto">
                 <div class="text-center mb-6 sm:mb-8">
                     <h2 id="winning-link-title" class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter mb-2 sm:mb-3" style="color: var(--text-referral-heading, #ffffff)">Your winning link</h2>
-                    <p id="winning-link-description" class="text-base sm:text-lg text-zinc-300 max-w-lg mx-auto" data-vr-declutter-secondary>Copy → share → climb. Every click counts toward #1.</p>
-                    <!-- Always-visible 24h rule (i18n) — strongest pre-share education in the funnel -->
+                    <p id="winning-link-description" class="text-base sm:text-lg text-zinc-300 max-w-lg mx-auto" data-vr-declutter-secondary>Send your link. When a friend gets their free link through you, you climb — and your link locks.</p>
+                    <!-- One clear public rule (i18n) — friend Get link locks; share can add time; copy never locks -->
                     <p id="share-deadline-pre-note" class="share-deadline-pre-note mt-3 max-w-lg mx-auto text-sm font-semibold text-amber-200/95 leading-snug" role="status" data-i18n="deadline.pre_rule">
-                        Share on a real platform within 24 hours or your link is removed — clipboard alone does not count.
+                        Simple rule: a friend must open your link and tap Get my link. That locks it. Copying alone never locks. Sharing can add extra time. You have about 2 days.
                     </p>
                 </div>
                
@@ -352,16 +355,62 @@
                                         <i class="fa-solid fa-clock"></i>
                                     </span>
                                     <div class="min-w-0">
-                                        <p class="text-[10px] uppercase tracking-wider font-bold text-amber-200/95 mb-1" data-i18n="deadline.badge">24-hour share rule</p>
+                                        <p class="text-[10px] uppercase tracking-wider font-bold text-amber-200/95 mb-1" data-i18n="deadline.badge">Need 1 friend to lock</p>
+                                        <span id="share-deadline-status-pill" class="hidden share-deadline-status-pill mb-1.5" data-status="pending">Waiting for a friend</span>
                                         <p id="share-deadline-title" class="text-sm font-medium text-amber-50 leading-snug" data-i18n="deadline.pending">
-                                            Share this link within 24 hours or it is removed from the system (clipboard alone does not count).
+                                            Not locked yet. A friend must get their free link through you before time runs out. Keep sharing!
                                         </p>
                                     </div>
                                 </div>
-                                <div class="shrink-0 text-right pl-1">
+                                <div id="share-deadline-time-wrap" class="shrink-0 text-right pl-1">
                                     <div class="text-[10px] uppercase tracking-wider text-amber-200/75" data-i18n="deadline.time_left">Time left</div>
                                     <div id="share-deadline-countdown" class="text-2xl font-black tabular-nums text-amber-100 leading-none mt-0.5">24h</div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Share-first: native sheet primary (any app), then SMS / WhatsApp -->
+                        <div id="share-first-strip" class="hidden share-first-strip mb-4 rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-500/10 via-zinc-900/80 to-violet-500/10 px-4 py-4" role="region" aria-label="Send your referral link">
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <div class="min-w-0">
+                                    <p class="text-[10px] uppercase tracking-wider font-bold text-emerald-300/90" data-i18n="share_first.heading">Send your link</p>
+                                    <p id="share-first-status" class="text-sm font-semibold text-white mt-0.5 leading-snug" data-status="pending" data-i18n="share_first.status_pending">
+                                        Send your link. It locks when a friend taps Get my link.
+                                    </p>
+                                    <p class="text-[11px] text-zinc-400 mt-1 leading-snug" data-i18n="share_first.sub">
+                                        Simple rule: a friend must open your link and tap Get my link. That locks it. Copying alone never locks. Sharing can add extra time.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2 mt-3">
+                                <button id="native-share-btn" type="button" onclick="nativeShare()"
+                                        class="share-first-primary-btn hidden w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-violet-600 hover:from-emerald-500 hover:to-violet-500 text-white py-4 px-6 rounded-2xl font-bold text-base shadow-lg shadow-emerald-900/30 ring-2 ring-emerald-300/40"
+                                        title="Open your device share sheet — pick Messages, WhatsApp, Telegram, X, or any app"
+                                        aria-label="Share via device share sheet — any app">
+                                    <i class="fa-solid fa-share-nodes text-xl" aria-hidden="true"></i>
+                                    <span data-i18n="share_first.cta_native">Share now (pick any app)</span>
+                                </button>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button id="share-first-sms" type="button" onclick="shareTo('sms')"
+                                            class="share-first-alt-btn flex items-center justify-center gap-2 bg-emerald-700/90 hover:bg-emerald-600 text-white py-3 px-3 rounded-2xl font-semibold text-sm"
+                                            title="Send via SMS / Messages"
+                                            aria-label="Share via SMS">
+                                        <i class="fa-solid fa-sms" aria-hidden="true"></i>
+                                        <span>SMS</span>
+                                    </button>
+                                    <button id="share-first-whatsapp" type="button" onclick="shareTo('whatsapp')"
+                                            class="share-first-alt-btn flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white py-3 px-3 rounded-2xl font-semibold text-sm"
+                                            title="Share on WhatsApp"
+                                            aria-label="Share on WhatsApp">
+                                        <i class="fa-brands fa-whatsapp text-lg" aria-hidden="true"></i>
+                                        <span>WhatsApp</span>
+                                    </button>
+                                </div>
+                                <button type="button" onclick="copyLink()"
+                                        class="share-first-copy-only text-center text-xs text-zinc-500 hover:text-zinc-300 py-1.5 underline underline-offset-2 decoration-zinc-600"
+                                        data-i18n="share_first.copy_only">
+                                    Copy only (does not lock link)
+                                </button>
                             </div>
                         </div>
 
@@ -371,7 +420,7 @@
                             <span id="competitor-badge" class="hidden competitor-badge text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full border border-emerald-400/40 text-emerald-200 bg-emerald-500/15" title="Unlocked after your first platform share">Competitor ✓</span>
                         </div>
                        
-                        <p data-vr-slim-share-meta class="text-xs text-zinc-500 -mt-1 mb-3">Every open of your link moves you up. WhatsApp is fastest.</p>
+                        <p data-vr-slim-share-meta class="text-xs text-zinc-500 -mt-1 mb-3">Send with Share now above. Copy never locks — a friend must Get my link. Sharing can add time.</p>
 
                         <!-- Distance to glory — always-on near-win meter (client-only) -->
                         <div id="distance-glory-meter" data-vr-zone="distance-glory" class="hidden distance-glory-meter mb-4 rounded-2xl border border-violet-400/30 bg-gradient-to-r from-violet-500/10 via-zinc-900/70 to-emerald-500/5 px-4 py-3" role="status" aria-live="polite">
@@ -549,14 +598,6 @@
                                 aria-label="Quick boost share on WhatsApp">
                             <i class="fa-brands fa-whatsapp text-2xl"></i>
                             <span>Quick Boost — WhatsApp</span>
-                        </button>
-
-                        <button id="native-share-btn" type="button" onclick="nativeShare()"
-                                class="hidden share-native-btn w-full mb-4 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-violet-600 hover:from-emerald-500 hover:to-violet-500 text-white py-4 px-6 rounded-2xl font-bold text-base shadow-lg shadow-emerald-900/30"
-                                title="Open your device share sheet — fastest on mobile"
-                                aria-label="Share via device share sheet">
-                            <i class="fa-solid fa-share-nodes text-xl"></i>
-                            <span>Share everywhere (one tap)</span>
                         </button>
 
                         <div id="share-ab-wrap" class="hidden mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-violet-400/20 bg-violet-500/5 px-3 py-2">
@@ -743,7 +784,7 @@
             <div class="text-center mb-8">
                 <div class="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">
                     <i class="fa-solid fa-lightbulb"></i>
-                    <span id="how-it-works-badge" data-i18n="how.badge" style="color: var(--text-how-badge, #a5b4fc)">3 SIMPLE STEPS</span>
+                    <span id="how-it-works-badge" data-i18n="how.badge" style="color: var(--text-how-badge, #a5b4fc)">3 EASY STEPS</span>
                 </div>
                 <h2 id="how-it-works-title" data-i18n="how.title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-how-title, #ffffff)">How ViralRefer Works</h2>
                 <p id="how-it-works-subtitle" data-i18n="how.subtitle" class="text-xl text-zinc-400 mt-2 max-w-md mx-auto">Three steps. Under ten minutes. Free forever.</p>
@@ -762,7 +803,7 @@
                         <i class="fa-solid fa-share-alt"></i>
                     </div>
                     <div id="how-step2-title" data-i18n="how.step2_title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">2. Share anywhere</div>
-                    <p id="how-step2-desc" data-i18n="how.step2_desc" class="text-zinc-400 leading-relaxed">Copy and paste on social, chat, email — every visit can count.</p>
+                    <p id="how-step2-desc" data-i18n="how.step2_desc" class="text-zinc-400 leading-relaxed">Share it with friends (any app). Your link stays safe only if a friend uses it — a friend must open your link and get their own free link.</p>
                     <p id="how-step2-deadline" data-i18n="deadline.how_note" class="text-xs font-semibold text-amber-300/90 mt-3 leading-snug">Copy is not enough: share on a real platform within 24 hours or your link is removed.</p>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-amber-400/50 transition-all">
@@ -770,7 +811,7 @@
                         <i class="fa-solid fa-trophy"></i>
                     </div>
                     <div id="how-step3-title" data-i18n="how.step3_title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">3. Climb &amp; get featured</div>
-                    <p id="how-it-works-step3" data-i18n="how.step3_desc" class="text-zinc-400 leading-relaxed">Reach the top of the leaderboard and claim a homepage feature for your site — no cash prize.</p>
+                    <p id="how-it-works-step3" data-i18n="how.step3_desc" class="text-zinc-400 leading-relaxed">When friends get their own free link through you, you move up. #1 can put their website on our homepage (no cash prize).</p>
                 </div>
             </div>
         </div>
@@ -783,7 +824,7 @@
                     <span id="prize-badge" data-i18n="prize.badge">HOMEPAGE FEATURE</span>
                 </div>
                 <h2 id="prize-title" data-i18n="prize.title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-prize-title)">Homepage Banner Feature</h2>
-                <p id="prize-subtitle" data-i18n="prize.subtitle" class="text-xl text-zinc-300 mt-2">Open worldwide. #1 on the live board can claim a homepage feature for their website — free recognition, no cash prize.</p>
+                <p id="prize-subtitle" data-i18n="prize.subtitle" class="text-xl text-zinc-300 mt-2">Open worldwide. Climb to #1 on the live board — claim a homepage banner for <em>your</em> website. Free recognition. No cash prize. Early ranks are wide open.</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">

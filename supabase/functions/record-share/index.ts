@@ -1,10 +1,16 @@
 // ============================================================================
 // supabase/functions/record-share/index.ts
 // Public Edge — log social share / copy events for Admin → Share Analytics.
+// Share attempts may extend grace deadline; they do NOT lock the link.
+// Lock happens only when a real referral credits the referrer (record-referral).
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
-import { markReferrerLinkShared, normalizeSharePlatform } from '../_shared/referrer-share-deadline.ts';
+import {
+  extendShareDeadlineGrace,
+  isVerifiedSharePlatform,
+  normalizeSharePlatform,
+} from '../_shared/referrer-share-deadline.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -76,11 +82,26 @@ Deno.serve(async (req: Request) => {
     for (const row of attempts) {
       const { error } = await supabaseAdmin.from('shares').insert(row);
       if (!error) {
-        // Verified share platforms activate the 24h share-or-expire clock
-        await markReferrerLinkShared(supabaseAdmin, referrer_code, platform);
-        return new Response(JSON.stringify({ success: true, verified_share: true }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        // Real share path → optional deadline grace (never lock)
+        let grace: { extended: boolean; deadline_at?: string; grace_count?: number } = {
+          extended: false,
+        };
+        if (isVerifiedSharePlatform(platform)) {
+          grace = await extendShareDeadlineGrace(supabaseAdmin, referrer_code, platform);
+        }
+        return new Response(
+          JSON.stringify({
+            success: true,
+            verified_share: false,
+            locked: false,
+            grace_extended: grace.extended === true,
+            deadline_at: grace.deadline_at ?? null,
+            share_grace_count: grace.grace_count ?? null,
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
       }
       lastError = error;
       console.warn('[record-share] insert attempt failed:', error.message, Object.keys(row));

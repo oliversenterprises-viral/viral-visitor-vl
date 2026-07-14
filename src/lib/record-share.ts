@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { isVerifiedSharePlatform, markLocalVerifiedShare } from './share-deadline';
+import { applyGraceDeadlineFromServer, isVerifiedSharePlatform } from './share-deadline';
 
 export interface RecordSharePayload {
   platform: string;
@@ -9,14 +9,23 @@ export interface RecordSharePayload {
   ab_variant?: 'a' | 'b';
 }
 
-/** Best-effort server log when a user shares or copies their referral link. */
-export function recordShareEvent(payload: RecordSharePayload): void {
-  if (!payload.referrer_code || !payload.referral_link) return;
+export interface RecordShareOptions {
+  /**
+   * @deprecated Self-confirm no longer locks. Lock is only first real referral.
+   * Kept for call-site compatibility; ignored for locking.
+   */
+  confirmLock?: boolean;
+}
 
-  // Verified platforms (not clipboard) clear the 24h removal clock locally
-  if (isVerifiedSharePlatform(payload.platform)) {
-    markLocalVerifiedShare(payload.platform);
-  }
+/**
+ * Best-effort server log when a user shares or copies their referral link.
+ * Never locks the deadline. Verified share paths may earn server-side grace time.
+ */
+export function recordShareEvent(
+  payload: RecordSharePayload,
+  _options: RecordShareOptions = {},
+): void {
+  if (!payload.referrer_code || !payload.referral_link) return;
 
   supabase.functions
     .invoke('record-share', {
@@ -26,6 +35,21 @@ export function recordShareEvent(payload: RecordSharePayload): void {
         referral_link: payload.referral_link,
         ab_variant: payload.ab_variant,
       },
+    })
+    .then((res) => {
+      const body = res.data as {
+        grace_extended?: boolean;
+        deadline_at?: string | null;
+      } | null;
+      if (body?.grace_extended && body.deadline_at) {
+        applyGraceDeadlineFromServer(body.deadline_at);
+      } else if (
+        isVerifiedSharePlatform(payload.platform) &&
+        body &&
+        !body.grace_extended
+      ) {
+        // silent — max grace already used or not pending
+      }
     })
     .catch(() => {});
 }

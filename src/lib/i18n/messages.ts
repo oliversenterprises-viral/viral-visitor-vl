@@ -27,33 +27,36 @@ export const en = {
   'hero.badge': 'WORLDWIDE • FREE',
   'hero.title_line1': 'Get your free link in 30 seconds.',
   'hero.title_accent': 'Climb to #1 — claim homepage feature.',
-  'hero.subtitle': 'Open worldwide. No signup. One tap, then share anywhere.',
+  'hero.subtitle':
+    'Open worldwide. Free link → share → climb. #1 claims a homepage banner for their website.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',
   'hero.proof_no_email': 'No email',
   'hero.proof_live': 'Live free leaderboard',
   'hero.cta': 'Get my referral link',
   'hero.cta_secondary': 'See leaderboard',
-  'hero.trust': 'Free recognition for #1 • Your link in ~5 seconds',
+  'hero.trust':
+    '#1 wins a homepage feature for their site · Free · No signup · Link in ~5 sec',
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 
-  'funnel.badge': 'YOUR 3-STEP PATH TO #1',
+  'funnel.badge': '3 EASY STEPS',
   'funnel.step1': '1. Get link',
-  'funnel.step2': '2. Copy',
-  'funnel.step3': '3. Share & climb',
-  'funnel.coach': 'Step 1: tap Get my referral link to start.',
+  'funnel.step2': '2. Share it',
+  'funnel.step3': '3. Climb',
+  'funnel.coach': 'Step 1: tap Get my link. Free. No sign-up.',
 
-  'how.badge': '3 SIMPLE STEPS',
+  'how.badge': '3 EASY STEPS',
   'how.title': 'How ViralRefer Works',
-  'how.subtitle': 'Three steps. Under ten minutes. Free forever.',
+  'how.subtitle': 'Three easy steps. Free. No sign-up.',
   'how.step1_title': '1. Get your link',
-  'how.step1_desc': 'Tap the button — free, no signup, unique trackable link in seconds.',
-  'how.step2_title': '2. Share anywhere',
-  'how.step2_desc': 'Copy and paste on social, chat, email — every visit can count.',
-  'how.step3_title': '3. Climb & get featured',
+  'how.step1_desc': 'Tap the big button. You get your own free link in a few seconds. No email needed.',
+  'how.step2_title': '2. Send your link',
+  'how.step2_desc':
+    'Share it with friends (any app). Your link stays safe only if a friend uses it — see the lock rule below.',
+  'how.step3_title': '3. Climb the board',
   'how.step3_desc':
-    'Reach the top of the leaderboard and claim a homepage feature for your site — no cash prize.',
+    'When friends get their own free link through you, you move up. #1 can put their website on our homepage (no cash prize).',
 
   'prize.badge': 'HOMEPAGE FEATURE',
   'prize.title': 'Homepage Banner Feature',
@@ -109,46 +112,100 @@ export const en = {
   'exit.body': 'One tap (~30 sec). Open worldwide. No signup. Get your link and climb the live board.',
   'exit.cta': 'Get my free link',
 
-  // Coach
+  // Coach (simple words)
   'coach.greet_direct':
-    'Hi — free worldwide link in ~30 seconds. Share to climb; #1 claims a homepage feature. Tap Get my link to start.',
+    'Hi! Get a free link in about 30 seconds. Share it with friends. When they join, you climb. #1 can show their website on our home page. Tap Get my link.',
   'coach.greet_referred':
-    'Hi — you landed via {code}. {credit} I will walk you through: get link → copy → share.',
-  'coach.credit_ok': 'Your visit is credited.',
-  'coach.credit_need': 'Tap Get my link first so your visit counts for them.',
+    'Hi! You opened {code}’s invite. {credit} Next: get your free link, then share it with friends.',
+  'coach.credit_ok': 'Good — your visit counted for them.',
+  'coach.credit_need': 'Tap Get my link so your visit counts for them.',
   'coach.act_get_link': 'Get my link',
   'coach.act_copy': 'Copy my link',
   'coach.act_share': 'Share now',
-  'coach.act_board': 'See leaderboard',
-  'coach.act_prize': 'What do I get?',
+  'coach.act_board': 'See the board',
+  'coach.act_prize': 'What do I win?',
   'coach.act_help': 'Where am I?',
   'coach.prize_reply':
-    'Open worldwide (18+). Top referrer can claim a homepage banner feature after verification. No cash prize — pure visibility. Live board updates in real time.',
+    'Anyone 18+ can play, free. If you reach #1, you can put your website on our home page. No cash money — just a cool feature. The live board shows who is ahead.',
   'coach.free_reply':
-    'Totally free — no email signup, no payment. Tap Get my link, copy it, and share anywhere.',
+    'Yes, free! No email. No payment. Get your link, share it, and wait for friends to join.',
   'coach.fallback':
-    "I'm your funnel coach — ask about getting your link, copying, sharing, or the homepage feature.",
+    'Ask me how to get your link, share it, or lock it. Tip: your link locks when a friend taps Get my link — not when you only open an app.',
 
   // Share (default template)
   'share.default':
-    "I'm on ViralRefer's live worldwide leaderboard 🏆 Free · no signup · ~30 sec. #1 can claim a homepage feature. Can you beat me? {link}",
+    "I'm on ViralRefer's live board 🏆 Free link · no signup · ~30 sec. #1 can feature their website. Can you beat me? {link}",
 
-  // 24h verified-share deadline (clipboard alone does not count)
-  'deadline.badge': '24-hour share rule',
+  // One clear public rule (everywhere):
+  // Friend must Get my link to lock · sharing can add time · copy never locks.
+  'rule.public':
+    'Simple rule: a friend must open your link and tap Get my link. That locks it. Copying alone never locks. Sharing can add extra time.',
+
+  // First-friend lock (5th-grade clear)
+  'deadline.badge': 'Need 1 friend to lock',
   'deadline.time_left': 'Time left',
   'deadline.pre_rule':
-    'Share on a real platform within 24 hours or your link is removed — clipboard alone does not count.',
+    'Simple rule: a friend must open your link and tap Get my link. That locks it. Copying alone never locks. Sharing can add extra time. You have about 2 days.',
   'deadline.pending':
-    'Share this link within 24 hours or it is removed from the system (clipboard alone does not count).',
+    'Not locked yet. Send your link — a friend must Get my link before time runs out.',
   'deadline.urgent':
-    'Hurry — under 4 hours left. Share now on WhatsApp, X, SMS, or another real platform, or your link is removed.',
+    'Time is low. Send until a friend taps Get my link, or this link will stop.',
   'deadline.expired':
-    'Link expired — not shared within 24 hours. Get a new link and share it to rejoin.',
-  'deadline.countdown_expired': 'Expired',
+    'This link stopped. No friend joined in time. Tap Get my link again for a new one.',
+  'deadline.countdown_expired': "Time's up",
   'deadline.toast_removed':
-    'Link removed — you did not share within 24 hours. Get a new link and share it to stay in the system.',
+    'Your old link stopped. Get a new free link and send it to a friend.',
   'deadline.how_note':
-    'Copy is not enough: share on a real platform within 24 hours or your link is removed.',
+    'Simple rule: a friend must open your link and tap Get my link. That locks it. Copying alone never locks. Sharing can add extra time.',
+  'deadline.locked':
+    'Locked! A friend used your link. Send more to climb higher.',
+  'deadline.locked_badge': 'Friend joined',
+  'deadline.status_pending': 'Waiting for a friend',
+  'deadline.status_locked': 'Locked',
+  'deadline.grace_extended':
+    'Nice — extra time added. Keep sending so a friend can Get my link.',
+
+  // Share-first strip
+  'share_first.status_pending':
+    'Send your link. It locks when a friend taps Get my link.',
+  'share_first.status_locked': 'Locked — a friend joined. Challenge another to climb!',
+  'share_first.next_step':
+    'Next: send your link. Copy never locks. A friend must Get my link.',
+  'share_first.reminder':
+    'Send your link. About 2 days for a friend to Get my link. Sharing can add time.',
+  'share_first.cta_native': 'Share now (pick any app)',
+  'share_first.cta_sms': 'Send by text',
+  'share_first.cta_whatsapp': 'Share on WhatsApp',
+  'share_first.heading': 'Send your link',
+  'share_first.sub':
+    'Simple rule: a friend must open your link and tap Get my link. That locks it. Copying alone never locks. Sharing can add extra time.',
+  'share_first.copy_only': 'Copy only (does not lock)',
+  'share_first.fomo':
+    'Race for #1 — homepage feature for your site. Early ranks are open.',
+
+  // Send mode — one primary action after get-link (main funnel fix)
+  'send_mode.primary_cta': 'Send to a friend now',
+  'send_mode.sticky_cta': 'Send to a friend now',
+  'send_mode.sticky_hint': 'Locks when a friend taps Get my link · copy never locks',
+  'send_mode.status': 'Link ready. Send it to a friend now.',
+  'send_mode.sub':
+    'One tap. Send to a friend. They open your link and tap Get my link. Copy never locks.',
+  'send_mode.next_step':
+    'Tap Send to a friend now — then they must Get my link to lock yours.',
+  'send_mode.reminder':
+    'Send your link now. Copy alone never locks. Sharing can add time.',
+  'send_mode.more': 'More ways to send',
+  'send_mode.less': 'Hide extra options',
+
+  // After first friend locks the link
+  'post_share.title': "You're in — a friend joined!",
+  'post_share.sub':
+    'Challenge another friend, or save your rank card.',
+  'post_share.cta_challenge': 'Challenge a friend',
+  'post_share.cta_receipt': 'Get my rank card',
+  'post_share.prize_nudge':
+    '#1 can put their website on our home page. Keep sending to climb!',
+  'post_share.toast': "You're locked in! Challenge someone or grab your rank card.",
 } as const;
 
 export type MessageKey = keyof typeof en;
@@ -255,21 +312,6 @@ const es = dict({
     'Soy tu coach — pregunta por el enlace, copiar, compartir o el destacado en la web.',
   'share.default':
     'Estoy en el ranking mundial en vivo de ViralRefer 🏆 Gratis · sin registro · ~30 seg. El #1 puede reclamar un destacado. ¿Me ganas? {link}',
-  'deadline.badge': 'Regla de compartir en 24 horas',
-  'deadline.time_left': 'Tiempo restante',
-  'deadline.pre_rule':
-    'Comparte en una plataforma real en 24 horas o se elimina tu enlace — copiar solo no cuenta.',
-  'deadline.pending':
-    'Comparte este enlace en 24 horas o se elimina del sistema (copiar solo no cuenta).',
-  'deadline.urgent':
-    'Date prisa — quedan menos de 4 horas. Comparte ya en WhatsApp, X, SMS u otra plataforma real, o se elimina tu enlace.',
-  'deadline.expired':
-    'Enlace caducado — no se compartió en 24 horas. Obtén uno nuevo y compártelo para volver.',
-  'deadline.countdown_expired': 'Caducado',
-  'deadline.toast_removed':
-    'Enlace eliminado — no compartiste en 24 horas. Obtén uno nuevo y compártelo para seguir en el sistema.',
-  'deadline.how_note':
-    'Copiar no basta: comparte en una plataforma real en 24 horas o se elimina tu enlace.',
 });
 
 const fr = dict({
@@ -329,21 +371,6 @@ const fr = dict({
   'footer.privacy': 'Confidentialité',
   'footer.terms': 'Conditions',
   'lang.hint': 'Langue de la page',
-  'deadline.badge': 'Règle de partage 24 h',
-  'deadline.time_left': 'Temps restant',
-  'deadline.pre_rule':
-    'Partagez sur une vraie plateforme sous 24 h ou votre lien est retiré — copier seul ne compte pas.',
-  'deadline.pending':
-    'Partagez ce lien sous 24 h ou il est retiré du système (copier seul ne compte pas).',
-  'deadline.urgent':
-    'Dépêchez-vous — moins de 4 h. Partagez maintenant sur WhatsApp, X, SMS ou une autre vraie plateforme, sinon le lien est retiré.',
-  'deadline.expired':
-    'Lien expiré — non partagé sous 24 h. Obtenez un nouveau lien et partagez-le pour revenir.',
-  'deadline.countdown_expired': 'Expiré',
-  'deadline.toast_removed':
-    'Lien retiré — vous n’avez pas partagé sous 24 h. Obtenez un nouveau lien et partagez-le pour rester dans le système.',
-  'deadline.how_note':
-    'Copier ne suffit pas : partagez sur une vraie plateforme sous 24 h ou le lien est retiré.',
 });
 
 const pt = dict({
@@ -403,21 +430,6 @@ const pt = dict({
   'footer.privacy': 'Privacidade',
   'footer.terms': 'Termos',
   'lang.hint': 'Idioma da página',
-  'deadline.badge': 'Regra de compartilhar em 24 horas',
-  'deadline.time_left': 'Tempo restante',
-  'deadline.pre_rule':
-    'Compartilhe em uma plataforma real em 24 horas ou seu link é removido — só copiar não conta.',
-  'deadline.pending':
-    'Compartilhe este link em 24 horas ou ele é removido do sistema (só copiar não conta).',
-  'deadline.urgent':
-    'Rápido — menos de 4 horas. Compartilhe agora no WhatsApp, X, SMS ou outra plataforma real, ou o link é removido.',
-  'deadline.expired':
-    'Link expirado — não compartilhado em 24 horas. Pegue um novo e compartilhe para voltar.',
-  'deadline.countdown_expired': 'Expirado',
-  'deadline.toast_removed':
-    'Link removido — você não compartilhou em 24 horas. Pegue um novo e compartilhe para continuar no sistema.',
-  'deadline.how_note':
-    'Só copiar não basta: compartilhe em uma plataforma real em 24 horas ou o link é removido.',
 });
 
 const de = dict({
@@ -477,21 +489,6 @@ const de = dict({
   'footer.privacy': 'Datenschutz',
   'footer.terms': 'Bedingungen',
   'lang.hint': 'Seitensprache',
-  'deadline.badge': '24-Stunden-Teilen-Regel',
-  'deadline.time_left': 'Verbleibende Zeit',
-  'deadline.pre_rule':
-    'Teile innerhalb von 24 Stunden auf einer echten Plattform — sonst wird dein Link entfernt (nur Kopieren zählt nicht).',
-  'deadline.pending':
-    'Teile diesen Link innerhalb von 24 Stunden, sonst wird er aus dem System entfernt (nur Kopieren zählt nicht).',
-  'deadline.urgent':
-    'Beeil dich — unter 4 Stunden. Jetzt auf WhatsApp, X, SMS oder einer anderen echten Plattform teilen, sonst wird der Link entfernt.',
-  'deadline.expired':
-    'Link abgelaufen — nicht innerhalb von 24 Stunden geteilt. Hol einen neuen Link und teile ihn, um wieder dabei zu sein.',
-  'deadline.countdown_expired': 'Abgelaufen',
-  'deadline.toast_removed':
-    'Link entfernt — du hast nicht innerhalb von 24 Stunden geteilt. Hol einen neuen Link und teile ihn, um im System zu bleiben.',
-  'deadline.how_note':
-    'Kopieren reicht nicht: teile innerhalb von 24 Stunden auf einer echten Plattform, sonst wird der Link entfernt.',
 });
 // fix German coach (avoid bad paste)
 de['funnel.coach'] = 'Tippe auf Meinen Empfehlungslink holen, um zu starten.';
@@ -553,21 +550,6 @@ const hi = dict({
   'footer.privacy': 'गोपनीयता',
   'footer.terms': 'शर्तें',
   'lang.hint': 'पेज की भाषा',
-  'deadline.badge': '24 घंटे शेयर नियम',
-  'deadline.time_left': 'बचा समय',
-  'deadline.pre_rule':
-    '24 घंटे में असली प्लेटफ़ॉर्म पर शेयर करें वरना लिंक हट जाएगा — सिर्फ़ कॉपी गिना नहीं जाता।',
-  'deadline.pending':
-    'इस लिंक को 24 घंटे में शेयर करें वरना सिस्टम से हट जाएगा (सिर्फ़ कॉपी गिना नहीं जाता)।',
-  'deadline.urgent':
-    'जल्दी करें — 4 घंटे से कम बचे हैं। अभी WhatsApp, X, SMS या किसी असली प्लेटफ़ॉर्म पर शेयर करें, वरना लिंक हट जाएगा।',
-  'deadline.expired':
-    'लिंक समाप्त — 24 घंटे में शेयर नहीं हुआ। नया लिंक लें और फिर से जुड़ने के लिए शेयर करें।',
-  'deadline.countdown_expired': 'समाप्त',
-  'deadline.toast_removed':
-    'लिंक हटा दिया गया — आपने 24 घंटे में शेयर नहीं किया। सिस्टम में रहने के लिए नया लिंक लें और शेयर करें।',
-  'deadline.how_note':
-    'सिर्फ़ कॉपी काफ़ी नहीं: 24 घंटे में असली प्लेटफ़ॉर्म पर शेयर करें वरना लिंक हट जाएगा।',
 });
 
 // Correct German coach string (must not contain CJK)

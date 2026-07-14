@@ -236,6 +236,273 @@ h3 { font-size: 1.35rem; }
 }
 
 /* Live countdown sits at share step — always urgent feel when pending */
+/* Post-share return loop — show receipt + duel even under growth-hub quiet mode */
+html[data-vr-post-share-return] #rank-receipt-cta,
+html[data-vr-share-locked] #rank-receipt-cta {
+  display: block !important;
+}
+html[data-vr-post-share-return] #duel-invite-strip,
+html[data-vr-share-locked] #duel-invite-strip {
+  display: block !important;
+}
+html[data-vr-post-share-return] #post-share-return-hub {
+  display: block;
+}
+html[data-vr-share-locked] #share-first-strip .share-first-primary-btn,
+html[data-vr-share-locked] #share-first-strip .share-first-alt-btn {
+  opacity: 0.85;
+}
+.post-share-return-hub {
+  animation: share-first-in 0.35s ease-out;
+}
+
+/* Still-pending chip after dismiss confirm */
+.share-still-pending-chip {
+  animation: share-first-pulse-anim 1.4s ease-in-out infinite;
+}
+.share-still-pending-chip.hidden {
+  display: none !important;
+}
+html[data-vr-confirm-dismissed] #share-deadline-banner {
+  border-color: rgba(251, 191, 36, 0.65);
+}
+
+/* Prize FOMO on cold land */
+#hero-prize-fomo {
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
+html[data-vr-has-link] #hero-prize-fomo {
+  opacity: 0.9;
+}
+
+/* Confirm real send after intent open */
+.share-confirm-banner {
+  pointer-events: none;
+}
+.share-confirm-banner.hidden {
+  display: none !important;
+}
+.share-confirm-banner__card {
+  pointer-events: auto;
+  animation: share-confirm-up 0.28s ease-out;
+}
+@keyframes share-confirm-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Deadline truth — locked (verified share) vs pending */
+#share-deadline-banner.share-deadline-banner--locked {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.18), rgba(139, 92, 246, 0.1));
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.12);
+}
+#share-deadline-banner.share-deadline-banner--locked .share-deadline-banner__icon {
+  background: rgba(16, 185, 129, 0.25);
+  color: #a7f3d0;
+}
+#share-deadline-banner.share-deadline-banner--locked #share-deadline-countdown {
+  color: #6ee7b7;
+}
+.share-deadline-status-pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.15);
+}
+.share-deadline-status-pill[data-status='locked'] {
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.15);
+}
+
+/* Share-first strip — primary send path after get-link */
+.share-first-strip {
+  animation: share-first-in 0.35s ease-out;
+}
+@keyframes share-first-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.share-first-pulse {
+  animation: share-first-pulse-anim 1.2s ease-in-out 2;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45);
+}
+@keyframes share-first-pulse-anim {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.35); }
+  50% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
+}
+#share-first-status[data-status='pending'] {
+  color: #fde68a;
+}
+#share-first-status[data-status='locked'] {
+  color: #6ee7b7;
+}
+html[data-vr-share-pending] #share-first-strip {
+  border-color: rgba(251, 191, 36, 0.4);
+}
+html[data-vr-share-locked] #share-first-strip {
+  border-color: rgba(52, 211, 153, 0.4);
+}
+/* While share still pending, de-emphasize platform grid until "More" */
+html[data-vr-share-pending]:not([data-vr-slim-share-expanded]) #share-buttons-panel {
+  opacity: 0.55;
+}
+html[data-vr-share-pending]:not([data-vr-slim-share-expanded]) #share-buttons-panel:focus-within,
+html[data-vr-share-pending][data-vr-slim-share-expanded] #share-buttons-panel {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SEND MODE — post–get-link: one job = send to a friend now
+   Less chrome, one giant primary. Main get-link → share fix.
+   ═══════════════════════════════════════════════════════════ */
+html[data-vr-send-mode] #share-first-strip.share-first-strip--send-mode {
+  border-color: rgba(52, 211, 153, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(52, 211, 153, 0.2),
+    0 12px 40px rgba(16, 185, 129, 0.12);
+  position: relative;
+  z-index: 5;
+}
+
+html[data-vr-send-mode] #share-first-strip .share-first-primary-btn {
+  min-height: 56px;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+
+/* Hide multi-platform grid + tools until they leave send mode (or lock) */
+html[data-vr-send-mode] #share-buttons-panel,
+html[data-vr-send-mode] #share-tools-row,
+html[data-vr-send-mode] #share-ab-wrap,
+html[data-vr-send-mode] #share-preview-wrap,
+html[data-vr-send-mode] #referral-qr-block,
+html[data-vr-send-mode] #share-power-block > div:has(#share-link-heading),
+html[data-vr-send-mode] [data-vr-slim-share-meta],
+html[data-vr-send-mode] #distance-glory-meter,
+html[data-vr-send-mode] #growth-command-center,
+html[data-vr-send-mode] #my-stats,
+html[data-vr-send-mode] #funnel-journey,
+html[data-vr-send-mode] #how,
+html[data-vr-send-mode] #prize,
+html[data-vr-send-mode] #copy-message-btn,
+html[data-vr-send-mode] #new-code-button,
+html[data-vr-send-mode] #share-more-options-btn,
+html[data-vr-send-mode] button[onclick="showQRModal()"] {
+  display: none !important;
+}
+
+/* De-emphasize clipboard path — copy alone never locks */
+html[data-vr-send-mode] #copy-link-btn {
+  opacity: 0.55;
+  transform: scale(0.92);
+  transform-origin: right center;
+}
+html[data-vr-send-mode] #copy-link-btn span {
+  font-size: 0.7rem;
+}
+
+/* Next-step hint stays loud and green */
+html[data-vr-send-mode] #referral-next-step {
+  display: block !important;
+  color: #6ee7b7;
+  font-weight: 600;
+}
+
+/* Sticky mobile send bar — always on thumb */
+.mobile-send-cta:not(.hidden) {
+  display: block;
+}
+body.has-mobile-send-cta {
+  padding-bottom: 6.25rem;
+}
+body.has-mobile-send-cta #mobile-referral-cta,
+body.has-mobile-send-cta #distance-glory-sticky {
+  display: none !important;
+}
+body.has-mobile-send-cta .funnel-coach-chat {
+  bottom: 5.75rem;
+}
+body.has-mobile-send-cta #toast-container {
+  bottom: 5.5rem;
+}
+@media (min-width: 768px) {
+  /* Desktop: sticky less critical; still show strip primary */
+  .mobile-send-cta {
+    display: none !important;
+  }
+  body.has-mobile-send-cta {
+    padding-bottom: 0;
+  }
+}
+
+/* Deadline banner stays — urgency helps conversion */
+html[data-vr-send-mode] #share-deadline-banner:not(.hidden) {
+  margin-bottom: 0.75rem;
+}
+
+/* Soft-hide coach noise during send focus (can still open via restore) */
+html[data-vr-send-mode] #funnel-coach-chat .funnel-coach-chat-panel {
+  max-height: 40vh;
+}
+
+/* Cold-land declutter — one job: Get link */
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-global-regions,
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-board-meta,
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-campaign-badge {
+  display: none !important;
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-btn {
+  opacity: 0.65;
+  font-size: 0.8rem;
+  min-height: 32px;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-link {
+  display: none !important;
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-nav-link {
+  display: none !important;
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) #admin-btn {
+  opacity: 0.55;
+  transform: scale(0.92);
+  transform-origin: right center;
+}
+
+/* Referred micro-flow — credit path only until Get link */
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-global-regions,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-global-proof,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-leaderboard-btn,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-leaderboard-link,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-expand-wrap,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #how,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #prize,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #leaderboard,
+html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link {
+  display: none !important;
+}
+html[data-vr-referred-micro]:not([data-vr-has-link]) #attribution-banner {
+  border-color: rgba(52, 211, 153, 0.45);
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.15);
+}
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-get-link-btn,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #attribution-get-link-btn {
+  animation: hero-get-link-soft 2s ease-in-out infinite;
+}
+@keyframes hero-get-link-soft {
+  0%, 100% { box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35); }
+  50% { box-shadow: 0 8px 40px rgba(16, 185, 129, 0.45); }
+}
+
 #share-deadline-banner.share-deadline-banner--pending {
   border-color: rgba(251, 191, 36, 0.55);
   background: linear-gradient(90deg, rgba(245, 158, 11, 0.16), rgba(244, 63, 94, 0.08));

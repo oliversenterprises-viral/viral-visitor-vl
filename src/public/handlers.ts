@@ -10,7 +10,6 @@ import { supabase } from '../lib/supabase';
 import { showToast } from '../ui';
 import { recordShareEvent } from '../lib/record-share';
 import { trackVisitorFunnel } from '../lib/visitor-tracking';
-import { onFunnelShareComplete } from '../lib/funnel-guide';
 import {
   buildShareMessage,
   buildPlatformShareUrl,
@@ -77,16 +76,30 @@ function clipboardShareToast(platform: SharePlatform): string {
   return 'Message copied — paste anywhere';
 }
 
-function logShare(platform: string, code: string, link: string): void {
+function logShare(
+  platform: string,
+  code: string,
+  link: string,
+  options: { confirmLock?: boolean } = {},
+): void {
   const abVariant = resolveShareAbVariant(code);
-  recordShareEvent({ platform, referrer_code: code, referral_link: link, ab_variant: abVariant });
-  trackVisitorFunnel('ShareReferral', { platform });
-  incrementShareStreak();
-  refreshShareStreakUI();
-  onShareReminderCompleted();
-  celebrateShareIfFirst();
-  onViralLoopShare();
-  nudgeReceiptAfterShare();
+  recordShareEvent(
+    { platform, referrer_code: code, referral_link: link, ab_variant: abVariant },
+    { confirmLock: options.confirmLock === true },
+  );
+  // Funnel analytics still fire; lock only happens when confirmLock is set
+  trackVisitorFunnel('ShareReferral', {
+    platform,
+    confirmed: options.confirmLock === true ? '1' : '0',
+  });
+  if (options.confirmLock) {
+    incrementShareStreak();
+    refreshShareStreakUI();
+    onShareReminderCompleted();
+    celebrateShareIfFirst();
+    onViralLoopShare();
+    nudgeReceiptAfterShare();
+  }
 }
 
 async function copyTextToClipboard(text: string, successToast: string): Promise<boolean> {
@@ -122,20 +135,37 @@ export const shareTo = (platform: string) => {
     const sharePlatform = platform as SharePlatform;
     const trackedLink = buildTrackedShareLink(ctx.link, sharePlatform);
     const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions(sharePlatform, ctx.link));
+    const abVariant = resolveShareAbVariant(ctx.code);
 
     const url = buildPlatformShareUrl(sharePlatform, trackedLink, text);
     if (url) {
+      // Intent open ≠ sent. Track first, then open (measure away-time).
+      const { trackShareAwaitingConfirm } = await import('../lib/share-confirm');
+      trackShareAwaitingConfirm({
+        platform,
+        referrer_code: ctx.code,
+        referral_link: trackedLink,
+        ab_variant: abVariant,
+        sheetSettled: true,
+      });
       openShareIntent(url);
-    } else if (shouldCopyShareMessage(sharePlatform)) {
-      const copied = await copyTextToClipboard(text, clipboardShareToast(sharePlatform));
-      if (!copied) showToast('Copy failed — try Copy full message', 'info');
-    } else {
-      const copied = await copyTextToClipboard(ctx.link, 'Link copied for sharing');
-      if (!copied) showToast('Copy failed — try the COPY button', 'info');
+      logShare(platform, ctx.code, trackedLink, { confirmLock: false });
+      showToast('Send your link in the app — come back; confirm unlocks after a short wait', 'info');
+      return;
     }
 
-    logShare(platform, ctx.code, trackedLink);
-    onFunnelShareComplete();
+    if (shouldCopyShareMessage(sharePlatform)) {
+      const copied = await copyTextToClipboard(text, clipboardShareToast(sharePlatform));
+      if (!copied) showToast('Copy failed — try Copy full message', 'info');
+      // Clipboard alone never locks
+      logShare(platform, ctx.code, trackedLink, { confirmLock: false });
+      showToast('Message copied — paste & send in the app (copy alone does not lock)', 'info');
+      return;
+    }
+
+    const copied = await copyTextToClipboard(ctx.link, 'Link copied for sharing');
+    if (!copied) showToast('Copy failed — try the COPY button', 'info');
+    logShare(platform, ctx.code, trackedLink, { confirmLock: false });
   })();
 };
 registerGlobal('shareTo', shareTo);
@@ -148,11 +178,19 @@ export const boostShareWhatsApp = () => {
 
     const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions('boost', ctx.link));
     const tracked = buildTrackedShareLink(ctx.link, 'boost');
+    const abVariant = resolveShareAbVariant(ctx.code);
     const url = buildPlatformShareUrl('whatsapp', tracked, text);
+    const { trackShareAwaitingConfirm } = await import('../lib/share-confirm');
+    trackShareAwaitingConfirm({
+      platform: 'boost-whatsapp',
+      referrer_code: ctx.code,
+      referral_link: tracked,
+      ab_variant: abVariant,
+      sheetSettled: true,
+    });
     if (url) openShareIntent(url);
-    showToast('Opening WhatsApp — send to friends & groups', 'success');
-    logShare('boost-whatsapp', ctx.code, tracked);
-    onFunnelShareComplete();
+    logShare('boost-whatsapp', ctx.code, tracked, { confirmLock: false });
+    showToast('Send in WhatsApp — return here; confirm unlocks after you come back', 'info');
   })();
 };
 registerGlobal('boostShareWhatsApp', boostShareWhatsApp);
@@ -165,21 +203,54 @@ export const boostDuelShareWhatsApp = () => {
 
     const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions('boost', ctx.link));
     const tracked = buildTrackedShareLink(ctx.link, 'boost');
+    const abVariant = resolveShareAbVariant(ctx.code);
     const url = buildPlatformShareUrl('whatsapp', tracked, text);
+    const { trackShareAwaitingConfirm } = await import('../lib/share-confirm');
+    trackShareAwaitingConfirm({
+      platform: 'boost-whatsapp',
+      referrer_code: ctx.code,
+      referral_link: tracked,
+      ab_variant: abVariant,
+      sheetSettled: true,
+    });
     if (url) openShareIntent(url);
-    showToast('Challenge ready — send to friends who want to beat you', 'success');
-    logShare('boost-whatsapp', ctx.code, tracked);
+    logShare('boost-whatsapp', ctx.code, tracked, { confirmLock: false });
     trackDuelInviteShared('whatsapp');
-    onFunnelShareComplete();
+    showToast('Challenge opened — send it, return here to confirm later', 'info');
   })();
 };
 registerGlobal('boostDuelShareWhatsApp', boostDuelShareWhatsApp);
 
-/** One-tap native share sheet (mobile + supported desktop browsers). */
+/**
+ * One-tap native share sheet.
+ *
+ * Never auto-lock. Never show confirm as soon as the sheet opens.
+ * Start tracking BEFORE share() so away-time can be measured; after settle,
+ * user must return + wait before "Yes, I sent it" unlocks.
+ */
 export const nativeShare = () => {
   void (async () => {
     if (!isNativeShareSupported()) {
-      showToast('Native share not available — pick a platform below', 'info');
+      // Never dead-end in send mode (platform grid is collapsed) — use SMS/WhatsApp primary
+      showToast('Opening best send option for this device…', 'info');
+      try {
+        const { invokeShareFirstPrimary } = await import('../lib/share-first-ui');
+        invokeShareFirstPrimary();
+        return;
+      } catch {
+        /* fall through to direct channel */
+      }
+      const sms = document.getElementById('share-first-sms');
+      const wa = document.getElementById('share-first-whatsapp');
+      if (sms && !sms.classList.contains('hidden')) {
+        sms.click();
+        return;
+      }
+      if (wa && !wa.classList.contains('hidden')) {
+        wa.click();
+        return;
+      }
+      shareTo('sms');
       return;
     }
 
@@ -188,6 +259,21 @@ export const nativeShare = () => {
 
     const tracked = buildTrackedShareLink(ctx.link, 'native');
     const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions('native', ctx.link));
+    const abVariant = resolveShareAbVariant(ctx.code);
+
+    const { trackShareAwaitingConfirm, markShareSheetSettled } = await import(
+      '../lib/share-confirm'
+    );
+
+    // Start clock BEFORE sheet opens (do not show confirm yet)
+    trackShareAwaitingConfirm({
+      platform: 'native',
+      referrer_code: ctx.code,
+      referral_link: tracked,
+      ab_variant: abVariant,
+      sheetSettled: false,
+    });
+    showToast('Send your link in the share sheet — come back to confirm (not instant)', 'info');
 
     try {
       await navigator.share({
@@ -195,12 +281,42 @@ export const nativeShare = () => {
         text,
         url: tracked,
       });
-      showToast('Shared — thanks for spreading the word!', 'success');
-      logShare('native', ctx.code, tracked);
-      onFunnelShareComplete();
+      // Settled ≠ sent. Analytics only; confirm stays gated.
+      logShare('native', ctx.code, tracked, { confirmLock: false });
+      markShareSheetSettled();
+      showToast(
+        'If you sent it, return here and wait — confirm unlocks after a real send pause',
+        'info',
+      );
     } catch (err) {
-      if ((err as Error)?.name === 'AbortError') return;
-      showToast('Could not open share sheet — try a platform button', 'info');
+      markShareSheetSettled();
+      const name = (err as Error)?.name || '';
+      const msg = String((err as Error)?.message || '').toLowerCase();
+      if (
+        name === 'AbortError' ||
+        name === 'NotAllowedError' ||
+        msg.includes('abort') ||
+        msg.includes('cancel') ||
+        msg.includes('denied')
+      ) {
+        showToast('Share cancelled — still pending until you send your link', 'info');
+        return;
+      }
+      // Expand secondary send options + fall through to SMS/WhatsApp (one only)
+      document.documentElement.setAttribute('data-vr-send-more', '1');
+      void import('../lib/send-mode')
+        .then((m) => m.polishShareFirstForSendMode())
+        .catch(() => {});
+      showToast('Share sheet failed — try SMS or WhatsApp', 'info');
+      const sms = document.getElementById('share-first-sms');
+      const wa = document.getElementById('share-first-whatsapp');
+      if (sms && !sms.classList.contains('hidden')) {
+        sms.click();
+      } else if (wa && !wa.classList.contains('hidden')) {
+        wa.click();
+      } else {
+        shareTo('whatsapp');
+      }
     }
   })();
 };
@@ -217,7 +333,9 @@ export const copyShareMessage = () => {
     try {
       await navigator.clipboard.writeText(text);
       showToast('Full message copied — paste anywhere', 'success');
-      logShare('copy-message', ctx.code, buildTrackedShareLink(ctx.link, 'copy'));
+      logShare('copy-message', ctx.code, buildTrackedShareLink(ctx.link, 'copy'), {
+        confirmLock: false,
+      });
     } catch {
       showToast('Copy failed — try the COPY link button', 'info');
     }
@@ -232,7 +350,7 @@ export const copyShortCode = () => {
     if (!ctx) return;
     const code = extractReferralCodeFromLink(ctx.link) || ctx.code;
     const copied = await copyTextToClipboard(code, `Code ${code} copied`);
-    if (copied) logShare('copy-code', ctx.code, ctx.link);
+    if (copied) logShare('copy-code', ctx.code, ctx.link, { confirmLock: false });
   })();
 };
 registerGlobal('copyShortCode', copyShortCode);
@@ -244,7 +362,7 @@ export const copyEmbedCode = () => {
     if (!ctx) return;
     const embed = buildEmbedCode(ctx.link);
     const copied = await copyTextToClipboard(embed, 'Embed code copied — paste into your site');
-    if (copied) logShare('embed', ctx.code, ctx.link);
+    if (copied) logShare('embed', ctx.code, ctx.link, { confirmLock: false });
   })();
 };
 registerGlobal('copyEmbedCode', copyEmbedCode);
@@ -260,7 +378,9 @@ export const copyMarkdownShare = () => {
       leaderboardRank: opts.leaderboardRank,
     });
     const copied = await copyTextToClipboard(md, 'Markdown copied — paste on Reddit, GitHub, Notion');
-    if (copied) logShare('markdown', ctx.code, buildTrackedShareLink(ctx.link, 'copy'));
+    if (copied) logShare('markdown', ctx.code, buildTrackedShareLink(ctx.link, 'copy'), {
+      confirmLock: false,
+    });
   })();
 };
 registerGlobal('copyMarkdownShare', copyMarkdownShare);
@@ -298,8 +418,8 @@ export const generateXShareImage = () => {
       'Live referral leaderboard on ViralRefer 🏆 Free · no signup · #1 can claim a homepage feature. Can you beat me? (See image for my link)';
     openShareIntent(`https://x.com/intent/tweet?text=${encodeURIComponent(safeXText)}`);
 
-    showToast('Share image downloaded — attach it to your X post', 'success');
-    logShare('x-image', ctx.code, ctx.link);
+    showToast('Share image downloaded — attach it to your X post (does not lock link yet)', 'info');
+    logShare('x-image', ctx.code, ctx.link, { confirmLock: false });
   })();
 };
 registerGlobal('generateXShareImage', generateXShareImage);
@@ -315,8 +435,8 @@ export const generateStoryShareImage = () => {
       return;
     }
 
-    await copyTextToClipboard(ctx.link, 'Story image saved + link copied for your caption');
-    logShare('story-image', ctx.code, ctx.link);
+    await copyTextToClipboard(ctx.link, 'Story image saved + link copied (copy does not lock link)');
+    logShare('story-image', ctx.code, ctx.link, { confirmLock: false });
   })();
 };
 registerGlobal('generateStoryShareImage', generateStoryShareImage);
@@ -338,7 +458,9 @@ export const downloadSharePack = () => {
             : 'Share pack downloaded — square + story images',
           'success',
         );
-        logShare(isWinner ? 'winner-pack' : 'share-pack', ctx.code, ctx.link);
+        logShare(isWinner ? 'winner-pack' : 'share-pack', ctx.code, ctx.link, {
+          confirmLock: false,
+        });
       } else {
         showToast('Could not create full share pack — try individual buttons', 'info');
       }

@@ -36,6 +36,11 @@ function getBanner(): HTMLElement | null {
 }
 
 function scrollToCopy(): void {
+  // Send-mode: copy is secondary — push primary send instead
+  if (document.documentElement.getAttribute('data-vr-send-mode') === '1') {
+    scrollToShare();
+    return;
+  }
   document.getElementById('copy-link-btn')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   document.getElementById('copy-link-btn')?.classList.add('copy-link-pulse');
   window.setTimeout(() => {
@@ -43,14 +48,32 @@ function scrollToCopy(): void {
   }, 2800);
 }
 
+/** Scroll / pulse the live send path (share-first / sticky), never the hidden platform grid. */
 function scrollToShare(): void {
-  document
-    .getElementById('share-buttons-panel')
-    ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  document.getElementById('share-whatsapp-primary')?.classList.add('share-primary-pulse');
+  const primary =
+    document.getElementById('native-share-btn') ||
+    document.getElementById('share-first-sms') ||
+    document.getElementById('share-first-whatsapp') ||
+    document.getElementById('share-first-strip') ||
+    document.getElementById('mobile-send-cta-btn') ||
+    document.getElementById('share-whatsapp-primary') ||
+    document.getElementById('share-buttons-panel');
+  primary?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  primary?.classList.add('share-primary-pulse', 'share-first-pulse');
   window.setTimeout(() => {
-    document.getElementById('share-whatsapp-primary')?.classList.remove('share-primary-pulse');
+    primary?.classList.remove('share-primary-pulse', 'share-first-pulse');
   }, 3200);
+}
+
+function invokePrimarySend(): void {
+  const g = window as unknown as { invokeShareFirstPrimary?: () => void };
+  if (typeof g.invokeShareFirstPrimary === 'function') {
+    g.invokeShareFirstPrimary();
+    return;
+  }
+  void import('./share-first-ui')
+    .then((m) => m.invokeShareFirstPrimary())
+    .catch(() => scrollToShare());
 }
 
 function showBanner(): void {
@@ -122,11 +145,13 @@ function wireBannerActions(): void {
     hideBanner();
   });
 
-  document.getElementById('share-reminder-action')?.addEventListener('click', () => {
+  document.getElementById('share-reminder-action')?.addEventListener('click', (e) => {
+    e.preventDefault();
     dismissShareReminder();
     hideBanner();
-    if (hasLinkBeenCopied()) {
-      scrollToShare();
+    // Always open the real send path (copy alone never finishes the job)
+    if (document.documentElement.hasAttribute('data-vr-has-link')) {
+      invokePrimarySend();
     } else {
       scrollToCopy();
     }

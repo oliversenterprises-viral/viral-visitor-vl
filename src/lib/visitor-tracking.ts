@@ -66,6 +66,7 @@ export type ViralLoopEvent =
   | 'ChallengeDuelShared'
   | 'ReceiptGenerated'
   | 'ReceiptShared'
+  | 'PostShareReturn'
   | 'AnxietyBarShown'
   | 'AnxietyBarAction'
   | 'AnxietyNotification'
@@ -80,6 +81,7 @@ export const VIRAL_LOOP_EVENT_ORDER: ViralLoopEvent[] = [
   'ChallengeDuelShared',
   'ReceiptGenerated',
   'ReceiptShared',
+  'PostShareReturn',
   'AnxietyBarShown',
   'AnxietyBarAction',
   'AnxietyNotification',

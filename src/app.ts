@@ -329,6 +329,11 @@ export async function loadSiteContent() {
       /* non-fatal */
     }
 
+    // i18n rewrites data-i18n nodes — re-assert referred micro-flow copy last
+    if (isReferredLanding()) {
+      applyReferredLandingOverrides();
+    }
+
     const guideStep = document.documentElement.getAttribute('data-vr-funnel-guide-step');
     if (guideStep && !document.documentElement.hasAttribute('data-vr-funnel-complete')) {
       syncFunnelGuide(Number(guideStep) as FunnelStep);

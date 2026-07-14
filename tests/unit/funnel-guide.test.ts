@@ -8,6 +8,7 @@ function funnelGuideFixture(): void {
     <button id="hero-get-link-btn"></button>
     <button id="attribution-get-link-btn"></button>
     <button id="copy-link-btn"></button>
+    <div id="share-first-strip" class="share-first-strip"></div>
     <button id="share-whatsapp-primary"></button>
     <div id="funnel-steps">
       <span data-funnel-step="1" class="funnel-step funnel-step-active"></span>
@@ -55,7 +56,8 @@ describe('funnel-guide DOM sync', () => {
   it('setFunnelStep wires guide through funnel-conversion', () => {
     setFunnelStep(3);
     expect(document.documentElement.getAttribute('data-vr-funnel-guide-step')).toBe('3');
-    expect(document.getElementById('share-whatsapp-primary')?.classList.contains('funnel-guide-target-ring')).toBe(
+    // Step 3 targets share-first strip (primary send path), not the platform grid
+    expect(document.getElementById('share-first-strip')?.classList.contains('funnel-guide-target-ring')).toBe(
       true,
     );
   });

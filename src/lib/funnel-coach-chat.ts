@@ -54,8 +54,24 @@ function runCoachAction(kind: CoachChatAction['kind']): void {
       document.getElementById('copy-link-btn')?.click();
       break;
     case 'share': {
-      document.getElementById('share-whatsapp-primary')?.click();
-      document.getElementById('share-buttons-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Prefer share-first / send-mode primary (platform grid is hidden in send mode)
+      document.getElementById('share-first-strip')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+      const g = window as unknown as { invokeShareFirstPrimary?: () => void };
+      if (typeof g.invokeShareFirstPrimary === 'function') {
+        g.invokeShareFirstPrimary();
+        break;
+      }
+      void import('./share-first-ui')
+        .then((m) => m.invokeShareFirstPrimary())
+        .catch(() => {
+          const wa =
+            document.getElementById('share-first-whatsapp') ||
+            document.getElementById('share-whatsapp-primary');
+          wa?.click();
+        });
       break;
     }
     case 'leaderboard':

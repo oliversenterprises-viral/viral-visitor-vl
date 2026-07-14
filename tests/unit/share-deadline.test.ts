@@ -17,7 +17,7 @@ describe('share-deadline', () => {
     vi.setSystemTime(new Date('2026-07-11T12:00:00.000Z'));
   });
 
-  it('treats social platforms as verified, not clipboard', () => {
+  it('treats social platforms as verified, not clipboard or downloads', () => {
     expect(isVerifiedSharePlatform('whatsapp')).toBe(true);
     expect(isVerifiedSharePlatform('x')).toBe(true);
     expect(isVerifiedSharePlatform('twitter')).toBe(true);
@@ -26,6 +26,23 @@ describe('share-deadline', () => {
     expect(isVerifiedSharePlatform('copy')).toBe(false);
     expect(isVerifiedSharePlatform('copy-message')).toBe(false);
     expect(isVerifiedSharePlatform('embed')).toBe(false);
+    expect(isVerifiedSharePlatform('discord')).toBe(false);
+    expect(isVerifiedSharePlatform('tiktok')).toBe(false);
+    expect(isVerifiedSharePlatform('story-image')).toBe(false);
+    expect(isVerifiedSharePlatform('share-pack')).toBe(false);
+  });
+
+  it('classifies intent vs native for lock rules', async () => {
+    const { isIntentSharePlatform, isNativeSharePlatform } = await import(
+      '../../src/lib/share-deadline'
+    );
+    expect(isIntentSharePlatform('whatsapp')).toBe(true);
+    expect(isIntentSharePlatform('sms')).toBe(true);
+    expect(isIntentSharePlatform('boost-whatsapp')).toBe(true);
+    expect(isIntentSharePlatform('native')).toBe(false);
+    expect(isIntentSharePlatform('copy')).toBe(false);
+    expect(isNativeSharePlatform('native')).toBe(true);
+    expect(isNativeSharePlatform('whatsapp')).toBe(false);
   });
 
   it('formats countdown', () => {
@@ -33,7 +50,7 @@ describe('share-deadline', () => {
     expect(formatDeadlineCountdown(0)).toBe('0h 0m');
   });
 
-  it('tracks local pending → active on verified share', () => {
+  it('tracks local pending → active on first_referral lock only', () => {
     const created = new Date().toISOString();
     writeShareDeadlineState({
       code: 'VIRAL-TEST01',
@@ -44,8 +61,13 @@ describe('share-deadline', () => {
     expect(readShareDeadlineState()?.status).toBe('pending_share');
     markLocalVerifiedShare('copy');
     expect(readShareDeadlineState()?.status).toBe('pending_share');
-    markLocalVerifiedShare('whatsapp');
+    // Self-report platforms no longer auto-lock UI in product flow; first_referral does
+    markLocalVerifiedShare('first_referral');
     expect(readShareDeadlineState()?.status).toBe('active');
+  });
+
+  it('uses 48h base window', () => {
+    expect(SHARE_DEADLINE_MS).toBe(48 * 60 * 60 * 1000);
   });
 
   it('msUntilDeadline decreases with time', () => {
@@ -87,6 +109,28 @@ describe('share-deadline i18n keys', () => {
       'deadline.countdown_expired',
       'deadline.toast_removed',
       'deadline.how_note',
+      'deadline.locked',
+      'deadline.locked_badge',
+      'deadline.status_pending',
+      'deadline.status_locked',
+      'deadline.grace_extended',
+      'share_first.status_pending',
+      'share_first.status_locked',
+      'share_first.next_step',
+      'share_first.reminder',
+      'share_first.cta_native',
+      'share_first.cta_sms',
+      'share_first.cta_whatsapp',
+      'share_first.heading',
+      'share_first.sub',
+      'share_first.copy_only',
+      'share_first.fomo',
+      'post_share.title',
+      'post_share.sub',
+      'post_share.cta_challenge',
+      'post_share.cta_receipt',
+      'post_share.prize_nudge',
+      'post_share.toast',
     ] as const;
     for (const locale of SUPPORTED_LOCALES) {
       for (const key of keys) {

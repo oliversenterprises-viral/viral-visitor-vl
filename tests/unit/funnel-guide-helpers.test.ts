@@ -14,7 +14,7 @@ describe('funnel-guide-helpers', () => {
     );
     expect(resolveFunnelGuideTargetId(1)).toBe('hero-get-link-btn');
     expect(resolveFunnelGuideTargetId(2)).toBe('copy-link-btn');
-    expect(resolveFunnelGuideTargetId(3)).toBe('share-whatsapp-primary');
+    expect(resolveFunnelGuideTargetId(3)).toBe('share-first-strip');
   });
 
   it('funnelArrowState flows on active step boundary', () => {
@@ -26,9 +26,10 @@ describe('funnel-guide-helpers', () => {
 
   it('getFunnelGuideCopy returns step-specific coach text', () => {
     expect(getFunnelGuideCopy(1).message).toMatch(/Step 1/i);
-    expect(getFunnelGuideCopy(2).message).toMatch(/COPY/i);
-    expect(getFunnelGuideCopy(3).message).toMatch(/WhatsApp/i);
+    expect(getFunnelGuideCopy(2).message).toMatch(/link is ready|copy/i);
+    expect(getFunnelGuideCopy(3).message).toMatch(/friend|lock|share/i);
     expect(getFunnelShareCompleteCopy().icon).toBe('check');
+    expect(getFunnelShareCompleteCopy().message).toMatch(/friend|lock/i);
   });
 
   it('funnelGuideIconClass maps icon names', () => {

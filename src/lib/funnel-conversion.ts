@@ -47,38 +47,47 @@ function wireExpandToggle(): void {
 
 function tuneHeroForReferred(ref: string): void {
   const line1 = document.getElementById('hero-title-line1');
-  if (line1) line1.textContent = 'One tap credits your visit.';
+  if (line1) line1.textContent = 'One tap so they get credit.';
 
   const subtitle = document.getElementById('hero-subtitle');
   if (subtitle) {
     subtitle.textContent =
-      `You landed via ${ref} — that alone does not count. Tap Get my link (Step 1), then copy and share to join the same contest.`;
+      `You opened ${ref}'s invite. Visiting alone does not count — tap Get my link once, then send yours to play.`;
   }
 
   const badge = document.getElementById('hero-badge');
-  if (badge) badge.textContent = 'REFERRED VISITOR • STEP 1 REQUIRED';
+  if (badge) badge.textContent = 'REFERRED • TAP GET LINK';
 
   const trust = document.getElementById('hero-trust-line');
   if (trust) {
     trust.innerHTML =
-      '<strong class="text-amber-300">Visiting alone does not credit them.</strong> Tap the button below to count as a real referral.';
+      '<strong class="text-amber-300">Just visiting does not credit them.</strong> Tap <strong class="text-white">Get my link</strong> below — ~5 seconds.';
   }
+
+  // Micro-flow: hide secondary hero CTAs noise
+  const secondary = document.getElementById('hero-leaderboard-btn');
+  if (secondary) secondary.classList.add('opacity-70');
 }
 
 function tuneAttributionBanner(ref: string): void {
   const headline = document.getElementById('referrer-invite-headline');
   if (headline) {
-    headline.textContent = 'Step 1 required — tap Get my link to credit this visit';
+    headline.textContent = `Tap once to credit ${ref} — then you play too`;
   }
 
   const hint = document.getElementById('referrer-invite-hint');
   if (hint) {
-    hint.textContent = `Only counts for ${ref} after you generate YOUR link (same contest, ~30 sec).`;
+    hint.textContent = `Step 1 only: Get YOUR link. Same contest. Free. ~30 seconds.`;
     hint.classList.remove('hidden');
   }
 
   const inline = document.getElementById('referrer-code-inline');
   if (inline) inline.textContent = ref;
+
+  // Attribution CTA — make label unmistakable
+  const attrBtn = document.getElementById('attribution-get-link-btn');
+  const attrLabel = attrBtn?.querySelector('span');
+  if (attrLabel) attrLabel.textContent = 'Get my link — credit this visit';
 }
 
 function revealFunnelCreditGate(ref: string): void {
@@ -123,6 +132,7 @@ export function initFunnelConversion(loc: Location = location): void {
   if (!ref) return;
 
   document.documentElement.setAttribute('data-vr-referred-landing', '1');
+  document.documentElement.setAttribute('data-vr-referred-micro', '1');
   document.documentElement.setAttribute('data-vr-credit-pending', '1');
   revealFunnelCreditGate(ref);
   highlightHeroGetLink();
@@ -150,13 +160,6 @@ export function setFunnelStep(active: FunnelStep): void {
     else el.removeAttribute('aria-current');
   }
   syncFunnelGuide(active);
-}
-
-function highlightPrimaryShare(): void {
-  const primary = document.getElementById('share-whatsapp-primary');
-  if (!primary) return;
-  primary.classList.add('share-primary-pulse');
-  window.setTimeout(() => primary.classList.remove('share-primary-pulse'), 3200);
 }
 
 function updateCreditGate(status: 'required' | 'pending' | 'credited' | 'failed', message?: string): void {
@@ -188,11 +191,19 @@ export function onReferralCredited(): void {
 
   const ref = resolveLandingReferrerCode();
   const creditMsg = ref
-    ? `Step 1 done! Send a duel invite to beat ${ref} — tap Duel invite below.`
-    : 'Step 1 complete. Now COPY your link (Step 2), then SHARE (Step 3).';
+    ? `You counted for ${ref}. Next: Share now (any app) so you can climb too.`
+    : 'Step 1 complete. Next: Share now (any app) — copy alone does not lock your link.';
 
   updateCreditGate('credited', creditMsg);
   triggerDuelInviteMoment(ref);
+  // Push into send mode (one primary: native / SMS / WhatsApp) — not clipboard
+  void import('./send-mode')
+    .then((m) => m.activateSendModeAfterGetLink({ autoCopied: false }))
+    .catch(() => {
+      void import('./share-first-ui')
+        .then((m) => m.activateShareFirstAfterGetLink({ autoCopied: false }))
+        .catch(() => {});
+    });
 
   window.setTimeout(() => {
     const gate = document.getElementById('funnel-credit-gate');
@@ -231,7 +242,7 @@ export function onReferralLinkReady(): void {
   import('./visitor-slim').then((m) => m.refreshVisitorSlimState()).catch(() => {});
 }
 
-/** After successful clipboard copy — guide visitor to SHARE. */
+/** After successful clipboard copy — guide visitor to SHARE (verified). */
 export function onReferralLinkCopied(): void {
   setFunnelStep(3);
   highlightPrimaryShare();
@@ -241,7 +252,7 @@ export function onReferralLinkCopied(): void {
     hint.classList.remove('hidden');
     hint.dataset.vrSharePrompted = '1';
     hint.textContent =
-      'Link is ready — tap WhatsApp below (fastest). Every open climbs the live board.';
+      'Copied — now Share now (any app). Clipboard alone does not lock your link.';
   }
 
   // Keep progressive share reminders in sync (toast/banner after copy)
@@ -251,20 +262,22 @@ export function onReferralLinkCopied(): void {
 }
 
 function highlightCopyButton(): void {
-  const btn = document.getElementById('copy-link-btn');
-  if (btn) {
-    btn.classList.add('copy-link-pulse');
-    // Longer pulse so Step 2 is hard to miss after Get link
-    window.setTimeout(() => btn.classList.remove('copy-link-pulse'), 5200);
+  // Share-first: emphasize send path over copy after get-link
+  const primary =
+    document.getElementById('native-share-btn') ||
+    document.getElementById('share-first-strip') ||
+    document.getElementById('share-whatsapp-primary');
+  if (primary) {
+    primary.classList.add('share-first-pulse');
+    window.setTimeout(() => primary.classList.remove('share-first-pulse'), 5200);
   }
 
   const hint = document.getElementById('referral-next-step');
   if (hint) {
     hint.classList.remove('hidden');
-    // Default Step-2 prompt; auto-copy path upgrades this via onReferralLinkCopied
     if (!hint.dataset.vrSharePrompted) {
       hint.textContent =
-        'Next: tap COPY, then WhatsApp (or any share button) — every open climbs the board.';
+        'Next: tap Share now (pick any app). Copy alone does not lock your link.';
     }
   }
 
@@ -274,4 +287,22 @@ function highlightCopyButton(): void {
     sharePanel.classList.add('share-ready', 'share-panel-awaiting');
     window.setTimeout(() => sharePanel.classList.remove('share-panel-awaiting'), 8000);
   }
+}
+
+function highlightPrimaryShare(): void {
+  // Prefer visible send-mode controls over the (often hidden) multi-platform grid
+  const candidates = [
+    document.getElementById('native-share-btn'),
+    document.getElementById('share-first-sms'),
+    document.getElementById('share-first-whatsapp'),
+    document.getElementById('share-first-strip'),
+    document.getElementById('mobile-send-cta-btn'),
+    document.getElementById('share-whatsapp-primary'),
+  ];
+  const primary = candidates.find((el) => el && !el.classList.contains('hidden'));
+  if (!primary) return;
+  primary.classList.add('share-primary-pulse', 'share-first-pulse');
+  window.setTimeout(() => {
+    primary.classList.remove('share-primary-pulse', 'share-first-pulse');
+  }, 3200);
 }

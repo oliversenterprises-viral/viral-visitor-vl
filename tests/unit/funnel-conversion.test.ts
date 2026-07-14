@@ -68,6 +68,7 @@ describe('funnel-conversion helpers', () => {
     applyReferredLandingOverrides();
 
     expect(document.documentElement.getAttribute('data-vr-referred-landing')).toBe('1');
+    expect(document.documentElement.getAttribute('data-vr-referred-micro')).toBe('1');
     expect(document.documentElement.getAttribute('data-vr-credit-pending')).toBe('1');
     expect(document.getElementById('funnel-credit-gate')?.classList.contains('hidden')).toBe(false);
     expect(document.getElementById('funnel-gate-ref')?.textContent).toBe('VIRAL-GATE01');

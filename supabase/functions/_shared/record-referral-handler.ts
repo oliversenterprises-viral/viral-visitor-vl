@@ -2,7 +2,11 @@
 
 import { isSelfReferral, parseRecordReferralRequest } from './record-referral-request.ts';
 import { shouldSkipReferralCrediting } from './test-referral.ts';
-import { assertReferrerLinkAllowsReferrals } from './referrer-share-deadline.ts';
+import {
+  assertReferrerLinkAllowsReferrals,
+  LOCK_PLATFORM_FIRST_REFERRAL,
+  markReferrerLinkShared,
+} from './referrer-share-deadline.ts';
 
 export const RECORD_REFERRAL_CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -273,6 +277,16 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
 
   if (insertError) {
     if (insertError.code === '23505') {
+      // Still ensure referrer is locked if they already have credits
+      try {
+        await markReferrerLinkShared(
+          deps.supabaseAdmin as never,
+          referrerCode,
+          LOCK_PLATFORM_FIRST_REFERRAL,
+        );
+      } catch {
+        /* non-fatal */
+      }
       return jsonResponse(
         { success: true, message: 'Referral already recorded', duplicate: true },
         200,
@@ -283,11 +297,23 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
     return jsonResponse({ success: false, error: 'Failed to record referral' }, 500);
   }
 
+  // Strongest anti-cheat: first real referral credit locks the referrer's link
+  try {
+    await markReferrerLinkShared(
+      deps.supabaseAdmin as never,
+      referrerCode,
+      LOCK_PLATFORM_FIRST_REFERRAL,
+    );
+  } catch (lockErr) {
+    console.warn('[record-referral] lock-on-referral failed (non-fatal):', lockErr);
+  }
+
   return jsonResponse(
     {
       success: true,
       referralId: inserted!.id,
       recordedAt: inserted!.created_at,
+      referrer_locked: true,
     },
     200,
   );

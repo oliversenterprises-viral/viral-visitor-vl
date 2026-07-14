@@ -221,6 +221,13 @@ export function syncSharePowerUI(link?: string): void {
     }
   }
 
+  // Keep share-first strip in sync (pending vs locked, primary target)
+  if (resolvedLink) {
+    void import('./share-first-ui')
+      .then((m) => m.renderShareFirstStrip())
+      .catch(() => {});
+  }
+
   if (resolvedLink) {
     updateAbVariantUI(resolvedLink);
     setSharePreviewPlatform(activePreviewPlatform);

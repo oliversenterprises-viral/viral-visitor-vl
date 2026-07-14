@@ -19,20 +19,22 @@ export function resolveFunnelGuideTargetId(
     return 'hero-get-link-btn';
   }
   if (step === 2) return 'copy-link-btn';
-  return 'share-whatsapp-primary';
+  return 'share-first-strip';
 }
 
 const DEFAULT_GUIDE: Record<FunnelStep, FunnelGuideCopy> = {
   1: {
-    message: 'Step 1: tap Get my referral link — your unique winning link appears below.',
+    message: 'Step 1: tap Get my link. You get a free link in a few seconds. No sign-up.',
     icon: 'up',
   },
   2: {
-    message: 'Step 2: tap COPY under your link — then you can paste and share it anywhere.',
+    message:
+      'Step 2: your link is ready. You can copy it if you want — but you still need to send it to friends.',
     icon: 'down',
   },
   3: {
-    message: 'Step 3: share now (WhatsApp is fastest) — every open of your link climbs the board.',
+    message:
+      'Step 3: share your link. It locks when a friend opens it and taps Get my link. That is how you climb!',
     icon: 'down',
   },
 };
@@ -49,7 +51,7 @@ export function getFunnelShareCompleteCopy(): FunnelGuideCopy {
   return {
     message:
       getFunnelCopy('funnel_guide_complete') ??
-      'You shared! Every click through your link moves you closer to #1.',
+      'Nice! Keep sharing. Your link locks when a friend gets their free link through you — then you climb the board.',
     icon: 'check',
   };
 }
