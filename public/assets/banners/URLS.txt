@@ -1,0 +1,17 @@
+# ViralRefer ad banners — hotlink from viralrefer.app
+# Updated: 2026-07-15
+# Destination (iframe exchanges e.g. PageRankCafe): https://www.viralrefer.app/embed?utm_source=NETWORK&utm_medium=banner&utm_campaign=SIZE
+# Destination (full page / non-iframe): https://www.viralrefer.app/?utm_source=NETWORK&utm_medium=banner&utm_campaign=SIZE
+
+https://www.viralrefer.app/assets/banners/viralrefer-728x90.png  # 728x90
+https://www.viralrefer.app/assets/banners/viralrefer-468x60.png  # 468x60
+https://www.viralrefer.app/assets/banners/viralrefer-320x50.png  # 320x50
+https://www.viralrefer.app/assets/banners/viralrefer-320x100.png  # 320x100
+https://www.viralrefer.app/assets/banners/viralrefer-300x250.png  # 300x250
+https://www.viralrefer.app/assets/banners/viralrefer-160x600.png  # 160x600
+https://www.viralrefer.app/assets/banners/viralrefer-300x600.png  # 300x600
+https://www.viralrefer.app/assets/banners/viralrefer-250x250.png  # 250x250
+https://www.viralrefer.app/assets/banners/viralrefer-970x90.png  # 970x90
+https://www.viralrefer.app/assets/banners/viralrefer-970x250.png  # 970x250
+https://www.viralrefer.app/assets/banners/viralrefer-851x315.png  # 851x315
+https://www.viralrefer.app/assets/banners/viralrefer-851x315-pagerankcafe.png  # alias of 851x315
