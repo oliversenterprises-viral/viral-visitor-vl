@@ -77,7 +77,8 @@ export type ViralLoopEvent =
   | 'PromoKitCopyLink'
   | 'PromoKitOpenBanner'
   | 'PromoKitTelegram'
-  | 'PromoKitSharePack';
+  | 'PromoKitSharePack'
+  | 'PromoKitUnlocked';
 
 export const VIRAL_LOOP_EVENT_ORDER: ViralLoopEvent[] = [
   'ChallengeLanding',
@@ -98,6 +99,7 @@ export const VIRAL_LOOP_EVENT_ORDER: ViralLoopEvent[] = [
   'PromoKitOpenBanner',
   'PromoKitTelegram',
   'PromoKitSharePack',
+  'PromoKitUnlocked',
 ];
 
 /** Passive impressions — excluded from Engaged + Recent events (pollutes funnel readability). */

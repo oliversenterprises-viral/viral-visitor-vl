@@ -4,6 +4,9 @@ import {
   hasPromoKitLinkReady,
   buildPersonalPromoLink,
   buildPromoCaptions,
+  buildXSafePromoCaption,
+  isXAlgorithmSafeCaption,
+  resolvePromoCaptionKind,
   bannerUrl,
   PROMO_BANNERS,
 } from '../../src/lib/promo-kit';
@@ -45,12 +48,37 @@ describe('promo-kit', () => {
     expect(link).toContain('utm_content=test_cap');
   });
 
-  it('buildPromoCaptions include personal link', () => {
+  it('non-X captions include personal link; X-safe has no domain/url', () => {
     const url = 'https://www.viralrefer.app/r/VIRAL-TEST1';
-    const caps = buildPromoCaptions(url);
+    const caps = buildPromoCaptions(url, 'VIRAL-TEST1');
     expect(caps.short).toContain(url);
     expect(caps.long).toContain(url);
-    expect(caps.xSafe.toLowerCase()).toContain('viralrefer');
+    expect(isXAlgorithmSafeCaption(caps.xSafe)).toBe(true);
+    expect(caps.xSafe).not.toMatch(/https?:\/\//i);
+    expect(caps.xSafe).not.toMatch(/viralrefer\.app/i);
+    expect(caps.xSafe.toLowerCase()).toContain('google');
+    expect(caps.xSafe).toContain('VIRAL-TEST1');
+  });
+
+  it('buildXSafePromoCaption never includes flagged domain patterns', () => {
+    const cap = buildXSafePromoCaption('VIRAL-ABC123');
+    expect(isXAlgorithmSafeCaption(cap)).toBe(true);
+    expect(cap).not.toMatch(/x\.com/i);
+  });
+
+  it('isXAlgorithmSafeCaption rejects domains and urls', () => {
+    expect(isXAlgorithmSafeCaption('hello world')).toBe(true);
+    expect(isXAlgorithmSafeCaption('see https://www.viralrefer.app')).toBe(false);
+    expect(isXAlgorithmSafeCaption('viralrefer.app rocks')).toBe(false);
+    expect(isXAlgorithmSafeCaption('https://x.com/foo')).toBe(false);
+  });
+
+  it('resolvePromoCaptionKind maps x/twitter to xSafe', () => {
+    expect(resolvePromoCaptionKind('short')).toBe('short');
+    expect(resolvePromoCaptionKind('long')).toBe('long');
+    expect(resolvePromoCaptionKind('xSafe')).toBe('xSafe');
+    expect(resolvePromoCaptionKind('x')).toBe('xSafe');
+    expect(resolvePromoCaptionKind('twitter')).toBe('xSafe');
   });
 
   it('banner catalog is non-empty and URLs are under /assets/banners', () => {
