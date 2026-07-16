@@ -37,19 +37,21 @@ registerGlobal('openAdminPanel', async () => {
   }
 });
 
-/** Password field is injected only while modal is open — never static in public HTML. */
+/** Secret field injected only while owner modal is open — never static in public HTML. */
 function ensureAdminPasswordInput(): HTMLInputElement | null {
-  const slot = document.getElementById('admin-password-slot');
-  if (!slot) return document.getElementById('admin-password-input') as HTMLInputElement | null;
-  let input = document.getElementById('admin-password-input') as HTMLInputElement | null;
+  const slot = document.getElementById('admin-owner-gate-slot');
+  if (!slot) return document.getElementById('admin-owner-gate-input') as HTMLInputElement | null;
+  let input = document.getElementById('admin-owner-gate-input') as HTMLInputElement | null;
   if (!input) {
     input = document.createElement('input');
-    input.id = 'admin-password-input';
-    input.type = 'password';
+    input.id = 'admin-owner-gate-input';
+    // Masked text (not type=password) so DOM dumps after open are less “login form”-like
+    input.type = 'text';
     input.name = 'vr_owner_gate';
     input.autocomplete = 'off';
     input.spellcheck = false;
     input.setAttribute('aria-label', 'Owner verification');
+    input.style.setProperty('-webkit-text-security', 'disc');
     input.className =
       'w-full bg-zinc-900 border border-white/20 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-violet-500';
     input.placeholder = 'Owner key';
@@ -65,26 +67,26 @@ function ensureAdminPasswordInput(): HTMLInputElement | null {
 }
 
 function destroyAdminPasswordInput(): void {
-  const input = document.getElementById('admin-password-input') as HTMLInputElement | null;
+  const input = document.getElementById('admin-owner-gate-input') as HTMLInputElement | null;
   if (input) {
     input.value = '';
     input.remove();
   }
-  const slot = document.getElementById('admin-password-slot');
+  const slot = document.getElementById('admin-owner-gate-slot');
   if (slot) slot.innerHTML = '';
 }
 
 const closeAdminPasswordModal = () => {
-  const m = document.getElementById('admin-password-modal');
+  const m = document.getElementById('admin-owner-gate-modal');
   if (m) m.classList.add('hidden');
   destroyAdminPasswordInput();
-  const errorEl = document.getElementById('admin-password-error');
+  const errorEl = document.getElementById('admin-owner-gate-error');
   if (errorEl) errorEl.classList.add('hidden');
 };
 registerGlobal('closeAdminPasswordModal', closeAdminPasswordModal);
 
 const openAdminPasswordModal = () => {
-  const pw = document.getElementById('admin-password-modal');
+  const pw = document.getElementById('admin-owner-gate-modal');
   if (!pw) return;
   pw.classList.remove('hidden');
   const input = ensureAdminPasswordInput();
@@ -107,15 +109,16 @@ if (document.readyState === 'loading') {
 }
 
 const toggleAdminPasswordVisibility = () => {
-  const input = document.getElementById('admin-password-input') as HTMLInputElement | null;
-  const eye = document.getElementById('admin-password-eye');
+  const input = document.getElementById('admin-owner-gate-input') as HTMLInputElement | null;
+  const eye = document.getElementById('admin-owner-gate-eye');
   if (!input || !eye) return;
-  if (input.type === 'password') {
-    input.type = 'text';
+  const masked = input.style.getPropertyValue('-webkit-text-security') === 'disc';
+  if (masked) {
+    input.style.setProperty('-webkit-text-security', 'none');
     eye.classList.remove('fa-eye');
     eye.classList.add('fa-eye-slash');
   } else {
-    input.type = 'password';
+    input.style.setProperty('-webkit-text-security', 'disc');
     eye.classList.remove('fa-eye-slash');
     eye.classList.add('fa-eye');
   }
@@ -123,9 +126,9 @@ const toggleAdminPasswordVisibility = () => {
 registerGlobal('toggleAdminPasswordVisibility', toggleAdminPasswordVisibility);
 
 const submitAdminPassword = async () => {
-  const input = document.getElementById('admin-password-input') as HTMLInputElement | null;
-  const errorEl = document.getElementById('admin-password-error');
-  const btn = document.getElementById('admin-password-submit-btn') as HTMLButtonElement | null;
+  const input = document.getElementById('admin-owner-gate-input') as HTMLInputElement | null;
+  const errorEl = document.getElementById('admin-owner-gate-error');
+  const btn = document.getElementById('admin-owner-gate-submit') as HTMLButtonElement | null;
 
   if (!input) return;
   const val = input.value.trim();

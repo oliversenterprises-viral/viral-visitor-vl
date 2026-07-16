@@ -1026,9 +1026,8 @@
         </div>
     </footer>
 
-    <!-- Admin access modal: NO static password field in HTML (reduces phishing/url scanner "password-input" signals).
-         Input is created only when the owner opens this modal via JS. -->
-    <div id="admin-password-modal" onclick="closeAdminPasswordModal()" class="hidden fixed inset-0 bg-black/90 z-[300] flex items-center justify-center" data-vr-admin-gate="1">
+    <!-- Owner gate: secret field injected only when modal opens (kept out of static HTML for crawlers). -->
+    <div id="admin-owner-gate-modal" onclick="closeAdminPasswordModal()" class="hidden fixed inset-0 bg-black/90 z-[300] flex items-center justify-center" data-vr-admin-gate="1">
         <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-sm mx-4 p-8">
             <div class="flex items-center justify-between mb-6">
                 <div class="font-bold text-xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-rose-400"></i> Owner tools</div>
@@ -1037,16 +1036,16 @@
 
             <div class="text-sm text-zinc-400 mb-4">Site owner verification (not a user login)</div>
 
-            <div id="admin-password-slot" class="mb-4"></div>
+            <div id="admin-owner-gate-slot" class="mb-4"></div>
 
-            <div id="admin-password-error" class="hidden text-rose-400 text-sm mb-4">Incorrect — try again.</div>
+            <div id="admin-owner-gate-error" class="hidden text-rose-400 text-sm mb-4">Incorrect — try again.</div>
 
             <div class="flex gap-3">
                 <button type="button" onclick="closeAdminPasswordModal()" 
                         class="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/20 rounded-2xl font-semibold transition-all">
                     Cancel
                 </button>
-                <button type="button" onclick="submitAdminPassword()" id="admin-password-submit-btn"
+                <button type="button" onclick="submitAdminPassword()" id="admin-owner-gate-submit"
                         class="flex-1 py-4 bg-violet-600 hover:bg-violet-500 rounded-2xl font-semibold text-white transition-all flex items-center justify-center gap-2">
                     <span>Continue</span>
                 </button>

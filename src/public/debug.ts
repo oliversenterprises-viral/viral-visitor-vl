@@ -50,7 +50,7 @@ document.addEventListener('keydown', (e) => {
   const claimModal = document.getElementById('claim-details-modal');
   const winnerModal = document.getElementById('winner-modal');
   const adminModal = document.getElementById('admin-modal');
-  const adminPwModal = document.getElementById('admin-password-modal');
+  const adminPwModal = document.getElementById('admin-owner-gate-modal');
 
   if (winnerModal && !winnerModal.classList.contains('hidden')) {
     winnerModal.classList.add('hidden');
