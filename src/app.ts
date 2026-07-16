@@ -385,6 +385,9 @@ export async function initApp() {
     await withInitTimeout(renderMyStats(myReferralCode), undefined);
     initViralLoopUI();
     initGrowthCommandCenter();
+    void import('./lib/promo-kit')
+      .then((m) => m.initPromoKit())
+      .catch(() => {});
 
     if (isSupabaseConfigured) {
       initRealtimeSubscriptions();

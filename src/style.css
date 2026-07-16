@@ -1157,6 +1157,44 @@ html[data-vr-referred-landing] .funnel-journey-quiet {
   color: #e0f2fe;
 }
 
+/* Locked-only Promo Kit */
+.promo-kit-banner-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(24, 24, 27, 0.75);
+  color: #e4e4e7;
+  font-size: 0.7rem;
+  font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+}
+.promo-kit-banner-btn:hover {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(16, 185, 129, 0.12);
+}
+.promo-kit-banner-size {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.65rem;
+  color: #6ee7b7;
+}
+.promo-kit-banner-label {
+  color: #a1a1aa;
+  font-weight: 500;
+}
+html[data-vr-share-locked] #promo-kit {
+  animation: promo-kit-in 0.45s ease-out;
+}
+@keyframes promo-kit-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
 html[data-vr-direct-landing]:not([data-vr-has-link]) .hero-secondary-cta {
   opacity: 0.85;
 }

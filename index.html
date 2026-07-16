@@ -661,6 +661,61 @@
                             </button>
                         </div>
 
+                        <!-- Promo Kit teaser: has link but not locked yet -->
+                        <div id="promo-kit-teaser" class="promo-kit-teaser hidden mb-4 rounded-2xl border border-amber-400/25 bg-amber-500/5 px-4 py-3 text-left" role="status" aria-hidden="true">
+                            <div class="flex items-start gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-200 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-amber-100">Promo Kit locked</p>
+                                    <p class="text-xs text-zinc-400 mt-1 leading-relaxed">
+                                        When a friend opens your link and taps <strong class="text-zinc-200">Get my free link</strong>, your spot locks — and you unlock banners, captions, and share tools built for verified promoters.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Promo Kit: only for locked / verified referrers -->
+                        <div id="promo-kit" class="promo-kit hidden mb-5 rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-500/10 via-violet-500/5 to-transparent px-4 py-4 sm:px-5 sm:py-5 text-left" data-vr-zone="promo-kit" role="region" aria-label="Promo kit for locked referrers" aria-hidden="true">
+                            <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
+                                <div>
+                                    <p class="text-[10px] uppercase tracking-wider font-bold text-emerald-300/90 mb-1">
+                                        <i class="fa-solid fa-unlock-keyhole mr-1" aria-hidden="true"></i> Unlocked · verified promoter
+                                    </p>
+                                    <h3 class="text-lg font-bold text-white tracking-tight">Your Promo Kit</h3>
+                                    <p class="text-xs text-zinc-400 mt-1 max-w-md leading-relaxed">
+                                        Banners + captions with <span class="text-emerald-300 font-mono" id="promo-kit-code">—</span>. Post the image, paste your link so credits come back to you.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mb-3 rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2">
+                                <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">Your promo link</div>
+                                <a id="promo-kit-personal-link" href="#" target="_blank" rel="noopener noreferrer" class="text-xs sm:text-sm text-emerald-300/95 break-all font-mono hover:text-emerald-200">—</a>
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    <button type="button" onclick="copyPromoPersonalLink()" class="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-emerald-600/80 hover:bg-emerald-500 text-white">Copy link</button>
+                                    <button type="button" onclick="copyPromoCaption('short')" class="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-white/10">Copy short caption</button>
+                                    <button type="button" onclick="copyPromoCaption('long')" class="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-white/10">Copy full caption</button>
+                                    <button type="button" onclick="copyPromoCaption('xSafe')" class="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-white/10">X-safe caption</button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-2">Open banners (download from image)</div>
+                                <div id="promo-kit-banners" class="promo-kit-banners grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" onclick="runPromoSharePack()" class="text-xs font-semibold px-3 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-emerald-600 hover:from-violet-500 hover:to-emerald-500 text-white">
+                                    <i class="fa-solid fa-box-archive mr-1" aria-hidden="true"></i> Personalized share pack
+                                </button>
+                                <button type="button" onclick="openPromoTelegramHelper()" class="text-xs font-semibold px-3 py-2 rounded-xl bg-[#0088cc]/90 hover:bg-[#0088cc] text-white">
+                                    <i class="fa-brands fa-telegram-plane mr-1" aria-hidden="true"></i> Telegram helper
+                                </button>
+                                <button type="button" onclick="copyEmbedCode()" class="text-xs font-semibold px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-white/10">
+                                    <i class="fa-solid fa-code mr-1" aria-hidden="true"></i> Embed code
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- Primary viral platforms only; extras behind More (visitor-slim) -->
                         <div id="share-buttons-panel" data-vr-zone="share-panel" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <button id="share-whatsapp-primary" data-vr-zone="share-whatsapp" onclick="shareTo('whatsapp')" class="share-btn flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-2xl font-medium text-sm ring-2 ring-emerald-400/30 order-1" title="Recommended — fastest way to share">

@@ -42,6 +42,9 @@ export function markSharePending(): void {
 export function markShareLocked(): void {
   document.documentElement.removeAttribute('data-vr-share-pending');
   document.documentElement.setAttribute('data-vr-share-locked', '1');
+  void import('./promo-kit')
+    .then((m) => m.syncPromoKitUI())
+    .catch(() => {});
 }
 
 export function clearShareFirstFlags(): void {
@@ -231,5 +234,11 @@ export function onVerifiedShareForShareFirst(): void {
   void import('./share-deadline').then((m) => m.renderShareDeadlineBanner());
   void import('./post-share-return')
     .then((m) => m.activatePostShareReturnLoop())
+    .catch(() => {});
+  void import('./promo-kit')
+    .then((m) => {
+      m.syncPromoKitUI();
+      document.getElementById('promo-kit')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    })
     .catch(() => {});
 }

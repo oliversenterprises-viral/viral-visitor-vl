@@ -72,7 +72,12 @@ export type ViralLoopEvent =
   | 'AnxietyNotification'
   | 'SprintBoardView'
   | 'CommunityUnlockView'
-  | 'CommunityUnlockCelebration';
+  | 'CommunityUnlockCelebration'
+  | 'PromoKitCopyCaption'
+  | 'PromoKitCopyLink'
+  | 'PromoKitOpenBanner'
+  | 'PromoKitTelegram'
+  | 'PromoKitSharePack';
 
 export const VIRAL_LOOP_EVENT_ORDER: ViralLoopEvent[] = [
   'ChallengeLanding',
@@ -88,6 +93,11 @@ export const VIRAL_LOOP_EVENT_ORDER: ViralLoopEvent[] = [
   'SprintBoardView',
   'CommunityUnlockView',
   'CommunityUnlockCelebration',
+  'PromoKitCopyCaption',
+  'PromoKitCopyLink',
+  'PromoKitOpenBanner',
+  'PromoKitTelegram',
+  'PromoKitSharePack',
 ];
 
 /** Passive impressions — excluded from Engaged + Recent events (pollutes funnel readability). */
