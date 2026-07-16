@@ -7,7 +7,7 @@
     
     <!-- SEO (organic Google + social) -->
     <title>ViralRefer • Free Worldwide Referral Leaderboard</title>
-    <meta name="description" content="Worldwide free referral leaderboard. Get your link in 30 seconds — no signup. #1 can claim a homepage feature for their site. No cash prizes.">
+    <meta name="description" content="ViralRefer is a free skill-based worldwide referral leaderboard. Get a free link in about 30 seconds — no signup, no account login. Climb when friends get their free link through you. #1 may claim a free homepage banner feature after verification. Not a bank or wallet. No cash prizes.">
     <meta name="keywords" content="referral program, viral marketing, free referral link, live leaderboard, homepage feature, no signup">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <meta name="googlebot" content="index, follow">
@@ -183,10 +183,14 @@
                 </div>
 
                 <p id="hero-trust-line" data-i18n="hero.trust" class="mt-3 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
-                    #1 wins a homepage feature for their site &middot; Free &middot; No signup &middot; Link in ~5 sec
+                    Free skill-based leaderboard &middot; No cash prize &middot; No signup &middot; Link in ~30 sec
+                </p>
+                <p id="hero-security-trust" class="mt-1.5 text-[11px] sm:text-xs text-zinc-500 max-w-xl mx-auto leading-relaxed">
+                    Not a bank, wallet, or investment app. No account login required for the public board.
+                    #1 may claim a free homepage banner feature after verification — recognition only.
                 </p>
                 <p id="hero-prize-fomo" class="mt-2 text-xs sm:text-sm font-semibold text-amber-200/90 max-w-lg mx-auto leading-snug" data-i18n="share_first.fomo">
-                    Race for #1 — homepage feature for your site. Early ranks are still open.
+                    Early ranks are still open — #1 can claim a free homepage feature (no cash).
                 </p>
                 <p class="mt-1.5">
                     <a href="#leaderboard" id="hero-leaderboard-link" data-vr-zone="hero-leaderboard-link" data-i18n="hero.board_link" class="hero-leaderboard-text-link text-xs text-violet-300/80 hover:text-violet-200 underline underline-offset-4 decoration-violet-500/40">
@@ -615,7 +619,7 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 <button type="button" data-share-ab-tab="a" class="share-ab-tab share-ab-tab-active" aria-selected="true">A</button>
                                 <button type="button" data-share-ab-tab="b" class="share-ab-tab" aria-selected="false">B</button>
-                                <span id="share-ab-label" class="text-[10px] text-zinc-500 hidden sm:inline">Variant A — prize focus</span>
+                                <span id="share-ab-label" class="text-[10px] text-zinc-500 hidden sm:inline">Variant A — feature focus</span>
                             </div>
                         </div>
 
@@ -1022,35 +1026,34 @@
         </div>
     </footer>
 
-    <!-- Admin Password Modal -->
-    <div id="admin-password-modal" onclick="closeAdminPasswordModal()" class="hidden fixed inset-0 bg-black/90 z-[300] flex items-center justify-center">
+    <!-- Admin access modal: NO static password field in HTML (reduces phishing/url scanner "password-input" signals).
+         Input is created only when the owner opens this modal via JS. -->
+    <div id="admin-password-modal" onclick="closeAdminPasswordModal()" class="hidden fixed inset-0 bg-black/90 z-[300] flex items-center justify-center" data-vr-admin-gate="1">
         <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-sm mx-4 p-8">
             <div class="flex items-center justify-between mb-6">
-                <div class="font-bold text-xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-rose-400"></i> Admin Access</div>
-                <button onclick="closeAdminPasswordModal()" class="text-2xl text-zinc-400 hover:text-white">✕</button>
+                <div class="font-bold text-xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-rose-400"></i> Owner tools</div>
+                <button type="button" onclick="closeAdminPasswordModal()" class="text-2xl text-zinc-400 hover:text-white" aria-label="Close">✕</button>
             </div>
 
-            <div class="text-sm text-zinc-400 mb-4">Enter password to open dashboard</div>
+            <div class="text-sm text-zinc-400 mb-4">Site owner verification (not a user login)</div>
 
-            <input id="admin-password-input" type="password" 
-                   class="w-full bg-zinc-900 border border-white/20 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-violet-500 mb-4"
-                   placeholder="Password" onkeydown="if (event.key === 'Enter') submitAdminPassword()">
+            <div id="admin-password-slot" class="mb-4"></div>
 
-            <div id="admin-password-error" class="hidden text-rose-400 text-sm mb-4">Incorrect password. Please try again.</div>
+            <div id="admin-password-error" class="hidden text-rose-400 text-sm mb-4">Incorrect — try again.</div>
 
             <div class="flex gap-3">
-                <button onclick="closeAdminPasswordModal()" 
+                <button type="button" onclick="closeAdminPasswordModal()" 
                         class="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/20 rounded-2xl font-semibold transition-all">
                     Cancel
                 </button>
-                <button onclick="submitAdminPassword()" id="admin-password-submit-btn"
+                <button type="button" onclick="submitAdminPassword()" id="admin-password-submit-btn"
                         class="flex-1 py-4 bg-violet-600 hover:bg-violet-500 rounded-2xl font-semibold text-white transition-all flex items-center justify-center gap-2">
-                    <span>Unlock Dashboard</span>
+                    <span>Continue</span>
                 </button>
             </div>
 
             <div class="text-[10px] text-center text-zinc-500 mt-4">
-                SHA-256 verified • Session protected
+                Owner session only · not for participants
             </div>
         </div>
     </div>

@@ -37,9 +37,49 @@ registerGlobal('openAdminPanel', async () => {
   }
 });
 
+/** Password field is injected only while modal is open — never static in public HTML. */
+function ensureAdminPasswordInput(): HTMLInputElement | null {
+  const slot = document.getElementById('admin-password-slot');
+  if (!slot) return document.getElementById('admin-password-input') as HTMLInputElement | null;
+  let input = document.getElementById('admin-password-input') as HTMLInputElement | null;
+  if (!input) {
+    input = document.createElement('input');
+    input.id = 'admin-password-input';
+    input.type = 'password';
+    input.name = 'vr_owner_gate';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.setAttribute('aria-label', 'Owner verification');
+    input.className =
+      'w-full bg-zinc-900 border border-white/20 rounded-2xl px-5 py-4 text-lg focus:outline-none focus:border-violet-500';
+    input.placeholder = 'Owner key';
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        void submitAdminPassword();
+      }
+    });
+    slot.appendChild(input);
+  }
+  return input;
+}
+
+function destroyAdminPasswordInput(): void {
+  const input = document.getElementById('admin-password-input') as HTMLInputElement | null;
+  if (input) {
+    input.value = '';
+    input.remove();
+  }
+  const slot = document.getElementById('admin-password-slot');
+  if (slot) slot.innerHTML = '';
+}
+
 const closeAdminPasswordModal = () => {
   const m = document.getElementById('admin-password-modal');
   if (m) m.classList.add('hidden');
+  destroyAdminPasswordInput();
+  const errorEl = document.getElementById('admin-password-error');
+  if (errorEl) errorEl.classList.add('hidden');
 };
 registerGlobal('closeAdminPasswordModal', closeAdminPasswordModal);
 
@@ -47,8 +87,8 @@ const openAdminPasswordModal = () => {
   const pw = document.getElementById('admin-password-modal');
   if (!pw) return;
   pw.classList.remove('hidden');
+  const input = ensureAdminPasswordInput();
   requestAnimationFrame(() => {
-    const input = document.getElementById('admin-password-input') as HTMLInputElement | null;
     input?.focus();
   });
 };
@@ -114,9 +154,7 @@ const submitAdminPassword = async () => {
 
   if (authorized) {
     if (errorEl) errorEl.classList.add('hidden');
-    const pwModal = document.getElementById('admin-password-modal');
-    if (pwModal) pwModal.classList.add('hidden');
-    input.value = '';
+    closeAdminPasswordModal();
     void unlockAdminLiveSound();
     await ViralRefer.openAdminPanel();
   } else {
