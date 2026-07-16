@@ -1,0 +1,75 @@
+# ViralRefer — Universal social banners (click → viralrefer.app)
+Updated: 2026-07-16
+
+IMPORTANT
+- PNG images do not auto-link. When you post, set the destination URL below (or wrap the HTML banner).
+- Use homepage links for Facebook / Telegram / Reddit / normal posts.
+- Use /embed only for traffic exchanges that load sites inside iframes (e.g. PageRankCafe).
+
+═══════════════════════════════════════
+IMAGE SOURCES (hosted on viralrefer.app)
+═══════════════════════════════════════
+Primary (most places):
+https://www.viralrefer.app/assets/banners/viralrefer-social-1200x628.png
+
+HD / Telegram:
+https://www.viralrefer.app/assets/banners/viralrefer-social-1280x720.png
+
+Square (IG / FB / Telegram):
+https://www.viralrefer.app/assets/banners/viralrefer-social-1080x1080.png
+
+Stories / tall:
+https://www.viralrefer.app/assets/banners/viralrefer-social-1080x1920.png
+
+Clickable HTML embed:
+https://www.viralrefer.app/assets/banners/viralrefer-clickable-banner.html
+
+Also available IAB sizes:
+https://www.viralrefer.app/assets/banners/URLS.txt
+
+═══════════════════════════════════════
+CLICK / REDIRECT DESTINATIONS
+═══════════════════════════════════════
+Facebook post / ad / page:
+https://www.viralrefer.app/?utm_source=facebook&utm_medium=social&utm_campaign=social_banner&utm_content=1200x628
+
+Telegram channel / group / bot caption:
+https://www.viralrefer.app/?utm_source=telegram&utm_medium=social&utm_campaign=social_banner&utm_content=1280x720
+
+Reddit post (link post) or first comment under image:
+https://www.viralrefer.app/?utm_source=reddit&utm_medium=social&utm_campaign=social_banner&utm_content=1200x628
+
+Generic / anywhere else:
+https://www.viralrefer.app/?utm_source=social&utm_medium=banner&utm_campaign=social_universal&utm_content=multi
+
+Personal referral share (when YOU are sharing as a participant — not cold ads):
+https://www.viralrefer.app/r/VIRAL-97UWEGZ
+
+═══════════════════════════════════════
+SUGGESTED CAPTIONS
+═══════════════════════════════════════
+Short:
+Get a free referral link in 30 seconds. Climb the live worldwide board — #1 claims a homepage feature. No signup.
+
+Facebook:
+Free worldwide referral leaderboard 🔥
+Get your free link in ~30 seconds (no email). Share → climb → #1 can claim a homepage feature.
+No cash prize. Open worldwide · 18+.
+
+Reddit (value-first):
+Built a free no-signup referral leaderboard. Live board, ~30s to get a trackable link, #1 can claim a homepage feature (no cash prize). Feedback welcome.
+
+Telegram:
+ViralRefer — free link in 30s · live leaderboard · climb to #1 for homepage feature.
+No signup. Open worldwide.
+
+═══════════════════════════════════════
+HOW TO USE BY PLATFORM
+═══════════════════════════════════════
+Facebook: Create post → add image (1200x628 or 1080x1080) → paste Facebook destination URL in post text or as link attachment.
+Telegram: Send photo → put Telegram destination URL in caption.
+Reddit: Image post + sticky comment with Reddit destination URL, OR link post pointing at the destination URL with image as thumbnail if allowed.
+Anywhere HTML is allowed: open viralrefer-clickable-banner.html source and embed (image already links to site).
+
+Title if needed:
+Get a Free Referral Link in 30 Sec · Climb the Live Leaderboard

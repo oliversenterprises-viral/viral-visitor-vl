@@ -15,3 +15,11 @@ https://www.viralrefer.app/assets/banners/viralrefer-970x90.png  # 970x90
 https://www.viralrefer.app/assets/banners/viralrefer-970x250.png  # 970x250
 https://www.viralrefer.app/assets/banners/viralrefer-851x315.png  # 851x315
 https://www.viralrefer.app/assets/banners/viralrefer-851x315-pagerankcafe.png  # alias of 851x315
+
+# Social / multi-platform (2026-07-15+)
+https://www.viralrefer.app/assets/banners/viralrefer-social-1200x628.png  # FB Reddit LinkedIn
+https://www.viralrefer.app/assets/banners/viralrefer-social-1280x720.png  # Telegram HD
+https://www.viralrefer.app/assets/banners/viralrefer-social-1080x1080.png # Square
+https://www.viralrefer.app/assets/banners/viralrefer-social-1080x1920.png # Stories
+https://www.viralrefer.app/assets/banners/viralrefer-clickable-banner.html # HTML click wrapper
+https://www.viralrefer.app/assets/banners/SOCIAL-SHARE.txt  # full paste guide
