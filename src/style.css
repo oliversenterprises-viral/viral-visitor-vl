@@ -1144,6 +1144,19 @@ html[data-vr-referred-landing] .funnel-journey-quiet {
   color: #ede9fe;
 }
 
+/* Optional helper: opens Telegram bot (does not replace primary Get-link CTA) */
+.hero-telegram-helper-cta {
+  color: #7dd3fc;
+  background: rgba(0, 136, 204, 0.1);
+  border: 1px solid rgba(0, 136, 204, 0.35);
+  text-decoration: none;
+}
+.hero-telegram-helper-cta:hover {
+  background: rgba(0, 136, 204, 0.2);
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #e0f2fe;
+}
+
 html[data-vr-direct-landing]:not([data-vr-has-link]) .hero-secondary-cta {
   opacity: 0.85;
 }
