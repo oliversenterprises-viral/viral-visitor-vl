@@ -8,6 +8,8 @@ import {
   writeShareDeadlineState,
   clearShareDeadlineState,
   markLocalVerifiedShare,
+  shouldUnlockLinkFromServer,
+  unlockIfReferralCountUnlocked,
 } from '../../src/lib/share-deadline';
 
 describe('share-deadline', () => {
@@ -93,6 +95,28 @@ describe('share-deadline', () => {
     });
     clearShareDeadlineState();
     expect(readShareDeadlineState()).toBeNull();
+  });
+
+  it('shouldUnlockLinkFromServer unlocks owner exempt AND active (promo kit fix)', () => {
+    // Owner IP path: exempt:true + status:active must unlock
+    expect(shouldUnlockLinkFromServer({ status: 'active', exempt: true })).toBe(true);
+    expect(shouldUnlockLinkFromServer({ status: 'pending_share', exempt: true })).toBe(true);
+    // Normal first-friend path
+    expect(shouldUnlockLinkFromServer({ status: 'active', exempt: false })).toBe(true);
+    // Still pending
+    expect(shouldUnlockLinkFromServer({ status: 'pending_share', exempt: false })).toBe(false);
+    expect(shouldUnlockLinkFromServer({ status: 'expired', exempt: false })).toBe(false);
+  });
+
+  it('unlockIfReferralCountUnlocked locks UI when count ≥ 1', () => {
+    document.documentElement.removeAttribute('data-vr-share-locked');
+    localStorage.setItem('vr_my_ref_code', 'VIRAL-97UWEGZ');
+    expect(unlockIfReferralCountUnlocked(0)).toBe(false);
+    expect(document.documentElement.hasAttribute('data-vr-share-locked')).toBe(false);
+    expect(unlockIfReferralCountUnlocked(6)).toBe(true);
+    expect(document.documentElement.getAttribute('data-vr-share-locked')).toBe('1');
+    // Idempotent when already locked
+    expect(unlockIfReferralCountUnlocked(6)).toBe(false);
   });
 });
 

@@ -26,11 +26,24 @@ export function resolveShareFirstPrimary(
 
 /** True when local deadline state still requires a verified platform share. */
 export function isSharePendingLocal(): boolean {
+  // Already locked in DOM (promo kit / post-share)
+  if (document.documentElement.hasAttribute('data-vr-share-locked')) return false;
+
+  // Owner-exempt codes never require the first-friend pending flow
+  try {
+    const code = String(localStorage.getItem('vr_my_ref_code') || '').toUpperCase();
+    const exempt = String(localStorage.getItem('vr_share_deadline_exempt') || '').toUpperCase();
+    if (code && exempt && code === exempt) return false;
+  } catch {
+    /* non-fatal */
+  }
+
   const state = readShareDeadlineState();
   if (!state) {
     // Has link but no deadline yet — treat as pending until verified share or server exempt.
     return document.documentElement.hasAttribute('data-vr-has-link');
   }
+  if (state.status === 'active') return false;
   return state.status === 'pending_share' || state.status === 'unknown';
 }
 

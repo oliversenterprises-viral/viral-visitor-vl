@@ -147,6 +147,33 @@ function isExemptCode(code?: string | null): boolean {
   }
 }
 
+/**
+ * Server said the link has no pending clock / is already good.
+ * - active: first friend got a link (or owner upsert active)
+ * - exempt: owner IP — no deadline, treat as unlocked for UI (promo kit)
+ */
+export function shouldUnlockLinkFromServer(opts: {
+  status: string;
+  exempt?: boolean;
+}): boolean {
+  if (opts.exempt === true) return true;
+  return opts.status === 'active';
+}
+
+/**
+ * Recovery: if public referral_count ≥ 1 for this code, unlock UI.
+ * Covers missed client flags after reload / race / exempt path bugs.
+ */
+export function unlockIfReferralCountUnlocked(count: number): boolean {
+  const n = Math.floor(Number(count) || 0);
+  if (n < 1) return false;
+  if (typeof document !== 'undefined' && document.documentElement.hasAttribute('data-vr-share-locked')) {
+    return false;
+  }
+  markLocalVerifiedShare('first_referral');
+  return true;
+}
+
 /** Register code on the server (starts the first-referral deadline clock). */
 export async function registerReferrerLinkDeadline(
   code: string,
@@ -187,29 +214,32 @@ export async function registerReferrerLinkDeadline(
     const exempt =
       envelope?.data?.exempt === true || envelope?.data?.share_required === false;
 
-    // Owner IP / active / exempt: locked (or no clock)
-    if (exempt || status === 'active') {
-      const wasPending = readShareDeadlineState()?.status === 'pending_share';
-      clearShareDeadlineState();
+    // Owner IP exempt OR first friend joined (active): unlock link + promo kit UI.
+    // BUG FIX: previously we only called markLocalVerifiedShare when
+    // status==='active' && !exempt — so owner IPs (exempt:true, status:active)
+    // never got data-vr-share-locked, leaving promo kit and send-mode stuck.
+    if (shouldUnlockLinkFromServer({ status, exempt })) {
       try {
         if (exempt) localStorage.setItem('vr_share_deadline_exempt', referrer_code);
         else localStorage.removeItem('vr_share_deadline_exempt');
       } catch {
         /* ignore */
       }
-      if (status === 'active' && !exempt) {
-        writeShareDeadlineState({
-          code: referrer_code,
-          status: 'active',
-          createdAt: envelope?.data?.created_at || fallback.createdAt,
-          deadlineAt: envelope?.data?.deadline_at || fallback.deadlineAt,
-        });
-        // First referral landed while away — celebrate lock once
-        if (wasPending || !document.documentElement.hasAttribute('data-vr-share-locked')) {
-          markLocalVerifiedShare('first_referral');
-        }
+      writeShareDeadlineState({
+        code: referrer_code,
+        status: 'active',
+        createdAt: envelope?.data?.created_at || fallback.createdAt,
+        deadlineAt:
+          envelope?.data?.deadline_at || fallback.deadlineAt || new Date().toISOString(),
+      });
+      if (!document.documentElement.hasAttribute('data-vr-share-locked')) {
+        markLocalVerifiedShare('first_referral');
+      } else {
+        renderShareDeadlineBanner();
+        void import('./promo-kit')
+          .then((m) => m.syncPromoKitUI())
+          .catch(() => {});
       }
-      renderShareDeadlineBanner();
       return {
         code: referrer_code,
         status: 'active',
@@ -277,9 +307,17 @@ export function markLocalVerifiedShare(platform: string): void {
       /* ignore */
     }
   }
+  // Sync lock immediately so promo kit / isSharePendingLocal don't race dynamic imports
+  if (typeof document !== 'undefined') {
+    document.documentElement.removeAttribute('data-vr-share-pending');
+    document.documentElement.setAttribute('data-vr-share-locked', '1');
+  }
   renderShareDeadlineBanner();
   void import('./share-first-ui')
     .then((m) => m.onVerifiedShareForShareFirst())
+    .catch(() => {});
+  void import('./promo-kit')
+    .then((m) => m.syncPromoKitUI())
     .catch(() => {});
 }
 

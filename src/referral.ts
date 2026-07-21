@@ -284,16 +284,26 @@ export function applyExistingReferralLink(code: string): void {
   populateReferralLinkUI(code, buildReferralLink(code));
   syncMobileReferralCta();
   initShareDeadlineUi();
-  // Returning visitor: send mode if still pending; otherwise locked strip
-  void import('./lib/share-first-ui').then((m) => {
-    if (m.isSharePendingLocal()) {
-      void import('./lib/send-mode').then((sm) =>
-        sm.activateSendModeAfterGetLink({ autoCopied: false }),
-      );
-    } else {
-      m.markShareLocked();
-      m.renderShareFirstStrip();
+  // Wait for server deadline status before send-mode vs locked (avoids race leaving
+  // owners/active codes stuck in pending send-mode without promo kit).
+  void registerReferrerLinkDeadline(code).then((state) => {
+    if (state?.status === 'expired') {
+      enforceLocalShareDeadlineExpiry(code);
+      return;
     }
+    void import('./lib/share-first-ui').then((m) => {
+      if (m.isSharePendingLocal()) {
+        void import('./lib/send-mode').then((sm) =>
+          sm.activateSendModeAfterGetLink({ autoCopied: false }),
+        );
+      } else {
+        m.markShareLocked();
+        m.renderShareFirstStrip();
+        void import('./lib/promo-kit')
+          .then((pk) => pk.syncPromoKitUI())
+          .catch(() => {});
+      }
+    });
   });
   if (pendingReferrerCode && !referralRecordedThisSession) {
     void runFunnelReferralRecording();

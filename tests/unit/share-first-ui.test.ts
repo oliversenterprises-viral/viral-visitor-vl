@@ -65,6 +65,14 @@ describe('share-first-ui', () => {
     expect(isSharePendingLocal()).toBe(false);
   });
 
+  it('isSharePendingLocal false for owner-exempt codes (promo kit path)', () => {
+    localStorage.setItem('vr_my_ref_code', 'VIRAL-97UWEGZ');
+    localStorage.setItem('vr_share_deadline_exempt', 'VIRAL-97UWEGZ');
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    // No deadline state (old bug left owners with empty state + has-link)
+    expect(isSharePendingLocal()).toBe(false);
+  });
+
   it('hero labels are non-empty for each primary', () => {
     expect(shareFirstHeroLabel('native').length).toBeGreaterThan(4);
     expect(shareFirstHeroLabel('sms').length).toBeGreaterThan(3);

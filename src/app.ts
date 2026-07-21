@@ -436,6 +436,12 @@ async function renderMyStats(myCode: string | null): Promise<void> {
   setShareReferralCount(count);
   setShareLeaderboardRank(rank);
   setShareGapToNextRank(gap);
+  // Recovery: public count ≥ 1 means first friend joined → unlock link + promo kit
+  if (count >= 1) {
+    void import('./lib/share-deadline')
+      .then((m) => m.unlockIfReferralCountUnlocked(count))
+      .catch(() => {});
+  }
   celebrateMilestonesIfAny(count, rank);
   void enrichClientReferralOgMeta(myCode);
   const linkInput = document.getElementById('ref-link') as HTMLInputElement | null;
