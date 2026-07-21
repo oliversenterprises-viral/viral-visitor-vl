@@ -7,6 +7,9 @@
  *
  * White-hat: no dark patterns that trap forever; limited soft dismisses
  * per session; never blocks accessibility or breaks locked/embed flows.
+ * Residual-risk mitigations: longer dwell, fewer shows, poll only when
+ * send strip is off-screen, beforeunload only after a prior prompt, Escape
+ * + (after first show) backdrop soft-dismiss.
  */
 
 import { isEmbedMode } from './embed-mode';
@@ -18,17 +21,19 @@ const SESSION_SNOOZE_KEY = 'vr_share_abandon_snooze';
 const PANEL_ID = 'vr-share-abandon';
 
 /** Soft dwell before first abandon prompt (desktop). */
-export const MIN_DWELL_MS = 8_000;
+export const MIN_DWELL_MS = 12_000;
 /** Mobile dwell without a send attempt. */
-export const MOBILE_DWELL_MS = 18_000;
-/** Soft snooze after "I'll send later". */
-export const SOFT_SNOOZE_MS = 3 * 60 * 1000;
-/** Max full panels per tab session. */
-export const MAX_SESSION_SHOWS = 4;
-/** Re-check interval while pending. */
-export const POLL_MS = 45_000;
+export const MOBILE_DWELL_MS = 25_000;
+/** Soft snooze after "I'll send later" / Escape / backdrop (after first). */
+export const SOFT_SNOOZE_MS = 5 * 60 * 1000;
+/** Max full panels per tab session (kept low to avoid fatigue). */
+export const MAX_SESSION_SHOWS = 3;
+/** Re-check interval while pending (only if strip off-screen). */
+export const POLL_MS = 90_000;
 /** Min time away before return-prompt. */
-export const MIN_AWAY_RETURN_MS = 6_000;
+export const MIN_AWAY_RETURN_MS = 10_000;
+/** Min session age before beforeunload arms (even without a prior panel). */
+export const BEFOREUNLOAD_MIN_DWELL_MS = 90_000;
 
 export interface ShareAbandonEligibility {
   hasLink: boolean;
@@ -40,13 +45,35 @@ export interface ShareAbandonEligibility {
   isCoarsePointer: boolean;
   embed: boolean;
   confirmFlowActive: boolean;
+  /** Poll path only: skip if primary send UI is already visible. */
+  shareStripInView?: boolean;
+  reason?: string;
 }
 
 export function shouldShowShareAbandon(opts: ShareAbandonEligibility): boolean {
   if (opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
   if (opts.alreadyMaxShows || opts.snoozed || opts.confirmFlowActive) return false;
+  // Poll is the softest path — never interrupt if they can already see Send
+  if (opts.reason === 'poll' && opts.shareStripInView) return false;
   if (opts.isCoarsePointer) return opts.dwellMs >= MOBILE_DWELL_MS;
   return opts.dwellMs >= MIN_DWELL_MS;
+}
+
+/** beforeunload only after a prior abandon prompt, or long idle pending. */
+export function shouldArmBeforeUnload(opts: {
+  hasLink: boolean;
+  sharePending: boolean;
+  locked: boolean;
+  embed: boolean;
+  confirmFlowActive: boolean;
+  snoozed: boolean;
+  sessionShows: number;
+  dwellMs: number;
+}): boolean {
+  if (opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
+  if (opts.confirmFlowActive || opts.snoozed) return false;
+  if (opts.sessionShows >= 1) return true;
+  return opts.dwellMs >= BEFOREUNLOAD_MIN_DWELL_MS;
 }
 
 export function buildShareAbandonMessage(): {
@@ -114,6 +141,35 @@ function confirmFlowActive(): boolean {
   return document.documentElement.hasAttribute('data-vr-share-confirm');
 }
 
+/** True when share-first / sticky send is largely in the viewport. */
+export function isShareStripInView(win: Window = window): boolean {
+  const el =
+    win.document.getElementById('share-first-strip') ||
+    win.document.getElementById('mobile-send-cta') ||
+    win.document.getElementById('native-share-btn');
+  if (!el) return false;
+  if (el.classList.contains('hidden')) {
+    // sticky may be the only visible path
+    const sticky = win.document.getElementById('mobile-send-cta');
+    if (!sticky || sticky.classList.contains('hidden')) return false;
+    return stickyInViewport(sticky, win);
+  }
+  return stickyInViewport(el, win);
+}
+
+function stickyInViewport(el: Element, win: Window): boolean {
+  try {
+    const r = el.getBoundingClientRect();
+    const vh = win.innerHeight || 0;
+    if (r.height <= 0 && r.width <= 0) return false;
+    // At least ~40% of the control is visible
+    const visible = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+    return visible >= Math.min(r.height * 0.4, 48);
+  } catch {
+    return false;
+  }
+}
+
 function removePanel(): void {
   document.getElementById(PANEL_ID)?.remove();
   document.documentElement.removeAttribute('data-vr-share-abandon');
@@ -154,12 +210,18 @@ function showAbandonPanel(reason: string): void {
       isCoarsePointer: false,
       embed: isEmbedMode(),
       confirmFlowActive: confirmFlowActive(),
+      shareStripInView: reason === 'poll' ? isShareStripInView() : false,
+      reason,
     })
   ) {
     return;
   }
 
   const copy = buildShareAbandonMessage();
+  const priorShows = sessionShows();
+  // After the first panel in a session, allow backdrop / Escape soft-exit (less trap-y)
+  const allowSoftBackdrop = priorShows >= 1;
+
   const panel = document.createElement('div');
   panel.id = PANEL_ID;
   panel.className = 'vr-share-abandon';
@@ -169,7 +231,7 @@ function showAbandonPanel(reason: string): void {
   panel.dataset.reason = reason;
   panel.innerHTML = `
     <div class="vr-share-abandon-backdrop" data-abandon-backdrop></div>
-    <div class="vr-share-abandon-card">
+    <div class="vr-share-abandon-card" tabindex="-1">
       <div class="vr-share-abandon-pulse" aria-hidden="true"></div>
       <p id="vr-share-abandon-title" class="vr-share-abandon-title">${copy.title}</p>
       <p class="vr-share-abandon-body">${copy.body}</p>
@@ -191,22 +253,42 @@ function showAbandonPanel(reason: string): void {
   const closeSoft = () => {
     softSnoozeShareAbandon();
     removePanel();
+    window.removeEventListener('keydown', onKey);
   };
 
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeSoft();
+    }
+  };
+  window.addEventListener('keydown', onKey);
+
   panel.querySelector('[data-abandon-cta]')?.addEventListener('click', () => {
+    window.removeEventListener('keydown', onKey);
     removePanel();
     // Brief snooze so re-open mid-sheet doesn't stack
-    softSnoozeShareAbandon(45_000);
+    softSnoozeShareAbandon(60_000);
     invokeSend();
   });
   panel.querySelector('[data-abandon-later]')?.addEventListener('click', closeSoft);
-  // Backdrop does NOT dismiss — hard to skip; only explicit Later
+
   panel.querySelector('[data-abandon-backdrop]')?.addEventListener('click', () => {
+    if (allowSoftBackdrop) {
+      closeSoft();
+      return;
+    }
+    // First show: nudge only (still hard to skip once)
     panel.querySelector<HTMLElement>('.vr-share-abandon-card')?.classList.add('vr-share-abandon-shake');
     window.setTimeout(() => {
       panel.querySelector('.vr-share-abandon-card')?.classList.remove('vr-share-abandon-shake');
     }, 420);
   });
+
+  // Focus primary for a11y
+  window.setTimeout(() => {
+    (panel.querySelector('[data-abandon-cta]') as HTMLElement | null)?.focus();
+  }, 50);
 }
 
 function tryShow(reason: string, startedAt: number, coarse: boolean): void {
@@ -222,6 +304,8 @@ function tryShow(reason: string, startedAt: number, coarse: boolean): void {
       isCoarsePointer: coarse,
       embed: isEmbedMode(),
       confirmFlowActive: confirmFlowActive(),
+      shareStripInView: reason === 'poll' ? isShareStripInView() : false,
+      reason,
     })
   ) {
     return;
@@ -229,14 +313,26 @@ function tryShow(reason: string, startedAt: number, coarse: boolean): void {
   showAbandonPanel(reason);
 }
 
-/** Browser leave dialog while share still pending (soft; browsers control copy). */
-function onBeforeUnload(e: BeforeUnloadEvent): void {
-  if (isEmbedMode()) return;
-  if (!hasLink() || isLocked() || !isSharePendingLocal()) return;
-  // Don't nag mid native/intent confirm
-  if (confirmFlowActive()) return;
-  e.preventDefault();
-  e.returnValue = '';
+/** Browser leave dialog — only after prior prompt or long idle (mitigates surprise). */
+function makeBeforeUnloadHandler(startedAt: number) {
+  return (e: BeforeUnloadEvent): void => {
+    if (
+      !shouldArmBeforeUnload({
+        hasLink: hasLink(),
+        sharePending: isSharePendingLocal(),
+        locked: isLocked(),
+        embed: isEmbedMode(),
+        confirmFlowActive: confirmFlowActive(),
+        snoozed: isSnoozed(),
+        sessionShows: sessionShows(),
+        dwellMs: Date.now() - startedAt,
+      })
+    ) {
+      return;
+    }
+    e.preventDefault();
+    e.returnValue = '';
+  };
 }
 
 /**
@@ -273,9 +369,9 @@ export function initShareAbandonRescue(win: Window = window): void {
     leftHiddenAt = null;
   });
 
-  win.addEventListener('beforeunload', onBeforeUnload);
+  win.addEventListener('beforeunload', makeBeforeUnloadHandler(started));
 
-  // Periodic re-surface if they scroll past and ignore sticky CTA
+  // Periodic re-surface only if they scrolled away from send UI
   win.setInterval(() => {
     if (!hasLink() || isLocked() || !isSharePendingLocal()) {
       removePanel();

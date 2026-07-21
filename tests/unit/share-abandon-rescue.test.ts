@@ -1,12 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   shouldShowShareAbandon,
+  shouldArmBeforeUnload,
   buildShareAbandonMessage,
   softSnoozeShareAbandon,
   SOFT_SNOOZE_MS,
   MIN_DWELL_MS,
   MOBILE_DWELL_MS,
   MAX_SESSION_SHOWS,
+  BEFOREUNLOAD_MIN_DWELL_MS,
+  POLL_MS,
   resetShareAbandonSessionForTest,
   forceShareAbandonForTest,
 } from '../../src/lib/share-abandon-rescue';
@@ -61,6 +64,24 @@ describe('share-abandon-rescue', () => {
     expect(shouldShowShareAbandon({ ...base, dwellMs: 1000 })).toBe(false);
   });
 
+  it('poll skips when share strip already in view (fatigue mitigation)', () => {
+    const base = {
+      hasLink: true,
+      sharePending: true,
+      locked: false,
+      alreadyMaxShows: false,
+      snoozed: false,
+      dwellMs: MIN_DWELL_MS + 100,
+      isCoarsePointer: false,
+      embed: false,
+      confirmFlowActive: false,
+      reason: 'poll',
+      shareStripInView: true,
+    };
+    expect(shouldShowShareAbandon(base)).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, shareStripInView: false })).toBe(true);
+  });
+
   it('mobile needs longer dwell', () => {
     const base = {
       hasLink: true,
@@ -68,7 +89,7 @@ describe('share-abandon-rescue', () => {
       locked: false,
       alreadyMaxShows: false,
       snoozed: false,
-      dwellMs: 10_000,
+      dwellMs: 12_000,
       isCoarsePointer: true,
       embed: false,
       confirmFlowActive: false,
@@ -84,6 +105,26 @@ describe('share-abandon-rescue', () => {
     expect(until).toBe(now + SOFT_SNOOZE_MS);
   });
 
+  it('beforeunload only after prior show or long idle', () => {
+    const base = {
+      hasLink: true,
+      sharePending: true,
+      locked: false,
+      embed: false,
+      confirmFlowActive: false,
+      snoozed: false,
+      sessionShows: 0,
+      dwellMs: 20_000,
+    };
+    expect(shouldArmBeforeUnload(base)).toBe(false);
+    expect(shouldArmBeforeUnload({ ...base, sessionShows: 1 })).toBe(true);
+    expect(
+      shouldArmBeforeUnload({ ...base, dwellMs: BEFOREUNLOAD_MIN_DWELL_MS + 1 }),
+    ).toBe(true);
+    expect(shouldArmBeforeUnload({ ...base, sessionShows: 1, snoozed: true })).toBe(false);
+    expect(shouldArmBeforeUnload({ ...base, sessionShows: 1, locked: true })).toBe(false);
+  });
+
   it('forceShareAbandonForTest mounts panel when pending', () => {
     document.documentElement.setAttribute('data-vr-has-link', '1');
     markSharePending();
@@ -96,8 +137,10 @@ describe('share-abandon-rescue', () => {
     expect(document.documentElement.getAttribute('data-vr-share-abandon')).toBe('unit');
   });
 
-  it('MAX_SESSION_SHOWS is finite and small', () => {
-    expect(MAX_SESSION_SHOWS).toBeGreaterThanOrEqual(2);
-    expect(MAX_SESSION_SHOWS).toBeLessThanOrEqual(6);
+  it('caps are conservative to limit residual annoyance', () => {
+    expect(MAX_SESSION_SHOWS).toBe(3);
+    expect(SOFT_SNOOZE_MS).toBeGreaterThanOrEqual(5 * 60 * 1000);
+    expect(POLL_MS).toBeGreaterThanOrEqual(60_000);
+    expect(MIN_DWELL_MS).toBeGreaterThanOrEqual(10_000);
   });
 });
