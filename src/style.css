@@ -434,11 +434,23 @@ body.has-mobile-send-cta #toast-container {
   bottom: 5.5rem;
 }
 @media (min-width: 768px) {
-  /* Desktop: sticky less critical; still show strip primary */
-  .mobile-send-cta {
-    display: none !important;
+  /* Desktop: keep sticky send visible while share is pending — hard to ignore */
+  .mobile-send-cta:not(.hidden) {
+    display: block;
+    max-width: 28rem;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
   }
   body.has-mobile-send-cta {
+    padding-bottom: 6.25rem;
+  }
+  /* After lock, sticky can hide (exitSendMode already removes it) */
+  html[data-vr-share-locked] .mobile-send-cta {
+    display: none !important;
+  }
+  html[data-vr-share-locked] body.has-mobile-send-cta {
     padding-bottom: 0;
   }
 }
@@ -2017,6 +2029,166 @@ html[data-vr-has-link] .funnel-step-active {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Share abandon rescue — hard to ignore after get-link */
+.vr-share-abandon {
+  position: fixed;
+  inset: 0;
+  z-index: 960;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  animation: vr-share-abandon-in 0.28s ease-out;
+}
+
+@media (min-width: 640px) {
+  .vr-share-abandon {
+    align-items: center;
+  }
+}
+
+.vr-share-abandon-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.vr-share-abandon-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 26rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  background: linear-gradient(160deg, rgba(16, 185, 129, 0.18), rgba(24, 24, 27, 0.98) 40%, rgba(124, 58, 237, 0.16));
+  padding: 1.25rem 1.15rem 1rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(52, 211, 153, 0.12);
+}
+
+.vr-share-abandon-pulse {
+  position: absolute;
+  top: -0.35rem;
+  right: 1rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: #34d399;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+  animation: vr-share-abandon-dot 1.6s ease-out infinite;
+}
+
+.vr-share-abandon-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #ecfdf5;
+  line-height: 1.25;
+  margin: 0 0 0.5rem;
+}
+
+.vr-share-abandon-body {
+  font-size: 0.875rem;
+  color: #d4d4d8;
+  line-height: 1.45;
+  margin: 0 0 1rem;
+}
+
+.vr-share-abandon-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vr-share-abandon-cta {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  border: none;
+  background: linear-gradient(90deg, #059669, #7c3aed);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 10px 28px rgba(5, 150, 105, 0.35);
+}
+
+.vr-share-abandon-cta:hover {
+  filter: brightness(1.06);
+}
+
+.vr-share-abandon-later {
+  width: 100%;
+  padding: 0.55rem;
+  border: none;
+  background: transparent;
+  color: #a1a1aa;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.vr-share-abandon-later:hover {
+  color: #e4e4e7;
+}
+
+.vr-share-abandon-rule {
+  margin: 0.75rem 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: #71717a;
+  text-align: center;
+}
+
+.vr-share-abandon-card.vr-share-abandon-shake {
+  animation: vr-share-abandon-shake 0.4s ease;
+}
+
+@keyframes vr-share-abandon-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vr-share-abandon-dot {
+  0% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.65);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(52, 211, 153, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+  }
+}
+
+@keyframes vr-share-abandon-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+/* While abandon panel is open, sticky bar stays under dialog */
+html[data-vr-share-abandon] .mobile-send-cta {
+  z-index: 820;
 }
 
 /* Traffic-exchange iframe embed (/embed — frame-allowed route) */

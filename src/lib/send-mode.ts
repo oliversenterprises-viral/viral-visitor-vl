@@ -243,6 +243,11 @@ export function activateSendModeAfterGetLink(opts?: { autoCopied?: boolean }): v
   showStickySendBar();
   scrollToShareFirstPrimary();
 
+  // Hard-to-skip share: exit/return/poll abandon rescue (no prod side effects)
+  void import('./share-abandon-rescue')
+    .then((m) => m.initShareAbandonRescue())
+    .catch(() => {});
+
   // Re-sync funnel guide after strip is visible (ring was skipped while strip was hidden)
   void import('./funnel-conversion')
     .then((m) => m.setFunnelStep(3))

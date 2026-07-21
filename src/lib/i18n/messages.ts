@@ -197,6 +197,13 @@ export const en = {
   'send_mode.more': 'More ways to send',
   'send_mode.less': 'Hide extra options',
 
+  // Share abandon rescue — hard to ignore/skip after get-link
+  'share_abandon.title': "Don't leave without sending",
+  'share_abandon.body':
+    'Your free link is ready. Send it now — it locks when a friend taps Get my link. Copy alone never locks.',
+  'share_abandon.cta': 'Send to a friend now',
+  'share_abandon.later': "I'll send in a few minutes",
+
   // After first friend locks the link
   'post_share.title': "You're in — a friend joined!",
   'post_share.sub':

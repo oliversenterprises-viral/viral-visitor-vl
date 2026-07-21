@@ -16,6 +16,8 @@ export const COPY_NUDGE_DELAY_MS = 12 * 1000;
 /** Soft toast after copy if they still have not shared. */
 export const SHARE_NUDGE_AFTER_COPY_MS = 18 * 1000;
 const DEFAULT_SNOOZE_MS = 60 * 60 * 1000; // 1 hour
+/** "Later" is not permanent — short soft snooze so share stays hard to skip. */
+export const SOFT_DISMISS_MS = 4 * 60 * 1000;
 
 export function markReferralLinkReady(): void {
   try {
@@ -57,12 +59,12 @@ export function markShareCompleted(): void {
   }
 }
 
-export function dismissShareReminder(): void {
-  try {
-    localStorage.setItem(REMINDER_DISMISSED_KEY, '1');
-  } catch {
-    // non-fatal
-  }
+/**
+ * Soft dismiss ("Later") — never permanent.
+ * Permanent hide only via markShareCompleted (real share path).
+ */
+export function dismissShareReminder(ms = SOFT_DISMISS_MS, now = Date.now()): void {
+  snoozeShareReminder(ms, now);
 }
 
 /** Snooze reminder (default 1 hour) without marking as permanently dismissed. */
@@ -72,6 +74,15 @@ export function snoozeShareReminder(ms = DEFAULT_SNOOZE_MS, now = Date.now()): v
     localStorage.removeItem(REMINDER_DISMISSED_KEY);
   } catch {
     // non-fatal
+  }
+}
+
+/** True only after a real share completed (permanent dismiss key). */
+export function isShareReminderPermanentlyDismissed(): boolean {
+  try {
+    return localStorage.getItem(REMINDER_DISMISSED_KEY) === '1';
+  } catch {
+    return false;
   }
 }
 

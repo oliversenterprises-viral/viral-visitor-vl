@@ -78,4 +78,8 @@ initApp().catch((err) => {
       }
     })
     .catch(() => {});
+  // Arm hard-to-skip share abandon (no-ops until link + pending; safe on cold loads)
+  void import('./lib/share-abandon-rescue')
+    .then((m) => m.initShareAbandonRescue())
+    .catch(() => {});
 });

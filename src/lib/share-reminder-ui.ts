@@ -147,7 +147,8 @@ function wireBannerActions(): void {
 
   document.getElementById('share-reminder-action')?.addEventListener('click', (e) => {
     e.preventDefault();
-    dismissShareReminder();
+    // Soft snooze only — permanent dismiss only after real share (markShareCompleted)
+    dismissShareReminder(45_000);
     hideBanner();
     // Always open the real send path (copy alone never finishes the job)
     if (document.documentElement.hasAttribute('data-vr-has-link')) {

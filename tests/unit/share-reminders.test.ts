@@ -66,15 +66,22 @@ describe('share-reminders', () => {
     expect(shouldShowShareReminder()).toBe(true);
   });
 
-  it('hides reminder after share or dismiss', () => {
+  it('hides reminder after real share permanently', () => {
     markReferralLinkReady();
     vi.advanceTimersByTime(REMINDER_DELAY_MS + 1);
     markShareCompleted();
     expect(shouldShowShareReminder()).toBe(false);
+  });
 
+  it('Later is soft dismiss — returns after short snooze (hard to skip forever)', () => {
     markReferralLinkReady();
     vi.advanceTimersByTime(REMINDER_DELAY_MS + 1);
-    dismissShareReminder();
+    expect(shouldShowShareReminder()).toBe(true);
+    dismissShareReminder(); // soft 4 min default
     expect(shouldShowShareReminder()).toBe(false);
+    vi.advanceTimersByTime(3 * 60 * 1000);
+    expect(shouldShowShareReminder()).toBe(false);
+    vi.advanceTimersByTime(2 * 60 * 1000);
+    expect(shouldShowShareReminder()).toBe(true);
   });
 });
