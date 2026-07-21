@@ -7,6 +7,11 @@ import {
   type PublicActivityRow,
 } from './public-activity';
 import { formatRankMoveLabel, type RankMoveActivityRow } from './rank-move-activity';
+import {
+  formatPublicReferralActivity,
+  formatPublicShareActivity,
+  formatReferrerBadge,
+} from './referrer-display';
 
 /** @deprecated Use PublicActivityRow — kept for existing imports */
 export type ActivityRow = PublicActivityRow;
@@ -36,12 +41,14 @@ function renderActivityRow(row: PublicActivityRow, index: number): string {
 
   if (row.kind === 'share') {
     const platform = formatSharePlatformLabel(row.platform);
+    const { code, action } = formatPublicShareActivity(row.referrer_code, platform);
     return `
         <div class="activity-row activity-row--share flex justify-between items-center text-xs bg-zinc-900/70 px-4 py-2.5 rounded-2xl border border-white/5${fresh}${reveal}">
           <span class="font-mono text-violet-300 flex items-center gap-2 flex-wrap">
             ${bolt}
-            ${escapeHtml(row.referrer_code)}
-            <span class="text-zinc-500 font-sans">shared on ${escapeHtml(platform)}</span>
+            <span class="text-[10px] uppercase tracking-wide text-zinc-500 font-sans">Referrer</span>
+            ${escapeHtml(code)}
+            <span class="text-zinc-500 font-sans">${escapeHtml(action)}</span>
           </span>
           <span class="text-zinc-400 tabular-nums flex-shrink-0">${formatRelativeTime(row.created_at)}</span>
         </div>`;
@@ -55,6 +62,7 @@ function renderActivityRow(row: PublicActivityRow, index: number): string {
         <div class="activity-row activity-row--rank flex justify-between items-center text-xs bg-amber-500/10 px-4 py-2.5 rounded-2xl border border-amber-400/20${fresh}${reveal}">
           <span class="font-mono ${rankClass} flex items-center gap-2 flex-wrap">
             ${bolt}
+            <span class="text-[10px] uppercase tracking-wide text-zinc-500 font-sans">Referrer</span>
             ${escapeHtml(row.referrer_code)}
             <span class="text-zinc-400 font-sans">${escapeHtml(label)}</span>
           </span>
@@ -62,12 +70,14 @@ function renderActivityRow(row: PublicActivityRow, index: number): string {
         </div>`;
   }
 
+  const credit = formatPublicReferralActivity(row.referrer_code);
   return `
-        <div class="activity-row activity-row--referral flex justify-between items-center text-xs bg-zinc-900/70 px-4 py-2.5 rounded-2xl border border-white/5${fresh}${reveal}">
-          <span class="font-mono text-emerald-400 flex items-center gap-2">
+        <div class="activity-row activity-row--referral flex justify-between items-center text-xs bg-zinc-900/70 px-4 py-2.5 rounded-2xl border border-white/5${fresh}${reveal}" title="${escapeHtml(formatReferrerBadge(row.referrer_code))}">
+          <span class="font-mono text-emerald-400 flex items-center gap-2 flex-wrap">
             ${bolt}
-            ${escapeHtml(row.referrer_code)}
-            <span class="text-zinc-500 font-sans">joined</span>
+            <span class="text-[10px] uppercase tracking-wide text-emerald-600/90 font-sans">Referrer</span>
+            ${escapeHtml(credit.code)}
+            <span class="text-zinc-500 font-sans">${escapeHtml(credit.action)}</span>
           </span>
           <span class="text-zinc-400 tabular-nums">${formatRelativeTime(row.created_at)}</span>
         </div>`;

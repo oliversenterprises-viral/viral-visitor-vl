@@ -18,6 +18,13 @@ import {
   reportReferralsTrackingSummary,
   wireReferralsTrackingHub,
 } from './referrals-tracking';
+import {
+  REFERRAL_STAT_HINTS,
+  REFERRER_COLUMN_SUB,
+  REFERRER_COLUMN_TITLE,
+  VISITOR_IP_COLUMN_SUB,
+  VISITOR_IP_COLUMN_TITLE,
+} from '../lib/referrer-display';
 
 type RiskFilter = 'all' | 'high-risk';
 
@@ -126,7 +133,7 @@ async function renderReferralsTab(content: HTMLElement) {
     <div class="flex items-center justify-between mb-4">
       <div>
         <div class="text-2xl font-bold">Referrals</div>
-        <div class="text-sm text-zinc-400">Monitor all referral activity • Abuse detection built-in</div>
+        <div class="text-sm text-zinc-400">Each row = one signup · code = who got credit (referrer) · IP = who joined</div>
       </div>
       <div class="flex items-center gap-3">
         <span id="referrals-live-indicator" class="hidden text-[10px] text-emerald-400/80"><i class="fa-solid fa-circle text-[6px] mr-1"></i>live</span>
@@ -138,35 +145,40 @@ async function renderReferralsTab(content: HTMLElement) {
     </div>
 
     <div id="referrals-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="glass admin-stat-card rounded-2xl p-4">
-        <div class="text-xs text-zinc-400">TOTAL REFERRALS</div>
+      <div class="glass admin-stat-card rounded-2xl p-4" title="${REFERRAL_STAT_HINTS.total}">
+        <div class="text-xs text-zinc-400 uppercase tracking-wide">Referrals</div>
         <div id="stat-total" class="text-4xl font-bold text-white mt-1">—</div>
+        <div class="text-[10px] text-zinc-500 mt-1 leading-snug">${REFERRAL_STAT_HINTS.total}</div>
       </div>
-      <div class="glass admin-stat-card rounded-2xl p-4">
-        <div class="text-xs text-zinc-400">UNIQUE REFERRERS</div>
+      <div class="glass admin-stat-card rounded-2xl p-4" title="${REFERRAL_STAT_HINTS.unique}">
+        <div class="text-xs text-emerald-400/90 uppercase tracking-wide">Referrers</div>
         <div id="stat-unique" class="text-4xl font-bold text-emerald-400 mt-1">—</div>
+        <div class="text-[10px] text-zinc-500 mt-1 leading-snug">${REFERRAL_STAT_HINTS.unique}</div>
       </div>
-      <div class="glass admin-stat-card rounded-2xl p-4">
-        <div class="text-xs text-zinc-400">TODAY</div>
+      <div class="glass admin-stat-card rounded-2xl p-4" title="${REFERRAL_STAT_HINTS.today}">
+        <div class="text-xs text-zinc-400 uppercase tracking-wide">Today</div>
         <div id="stat-today" class="text-4xl font-bold text-white mt-1">—</div>
+        <div class="text-[10px] text-zinc-500 mt-1 leading-snug">${REFERRAL_STAT_HINTS.today}</div>
       </div>
-      <button type="button" id="stat-risk-card" class="glass admin-stat-card rounded-2xl p-4 border border-red-500/30 text-left hover:border-red-500/50 transition-colors" title="Click to filter high-risk IPs only">
-        <div class="text-xs text-red-400 flex items-center gap-1">
-          HIGH-RISK IPs
+      <button type="button" id="stat-risk-card" class="glass admin-stat-card rounded-2xl p-4 border border-red-500/30 text-left hover:border-red-500/50 transition-colors" title="${REFERRAL_STAT_HINTS.risk}">
+        <div class="text-xs text-red-400 flex items-center gap-1 uppercase tracking-wide">
+          High-risk IPs
           <i class="fa-solid fa-info-circle text-[10px] opacity-60"></i>
         </div>
         <div id="stat-risk" class="text-4xl font-bold text-red-400 mt-1">—</div>
+        <div class="text-[10px] text-zinc-500 mt-1 leading-snug">${REFERRAL_STAT_HINTS.risk}</div>
       </button>
     </div>
 
     <div id="referrals-top-panel" class="hidden mb-6 rounded-2xl border border-white/10 bg-zinc-900/40 p-4">
-      <div class="text-xs uppercase tracking-widest text-zinc-500 mb-3">Top referrers in current view</div>
+      <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Top referrers in current view</div>
+      <div class="text-[10px] text-zinc-500 mb-3">Who got the most credit (click a code to filter the table)</div>
       <div id="referrals-top-list" class="flex flex-wrap gap-2"></div>
     </div>
 
     <div class="flex flex-col md:flex-row gap-3 items-center mb-3">
       <div class="relative flex-1 w-full">
-        <input id="referral-search" type="search" placeholder="Search code, IP, or user agent..."
+        <input id="referral-search" type="search" placeholder="Search referrer code, visitor IP, or user agent…"
                class="w-full bg-zinc-900 border border-white/10 rounded-2xl px-4 py-2 pr-10 text-sm focus:border-violet-500" />
         <button type="button" id="referral-search-clear" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs" aria-label="Clear search">✕</button>
       </div>
@@ -309,7 +321,7 @@ async function renderReferralsTab(content: HTMLElement) {
       <button type="button" data-search-code="${escapeHtml(t.code)}" class="referral-top-chip flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm">
         <span class="w-5 h-5 rounded-full bg-violet-600/80 flex items-center justify-center text-[10px] font-bold">${i + 1}</span>
         <span class="font-mono text-emerald-400">${escapeHtml(t.code)}</span>
-        <span class="text-zinc-400 text-xs">${t.count} refs</span>
+        <span class="text-zinc-400 text-xs">${t.count} credit${t.count === 1 ? '' : 's'}</span>
       </button>`,
       )
       .join('');
@@ -569,11 +581,19 @@ function showReferralDetails(row: AdminReferralRow, isHighRisk: boolean = false)
   const safeUa = escapeHtml(row.user_agent || '—');
 
   contentBox.innerHTML = `
+    <div class="mb-3 rounded-xl border border-emerald-500/25 bg-emerald-950/30 px-3 py-2 text-xs text-emerald-100/90">
+      <span class="font-semibold text-emerald-300">Who got credit:</span>
+      <span class="font-mono text-emerald-200 ml-1">${safeCode}</span>
+      <span class="text-zinc-500 mx-1">·</span>
+      <span class="text-zinc-400">Visitor who joined:</span>
+      <span class="font-mono text-zinc-200 ml-1">${safeIp}</span>
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
       <div><span class="text-zinc-400">Referral ID</span><div class="font-mono text-xs break-all">${escapeHtml(row.id || '—')}</div></div>
       <div>
-        <span class="text-zinc-400">Referrer Code</span>
-        <div class="flex items-center gap-2">
+        <span class="text-zinc-400">${REFERRER_COLUMN_TITLE}</span>
+        <div class="text-[10px] text-zinc-500">${REFERRER_COLUMN_SUB} · this person climbs the board</div>
+        <div class="flex items-center gap-2 mt-0.5">
           <div class="font-mono text-emerald-400 text-lg">${safeCode}</div>
           ${row.referrer_code ? `
             <button class="copy-modal-code-btn text-emerald-400 hover:text-emerald-300 px-2 py-0.5 rounded bg-white/5 text-xs" data-code="${safeCode}">
@@ -584,8 +604,9 @@ function showReferralDetails(row: AdminReferralRow, isHighRisk: boolean = false)
       </div>
 
       <div>
-        <span class="text-zinc-400">IP Address</span>
-        <div class="flex items-center gap-2">
+        <span class="text-zinc-400">${VISITOR_IP_COLUMN_TITLE}</span>
+        <div class="text-[10px] text-zinc-500">${VISITOR_IP_COLUMN_SUB}</div>
+        <div class="flex items-center gap-2 mt-0.5">
           <div class="font-mono text-xs">${safeIp}</div>
           ${rowIp ? `
             <button class="copy-modal-ip-btn text-sky-400 hover:text-sky-300 px-2 py-0.5 rounded bg-white/5 text-xs" data-ip="${safeIp}">
@@ -660,8 +681,14 @@ function buildReferralsTableHTML(filtered: readonly AdminReferralRow[], riskIPs:
       <thead class="sticky top-0 bg-zinc-950/95 backdrop-blur-sm z-10">
         <tr class="border-b border-white/10 text-left text-zinc-400">
           <th class="py-3 pr-4">Date</th>
-          <th class="py-3 pr-4">Referrer Code</th>
-          <th class="py-3 pr-4">IP Address</th>
+          <th class="py-3 pr-4">
+            <div class="text-emerald-300/90">${REFERRER_COLUMN_TITLE}</div>
+            <div class="text-[10px] font-normal text-zinc-500 normal-case tracking-normal">${REFERRER_COLUMN_SUB}</div>
+          </th>
+          <th class="py-3 pr-4">
+            <div>${VISITOR_IP_COLUMN_TITLE}</div>
+            <div class="text-[10px] font-normal text-zinc-500 normal-case tracking-normal">${VISITOR_IP_COLUMN_SUB}</div>
+          </th>
           <th class="py-3 pr-4">User Agent</th>
           <th class="py-3 pr-4">Time Ago</th>
           <th class="py-3 pr-4">Risk</th>
@@ -683,21 +710,25 @@ function buildReferralsTableHTML(filtered: readonly AdminReferralRow[], riskIPs:
     const isRisk = !!(rowIp && riskIPs.has(rowIp));
 
     html += `
-      <tr data-referral-id="${escapeHtml(rowId)}" class="referral-row table-row border-b border-white/10 hover:bg-zinc-900/60 cursor-pointer ${isRisk ? 'bg-red-950/20' : ''}">
+      <tr data-referral-id="${escapeHtml(rowId)}" class="referral-row table-row border-b border-white/10 hover:bg-zinc-900/60 cursor-pointer ${isRisk ? 'bg-red-950/20' : ''}" title="Credit → ${code} · visitor ${ip}">
         <td class="py-3 pr-4 text-xs text-zinc-400 whitespace-nowrap">${dateStr}</td>
         <td class="py-3 pr-4 font-mono text-emerald-400">
-          <span class="inline-flex items-center gap-1.5">
-            ${code}
-            <button data-code="${code}" class="copy-code-btn text-emerald-400 hover:text-emerald-300 p-1 -mr-1" title="Copy code">
-              <i class="fa-solid fa-copy text-xs"></i>
-            </button>
+          <span class="inline-flex flex-col gap-0.5">
+            <span class="inline-flex items-center gap-1.5">
+              <span class="text-[9px] uppercase tracking-wide text-emerald-600/80 font-sans">Referrer</span>
+              ${code}
+              <button data-code="${code}" class="copy-code-btn text-emerald-400 hover:text-emerald-300 p-1 -mr-1" title="Copy referrer code">
+                <i class="fa-solid fa-copy text-xs"></i>
+              </button>
+            </span>
           </span>
         </td>
         <td class="py-3 pr-4 font-mono text-xs text-zinc-300">
           <span class="inline-flex items-center gap-1">
+            <span class="text-[9px] uppercase tracking-wide text-zinc-500 font-sans">Visitor</span>
             ${ip}
             ${rowIp ? `
-              <button data-ip="${ip}" class="copy-ip-btn text-sky-400 hover:text-sky-300 p-1" title="Copy IP">
+              <button data-ip="${ip}" class="copy-ip-btn text-sky-400 hover:text-sky-300 p-1" title="Copy visitor IP">
                 <i class="fa-solid fa-copy text-[10px]"></i>
               </button>
             ` : ''}

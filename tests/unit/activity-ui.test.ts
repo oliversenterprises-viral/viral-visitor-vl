@@ -7,21 +7,24 @@ describe('activity-ui', () => {
     expect(formatRelativeTime(new Date(now - 5000).toISOString(), now)).toBe('just now');
   });
 
-  it('buildRecentActivityHtml marks first row fresh for referrals', () => {
+  it('buildRecentActivityHtml marks first row fresh and shows who got credit', () => {
     const html = buildRecentActivityHtml([
       { kind: 'referral', referrer_code: 'VIRAL-X', created_at: new Date().toISOString() },
     ]);
     expect(html).toContain('activity-row--fresh');
     expect(html).toContain('VIRAL-X');
-    expect(html).toContain('joined');
+    expect(html).toContain('got credit');
+    expect(html).toMatch(/Referrer/i);
   });
 
-  it('buildRecentActivityHtml renders share rows', () => {
+  it('buildRecentActivityHtml renders share rows with referrer label', () => {
     const html = buildRecentActivityHtml([
       { kind: 'share', referrer_code: 'VIRAL-Z', created_at: new Date().toISOString(), platform: 'reddit' },
     ]);
     expect(html).toContain('shared on Reddit');
     expect(html).toContain('activity-row--share');
+    expect(html).toContain('VIRAL-Z');
+    expect(html).toMatch(/Referrer/i);
   });
 
   it('buildRecentActivityHtml renders rank move rows', () => {

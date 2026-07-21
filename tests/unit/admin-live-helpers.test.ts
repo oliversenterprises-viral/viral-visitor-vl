@@ -19,7 +19,7 @@ import {
 } from '../../src/admin/admin-live-helpers';
 
 describe('admin-live-helpers', () => {
-  it('parseAdminLiveEvent maps referral insert', () => {
+  it('parseAdminLiveEvent maps referral insert with credit → referrer', () => {
     const ev = parseAdminLiveEvent('referrals', 'INSERT', {
       id: 'r1',
       referrer_code: 'VIRAL-ABC',
@@ -27,10 +27,12 @@ describe('admin-live-helpers', () => {
     });
     expect(ev?.kind).toBe('referral');
     expect(ev?.tab).toBe(0);
-    expect(ev?.detail).toBe('VIRAL-ABC');
+    expect(ev?.label).toMatch(/credited|referral/i);
+    expect(ev?.detail).toContain('VIRAL-ABC');
+    expect(ev?.detail).toMatch(/Credit/i);
   });
 
-  it('parseAdminLiveEvent maps share insert', () => {
+  it('parseAdminLiveEvent maps share insert with referrer badge', () => {
     const ev = parseAdminLiveEvent('shares', 'INSERT', {
       id: 's1',
       platform: 'twitter',
@@ -39,6 +41,8 @@ describe('admin-live-helpers', () => {
     });
     expect(ev?.kind).toBe('share');
     expect(ev?.label).toContain('twitter');
+    expect(ev?.detail).toContain('VIRAL-X');
+    expect(ev?.detail).toMatch(/Referrer/i);
   });
 
   it('parseAdminLiveEvent maps prize_claims with prod columns (no prize_name)', () => {
@@ -64,7 +68,7 @@ describe('admin-live-helpers', () => {
     });
     expect(ev?.kind).toBe('visitor');
     expect(ev?.label).toContain('landing');
-    expect(ev?.detail).toContain('direct');
+    expect(ev?.detail).toMatch(/direct/i);
     expect(ev?.detail).toContain('reddit');
   });
 
@@ -76,7 +80,7 @@ describe('admin-live-helpers', () => {
       created_at: '2026-06-30T12:00:00Z',
     });
     expect(ev?.refCode).toBe('VIRAL-ABC');
-    expect(ev?.detail).toContain('ref:VIRAL-ABC');
+    expect(ev?.detail).toContain('via VIRAL-ABC');
     expect(isAdminLiveReferredEvent(ev!)).toBe(true);
   });
 

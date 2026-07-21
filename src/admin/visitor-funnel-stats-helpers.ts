@@ -112,14 +112,15 @@ export function formatVisitorIpLabel(event: Record<string, unknown>): string {
   return '';
 }
 
-/** Compact context for a funnel event row (IP, ref, country, share platform). */
+/** Compact context for a funnel event row (IP, referrer, country, share platform). */
 export function formatRecentVisitorEventDetail(event: Record<string, unknown>): string {
   const parts: string[] = [];
   const ip = formatVisitorIpLabel(event);
   if (ip) parts.push(ip);
 
   const ref = String(event.ref_code || event.refCode || '').trim();
-  if (ref) parts.push(`ref:${ref}`);
+  if (ref) parts.push(`via ${ref}`);
+  else parts.push('direct');
 
   const country = String(event.country_code || event.countryCode || '').trim();
   if (country && country !== '—') parts.push(country);
@@ -141,16 +142,21 @@ export function getReferralNotifierIp(row: RecentReferralNotifierRow): string {
   return typeof ip === 'string' ? ip.trim() : '';
 }
 
-/** Label for referral notifier rows (credited referrer ← visitor IP). */
+/** Label for referral notifier rows (who got credit ← visitor IP). */
 export function formatReferralNotifierLine(row: RecentReferralNotifierRow): {
   code: string;
   ipLabel: string;
+  referrerLabel: string;
+  summary: string;
 } {
   const code = String(row.referrer_code || '—').trim() || '—';
-  const ip = getReferralNotifierIp(row);
+  const ip = getReferralNotifierIp(row) || 'IP withheld';
+  const referrerLabel = code === '—' ? 'Referrer unknown' : `Referrer ${code}`;
   return {
     code,
-    ipLabel: ip || 'IP withheld',
+    ipLabel: ip,
+    referrerLabel,
+    summary: `${referrerLabel} got credit ← visitor ${ip}`,
   };
 }
 

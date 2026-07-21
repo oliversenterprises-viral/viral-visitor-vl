@@ -460,12 +460,13 @@ function renderVisitorFunnelView(
 
   const newReferralCount = countRecentReferralNotifiers(recentReferrals, 60);
   html += `<div class="flex flex-wrap items-center gap-2 mb-1 mt-2">`;
-  html += `<div class="text-[9px] text-emerald-300 font-semibold">Referral notifier</div>`;
+  html += `<div class="text-[9px] text-emerald-300 font-semibold">Who got credit (referrals)</div>`;
   if (newReferralCount > 0) {
     html += `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200 text-[8px]">${newReferralCount} in last hour</span>`;
   }
   html += `</div>`;
-  html += `<div class="font-mono text-[8px] text-zinc-300 bg-emerald-950/30 border border-emerald-500/25 p-1.5 rounded max-h-20 overflow-y-auto mb-2">`;
+  html += `<div class="text-[8px] text-zinc-500 mb-1">Each line: referrer code that received credit ← visitor who joined</div>`;
+  html += `<div class="font-mono text-[8px] text-zinc-300 bg-emerald-950/30 border border-emerald-500/25 p-1.5 rounded max-h-24 overflow-y-auto mb-2">`;
   if (referralFetchError) {
     html += `<div class="text-amber-400/90">Referral notifier: ${escapeHtml(referralFetchError)}</div>`;
   } else if (!recentReferrals.length) {
@@ -474,7 +475,7 @@ function renderVisitorFunnelView(
     for (const row of recentReferrals) {
       const ts = row.created_at || '';
       const when = ts ? formatEventTimestampLabel(ts) : '';
-      const { code, ipLabel } = formatReferralNotifierLine(row);
+      const { code, ipLabel, referrerLabel } = formatReferralNotifierLine(row);
       const isNew = isRecentReferralNotifier(ts, 60);
       const dot = isNew
         ? '<span class="text-emerald-400" title="Last hour">●</span> '
@@ -482,7 +483,7 @@ function renderVisitorFunnelView(
       const timePrefix = when
         ? `<span class="text-zinc-500">${escapeHtml(when)}</span> · `
         : '';
-      html += `<div class="mb-0.5 ${isNew ? 'text-emerald-100' : ''}">${dot}${timePrefix}<span class="text-violet-200">${escapeHtml(code)}</span> <span class="text-zinc-500">credited</span> ← <span class="text-zinc-200">${escapeHtml(ipLabel)}</span></div>`;
+      html += `<div class="mb-0.5 ${isNew ? 'text-emerald-100' : ''}" title="${escapeHtml(referrerLabel)} got credit">${dot}${timePrefix}<span class="text-[7px] uppercase text-emerald-600/90">Referrer</span> <span class="text-violet-200 font-semibold">${escapeHtml(code)}</span> <span class="text-zinc-500">got credit</span> ← <span class="text-zinc-400">visitor</span> <span class="text-zinc-200">${escapeHtml(ipLabel)}</span></div>`;
     }
   }
   html += `</div>`;

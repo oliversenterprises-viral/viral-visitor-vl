@@ -45,30 +45,34 @@ function buildReferralsHubHeaderHtml(summary: ReferralTrackingSummary | null): s
   const kpi = summary
     ? `
       <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2">
-        <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">In view</div>
+        <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5" title="Signups in the current filter">
+          <div class="text-[7px] text-zinc-500 uppercase">Signups in view</div>
           <div class="text-sm font-bold text-white tabular-nums">${summary.inView}</div>
+          <div class="text-[7px] text-zinc-600">joined via a link</div>
         </div>
-        <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">Unique referrers</div>
+        <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5" title="Distinct referrer codes that got credit">
+          <div class="text-[7px] text-zinc-500 uppercase">Who got credit</div>
           <div class="text-sm font-bold text-emerald-300 tabular-nums">${summary.uniqueReferrers}</div>
+          <div class="text-[7px] text-zinc-600">unique referrers</div>
         </div>
-        <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5">
+        <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5" title="Credited signups since local midnight">
           <div class="text-[7px] text-zinc-500 uppercase">Today</div>
           <div class="text-sm font-bold text-white tabular-nums">${summary.today}</div>
+          <div class="text-[7px] text-zinc-600">new credits</div>
         </div>
-        <div class="rounded-lg bg-red-950/40 border border-red-500/25 px-2 py-1.5">
+        <div class="rounded-lg bg-red-950/40 border border-red-500/25 px-2 py-1.5" title="Visitor IPs with 3+ referrals">
           <div class="text-[7px] text-zinc-500 uppercase">High-risk IPs</div>
           <div class="text-sm font-bold text-red-400 tabular-nums">${summary.highRiskIps}</div>
+          <div class="text-[7px] text-zinc-600">3+ from same IP</div>
         </div>
-        <div class="rounded-lg bg-emerald-950/40 border border-emerald-500/25 px-2 py-1.5">
+        <div class="rounded-lg bg-emerald-950/40 border border-emerald-500/25 px-2 py-1.5" title="Referrer with most credits in view">
           <div class="text-[7px] text-zinc-500 uppercase">Top referrer</div>
           <div class="text-[10px] font-bold text-emerald-300 truncate">${escapeHtml(summary.topReferrer)}</div>
-          <div class="text-[8px] text-zinc-500 tabular-nums">${summary.topReferrerCount} refs</div>
+          <div class="text-[8px] text-zinc-500 tabular-nums">${summary.topReferrerCount} credit${summary.topReferrerCount === 1 ? '' : 's'}</div>
         </div>
       </div>
       <div class="text-[8px] text-zinc-500 mt-1.5">
-        ${summary.totalReal} real referrals in database · Range ${escapeHtml(String(summary.filterDays === 0 ? 'all time' : `${summary.filterDays}d`))}
+        ${summary.totalReal} real referrals in database · Range ${escapeHtml(String(summary.filterDays === 0 ? 'all time' : `${summary.filterDays}d`))} · code always = who got credit
       </div>`
     : `<div class="text-[9px] text-zinc-500 mt-2">Loading referral tracking…</div>`;
 
@@ -77,7 +81,7 @@ function buildReferralsHubHeaderHtml(summary: ReferralTrackingSummary | null): s
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
           <div class="text-xs font-semibold text-zinc-100">Referral Analytics</div>
-          <div class="text-[9px] text-zinc-500">Credited signups, abuse detection, and referrer performance</div>
+          <div class="text-[9px] text-zinc-500">Code = who got credit · IP = visitor who joined · abuse filters built-in</div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           ${buildAdminTabDaysSelectHtml(REFERRALS_DAYS_STORAGE_KEY, 'data-referrals-tracking-range', summary?.filterDays)}

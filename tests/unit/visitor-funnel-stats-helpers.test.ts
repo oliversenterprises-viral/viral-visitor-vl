@@ -142,7 +142,7 @@ describe('visitor funnel stats helpers (pure)', () => {
     expect(formatVisitorIpLabel({})).toBe('');
   });
 
-  it('formatRecentVisitorEventDetail joins IP, ref, country, and platform', () => {
+  it('formatRecentVisitorEventDetail joins IP, via-referrer, country, and platform', () => {
     const detail = formatRecentVisitorEventDetail({
       event_name: 'ShareReferral',
       metadata: { client_ip: '1.2.3.4', platform: 'x' },
@@ -150,19 +150,22 @@ describe('visitor funnel stats helpers (pure)', () => {
       country_code: 'US',
     });
     expect(detail).toContain('1.2.3.4');
-    expect(detail).toContain('ref:VIRAL-ABC');
+    expect(detail).toContain('via VIRAL-ABC');
     expect(detail).toContain('US');
     expect(detail).toContain('x');
   });
 
-  it('formatReferralNotifierLine falls back when IP missing', () => {
-    expect(formatReferralNotifierLine({ referrer_code: 'VIRAL-A' })).toEqual({
+  it('formatReferralNotifierLine shows who got credit', () => {
+    expect(formatReferralNotifierLine({ referrer_code: 'VIRAL-A' })).toMatchObject({
       code: 'VIRAL-A',
       ipLabel: 'IP withheld',
+      referrerLabel: 'Referrer VIRAL-A',
     });
-    expect(formatReferralNotifierLine({ referrer_code: 'VIRAL-B', referred_ip: '9.9.9.9' })).toEqual({
+    expect(formatReferralNotifierLine({ referrer_code: 'VIRAL-B', referred_ip: '9.9.9.9' })).toMatchObject({
       code: 'VIRAL-B',
       ipLabel: '9.9.9.9',
+      referrerLabel: 'Referrer VIRAL-B',
+      summary: expect.stringContaining('got credit'),
     });
   });
 

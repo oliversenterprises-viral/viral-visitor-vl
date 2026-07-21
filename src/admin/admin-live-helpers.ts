@@ -3,6 +3,11 @@
  */
 
 import { isPassiveViralLoopStep, isViralLoopStep } from '../lib/visitor-tracking';
+import {
+  formatAdminLiveReferralDetail,
+  formatAdminLiveShareDetail,
+  formatVisitorViaReferrer,
+} from '../lib/referrer-display';
 
 export type AdminLiveEventKind =
   | 'referral'
@@ -110,12 +115,13 @@ export function parseAdminLiveEvent(
 
   if (table === 'referrals' && eventType === 'INSERT') {
     const code = str(row.referrer_code, 16);
+    // Code = who got credit (referrer), never the visitor
     return {
       id,
       kind: 'referral',
       ...pickMeta('referral'),
-      label: 'New referral',
-      detail: code || 'anonymous',
+      label: 'Referral credited',
+      detail: formatAdminLiveReferralDetail(code || ''),
       at,
     };
   }
@@ -128,7 +134,7 @@ export function parseAdminLiveEvent(
       kind: 'share',
       ...pickMeta('share'),
       label: `Share · ${platform}`,
-      detail: code || 'link copied',
+      detail: formatAdminLiveShareDetail(code || '', platform),
       at,
     };
   }
@@ -157,8 +163,8 @@ export function parseAdminLiveEvent(
     const src = str(row.utm_source, 16);
     const refCode = str(row.ref_code, 16);
     const detailParts: string[] = [];
-    if (refCode) detailParts.push(`ref:${refCode}`);
-    else detailParts.push('direct');
+    // Landing referrer who sent this visitor (if any)
+    detailParts.push(formatVisitorViaReferrer(refCode || ''));
     if (src) detailParts.push(src);
     const prefix = isViralLoopStep(step) ? 'Loop' : 'Funnel';
     return {
