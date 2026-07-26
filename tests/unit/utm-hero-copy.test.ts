@@ -33,6 +33,18 @@ describe('utm-hero-copy', () => {
     expect(resolveUtmHeroSegment('telegram', 'social')).toBe('telegram');
   });
 
+  it('resolveUtmHeroSegment maps paid medium to paid segment', () => {
+    expect(resolveUtmHeroSegment('reddit', 'paid')).toBe('reddit');
+    expect(resolveUtmHeroSegment('facebook', 'paid')).toBe('paid');
+    expect(resolveUtmHeroSegment('google', 'cpc')).toBe('paid');
+  });
+
+  it('resolveUtmHeroCopy paid segment emphasizes get-link then share', () => {
+    const copy = resolveUtmHeroCopy('facebook', 'paid');
+    expect(copy?.buttonLabel.toLowerCase()).toMatch(/link|share/);
+    expect(copy?.titleAccent.toLowerCase()).toMatch(/share|climb|board/);
+  });
+
   it('resolveUtmHeroCopy returns tailored button for trafficadbar', () => {
     const copy = resolveUtmHeroCopy('trafficadbar', 'traffic_exchange');
     expect(copy?.buttonLabel).toBe('Get my free link now');

@@ -6,6 +6,7 @@
 import { isAdminStatsReadOnlyRefresh } from './admin-stats-refresh-guard';
 import { getStoredLandingRef } from './referral-url';
 import { getStoredUtmAttribution } from './utm-attribution';
+import { trackRedditFunnelStep } from './reddit-pixel';
 import { supabase } from './supabase';
 import { eventName, groupBy, latestEvents } from './stats-helpers';
 
@@ -236,6 +237,8 @@ export function trackVisitorFunnel(
   if (isAdminStatsReadOnlyRefresh()) return;
   pushLocalVisitorEvent(step, metadata);
   logVisitorEventServer(step, metadata);
+  // Optional Reddit Ads pixel (no-op unless VITE_REDDIT_PIXEL_ID is set)
+  trackRedditFunnelStep(step);
 }
 
 /** Track viral loop engagement (same visitor_events table, distinct event names). */

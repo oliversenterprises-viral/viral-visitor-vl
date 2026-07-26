@@ -48,6 +48,19 @@ export interface ShareAbandonEligibility {
   /** Poll path only: skip if primary send UI is already visible. */
   shareStripInView?: boolean;
   reason?: string;
+  /** Paid / Reddit — prompt share sooner after get-link. */
+  isPaidTraffic?: boolean;
+}
+
+/** Dwell before share-abandon panel (paid traffic is faster). */
+export function resolveShareAbandonDwellMs(opts: {
+  isCoarsePointer: boolean;
+  isPaidTraffic?: boolean;
+}): number {
+  if (opts.isPaidTraffic) {
+    return opts.isCoarsePointer ? 10_000 : 6_000;
+  }
+  return opts.isCoarsePointer ? MOBILE_DWELL_MS : MIN_DWELL_MS;
 }
 
 export function shouldShowShareAbandon(opts: ShareAbandonEligibility): boolean {
@@ -55,8 +68,11 @@ export function shouldShowShareAbandon(opts: ShareAbandonEligibility): boolean {
   if (opts.alreadyMaxShows || opts.snoozed || opts.confirmFlowActive) return false;
   // Poll is the softest path — never interrupt if they can already see Send
   if (opts.reason === 'poll' && opts.shareStripInView) return false;
-  if (opts.isCoarsePointer) return opts.dwellMs >= MOBILE_DWELL_MS;
-  return opts.dwellMs >= MIN_DWELL_MS;
+  const need = resolveShareAbandonDwellMs({
+    isCoarsePointer: opts.isCoarsePointer,
+    isPaidTraffic: opts.isPaidTraffic,
+  });
+  return opts.dwellMs >= need;
 }
 
 /** beforeunload only after a prior abandon prompt, or long idle pending. */
@@ -212,6 +228,7 @@ function showAbandonPanel(reason: string): void {
       confirmFlowActive: confirmFlowActive(),
       shareStripInView: reason === 'poll' ? isShareStripInView() : false,
       reason,
+      isPaidTraffic: document.documentElement.getAttribute('data-vr-paid-landing') === '1',
     })
   ) {
     return;
@@ -306,6 +323,7 @@ function tryShow(reason: string, startedAt: number, coarse: boolean): void {
       confirmFlowActive: confirmFlowActive(),
       shareStripInView: reason === 'poll' ? isShareStripInView() : false,
       reason,
+      isPaidTraffic: document.documentElement.getAttribute('data-vr-paid-landing') === '1',
     })
   ) {
     return;
@@ -347,6 +365,12 @@ export function initShareAbandonRescue(win: Window = window): void {
 
   const started = Date.now();
   const coarse = win.matchMedia('(pointer: coarse)').matches;
+  const isPaid =
+    win.document.documentElement.getAttribute('data-vr-paid-landing') === '1';
+  const dwellNeed = resolveShareAbandonDwellMs({
+    isCoarsePointer: coarse,
+    isPaidTraffic: isPaid,
+  });
   let leftHiddenAt: number | null = null;
 
   if (!coarse) {
@@ -354,8 +378,11 @@ export function initShareAbandonRescue(win: Window = window): void {
       if (e.clientY > 12 || e.relatedTarget != null) return;
       tryShow('exit', started, coarse);
     });
+    if (isPaid) {
+      win.setTimeout(() => tryShow('dwell', started, coarse), dwellNeed);
+    }
   } else {
-    win.setTimeout(() => tryShow('dwell', started, coarse), MOBILE_DWELL_MS);
+    win.setTimeout(() => tryShow('dwell', started, coarse), dwellNeed);
   }
 
   win.document.addEventListener('visibilitychange', () => {

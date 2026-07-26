@@ -6,6 +6,7 @@ import { initFunnelConversion } from './lib/funnel-conversion';
 import { initAttributedReferralRecording, syncMobileReferralCta } from './referral';
 import { captureUtmAttribution } from './lib/utm-attribution';
 import { initVisitorTracking } from './lib/visitor-tracking';
+import { initRedditPixel } from './lib/reddit-pixel';
 import { initInteractionTracking } from './lib/interaction-tracking';
 import { initVisitorSlim } from './lib/visitor-slim';
 import { initMobileOptimize } from './lib/mobile-optimize';
@@ -56,6 +57,8 @@ initViralLoops();
 initVisitorSlim();
 initAttributedReferralRecording();
 initVisitorTracking();
+// Reddit retargeting pixel — only loads when VITE_REDDIT_PIXEL_ID is set (safe no-op otherwise)
+initRedditPixel();
 initInteractionTracking();
 initOrganicSeo();
 applyClientReferralOgMeta();

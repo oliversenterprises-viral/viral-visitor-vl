@@ -1371,6 +1371,93 @@ html[data-vr-referred-landing] .funnel-step-cta {
   animation: vr-hero-pulse 0.75s ease-in-out 8;
 }
 
+/* Paid / Reddit: keep Step-1 in face; hide secondary chrome until they have a link */
+html[data-vr-paid-landing]:not([data-vr-has-link]) #hero-get-link-btn {
+  animation: vr-hero-pulse 0.75s ease-in-out 12;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.45), 0 12px 28px rgba(16, 185, 129, 0.25);
+}
+html[data-vr-paid-landing]:not([data-vr-has-link]) #mobile-referral-cta {
+  border-color: rgba(52, 211, 153, 0.45);
+  box-shadow: 0 -8px 32px rgba(16, 185, 129, 0.18);
+}
+html[data-vr-paid-landing]:not([data-vr-has-link]) #mobile-referral-cta button {
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+
+.vr-paid-getlink-nudge {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+}
+@media (min-width: 768px) {
+  .vr-paid-getlink-nudge {
+    align-items: center;
+  }
+}
+.vr-paid-getlink-nudge-card {
+  position: relative;
+  width: 100%;
+  max-width: 22rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  background: linear-gradient(160deg, #18181b 0%, #27272a 100%);
+  padding: 1.25rem 1.15rem 1rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+}
+.vr-paid-getlink-nudge-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.65rem;
+  color: #a1a1aa;
+  font-size: 1.35rem;
+  line-height: 1;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.vr-paid-getlink-nudge-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 1.5rem 0.4rem 0;
+}
+.vr-paid-getlink-nudge-body {
+  font-size: 0.875rem;
+  color: #a1a1aa;
+  margin: 0 0 1rem;
+  line-height: 1.4;
+}
+.vr-paid-getlink-nudge-cta {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 0.9rem;
+  border: 0;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(90deg, #059669, #7c3aed);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.35);
+}
+.vr-paid-getlink-nudge-dismiss {
+  width: 100%;
+  margin-top: 0.5rem;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: #71717a;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
 @keyframes vr-hero-pulse {
   0%,
   100% {

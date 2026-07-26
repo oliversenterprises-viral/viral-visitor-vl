@@ -43,4 +43,27 @@ describe('exit-intent-rescue', () => {
       }),
     ).toBe(true);
   });
+
+  it('shouldShowExitRescue uses shorter dwell for paid traffic', () => {
+    expect(
+      shouldShowExitRescue({
+        isReferred: false,
+        hasLink: false,
+        alreadyShown: false,
+        dwellMs: 7500,
+        isCoarsePointer: true,
+        isPaidTraffic: true,
+      }),
+    ).toBe(true);
+    expect(
+      shouldShowExitRescue({
+        isReferred: false,
+        hasLink: false,
+        alreadyShown: false,
+        dwellMs: 4500,
+        isCoarsePointer: false,
+        isPaidTraffic: true,
+      }),
+    ).toBe(true);
+  });
 });

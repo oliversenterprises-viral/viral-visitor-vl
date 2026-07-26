@@ -7,10 +7,12 @@ import { isReferredLanding } from './funnel-conversion';
 import { hasReferralLinkInUI } from './visitor-slim';
 import { t } from './i18n';
 
-
 const SESSION_KEY = 'vr_exit_rescue_done';
 const MIN_DWELL_MS = 5000;
 const MOBILE_DWELL_MS = 22000;
+/** Paid / Reddit cold traffic — mobile bounce is much faster than organic. */
+const PAID_MOBILE_DWELL_MS = 7000;
+const PAID_DESKTOP_DWELL_MS = 4000;
 
 export interface ExitRescueEligibility {
   isReferred: boolean;
@@ -18,12 +20,27 @@ export interface ExitRescueEligibility {
   alreadyShown: boolean;
   dwellMs: number;
   isCoarsePointer: boolean;
+  /** Shorter thresholds for paid/Reddit landings. */
+  isPaidTraffic?: boolean;
+}
+
+export function resolveExitDwellMs(opts: {
+  isCoarsePointer: boolean;
+  isPaidTraffic?: boolean;
+}): number {
+  if (opts.isPaidTraffic) {
+    return opts.isCoarsePointer ? PAID_MOBILE_DWELL_MS : PAID_DESKTOP_DWELL_MS;
+  }
+  return opts.isCoarsePointer ? MOBILE_DWELL_MS : MIN_DWELL_MS;
 }
 
 export function shouldShowExitRescue(opts: ExitRescueEligibility): boolean {
   if (opts.isReferred || opts.hasLink || opts.alreadyShown) return false;
-  if (opts.isCoarsePointer) return opts.dwellMs >= MOBILE_DWELL_MS;
-  return opts.dwellMs >= MIN_DWELL_MS;
+  const need = resolveExitDwellMs({
+    isCoarsePointer: opts.isCoarsePointer,
+    isPaidTraffic: opts.isPaidTraffic,
+  });
+  return opts.dwellMs >= need;
 }
 
 export function buildExitRescueMessage(): { title: string; body: string; cta: string } {
@@ -105,6 +122,8 @@ export function initExitIntentRescue(win: Window = window): void {
 
   const started = Date.now();
   const coarse = win.matchMedia('(pointer: coarse)').matches;
+  const isPaidTraffic = win.document.documentElement.getAttribute('data-vr-paid-landing') === '1';
+  const dwellNeed = resolveExitDwellMs({ isCoarsePointer: coarse, isPaidTraffic });
 
   const tryShow = (mode: 'exit' | 'dwell') => {
     if (
@@ -114,6 +133,8 @@ export function initExitIntentRescue(win: Window = window): void {
         alreadyShown: alreadyShown(),
         dwellMs: Date.now() - started,
         isCoarsePointer: coarse,
+        isPaidTraffic:
+          isPaidTraffic || win.document.documentElement.getAttribute('data-vr-paid-landing') === '1',
       })
     ) {
       return;
@@ -126,7 +147,10 @@ export function initExitIntentRescue(win: Window = window): void {
       if (e.clientY > 12 || e.relatedTarget != null) return;
       tryShow('exit');
     });
+    if (isPaidTraffic) {
+      win.setTimeout(() => tryShow('dwell'), dwellNeed);
+    }
   } else {
-    win.setTimeout(() => tryShow('dwell'), MOBILE_DWELL_MS);
+    win.setTimeout(() => tryShow('dwell'), dwellNeed);
   }
 }

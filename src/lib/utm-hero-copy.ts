@@ -6,7 +6,13 @@ import { isReferredLanding } from './funnel-conversion';
 import { applyHeroCopyToDom, type HeroCtaCopy } from './hero-cta-variant';
 import { getStoredUtmAttribution } from './utm-attribution';
 
-export type UtmHeroSegment = 'traffic_exchange' | 'linkedin' | 'reddit' | 'telegram' | 'social';
+export type UtmHeroSegment =
+  | 'traffic_exchange'
+  | 'linkedin'
+  | 'reddit'
+  | 'telegram'
+  | 'social'
+  | 'paid';
 
 const TRAFFIC_EXCHANGE_SOURCES = new Set([
   'pagerankcafe',
@@ -34,12 +40,23 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
     buttonLabel: 'Get my free link',
   },
   reddit: {
-    badge: 'WORLDWIDE • FREE',
-    titleLine1: 'Get your free link in 30 seconds.',
-    titleAccent: 'No signup friction. Share to climb.',
-    subtitle: 'Open worldwide. Tap below, copy, share once — watch the board move.',
-    trustLine: 'Homepage feature for #1 · Rules on site',
-    buttonLabel: 'Get my link — 30 seconds',
+    badge: 'FREE • NO SIGNUP',
+    titleLine1: 'Tap once. Get your link. Share it.',
+    titleAccent: 'That’s how you climb the live board.',
+    subtitle:
+      'No account. No app install. Get a unique referral link in seconds, share it, and watch your rank update live.',
+    trustLine: 'Step 1: Get link · Step 2: Share · Homepage feature for verified #1',
+    buttonLabel: 'Get my free referral link',
+  },
+  /** Paid ads (Reddit CPC etc.) — same intent, even more conversion-focused. */
+  paid: {
+    badge: 'FREE • 30 SECONDS',
+    titleLine1: 'Get your referral link free.',
+    titleAccent: 'Then share it to climb the board.',
+    subtitle:
+      'You are one tap from your unique link. Share it with friends — real referrals move the live leaderboard.',
+    trustLine: 'No signup · Free forever · Share once to start',
+    buttonLabel: 'Get my link — then share',
   },
   telegram: {
     badge: 'WORLDWIDE • FREE',
@@ -85,7 +102,9 @@ export function resolveUtmHeroSegment(
   if (src === 'linkedin') return 'linkedin';
   if (src === 'reddit') return 'reddit';
   if (src === 'telegram') return 'telegram';
-  if (med === 'social' || med === 'paid' || med === 'organic') return 'social';
+  // Paid medium wins over generic social so ad landers get conversion copy
+  if (med === 'paid' || med === 'cpc' || med === 'cpm' || med === 'ppc') return 'paid';
+  if (med === 'social' || med === 'organic') return 'social';
 
   return null;
 }

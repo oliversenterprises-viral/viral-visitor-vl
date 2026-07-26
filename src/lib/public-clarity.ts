@@ -5,6 +5,7 @@
 import { isReferredLanding } from './funnel-conversion';
 import { hasReferralLinkInUI } from './visitor-slim';
 import { initExitIntentRescue } from './exit-intent-rescue';
+import { initPaidConversionBoost } from './paid-conversion-boost';
 import { t, type MessageKey } from './i18n';
 
 const NAV_SECTIONS = [
@@ -158,6 +159,8 @@ export function initPublicClarity(): void {
   wireNavGetLink();
   wireNavScrollSpy();
   wireHeroLeaderboardLink();
+  // Paid/Reddit first so exit-intent reads data-vr-paid-landing for shorter dwell
+  initPaidConversionBoost();
   initExitIntentRescue();
 
   window.addEventListener('vr:locale-change', () => {
