@@ -5,6 +5,7 @@
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,6 +51,10 @@ Deno.serve(async (req: Request) => {
       req.headers.get('cf-connecting-ip') ||
       req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       null;
+
+    if (isBlockedActivityIp(ip)) {
+      return blockedActivityResponse(corsHeaders);
+    }
 
     const attempts: Record<string, unknown>[] = [
       {

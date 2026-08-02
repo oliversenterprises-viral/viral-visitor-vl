@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -55,6 +56,9 @@ Deno.serve(async (req: Request) => {
     }
 
     const ip = getClientIp(req);
+    if (isBlockedActivityIp(ip)) {
+      return blockedActivityResponse(corsHeaders);
+    }
     const ipHash = await hashIp(ip);
     const clientMetadata =
       body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata)

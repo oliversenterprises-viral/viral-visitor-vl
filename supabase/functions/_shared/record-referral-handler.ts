@@ -2,6 +2,7 @@
 
 import { isSelfReferral, parseRecordReferralRequest } from './record-referral-request.ts';
 import { shouldSkipReferralCrediting } from './test-referral.ts';
+import { isBlockedActivityIp } from './blocked-ips.ts';
 import {
   assertReferrerLinkAllowsReferrals,
   LOCK_PLATFORM_FIRST_REFERRAL,
@@ -81,6 +82,10 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
 
   const ip = getClientIp(req);
   const userAgent = req.headers.get('user-agent') || '';
+
+  if (isBlockedActivityIp(ip)) {
+    return jsonResponse({ success: false, error: 'Access denied.' }, 403);
+  }
 
   if (shouldSkipReferralCrediting({ referrerCode, referredIp: ip, userAgent })) {
     return jsonResponse(

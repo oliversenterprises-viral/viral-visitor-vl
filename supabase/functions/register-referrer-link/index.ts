@@ -3,6 +3,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { registerReferrerLink } from '../_shared/referrer-share-deadline.ts';
+import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,6 +51,9 @@ Deno.serve(async (req: Request) => {
     );
 
     const clientIp = getClientIp(req);
+    if (isBlockedActivityIp(clientIp)) {
+      return blockedActivityResponse(corsHeaders);
+    }
     const result = await registerReferrerLink(supabaseAdmin, code, { clientIp });
 
     return new Response(

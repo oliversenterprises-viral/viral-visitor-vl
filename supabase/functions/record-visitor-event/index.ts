@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { dispatchFunnelOffsiteNotify } from '../_shared/funnel-notify.ts';
+import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -93,6 +94,9 @@ Deno.serve(async (req: Request) => {
     const visitorId = String(body.visitor_id || body.visitorId || '').trim().slice(0, 64) || null;
     const sessionId = String(body.session_id || body.sessionId || '').trim().slice(0, 64) || null;
     const ip = getClientIp(req);
+    if (isBlockedActivityIp(ip)) {
+      return blockedActivityResponse(corsHeaders);
+    }
     const ipHash = await hashIp(ip);
     let countryCode = getCountryFromHeaders(req);
     if (!countryCode && ip) {

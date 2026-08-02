@@ -6,6 +6,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { computeClaimLeader, isSafeHttpUrl } from '../_shared/claim-leader.ts';
+import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -93,6 +94,9 @@ Deno.serve(async (req: Request) => {
   }
 
   const ip = getClientIp(req);
+  if (isBlockedActivityIp(ip)) {
+    return blockedActivityResponse(corsHeaders);
+  }
 
   // Turnstile: real tokens always verified. dev-bypass-token only when explicitly enabled (local/staging).
   if (turnstileToken === 'dev-bypass-token') {
