@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Free Share Message Generator · ViralRefer</title>
+  <meta name="description" content="Free referral share message generator — X, WhatsApp, Reddit, LinkedIn, Telegram, SMS. Paste your ViralRefer link and copy perfect captions." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/share-generator.html" />
+  <meta name="theme-color" content="#6b3acc" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root { --bg:#09090b; --card:rgba(255,255,255,.06); --border:rgba(255,255,255,.12); --text:#f4f4f5; --muted:#a1a1aa; --accent:#864cff; --ok:#86efac; }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0% 0%,rgba(134,76,255,.3),transparent),var(--bg);color:var(--text);line-height:1.5;-webkit-text-size-adjust:100%}
+    .w{max-width:720px;margin:0 auto;padding:1rem 1rem 3rem}
+    a{color:#c4b5fd} h1{font-size:clamp(1.4rem,4.5vw,1.9rem);margin:.5rem 0 .4rem;letter-spacing:-.02em}
+    .sub{color:var(--muted);margin:0 0 1.2rem}
+    .nav{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:space-between;align-items:center;margin-bottom:1rem}
+    .brand{font-weight:800;color:#fff;text-decoration:none}
+    label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:.75rem 0 .35rem}
+    input,select,textarea{width:100%;min-height:48px;border-radius:.8rem;border:1px solid var(--border);background:rgba(0,0,0,.35);color:#fff;padding:.75rem .9rem;font-size:16px;font-family:inherit}
+    textarea{min-height:110px;resize:vertical}
+    .row{display:grid;gap:.75rem}
+    @media(min-width:560px){.row{grid-template-columns:1fr 1fr}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:1rem;margin-top:1rem}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1rem;border:none;border-radius:.8rem;font-weight:700;font-size:.95rem;cursor:pointer;width:100%;touch-action:manipulation}
+    .btn-p{background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff}
+    .btn-s{background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--border);margin-top:.5rem}
+    .pill{display:inline-block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:.2rem .5rem;border-radius:999px;background:rgba(134,76,255,.2);color:#ddd6fe;margin-bottom:.5rem}
+    .out{white-space:pre-wrap;background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:.8rem;padding:.85rem;font-size:.95rem;min-height:5rem}
+    .toast{color:var(--ok);font-size:.85rem;min-height:1.2rem;margin-top:.4rem}
+    .cta-bar{margin-top:1.25rem;padding:1rem;border-radius:1rem;background:linear-gradient(135deg,rgba(134,76,255,.25),rgba(107,58,204,.15));border:1px solid rgba(196,181,253,.3)}
+    .cta-bar a.btn{text-decoration:none;margin-top:.6rem}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav">
+      <a class="brand" href="./">← Free tools</a>
+      <a href="https://www.viralrefer.app/?utm_source=leadmagnet&utm_medium=share_generator&utm_campaign=get_link#get-link" style="font-weight:700;text-decoration:none;color:#c4b5fd">Get free link →</a>
+    </div>
+    <span class="pill">Lead magnet · free</span>
+    <h1>Share Message Generator</h1>
+    <p class="sub">Paste your ViralRefer link (or leave blank to use the homepage). Pick a platform + tone. Copy captions that don’t sound spammy.</p>
+
+    <label for="link">Your referral / share link</label>
+    <input id="link" type="url" inputmode="url" placeholder="https://www.viralrefer.app/r/YOURCODE" autocomplete="url" />
+
+    <div class="row">
+      <div>
+        <label for="platform">Platform</label>
+        <select id="platform">
+          <option value="x">X / Twitter</option>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="reddit">Reddit</option>
+          <option value="linkedin">LinkedIn</option>
+          <option value="telegram">Telegram</option>
+          <option value="sms">SMS / text</option>
+          <option value="generic">Generic / bio</option>
+        </select>
+      </div>
+      <div>
+        <label for="tone">Tone</label>
+        <select id="tone">
+          <option value="friendly">Friendly</option>
+          <option value="direct">Direct</option>
+          <option value="curious">Curiosity</option>
+          <option value="builder">Builder / founder</option>
+          <option value="challenge">Challenge / leaderboard</option>
+        </select>
+      </div>
+    </div>
+
+    <label for="name">Optional: your name or niche</label>
+    <input id="name" type="text" maxlength="40" placeholder="e.g. Alex · indie makers" />
+
+    <div class="card">
+      <button type="button" class="btn btn-p" id="gen">Generate messages</button>
+      <p class="toast" id="toast"></p>
+      <label>Option A</label>
+      <div class="out" id="a"></div>
+      <button type="button" class="btn btn-s" data-copy="a">Copy A</button>
+      <label>Option B</label>
+      <div class="out" id="b"></div>
+      <button type="button" class="btn btn-s" data-copy="b">Copy B</button>
+      <label>Option C (short)</label>
+      <div class="out" id="c"></div>
+      <button type="button" class="btn btn-s" data-copy="c">Copy C</button>
+    </div>
+
+    <div class="cta-bar">
+      <strong>Don’t have a link yet?</strong>
+      <p style="margin:.35rem 0 0;color:var(--muted);font-size:.92rem">Get a free ViralRefer referral link in ~30 seconds — no signup.</p>
+      <a class="btn btn-p" href="https://www.viralrefer.app/?utm_source=leadmagnet&utm_medium=share_generator&utm_campaign=cta#get-link">Get my free referral link →</a>
+    </div>
+  </div>
+  <script>
+    const DEFAULT = 'https://www.viralrefer.app/?utm_source=share_generator&utm_medium=organic&utm_campaign=leadmagnet';
+    const $ = (id) => document.getElementById(id);
+
+    function link() {
+      const v = ($('link').value || '').trim();
+      return v || DEFAULT;
+    }
+    function who() {
+      const n = ($('name').value || '').trim();
+      return n ? n : 'I';
+    }
+
+    const bank = {
+      x: {
+        friendly: (L, W) => [
+          `${W} just joined a free worldwide referral leaderboard — no signup.\nGet a free link in ~30s and climb with real shares:\n${L}`,
+          `Free tool for builders who actually share:\n• Instant referral link\n• Live leaderboard\n• No account required\n${L}`,
+          `Free referral leaderboard → ${L}`
+        ],
+        direct: (L, W) => [
+          `If you want a free referral link + live leaderboard, start here (no signup):\n${L}`,
+          `${W}: simple growth loop — get link, share, climb. Free.\n${L}`,
+          `Free ViralRefer link → ${L}`
+        ],
+        curious: (L) => [
+          `What if every share you made moved a live public leaderboard?\nI tried this free no-signup version:\n${L}`,
+          `Tiny experiment: can a free referral board grow without ads?\nJoin / watch: ${L}`,
+          `Curious about viral loops? ${L}`
+        ],
+        builder: (L) => [
+          `Shipping a free growth surface for promoters:\nNo signup · free link in 30s · live board.\n${L}`,
+          `Builders: white-hat referral mechanics without another dashboard login.\n${L}`,
+          `Free growth experiment → ${L}`
+        ],
+        challenge: (L) => [
+          `Leaderboard challenge is open worldwide. Free link. No signup.\nCan you climb with real shares only?\n${L}`,
+          `Public board. Real attributions. Free to start.\n${L}`,
+          `Climb the board → ${L}`
+        ]
+      },
+      whatsapp: {
+        friendly: (L, W) => [
+          `Hey — ${W.toLowerCase() === 'i' ? 'I found' : W + ' found'} a free referral leaderboard. You get a link in ~30 seconds (no signup). If you want in: ${L}`,
+          `Quick free tool for sharing growth — live leaderboard + free link:\n${L}`,
+          `Free referral link: ${L}`
+        ],
+        direct: (L) => [
+          `Free ViralRefer link (no account): ${L}`,
+          `Join the free referral leaderboard: ${L}`,
+          `${L}`
+        ],
+        curious: (L) => [
+          `Have you seen free no-signup referral boards? This one’s live: ${L}`,
+          `Interesting free growth tool: ${L}`,
+          `${L}`
+        ],
+        builder: (L) => [
+          `For makers — free referral link + public board, no login wall: ${L}`,
+          `Builder-friendly growth link: ${L}`,
+          `${L}`
+        ],
+        challenge: (L) => [
+          `Open challenge: climb a free worldwide referral board → ${L}`,
+          `Leaderboard is live (free): ${L}`,
+          `${L}`
+        ]
+      },
+      reddit: {
+        friendly: (L) => [
+          `I built / joined a free no-signup referral leaderboard — you get a trackable link in ~30s and a live public board. White-hat only (real shares). If useful:\n\n${L}\n\nHappy to answer how attribution works.`,
+          `Resource: free worldwide referral leaderboard (no account).\n${L}`,
+          `Free tool: ${L}`
+        ],
+        direct: (L) => [
+          `Free no-signup referral leaderboard with live rankings:\n${L}`,
+          `Tool drop (free): ${L}`,
+          `${L}`
+        ],
+        curious: (L) => [
+          `Question for growth folks: how would you design a fair free referral board?\nHere’s one live implementation (no signup): ${L}`,
+          `Discussing simple viral loops — example: ${L}`,
+          `${L}`
+        ],
+        builder: (L) => [
+          `Show HN-style (soft): free referral leaderboard, no auth, live board.\n${L}`,
+          `Indie project surface for promoters: ${L}`,
+          `${L}`
+        ],
+        challenge: (L) => [
+          `Public free leaderboard challenge (skill-based / real shares):\n${L}`,
+          `Board is open: ${L}`,
+          `${L}`
+        ]
+      },
+      linkedin: {
+        friendly: (L) => [
+          `I’ve been testing a free, no-signup referral leaderboard for transparent growth.\n\nYou get a link in about 30 seconds and climb with real shares — no black-hat tactics.\n\nIf you experiment with referral loops: ${L}`,
+          `Free resource for referral marketers: ${L}`,
+          `ViralRefer (free): ${L}`
+        ],
+        direct: (L) => [
+          `Free referral leaderboard · no account · live rankings\n${L}`,
+          `Start here (free): ${L}`,
+          `${L}`
+        ],
+        curious: (L) => [
+          `What happens when referral growth is public and free?\nAn open experiment: ${L}`,
+          `Thoughts on transparent leaderboards? ${L}`,
+          `${L}`
+        ],
+        builder: (L) => [
+          `For founders testing distribution: free referral surface with no login wall.\n${L}`,
+          `Builder note → ${L}`,
+          `${L}`
+        ],
+        challenge: (L) => [
+          `Open worldwide leaderboard (free to join):\n${L}`,
+          `Climb with real shares: ${L}`,
+          `${L}`
+        ]
+      },
+      telegram: {
+        friendly: (L) => [
+          `Free referral leaderboard (no signup) → get a link in ~30s:\n${L}`,
+          `Share this free growth tool: ${L}`,
+          `${L}`
+        ],
+        direct: (L) => [`ViralRefer free link: ${L}`, `${L}`, `${L}`],
+        curious: (L) => [`Anyone testing free viral boards? ${L}`, `${L}`, `${L}`],
+        builder: (L) => [`Maker tool (free): ${L}`, `${L}`, `${L}`],
+        challenge: (L) => [`Leaderboard open: ${L}`, `${L}`, `${L}`]
+      },
+      sms: {
+        friendly: (L) => [
+          `Hey — free referral link tool, no signup: ${L}`,
+          `Quick free leaderboard if you want it: ${L}`,
+          `${L}`
+        ],
+        direct: (L) => [`Free ViralRefer: ${L}`, `${L}`, `${L}`],
+        curious: (L) => [`Thought this was interesting (free): ${L}`, `${L}`, `${L}`],
+        builder: (L) => [`Builder tool free: ${L}`, `${L}`, `${L}`],
+        challenge: (L) => [`Join free board: ${L}`, `${L}`, `${L}`]
+      },
+      generic: {
+        friendly: (L) => [
+          `Free worldwide referral leaderboard — get your link in ~30 seconds (no signup): ${L}`,
+          `ViralRefer free growth tool: ${L}`,
+          `${L}`
+        ],
+        direct: (L) => [`Get free referral link: ${L}`, `${L}`, `${L}`],
+        curious: (L) => [`Explore free viral loops: ${L}`, `${L}`, `${L}`],
+        builder: (L) => [`Free builder growth tool: ${L}`, `${L}`, `${L}`],
+        challenge: (L) => [`Climb free leaderboard: ${L}`, `${L}`, `${L}`]
+      }
+    };
+
+    function generate() {
+      const p = $('platform').value;
+      const t = $('tone').value;
+      const L = link();
+      const W = who();
+      const pack = (bank[p] && bank[p][t]) ? bank[p][t](L, W) : bank.generic.friendly(L, W);
+      $('a').textContent = pack[0];
+      $('b').textContent = pack[1];
+      $('c').textContent = pack[2];
+      $('toast').textContent = '3 messages ready — copy and post where it fits.';
+    }
+
+    $('gen').addEventListener('click', generate);
+    document.querySelectorAll('[data-copy]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-copy');
+        const text = $(id).textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+          $('toast').textContent = 'Copied ✓';
+        } catch {
+          $('toast').textContent = 'Select the text and copy manually.';
+        }
+      });
+    });
+    generate();
+  </script>
+</body>
+</html>

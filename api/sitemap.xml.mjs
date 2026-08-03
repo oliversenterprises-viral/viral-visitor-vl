@@ -17,6 +17,13 @@ export default function handler(_req, res) {
   const date = new Date().toISOString().slice(0, 10);
   const urls = [
     { loc: `${ORIGIN}/`, changefreq: 'daily', priority: '1.0' },
+    { loc: `${ORIGIN}/tools/`, changefreq: 'weekly', priority: '0.9' },
+    { loc: `${ORIGIN}/tools/share-generator.html`, changefreq: 'monthly', priority: '0.8' },
+    { loc: `${ORIGIN}/tools/viral-calculator.html`, changefreq: 'monthly', priority: '0.8' },
+    { loc: `${ORIGIN}/tools/7-day-launch.html`, changefreq: 'monthly', priority: '0.8' },
+    { loc: `${ORIGIN}/tools/utm-builder.html`, changefreq: 'monthly', priority: '0.75' },
+    { loc: `${ORIGIN}/tools/traffic-refer-kit.html`, changefreq: 'monthly', priority: '0.8' },
+    { loc: `${ORIGIN}/tools/hook-bank.html`, changefreq: 'monthly', priority: '0.75' },
     { loc: `${ORIGIN}/#how`, changefreq: 'weekly', priority: '0.8' },
     { loc: `${ORIGIN}/#leaderboard`, changefreq: 'daily', priority: '0.9' },
     { loc: `${ORIGIN}/#prize`, changefreq: 'weekly', priority: '0.7' },

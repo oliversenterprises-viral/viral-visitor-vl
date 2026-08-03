@@ -4,6 +4,28 @@ Allow: /
 User-agent: Googlebot
 Allow: /
 
+# Allow major AI answer-engine crawlers (AEO: we want accurate citations)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
 Disallow: /api/
 
 Sitemap: https://www.viralrefer.app/sitemap.xml

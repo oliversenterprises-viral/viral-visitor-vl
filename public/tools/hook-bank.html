@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>100 Viral Hooks Bank (Free) · ViralRefer Content Magnet</title>
+  <meta name="description" content="Free bank of 100 white-hat hooks for short video, X, Reddit, and LinkedIn to promote free referral growth tools." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/hook-bank.html" />
+  <meta name="theme-color" content="#6b3acc" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root{--bg:#09090b;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--text:#f4f4f5;--muted:#a1a1aa}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(700px 360px at 80% 0%,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5}
+    .w{max-width:760px;margin:0 auto;padding:1rem 1rem 3rem}a{color:#c4b5fd}
+    h1{font-size:clamp(1.35rem,4.5vw,1.85rem);margin:.4rem 0}.sub{color:var(--muted)}
+    .nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem}
+    .brand{font-weight:800;color:#fff;text-decoration:none}
+    .filters{display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0}
+    .chip{border:1px solid var(--border);background:rgba(255,255,255,.05);color:#e4e4e7;border-radius:999px;padding:.4rem .75rem;font-size:.82rem;font-weight:600;cursor:pointer;min-height:40px}
+    .chip[aria-pressed="true"]{background:rgba(134,76,255,.3);border-color:rgba(196,181,253,.5);color:#fff}
+    .hook{background:var(--card);border:1px solid var(--border);border-radius:.9rem;padding:.85rem 1rem;margin:.55rem 0;display:flex;gap:.65rem;align-items:flex-start;justify-content:space-between}
+    .hook p{margin:0;flex:1;font-size:.95rem}
+    .hook button{flex-shrink:0;min-height:40px;padding:.4rem .7rem;border-radius:.65rem;border:1px solid var(--border);background:rgba(255,255,255,.08);color:#fff;font-weight:700;cursor:pointer}
+    .btn{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:.8rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff;font-weight:700;text-decoration:none;margin-top:1.25rem}
+    .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#18181b;border:1px solid #864cff;padding:.55rem 1rem;border-radius:999px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+    .toast.show{opacity:1}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav">
+      <a class="brand" href="./">← Free tools</a>
+      <a href="https://www.viralrefer.app/?utm_source=leadmagnet&utm_medium=hook_bank&utm_campaign=get_link#get-link" style="font-weight:700;text-decoration:none;color:#c4b5fd">Get free link →</a>
+    </div>
+    <h1>100 Viral Hooks Bank</h1>
+    <p class="sub">White-hat openers only. Pair any hook with a free tool or your ViralRefer link. No “get rich” claims. No spam energy.</p>
+    <div class="filters" id="filters"></div>
+    <div id="list"></div>
+    <a class="btn" href="https://www.viralrefer.app/?utm_source=leadmagnet&utm_medium=hook_bank&utm_campaign=cta#get-link">Get free referral link to put under your hook →</a>
+  </div>
+  <div class="toast" id="toast">Copied</div>
+  <script>
+    const hooks = [
+      // short video
+      { t: 'video', h: 'Stop buying traffic before you try a free reciprocal loop.' },
+      { t: 'video', h: 'I tested a no-signup referral board so you don’t have to.' },
+      { t: 'video', h: 'The growth mechanic nobody explains simply enough.' },
+      { t: 'video', h: 'One link. Live leaderboard. No account wall.' },
+      { t: 'video', h: 'If your funnel needs a password, you already lost half the share.' },
+      { t: 'video', h: 'Here’s a free tool I actually use to write share captions.' },
+      { t: 'video', h: 'Traffic exchange vs referral board — when to use both.' },
+      { t: 'video', h: 'Watch me get a free referral link in under 30 seconds.' },
+      { t: 'video', h: 'Your “viral strategy” is missing a public scoreboard.' },
+      { t: 'video', h: 'White-hat only. No bots. Still can compound.' },
+      { t: 'video', h: 'The K-factor explained in 20 seconds (with a free calculator).' },
+      { t: 'video', h: 'Why empty queues kill growth products — and how house seats fix cold start.' },
+      { t: 'video', h: 'I open-sourced my growth toolkit for promoters.' },
+      { t: 'video', h: 'Steal this 7-day launch checklist (free, interactive).' },
+      { t: 'video', h: 'Dual engine: free visits + free referrals.' },
+      { t: 'video', h: 'If you can explain it in one sentence, people can share it.' },
+      { t: 'video', h: 'The difference between vanity clicks and attributed growth.' },
+      { t: 'video', h: 'Builders: ship the loop, not another login.' },
+      { t: 'video', h: 'This is what reciprocal traffic looks like in practice.' },
+      { t: 'video', h: 'Save this if you’re launching without an ad budget.' },
+      // x
+      { t: 'x', h: 'Free growth surface with no signup wall →' },
+      { t: 'x', h: 'Unpopular opinion: leaderboards make sharing honest.' },
+      { t: 'x', h: 'Shipping free tools > writing another “10 tips” thread without a CTA.' },
+      { t: 'x', h: 'K-factor toy model (free calculator) for people tired of vibes-only growth.' },
+      { t: 'x', h: 'Hot take: if sharing needs a tutorial, your product is too heavy.' },
+      { t: 'x', h: 'Built a free share caption generator for referral promoters.' },
+      { t: 'x', h: 'Relay = view to earn your turn. Simple on purpose.' },
+      { t: 'x', h: 'What I’d do with 0 ad spend this week (checklist inside).' },
+      { t: 'x', h: 'Public board + free link. That’s the whole pitch.' },
+      { t: 'x', h: 'Stop dark-posting your link with zero value attached.' },
+      { t: 'x', h: 'Lead magnet stack for promoters (all free):' },
+      { t: 'x', h: 'UTMs are free. Flying blind is expensive.' },
+      { t: 'x', h: 'If your invite conversion is 5%, fix the message before “more volume.”' },
+      { t: 'x', h: 'Curious how fair free referral boards can be.' },
+      { t: 'x', h: 'One free loop. Two surfaces. Same brand.' },
+      { t: 'x', h: 'No cash hype. Just a free link and a live board.' },
+      { t: 'x', h: 'The cold-start problem for traffic products, solved simply.' },
+      { t: 'x', h: 'Today’s free drop: 100 hooks + tools hub.' },
+      { t: 'x', h: 'Your bio link should teach something, not only sell.' },
+      { t: 'x', h: 'I open the tools first. Link second. Conversion goes up.' },
+      // reddit
+      { t: 'reddit', h: 'I put together free no-signup growth tools for referral experiments — feedback welcome.' },
+      { t: 'reddit', h: 'Resource: viral coefficient calculator (educational) + free referral board.' },
+      { t: 'reddit', h: 'How would you design a fair free traffic exchange in 2026?' },
+      { t: 'reddit', h: 'Show-and-tell: interactive 7-day launch checklist that saves in-browser.' },
+      { t: 'reddit', h: 'Lessons from shipping a reciprocal “hot seat” traffic page.' },
+      { t: 'reddit', h: 'White-hat promo thread: free tools only, soft CTA at the end.' },
+      { t: 'reddit', h: 'If self-promo is allowed as a resource, here’s a free UTM builder.' },
+      { t: 'reddit', h: 'Discussion: closed-loop traffic vs open-loop referrals.' },
+      { t: 'reddit', h: 'Built dual growth kit (traffic exchange + referral board).' },
+      { t: 'reddit', h: 'What conversion rate do you see on free invite links?' },
+      { t: 'reddit', h: 'Free share-message generator — looking for copy critiques.' },
+      { t: 'reddit', h: 'Cold start strategies for network products without ads.' },
+      { t: 'reddit', h: 'I avoided “get rich” claims on purpose — does that help trust?' },
+      { t: 'reddit', h: 'Open to AMA on no-signup referral attribution.' },
+      { t: 'reddit', h: 'Tool dump for indie promoters (all free, hosted).' },
+      // linkedin
+      { t: 'linkedin', h: 'Transparent growth experiments beat vanity dashboards.' },
+      { t: 'linkedin', h: 'We made free tools so promoters don’t need another SaaS login.' },
+      { t: 'linkedin', h: 'Referral loops work when friction drops to near zero.' },
+      { t: 'linkedin', h: 'A public leaderboard is a feature, not a gimmick — when rules are clear.' },
+      { t: 'linkedin', h: 'Educational K-factor model for teams testing organic invites.' },
+      { t: 'linkedin', h: 'Distribution tip: gift a tool, then offer the free link.' },
+      { t: 'linkedin', h: 'Building in public: dual surfaces for traffic + referrals.' },
+      { t: 'linkedin', h: 'UTM discipline is still the cheapest analytics stack.' },
+      { t: 'linkedin', h: 'No-signup funnels change who can participate.' },
+      { t: 'linkedin', h: 'White-hat growth is slower — and still compounds.' },
+      { t: 'linkedin', h: 'Founders: ship the loop your users can explain in one breath.' },
+      { t: 'linkedin', h: 'A free 7-day launch plan for people starting from zero audience.' },
+      { t: 'linkedin', h: 'Why I separate “traffic exchange” from “referral equity.”' },
+      { t: 'linkedin', h: 'If you only optimize for clicks, you’ll get clicks.' },
+      { t: 'linkedin', h: 'Open toolkit for sustainable promotion experiments.' },
+      // general / email
+      { t: 'general', h: 'Quick free resource before the pitch…' },
+      { t: 'general', h: 'If you only open one link today, make it a tool, not a hype page.' },
+      { t: 'general', h: 'Bookmark this free growth hub for your next launch week.' },
+      { t: 'general', h: 'No account required to start. That’s the point.' },
+      { t: 'general', h: 'Share this with one friend who hates complicated dashboards.' },
+      { t: 'general', h: 'The honest version of “go viral”: improve K, then show up daily.' },
+      { t: 'general', h: 'Free does not mean low quality — it means low friction.' },
+      { t: 'general', h: 'Your next post needs a hook, a gift, and one clear CTA.' },
+      { t: 'general', h: 'Copy a hook. Attach a free tool. Earn the click.' },
+      { t: 'general', h: 'Growth without dark patterns is still growth.' },
+      { t: 'general', h: 'Start with the calculator — then get your free link if it clicks.' },
+      { t: 'general', h: 'I’m not selling a course. I’m sharing free tools.' },
+      { t: 'general', h: 'One sentence pitch: free referral board, live rankings, no signup.' },
+      { t: 'general', h: 'If spam is the strategy, the strategy is already broken.' },
+      { t: 'general', h: 'Lead magnets should help even if they never convert.' },
+      { t: 'general', h: 'Here’s the free stack I wish I had on day one.' },
+      { t: 'general', h: 'Open the hub: generators, plans, calculators, kits.' },
+      { t: 'general', h: 'Make the first click useful. Make the second click the product.' },
+      { t: 'general', h: 'You can borrow these hooks — just keep it white-hat.' },
+      { t: 'general', h: 'Ready when you are: free link in ~30 seconds.' },
+      { t: 'general', h: 'The best CTA is still: try this free thing.' },
+      { t: 'general', h: 'Save → try → share. That’s the whole funnel.' },
+      { t: 'general', h: 'If this helped, send the tools hub to a friend building in public.' },
+      { t: 'general', h: 'No pressure. Free tools either way.' },
+      { t: 'general', h: 'Your move: pick one hook and post today.' }
+    ];
+
+    // pad to ~100 if short
+    while (hooks.length < 100) {
+      hooks.push({ t: 'general', h: `Free growth tip #${hooks.length + 1}: lead with value, track with UTMs, invite with a free link.` });
+    }
+
+    const cats = [
+      { id: 'all', label: 'All' },
+      { id: 'video', label: 'Short video' },
+      { id: 'x', label: 'X / Twitter' },
+      { id: 'reddit', label: 'Reddit' },
+      { id: 'linkedin', label: 'LinkedIn' },
+      { id: 'general', label: 'General' }
+    ];
+    let filter = 'all';
+    const filters = document.getElementById('filters');
+    const list = document.getElementById('list');
+    const toast = document.getElementById('toast');
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1200);
+    }
+
+    function renderFilters() {
+      filters.innerHTML = '';
+      cats.forEach((c) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        b.textContent = c.label;
+        b.setAttribute('aria-pressed', filter === c.id ? 'true' : 'false');
+        b.addEventListener('click', () => { filter = c.id; render(); });
+        filters.appendChild(b);
+      });
+    }
+
+    function render() {
+      renderFilters();
+      list.innerHTML = '';
+      hooks.filter((h) => filter === 'all' || h.t === filter).forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = 'hook';
+        row.innerHTML = `<p>${item.h}</p>`;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = 'Copy';
+        btn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(item.h);
+            showToast('Hook copied');
+          } catch {
+            showToast('Copy manually');
+          }
+        });
+        row.appendChild(btn);
+        list.appendChild(row);
+      });
+    }
+    render();
+  </script>
+</body>
+</html>

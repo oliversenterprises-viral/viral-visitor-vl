@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Viral Coefficient Calculator (Free) · ViralRefer</title>
+  <meta name="description" content="Free viral coefficient (K-factor) calculator. Understand invites × conversion, then run a free no-signup referral loop on ViralRefer." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/viral-calculator.html" />
+  <meta name="theme-color" content="#6b3acc" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root{--bg:#09090b;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--text:#f4f4f5;--muted:#a1a1aa;--accent:#864cff;--ok:#86efac;--warn:#fde68a}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--text);background:radial-gradient(700px 360px at 100% 0%,rgba(134,76,255,.28),transparent),var(--bg);line-height:1.5}
+    .w{max-width:720px;margin:0 auto;padding:1rem 1rem 3rem}a{color:#c4b5fd}
+    h1{font-size:clamp(1.4rem,4.5vw,1.9rem);margin:.4rem 0;letter-spacing:-.02em}.sub{color:var(--muted)}
+    .nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem}
+    .brand{font-weight:800;color:#fff;text-decoration:none}
+    label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:.7rem 0 .3rem}
+    input[type=number],input[type=range]{width:100%}
+    input[type=number]{min-height:48px;border-radius:.8rem;border:1px solid var(--border);background:rgba(0,0,0,.35);color:#fff;padding:.7rem .9rem;font-size:16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:1rem;margin-top:.9rem}
+    .big{font-size:clamp(2rem,8vw,3rem);font-weight:800;letter-spacing:-.03em;margin:.2rem 0}
+    .ok{color:var(--ok)}.mid{color:var(--warn)}.low{color:#fca5a5}
+    .grid{display:grid;gap:.75rem}@media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
+    .btn{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:.8rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff;font-weight:700;text-decoration:none;margin-top:.75rem}
+    .muted{color:var(--muted);font-size:.9rem}
+    .bar{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin:.5rem 0}
+    .bar>i{display:block;height:100%;background:linear-gradient(90deg,#864cff,#22c55e);width:0%;transition:width .25s}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav">
+      <a class="brand" href="./">← Free tools</a>
+      <a href="https://www.viralrefer.app/?utm_source=leadmagnet&utm_medium=viral_calculator&utm_campaign=get_link#get-link" style="font-weight:700;text-decoration:none;color:#c4b5fd">Get free link →</a>
+    </div>
+    <h1>Viral Coefficient Calculator</h1>
+    <p class="sub">K ≈ (invites each user sends) × (conversion rate of those invites). If K stays above 1, growth can compound. Educational only — not a guarantee of results.</p>
+
+    <div class="grid">
+      <div>
+        <label for="invites">Avg invites / user (per cycle)</label>
+        <input id="invites" type="number" min="0" max="100" step="0.1" value="3" />
+      </div>
+      <div>
+        <label for="conv">Invite → join conversion (%)</label>
+        <input id="conv" type="number" min="0" max="100" step="0.5" value="20" />
+      </div>
+    </div>
+    <div class="grid">
+      <div>
+        <label for="seed">Starting users</label>
+        <input id="seed" type="number" min="1" max="100000" step="1" value="50" />
+      </div>
+      <div>
+        <label for="cycles">Cycles to project</label>
+        <input id="cycles" type="number" min="1" max="20" step="1" value="5" />
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="muted">Estimated K-factor</div>
+      <div class="big" id="k">0.60</div>
+      <div class="bar"><i id="bar"></i></div>
+      <p id="verdict" class="muted"></p>
+      <p class="muted" id="proj"></p>
+    </div>
+
+    <div class="card">
+      <strong>What this means for ViralRefer</strong>
+      <p class="muted" style="margin:.5rem 0 0">
+        ViralRefer is designed so the “invite” is a free shareable link (no signup wall) and conversion is “friend gets their free link through you.”
+        Improve K by: clearer message, better channel fit, and following up after share — not by spam.
+      </p>
+      <a class="btn" href="https://www.viralrefer.app/?utm_source=leadmagnet&utm_medium=viral_calculator&utm_campaign=cta#get-link">Run your free loop on ViralRefer →</a>
+      <a class="btn" style="background:rgba(255,255,255,.08);border:1px solid var(--border);margin-top:.5rem" href="https://www.viralrefer.app/relay?utm_source=leadmagnet&utm_medium=viral_calculator&utm_campaign=relay">Also try Relay traffic exchange →</a>
+    </div>
+  </div>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function fmt(n) {
+      if (!Number.isFinite(n)) return '—';
+      if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+      if (n >= 1e3) return (n/1e3).toFixed(1) + 'k';
+      return Math.round(n).toLocaleString();
+    }
+    function calc() {
+      const invites = Math.max(0, Number($('invites').value) || 0);
+      const conv = Math.min(100, Math.max(0, Number($('conv').value) || 0)) / 100;
+      const seed = Math.max(1, Number($('seed').value) || 1);
+      const cycles = Math.min(20, Math.max(1, Number($('cycles').value) || 1));
+      const k = invites * conv;
+      const kEl = $('k');
+      kEl.textContent = k.toFixed(2);
+      kEl.className = 'big ' + (k >= 1 ? 'ok' : k >= 0.5 ? 'mid' : 'low');
+      $('bar').style.width = Math.min(100, k * 50) + '%';
+      if (k >= 1) $('verdict').textContent = 'K ≥ 1: in theory, each generation can grow the next (hard to sustain in real life — still aim high).';
+      else if (k >= 0.5) $('verdict').textContent = 'K is solid for a free product. Compound with better messaging + consistent sharing.';
+      else $('verdict').textContent = 'K is low. Focus on fewer, better invites and higher conversion (clear CTA, trust, easy share).';
+
+      let users = seed;
+      let total = seed;
+      for (let i = 0; i < cycles; i++) {
+        const next = users * k;
+        total += next;
+        users = next;
+        if (users < 0.01) break;
+      }
+      $('proj').textContent = `Rough projection after ${cycles} cycle(s) from ${fmt(seed)} seeds: ~${fmt(total)} cumulative users (toy model; real life has fatigue & channel limits).`;
+    }
+    ['invites','conv','seed','cycles'].forEach((id) => $(id).addEventListener('input', calc));
+    calc();
+  </script>
+</body>
+</html>

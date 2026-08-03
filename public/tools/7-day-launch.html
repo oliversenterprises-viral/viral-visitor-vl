@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>7-Day Referral Launch Plan (Free Checklist) · ViralRefer</title>
+  <meta name="description" content="Free interactive 7-day referral launch checklist. Progress saves in your browser. White-hat growth plan for ViralRefer." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/7-day-launch.html" />
+  <meta name="theme-color" content="#6b3acc" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root{--bg:#09090b;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--text:#f4f4f5;--muted:#a1a1aa;--accent:#864cff;--ok:#86efac}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(700px 400px at 0% 0%,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5}
+    .w{max-width:720px;margin:0 auto;padding:1rem 1rem 3rem}a{color:#c4b5fd}
+    h1{font-size:clamp(1.35rem,4.5vw,1.85rem);margin:.4rem 0;letter-spacing:-.02em}.sub{color:var(--muted)}
+    .nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem}
+    .brand{font-weight:800;color:#fff;text-decoration:none}
+    .prog{height:10px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;margin:1rem 0 .4rem}
+    .prog>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#864cff,#22c55e);transition:width .25s}
+    .day{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:.9rem 1rem;margin:.7rem 0}
+    .day h2{margin:0 0 .55rem;font-size:1.05rem}
+    label.task{display:flex;gap:.65rem;align-items:flex-start;padding:.45rem 0;border-top:1px solid rgba(255,255,255,.06);cursor:pointer;font-size:.95rem}
+    label.task:first-of-type{border-top:none}
+    input[type=checkbox]{width:1.15rem;height:1.15rem;margin-top:.15rem;flex-shrink:0;accent-color:#864cff}
+    .done{color:var(--ok);text-decoration:line-through;opacity:.85}
+    .btn{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:.8rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff;font-weight:700;text-decoration:none;margin-top:1rem}
+    .btn-s{background:rgba(255,255,255,.08);border:1px solid var(--border);color:#fff;width:100%;min-height:44px;border-radius:.8rem;font-weight:600;cursor:pointer;margin-top:.5rem}
+    .meta{font-size:.85rem;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav">
+      <a class="brand" href="./">← Free tools</a>
+      <a href="https://www.viralrefer.app/?utm_source=leadmagnet&utm_medium=7day_launch&utm_campaign=get_link#get-link" style="font-weight:700;text-decoration:none;color:#c4b5fd">Get free link →</a>
+    </div>
+    <h1>7-Day Referral Launch Plan</h1>
+    <p class="sub">Interactive white-hat checklist. Progress saves on this device. No spam, no bots — real shares only.</p>
+    <div class="prog" aria-hidden="true"><i id="bar"></i></div>
+    <p class="meta"><span id="pct">0</span>% complete · <span id="count">0</span> tasks done</p>
+    <div id="days"></div>
+    <button type="button" class="btn-s" id="reset">Reset progress</button>
+    <a class="btn" href="https://www.viralrefer.app/?utm_source=leadmagnet&utm_medium=7day_launch&utm_campaign=cta#get-link">Day 0: Get your free ViralRefer link →</a>
+  </div>
+  <script>
+    const KEY = 'vr_7day_launch_v1';
+    const plan = [
+      { day: 1, title: 'Foundation', tasks: [
+        'Get your free ViralRefer link (no signup)',
+        'Copy your link to notes / password manager',
+        'Write a 1-sentence pitch: who it’s for + free + no signup',
+        'Save 3 channels you’ll actually post on this week'
+      ]},
+      { day: 2, title: 'Message kit', tasks: [
+        'Generate 3 captions with the Share Message Generator',
+        'Make a short “how it works” voice note or 15s video for yourself',
+        'Pin your best caption in a note for reuse',
+        'Optional: add link to bio (if allowed on that platform)'
+      ]},
+      { day: 3, title: 'Warm network', tasks: [
+        'Share with 5 people who already trust you (DM, not blast)',
+        'Ask one friend for honest feedback on the pitch',
+        'Join ViralRefer Relay once so you understand the traffic loop',
+        'Track: how many opened / asked questions'
+      ]},
+      { day: 4, title: 'Public value post', tasks: [
+        'Post a value-first tip about referral loops (not “click me”)',
+        'Include your free tool or calculator link as a resource',
+        'Reply to every comment within 24 hours',
+        'Zero spam replies in other people’s threads'
+      ]},
+      { day: 5, title: 'Community fit', tasks: [
+        'Pick 1 community where self-promo rules allow helpful tools',
+        'Share the free calculator or 7-day plan as the gift',
+        'CTA soft: “free link if useful”',
+        'Log what got engagement for later'
+      ]},
+      { day: 6, title: 'Double down', tasks: [
+        'Repost best-performing angle with a new hook',
+        'Share on a second channel (don’t clone spam the same group)',
+        'Invite one collaborator to try the board with you',
+        'Check leaderboard / your stats — celebrate small wins'
+      ]},
+      { day: 7, title: 'Systemize', tasks: [
+        'Pick a weekly cadence you can keep (e.g. 3 shares/week)',
+        'Build 1 tracked UTM link per main channel',
+        'Bookmark /tools hub for future posts',
+        'Write what you’d tell “day 1 you” in 3 bullets'
+      ]}
+    ];
+
+    function load() {
+      try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; }
+    }
+    function save(state) {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+    }
+
+    const state = load();
+    const root = document.getElementById('days');
+
+    function tid(d, i) { return `d${d}_${i}`; }
+
+    function render() {
+      root.innerHTML = '';
+      let total = 0, done = 0;
+      plan.forEach((block) => {
+        const card = document.createElement('section');
+        card.className = 'day';
+        card.innerHTML = `<h2>Day ${block.day} · ${block.title}</h2>`;
+        block.tasks.forEach((text, i) => {
+          total++;
+          const id = tid(block.day, i);
+          const checked = !!state[id];
+          if (checked) done++;
+          const lab = document.createElement('label');
+          lab.className = 'task' + (checked ? ' done' : '');
+          lab.innerHTML = `<input type="checkbox" ${checked ? 'checked' : ''} data-id="${id}" /><span>${text}</span>`;
+          card.appendChild(lab);
+        });
+        root.appendChild(card);
+      });
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      document.getElementById('pct').textContent = String(pct);
+      document.getElementById('count').textContent = String(done);
+      document.getElementById('bar').style.width = pct + '%';
+
+      root.querySelectorAll('input[type=checkbox]').forEach((box) => {
+        box.addEventListener('change', () => {
+          state[box.getAttribute('data-id')] = box.checked;
+          save(state);
+          render();
+        });
+      });
+    }
+
+    document.getElementById('reset').addEventListener('click', () => {
+      if (confirm('Reset all checklist progress on this device?')) {
+        try { localStorage.removeItem(KEY); } catch {}
+        Object.keys(state).forEach((k) => delete state[k]);
+        render();
+      }
+    });
+    render();
+  </script>
+</body>
+</html>
