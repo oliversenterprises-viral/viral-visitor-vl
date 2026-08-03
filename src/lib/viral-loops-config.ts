@@ -9,6 +9,8 @@ export interface ViralLoopsConfig {
   sprint_enabled: boolean;
   community_enabled: boolean;
   community_goal_weekly: number;
+  /** No-cash 24h UTC Daily Crown strip + Hall of Crowns */
+  daily_crown_enabled: boolean;
 }
 
 export const DEFAULT_VIRAL_LOOPS_CONFIG: ViralLoopsConfig = {
@@ -18,6 +20,7 @@ export const DEFAULT_VIRAL_LOOPS_CONFIG: ViralLoopsConfig = {
   sprint_enabled: true,
   community_enabled: true,
   community_goal_weekly: 25,
+  daily_crown_enabled: true,
 };
 
 let cached: ViralLoopsConfig = { ...DEFAULT_VIRAL_LOOPS_CONFIG };
@@ -72,6 +75,10 @@ export function initViralLoopsConfigFromContent(content: Record<string, unknown>
     community_goal_weekly: parseGoal(
       obj.community_goal_weekly,
       DEFAULT_VIRAL_LOOPS_CONFIG.community_goal_weekly,
+    ),
+    daily_crown_enabled: parseBool(
+      obj.daily_crown_enabled,
+      DEFAULT_VIRAL_LOOPS_CONFIG.daily_crown_enabled,
     ),
   };
 }

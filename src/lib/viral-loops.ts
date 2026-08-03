@@ -10,9 +10,15 @@ import { renderCommunityUnlockMeter } from './community-unlock';
 import { offerRankReceipt } from './rank-receipt-card';
 import { formatSprintHeroLine, renderWeeklySprintBoard } from './weekly-sprint';
 import {
+  fetchDailyCrownStatus,
   fetchWeeklyReferralCount,
   fetchWeeklySprintLeaderboard,
 } from './supabase';
+import {
+  parseDailyCrownStatus,
+  renderDailyCrown,
+  getCachedDailyCrownStatus,
+} from './daily-crown';
 import type { LeaderboardEntry } from './types';
 
 function hasReferralLink(): boolean {
@@ -25,21 +31,27 @@ export function initViralLoops(): void {
   initChallengeLanding();
 }
 
-/** Load public sprint + community widgets (no user code required). */
+/** Load public sprint + community + Daily Crown widgets (no user code required). */
 export async function loadPublicViralLoops(myCode?: string | null): Promise<void> {
   const code = myCode ?? getMyReferralCode();
   try {
-    const [sprint, weeklyCount] = await Promise.all([
+    const [sprint, weeklyCount, crownRaw] = await Promise.all([
       fetchWeeklySprintLeaderboard(10),
       fetchWeeklyReferralCount(),
+      fetchDailyCrownStatus(14),
     ]);
     renderWeeklySprintBoard(sprint, code);
     renderCommunityUnlockMeter(weeklyCount);
     paintSprintHeroLine(sprint);
+    const crown = parseDailyCrownStatus(crownRaw);
+    renderDailyCrown(crown, code);
   } catch {
     // non-fatal
   }
 }
+
+/** Latest Daily Crown cache for leaderboard flair (after loadPublicViralLoops). */
+export { getCachedDailyCrownStatus };
 
 /** Sync user-specific loops after stats refresh. */
 export function syncUserViralLoops(

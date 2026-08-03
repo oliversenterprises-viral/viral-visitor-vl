@@ -74,6 +74,8 @@ export type ViralLoopEvent =
   | 'SprintBoardView'
   | 'CommunityUnlockView'
   | 'CommunityUnlockCelebration'
+  | 'DailyCrownView'
+  | 'DailyCrownShare'
   | 'PromoKitCopyCaption'
   | 'PromoKitCopyLink'
   | 'PromoKitOpenBanner'
@@ -95,6 +97,8 @@ export const VIRAL_LOOP_EVENT_ORDER: ViralLoopEvent[] = [
   'SprintBoardView',
   'CommunityUnlockView',
   'CommunityUnlockCelebration',
+  'DailyCrownView',
+  'DailyCrownShare',
   'PromoKitCopyCaption',
   'PromoKitCopyLink',
   'PromoKitOpenBanner',
@@ -109,6 +113,7 @@ export const PASSIVE_VIRAL_LOOP_EVENTS: ReadonlySet<ViralLoopEvent> = new Set([
   'CommunityUnlockView',
   'DuelInviteShown',
   'AnxietyBarShown',
+  'DailyCrownView',
 ]);
 
 const FUNNEL_EVENT_ORDER: VisitorFunnelEvent[] = [

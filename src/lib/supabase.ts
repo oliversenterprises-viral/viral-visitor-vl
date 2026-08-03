@@ -269,6 +269,20 @@ export async function fetchWeeklyReferralCount(): Promise<number> {
   return 0;
 }
 
+/** Daily Crown status (UTC day race + Hall of Crowns). Null if RPC not applied yet. */
+export async function fetchDailyCrownStatus(hallDays = 14): Promise<unknown | null> {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const { data, error } = await supabase.rpc('get_daily_crown_status', {
+      p_hall_days: hallDays,
+    });
+    if (!error && data != null) return data;
+  } catch {
+    // RPC unavailable until migration 0045
+  }
+  return null;
+}
+
 export async function fetchSiteContent(): Promise<Record<string, unknown>> {
   if (!isSupabaseConfigured) return {};
   const { data, error } = await supabase
