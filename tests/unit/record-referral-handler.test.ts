@@ -6,14 +6,19 @@ import {
 
 function buildSupabaseMock(overrides: {
   rateCount?: number;
+  dailyCount?: number;
   existing?: { id: string; created_at: string } | null;
+  dedupeError?: unknown;
   inserted?: { id: string; created_at: string } | null;
   insertError?: { code?: string } | null;
 } = {}) {
   const rateCount = overrides.rateCount ?? 0;
+  const dailyCount = overrides.dailyCount ?? rateCount;
   const existing = overrides.existing ?? null;
+  const dedupeError = overrides.dedupeError ?? null;
   const inserted = overrides.inserted ?? { id: 'ref-uuid-1', created_at: '2026-06-22T12:00:00Z' };
   const insertError = overrides.insertError ?? null;
+  let headCountCalls = 0;
 
   return {
     from: (table: string) => {
@@ -23,18 +28,22 @@ function buildSupabaseMock(overrides: {
           if (opts?.head) {
             return {
               eq: () => ({
-                gte: async () => ({ count: rateCount, error: null }),
+                gte: async () => {
+                  headCountCalls += 1;
+                  // 1st head = short rate window, 2nd = daily global cap
+                  const count = headCountCalls === 1 ? rateCount : dailyCount;
+                  return { count, error: null };
+                },
               }),
             };
           }
+          // Lifetime dedupe: .eq(referrer).eq(ip).order().limit().maybeSingle() — no gte
           return {
             eq: () => ({
               eq: () => ({
-                gte: () => ({
-                  order: () => ({
-                    limit: () => ({
-                      maybeSingle: async () => ({ data: existing, error: null }),
-                    }),
+                order: () => ({
+                  limit: () => ({
+                    maybeSingle: async () => ({ data: existing, error: dedupeError }),
                   }),
                 }),
               }),
@@ -149,5 +158,44 @@ describe('record-referral handler (edge index delegates here)', () => {
       headers: { 'cf-connecting-ip': '1.2.3.4', 'x-forwarded-for': '9.9.9.9' },
     });
     expect(getClientIp(req)).toBe('1.2.3.4');
+  });
+
+  it('POST returns duplicate for lifetime same IP + same referrer (no time window)', async () => {
+    const res = await handleRecordReferral(
+      post(
+        { referrerCode: 'VIRAL-LIFE' },
+        { 'cf-connecting-ip': '182.62.227.19', 'user-agent': 'Mozilla/5.0 Chrome' },
+      ),
+      {
+        verifyTurnstile: vi.fn(),
+        supabaseAdmin: buildSupabaseMock({
+          existing: { id: 'old-ref-id', created_at: '2025-01-01T00:00:00Z' },
+        }),
+      },
+    );
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json).toMatchObject({
+      success: true,
+      duplicate: true,
+      lifetime_ip_dedupe: true,
+      referralId: 'old-ref-id',
+      message: 'Referral already recorded for this network',
+    });
+  });
+
+  it('POST fails closed with 503 when lifetime dedupe query errors', async () => {
+    const res = await handleRecordReferral(
+      post(
+        { referrerCode: 'VIRAL-LIFE' },
+        { 'cf-connecting-ip': '182.62.227.20', 'user-agent': 'Mozilla/5.0 Chrome' },
+      ),
+      {
+        verifyTurnstile: vi.fn(),
+        supabaseAdmin: buildSupabaseMock({ dedupeError: { message: 'db down' } }),
+      },
+    );
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ success: false });
   });
 });

@@ -18,11 +18,18 @@ export const RECORD_REFERRAL_CORS_HEADERS = {
 
 const DEFAULT_RATE_LIMIT_WINDOW_MS = 60_000;
 const DEFAULT_RATE_LIMIT_MAX = 2;
-const DEFAULT_DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000;
+/** Rolling 24h window for global per-IP caps (any referrer). */
+const DAY_MS = 24 * 60 * 60 * 1000;
 /** Max referrals any single IP can credit (any referrer) per 24h — slows VPN farms. */
 const GLOBAL_IP_DAILY_MAX = 8;
 const UNKNOWN_IP_RATE_WINDOW_MS = 5 * 60_000;
 const UNKNOWN_IP_RATE_MAX = 1;
+
+/**
+ * Per-referrer + IP credit is lifetime (one ever).
+ * Kept as an exported constant for tests / ops docs — not a sliding window.
+ */
+export const REFERRER_IP_DEDUPE_LIFETIME = true;
 
 export function getClientIp(req: Request): string {
   const cfIp = req.headers.get('cf-connecting-ip');
@@ -41,6 +48,10 @@ export type RecordReferralDeps = {
   };
   rateLimitWindowMs?: number;
   rateLimitMax?: number;
+  /**
+   * @deprecated Ignored — same IP may credit a given referrer only once for life.
+   * Kept so older callers/tests that pass dedupeWindowMs still type-check.
+   */
   dedupeWindowMs?: number;
 };
 
@@ -117,7 +128,7 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
 
   const rateLimitWindowMs = deps.rateLimitWindowMs ?? DEFAULT_RATE_LIMIT_WINDOW_MS;
   const rateLimitMax = deps.rateLimitMax ?? DEFAULT_RATE_LIMIT_MAX;
-  const dedupeWindowMs = deps.dedupeWindowMs ?? DEFAULT_DEDUPE_WINDOW_MS;
+  // deps.dedupeWindowMs intentionally ignored — lifetime per (referrer, IP)
 
   const shouldVerifyTurnstile = Boolean(
     turnstileToken && turnstileToken !== 'dev-bypass-token',
@@ -176,7 +187,7 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
 
   if (ip !== 'unknown') {
     try {
-      const dayStart = new Date(Date.now() - DEFAULT_DEDUPE_WINDOW_MS).toISOString();
+      const dayStart = new Date(Date.now() - DAY_MS).toISOString();
       const dailyQuery = supabaseAdmin.from('referrals') as {
         select: (
           cols: string,
@@ -213,20 +224,19 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
     }
   }
 
+  // Lifetime: one credit per (referrer_code, referred_ip) ever — no sliding window.
+  // Same IP may still credit a *different* referrer (subject to global daily cap).
   if (ip !== 'unknown') {
-    const dedupeStart = new Date(Date.now() - dedupeWindowMs).toISOString();
     const dedupeQuery = supabaseAdmin.from('referrals') as {
       select: (cols: string) => {
         eq: (col: string, val: string) => {
           eq: (col: string, val: string) => {
-            gte: (col: string, val: string) => {
-              order: (col: string, opts: { ascending: boolean }) => {
-                limit: (n: number) => {
-                  maybeSingle: () => Promise<{
-                    data: { id: string; created_at: string } | null;
-                    error: unknown;
-                  }>;
-                };
+            order: (col: string, opts: { ascending: boolean }) => {
+              limit: (n: number) => {
+                maybeSingle: () => Promise<{
+                  data: { id: string; created_at: string } | null;
+                  error: unknown;
+                }>;
               };
             };
           };
@@ -237,19 +247,24 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
       .select('id, created_at')
       .eq('referrer_code', referrerCode)
       .eq('referred_ip', ip)
-      .gte('created_at', dedupeStart)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (dedupeError) {
-      console.error('[record-referral] Dedupe query error:', dedupeError);
+      // Fail closed: do not double-credit when lifetime dedupe DB is degraded
+      console.error('[record-referral] Lifetime IP dedupe query error:', dedupeError);
+      return jsonResponse(
+        { success: false, error: 'Temporarily unavailable. Please try again.' },
+        503,
+      );
     } else if (existing) {
       return jsonResponse(
         {
           success: true,
-          message: 'Referral already recorded',
+          message: 'Referral already recorded for this network',
           duplicate: true,
+          lifetime_ip_dedupe: true,
           referralId: existing.id,
           recordedAt: existing.created_at,
         },
