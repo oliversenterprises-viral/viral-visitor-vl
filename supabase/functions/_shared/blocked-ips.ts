@@ -7,6 +7,7 @@
 /** IPs permanently denied from referrals, claims, visitor events, and related writes. */
 export const BLOCKED_ACTIVITY_IPS = [
   '77.49.85.59', // high-risk — blocked 2026-08-02 (Nova Team)
+  '24.255.60.39', // high-risk — blocked 2026-08-07 (Nova Team)
 ] as const;
 
 /** Normalize client IP for comparison (trim, lowercase for IPv6). */

@@ -11,14 +11,21 @@ describe('blocked-ips', () => {
     expect(BLOCKED_ACTIVITY_IPS).toContain('77.49.85.59');
   });
 
+  it('includes the high-risk IP 24.255.60.39', () => {
+    expect(BLOCKED_ACTIVITY_IPS).toContain('24.255.60.39');
+  });
+
   it('isBlockedActivityIp matches exact blocked IP', () => {
     expect(isBlockedActivityIp('77.49.85.59')).toBe(true);
     expect(isBlockedActivityIp(' 77.49.85.59 ')).toBe(true);
+    expect(isBlockedActivityIp('24.255.60.39')).toBe(true);
+    expect(isBlockedActivityIp(' 24.255.60.39 ')).toBe(true);
   });
 
   it('isBlockedActivityIp does not match unrelated IPs', () => {
     expect(isBlockedActivityIp('8.8.8.8')).toBe(false);
     expect(isBlockedActivityIp('77.49.85.60')).toBe(false);
+    expect(isBlockedActivityIp('24.255.60.40')).toBe(false);
     expect(isBlockedActivityIp('unknown')).toBe(false);
     expect(isBlockedActivityIp('')).toBe(false);
     expect(isBlockedActivityIp(null)).toBe(false);
@@ -40,6 +47,28 @@ describe('record-referral blocks high-risk IP', () => {
         headers: {
           'Content-Type': 'application/json',
           'cf-connecting-ip': '77.49.85.59',
+        },
+        body: JSON.stringify({ referrerCode: 'VIRAL-ABCDEF' }),
+      }),
+      {
+        verifyTurnstile: async () => ({ success: true }),
+        supabaseAdmin: { from },
+      },
+    );
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ success: false, error: 'Access denied.' });
+  });
+
+  it('returns 403 for high-risk IP 24.255.60.39 before any DB work', async () => {
+    const from = () => {
+      throw new Error('DB must not be called for blocked IP');
+    };
+    const res = await handleRecordReferral(
+      new Request('https://edge.test/record-referral', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'cf-connecting-ip': '24.255.60.39',
         },
         body: JSON.stringify({ referrerCode: 'VIRAL-ABCDEF' }),
       }),
