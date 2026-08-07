@@ -77,3 +77,8 @@ tests/extract-env-from-vercel.mjs
 tests/referral-flow-audit.mjs
 
 .vercel
+
+# Local ViralRefer alert cursors (machine-only)
+scripts/.email-referral-alert-state.json
+scripts/.monitor-referral-state.json
+
