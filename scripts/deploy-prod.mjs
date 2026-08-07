@@ -23,6 +23,9 @@ function run(cmd, label) {
 console.log('=== ViralRefer production deploy (with smoke gate) ===');
 console.log('Vercel project: viralrefer-premium → https://www.viralrefer.app\n');
 
+// Fail before deploy if partner splash / tools files are missing from public/
+run('npm run test:smoke:static', 'Preflight: required static routes present in public/');
+
 /** All production edge entrypoints — keep in sync with supabase/functions/* (exclude empty/archived). */
 const EDGE_FUNCTIONS = [
   'record-referral',
@@ -57,6 +60,7 @@ if (deployUrl) {
   }
 }
 run('npm run test:smoke:prod', 'Run production referral smoke test');
+run('npm run test:smoke:static:live', 'Post-deploy: required static routes return 200 on www');
 run(
   'node scripts/cleanup-test-referral-pollution.mjs --apply',
   'Purge smoke/owner referral pollution after smoke',

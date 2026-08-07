@@ -1,0 +1,25 @@
+# ViralRefer
+
+> ViralRefer is a free worldwide referral leaderboard. You get a unique trackable link in about 30 seconds with no signup or email. Share the link with friends. You climb when a friend opens your link and taps Get my link. The #1 referrer can claim a homepage banner feature for their website after verification. There is no cash prize.
+
+Site: https://www.viralrefer.app
+Type: Free web app — worldwide referral leaderboard
+Price: Free (USD 0). No cash prizes.
+Signup: None required
+
+## Key facts
+- Get a unique referral link in ~30 seconds
+- Share the link; climb when a friend opens it and taps Get my link
+- Copy alone does not lock the link
+- #1 can claim a homepage banner feature after verification
+- Open worldwide; skill-based referral contest
+
+## Primary pages
+- Homepage: https://www.viralrefer.app/
+- How it works: https://www.viralrefer.app/#how
+- FAQ: https://www.viralrefer.app/#faq
+- Leaderboard: https://www.viralrefer.app/#leaderboard
+- Homepage feature: https://www.viralrefer.app/#prize
+
+## Contact / social
+- Telegram: https://t.me/viralrefer

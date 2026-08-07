@@ -12,6 +12,8 @@
     "test:e2e": "playwright test",
     "test:audit": "node tests/site-audit.mjs",
     "test:smoke:prod": "node scripts/smoke-prod-referrals.mjs",
+    "test:smoke:static": "node scripts/smoke-static-routes.mjs",
+    "test:smoke:static:live": "node scripts/smoke-static-routes.mjs --live",
     "test:admin-audit": "node scripts/audit-admin-flow.mjs",
     "test:preview-load": "node tests/preview-load.mjs",
     "deploy:prod": "node scripts/deploy-prod.mjs",
