@@ -63,6 +63,20 @@ describe('share-power', () => {
     expect(buildPlatformShareUrl('native', LINK, text)).toBeNull();
   });
 
+  it('buildPlatformShareUrl facebook uses sharer.php with encoded u and optional quote', () => {
+    const tracked = buildTrackedShareLink(LINK, 'facebook');
+    const text = buildShareMessage(LINK, { platform: 'facebook', trackUtm: true });
+    const url = buildPlatformShareUrl('facebook', tracked, text);
+    expect(url).toMatch(/^https:\/\/www\.facebook\.com\/sharer\/sharer\.php\?/);
+    expect(url).toContain(`u=${encodeURIComponent(tracked)}`);
+    // quote should be present when message has a non-URL first line
+    expect(url).toContain('quote=');
+    // Must not double-encode the whole URL string into u=
+    const u = new URL(url!).searchParams.get('u');
+    expect(u).toBe(tracked);
+    expect(u).toContain('utm_source=facebook');
+  });
+
   it('buildQrImageUrl encodes link', () => {
     const url = buildQrImageUrl(LINK, 200);
     expect(url).toContain('qrserver.com');

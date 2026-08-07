@@ -1,18 +1,26 @@
 /**
- * Organic search (Google) snippets — robots/sitemap helpers, JSON-LD, homepage meta.
- * Static copies live in index.html + public/ for non-JS crawlers; this module keeps DRY + runtime fixes.
+ * Organic SEO + Answer Engine Optimization (AEO).
+ * Static copies in index.html + public/ for non-JS crawlers; this module keeps DRY + runtime sync.
+ *
+ * AEO goal: clear entity answers AI systems can quote (ChatGPT, Perplexity, AI Overviews).
+ * Does not change the get-link → send funnel — FAQ / entity blocks stay below the fold.
  */
 
 import { parseRefFromLocation } from './referral-url';
+import { escapeHtml } from './escape-html';
 
 export const SEO_SITE_ORIGIN = 'https://www.viralrefer.app';
+
+/** Canonical entity definition — lead answer for AEO / AI Overviews. */
+export const AEO_ENTITY_DEFINITION =
+  'ViralRefer is a free worldwide referral leaderboard. You get a unique trackable link in about 30 seconds with no signup or email. Share the link with friends. You climb when a friend opens your link and taps Get my link. The #1 referrer can claim a homepage banner feature for their website after verification. There is no cash prize.';
 
 export const HOMEPAGE_SEO = {
   title: 'ViralRefer • Free Worldwide Referral Leaderboard',
   description:
-    'Worldwide free referral leaderboard. Get your link in 30 seconds — no signup. #1 can claim a homepage feature for their site. No cash prizes.',
+    'ViralRefer is a free worldwide referral leaderboard. Get your link in 30 seconds — no signup. Share it; climb when friends get their free link through you. #1 can claim a homepage feature. No cash prizes.',
   keywords:
-    'referral program, viral marketing, free referral link, live leaderboard, homepage feature, worldwide, no signup',
+    'free referral leaderboard, free referral link, viral referral contest, no signup referral program, homepage feature prize, live referral board, ViralRefer',
 } as const;
 
 export interface FaqEntry {
@@ -20,27 +28,49 @@ export interface FaqEntry {
   answer: string;
 }
 
-/** FAQ content mirrored in index.html JSON-LD for rich-result eligibility. */
+/**
+ * FAQ mirrored in index.html (visible + JSON-LD).
+ * Written as extractable answers for answer engines — short, factual, entity-clear.
+ */
 export const HOMEPAGE_FAQ: readonly FaqEntry[] = [
   {
-    question: 'How do I get a ViralRefer referral link?',
+    question: 'What is ViralRefer?',
+    answer: AEO_ENTITY_DEFINITION,
+  },
+  {
+    question: 'How do I get a free ViralRefer referral link?',
     answer:
-      'Click "Get my referral link" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required.',
+      'Open viralrefer.app and tap Get my referral link. You receive a unique trackable link in about 30 seconds. It is free. No email and no account are required.',
   },
   {
     question: 'Is ViralRefer free to use?',
     answer:
-      'Yes. ViralRefer is completely free. There is no payment, no email signup, and no catch — just copy your link and share it.',
-  },
-  {
-    question: 'What does the #1 referrer get?',
-    answer:
-      'Open worldwide. The top referrer on the live leaderboard can claim a homepage banner feature for their website after verification (minimum referrals as shown on site). There is no cash prize.',
+      'Yes. ViralRefer is completely free. There is no payment, no email signup, and no cash prize. The top referrer can claim a homepage banner feature for their website after verification.',
   },
   {
     question: 'How does the ViralRefer leaderboard work?',
     answer:
-      'Every person who signs up through your unique referral link counts toward your total. Share on X, WhatsApp, LinkedIn, Telegram, SMS, or anywhere — then watch your rank climb on the live board.',
+      'You share your unique link. When someone opens it and taps Get my link, that counts as a verified referral for you. Rankings update on the live leaderboard. Test and owner traffic are not credited the same way as real friends.',
+  },
+  {
+    question: 'What does the #1 referrer on ViralRefer get?',
+    answer:
+      'Open worldwide. The top verified referrer can claim a homepage banner feature for their website after eligibility checks and Official Rules. There is no cash prize — it is free recognition and visibility only.',
+  },
+  {
+    question: 'Does copying my link lock my ViralRefer spot?',
+    answer:
+      'No. Copying alone does not lock your link. Your link locks when a real friend opens it and taps Get my link. Sharing on apps like WhatsApp, SMS, or your device share sheet helps you reach friends faster.',
+  },
+  {
+    question: 'Do I need to sign up or give my email for ViralRefer?',
+    answer:
+      'No. ViralRefer does not require an account or email to get a free referral link. Tap Get my referral link and share it.',
+  },
+  {
+    question: 'Is ViralRefer a cash prize contest?',
+    answer:
+      'No. ViralRefer does not offer cash prizes. The reward for #1 is a homepage banner feature for the winner’s website after verification. It is a skill-based referral contest focused on visibility, not money.',
   },
 ] as const;
 
@@ -51,6 +81,7 @@ export function buildHomepageJsonLd(origin = SEO_SITE_ORIGIN): Record<string, un
       '@context': 'https://schema.org',
       '@type': 'WebSite',
       name: 'ViralRefer',
+      alternateName: ['Viral Refer', 'viralrefer.app'],
       url: base,
       description: HOMEPAGE_SEO.description,
       inLanguage: 'en-US',
@@ -62,7 +93,8 @@ export function buildHomepageJsonLd(origin = SEO_SITE_ORIGIN): Record<string, un
       name: 'ViralRefer',
       url: base,
       logo: `${base}/favicon.svg`,
-      description: HOMEPAGE_SEO.description,
+      description: AEO_ENTITY_DEFINITION,
+      sameAs: ['https://t.me/viralrefer'],
     },
     {
       '@context': 'https://schema.org',
@@ -71,8 +103,15 @@ export function buildHomepageJsonLd(origin = SEO_SITE_ORIGIN): Record<string, un
       url: base,
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
+      browserRequirements: 'Requires JavaScript',
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-      description: HOMEPAGE_SEO.description,
+      description: AEO_ENTITY_DEFINITION,
+      featureList: [
+        'Free referral link in about 30 seconds',
+        'No signup or email required',
+        'Live worldwide referral leaderboard',
+        'Homepage banner feature for #1 (no cash prize)',
+      ],
     },
     {
       '@context': 'https://schema.org',
@@ -86,14 +125,54 @@ export function buildHomepageJsonLd(origin = SEO_SITE_ORIGIN): Record<string, un
   ];
 }
 
+/** Plain-text entity brief for AI assistants / crawlers (public/llms.txt). */
+export function buildLlmsTxt(origin = SEO_SITE_ORIGIN): string {
+  const base = origin.replace(/\/$/, '');
+  const lines = [
+    '# ViralRefer',
+    '',
+    `> ${AEO_ENTITY_DEFINITION}`,
+    '',
+    `Site: ${base}`,
+    'Type: Free web app — worldwide referral leaderboard',
+    'Price: Free (USD 0). No cash prizes.',
+    'Signup: None required',
+    '',
+    '## Key facts',
+    '- Get a unique referral link in ~30 seconds',
+    '- Share the link; climb when a friend opens it and taps Get my link',
+    '- Copy alone does not lock the link',
+    '- #1 can claim a homepage banner feature after verification',
+    '- Open worldwide; skill-based referral contest',
+    '',
+    '## Primary pages',
+    `- Homepage: ${base}/`,
+    `- How it works: ${base}/#how`,
+    `- FAQ: ${base}/#faq`,
+    `- Leaderboard: ${base}/#leaderboard`,
+    `- Homepage feature: ${base}/#prize`,
+    '',
+    '## Contact / social',
+    '- Telegram: https://t.me/viralrefer',
+    '',
+  ];
+  return lines.join('\n');
+}
+
 export function buildSitemapXml(origin = SEO_SITE_ORIGIN, lastmod?: string): string {
   const base = origin.replace(/\/$/, '');
   const date = lastmod || new Date().toISOString().slice(0, 10);
   const urls = [
     { loc: `${base}/`, changefreq: 'daily', priority: '1.0' },
     { loc: `${base}/#how`, changefreq: 'weekly', priority: '0.8' },
+    { loc: `${base}/#faq`, changefreq: 'weekly', priority: '0.85' },
     { loc: `${base}/#leaderboard`, changefreq: 'daily', priority: '0.9' },
     { loc: `${base}/#prize`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/go/makers/`, changefreq: 'weekly', priority: '0.75' },
+    { loc: `${base}/go/race/`, changefreq: 'weekly', priority: '0.75' },
+    { loc: `${base}/go/feature/`, changefreq: 'weekly', priority: '0.75' },
+    { loc: `${base}/go/challenge/`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/llms.txt`, changefreq: 'monthly', priority: '0.4' },
   ];
   const body = urls
     .map(
@@ -118,6 +197,28 @@ export function buildRobotsTxt(origin = SEO_SITE_ORIGIN): string {
 Allow: /
 
 User-agent: Googlebot
+Allow: /
+
+# Allow major AI answer-engine crawlers (AEO: we want accurate citations)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
 Allow: /
 
 Disallow: /api/
@@ -156,8 +257,31 @@ function upsertJsonLd(doc: Document, id: string, payload: Record<string, unknown
   el.textContent = JSON.stringify(payload.length === 1 ? payload[0] : payload);
 }
 
-/** Homepage-only: canonical URL, JSON-LD refresh, optional Google Search Console verification. */
+/** Sync visible FAQ list + entity definition with HOMEPAGE_FAQ (AEO extractable HTML). */
+export function mountAeoContent(doc: Document = document): void {
+  const def = doc.getElementById('aeo-entity-definition');
+  if (def) def.textContent = AEO_ENTITY_DEFINITION;
+
+  const list = doc.getElementById('aeo-faq-list');
+  if (!list) return;
+
+  list.innerHTML = HOMEPAGE_FAQ.map(
+    (item) => `
+    <details class="aeo-faq-item group rounded-2xl border border-white/10 bg-zinc-900/50 px-4 py-3 open:border-violet-400/30 open:bg-violet-500/5">
+      <summary class="aeo-faq-q cursor-pointer list-none font-semibold text-sm sm:text-base text-white flex items-start justify-between gap-3">
+        <span>${escapeHtml(item.question)}</span>
+        <i class="fa-solid fa-chevron-down text-xs text-zinc-500 mt-1 group-open:rotate-180 transition-transform" aria-hidden="true"></i>
+      </summary>
+      <p class="aeo-faq-a mt-2 text-sm text-zinc-300 leading-relaxed">${escapeHtml(item.answer)}</p>
+    </details>`,
+  ).join('');
+}
+
+/** Homepage-only: canonical, JSON-LD, AEO visible blocks, GSC verify. */
 export function initOrganicSeo(loc: Location = location, doc: Document = document): void {
+  // Always mount visible FAQ/entity if present (static HTML fallback already there)
+  mountAeoContent(doc);
+
   if (parseRefFromLocation(loc)) return;
 
   const canonical = `${SEO_SITE_ORIGIN.replace(/\/$/, '')}/`;
@@ -165,6 +289,10 @@ export function initOrganicSeo(loc: Location = location, doc: Document = documen
 
   const graphs = buildHomepageJsonLd();
   upsertJsonLd(doc, 'vr-organic-jsonld', graphs);
+
+  // Keep meta description aligned with AEO-friendly copy
+  const desc = doc.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+  if (desc) desc.content = HOMEPAGE_SEO.description;
 
   const verify = import.meta.env.VITE_GOOGLE_SITE_VERIFICATION as string | undefined;
   if (verify && verify.trim()) {

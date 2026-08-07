@@ -342,6 +342,20 @@ async function checkEmbedRoute() {
   );
 }
 
+/** Relay reciprocal exchange must be frameable for TraffUp / traffic exchanges. */
+async function checkRelayRoute() {
+  const res = await fetch(`${LIVE_SITE}/relay?utm_source=smoke`, { redirect: 'follow' });
+  record('live: /relay HTTP 200', res.ok, `status=${res.status}`);
+
+  const csp = res.headers.get('content-security-policy') || '';
+  const xfo = (res.headers.get('x-frame-options') || '').toUpperCase();
+  record(
+    'live: /relay allows iframe embedding (traffic exchanges)',
+    /frame-ancestors\s+\*/i.test(csp) && !xfo.includes('DENY') && !xfo.includes('SAMEORIGIN'),
+    `csp frame-ancestors *; x-frame-options=${xfo || '(none)'}`,
+  );
+}
+
 async function checkLiveSitePlaywright() {
   let recordReferralHit = null;
   const browser = await chromium.launch({ headless: true });
@@ -420,6 +434,7 @@ async function checkOgImages() {
 async function checkLiveSite() {
   await checkLiveSiteFetch();
   await checkEmbedRoute();
+  await checkRelayRoute();
   await checkOgImages();
   try {
     await checkLiveSitePlaywright();

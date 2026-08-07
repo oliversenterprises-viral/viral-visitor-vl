@@ -898,6 +898,288 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // ── ViralRefer Relay operator controls ─────────────────────────────────
+    if (action === 'get_relay_admin') {
+      const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: config } = await supabaseAdmin.from('relay_config').select('*').eq('id', 1).maybeSingle();
+      const { data: live } = await supabaseAdmin
+        .from('relay_links')
+        .select('id, url, domain, status, views_remaining, views_delivered, live_at, created_at')
+        .eq('status', 'live')
+        .maybeSingle();
+      const { data: queue } = await supabaseAdmin
+        .from('relay_links')
+        .select('id, url, domain, status, created_at, views_delivered')
+        .eq('status', 'queued')
+        .order('created_at', { ascending: true })
+        .limit(30);
+      const { data: recent } = await supabaseAdmin
+        .from('relay_links')
+        .select('id, url, domain, status, views_delivered, views_remaining, created_at, live_at, completed_at')
+        .order('created_at', { ascending: false })
+        .limit(40);
+      const { count: views24h } = await supabaseAdmin
+        .from('relay_views')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', since24h);
+      const { count: enqueues24h } = await supabaseAdmin
+        .from('relay_links')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', since24h);
+      const { count: sessions24h } = await supabaseAdmin
+        .from('relay_sessions')
+        .select('id', { count: 'exact', head: true })
+        .gte('last_seen_at', since24h);
+      const { count: queueLength } = await supabaseAdmin
+        .from('relay_links')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'queued');
+      const { count: houseViews24h } = await supabaseAdmin
+        .from('relay_views')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_house', true)
+        .gte('created_at', since24h);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            config: config || null,
+            live: live || null,
+            queue: queue || [],
+            recent: recent || [],
+            stats: {
+              views_24h: views24h ?? 0,
+              house_views_24h: houseViews24h ?? 0,
+              enqueues_24h: enqueues24h ?? 0,
+              sessions_active_24h: sessions24h ?? 0,
+              queue_length: queueLength ?? 0,
+            },
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (action === 'update_relay_config') {
+      const p = payload || {};
+      const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+
+      if (typeof p.enabled === 'boolean') patch.enabled = p.enabled;
+      if (p.min_dwell_seconds != null) {
+        const n = Math.floor(Number(p.min_dwell_seconds));
+        if (n < 5 || n > 120) {
+          return new Response(JSON.stringify({ success: false, error: 'min_dwell_seconds must be 5–120' }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        patch.min_dwell_seconds = n;
+      }
+      if (p.views_per_seat != null) {
+        const n = Math.floor(Number(p.views_per_seat));
+        if (n < 1 || n > 50) {
+          return new Response(JSON.stringify({ success: false, error: 'views_per_seat must be 1–50' }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        patch.views_per_seat = n;
+      }
+      if (p.enqueue_cooldown_seconds != null) {
+        const n = Math.floor(Number(p.enqueue_cooldown_seconds));
+        if (n < 0 || n > 86400) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'enqueue_cooldown_seconds must be 0–86400' }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
+        patch.enqueue_cooldown_seconds = n;
+      }
+      if (typeof p.house_url === 'string' && p.house_url.trim()) {
+        try {
+          const u = new URL(p.house_url.trim());
+          if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('bad protocol');
+          patch.house_url = u.toString();
+        } catch {
+          return new Response(JSON.stringify({ success: false, error: 'Invalid house_url' }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      if (typeof p.banner_url === 'string' && p.banner_url.trim()) {
+        try {
+          const u = new URL(p.banner_url.trim());
+          if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('bad protocol');
+          patch.banner_url = u.toString();
+        } catch {
+          return new Response(JSON.stringify({ success: false, error: 'Invalid banner_url' }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      if (typeof p.house_label === 'string') {
+        patch.house_label = p.house_label.trim().slice(0, 200) || 'ViralRefer';
+      }
+
+      if (Object.keys(patch).length <= 1) {
+        return new Response(JSON.stringify({ success: false, error: 'No valid config fields' }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data, error } = await supabaseAdmin
+        .from('relay_config')
+        .update(patch)
+        .eq('id', 1)
+        .select('*')
+        .maybeSingle();
+
+      if (error) {
+        return new Response(JSON.stringify({ success: false, error: error.message }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ success: true, data: { config: data } }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'force_complete_relay_live') {
+      const { data: live } = await supabaseAdmin
+        .from('relay_links')
+        .select('id')
+        .eq('status', 'live')
+        .maybeSingle();
+      if (!live?.id) {
+        return new Response(JSON.stringify({ success: false, error: 'No LIVE seat to complete' }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      await supabaseAdmin
+        .from('relay_links')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          views_remaining: 0,
+        })
+        .eq('id', live.id)
+        .eq('status', 'live');
+
+      const { data: cfg } = await supabaseAdmin
+        .from('relay_config')
+        .select('views_per_seat')
+        .eq('id', 1)
+        .maybeSingle();
+      const viewsPerSeat = Math.max(1, Number(cfg?.views_per_seat) || 5);
+
+      const { data: next } = await supabaseAdmin
+        .from('relay_links')
+        .select('id')
+        .eq('status', 'queued')
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      let promotedId: string | null = null;
+      if (next?.id) {
+        await supabaseAdmin
+          .from('relay_links')
+          .update({
+            status: 'live',
+            live_at: new Date().toISOString(),
+            views_remaining: viewsPerSeat,
+          })
+          .eq('id', next.id)
+          .eq('status', 'queued');
+        promotedId = next.id;
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: { completed_id: live.id, promoted_id: promotedId },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (action === 'reject_relay_link') {
+      const linkId = String(payload?.linkId || payload?.link_id || '').trim();
+      if (!linkId) {
+        return new Response(JSON.stringify({ success: false, error: 'linkId required' }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const { data: row } = await supabaseAdmin
+        .from('relay_links')
+        .select('id, status')
+        .eq('id', linkId)
+        .maybeSingle();
+      if (!row?.id) {
+        return new Response(JSON.stringify({ success: false, error: 'Link not found' }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (row.status === 'completed' || row.status === 'rejected') {
+        return new Response(JSON.stringify({ success: false, error: `Already ${row.status}` }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const wasLive = row.status === 'live';
+      await supabaseAdmin
+        .from('relay_links')
+        .update({
+          status: 'rejected',
+          completed_at: new Date().toISOString(),
+          views_remaining: 0,
+        })
+        .eq('id', linkId);
+
+      let promotedId: string | null = null;
+      if (wasLive) {
+        const { data: cfg } = await supabaseAdmin
+          .from('relay_config')
+          .select('views_per_seat')
+          .eq('id', 1)
+          .maybeSingle();
+        const viewsPerSeat = Math.max(1, Number(cfg?.views_per_seat) || 5);
+        const { data: next } = await supabaseAdmin
+          .from('relay_links')
+          .select('id')
+          .eq('status', 'queued')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (next?.id) {
+          await supabaseAdmin
+            .from('relay_links')
+            .update({
+              status: 'live',
+              live_at: new Date().toISOString(),
+              views_remaining: viewsPerSeat,
+            })
+            .eq('id', next.id)
+            .eq('status', 'queued');
+          promotedId = next.id;
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, data: { rejected_id: linkId, promoted_id: promotedId } }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
     return new Response(JSON.stringify({ success: false, error: 'Unknown action' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -65,8 +65,87 @@ async function resolveShareContext(): Promise<{ link: string; code: string } | n
   return { link, code };
 }
 
-function openShareIntent(url: string): void {
-  window.open(url, '_blank', 'noopener');
+/**
+ * Open a share intent URL in a new tab.
+ * Never pass a non-empty windowFeatures string alone (e.g. 'noopener') — that forces a
+ * restricted popup. Facebook's sharer often fails/blank in those popups.
+ * When `pending` was opened under the user gesture (before await), navigate it instead.
+ */
+function openShareIntent(url: string, pending: Window | null = null): boolean {
+  if (pending && !pending.closed) {
+    try {
+      pending.location.replace(url);
+      return true;
+    } catch {
+      try {
+        pending.location.href = url;
+        return true;
+      } catch {
+        try {
+          pending.close();
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+  }
+
+  // Prefer a real tab (no features string) so FB/LinkedIn login UIs work.
+  try {
+    const w = window.open(url, '_blank');
+    if (w) return true;
+  } catch {
+    /* fall through */
+  }
+
+  // Popup blocked after async — anchor navigation often still works.
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return true;
+  } catch {
+    /* last resort */
+  }
+
+  try {
+    window.location.assign(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Platforms that open an external share/intent URL (not clipboard-only). */
+const WEB_INTENT_PLATFORMS: ReadonlySet<SharePlatform> = new Set([
+  'x',
+  'whatsapp',
+  'linkedin',
+  'facebook',
+  'telegram',
+  'sms',
+  'email',
+  'reddit',
+  'bluesky',
+  'threads',
+  'pinterest',
+  'boost',
+]);
+
+/** Reserve a blank tab under the click gesture so post-await open isn't blocked. */
+function reserveShareWindow(platform: SharePlatform): Window | null {
+  if (!WEB_INTENT_PLATFORMS.has(platform)) return null;
+  // Open about:blank sync so we keep the user-activation token (critical for Facebook).
+  try {
+    return window.open('about:blank', '_blank');
+  } catch {
+    return null;
+  }
 }
 
 function clipboardShareToast(platform: SharePlatform): string {
@@ -128,95 +207,172 @@ registerGlobal('closeWinnerModal', closeWinnerModal);
  * Handles sharing the referral link to various platforms.
  */
 export const shareTo = (platform: string) => {
+  const sharePlatform = platform as SharePlatform;
+  // Sync: reserve a tab under the user gesture so Facebook/etc. aren't popup-blocked after await.
+  const pendingWin = reserveShareWindow(sharePlatform);
+
   void (async () => {
-    const ctx = await resolveShareContext();
-    if (!ctx) return;
+    try {
+      const ctx = await resolveShareContext();
+      if (!ctx) {
+        try {
+          pendingWin?.close();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
 
-    const sharePlatform = platform as SharePlatform;
-    const trackedLink = buildTrackedShareLink(ctx.link, sharePlatform);
-    const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions(sharePlatform, ctx.link));
-    const abVariant = resolveShareAbVariant(ctx.code);
+      const trackedLink = buildTrackedShareLink(ctx.link, sharePlatform);
+      const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions(sharePlatform, ctx.link));
+      const abVariant = resolveShareAbVariant(ctx.code);
 
-    const url = buildPlatformShareUrl(sharePlatform, trackedLink, text);
-    if (url) {
-      // Intent open ≠ sent. Track first, then open (measure away-time).
-      const { trackShareAwaitingConfirm } = await import('../lib/share-confirm');
-      trackShareAwaitingConfirm({
-        platform,
-        referrer_code: ctx.code,
-        referral_link: trackedLink,
-        ab_variant: abVariant,
-        sheetSettled: true,
-      });
-      openShareIntent(url);
+      const url = buildPlatformShareUrl(sharePlatform, trackedLink, text);
+      if (url) {
+        // Intent open ≠ sent. Track first, then open (measure away-time).
+        const { trackShareAwaitingConfirm } = await import('../lib/share-confirm');
+        trackShareAwaitingConfirm({
+          platform,
+          referrer_code: ctx.code,
+          referral_link: trackedLink,
+          ab_variant: abVariant,
+          sheetSettled: true,
+        });
+        const opened = openShareIntent(url, pendingWin);
+        logShare(platform, ctx.code, trackedLink, { confirmLock: false });
+        if (!opened) {
+          showToast('Could not open the share window — allow popups or copy your link', 'info');
+        } else if (sharePlatform === 'facebook') {
+          showToast('Facebook opened — post your link, then come back to confirm', 'info');
+        } else {
+          showToast('Send your link in the app — come back; confirm unlocks after a short wait', 'info');
+        }
+        return;
+      }
+
+      try {
+        pendingWin?.close();
+      } catch {
+        /* ignore */
+      }
+
+      if (shouldCopyShareMessage(sharePlatform)) {
+        const copied = await copyTextToClipboard(text, clipboardShareToast(sharePlatform));
+        if (!copied) showToast('Copy failed — try Copy full message', 'info');
+        // Clipboard alone never locks
+        logShare(platform, ctx.code, trackedLink, { confirmLock: false });
+        showToast('Message copied — paste & send in the app (copy alone does not lock)', 'info');
+        return;
+      }
+
+      const copied = await copyTextToClipboard(ctx.link, 'Link copied for sharing');
+      if (!copied) showToast('Copy failed — try the COPY button', 'info');
       logShare(platform, ctx.code, trackedLink, { confirmLock: false });
-      showToast('Send your link in the app — come back; confirm unlocks after a short wait', 'info');
-      return;
+    } catch {
+      try {
+        pendingWin?.close();
+      } catch {
+        /* ignore */
+      }
+      showToast('Share failed — try Copy full message', 'info');
     }
-
-    if (shouldCopyShareMessage(sharePlatform)) {
-      const copied = await copyTextToClipboard(text, clipboardShareToast(sharePlatform));
-      if (!copied) showToast('Copy failed — try Copy full message', 'info');
-      // Clipboard alone never locks
-      logShare(platform, ctx.code, trackedLink, { confirmLock: false });
-      showToast('Message copied — paste & send in the app (copy alone does not lock)', 'info');
-      return;
-    }
-
-    const copied = await copyTextToClipboard(ctx.link, 'Link copied for sharing');
-    if (!copied) showToast('Copy failed — try the COPY button', 'info');
-    logShare(platform, ctx.code, trackedLink, { confirmLock: false });
   })();
 };
 registerGlobal('shareTo', shareTo);
 
 /** Mobile-first one-tap: open WhatsApp with tracked message (highest-converting channel). */
 export const boostShareWhatsApp = () => {
+  const pendingWin = reserveShareWindow('whatsapp');
   void (async () => {
-    const ctx = await resolveShareContext();
-    if (!ctx) return;
+    try {
+      const ctx = await resolveShareContext();
+      if (!ctx) {
+        try {
+          pendingWin?.close();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
 
-    const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions('boost', ctx.link));
-    const tracked = buildTrackedShareLink(ctx.link, 'boost');
-    const abVariant = resolveShareAbVariant(ctx.code);
-    const url = buildPlatformShareUrl('whatsapp', tracked, text);
-    const { trackShareAwaitingConfirm } = await import('../lib/share-confirm');
-    trackShareAwaitingConfirm({
-      platform: 'boost-whatsapp',
-      referrer_code: ctx.code,
-      referral_link: tracked,
-      ab_variant: abVariant,
-      sheetSettled: true,
-    });
-    if (url) openShareIntent(url);
-    logShare('boost-whatsapp', ctx.code, tracked, { confirmLock: false });
-    showToast('Send in WhatsApp — return here; confirm unlocks after you come back', 'info');
+      const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions('boost', ctx.link));
+      const tracked = buildTrackedShareLink(ctx.link, 'boost');
+      const abVariant = resolveShareAbVariant(ctx.code);
+      const url = buildPlatformShareUrl('whatsapp', tracked, text);
+      const { trackShareAwaitingConfirm } = await import('../lib/share-confirm');
+      trackShareAwaitingConfirm({
+        platform: 'boost-whatsapp',
+        referrer_code: ctx.code,
+        referral_link: tracked,
+        ab_variant: abVariant,
+        sheetSettled: true,
+      });
+      if (url) openShareIntent(url, pendingWin);
+      else {
+        try {
+          pendingWin?.close();
+        } catch {
+          /* ignore */
+        }
+      }
+      logShare('boost-whatsapp', ctx.code, tracked, { confirmLock: false });
+      showToast('Send in WhatsApp — return here; confirm unlocks after you come back', 'info');
+    } catch {
+      try {
+        pendingWin?.close();
+      } catch {
+        /* ignore */
+      }
+    }
   })();
 };
 registerGlobal('boostShareWhatsApp', boostShareWhatsApp);
 
 /** Duel invite — WhatsApp with challenge link + rivalry copy (highest viral loop). */
 export const boostDuelShareWhatsApp = () => {
+  const pendingWin = reserveShareWindow('whatsapp');
   void (async () => {
-    const ctx = await resolveShareContext();
-    if (!ctx) return;
+    try {
+      const ctx = await resolveShareContext();
+      if (!ctx) {
+        try {
+          pendingWin?.close();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
 
-    const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions('boost', ctx.link));
-    const tracked = buildTrackedShareLink(ctx.link, 'boost');
-    const abVariant = resolveShareAbVariant(ctx.code);
-    const url = buildPlatformShareUrl('whatsapp', tracked, text);
-    const { trackShareAwaitingConfirm } = await import('../lib/share-confirm');
-    trackShareAwaitingConfirm({
-      platform: 'boost-whatsapp',
-      referrer_code: ctx.code,
-      referral_link: tracked,
-      ab_variant: abVariant,
-      sheetSettled: true,
-    });
-    if (url) openShareIntent(url);
-    logShare('boost-whatsapp', ctx.code, tracked, { confirmLock: false });
-    trackDuelInviteShared('whatsapp');
-    showToast('Challenge opened — send it, return here to confirm later', 'info');
+      const text = buildShareMessage(ctx.link, resolveShareMessageBuildOptions('boost', ctx.link));
+      const tracked = buildTrackedShareLink(ctx.link, 'boost');
+      const abVariant = resolveShareAbVariant(ctx.code);
+      const url = buildPlatformShareUrl('whatsapp', tracked, text);
+      const { trackShareAwaitingConfirm } = await import('../lib/share-confirm');
+      trackShareAwaitingConfirm({
+        platform: 'boost-whatsapp',
+        referrer_code: ctx.code,
+        referral_link: tracked,
+        ab_variant: abVariant,
+        sheetSettled: true,
+      });
+      if (url) openShareIntent(url, pendingWin);
+      else {
+        try {
+          pendingWin?.close();
+        } catch {
+          /* ignore */
+        }
+      }
+      logShare('boost-whatsapp', ctx.code, tracked, { confirmLock: false });
+      trackDuelInviteShared('whatsapp');
+      showToast('Challenge opened — send it, return here to confirm later', 'info');
+    } catch {
+      try {
+        pendingWin?.close();
+      } catch {
+        /* ignore */
+      }
+    }
   })();
 };
 registerGlobal('boostDuelShareWhatsApp', boostDuelShareWhatsApp);
@@ -405,21 +561,45 @@ function downloadShareCard(link: string, code: string, format: 'square' | 'story
  * Bypasses X malware/link filters because the referral URL lives in the image, not the tweet.
  */
 export const generateXShareImage = () => {
+  const pendingWin = reserveShareWindow('x');
   void (async () => {
-    const ctx = await resolveShareContext();
-    if (!ctx || !/\/r\/VIRAL-/i.test(ctx.link)) return;
+    try {
+      const ctx = await resolveShareContext();
+      if (!ctx || !/\/r\/VIRAL-/i.test(ctx.link)) {
+        try {
+          pendingWin?.close();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
 
-    if (!downloadShareCard(ctx.link, ctx.code, 'square')) {
-      showToast('Could not create share image — try again', 'info');
-      return;
+      if (!downloadShareCard(ctx.link, ctx.code, 'square')) {
+        try {
+          pendingWin?.close();
+        } catch {
+          /* ignore */
+        }
+        showToast('Could not create share image — try again', 'info');
+        return;
+      }
+
+      const safeXText =
+        'Live referral leaderboard on ViralRefer 🏆 Free · no signup · #1 can claim a homepage feature. Can you beat me? (See image for my link)';
+      openShareIntent(
+        `https://x.com/intent/tweet?text=${encodeURIComponent(safeXText)}`,
+        pendingWin,
+      );
+
+      showToast('Share image downloaded — attach it to your X post (does not lock link yet)', 'info');
+      logShare('x-image', ctx.code, ctx.link, { confirmLock: false });
+    } catch {
+      try {
+        pendingWin?.close();
+      } catch {
+        /* ignore */
+      }
     }
-
-    const safeXText =
-      'Live referral leaderboard on ViralRefer 🏆 Free · no signup · #1 can claim a homepage feature. Can you beat me? (See image for my link)';
-    openShareIntent(`https://x.com/intent/tweet?text=${encodeURIComponent(safeXText)}`);
-
-    showToast('Share image downloaded — attach it to your X post (does not lock link yet)', 'info');
-    logShare('x-image', ctx.code, ctx.link, { confirmLock: false });
   })();
 };
 registerGlobal('generateXShareImage', generateXShareImage);

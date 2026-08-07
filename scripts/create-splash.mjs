@@ -173,6 +173,38 @@ const PRESETS = {
     UTM_MEDIUM: 'landing',
     UTM_CAMPAIGN: 'organic',
   },
+  /** Internet marketers / opportunity seekers (HercuList, traffic exchanges, solo ads) */
+  herculist: {
+    PAGE_TITLE: 'FREE Homepage Feature for YOUR Website · ViralRefer',
+    META_DESCRIPTION:
+      'Free viral referral leaderboard for marketers. Link in 30 seconds — no email, no fee. Climb live. #1 can claim a homepage banner for their website. No cash prize. 18+.',
+    BADGE: 'Built for marketers & opportunity seekers',
+    HEADLINE: 'FREE homepage feature for <em>YOUR</em> website',
+    SUBHEAD:
+      'Get a free trackable referral link in ~30 seconds. Share it with friends, your list, or social. Climb the live board. #1 can put their website on ViralRefer’s homepage — free visibility, no cash prize.',
+    CARD_LABEL: 'What you can win (not cash)',
+    CARD_TITLE: 'Homepage banner for YOUR site',
+    PRIZE_BLURB:
+      'Internet marketers love free exposure. Climb with verified referrals — #1 claims a homepage feature slot after verification. Pure recognition. Zero paywall to enter.',
+    BULLET_1: 'No email · no signup wall · free forever',
+    BULLET_2: 'Share to your list / WhatsApp / social — climb live ranks',
+    BULLET_3: '#1 homepage banner feature (no cash prize)',
+    CTA_LABEL: 'Get my free link — 30 seconds',
+    FINE_PRINT: 'Open worldwide · 18+ · No purchase necessary',
+    URGENCY: 'ATTENTION MARKETERS — early ranks still open',
+    YOU_LINE: 'Your free link starts here',
+    BOARD_FOOT: 'You are not ranked yet. <strong>First verified friend unlocks your spot.</strong>',
+    MID_HOOK: 'Tired of paying for every click?',
+    MID_SUB: 'This is a free viral loop: get link → share → climb → homepage feature for #1.',
+    FAQ3_Q: 'Why would HercuList / IM traffic like this?',
+    FAQ3_A:
+      'Opportunity seekers and marketers already hunt free traffic and exposure tools. ViralRefer is free, no email wall, and the #1 prize is a homepage banner for their website — the same “free advertising” language they respond to. Honest copy: no cash prize, skill-based, 18+ worldwide.',
+    STICKY_TITLE: 'Free site exposure',
+    STICKY_SUB: 'Link in ~30 sec · no email',
+    UTM_SOURCE: 'herculist',
+    UTM_MEDIUM: 'landing',
+    UTM_CAMPAIGN: 'herculist_monsterblurb',
+  },
 };
 
 function parseArgs(argv) {
@@ -256,11 +288,12 @@ Creates BOTH URLs for every slug:
   Iframe OK (exchanges):  /embed/<slug>/
 
 Usage:
-  npm run splash:create -- <slug> [--preset makers|race|feature|challenge|blank] [--force]
+  npm run splash:create -- <slug> [--preset makers|race|feature|challenge|blank|herculist] [--force]
   npm run splash:list
 
 Examples:
   npm run splash:create -- makers --preset makers --force
+  npm run splash:create -- herculist --preset herculist --force
   npm run splash:create -- reddit-week1 --preset race --utm-source reddit --utm-campaign week1
 `);
     process.exit(0);

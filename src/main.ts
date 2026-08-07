@@ -15,6 +15,7 @@ import { initPublicPolish } from './lib/public-polish';
 import { initEmbedMode } from './lib/embed-mode';
 import { initViralLoops } from './lib/viral-loops';
 import { initI18n } from './lib/i18n';
+import { isRelayMode } from './lib/relay-mode';
 
 // Public layer (all onclick handlers, modals, debug, etc.)
 import { initPublic } from './public';
@@ -25,6 +26,18 @@ import { initPublic } from './public';
 // even if Supabase fetch is slow, fails, or no color_* keys exist yet in site_content.
 import { seedDefaultTextColors } from './colors';
 seedDefaultTextColors();
+
+// ViralRefer Relay (/relay, /traffic) — dedicated Hot Seat surface; skip main funnel chrome.
+if (isRelayMode()) {
+  void import('./lib/relay-ui')
+    .then((m) => m.initRelayUi())
+    .catch((err) => {
+      console.warn('[ViralRefer] Relay init failed:', err);
+    })
+    .finally(() => {
+      document.documentElement.setAttribute('data-vr-ready', '1');
+    });
+} else {
 initEmbedMode();
 initMobileOptimize();
 initPublicPolish();
@@ -86,3 +99,4 @@ initApp().catch((err) => {
     .then((m) => m.initShareAbandonRescue())
     .catch(() => {});
 });
+} // end non-relay bootstrap

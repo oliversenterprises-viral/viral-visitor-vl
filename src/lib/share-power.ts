@@ -65,6 +65,8 @@ const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
     "Hey! I'm competing on ViralRefer — a free worldwide referral leaderboard with live ranks. #1 can claim a homepage feature for their site.\n\nJoin free in ~30 sec (no signup) and try to beat me:\n{link}",
   linkedin:
     "I'm on ViralRefer's live worldwide referral leaderboard — free, no signup, real-time ranks. #1 can claim a homepage feature. Join and race me: {link}",
+  facebook:
+    "I'm on ViralRefer's live worldwide leaderboard 🏆 Free link in ~30 sec · no signup · #1 can claim a homepage feature. Can you beat me?",
   telegram:
     "I'm on ViralRefer's live leaderboard 🏆 Free · no signup · #1 claims homepage feature. Can you beat me?\n\n{link}",
   threads:
@@ -218,8 +220,19 @@ export function buildPlatformShareUrl(
       return `https://wa.me/?text=${encodedText}`;
     case 'linkedin':
       return `https://www.linkedin.com/sharing/share-offsite/?url=${encodedLink}`;
-    case 'facebook':
-      return `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`;
+    case 'facebook': {
+      // Official share dialog. `u` is required; optional `quote` pre-fills commentary
+      // where Facebook still supports it (harmless if ignored).
+      const firstLine = text
+        .split('\n')
+        .map((l) => l.trim())
+        .find((l) => l && !/^https?:\/\//i.test(l));
+      const quote =
+        firstLine && firstLine.length > 0
+          ? `&quote=${encodeURIComponent(firstLine.slice(0, 200))}`
+          : '';
+      return `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}${quote}`;
+    }
     case 'telegram':
       return `https://t.me/share/url?url=${encodedLink}&text=${encodedText}`;
     case 'sms':

@@ -12,3 +12,11 @@
 export const DEFAULT_REFERRAL_BASE_URL = 'https://www.viralrefer.app';
 
 export const APP_NAME = 'ViralRefer';
+
+/** ViralRefer Relay — reciprocal traffic exchange surface. */
+export const RELAY_PATH = '/relay';
+export const RELAY_HOUSE_REF = 'RELAY';
+export const RELAY_DEFAULT_HOUSE_URL =
+  'https://www.viralrefer.app/?ref=RELAY&utm_source=relay&utm_medium=hotseat&utm_campaign=house';
+export const RELAY_DEFAULT_BANNER_URL =
+  'https://www.viralrefer.app/?ref=RELAY&utm_source=relay&utm_medium=banner&utm_campaign=house';

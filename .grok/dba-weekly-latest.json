@@ -1,0 +1,170 @@
+{
+  "at": "2026-07-08T22:16:22.847Z",
+  "site": "https://www.viralrefer.app",
+  "migrations": {
+    "synced": true,
+    "unsynced": []
+  },
+  "inventory": {
+    "anon_select_grants": [
+      {
+        "grantee": "anon",
+        "table": "site_content"
+      },
+      {
+        "grantee": "authenticated",
+        "table": "site_content"
+      }
+    ],
+    "interaction_events_rows": 1930,
+    "permissive_select_policies": [
+      {
+        "policy": "site_content_select_public",
+        "roles": "{anon,authenticated}",
+        "table": "site_content"
+      }
+    ],
+    "prize_claims_rows": 0,
+    "referrals_rows": 6,
+    "tables": [
+      "banner_events",
+      "interaction_events",
+      "optimizer_experiments",
+      "prize_claims",
+      "reddit_events",
+      "referrals",
+      "shares",
+      "site_analytics",
+      "site_content",
+      "visitor_events",
+      "visits"
+    ],
+    "visitor_events_rows": 2392
+  },
+  "securityIssues": [],
+  "stats": {
+    "at": "2026-07-08T22:16:55.219Z",
+    "site": "https://www.viralrefer.app",
+    "ownerCode": "VIRAL-97UWEGZ",
+    "shareUrl": "https://www.viralrefer.app/r/VIRAL-97UWEGZ",
+    "referrals": {
+      "total": 6,
+      "yours": 6,
+      "rank": 1,
+      "leaderboard": [
+        {
+          "referrer_code": "VIRAL-97UWEGZ",
+          "referral_count": 6,
+          "rank": 1
+        }
+      ],
+      "recent": [
+        {
+          "created_at": "2026-07-04T13:35:50.350511+00:00",
+          "referred_ip": "188.163.114.70"
+        },
+        {
+          "created_at": "2026-07-04T07:23:59.429928+00:00",
+          "referred_ip": "103.230.106.59"
+        },
+        {
+          "created_at": "2026-07-04T06:00:40.718966+00:00",
+          "referred_ip": "197.211.59.66"
+        },
+        {
+          "created_at": "2026-06-30T11:52:50.522407+00:00",
+          "referred_ip": "182.180.160.83"
+        },
+        {
+          "created_at": "2026-06-28T20:25:32.037821+00:00",
+          "referred_ip": "209.54.3.164"
+        },
+        {
+          "created_at": "2026-06-26T22:09:10.312681+00:00",
+          "referred_ip": "182.62.227.19"
+        }
+      ]
+    },
+    "uniqueReferrersLive": 1,
+    "last7Days": {
+      "funnelEventsSampled": 875,
+      "uniqueVisitorsSampled": 365,
+      "byEvent": {
+        "SiteLanding": 861,
+        "CommunityUnlockView": 2,
+        "SprintBoardView": 2,
+        "GetReferralLink": 3,
+        "CopyReferralLink": 2,
+        "ShareReferral": 5
+      },
+      "topCountries": [
+        {
+          "code": "US",
+          "count": 196
+        },
+        {
+          "code": "FR",
+          "count": 54
+        },
+        {
+          "code": "CA",
+          "count": 40
+        },
+        {
+          "code": "GB",
+          "count": 40
+        },
+        {
+          "code": "MA",
+          "count": 39
+        },
+        {
+          "code": "ZA",
+          "count": 36
+        },
+        {
+          "code": "IN",
+          "count": 33
+        },
+        {
+          "code": "BR",
+          "count": 27
+        },
+        {
+          "code": "PK",
+          "count": 27
+        },
+        {
+          "code": "DE",
+          "count": 27
+        }
+      ],
+      "shares": 10,
+      "sharePlatforms": {
+        "x-image": 1,
+        "copy": 4,
+        "copy-message": 1,
+        "boost-whatsapp": 1,
+        "story-image": 2,
+        "native": 1
+      },
+      "bannerImpressions": 0,
+      "bannerClicks": 0,
+      "prizeClaims": 0
+    },
+    "allTime": {
+      "visitorEvents": 2392,
+      "siteLandings": 2316,
+      "getReferralLink": 37,
+      "copyReferralLink": 5,
+      "shareReferralEvents": 14,
+      "shares": 29
+    }
+  },
+  "smoke": {
+    "ok": true,
+    "passed": 38,
+    "total": 38
+  },
+  "healthy": true
+}

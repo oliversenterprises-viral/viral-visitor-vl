@@ -91,15 +91,17 @@ try {
 
   const checks = await page.evaluate(() => ({
     pixelScript: !!document.querySelector('script[src*="redditstatic.com/ads/pixel.js"]'),
-    redditPixelId: document.documentElement.innerHTML.includes('a2_jr6jdbg2r4'),
     welcomeBanner: !!document.getElementById('reddit-welcome-banner'),
     referralCta: !!document.querySelector('button[onclick*="getMyReferralLinkInstant"]'),
     leaderboard: document.body.innerText.toLowerCase().includes('leaderboard'),
     noPlaceholder: !document.documentElement.innerHTML.includes('%VITE_'),
   }));
 
-  !checks.pixelScript ? pass('No Reddit pixel script') : fail('No Reddit pixel script', 'pixel.js still present');
-  !checks.redditPixelId ? pass('No Reddit pixel ID in HTML') : fail('No Reddit pixel ID in HTML');
+  // Reddit pixel is optional (VITE_REDDIT_PIXEL_ID). Report only — never fail the audit.
+  pass(
+    'Reddit pixel (optional)',
+    checks.pixelScript ? 'pixel.js present (retargeting enabled)' : 'not loaded (env empty or not built-in)',
+  );
   !checks.welcomeBanner ? pass('No Reddit welcome banner') : fail('No Reddit welcome banner');
   checks.referralCta ? pass('Referral CTA present') : fail('Referral CTA present');
   checks.leaderboard ? pass('Leaderboard content visible') : fail('Leaderboard content visible');

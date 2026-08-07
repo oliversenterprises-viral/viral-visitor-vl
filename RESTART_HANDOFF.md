@@ -1,308 +1,176 @@
 # RESTART_HANDOFF — ViralRefer Premium (viral-visitor-vl)
 
-**Generated:** 2026-07-06 via `/handoff` (Nova flush + compact)  
-**Session:** `019f2a6a-2dbd-7cf3-bd19-00d63a0167de` (cwd: `C:\Users\olive\viral-visitor-vl`)  
-**Model:** `grok-composer-2.5-fast` | Context before handoff: **~82%** (165,437/200k) | Compactions: 10 | Turns: 114
+**Generated:** 2026-08-02 via `/handoff` skill  
+**Session:** `019fc436-f5ec-7db3-b206-edd79def0ebd` (cwd group: `C%3A%5CUsers%5Colive`)  
+**Model:** `grok-4.5` | Context before handoff: **~17%** (83,168 / 500,000) | Turns: ~6 | Compactions: 0  
+**Project root:** `C:\Users\olive\Projects\viral-visitor-vl`  
+**Live site:** https://www.viralrefer.app  
 
 ---
 
 ## Quick Resume
 
-1. `cd C:\Users\olive\viral-visitor-vl`
-2. Launch Grok in this directory.
-3. Say: **"Read RESTART_HANDOFF.md. Continue ViralRefer growth — P1 conversion is live, marketing queue has 4 pending posts, main bottleneck is ~1% get-link rate."**
-4. Run-for-me mode active — user never runs terminal commands.
-5. Swarm (if needed): `/novacodeswarm-workdir C:\Users\olive\viral-visitor-vl`
+1. `cd C:\Users\olive\Projects\viral-visitor-vl`
+2. Launch Grok in this directory (or open session home with project path).
+3. Say:
 
----
+> **Read RESTART_HANDOFF.md. High-risk IP 77.49.85.59 is blocked (Vercel Firewall + edge blocklist, commit f61c158 pushed). Continue ViralRefer without breaking prod. Large local uncommitted tree remains (relay/AEO/growth — not the IP work).**
 
-## Current Status (Production — July 6, 2026)
-
-| Check | Result |
-|-------|--------|
-| **Live site** | https://www.viralrefer.app — HTTP 200 |
-| **Latest commit** | `73f4af3` — typecast fix for recent-activity test-referral filter |
-| **Branch** | `main` — **large uncommitted working tree** (~196 changed/untracked files from P1 + growth work) |
-| **In-session deploy** | P1 conversion + growth automation deployed to prod; **15/15 smoke** pass |
-| **Migration applied** | `0024_p1_conversion_boost.sql` (+ prior 0016–0023 in working tree) |
-| **Smoke test** | `npm run test:smoke:prod` — **15/15** pass at last deploy |
-| **Deploy** | `npm run deploy:prod` — edge + Vercel + smoke + auto referral pollution cleanup |
-
-### Funnel snapshot (7d, from `marketing/growth-queue/queue.json`)
-
-| Metric | Value |
-|--------|-------|
-| Landings | 347 |
-| Get-link (unique) | 4 (**~1%** — main bottleneck) |
-| Total referrals | 6 |
-| Unique referrers | 1 |
-| Leader | `VIRAL-97UWEGZ` × 6 |
-| K-score | 0.009 |
-| Share URL | `https://www.viralrefer.app/r/VIRAL-97UWEGZ` |
-
-### Optimizer flags (prod, enabled this session)
-
-| Flag | Value |
-|------|-------|
-| `auto_pilot` | `true` |
-| `growth_engine` | `true` |
-| `referred_share_first` | `true` |
-| `hero_cta_variant` | `prize` |
+4. Optional session resume: session id `019fc436-f5ec-7db3-b206-edd79def0ebd`  
+5. Hands-free **run-for-me** / Nova Team defaults apply.
 
 ---
 
 ## Current Goals & Active TODOs
 
-- [x] **Phase 3 P1 conversion** — referred share-first, hero social proof, optimizer flags (`0024`)
-- [x] **Growth automation** — autopilot + growth engine enabled; dry-run validated
-- [x] **Marketing post queue** — `scripts/generate-growth-post-queue.mjs` + `post-growth-queue.mjs`
-- [x] **Telegram channel** — first broadcast to https://t.me/viralrefer (`@viralrefer`)
-- [x] **X no-URL workaround** — QR + "Search Google: ViralRefer" policy for all X queue items
-- [x] **X posts** — leaderboard-hook + how-it-works marked posted
-- [ ] **Marketing queue** — 4 pending: LinkedIn case-study, X stats-pulse, Reddit value-post, X weekend-cta
-- [ ] **Measure P1 lift** — watch get-link rate 7 days post-deploy (target: >1%)
-- [ ] **X domain appeal** — submit per `marketing/x-launch/APPEAL-TO-X.txt`
-- [ ] **Git commit** — large batch of uncommitted P1/growth/automation changes
-- [ ] **Phase 2 content** — `/guides` hub, GSC setup (deferred)
+### Done this session (2026-08-02) — high-risk IP block
 
----
+- [x] **Vercel Firewall IP block** — `77.49.85.59` live on project `viralrefer-premium` (all hosts); notes: *High-risk IP blocked 2026-08-02 (Nova Team)*
+- [x] **App-level blocklist** — `supabase/functions/_shared/blocked-ips.ts` (`BLOCKED_ACTIVITY_IPS`, `isBlockedActivityIp`, 403 *Access denied.*)
+- [x] Wired into edge write paths: `record-referral`, `register-referrer-link`, `record-visitor-event`, `submit-claim`, `record-interaction`, `record-banner-event`, `relay` (relay also deployed live; full relay feature still **untracked** in git)
+- [x] Unit tests: `tests/unit/blocked-ips.test.ts` (14 related tests green with referral handler suite)
+- [x] **Supabase edge deploy** (live): those 7 functions on project ref `wqbefjzpgsezzwdrvvua` via `--use-api` (temp rename of broken `.env.local` BOM parse)
+- [x] **Git:** commit `f61c158` + **pushed** `origin/main` (`18cda0e..f61c158`)
+- [x] Prod smoke after block: homepage **200**, `version.json` **200** (frontend build still `18cda0e` from 2026-07-30 — IP work did not require Vercel app redeploy)
 
-## Owner & Test Constants
+### Still open (pre-existing / local tree)
 
-| Item | Value |
-|------|-------|
-| **Owner IP** | `161.38.136.60` |
-| **Owner referral code** | `VIRAL-97UWEGZ` (real code — test referrals blocked) |
-| **Primary share URL** | `https://www.viralrefer.app/r/VIRAL-97UWEGZ` |
-| **Owner visitor_id** | `6ec2691e-0de5-40fb-86e7-302b6755c68b` (testing — NOT external referrals) |
-
----
-
-## Marketing URL routing (do not mix these up)
-
-| Traffic | URL pattern | Why |
-|---------|-------------|-----|
-| **Your ads** (PageRankCafe, Telegram channel, LinkedIn, Reddit, directories) | `https://www.viralrefer.app/?utm_source=…&utm_medium=…` | **Direct landing** — prize hero, no “credit your friend” gate |
-| **Peer / viral shares** (WhatsApp, DM, “use my link”) | `https://www.viralrefer.app/r/CODE` | **Referred landing** — credits sharer when visitor completes Step 1 |
-
-**Do not** advertise with `/r/VIRAL-97UWEGZ` everywhere. That forces referred UX on cold ad clicks, hurts get-link conversion, and inflates owner referrals without a real viral loop.
-
-| Channel | Ready-to-paste |
-|---------|----------------|
-| PageRankCafe feed | `marketing/pagerankcafe/LISTING.txt` |
-| PageRankCafe URL | `…?utm_source=pagerankcafe&utm_medium=traffic_exchange&utm_campaign=link_post&utm_content=feed` |
-| Traffic Ad Bar feed | `marketing/trafficadbar/LISTING.txt` |
-| Traffic Ad Bar URL | `…?utm_source=trafficadbar&utm_medium=traffic_exchange&utm_campaign=link_post&utm_content=feed` |
-| **Iframe / surf** (traffic exchanges) | `https://www.viralrefer.app/embed?utm_source=SOURCE&utm_medium=traffic_exchange&utm_campaign=embed` — only `/embed` allows framing; main site stays `DENY` |
-| Telegram channel (queue) | `buildOwnerAdUrl({ source: 'telegram', content: 'channel-broadcast' })` — homepage, no `/r/` |
-| Code helper | `scripts/growth-post-queue-helpers.mjs` → `buildOwnerAdUrl()`, `PAGERANKCAFE_LISTING` |
+- [ ] **Large uncommitted working tree** — AEO/SEO, relay product, growth scripts, PH/tools assets, etc. (do **not** mix into security commits blindly)
+- [ ] **Product Hunt** — kit under `marketing/producthunt/`; user submits listing
+- [ ] **Guides blog** (`/guides`) — not built
+- [ ] **Telegram site CTA** — whitelist bot OK; no mass spam bots
+- [ ] **Unblock path** (if ever needed):  
+  `vercel firewall ip-blocks unblock 77.49.85.59 --yes` → `vercel firewall publish --yes` → remove IP from `blocked-ips.ts` → redeploy affected edge functions
 
 ---
 
 ## Critical Infrastructure & Config
 
 | Resource | Value |
-|----------|-------|
-| **Canonical repo** | `C:\Users\olive\viral-visitor-vl` |
-| **GitHub** | `oliversenterprises-viral/viral-visitor-vl` |
-| **Vercel project** | `viralrefer-premium` — `prj_lEguzmle2JOlyRyzO0zHjG2HtpNv` |
-| **Vercel team** | `team_hnd0XbdMIawij8c5v92NkJiQ` |
-| **Supabase ref** | `wqbefjzpgsezzwdrvvua` |
-| **Supabase URL** | `https://wqbefjzpgsezzwdrvvua.supabase.co` |
-| **Reddit pixel** | `a2_jr6jdbg2r4` |
-| **Turnstile** | `0x4AAAAAADbxoHgHBgOr7tC9` |
+|----------|--------|
+| Canonical repo | `C:\Users\olive\Projects\viral-visitor-vl` |
+| GitHub | `oliversenterprises-viral/viral-visitor-vl` |
+| Branch | `main` @ `f61c158` (security block; in sync with origin after push) |
+| Vercel project | `viralrefer-premium` — `prj_lEguzmle2JOlyRyzO0zHjG2HtpNv` |
+| Vercel team | `team_hnd0XbdMIawij8c5v92NkJiQ` |
+| Domains | https://www.viralrefer.app (primary), viralrefer.app → www |
+| Supabase ref | `wqbefjzpgsezzwdrvvua` (East US) |
+| Supabase URL | `https://wqbefjzpgsezzwdrvvua.supabase.co` |
+| Deploy frontend | `npm run deploy:prod` (edge + Vercel + smoke) — **prefer this over ad-hoc deploys** |
+| Edge deploy note | CLI may fail parsing `.env.local` (BOM/`»`); temp-rename or fix encoding before `supabase functions deploy` |
+| Vercel Firewall | IP blocks work; `firewall overview` may 404 “IP Bypass unavailable for this plan” — ignore for single IP blocks |
+| Env secrets | `VITE_*` / Turnstile / service role in dashboards only — never commit values |
 
-### Env vars (names only — values in Vercel/Supabase dashboard)
-
-`VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` · `VITE_ADMIN_PASSWORD` · `VITE_ADMIN_ACTION_SECRET` · `ADMIN_OWNER_PASSWORD` · `ADMIN_TEST_PASSWORD` · `VISITOR_IP_HASH_SALT` · `FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN` · `FUNNEL_NOTIFY_TELEGRAM_CHAT_ID` · `GROWTH_POST_TELEGRAM_CHAT_ID`
-
-### Telegram (marketing)
+### Owner / test constants
 
 | Item | Value |
-|------|-------|
-| **Channel** | https://t.me/viralrefer (`@viralrefer`) |
-| **Bot** | `@viralreferbot` (must be channel admin) |
-| **Supabase secret** | `GROWTH_POST_TELEGRAM_CHAT_ID=@viralrefer` |
-| **Personal funnel alerts** | `FUNNEL_NOTIFY_TELEGRAM_CHAT_ID` (owner chat `1274269043` — not marketing channel) |
+|------|--------|
+| Owner IP (stats exclude) | `161.38.136.60` (+ `57.138.135.240` in funnel helpers) |
+| Owner code | `VIRAL-97UWEGZ` |
+| Primary share | `https://www.viralrefer.app/r/VIRAL-97UWEGZ` |
+| **Blocked high-risk IP** | **`77.49.85.59`** (Firewall + `BLOCKED_ACTIVITY_IPS`) |
+| Telegram channel | https://t.me/viralrefer |
+
+### Product rules (do not regress)
+
+- **Lock** = first real friend “Get my link” (not clipboard alone)
+- Cold **ads/UTM** → homepage `?utm_...`, not `/r/owner`
+- **No cash prize** — homepage feature for #1 only
+- White-hat growth only (no spam bots / group auto-invite)
 
 ---
 
 ## Key File Locations (high-signal)
 
-### P1 conversion (deployed)
+### Security / IP block (this session)
 
-| File | Purpose |
-|------|---------|
-| `src/lib/hero-cta-variant.ts` | Prize-forward hero CTA variant |
-| `src/lib/referred-landing-social-proof.ts` | Social proof on referred landings |
-| `src/lib/referred-landing-trust-pack.ts` | Trust pack for referred visitors |
-| `src/lib/optimizer-flags.ts` | `referred_share_first`, `hero_cta_variant`, autopilot, growth_engine |
-| `supabase/migrations/0024_p1_conversion_boost.sql` | P1 flags migration |
+| Path | Role |
+|------|------|
+| `supabase/functions/_shared/blocked-ips.ts` | Canonical activity blocklist |
+| `supabase/functions/_shared/record-referral-handler.ts` | 403 before rate-limit/DB for blocked IP |
+| `tests/unit/blocked-ips.test.ts` | Unit coverage |
+| Vercel CLI | `vercel firewall ip-blocks list\|block\|unblock` + `publish` |
 
-### Growth automation
+### Core product / ops
 
-| File | Purpose |
-|------|---------|
-| `scripts/generate-growth-post-queue.mjs` | Build/refresh `marketing/growth-queue/queue.json` |
-| `scripts/growth-post-queue-helpers.mjs` | Queue item builders, X safe tweet, stats embed |
-| `scripts/post-growth-queue.mjs` | List, post-next, mark-posted, export-manual |
-| `scripts/enable-growth-automation.mjs` | Enable autopilot + growth engine flags |
-| `scripts/dba-stats-snapshot.mjs` | Prod funnel snapshot |
-| `scripts/dry-run-autopilot-prod.mjs` | Autopilot dry-run against prod |
-| `scripts/build-qr-asset.mjs` | QR PNG for X no-URL posts |
-| `supabase/functions/_shared/telegram-marketing.ts` | Telegram marketing broadcast helper |
-| `supabase/functions/admin-action/index.ts` | `post_telegram_marketing` action |
-| `marketing/growth-queue/queue.json` | Live marketing queue state |
-
-### X workaround assets
-
-| File | Purpose |
-|------|---------|
-| `marketing/x-launch/viralrefer-qr-VIRAL-97UWEGZ.png` | QR scan asset (no URL in tweet) |
-| `marketing/x-launch/viralrefer-x-leaderboard-VIRAL-97UWEGZ.png` | Leaderboard graphic |
-| `marketing/x-launch/APPEAL-TO-X.txt` | Domain appeal text |
-| `marketing/x-launch/malware-blocked-post.ps1` | Assist script for blocked posts |
-
-### DBA / test pollution (from prior handoff — still active)
-
-| File | Purpose |
-|------|---------|
-| `supabase/functions/_shared/test-referral.ts` | `shouldSkipReferralCrediting()` |
-| `supabase/migrations/0015_exclude_test_referrals_from_public_stats.sql` | Public stats RPCs exclude test rows |
-| `scripts/deploy-prod.mjs` | Edge + Vercel + smoke + post-smoke referral cleanup |
-| `scripts/cleanup-test-referral-pollution.mjs` | Post-deploy referral pollution purge |
-| `src/lib/referral-url.ts` | `/r/CODE` clean share links |
-
-### npm scripts (growth)
-
-```json
-"growth:queue": "node scripts/generate-growth-post-queue.mjs",
-"growth:post": "node scripts/post-growth-queue.mjs",
-"optimizer:autopilot": "node scripts/run-optimizer-autopilot.mjs",
-"optimizer:autopilot:dry": "node scripts/run-optimizer-autopilot.mjs --dry-run"
-```
-
----
-
-## Marketing Queue Status (`marketing/growth-queue/queue.json`)
-
-| Status | ID | Platform | Scheduled |
-|--------|-----|----------|-----------|
-| **posted** | `2026-07-06-x-leaderboard-hook` | X (no-url + QR) | 2026-07-06 |
-| **posted** | `2026-07-06-x-how-it-works` | X (no-url + QR) | 2026-07-07 |
-| **posted** | `2026-07-06-telegram-channel-broadcast` | Telegram API | 2026-07-11 |
-| **pending** | `2026-07-06-linkedin-case-study` | LinkedIn manual | 2026-07-08 |
-| **pending** | `2026-07-06-x-stats-pulse` | X assist (no-url) | 2026-07-09 |
-| **pending** | `2026-07-06-reddit-value-post` | Reddit manual | 2026-07-10 |
-| **pending** | `2026-07-06-x-weekend-cta` | X assist (no-url) | 2026-07-12 |
-
-### Next marketing commands
-
-```powershell
-node scripts/dba-stats-snapshot.mjs
-node scripts/generate-growth-post-queue.mjs --merge
-node scripts/post-growth-queue.mjs --list
-node scripts/post-growth-queue.mjs --post-next x --assist
-node scripts/post-growth-queue.mjs --mark-posted <id>
-node scripts/post-growth-queue.mjs --export-manual linkedin
-node scripts/post-growth-queue.mjs --export-manual reddit
-```
-
----
-
-## Major Decisions (this session — newest first)
-
-1. **P1 conversion deployed** — `referred_share_first`, hero social proof, `hero_cta_variant: prize`; migration `0024` applied; 15/15 smoke.
-2. **Growth engine + autopilot enabled** — `enable-growth-automation.mjs` run against prod; dry-run validated.
-3. **Marketing queue system** — weekly social posts generated from live stats; X/LinkedIn/Reddit/Telegram platforms.
-4. **Telegram marketing channel** — `@viralrefer` via `post_telegram_marketing` admin-action; first broadcast succeeded.
-5. **X entire-domain block** — `viralrefer.app` flagged harmful on X; **no URLs in any X tweet or bio**. All X items use `xLinkPolicy: 'no-url'` + QR image + "Search Google: ViralRefer".
-6. **Get-link rate is the bottleneck** — 347 landings → 4 links (1%); P1 targets step-1 conversion, not share volume.
-7. **Prod deployed in-session** but git head still `73f4af3` — large uncommitted diff needs commit.
-
----
-
-## Campaign-Critical — Do Not Break
-
-1. **record-referral** edge — skip test crediting + prod schema
-2. **Reddit pixel** + UTM banner — CSP in `vercel.json`
-3. **Admin login** — `verify_owner_password`
-4. **Claim flow** — Turnstile + `#winner-modal`
-5. **Smoke gate** — `deploy:prod` runs `test:smoke:prod` before finishing
-6. **Referral URLs** — `/r/CODE` via `src/lib/referral-url.ts`
-7. **Public stats RPCs** — migration 0015 non-test filter
-8. **X no-URL policy** — never put `viralrefer.app` in X tweets until appeal succeeds
-9. **Optimizer flags** — `referred_share_first` + `hero_cta_variant: prize` are live conversion experiments
-
----
-
-## X.com Marketing — CRITICAL BLOCKER
-
-**Problem:** X flags entire domain `viralrefer.app` as malware/harmful — cannot put URLs in bio or tweets.
-
-**Workaround (active):**
-- Bio: text only — "Search Google: ViralRefer | Scan QR on pinned post"
-- Tweets: attach `marketing/x-launch/viralrefer-qr-VIRAL-97UWEGZ.png` + "SCAN THE QR image — or search Google: ViralRefer"
-- `buildXSafeTweet()` + `xLinkPolicy: 'no-url'` in queue helpers
-- Appeal text: `marketing/x-launch/APPEAL-TO-X.txt`
-
-**Reddit / WhatsApp / Telegram / LinkedIn:** full links work fine.
+| Area | Paths |
+|------|--------|
+| Deploy | `scripts/deploy-prod.mjs`, `npm run deploy:prod` |
+| Smoke | `npm run test:smoke:prod` → `scripts/smoke-prod-referrals.mjs` |
+| Share / send mode | `src/lib/send-mode.ts`, `src/lib/share-first-ui.ts`, `src/referral.ts` |
+| Deadline | `src/lib/share-deadline.ts`, `supabase/functions/_shared/referrer-share-deadline.ts` |
+| Test/owner skip credit | `supabase/functions/_shared/test-referral.ts`, `visitor-funnel-test.ts` |
+| AEO / SEO (local uncommitted may be ahead of prod) | `src/lib/organic-seo.ts`, `public/llms.txt`, `public/robots.txt`, `public/sitemap.xml` |
+| Relay (untracked full feature + already-deployed function) | `supabase/functions/relay/`, `docs/adr/003-viralrefer-relay-product.md` |
+| PH kit | `marketing/producthunt/` |
+| This handoff | `RESTART_HANDOFF.md` (source of truth after `/handoff`) |
 
 ---
 
 ## Background / Tasks Flushed in This Handoff
 
-- **Schedulers:** None (no scheduler API in this environment).
-- **Background shells:** None active at handoff.
-- **Subagents:** None running.
-- **GCS queue:** 0 pending (891 uploaded, 0 failed).
+| Kind | Result |
+|------|--------|
+| Schedulers | **None** active (`scheduler_list` empty) |
+| Monitors / bg shell tasks | **None** killed (no lingering monitors in session) |
+| Workflows | No active `/workflow` runs noted for this mission |
 
 ---
 
 ## Compaction Status
 
-| Session | State |
-|---------|-------|
-| `019f2a6a-...` (current) | No `compaction/` folder on disk — 10 in-session compactions; context rolled into this handoff |
-| `019f04e1-...` (prior) | No segments — superseded |
-| **Disk truth** | This `RESTART_HANDOFF.md` + `marketing/growth-queue/queue.json` |
+| Item | State |
+|------|--------|
+| Segments before | **None** (`compaction/`, checkpoints, requests missing) |
+| Pruned/rolled | N/A — nothing to archive |
+| Live context | ~17% — low pressure; handoff still written for cross-session resume |
 
 ---
 
-## Open Issues / Gotchas
+## Major Decisions & State (most recent first)
 
-- **X blocks all viralrefer.app URLs** — QR + Google search workaround until appeal succeeds.
-- **~1% get-link rate** — 347 landings, 4 links; partly from advertising with `/r/VIRAL-97UWEGZ` (wrong UX for cold ads). Switch owner ads to homepage + UTMs; measure over 7 days.
-- **Large uncommitted tree** — ~196 files changed/untracked; prod was deployed in-session but not committed.
-- **Smoke tests never credit referrals** — by design (`skipped: true`); do not treat smoke as growth signal.
-- **Owner testing ≠ referrals** — owner IP `161.38.136.60` and automation UA patterns filtered everywhere.
-- **Telegram bot must stay channel admin** — `@viralreferbot` on `@viralrefer` or API posts fail.
-- **Workspace** — always open Grok at `C:\Users\olive\viral-visitor-vl` (not home dir).
+1. **2026-08-02 — Block high-risk IP without breaking prod**
+   - Dual layer: **Vercel Firewall** (edge site) + **Supabase edge** (direct API writes).
+   - Single exact IP only — no CIDR ranges.
+   - Scoped git commit (security only); did **not** commit the large dirty tree.
+   - Frontend prod deploy **not** required for Firewall; edge functions redeployed for API deny.
 
----
-
-## User-Supplied Preserve Notes
-
-"Nova, flush session and compact everything" — no additional preserve items beyond full session state captured above.
+2. **Pre-existing (still true)**
+   - One Vercel project only: `viralrefer-premium`.
+   - Growth: value-first; no AdFasten-style spam automation.
+   - Owner/test traffic filtered from public stats via excluded IPs/codes — **separate** from abuse blocklist.
 
 ---
 
-## Compact Invocation (run after reading this file)
+## Open Issues / Gotchas / “Do Not Forget”
 
-```
-/compact preserve full RESTART_HANDOFF.md at C:\Users\olive\viral-visitor-vl, session 019f2a6a-2dbd-7cf3-bd19-00d63a0167de, Supabase wqbefjzpgsezzwdrvvua, Vercel prj_lEguzmle2JOlyRyzO0zHjG2HtpNv, owner ref VIRAL-97UWEGZ, owner IP 161.38.136.60, commit 73f4af3 (large uncommitted tree), prod deployed P1+growth, smoke 15/15, migration 0024, optimizer flags auto_pilot+growth_engine+referred_share_first+hero_cta_variant:prize, get-link rate 1% bottleneck, marketing queue 3 posted 4 pending, Telegram @viralrefer, X no-url+QR workaround, GROWTH_POST_TELEGRAM_CHAT_ID, growth:queue growth:post scripts, shouldSkipReferralCrediting blocks test pollution.
-```
-
----
-
-## Previous Handoff History (condensed)
-
-**2026-06-26 (`019f04e1`):** DBA cleanup — test referral block, migration 0015, deploy:prod smoke+cleanup, 1 funnel-gated referral, X QR workaround introduced — superseded by P1 + growth sections above.
-
-**2026-06-21 (`019eeb29`):** Referral recording fix, promo video, `/r/` URLs, X launch kit — superseded.
-
-**2026-06-20:** CI green, admin stats, first `RESTART_HANDOFF.md`.
+- **Dirty tree:** many modified + untracked files (relay, AEO, growth). Commit in topic slices if shipping.
+- **Relay:** function may already be live from this session’s deploy, but full `supabase/functions/relay/` tree is still **??** in git — reconcile before next relay work.
+- **`.env.local`:** Supabase CLI parse error (`unexpected character '»'`) — fix encoding or keep temp-rename pattern for deploys.
+- **Do not** enable Vercel Trusted IPs “exclusive” mode — that would lock the site to allowlisted IPs only.
+- **Unblock checklist** above if 77.49.85.59 was a false positive.
+- Windows: PowerShell; use `;` not `&&` in older shells when chaining.
 
 ---
 
-*End of handoff. Disk artifact is authoritative. Resume from Quick Resume above.*
+## User-Supplied Preserve Notes (from this /handoff invocation)
+
+- none (plain `/handoff`)
+- Implicit session mission: block `77.49.85.59`, don’t break prod — **done**
+
+---
+
+## Previous handoff history
+
+### 2026-07-14
+- Send mode, AEO plan (FAQ/JSON-LD/llms.txt), Product Hunt kit, growth channel policy.
+- Canonical path: `C:\Users\olive\Projects\viral-visitor-vl`.
+- Pending then (still relevant): PH submit, `/guides`, Telegram CTA, large uncommitted tree.
+
+### 2026-07-06
+- P1 conversion + growth engine flags; get-link ~1% bottleneck noted.
+- Older path alias `C:\Users\olive\viral-visitor-vl` — prefer **Projects** path.
+
+---
+
+**End of RESTART_HANDOFF — 2026-08-02**

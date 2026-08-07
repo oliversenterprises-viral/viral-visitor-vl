@@ -76,6 +76,11 @@ export async function switchAdminTab(tab: number) {
       const { renderViralOptimizerTab } = await import('./viral-optimizer-tab');
       if (isStale(requestId)) return;
       await renderViralOptimizerTab(content);
+    } else if (tab === 6) {
+      if (isStale(requestId)) return;
+      const { renderRelayAdminTab } = await import('./relay-admin-tab');
+      if (isStale(requestId)) return;
+      await renderRelayAdminTab(content);
     }
   } catch (err) {
     if (isStale(requestId)) return;

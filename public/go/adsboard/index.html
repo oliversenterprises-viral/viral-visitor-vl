@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Buy a site ad · Day / Week / Month · ViralRefer Ads</title>
+  <meta name="description" content="Self-serve text and banner ads on ViralRefer. Day, week, or month. See live prices and open slots. Owner-approved. No contest rank selling." />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#070a12" />
+  <link rel="canonical" href="https://www.viralrefer.app/go/adsboard/" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <!-- EMBED_MODE=full · full=/go/adsboard/ · iframe=/embed/adsboard/ · CTA=ads.viralrefer.app -->
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.viralrefer.app/go/adsboard/" />
+  <meta property="og:title" content="Buy a site ad · Day / Week / Month · ViralRefer Ads" />
+  <meta property="og:description" content="Self-serve text and banner ads. Day, week, or month. Live prices. Owner-approved." />
+  <meta property="og:site_name" content="ViralRefer Ads" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Buy a site ad · Day / Week / Month" />
+  <meta name="twitter:description" content="Self-serve text and banner spots on ViralRefer. Open slots now." />
+
+  <style>
+    :root {
+      /* Orange=buy | Green=earn/money | Gold=value | Magenta=energy */
+      --bg: #0a0614;
+      --card: rgba(28, 16, 48, 0.94);
+      --border: rgba(255, 140, 80, 0.28);
+      --text: #fff8f2;
+      --muted: #d0b8d8;
+      --dim: #9a84a8;
+      --accent: #ff7a3d;
+      --accent2: #ff3d8a;
+      --green: #12d18a;
+      --amber: #ffd54f;
+      --cta-start: #ff9a3c;
+      --cta-end: #ff3d6e;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding-bottom: 5.5rem;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+      background-image:
+        radial-gradient(ellipse 90% 55% at 50% -18%, rgba(255, 90, 40, 0.4), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 100% 15%, rgba(255, 61, 138, 0.22), transparent),
+        radial-gradient(ellipse 45% 35% at 0% 85%, rgba(18, 209, 138, 0.18), transparent),
+        radial-gradient(ellipse 40% 30% at 85% 90%, rgba(192, 132, 252, 0.15), transparent);
+    }
+    a { color: inherit; text-decoration: none; }
+
+    .urgency {
+      position: sticky; top: 0; z-index: 40;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap;
+      text-align: center;
+      background: linear-gradient(90deg, #ff5c1a 0%, #ff3d6e 45%, #a855f7 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 0.55rem 1rem;
+      font-size: 0.78rem; font-weight: 800;
+      color: #1a0608;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 24px rgba(255, 60, 30, 0.35);
+    }
+    .urgency .live {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: rgba(0, 0, 0, 0.25); border-radius: 999px;
+      padding: 0.15rem 0.55rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .dot {
+      width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--green);
+      box-shadow: 0 0 8px var(--green); animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .wrap { max-width: 28rem; margin: 0 auto; padding: 1.5rem 1.15rem 2rem; text-align: center; }
+
+    .logo {
+      display: inline-flex; align-items: center; gap: 0.55rem;
+      font-weight: 800; font-size: 1.05rem; margin-bottom: 1rem; opacity: 0.95;
+    }
+    .logo .mark {
+      width: 2rem; height: 2rem; border-radius: 0.55rem;
+      display: grid; place-items: center; font-size: 0.72rem; font-weight: 900;
+      background: linear-gradient(135deg, #ff7a3d, #ff3d8a 55%, #c084fc); color: #1a0610;
+      box-shadow: 0 0 18px rgba(255, 90, 40, 0.5);
+    }
+    .logo span { color: var(--amber); }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #042016; background: linear-gradient(90deg, #12d18a, #00e5a8);
+      border: 1px solid rgba(18, 209, 138, 0.55); border-radius: 999px;
+      padding: 0.35rem 0.8rem; margin-bottom: 1rem;
+      box-shadow: 0 0 16px rgba(18, 209, 138, 0.35);
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 6vw, 2.45rem); font-weight: 900;
+      letter-spacing: -0.035em; line-height: 1.12; margin-bottom: 0.85rem;
+    }
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(115deg, #ffd54f, #ff7a3d 40%, #ff3d8a 75%, #c084fc);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 18px rgba(255, 120, 40, 0.35));
+    }
+
+    .sub {
+      color: var(--muted); font-size: 1.02rem; max-width: 26rem;
+      margin: 0 auto 1.15rem; line-height: 1.55;
+    }
+
+    .chips {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem;
+      margin: 0 auto 1.35rem;
+    }
+    .chip {
+      font-size: 0.72rem; font-weight: 700; color: #fff4ec;
+      background: rgba(255, 120, 60, 0.12); border: 1px solid rgba(255, 150, 80, 0.35);
+      border-radius: 999px; padding: 0.3rem 0.65rem;
+    }
+    .chip strong { color: var(--amber); font-weight: 800; }
+
+    .cta {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      width: 100%; max-width: 22rem;
+      min-height: 48px;
+      background: linear-gradient(135deg, var(--cta-start) 0%, #ff5c1a 45%, var(--cta-end) 100%);
+      color: #1a0608; font-weight: 900; font-size: 1.08rem;
+      padding: 1.05rem 1.5rem; border-radius: 999px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+        0 12px 36px rgba(255, 70, 20, 0.5),
+        0 0 40px rgba(255, 100, 40, 0.25);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+    .cta:hover, .cta:focus-visible {
+      transform: translateY(-2px) scale(1.02);
+      filter: brightness(1.06);
+      outline: none;
+    }
+    .cta.secondary {
+      background: linear-gradient(135deg, rgba(18, 209, 138, 0.2), rgba(0, 229, 168, 0.12));
+      color: #b8ffe4;
+      border: 1px solid rgba(18, 209, 138, 0.55);
+      box-shadow: 0 0 20px rgba(18, 209, 138, 0.15);
+      margin-top: 0.65rem;
+      font-size: 0.95rem; padding: 0.85rem 1.25rem;
+    }
+    #cta-aff {
+      background: linear-gradient(135deg, #12d18a 0%, #00c853 100%);
+      color: #042016;
+      border: none;
+      box-shadow: 0 10px 28px rgba(18, 209, 138, 0.4);
+    }
+
+    .fine { color: var(--dim); font-size: 0.82rem; margin-top: 0.75rem; }
+    .fine span { color: var(--amber); font-weight: 800; text-shadow: 0 0 12px rgba(255, 200, 60, 0.35); }
+
+    .prices {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem;
+      margin: 1.5rem auto 0; max-width: 24rem; text-align: left;
+    }
+    .price-card {
+      background:
+        linear-gradient(160deg, rgba(255, 180, 40, 0.16), transparent 50%),
+        var(--card);
+      border: 1px solid rgba(255, 180, 60, 0.4);
+      border-radius: 1rem; padding: 0.95rem;
+      box-shadow: 0 0 24px rgba(255, 140, 40, 0.12);
+    }
+    .price-card h3 { font-size: 0.95rem; margin-bottom: 0.25rem; color: var(--amber); }
+    .price-card .open {
+      font-size: 0.72rem; color: var(--green); font-weight: 800; margin-bottom: 0.55rem;
+    }
+    .price-card ul { list-style: none; font-size: 0.88rem; }
+    .price-card li {
+      display: flex; justify-content: space-between; padding: 0.28rem 0;
+      border-bottom: 1px solid rgba(255,200,100,0.08); color: var(--muted);
+    }
+    .price-card li strong { color: var(--green); font-variant-numeric: tabular-nums; font-weight: 800; }
+
+    .widget-host {
+      margin: 1.5rem auto 0; max-width: 24rem; text-align: left;
+      min-height: 120px;
+    }
+
+    .section-label {
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--dim); margin: 2rem 0 0.75rem;
+    }
+    .steps { display: grid; gap: 0.55rem; text-align: left; }
+    .step {
+      display: grid; grid-template-columns: auto 1fr; gap: 0.75rem; align-items: start;
+      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
+      border-radius: 0.9rem; padding: 0.85rem 0.95rem;
+    }
+    .n {
+      width: 1.7rem; height: 1.7rem; border-radius: 0.5rem;
+      background: linear-gradient(135deg, rgba(110, 168, 255, 0.35), rgba(167, 139, 250, 0.2));
+      color: #fff; font-weight: 900; font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step strong { display: block; font-size: 0.92rem; margin-bottom: 0.12rem; }
+    .step p { color: var(--muted); font-size: 0.82rem; }
+
+    .faq { text-align: left; margin-top: 0.5rem; }
+    details {
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: 0.85rem; padding: 0.85rem 1rem; margin-bottom: 0.5rem;
+    }
+    summary { font-weight: 700; cursor: pointer; list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    details p { color: var(--muted); font-size: 0.88rem; margin-top: 0.5rem; }
+
+    .note {
+      margin-top: 1.5rem; font-size: 0.8rem; color: var(--dim);
+      border-top: 1px solid var(--border); padding-top: 1rem;
+    }
+    .note a { color: var(--accent); text-decoration: underline; }
+
+    .sticky {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+      padding: 0.75rem 1rem calc(0.75rem + var(--safe-bottom));
+      background: linear-gradient(180deg, transparent, rgba(20, 6, 24, 0.94) 28%);
+      backdrop-filter: blur(8px);
+      display: flex; justify-content: center;
+    }
+    .sticky .cta { max-width: 24rem; font-size: 0.98rem; padding: 0.9rem 1.25rem; }
+
+    .n {
+      background: linear-gradient(135deg, rgba(255, 122, 61, 0.55), rgba(255, 61, 138, 0.35)) !important;
+    }
+    .step {
+      border-color: rgba(255, 140, 80, 0.25) !important;
+      background: rgba(255, 90, 40, 0.06) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="urgency">
+    <span class="live"><span class="dot"></span> Open inventory</span>
+    <span id="urgency-text">Text &amp; banner spots · day / week / month</span>
+  </div>
+
+  <main class="wrap">
+    <a class="logo" href="https://ads.viralrefer.app/" id="logo-link">
+      <span class="mark">VR</span>
+      ViralRefer <span>Ads</span>
+    </a>
+
+    <div class="badge">Self-serve · owner-approved</div>
+
+    <h1>Buy a <em>day, week, or month</em> ad spot</h1>
+    <p class="sub">
+      Text lines and banner placements on a real public board — not a contest rank boost.
+      Pick a package, submit creative, pay, get approved, go live until it expires.
+    </p>
+
+    <div class="chips">
+      <span class="chip"><strong>Text</strong> from $5/day</span>
+      <span class="chip"><strong>Banner</strong> from $15/day</span>
+      <span class="chip"><strong>Labeled</strong> Sponsored</span>
+      <span class="chip"><strong>Separate</strong> from leaderboard</span>
+    </div>
+
+    <a class="cta" id="cta-hero" href="https://ads.viralrefer.app/#buy">Buy a spot now <span aria-hidden="true">→</span></a>
+    <a class="cta secondary" id="cta-aff" href="https://ads.viralrefer.app/#affiliate-join">Earn 20% as an affiliate</a>
+    <a class="cta secondary" id="cta-demo" href="https://ads.viralrefer.app/widget-demo.html">See live board demo</a>
+    <p class="fine">Slots fill first-come · <span id="fine-open">checking open inventory…</span></p>
+
+    <div class="prices" id="price-cards" aria-live="polite">
+      <article class="price-card">
+        <h3>Text ads</h3>
+        <div class="open" data-open="text">— open</div>
+        <ul>
+          <li><span>Day</span> <strong data-p="text.day">$5</strong></li>
+          <li><span>Week</span> <strong data-p="text.week">$20</strong></li>
+          <li><span>Month</span> <strong data-p="text.month">$60</strong></li>
+        </ul>
+      </article>
+      <article class="price-card">
+        <h3>Banner ads</h3>
+        <div class="open" data-open="banner">— open</div>
+        <ul>
+          <li><span>Day</span> <strong data-p="banner.day">$15</strong></li>
+          <li><span>Week</span> <strong data-p="banner.week">$49</strong></li>
+          <li><span>Month</span> <strong data-p="banner.month">$149</strong></li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="section-label">Live board preview</div>
+    <div class="widget-host">
+      <div id="viralrefer-ads" data-mode="compact" data-theme="dark"></div>
+    </div>
+
+    <div class="section-label">How it works</div>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><div><strong>Choose package</strong><p>Text or banner · day / week / month.</p></div></div>
+      <div class="step"><span class="n">2</span><div><strong>Submit creative</strong><p>Title, line or image URL, destination link, email.</p></div></div>
+      <div class="step"><span class="n">3</span><div><strong>Pay &amp; get approved</strong><p>Owner reviews — then your spot goes live for the full duration.</p></div></div>
+    </div>
+
+    <div class="section-label">FAQ</div>
+    <div class="faq">
+      <details open>
+        <summary>Is this the contest leaderboard?</summary>
+        <p>No. This is a separate ad board (ads.viralrefer.app). Buying a spot does not buy rank on the free referral leaderboard.</p>
+      </details>
+      <details>
+        <summary>What do I get?</summary>
+        <p>A labeled Sponsored text or banner placement for the days you paid. When time ends, the slot frees up.</p>
+      </details>
+      <details>
+        <summary>Can ads be rejected?</summary>
+        <p>Yes — spam, scams, illegal, adult, or get-rich-quick creative can be rejected. Keep it clean and relevant.</p>
+      </details>
+    </div>
+
+    <p class="note">
+      Storefront: <a href="https://ads.viralrefer.app/">ads.viralrefer.app</a>
+      · Contest app: <a href="https://www.viralrefer.app/">viralrefer.app</a>
+      · Traffic-exchange iframe version: <a href="/embed/adsboard/">/embed/adsboard/</a>
+    </p>
+  </main>
+
+  <div class="sticky">
+    <a class="cta" id="cta-sticky" href="https://ads.viralrefer.app/#buy">Buy a spot — open slots</a>
+  </div>
+
+  <script>
+    (function () {
+      var DEFAULTS = {
+        utm_source: 'splash',
+        utm_medium: 'landing',
+        utm_campaign: 'adsboard',
+        from: 'splash',
+        splash: 'adsboard'
+      };
+
+      function money(cents) {
+        var n = Number(cents) || 0;
+        return '$' + (n / 100).toFixed(n % 100 === 0 ? 0 : 2);
+      }
+
+      function withUtm(base) {
+        try {
+          var u = new URL(base, location.href);
+          var inParams = new URLSearchParams(location.search);
+          Object.keys(DEFAULTS).forEach(function (k) {
+            if (!u.searchParams.has(k)) u.searchParams.set(k, DEFAULTS[k]);
+          });
+          inParams.forEach(function (v, k) {
+            if (
+              k.indexOf('utm_') === 0 ||
+              k === 'from' ||
+              k === 'splash' ||
+              k === 'aff' ||
+              k === 'affiliate' ||
+              k === 'ref'
+            ) {
+              u.searchParams.set(k === 'affiliate' || k === 'ref' ? 'aff' : k, v);
+            }
+          });
+          // Tag button position
+          return u;
+        } catch (e) {
+          return new URL(base);
+        }
+      }
+
+      function wireCtas() {
+        ['cta-hero', 'cta-demo', 'cta-aff', 'cta-sticky', 'logo-link'].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          var href = el.getAttribute('href');
+          var u = withUtm(href);
+          if (id === 'cta-hero') u.searchParams.set('utm_content', 'hero');
+          if (id === 'cta-demo') u.searchParams.set('utm_content', 'demo');
+          if (id === 'cta-aff') u.searchParams.set('utm_content', 'affiliate_join');
+          if (id === 'cta-sticky') u.searchParams.set('utm_content', 'sticky');
+          if (id === 'logo-link') u.searchParams.set('utm_content', 'logo');
+          el.setAttribute('href', u.toString());
+        });
+      }
+
+      function fillPrices(data) {
+        var prices = (data && data.prices) || {};
+        var inv = (data && data.inventory) || {};
+        function setP(key, cents) {
+          var el = document.querySelector('[data-p="' + key + '"]');
+          if (el) el.textContent = money(cents);
+        }
+        if (prices.text) {
+          setP('text.day', prices.text.day);
+          setP('text.week', prices.text.week);
+          setP('text.month', prices.text.month);
+        }
+        if (prices.banner) {
+          setP('banner.day', prices.banner.day);
+          setP('banner.week', prices.banner.week);
+          setP('banner.month', prices.banner.month);
+        }
+        var t = inv.text || {};
+        var b = inv.banner || {};
+        var tEl = document.querySelector('[data-open="text"]');
+        var bEl = document.querySelector('[data-open="banner"]');
+        if (tEl) tEl.textContent = (t.available != null ? t.available : '—') + ' of ' + (t.limit || 10) + ' open';
+        if (bEl) bEl.textContent = (b.available != null ? b.available : '—') + ' of ' + (b.limit || 3) + ' open';
+        var fine = document.getElementById('fine-open');
+        if (fine) {
+          var open = (Number(t.available) || 0) + (Number(b.available) || 0);
+          fine.textContent = open + ' slots open right now';
+        }
+        var urg = document.getElementById('urgency-text');
+        if (urg && t.available != null) {
+          urg.textContent = (t.available + ' text · ' + b.available + ' banner open') + ' · day / week / month';
+        }
+      }
+
+      wireCtas();
+
+      fetch('https://ads.viralrefer.app/api/widget', { mode: 'cors', credentials: 'omit', cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(fillPrices)
+        .catch(function () {
+          var fine = document.getElementById('fine-open');
+          if (fine) fine.textContent = 'open inventory on ads.viralrefer.app';
+        });
+    })();
+  </script>
+  <script src="https://ads.viralrefer.app/widget.js" async></script>
+</body>
+</html>
