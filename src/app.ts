@@ -53,6 +53,11 @@ import {
   setShareLeaderboardRank,
 } from './lib/share-context';
 import { enrichClientReferralOgMeta } from './lib/client-og-meta';
+import {
+  buildComplianceBannerHtml,
+  getReferrerComplianceNotice,
+  maybeShowReferrerComplianceModal,
+} from './lib/referrer-notices';
 import { syncSharePowerUI } from './lib/share-ui';
 import { buildLeaderboardHtml, buildRankGapSummary, pulseLeaderboardActivity } from './lib/leaderboard-ui';
 import { dailyCrownFlairCodes, getCachedDailyCrownStatus } from './lib/daily-crown';
@@ -468,7 +473,18 @@ async function renderMyStats(myCode: string | null): Promise<void> {
 
   container.classList.remove('stats-content--loading');
   container.setAttribute('aria-busy', 'false');
+  const complianceNotice = getReferrerComplianceNotice(myCode);
+  const complianceBanner = complianceNotice ? buildComplianceBannerHtml(complianceNotice) : '';
+  if (complianceNotice) {
+    // Owner-only modal (code in localStorage) — does not show to /r/ visitors
+    try {
+      maybeShowReferrerComplianceModal(myCode);
+    } catch {
+      /* non-fatal */
+    }
+  }
   container.innerHTML = `
+    ${complianceBanner}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 vr-reveal-row" style="--vr-stagger:0">
       <div class="bg-zinc-900/70 border border-white/10 rounded-2xl p-4 text-center">
         <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Your Referrals</div>

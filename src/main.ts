@@ -85,4 +85,15 @@ initApp().catch((err) => {
   void import('./lib/share-abandon-rescue')
     .then((m) => m.initShareAbandonRescue())
     .catch(() => {});
+  // Targeted fair-play notice for specific code owners (e.g. same-IP multi-signup warning)
+  void import('./lib/referrer-notices')
+    .then((m) => {
+      try {
+        const code = localStorage.getItem('vr_my_ref_code');
+        if (code) m.maybeShowReferrerComplianceModal(code);
+      } catch {
+        /* ignore */
+      }
+    })
+    .catch(() => {});
 });
