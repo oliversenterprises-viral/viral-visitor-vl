@@ -2,18 +2,22 @@
  * Owner → everyone in-app broadcast via site_content (no email required).
  * Safe additive feature: missing keys = no banner. Fail-open if storage broken.
  *
+ * Public visitors cannot dismiss — only the owner turns it off in Admin
+ * (Edit Site Content → Message all joiners → Turn OFF banner).
+ *
  * Keys (CMS / admin):
  * - owner_broadcast_enabled: "1" | "true" | "yes" to show
  * - owner_broadcast_title: short headline
  * - owner_broadcast_body: message body (plain text)
- * - owner_broadcast_id: optional version id (dismiss tracks this; auto from body hash if empty)
+ * - owner_broadcast_id: optional version id (for your records)
  */
 
 import { normalizeSiteContentText } from './site-content-value';
 import { escapeHtml } from './escape-html';
 
-const DISMISS_KEY = 'vr_owner_broadcast_dismissed_id';
 const BANNER_ID = 'vr-owner-broadcast-banner';
+/** Legacy key from when visitors could dismiss — cleared so old dismiss never hides owner messages. */
+const LEGACY_DISMISS_KEY = 'vr_owner_broadcast_dismissed_id';
 
 export interface OwnerBroadcastPayload {
   enabled: boolean;
@@ -29,7 +33,7 @@ function truthyFlag(raw: unknown): boolean {
   return s === '1' || s === 'true' || s === 'yes' || s === 'on';
 }
 
-/** Stable short id so dismiss survives small whitespace edits only when id set. */
+/** Stable short id from title/body or explicit CMS id. */
 export function broadcastMessageId(title: string, body: string, explicitId?: string): string {
   const explicit = String(explicitId || '').trim();
   if (explicit) return explicit.slice(0, 80);
@@ -60,17 +64,9 @@ export function parseOwnerBroadcast(content: Record<string, unknown> | null | un
   };
 }
 
-function readDismissedId(): string | null {
+function clearLegacyVisitorDismiss(): void {
   try {
-    return localStorage.getItem(DISMISS_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function dismissOwnerBroadcast(id: string): void {
-  try {
-    localStorage.setItem(DISMISS_KEY, id);
+    localStorage.removeItem(LEGACY_DISMISS_KEY);
   } catch {
     /* private mode */
   }
@@ -82,16 +78,16 @@ function removeBanner(): void {
 
 /**
  * Render or clear the public owner broadcast banner.
+ * Only CMS owner_broadcast_enabled=off removes it — no public dismiss.
  * Non-fatal; never throws into content load.
  */
 export function applyOwnerBroadcast(content: Record<string, unknown>): void {
   try {
+    // Drop any old visitor-side dismiss so owner messages always show when enabled
+    clearLegacyVisitorDismiss();
+
     const msg = parseOwnerBroadcast(content);
     if (!msg) {
-      removeBanner();
-      return;
-    }
-    if (readDismissedId() === msg.id) {
       removeBanner();
       return;
     }
@@ -102,7 +98,7 @@ export function applyOwnerBroadcast(content: Record<string, unknown>): void {
       el.id = BANNER_ID;
       el.setAttribute('role', 'region');
       el.setAttribute('aria-label', 'Site announcement');
-      // Insert under header / top of main shell if present
+      el.setAttribute('data-owner-only-remove', '1');
       const host =
         document.getElementById('app') ||
         document.querySelector('main') ||
@@ -122,21 +118,8 @@ export function applyOwnerBroadcast(content: Record<string, unknown>): void {
           <p class="text-sm font-semibold text-white leading-snug">${escapeHtml(msg.title)}</p>
           <p class="text-sm text-zinc-300 mt-1 leading-relaxed whitespace-pre-wrap">${escapeHtml(msg.body)}</p>
         </div>
-        <button type="button" id="vr-owner-broadcast-dismiss"
-          class="shrink-0 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-zinc-200 text-xs font-semibold px-2.5 py-1.5"
-          aria-label="Dismiss announcement">
-          Dismiss
-        </button>
       </div>
     `;
-
-    const btn = el.querySelector('#vr-owner-broadcast-dismiss') as HTMLButtonElement | null;
-    if (btn) {
-      btn.onclick = () => {
-        dismissOwnerBroadcast(msg.id);
-        removeBanner();
-      };
-    }
   } catch {
     /* never break homepage for broadcast */
   }

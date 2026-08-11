@@ -318,7 +318,7 @@ function buildContentListHTML(rows: ContentRow[]): string {
             <i class="fa-solid fa-bullhorn"></i> Message all joiners
           </div>
           <p class="text-xs text-zinc-400 mt-1 max-w-xl">
-            ViralRefer does not collect email for most people. This shows an in-app banner to everyone who opens the site (they can dismiss). Live when you publish — uses existing CMS only (safe).
+            ViralRefer does not collect email for most people. This shows an in-app banner to everyone who opens the site. <strong class="text-violet-200">Only you can remove it</strong> (Turn OFF below) — visitors cannot dismiss. Live when you publish — uses existing CMS only (safe).
           </p>
         </div>
         <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border ${
@@ -352,7 +352,7 @@ function buildContentListHTML(rows: ContentRow[]): string {
           Publish message (turn ON)
         </button>
         <button type="button" id="owner-bc-turn-off" class="px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-sm font-semibold">
-          Turn OFF banner
+          Turn OFF banner (owner only)
         </button>
       </div>
     </div>
