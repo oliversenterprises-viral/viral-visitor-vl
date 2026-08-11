@@ -1,9 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
+  buildBroadcastClickNotifyText,
   buildFunnelNotifyPayload,
   buildFunnelNotifyText,
   buildTelegramNotifyRequest,
   getFunnelNotifyChannel,
+  isBroadcastClickNotifyEnabled,
+  isBroadcastClickZone,
   isFunnelOffsiteNotifyEnabled,
   isImportantFunnelNotifyStep,
   shouldNotifyFunnelEvent,
@@ -14,12 +17,14 @@ describe('funnel-notify', () => {
   const prevToken = process.env.FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN;
   const prevChat = process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID;
   const prevImportant = process.env.FUNNEL_NOTIFY_IMPORTANT_ONLY;
+  const prevBc = process.env.FUNNEL_NOTIFY_BROADCAST_CLICKS;
 
   beforeEach(() => {
     delete process.env.FUNNEL_NOTIFY_WEBHOOK_URL;
     delete process.env.FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN;
     delete process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID;
     delete process.env.FUNNEL_NOTIFY_IMPORTANT_ONLY;
+    delete process.env.FUNNEL_NOTIFY_BROADCAST_CLICKS;
   });
 
   afterEach(() => {
@@ -31,6 +36,8 @@ describe('funnel-notify', () => {
     else process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID = prevChat;
     if (prevImportant === undefined) delete process.env.FUNNEL_NOTIFY_IMPORTANT_ONLY;
     else process.env.FUNNEL_NOTIFY_IMPORTANT_ONLY = prevImportant;
+    if (prevBc === undefined) delete process.env.FUNNEL_NOTIFY_BROADCAST_CLICKS;
+    else process.env.FUNNEL_NOTIFY_BROADCAST_CLICKS = prevBc;
   });
 
   it('isImportantFunnelNotifyStep excludes landings', () => {
@@ -98,5 +105,33 @@ describe('funnel-notify', () => {
     const ntfy = buildFunnelNotifyPayload(row, 'https://ntfy.sh/my-topic');
     expect(ntfy.body).toContain('CopyReferralLink');
     expect(ntfy.headers.Title).toBe('ViralRefer funnel');
+  });
+
+  it('isBroadcastClickZone matches broadcaster zones only', () => {
+    expect(isBroadcastClickZone('owner-broadcast-link')).toBe(true);
+    expect(isBroadcastClickZone('owner-broadcast-sponsor')).toBe(true);
+    expect(isBroadcastClickZone('hero-get-link')).toBe(false);
+  });
+
+  it('isBroadcastClickNotifyEnabled uses same Telegram secrets', () => {
+    expect(isBroadcastClickNotifyEnabled()).toBe(false);
+    process.env.FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN = '123:abc';
+    process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID = '999';
+    expect(isBroadcastClickNotifyEnabled()).toBe(true);
+    process.env.FUNNEL_NOTIFY_BROADCAST_CLICKS = 'false';
+    expect(isBroadcastClickNotifyEnabled()).toBe(false);
+  });
+
+  it('buildBroadcastClickNotifyText includes kind and href', () => {
+    const text = buildBroadcastClickNotifyText({
+      zone_id: 'owner-broadcast-sponsor',
+      href: 'https://example.com/offer',
+      label: 'Partner',
+      broadcast_id: 'rules-v1',
+    });
+    expect(text).toContain('Sponsor CTA');
+    expect(text).toContain('https://example.com/offer');
+    expect(text).toContain('Partner');
+    expect(text).toContain('id:rules-v1');
   });
 });

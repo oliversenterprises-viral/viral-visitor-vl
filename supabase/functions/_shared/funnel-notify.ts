@@ -196,3 +196,114 @@ export async function dispatchFunnelOffsiteNotify(
   const ok = await postNotify(url, body, headers);
   return { ok, channel: 'webhook' };
 }
+
+/** Owner broadcaster click zones (must match client viral-zones). */
+export const BROADCAST_CLICK_ZONES = new Set([
+  'owner-broadcast-link',
+  'owner-broadcast-sponsor',
+  'owner-broadcast-sponsor-img',
+]);
+
+export function isBroadcastClickZone(zoneId: string | undefined): boolean {
+  return BROADCAST_CLICK_ZONES.has(String(zoneId || '').trim());
+}
+
+/**
+ * Broadcast click alerts use the same Telegram/webhook channel as funnel alerts.
+ * Independent of FUNNEL_NOTIFY_IMPORTANT_ONLY (those only filter funnel visitor_events).
+ * Disable with FUNNEL_NOTIFY_BROADCAST_CLICKS=false.
+ */
+export function isBroadcastClickNotifyEnabled(): boolean {
+  if (!isFunnelOffsiteNotifyEnabled()) return false;
+  const flag = String(readEnv('FUNNEL_NOTIFY_BROADCAST_CLICKS') || 'true')
+    .trim()
+    .toLowerCase();
+  return flag !== 'false' && flag !== '0' && flag !== 'off';
+}
+
+export type BroadcastClickNotifyRow = {
+  zone_id: string;
+  href?: string | null;
+  kind?: string | null;
+  broadcast_id?: string | null;
+  label?: string | null;
+  path?: string | null;
+};
+
+export function buildBroadcastClickNotifyText(row: BroadcastClickNotifyRow): string {
+  const zone = String(row.zone_id || '').trim();
+  const kindLabel =
+    zone === 'owner-broadcast-sponsor'
+      ? 'Sponsor CTA'
+      : zone === 'owner-broadcast-sponsor-img'
+        ? 'Sponsor image'
+        : 'Body link';
+  const href = String(row.href || '').trim();
+  const label = String(row.label || '').trim();
+  const bcId = String(row.broadcast_id || '').trim();
+  const parts = [`📣 Broadcast click · ${kindLabel}`];
+  if (label) parts.push(`“${label.slice(0, 60)}”`);
+  if (href) parts.push(href.slice(0, 180));
+  if (bcId) parts.push(`id:${bcId.slice(0, 40)}`);
+  return parts.join('\n');
+}
+
+/** Fire-and-forget safe Telegram/webhook for owner broadcaster link clicks. */
+export async function dispatchBroadcastClickNotify(
+  row: BroadcastClickNotifyRow,
+): Promise<{ ok: boolean; skipped?: string; channel?: FunnelNotifyChannel }> {
+  if (!isBroadcastClickNotifyEnabled()) {
+    return { ok: false, skipped: 'disabled' };
+  }
+  if (!isBroadcastClickZone(row.zone_id)) {
+    return { ok: false, skipped: 'not_broadcast' };
+  }
+
+  const channel = getFunnelNotifyChannel();
+  if (!channel) return { ok: false, skipped: 'disabled' };
+
+  const text = buildBroadcastClickNotifyText(row);
+
+  if (channel === 'telegram') {
+    const botToken = getFunnelNotifyTelegramBotToken()!;
+    const chatId = getFunnelNotifyTelegramChatId()!;
+    const ok = await postNotify(
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
+      JSON.stringify({
+        chat_id: chatId,
+        text,
+        disable_web_page_preview: true,
+      }),
+      { 'Content-Type': 'application/json' },
+    );
+    return { ok, channel: 'telegram' };
+  }
+
+  const url = getFunnelNotifyWebhookUrl()!;
+  let body: string;
+  let headers: Record<string, string>;
+  if (url.includes('discord.com/api/webhooks')) {
+    body = JSON.stringify({ content: text });
+    headers = { 'Content-Type': 'application/json' };
+  } else if (url.includes('ntfy.sh')) {
+    body = text;
+    headers = {
+      'Content-Type': 'text/plain; charset=utf-8',
+      Title: 'ViralRefer broadcast click',
+      Tags: 'mega',
+    };
+  } else {
+    body = JSON.stringify({
+      text,
+      title: 'ViralRefer broadcast click',
+      zone_id: row.zone_id,
+      href: row.href ?? null,
+      kind: row.kind ?? null,
+      broadcast_id: row.broadcast_id ?? null,
+      at: new Date().toISOString(),
+    });
+    headers = { 'Content-Type': 'application/json' };
+  }
+  const ok = await postNotify(url, body, headers);
+  return { ok, channel: 'webhook' };
+}

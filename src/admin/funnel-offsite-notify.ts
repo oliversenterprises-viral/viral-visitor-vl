@@ -37,5 +37,5 @@ export function funnelOffsiteNotifyStatusLabel(status: FunnelOffsiteNotifyStatus
   }
   const via = status.channel === 'telegram' ? 'Telegram' : 'webhook';
   const scope = status.importantOnly ? 'conversion steps only' : 'all funnel steps';
-  return `Off-site alerts on via ${via} (${scope})`;
+  return `Off-site alerts on via ${via} (${scope}; broadcaster link clicks also notify)`;
 }

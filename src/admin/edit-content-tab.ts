@@ -665,6 +665,7 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
             ? `<p class="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">Top destinations</p><ul class="space-y-0.5">${topHrefs}</ul>`
             : `<p class="text-zinc-500">No broadcaster link clicks yet. Publish a message with links, then check back.</p>`
         }
+        <p class="text-[10px] text-zinc-500 mt-2 leading-relaxed">Telegram: each click also pings your funnel bot when <code class="text-zinc-400">FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN</code> + <code class="text-zinc-400">CHAT_ID</code> are set in Supabase secrets (same bot as get-link alerts). Set <code class="text-zinc-400">FUNNEL_NOTIFY_BROADCAST_CLICKS=false</code> to mute only these.</p>
         ${!result.success ? `<p class="text-amber-400/90 mt-2">Note: ${escapeHtml(String(result.error || 'stats may be incomplete'))}</p>` : ''}
       `;
     } catch (err) {

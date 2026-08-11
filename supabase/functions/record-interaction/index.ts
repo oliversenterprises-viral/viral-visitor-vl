@@ -1,5 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
+import {
+  dispatchBroadcastClickNotify,
+  isBroadcastClickZone,
+} from '../_shared/funnel-notify.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -89,6 +93,21 @@ Deno.serve(async (req: Request) => {
 
     const { error } = await supabaseAdmin.from('interaction_events').insert(row);
     if (error) throw error;
+
+    // Owner broadcaster clicks → same Telegram bot as funnel alerts (non-blocking)
+    if (eventType === 'click' && isBroadcastClickZone(zoneId)) {
+      const meta = clientMetadata as Record<string, unknown>;
+      dispatchBroadcastClickNotify({
+        zone_id: zoneId,
+        href: meta.href != null ? String(meta.href) : null,
+        kind: meta.kind != null ? String(meta.kind) : null,
+        broadcast_id: meta.broadcast_id != null ? String(meta.broadcast_id) : null,
+        label: meta.label != null ? String(meta.label) : null,
+        path: row.path,
+      }).catch((notifyErr) => {
+        console.error('[record-interaction] broadcast telegram notify:', notifyErr);
+      });
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
