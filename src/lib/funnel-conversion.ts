@@ -61,7 +61,7 @@ function tuneHeroForReferred(ref: string): void {
   const trust = document.getElementById('hero-trust-line');
   if (trust) {
     trust.innerHTML =
-      '<strong class="text-amber-300">Just visiting does not credit them.</strong> Tap <strong class="text-white">Get my link</strong> below — ~5 seconds.';
+      '<strong class="text-amber-300">Just visiting does not credit them.</strong> Tap <strong class="text-white">Get my link</strong> below — about 30 seconds.';
   }
 
   // Micro-flow: hide secondary hero CTAs noise
@@ -114,12 +114,20 @@ export function initDirectLandingConversionBoost(loc: Location = location): void
   highlightHeroGetLink();
 }
 
-function scrollToReferralSection(): void {
-  const section = document.getElementById('referral-section');
-  if (!section) return;
-  window.setTimeout(() => {
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 400);
+/**
+ * Referred first paint: keep Step 1 (Get link) in focus.
+ * Avoid yanking past the hero CTA to a far section — only nudge if needed.
+ */
+function scrollToStep1Focus(): void {
+  void import('./smooth-scroll').then(({ smoothScrollToElement }) => {
+    const el =
+      document.getElementById('hero-get-link-btn') ||
+      document.getElementById('attribution-get-link-btn') ||
+      document.getElementById('referral-attribution') ||
+      document.getElementById('funnel-credit-gate');
+    // Short delay so layout + banner settle; skip if already in view
+    smoothScrollToElement(el, { block: 'center', delayMs: 120 });
+  });
 }
 
 /** Call at bootstrap after attribution banner is revealed. */
@@ -137,7 +145,7 @@ export function initFunnelConversion(loc: Location = location): void {
   revealFunnelCreditGate(ref);
   highlightHeroGetLink();
   wireExpandToggle();
-  scrollToReferralSection();
+  scrollToStep1Focus();
 }
 
 /** Referred-landing copy overrides — run after CMS content is applied. */

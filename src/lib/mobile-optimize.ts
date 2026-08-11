@@ -41,6 +41,14 @@ export function initMobileOptimize(win: Window = window): void {
     root.setAttribute('data-vr-mobile', '1');
   }
 
+  try {
+    if (win.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.setAttribute('data-vr-reduced-motion', '1');
+    }
+  } catch {
+    /* ignore */
+  }
+
   if (resizeBound) return;
   resizeBound = true;
 
@@ -52,4 +60,15 @@ export function initMobileOptimize(win: Window = window): void {
 
   win.addEventListener('resize', onResize, { passive: true });
   win.visualViewport?.addEventListener('resize', onResize, { passive: true });
+
+  try {
+    const mq = win.matchMedia('(prefers-reduced-motion: reduce)');
+    const onMotion = () => {
+      if (mq.matches) root.setAttribute('data-vr-reduced-motion', '1');
+      else root.removeAttribute('data-vr-reduced-motion');
+    };
+    mq.addEventListener?.('change', onMotion);
+  } catch {
+    /* ignore */
+  }
 }

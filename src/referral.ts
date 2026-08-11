@@ -368,6 +368,8 @@ export async function getMyReferralLinkInstant(): Promise<void> {
       .catch(() => {});
 
     syncMobileReferralCta();
+    // Ensure sticky get-link bar is gone before send UI mounts (no double bottom bars)
+    document.getElementById('mobile-referral-cta')?.classList.add('hidden');
     // Bulletproof send mode: one primary action, hide chrome (canonical path)
     activateSendModeAfterGetLink({ autoCopied });
 

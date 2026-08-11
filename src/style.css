@@ -550,25 +550,116 @@ html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-subtitle {
   max-width: 28rem;
 }
 
-/* Referred micro-flow — credit path only until Get link */
+/* Referred micro-flow — one job: credit visit (Get link). Butter-smooth first paint. */
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-global-regions,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-global-proof,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-leaderboard-btn,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-leaderboard-link,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-telegram-helper-btn,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-security-trust,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-prize-fomo,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #vr-verified-total,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #daily-champion-strip,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-expand-wrap,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-journey,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #how,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #prize,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #leaderboard,
 html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link {
   display: none !important;
 }
-html[data-vr-referred-micro]:not([data-vr-has-link]) #attribution-banner {
+html[data-vr-referred-micro]:not([data-vr-has-link]) #referral-attribution {
   border-color: rgba(52, 211, 153, 0.45);
   box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.15);
+  margin-top: 1rem;
 }
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-get-link-btn,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #attribution-get-link-btn {
   animation: hero-get-link-soft 2s ease-in-out infinite;
+  min-height: 52px;
+}
+html[data-vr-referred-micro]:not([data-vr-has-link]) .hero-gradient {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-subtitle {
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+html[data-vr-referred-micro]:not([data-vr-has-link]) #winning-link-title,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #winning-link-description,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #share-deadline-pre-note {
+  /* Keep section calm until they have a link — gate + CTA lead */
+  opacity: 0.92;
+}
+
+/* Scroll targets clear fixed nav + optional sticky broadcast */
+#hero-get-link-btn,
+#attribution-get-link-btn,
+#referral-section,
+#share-first-strip,
+#referral-attribution,
+#funnel-credit-gate {
+  scroll-margin-top: calc(4.75rem + env(safe-area-inset-top, 0px));
+  scroll-margin-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 640px) {
+  #hero-get-link-btn,
+  #attribution-get-link-btn,
+  #referral-section,
+  #share-first-strip,
+  #referral-attribution,
+  #funnel-credit-gate {
+    scroll-margin-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+  }
+}
+html[data-vr-broadcast] #hero-get-link-btn,
+html[data-vr-broadcast] #attribution-get-link-btn,
+html[data-vr-broadcast] #referral-section,
+html[data-vr-broadcast] #share-first-strip,
+html[data-vr-broadcast] #referral-attribution,
+html[data-vr-broadcast] #funnel-credit-gate {
+  scroll-margin-top: calc(8.5rem + env(safe-area-inset-top, 0px));
+}
+
+/* Post get-link: soft settle, no layout thrash */
+html[data-vr-post-get-link] #share-first-strip {
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+html[data-vr-post-get-link] #share-first-strip:not(.hidden) {
+  border-color: rgba(52, 211, 153, 0.4);
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.12), 0 12px 36px rgba(16, 185, 129, 0.12);
+}
+.mobile-send-cta {
+  transition: transform 0.28s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.22s ease;
+}
+.mobile-send-cta.hidden {
+  pointer-events: none;
+}
+html[data-vr-reduced-motion] .mobile-send-cta,
+html[data-vr-reduced-motion] #share-first-strip,
+html[data-vr-reduced-motion] .hero-get-link-pulse,
+html[data-vr-reduced-motion] .share-first-pulse {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Attribution CTA full-width thumb zone on phones */
+@media (max-width: 639px) {
+  #referral-attribution .glass {
+    padding: 1rem;
+  }
+  #attribution-get-link-btn {
+    min-height: 48px;
+    width: 100%;
+  }
+  #referral-section .glass {
+    padding: 1.15rem !important;
+  }
+  #unique-referral-link-title {
+    font-size: 1.15rem !important;
+  }
 }
 @keyframes hero-get-link-soft {
   0%, 100% { box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35); }

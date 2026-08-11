@@ -35,6 +35,7 @@ export function enterSendMode(): void {
 export function exitSendMode(): void {
   document.documentElement.removeAttribute(SEND_MODE_ATTR);
   document.documentElement.removeAttribute('data-vr-send-more');
+  document.documentElement.removeAttribute('data-vr-post-get-link');
   hideStickySendBar();
   document.getElementById('share-first-strip')?.classList.remove('share-first-strip--send-mode');
 }
@@ -240,7 +241,9 @@ export function activateSendModeAfterGetLink(opts?: { autoCopied?: boolean }): v
     };
   }
 
+  // Sticky bar first so padding/safe-area settle, then scroll once to send UI
   showStickySendBar();
+  document.documentElement.setAttribute('data-vr-post-get-link', '1');
   scrollToShareFirstPrimary();
 
   // Hard-to-skip share: exit/return/poll abandon rescue (no prod side effects)
@@ -253,7 +256,7 @@ export function activateSendModeAfterGetLink(opts?: { autoCopied?: boolean }): v
     .then((m) => m.setFunnelStep(3))
     .catch(() => {});
 
-  // Pulse primary hard
+  // Pulse primary after sticky + scroll settle (avoids double-jank with layout shift)
   window.setTimeout(() => {
     const primary = resolveShareFirstPrimary();
     const id =
@@ -264,7 +267,7 @@ export function activateSendModeAfterGetLink(opts?: { autoCopied?: boolean }): v
           : 'share-first-whatsapp';
     document.getElementById(id)?.classList.add('share-first-pulse');
     document.getElementById('mobile-send-cta-btn')?.classList.add('share-first-pulse');
-  }, 200);
+  }, 320);
 
   void opts; // reserved (autoCopied is informational for future analytics)
 }

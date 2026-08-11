@@ -172,13 +172,16 @@ export function scrollToShareFirstPrimary(): void {
       document.getElementById('share-first-strip') ||
       document.getElementById('share-buttons-panel') ||
       document.getElementById('referral-section');
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    void import('./smooth-scroll').then(({ smoothScrollToElement }) => {
+      smoothScrollToElement(el, { block: 'center', force: true });
+    });
     el?.classList.add('share-first-pulse');
     window.setTimeout(() => el?.classList.remove('share-first-pulse'), 2800);
   };
+  // Wait one frame after strip paints + sticky send bar so scroll lands correctly
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      window.setTimeout(run, 80);
+      window.setTimeout(run, 100);
     });
   });
 }
