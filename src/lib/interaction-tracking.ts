@@ -48,17 +48,47 @@ function pushLocal(entry: Record<string, unknown>): void {
 
 function logInteractionServer(payload: Record<string, unknown>): void {
   const utm = getStoredUtmAttribution();
+  const {
+    metadata: metaFromPayload,
+    event_type,
+    zone_id,
+    path,
+    x,
+    y,
+    viewport_w,
+    viewport_h,
+    scroll_y,
+    scroll_depth_pct,
+    ...rest
+  } = payload;
+  const metadata =
+    metaFromPayload && typeof metaFromPayload === 'object' && !Array.isArray(metaFromPayload)
+      ? { ...(metaFromPayload as Record<string, unknown>) }
+      : {};
+  // Preserve unknown extras inside metadata for admin inspection
+  for (const [k, v] of Object.entries(rest)) {
+    if (v !== undefined && !(k in metadata)) metadata[k] = v;
+  }
+
   supabase.functions
     .invoke('record-interaction', {
       body: {
-        ...payload,
+        event_type,
+        zone_id,
+        path: path ?? location.pathname,
+        x,
+        y,
+        viewport_w,
+        viewport_h,
+        scroll_y,
+        scroll_depth_pct,
+        metadata,
         visitor_id: getVisitorId(),
         session_id: getVisitorSessionId(),
         utm_source: utm?.source,
         ref_code: resolveRefCode(),
         ab_variant: resolveShareAbVariant(resolveReferralCodeForAb()),
         is_referred: isReferredLanding(),
-        path: location.pathname,
         timestamp: new Date().toISOString(),
       },
     })
@@ -80,6 +110,34 @@ function recordInteraction(
   };
   pushLocal(entry);
   logInteractionServer(entry);
+}
+
+export type BroadcastClickKind = 'body' | 'sponsor' | 'sponsor_img';
+
+/** Fire-and-forget when a visitor clicks any link inside the owner broadcaster. */
+export function trackBroadcastLinkClick(opts: {
+  href: string;
+  kind: BroadcastClickKind;
+  broadcastId?: string;
+  label?: string;
+}): void {
+  const href = String(opts.href || '').trim().slice(0, 2000);
+  if (!href) return;
+  const zone: ViralZoneId =
+    opts.kind === 'sponsor'
+      ? 'owner-broadcast-sponsor'
+      : opts.kind === 'sponsor_img'
+        ? 'owner-broadcast-sponsor-img'
+        : 'owner-broadcast-link';
+  recordInteraction('click', zone, {
+    metadata: {
+      href,
+      kind: opts.kind,
+      broadcast_id: String(opts.broadcastId || '').slice(0, 80) || null,
+      label: String(opts.label || '').slice(0, 120) || null,
+      source: 'owner_broadcast',
+    },
+  });
 }
 
 function onDocumentClick(e: MouseEvent): void {

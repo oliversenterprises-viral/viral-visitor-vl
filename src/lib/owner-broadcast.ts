@@ -65,16 +65,22 @@ export function broadcastMessageId(title: string, body: string, explicitId?: str
   return `bc_${(h >>> 0).toString(16)}`;
 }
 
-function safeAnchor(href: string, label: string, extraClass = ''): string {
+function safeAnchor(
+  href: string,
+  label: string,
+  opts?: { extraClass?: string; zone?: string; kind?: string },
+): string {
   const safeHref = escapeHtml(href);
   const safeLabel = escapeHtml(label);
   const cls = [
     'text-violet-300 underline underline-offset-2 hover:text-violet-200 break-all',
-    extraClass,
+    opts?.extraClass || '',
   ]
     .filter(Boolean)
     .join(' ');
-  return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer" class="${cls}">${safeLabel}</a>`;
+  const zone = opts?.zone || 'owner-broadcast-link';
+  const kind = opts?.kind || 'body';
+  return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer" class="${cls}" data-vr-zone="${escapeHtml(zone)}" data-bc-kind="${escapeHtml(kind)}" data-bc-href="${safeHref}">${safeLabel}</a>`;
 }
 
 /**
@@ -93,7 +99,7 @@ export function linkifyEscapedText(escapedText: string): string {
       url = url.slice(0, -1);
     }
     if (!isSafeHttpUrl(url)) return match;
-    return safeAnchor(url, url) + trail;
+    return safeAnchor(url, url, { zone: 'owner-broadcast-link', kind: 'body' }) + trail;
   });
 }
 
@@ -115,7 +121,7 @@ export function formatBroadcastBodyHtml(rawBody: string): string {
     const label = m[1];
     const href = m[2];
     if (isSafeHttpUrl(href)) {
-      out += safeAnchor(href, label);
+      out += safeAnchor(href, label, { zone: 'owner-broadcast-link', kind: 'body' });
     } else {
       out += escapeHtml(m[0]);
     }
@@ -190,24 +196,60 @@ function renderSponsorHtml(sponsor: OwnerBroadcastSponsor): string {
   const img = sponsor.imageUrl
     ? `<img src="${escapeHtml(sponsor.imageUrl)}" alt="${escapeHtml(sponsor.label)}" class="vr-bc-sponsor-img" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
     : '';
+  const url = escapeHtml(sponsor.url);
   return `
     <div class="vr-bc-sponsor">
       <p class="vr-bc-sponsor-badge">Sponsored</p>
       <div class="vr-bc-sponsor-row">
         ${
           sponsor.imageUrl
-            ? `<a href="${escapeHtml(sponsor.url)}" target="_blank" rel="noopener noreferrer" class="vr-bc-sponsor-img-link">${img}</a>`
+            ? `<a href="${url}" target="_blank" rel="noopener noreferrer" class="vr-bc-sponsor-img-link" data-vr-zone="owner-broadcast-sponsor-img" data-bc-kind="sponsor_img" data-bc-href="${url}">${img}</a>`
             : ''
         }
         <div class="vr-bc-sponsor-copy min-w-0 flex-1">
           <p class="vr-bc-sponsor-label">${escapeHtml(sponsor.label)}</p>
-          <a href="${escapeHtml(sponsor.url)}" target="_blank" rel="noopener noreferrer" class="vr-bc-sponsor-cta">
+          <a href="${url}" target="_blank" rel="noopener noreferrer" class="vr-bc-sponsor-cta" data-vr-zone="owner-broadcast-sponsor" data-bc-kind="sponsor" data-bc-href="${url}">
             ${escapeHtml(sponsor.cta)} <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
           </a>
         </div>
       </div>
     </div>
   `;
+}
+
+function wireBroadcastClickTracking(root: HTMLElement, broadcastId: string): void {
+  if (root.dataset.bcClicksBound === '1') return;
+  root.dataset.bcClicksBound = '1';
+  root.addEventListener(
+    'click',
+    (ev) => {
+      try {
+        const t = ev.target;
+        if (!(t instanceof Element)) return;
+        const a = t.closest('a[href]') as HTMLAnchorElement | null;
+        if (!a || !root.contains(a)) return;
+        const href = (a.getAttribute('data-bc-href') || a.href || '').trim();
+        if (!href || !isSafeHttpUrl(href)) return;
+        const kindRaw = (a.getAttribute('data-bc-kind') || 'body').toLowerCase();
+        const kind =
+          kindRaw === 'sponsor' || kindRaw === 'sponsor_img' ? kindRaw : 'body';
+        const label = (a.textContent || '').trim().slice(0, 120);
+        void import('./interaction-tracking')
+          .then((m) =>
+            m.trackBroadcastLinkClick({
+              href,
+              kind: kind as 'body' | 'sponsor' | 'sponsor_img',
+              broadcastId,
+              label,
+            }),
+          )
+          .catch(() => {});
+      } catch {
+        /* never block navigation */
+      }
+    },
+    { capture: true },
+  );
 }
 
 /** Prefer content shell under fixed nav so the banner never sits under/over the navbar wrongly. */
@@ -255,6 +297,7 @@ export function applyOwnerBroadcast(content: Record<string, unknown>): void {
     const sponsorHtml = msg.sponsor ? renderSponsorHtml(msg.sponsor) : '';
 
     el.className = 'vr-owner-broadcast';
+    el.dataset.bcId = msg.id;
     el.innerHTML = `
       <div class="vr-bc-inner">
         <span class="vr-bc-icon" aria-hidden="true">
@@ -268,6 +311,7 @@ export function applyOwnerBroadcast(content: Record<string, unknown>): void {
         </div>
       </div>
     `;
+    wireBroadcastClickTracking(el, msg.id);
     document.documentElement.setAttribute('data-vr-broadcast', '1');
   } catch {
     /* never break homepage for broadcast */

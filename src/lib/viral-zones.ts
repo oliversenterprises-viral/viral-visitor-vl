@@ -22,6 +22,9 @@ export const VIRAL_ZONE_IDS = [
   'rank-receipt',
   'weekly-sprint',
   'community-unlock',
+  'owner-broadcast-link',
+  'owner-broadcast-sponsor',
+  'owner-broadcast-sponsor-img',
 ] as const;
 
 export type ViralZoneId = (typeof VIRAL_ZONE_IDS)[number];
@@ -45,6 +48,9 @@ export const VIRAL_ZONE_LABELS: Record<ViralZoneId, string> = {
   'rank-receipt': 'Rank receipt card',
   'weekly-sprint': 'Weekly sprint board',
   'community-unlock': 'Community unlock meter',
+  'owner-broadcast-link': 'Broadcaster — body link',
+  'owner-broadcast-sponsor': 'Broadcaster — sponsor CTA',
+  'owner-broadcast-sponsor-img': 'Broadcaster — sponsor image',
 };
 
 /** Funnel step each zone most directly supports. */
@@ -67,6 +73,9 @@ export const VIRAL_ZONE_FUNNEL_STEP: Record<ViralZoneId, string> = {
   'rank-receipt': 'ReceiptShared',
   'weekly-sprint': 'SprintBoardView',
   'community-unlock': 'CommunityUnlockView',
+  'owner-broadcast-link': 'BroadcastClick',
+  'owner-broadcast-sponsor': 'BroadcastClick',
+  'owner-broadcast-sponsor-img': 'BroadcastClick',
 };
 
 export function isViralZoneId(value: string): value is ViralZoneId {
