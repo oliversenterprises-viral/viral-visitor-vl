@@ -179,27 +179,49 @@ function clearLegacyVisitorDismiss(): void {
 
 function removeBanner(): void {
   document.getElementById(BANNER_ID)?.remove();
+  try {
+    document.documentElement.removeAttribute('data-vr-broadcast');
+  } catch {
+    /* ignore */
+  }
 }
 
 function renderSponsorHtml(sponsor: OwnerBroadcastSponsor): string {
   const img = sponsor.imageUrl
-    ? `<img src="${escapeHtml(sponsor.imageUrl)}" alt="${escapeHtml(sponsor.label)}" class="w-full max-h-28 object-contain rounded-lg bg-black/30 border border-white/10" loading="lazy" referrerpolicy="no-referrer" />`
+    ? `<img src="${escapeHtml(sponsor.imageUrl)}" alt="${escapeHtml(sponsor.label)}" class="vr-bc-sponsor-img" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
     : '';
   return `
-    <div class="mt-3 rounded-xl border border-amber-400/35 bg-amber-500/10 px-3 py-3">
-      <p class="text-[10px] uppercase tracking-wider font-bold text-amber-200/90 mb-1.5">Sponsored</p>
-      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-        ${sponsor.imageUrl ? `<a href="${escapeHtml(sponsor.url)}" target="_blank" rel="noopener noreferrer" class="shrink-0 w-full sm:w-40 block">${img}</a>` : ''}
-        <div class="min-w-0 flex-1">
-          <p class="text-sm font-semibold text-amber-50">${escapeHtml(sponsor.label)}</p>
-          <a href="${escapeHtml(sponsor.url)}" target="_blank" rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-xl bg-amber-500/90 hover:bg-amber-400 text-zinc-950 text-xs font-bold transition-colors">
-            ${escapeHtml(sponsor.cta)} <i class="fa-solid fa-arrow-up-right-from-square text-[10px]" aria-hidden="true"></i>
+    <div class="vr-bc-sponsor">
+      <p class="vr-bc-sponsor-badge">Sponsored</p>
+      <div class="vr-bc-sponsor-row">
+        ${
+          sponsor.imageUrl
+            ? `<a href="${escapeHtml(sponsor.url)}" target="_blank" rel="noopener noreferrer" class="vr-bc-sponsor-img-link">${img}</a>`
+            : ''
+        }
+        <div class="vr-bc-sponsor-copy min-w-0 flex-1">
+          <p class="vr-bc-sponsor-label">${escapeHtml(sponsor.label)}</p>
+          <a href="${escapeHtml(sponsor.url)}" target="_blank" rel="noopener noreferrer" class="vr-bc-sponsor-cta">
+            ${escapeHtml(sponsor.cta)} <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
           </a>
         </div>
       </div>
     </div>
   `;
+}
+
+/** Prefer content shell under fixed nav so the banner never sits under/over the navbar wrongly. */
+function resolveBroadcastHost(): HTMLElement {
+  // Public homepage shell: first padded content div after fixed #vr-nav
+  const underNav = document.querySelector('body > div.max-w-6xl, body > div.pt-20') as HTMLElement | null;
+  if (underNav) return underNav;
+  const afterNav = document.getElementById('vr-nav')?.nextElementSibling as HTMLElement | null;
+  if (afterNav) return afterNav;
+  return (
+    (document.getElementById('app') as HTMLElement | null) ||
+    (document.querySelector('main') as HTMLElement | null) ||
+    document.body
+  );
 }
 
 /**
@@ -224,33 +246,29 @@ export function applyOwnerBroadcast(content: Record<string, unknown>): void {
       el.setAttribute('role', 'region');
       el.setAttribute('aria-label', 'Site announcement');
       el.setAttribute('data-owner-only-remove', '1');
-      const host =
-        document.getElementById('app') ||
-        document.querySelector('main') ||
-        document.body;
-      host.prepend(el);
+      resolveBroadcastHost().prepend(el);
     }
 
     const bodyHtml = msg.body
-      ? `<p class="text-sm text-zinc-300 mt-1 leading-relaxed whitespace-pre-wrap">${formatBroadcastBodyHtml(msg.body)}</p>`
+      ? `<div class="vr-bc-body">${formatBroadcastBodyHtml(msg.body)}</div>`
       : '';
     const sponsorHtml = msg.sponsor ? renderSponsorHtml(msg.sponsor) : '';
 
-    el.className =
-      'vr-owner-broadcast sticky top-0 z-[80] border-b border-violet-400/40 bg-gradient-to-r from-violet-950/95 via-zinc-950/95 to-fuchsia-950/95 backdrop-blur-md shadow-lg shadow-violet-900/20';
+    el.className = 'vr-owner-broadcast';
     el.innerHTML = `
-      <div class="max-w-5xl mx-auto px-4 py-3 flex items-start gap-3">
-        <span class="mt-0.5 shrink-0 w-8 h-8 rounded-xl bg-violet-500/25 text-violet-200 flex items-center justify-center" aria-hidden="true">
-          <i class="fa-solid fa-bullhorn text-sm"></i>
+      <div class="vr-bc-inner">
+        <span class="vr-bc-icon" aria-hidden="true">
+          <i class="fa-solid fa-bullhorn"></i>
         </span>
-        <div class="min-w-0 flex-1">
-          <p class="text-[10px] uppercase tracking-wider font-bold text-violet-300/90 mb-0.5">Update from ViralRefer</p>
-          <p class="text-sm font-semibold text-white leading-snug">${escapeHtml(msg.title)}</p>
+        <div class="vr-bc-main min-w-0">
+          <p class="vr-bc-kicker">Update from ViralRefer</p>
+          <p class="vr-bc-title">${escapeHtml(msg.title)}</p>
           ${bodyHtml}
           ${sponsorHtml}
         </div>
       </div>
     `;
+    document.documentElement.setAttribute('data-vr-broadcast', '1');
   } catch {
     /* never break homepage for broadcast */
   }

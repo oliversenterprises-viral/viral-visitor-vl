@@ -3152,6 +3152,262 @@ body {
   padding-right: env(safe-area-inset-right, 0px);
 }
 
+/* ── Owner broadcast (all devices) ── */
+.vr-owner-broadcast {
+  position: sticky;
+  /* Sit just under fixed nav while scrolling */
+  top: calc(3.35rem + env(safe-area-inset-top, 0px));
+  z-index: 40;
+  margin: 0 0 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  background: linear-gradient(
+    105deg,
+    rgba(46, 16, 101, 0.97) 0%,
+    rgba(24, 24, 27, 0.98) 45%,
+    rgba(74, 4, 78, 0.95) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 12px 40px rgba(76, 29, 149, 0.25);
+  /* Long messages scroll inside the card — never blow past the fold on phones */
+  max-height: min(42vh, 20rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 640px) {
+  .vr-owner-broadcast {
+    top: calc(4.25rem + env(safe-area-inset-top, 0px));
+    max-height: min(36vh, 22rem);
+    margin-bottom: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vr-owner-broadcast {
+    max-height: min(32vh, 24rem);
+  }
+}
+
+.vr-bc-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .vr-bc-inner {
+    gap: 0.85rem;
+    padding: 1rem 1.15rem;
+  }
+}
+
+.vr-bc-icon {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(139, 92, 246, 0.28);
+  color: #ddd6fe;
+  font-size: 0.85rem;
+}
+
+.vr-bc-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.vr-bc-kicker {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(196, 181, 253, 0.9);
+  margin: 0 0 0.2rem;
+}
+
+.vr-bc-title {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: #fff;
+  line-height: 1.35;
+  margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (min-width: 640px) {
+  .vr-bc-title {
+    font-size: 0.95rem;
+  }
+}
+
+.vr-bc-body {
+  margin-top: 0.4rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: #d4d4d8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (min-width: 640px) {
+  .vr-bc-body {
+    font-size: 0.875rem;
+  }
+}
+
+.vr-bc-body a {
+  color: #c4b5fd;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}
+
+.vr-bc-body a:hover {
+  color: #ede9fe;
+}
+
+.vr-bc-sponsor {
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.vr-bc-sponsor-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(253, 230, 138, 0.95);
+  margin: 0 0 0.45rem;
+}
+
+.vr-bc-sponsor-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+@media (min-width: 480px) {
+  .vr-bc-sponsor-row {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.vr-bc-sponsor-img-link {
+  display: block;
+  width: 100%;
+  max-width: 11rem;
+  flex-shrink: 0;
+}
+
+.vr-bc-sponsor-img {
+  display: block;
+  width: 100%;
+  max-height: 5.5rem;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vr-bc-sponsor-label {
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: #fffbeb;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.vr-bc-sponsor-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.75rem;
+  background: rgba(245, 158, 11, 0.92);
+  color: #09090b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s ease;
+  touch-action: manipulation;
+}
+
+.vr-bc-sponsor-cta:hover {
+  background: #fbbf24;
+}
+
+.vr-bc-sponsor-cta i {
+  font-size: 0.65rem;
+}
+
+/* Share deadline: keep countdown readable on narrow screens */
+@media (max-width: 480px) {
+  #share-deadline-banner .flex.flex-wrap {
+    gap: 0.65rem;
+  }
+
+  #share-deadline-countdown {
+    font-size: 1.35rem !important;
+  }
+
+  #share-deadline-time-wrap {
+    width: 100%;
+    text-align: left !important;
+    padding-left: 2.5rem;
+  }
+}
+
+/* Tables / leaderboard never force horizontal page scroll */
+#leaderboard table,
+.leaderboard-table {
+  max-width: 100%;
+}
+
+/* Images in content never overflow */
+img,
+video,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Admin broadcast panel on small phones */
+@media (max-width: 639px) {
+  #owner-broadcast-panel {
+    padding: 1rem !important;
+  }
+
+  #owner-broadcast-panel .grid.md\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  #owner-bc-publish,
+  #owner-bc-turn-off {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
 #vr-nav {
   padding-top: env(safe-area-inset-top, 0px);
 }
