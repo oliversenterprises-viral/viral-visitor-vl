@@ -465,21 +465,22 @@ html[data-vr-send-mode] #funnel-coach-chat .funnel-coach-chat-panel {
   max-height: 40vh;
 }
 
-/* Cold-land declutter — one job: Get link */
+/* Cold-land declutter — one job: Get link (quiet hero; broadcaster untouched) */
 html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-global-regions,
 html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-board-meta,
-html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-campaign-badge {
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-campaign-badge,
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-telegram-helper-btn,
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-security-trust,
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-prize-fomo,
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-btn,
+html[data-vr-direct-landing]:not([data-vr-has-link]) #daily-champion-strip {
   display: none !important;
 }
-html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-btn {
-  opacity: 0.65;
-  font-size: 0.8rem;
-  min-height: 32px;
-  padding-top: 0.35rem;
-  padding-bottom: 0.35rem;
-}
+/* One quiet board path — text link only (no second button) */
 html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-link {
-  display: none !important;
+  display: inline !important;
+  font-size: 0.75rem;
+  opacity: 0.8;
 }
 html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-nav-link {
   display: none !important;
@@ -488,6 +489,65 @@ html[data-vr-direct-landing]:not([data-vr-has-link]) #admin-btn {
   opacity: 0.55;
   transform: scale(0.92);
   transform-origin: right center;
+}
+/* More air in the hero when cold — less cramped stack */
+html[data-vr-direct-landing]:not([data-vr-has-link]) .hero-gradient {
+  padding-top: 1.75rem;
+  padding-bottom: 1.75rem;
+}
+@media (min-width: 640px) {
+  html[data-vr-direct-landing]:not([data-vr-has-link]) .hero-gradient {
+    padding-top: 2.75rem;
+    padding-bottom: 2.75rem;
+  }
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) .hero-cta-stack {
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-trust-line {
+  margin-top: 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: rgba(212, 212, 216, 0.92);
+}
+/* Live stats: compact social proof, not a second “hero card” */
+html[data-vr-direct-landing]:not([data-vr-has-link]) #vr-verified-total {
+  margin-top: 1.35rem;
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-verified-total-inner {
+  padding: 0.5rem 0.9rem 0.55rem;
+  border-radius: 9999px;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: none;
+  gap: 0.15rem;
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-verified-total-badge {
+  display: none !important;
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-verified-total-num {
+  font-size: 1.05rem;
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-verified-total-label,
+html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-got-link-today {
+  font-size: 0.7rem;
+  opacity: 0.85;
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-sprint-line,
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-daily-crown-line {
+  display: none !important;
+}
+/* Proof chip stays; slightly calmer so CTA wins */
+html[data-vr-direct-landing]:not([data-vr-has-link]) .hero-global-proof {
+  margin-bottom: 1rem;
+  opacity: 0.92;
+  font-size: 0.72rem;
+  padding: 0.4rem 0.75rem;
+}
+html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-subtitle {
+  margin-bottom: 1rem;
+  max-width: 28rem;
 }
 
 /* Referred micro-flow — credit path only until Get link */
@@ -1987,18 +2047,18 @@ html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) #hero-leaderboard-
   display: none;
 }
 
-/* Public clarity — direct landing: one hero CTA until link exists */
-html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-btn {
+/* Public clarity — after link / non-direct: board path is the button, not duplicate text link */
+html[data-vr-direct-landing][data-vr-has-link] #hero-leaderboard-link,
+html:not([data-vr-direct-landing]) #hero-leaderboard-link {
   display: none !important;
 }
 
-html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-link {
-  display: inline;
+/* After get-link: restore secondary CTAs (Telegram, board button) without double board link */
+html[data-vr-has-link] #hero-telegram-helper-btn {
+  display: flex;
 }
-
-html[data-vr-direct-landing][data-vr-has-link] #hero-leaderboard-link,
-html:not([data-vr-direct-landing]) #hero-leaderboard-link {
-  display: none;
+html[data-vr-has-link] #hero-leaderboard-btn {
+  display: flex;
 }
 
 html[data-vr-direct-landing]:not([data-vr-has-link]) .funnel-journey-card {

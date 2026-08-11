@@ -36,7 +36,7 @@ export const en = {
   'hero.cta': 'Get my referral link',
   'hero.cta_secondary': 'See leaderboard',
   'hero.trust':
-    '#1 wins a homepage feature for their site · Free · No signup · Link in ~5 sec',
+    'Free · No signup · No cash prize · #1 gets a homepage feature · Link in ~30 sec',
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 
