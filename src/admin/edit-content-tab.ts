@@ -292,6 +292,10 @@ function buildContentListHTML(rows: ContentRow[]): string {
   const bcTitle = escapeHtml(contentKeyValue(rows, 'owner_broadcast_title'));
   const bcBody = escapeHtml(contentKeyValue(rows, 'owner_broadcast_body'));
   const bcId = escapeHtml(contentKeyValue(rows, 'owner_broadcast_id'));
+  const bcSpLabel = escapeHtml(contentKeyValue(rows, 'owner_broadcast_sponsor_label'));
+  const bcSpUrl = escapeHtml(contentKeyValue(rows, 'owner_broadcast_sponsor_url'));
+  const bcSpImage = escapeHtml(contentKeyValue(rows, 'owner_broadcast_sponsor_image'));
+  const bcSpCta = escapeHtml(contentKeyValue(rows, 'owner_broadcast_sponsor_cta'));
 
   let html = `
     <div class="flex items-center justify-between mb-4">
@@ -318,7 +322,7 @@ function buildContentListHTML(rows: ContentRow[]): string {
             <i class="fa-solid fa-bullhorn"></i> Message all joiners
           </div>
           <p class="text-xs text-zinc-400 mt-1 max-w-xl">
-            ViralRefer does not collect email for most people. This shows an in-app banner to everyone who opens the site. <strong class="text-violet-200">Only you can remove it</strong> (Turn OFF below) — visitors cannot dismiss. Live when you publish — uses existing CMS only (safe).
+            Banner for everyone on the site. <strong class="text-violet-200">Only you can remove it</strong> (Turn OFF). Links: paste full <code class="text-violet-300">https://…</code> URLs or use <code class="text-violet-300">[label](https://…)</code>. Optional sponsor ad below.
           </p>
         </div>
         <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border ${
@@ -335,18 +339,52 @@ function buildContentListHTML(rows: ContentRow[]): string {
             placeholder="e.g. Rule reminder: 48h to lock" />
         </label>
         <label class="block text-xs text-zinc-400">
-          Message id (optional — bump to re-show after dismiss)
+          Message id (optional)
           <input id="owner-bc-id" type="text" maxlength="80" value="${bcId}"
             class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
             placeholder="e.g. rules-2026-08-11" />
         </label>
       </div>
       <label class="block text-xs text-zinc-400 mt-3">
-        Message body
+        Message body (links auto-clickable)
         <textarea id="owner-bc-body" rows="4" maxlength="2000"
           class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
-          placeholder="Plain text only. Shown to all visitors until they dismiss.">${bcBody}</textarea>
+          placeholder="Text + https://example.com or [Get Safelist Traffic](https://example.com)">${bcBody}</textarea>
       </label>
+
+      <div class="mt-4 pt-4 border-t border-violet-400/25">
+        <div class="text-sm font-semibold text-amber-200/95 mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-rectangle-ad"></i> Sponsor ad (optional)
+        </div>
+        <p class="text-[11px] text-zinc-500 mb-3">Requires a valid https:// click URL. Image optional. Shown as a sponsored card under your message.</p>
+        <div class="grid gap-3 md:grid-cols-2">
+          <label class="block text-xs text-zinc-400">
+            Sponsor name
+            <input id="owner-bc-sp-label" type="text" maxlength="80" value="${bcSpLabel}"
+              class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
+              placeholder="e.g. Get Safelist Traffic" />
+          </label>
+          <label class="block text-xs text-zinc-400">
+            Button label
+            <input id="owner-bc-sp-cta" type="text" maxlength="40" value="${bcSpCta}"
+              class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
+              placeholder="Visit sponsor" />
+          </label>
+          <label class="block text-xs text-zinc-400 md:col-span-2">
+            Sponsor click URL (required for ad)
+            <input id="owner-bc-sp-url" type="url" maxlength="2000" value="${bcSpUrl}"
+              class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
+              placeholder="https://getsafelisttraffic.online/" />
+          </label>
+          <label class="block text-xs text-zinc-400 md:col-span-2">
+            Sponsor image URL (optional — https image)
+            <input id="owner-bc-sp-image" type="url" maxlength="2000" value="${bcSpImage}"
+              class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
+              placeholder="https://…/banner.png" />
+          </label>
+        </div>
+      </div>
+
       <div class="flex flex-wrap items-center gap-2 mt-4">
         <button type="button" id="owner-bc-publish" class="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 rounded-2xl text-sm font-semibold">
           Publish message (turn ON)
@@ -565,9 +603,37 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
       const title = (content.querySelector('#owner-bc-title') as HTMLInputElement | null)?.value?.trim() || '';
       const body = (content.querySelector('#owner-bc-body') as HTMLTextAreaElement | null)?.value?.trim() || '';
       const id = (content.querySelector('#owner-bc-id') as HTMLInputElement | null)?.value?.trim() || '';
-      if (!body) {
-        showToast('Write a message body first', 'info');
+      const spLabel = (content.querySelector('#owner-bc-sp-label') as HTMLInputElement | null)?.value?.trim() || '';
+      const spUrl = (content.querySelector('#owner-bc-sp-url') as HTMLInputElement | null)?.value?.trim() || '';
+      const spImage = (content.querySelector('#owner-bc-sp-image') as HTMLInputElement | null)?.value?.trim() || '';
+      const spCta = (content.querySelector('#owner-bc-sp-cta') as HTMLInputElement | null)?.value?.trim() || '';
+      if (!body && !spUrl) {
+        showToast('Add a message body and/or a sponsor click URL', 'info');
         return;
+      }
+      if (spUrl) {
+        try {
+          const u = new URL(spUrl);
+          if (u.protocol !== 'https:' && u.protocol !== 'http:') {
+            showToast('Sponsor URL must start with https://', 'info');
+            return;
+          }
+        } catch {
+          showToast('Sponsor URL is not a valid link', 'info');
+          return;
+        }
+      }
+      if (spImage) {
+        try {
+          const u = new URL(spImage);
+          if (u.protocol !== 'https:' && u.protocol !== 'http:') {
+            showToast('Sponsor image URL must start with https://', 'info');
+            return;
+          }
+        } catch {
+          showToast('Sponsor image URL is not valid', 'info');
+          return;
+        }
       }
       publishBc.disabled = true;
       publishBc.textContent = 'Publishing…';
@@ -578,7 +644,11 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
         (await saveSiteContentEntry(
           'owner_broadcast_id',
           id || `bc-${new Date().toISOString().slice(0, 10)}`,
-        ));
+        )) &&
+        (await saveSiteContentEntry('owner_broadcast_sponsor_label', spLabel.slice(0, 80))) &&
+        (await saveSiteContentEntry('owner_broadcast_sponsor_url', spUrl.slice(0, 2000))) &&
+        (await saveSiteContentEntry('owner_broadcast_sponsor_image', spImage.slice(0, 2000))) &&
+        (await saveSiteContentEntry('owner_broadcast_sponsor_cta', spCta.slice(0, 40)));
       publishBc.disabled = false;
       publishBc.textContent = 'Publish message (turn ON)';
       if (ok) {
