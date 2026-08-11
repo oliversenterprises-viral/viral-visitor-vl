@@ -613,14 +613,15 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
     try {
       const { invokeAdminAction } = await import('../lib/admin-action-client');
       const result = await invokeAdminAction<Array<Record<string, unknown>>>('get_interaction_stats');
-      const rows = Array.isArray(result.data) ? result.data : [];
+      const rows: Array<Record<string, unknown>> =
+        result.success && Array.isArray(result.data) ? result.data : [];
       const zones = new Set([
         'owner-broadcast-link',
         'owner-broadcast-sponsor',
         'owner-broadcast-sponsor-img',
       ]);
       const clicks = rows.filter(
-        (r) =>
+        (r: Record<string, unknown>) =>
           String(r.event_type || '') === 'click' &&
           zones.has(String(r.zone_id || '')),
       );
