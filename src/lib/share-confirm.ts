@@ -1,7 +1,7 @@
 /**
  * Share confirmation — anti-cheat gates.
  *
- * Opening WhatsApp/SMS/X or the native share sheet NEVER locks the 24h rule.
+ * Opening WhatsApp/SMS/X or the native share sheet NEVER locks the first-friend (48h) rule.
  * Confirm UI must NOT appear on top of the share sheet.
  * "Yes, I sent it" stays disabled until:
  *   1) minimum time has passed since share opened, AND

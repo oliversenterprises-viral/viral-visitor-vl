@@ -15,7 +15,7 @@ const URGENT_MS = 6 * 60 * 60 * 1000;
 let statusPollTimer: ReturnType<typeof setInterval> | null = null;
 
 /**
- * Never locks the 24h rule — clipboard, downloads, or non-send actions.
+ * Never locks the first-friend rule — clipboard, downloads, or non-send actions.
  * Keep in sync with edge `_shared/referrer-share-deadline.ts`.
  */
 const NON_VERIFIED = new Set([

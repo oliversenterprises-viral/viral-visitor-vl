@@ -137,15 +137,15 @@ export const en = {
     "I'm on ViralRefer's live board 🏆 Free link · no signup · ~30 sec. #1 can feature their website. Can you beat me? {link}",
 
   // One clear public rule (everywhere):
-  // Friend must Get my link to lock · sharing can add time · copy never locks.
+  // Friend must Get my link to lock · ~48h base · sharing can add time · copy never locks.
   'rule.public':
-    'Simple rule: a friend must open your link and tap Get my link. That locks it. Copying alone never locks. Sharing can add extra time.',
+    'Simple rule: a friend must open your link and tap Get my link within about 2 days (48h). That locks it. Copying alone never locks. Sharing can add extra time.',
 
   // First-friend lock (5th-grade clear)
   'deadline.badge': 'Need 1 friend to lock',
   'deadline.time_left': 'Time left',
   'deadline.pre_rule':
-    'Simple rule: a friend must open your link and tap Get my link. That locks it. Copying alone never locks. Sharing can add extra time. You have about 2 days.',
+    'Simple rule: a friend must open your link and tap Get my link within about 2 days (48h). That locks it. Copying alone never locks. Sharing can add extra time.',
   'deadline.pending':
     'Not locked yet. Send your link — a friend must Get my link before time runs out.',
   'deadline.urgent':
@@ -156,7 +156,7 @@ export const en = {
   'deadline.toast_removed':
     'Your old link stopped. Get a new free link and send it to a friend.',
   'deadline.how_note':
-    'Simple rule: a friend must open your link and tap Get my link. That locks it. Copying alone never locks. Sharing can add extra time.',
+    'Simple rule: a friend must open your link and tap Get my link within about 2 days (48h). That locks it. Copying alone never locks. Sharing can add extra time.',
   'deadline.locked':
     'Locked! A friend used your link. Send more to climb higher.',
   'deadline.locked_badge': 'Friend joined',

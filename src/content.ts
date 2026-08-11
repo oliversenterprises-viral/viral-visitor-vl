@@ -385,6 +385,14 @@ export async function updatePublicContent(content: Record<string, any>) {
 
   applyReferralBaseFromSiteContent(content);
 
+  // Owner → everyone in-app message (optional CMS keys; missing = no banner)
+  try {
+    const { applyOwnerBroadcast } = await import('./lib/owner-broadcast');
+    applyOwnerBroadcast(content as Record<string, unknown>);
+  } catch {
+    /* non-fatal */
+  }
+
   // Apply any dynamic text colors from site_content (color_* keys) — wired via the colors module
   applyTextColors(content);
 }

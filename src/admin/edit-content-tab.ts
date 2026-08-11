@@ -275,7 +275,24 @@ async function renderEditContentTab(content: HTMLElement) {
  * Builds the HTML for the content list view (header, search, add button, rows, and hidden form area).
  * Pure function — no side effects.
  */
+function contentKeyValue(rows: ContentRow[], key: string): string {
+  const row = rows.find((r) => r.id === key);
+  return formatValueForInput(row?.value);
+}
+
+function isBroadcastEnabledValue(raw: string): boolean {
+  const s = String(raw || '')
+    .trim()
+    .toLowerCase();
+  return s === '1' || s === 'true' || s === 'yes' || s === 'on';
+}
+
 function buildContentListHTML(rows: ContentRow[]): string {
+  const bcEnabled = isBroadcastEnabledValue(contentKeyValue(rows, 'owner_broadcast_enabled'));
+  const bcTitle = escapeHtml(contentKeyValue(rows, 'owner_broadcast_title'));
+  const bcBody = escapeHtml(contentKeyValue(rows, 'owner_broadcast_body'));
+  const bcId = escapeHtml(contentKeyValue(rows, 'owner_broadcast_id'));
+
   let html = `
     <div class="flex items-center justify-between mb-4">
       <div>
@@ -292,6 +309,54 @@ function buildContentListHTML(rows: ContentRow[]): string {
         </button>
       </div>
     </div>
+
+    <!-- Owner broadcast: message everyone who visits (no email — product is no-signup) -->
+    <div id="owner-broadcast-panel" class="mb-4 p-5 rounded-2xl border-2 border-violet-500/50 bg-violet-950/30">
+      <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+        <div>
+          <div class="text-lg font-bold text-violet-200 flex items-center gap-2">
+            <i class="fa-solid fa-bullhorn"></i> Message all joiners
+          </div>
+          <p class="text-xs text-zinc-400 mt-1 max-w-xl">
+            ViralRefer does not collect email for most people. This shows an in-app banner to everyone who opens the site (they can dismiss). Live when you publish — uses existing CMS only (safe).
+          </p>
+        </div>
+        <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border ${
+          bcEnabled
+            ? 'border-emerald-400/50 text-emerald-300 bg-emerald-500/10'
+            : 'border-zinc-500/40 text-zinc-400 bg-zinc-800/50'
+        }">${bcEnabled ? 'LIVE on site' : 'Off'}</span>
+      </div>
+      <div class="grid gap-3 md:grid-cols-2">
+        <label class="block text-xs text-zinc-400">
+          Title
+          <input id="owner-bc-title" type="text" maxlength="120" value="${bcTitle}"
+            class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
+            placeholder="e.g. Rule reminder: 48h to lock" />
+        </label>
+        <label class="block text-xs text-zinc-400">
+          Message id (optional — bump to re-show after dismiss)
+          <input id="owner-bc-id" type="text" maxlength="80" value="${bcId}"
+            class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
+            placeholder="e.g. rules-2026-08-11" />
+        </label>
+      </div>
+      <label class="block text-xs text-zinc-400 mt-3">
+        Message body
+        <textarea id="owner-bc-body" rows="4" maxlength="2000"
+          class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
+          placeholder="Plain text only. Shown to all visitors until they dismiss.">${bcBody}</textarea>
+      </label>
+      <div class="flex flex-wrap items-center gap-2 mt-4">
+        <button type="button" id="owner-bc-publish" class="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 rounded-2xl text-sm font-semibold">
+          Publish message (turn ON)
+        </button>
+        <button type="button" id="owner-bc-turn-off" class="px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-sm font-semibold">
+          Turn OFF banner
+        </button>
+      </div>
+    </div>
+
     ${buildTrackingHubShellHtml()}
     <div id="content-list" class="space-y-3">
   `;
@@ -490,6 +555,52 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
   if (contentTs) {
     const now = new Date();
     contentTs.textContent = `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  // Owner broadcast panel (message all site visitors via site_content)
+  const publishBc = content.querySelector('#owner-bc-publish') as HTMLButtonElement | null;
+  const offBc = content.querySelector('#owner-bc-turn-off') as HTMLButtonElement | null;
+  if (publishBc) {
+    publishBc.onclick = async () => {
+      const title = (content.querySelector('#owner-bc-title') as HTMLInputElement | null)?.value?.trim() || '';
+      const body = (content.querySelector('#owner-bc-body') as HTMLTextAreaElement | null)?.value?.trim() || '';
+      const id = (content.querySelector('#owner-bc-id') as HTMLInputElement | null)?.value?.trim() || '';
+      if (!body) {
+        showToast('Write a message body first', 'info');
+        return;
+      }
+      publishBc.disabled = true;
+      publishBc.textContent = 'Publishing…';
+      const ok =
+        (await saveSiteContentEntry('owner_broadcast_enabled', '1')) &&
+        (await saveSiteContentEntry('owner_broadcast_title', title || 'Message from ViralRefer')) &&
+        (await saveSiteContentEntry('owner_broadcast_body', body.slice(0, 2000))) &&
+        (await saveSiteContentEntry(
+          'owner_broadcast_id',
+          id || `bc-${new Date().toISOString().slice(0, 10)}`,
+        ));
+      publishBc.disabled = false;
+      publishBc.textContent = 'Publish message (turn ON)';
+      if (ok) {
+        showToast('Broadcast live — visitors will see it on next load', 'success');
+        await reloadList();
+      } else {
+        showToast('Publish failed — check admin access', 'info');
+      }
+    };
+  }
+  if (offBc) {
+    offBc.onclick = async () => {
+      offBc.disabled = true;
+      const ok = await saveSiteContentEntry('owner_broadcast_enabled', '0');
+      offBc.disabled = false;
+      if (ok) {
+        showToast('Broadcast turned off', 'info');
+        await reloadList();
+      } else {
+        showToast('Could not turn off — check admin access', 'info');
+      }
+    };
   }
 
   // Attach Add New Key button

@@ -1,7 +1,7 @@
 /**
  * Share-first post–Get link UX.
  * Primary = device share sheet when available (any app the user picks).
- * Clipboard is never treated as completion for the 24h rule.
+ * Clipboard is never treated as completion for the first-friend (48h) lock.
  */
 
 import { isNativeShareSupported } from './share-power';

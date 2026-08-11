@@ -243,7 +243,7 @@ function populateReferralLinkUI(code: string, link: string): void {
   initShareRemindersOnLinkReady();
   onReferralLinkReady();
   refreshPublicClarityState();
-  // Start / refresh 24h share-or-remove clock (server-backed when available)
+  // Start / refresh 48h first-friend lock clock (server-backed when available)
   void registerReferrerLinkDeadline(code).then((state) => {
     if (state?.status === 'expired') {
       enforceLocalShareDeadlineExpiry(code);
@@ -276,7 +276,7 @@ export async function ensureReferralLinkReady(): Promise<string> {
 
 /** Restore UI for returning visitors who already have a code in localStorage. */
 export function applyExistingReferralLink(code: string): void {
-  // Wipe locally if 24h share deadline already passed without a verified share
+  // Wipe locally if 48h first-friend deadline already passed without a lock
   if (enforceLocalShareDeadlineExpiry(code)) {
     syncMobileReferralCta();
     return;

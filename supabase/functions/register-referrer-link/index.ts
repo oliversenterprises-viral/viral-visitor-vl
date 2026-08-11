@@ -1,5 +1,5 @@
 // Public Edge — register a referrer code when the visitor gets their link.
-// Starts the 24h verified-share clock.
+// Starts the 48h first-friend lock clock (share may add grace; copy never locks).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { registerReferrerLink } from '../_shared/referrer-share-deadline.ts';
@@ -66,13 +66,14 @@ Deno.serve(async (req: Request) => {
           share_required: result.exempt ? false : result.status === 'pending_share',
           exempt: Boolean(result.exempt),
           message: result.exempt
-            ? 'Owner IP exempt — no share deadline.'
+            ? 'Owner IP exempt — no first-friend deadline.'
             : result.status === 'expired'
-              ? result.error || 'Link expired — generate a new link and share within 24 hours.'
+              ? result.error ||
+                'Link expired — get a new free link. A friend must Get my link within about 2 days (48h) to lock it.'
               : result.status === 'pending_share'
-                ? 'Share this link within 24 hours or it will be removed from the system.'
+                ? 'Send this link — a friend must Get my link within about 2 days (48h) or this link stops. Sharing can add time. Copy alone never locks.'
                 : result.status === 'active'
-                  ? 'Link is active — verified share recorded.'
+                  ? 'Link is locked — a friend already joined through you.'
                   : 'Registered.',
         },
         error: result.status === 'expired' ? result.error : undefined,

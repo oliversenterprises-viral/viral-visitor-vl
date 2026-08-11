@@ -109,7 +109,7 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
     );
   }
 
-  // 24h verified-share deadline — expired codes cannot earn new referrals
+  // 48h first-friend lock — expired codes cannot earn new referrals
   try {
     const gate = await assertReferrerLinkAllowsReferrals(deps.supabaseAdmin as never, referrerCode);
     if (!gate.allowed) {
