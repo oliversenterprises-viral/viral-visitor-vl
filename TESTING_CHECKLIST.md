@@ -10,7 +10,7 @@ Use this checklist to manually verify the core workflows after changes.
 
 - [ ] App is running locally (`npm run dev`)
 - [ ] You can access the public site (usually http://localhost:5173 or the preview URL)
-- [ ] You know the current admin password (`VITE_ADMIN_PASSWORD` value or development default `TestAdmin2026!`)
+- [ ] You know `ADMIN_OWNER_PASSWORD` (Supabase Edge secret). Open `/?owner=1` or press Ctrl+Shift+O.
 - [ ] Browser console is open (for defensive `[ViralRefer]` logs)
 - [ ] Vercel preview or production environment variables are correctly set for testing
 
@@ -157,7 +157,7 @@ Expected output shows:
 ## 10. General Polish
 
 - [ ] No obvious console errors on page load
-- [ ] Admin password gate works with the current `VITE_ADMIN_PASSWORD` value
+- [ ] Owner gate works via `/?owner=1` with `ADMIN_OWNER_PASSWORD` (not a `VITE_` env var)
 - [ ] Responsive on mobile (at least basic functionality)
 - [ ] Realtime updates visible in leaderboard/activity when testing with multiple tabs or devices
 
