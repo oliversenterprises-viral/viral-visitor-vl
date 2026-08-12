@@ -1,19 +1,18 @@
-# X profile correction (do this on x.com/viralrefer)
+# X profile correction
 
-ViralRefer’s live product has **no cash prize**. The official X bio still advertised $10 Cash App. Agents cannot change that bio from this repo.
+ViralRefer’s live product has **no cash prize**.
 
-Paste this into https://x.com/viralrefer:
-
-**Bio**
+**Bio (already live on x.com/viralrefer)**
 
 ```
 Free worldwide referral leaderboard. Get a link in 30 seconds — no signup. Climb when friends tap Get my link. #1 can claim a homepage banner. No cash prize.
 ```
 
-**Reply or quote any old “$10 Cash App” post**
+**June 2026 “win $10 + homepage banner” posts**
 
-```
-ViralRefer does not pay cash. The live prize is a verified homepage banner feature only. Rules: https://www.viralrefer.app/rules/
-```
+Deleted 2026-08-12 by the owner:
 
-Delete or unpin posts that still promise Cash App money.
+- https://x.com/viralrefer/status/2068797000493990166
+- https://x.com/viralrefer/status/2068804311618875563
+
+Do not recreate that copy. Growth queue and X launch scripts must stay no-cash.

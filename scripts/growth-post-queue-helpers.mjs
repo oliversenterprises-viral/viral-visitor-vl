@@ -36,6 +36,15 @@ export const X_SAFE_BIO =
   'Free referral leaderboard → #1 claims homepage feature | Search Google: ViralRefer | Scan QR on pinned post';
 
 const URL_IN_TEXT_RE = /https?:\/\/|viralrefer\.app|utm_/i;
+const CASH_PRIZE_RE = /\$10|cash app|win \$\d/i;
+
+/** Live product has no cash prize. Block copy that would re-post the old $10 lie. */
+export function assertNoCashPrize(text) {
+  if (CASH_PRIZE_RE.test(String(text || ''))) {
+    throw new Error('Copy must not promise cash / $10 / Cash App (homepage banner only)');
+  }
+  return text;
+}
 
 export function assertNoXUrls(text) {
   if (URL_IN_TEXT_RE.test(text)) {
@@ -49,7 +58,7 @@ export function buildXSafeTweet(body, { hashtags = '#buildinpublic #referral' } 
   const text = truncateForX(
     `${body.trim()}\n\n${X_NO_URL_CTA}\n\n${hashtags}`.trim(),
   );
-  return assertNoXUrls(text);
+  return assertNoCashPrize(assertNoXUrls(text));
 }
 
 export function loadEnvFile(path) {
