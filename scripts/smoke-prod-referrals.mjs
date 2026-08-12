@@ -140,6 +140,16 @@ async function checkEdgeFunctionContract() {
     noTurnstile.status === 200 && noTurnstile.json?.success === true,
     `status=${noTurnstile.status} ${noTurnstile.text.slice(0, 120)}`,
   );
+
+  const liveCode = await invokeRecordReferral({ referrerCode: 'VIRAL-LIVECHK1' });
+  const botBlocked =
+    liveCode.status === 403 && /bot check/i.test(liveCode.text || liveCode.json?.error || '');
+  const ownerSkipped = liveCode.status === 200 && liveCode.json?.skipped === true;
+  record(
+    'edge: non-test code requires Turnstile (or owner skip)',
+    botBlocked || ownerSkipped,
+    `status=${liveCode.status} ${liveCode.text.slice(0, 140)}`,
+  );
 }
 
 async function checkRlsLockdown() {
@@ -174,6 +184,25 @@ async function checkRlsLockdown() {
     'rls: anon blocked from interaction_events INSERT',
     Boolean(interactionInsertErr),
     interactionInsertErr?.message || 'insert succeeded (regression)',
+  );
+
+  const { error: visitorInsertErr } = await supabase.from('visitor_events').insert({
+    event_name: 'SiteLanding',
+    visitor_id: 'smoke-0047',
+  });
+  record(
+    'rls: anon blocked from visitor_events INSERT',
+    Boolean(visitorInsertErr),
+    visitorInsertErr?.message || 'insert succeeded (regression — 0047)',
+  );
+
+  const { error: bannerInsertErr } = await supabase.from('banner_events').insert({
+    event_type: 'impression',
+  });
+  record(
+    'rls: anon blocked from banner_events INSERT',
+    Boolean(bannerInsertErr),
+    bannerInsertErr?.message || 'insert succeeded (regression — 0047)',
   );
 
   for (const table of ['visits', 'reddit_events', 'site_analytics']) {

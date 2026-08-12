@@ -29,7 +29,7 @@ Two paths exist. Only path B deploys Edge Functions and runs smoke tests.
 
 They redefine `get_leaderboard` **without** test/owner filters and would put smoke rows back on the public board. Live RPCs live in `supabase/migrations/` (especially 0015 / 0039).
 
-New migrations `0046`–`0048` are **not auto-applied**. Inventory duplicates before 0046.
+Migrations `0046` (unique IP per code), `0047` (revoke anon INSERT on visitor/banner events), and `0048` (`ownership_hash`) were applied 2026-08-12 after Edge `deploy:prod`. Do not re-run them.
 
 ## Environment
 
