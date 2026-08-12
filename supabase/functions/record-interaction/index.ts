@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
+import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 import {
   dispatchBroadcastClickNotify,
   isBroadcastClickZone,
@@ -12,11 +13,8 @@ const corsHeaders = {
 };
 
 function getClientIp(req: Request): string {
-  const cfIp = req.headers.get('cf-connecting-ip');
-  if (cfIp) return cfIp.trim();
-  const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return '';
+  const ip = getTrustedClientIp(req);
+  return ip === 'unknown' ? '' : ip;
 }
 
 async function hashIp(ip: string): Promise<string | null> {
