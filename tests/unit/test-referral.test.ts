@@ -8,6 +8,8 @@ import {
 describe('test-referral guards', () => {
   it('flags smoke referrer codes', () => {
     expect(isTestReferrerCode('VIRAL-SMOKETEST')).toBe(true);
+    expect(isTestReferrerCode('VIRAL-E2ECLAIM')).toBe(true);
+    expect(isTestReferrerCode('VIRAL-LIVECHK1')).toBe(true);
     expect(isTestReferrerCode('VIRAL-97UWEGZ')).toBe(false);
   });
 

@@ -96,6 +96,7 @@ describe('share analytics helpers (pure)', () => {
   it('isTestShareReferrerCode matches agent/smoke codes only', () => {
     expect(isTestShareReferrerCode('VIRAL-PROBE1')).toBe(true);
     expect(isTestShareReferrerCode('VIRAL-READY')).toBe(true);
+    expect(isTestShareReferrerCode('VIRAL-E2ECLAIM')).toBe(true);
     expect(isTestShareReferrerCode('unknown')).toBe(true);
     expect(isTestShareReferrerCode('VIRAL-97UWEGZ')).toBe(false);
     expect(isTestShareReferrerCode('VIRAL-2DCURPE')).toBe(false);

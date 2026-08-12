@@ -20,6 +20,7 @@ import {
 } from '../_shared/funnel-notify.ts';
 import { mintAdminSessionToken, verifyAdminSessionToken } from '../_shared/admin-session.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
+import { isTestReferrerCode } from '../_shared/test-referral.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -73,13 +74,7 @@ function resolveShareReferrerCode(row: Record<string, unknown>): string {
 function isTestShareReferrerCode(code: string): boolean {
   const c = (code || '').trim().toUpperCase();
   if (!c || c === 'UNKNOWN') return true;
-  if (c === 'VIRAL-READY') return true;
-  if (/PROBE/.test(c)) return true;
-  if (/SMOKETEST/.test(c)) return true;
-  if (/DEMOCODE/.test(c)) return true;
-  if (/^DEMO\d+$/.test(c)) return true;
-  if (/TESTFIX/.test(c)) return true;
-  return false;
+  return isTestReferrerCode(c);
 }
 
 function normalizeBannerEventRow(row: Record<string, unknown>) {

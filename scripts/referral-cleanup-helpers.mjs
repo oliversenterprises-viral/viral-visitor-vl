@@ -33,8 +33,10 @@ export function isTestReferralRow(row) {
   if (/HeadlessChrome/i.test(ua)) return true;
   if (ua === 'node') return true;
   if (/^203\.0\.113\./.test(ip)) return true;
-  if (code === 'VIRAL-SMOKETEST' || code === 'VIRAL-READY') return true;
+  if (code === 'VIRAL-SMOKETEST' || code === 'VIRAL-READY' || code === 'VIRAL-E2ECLAIM' || code === 'VIRAL-TEST01') return true;
   if (/SMOKETEST/.test(code)) return true;
+  if (/LIVECHK/.test(code)) return true;
+  if (/^VIRAL-E2E/.test(code)) return true;
   if (/DEMOCODE/.test(code)) return true;
   if (/^DEMO\d+$/.test(code)) return true;
   if (/PROBE/.test(code)) return true;

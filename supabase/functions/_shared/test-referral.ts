@@ -3,7 +3,7 @@
  * Keep in sync with migration is_test_referral_row() and scripts/referral-cleanup-helpers.mjs.
  */
 
-import { ADMIN_FUNNEL_EXCLUDED_IPS } from './visitor-funnel-test.ts';
+export const ADMIN_FUNNEL_EXCLUDED_IPS = ['161.38.136.60', '57.138.135.240'] as const;
 
 const LEGACY_DEMO_CODES = new Set([
   'sarah_m', 'james_t', 'maria_k', 'david_r', 'emma_l', 'noah_p',
@@ -18,12 +18,14 @@ export function isTestReferrerCode(code: string | null | undefined): boolean {
   const c = normalizeReferrerCodeForTest(code);
   if (!c) return false;
   if (LEGACY_DEMO_CODES.has(String(code || '').trim())) return true;
-  if (c === 'VIRAL-SMOKETEST' || c === 'VIRAL-READY') return true;
+  if (c === 'VIRAL-SMOKETEST' || c === 'VIRAL-READY' || c === 'VIRAL-E2ECLAIM' || c === 'VIRAL-TEST01') return true;
   if (/SMOKETEST/.test(c)) return true;
   if (/DEMOCODE/.test(c)) return true;
   if (/^DEMO\d+$/.test(c)) return true;
   if (/PROBE/.test(c)) return true;
   if (/TESTFIX/.test(c)) return true;
+  if (/LIVECHK/.test(c)) return true;
+  if (/^VIRAL-E2E/.test(c)) return true;
   if (/^VIRAL-(LANDING|FUNNEL|TOAST|FAIL|RETRY|ATTRIB|DEMO)/.test(c)) return true;
   return false;
 }

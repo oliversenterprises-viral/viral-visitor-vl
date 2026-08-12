@@ -62,6 +62,13 @@ describe('funnel-notify', () => {
         ref_code: 'VIRAL-LANDING-TEST',
       }),
     ).toBe(false);
+    expect(
+      shouldNotifyFunnelEvent({
+        event_name: 'GetReferralLink',
+        ref_code: 'VIRAL-97UWEGZ',
+        metadata: { user_agent: 'Mozilla/5.0 HeadlessChrome/131' },
+      }),
+    ).toBe(false);
   });
 
   it('shouldNotifyFunnelEvent allows all steps by default', () => {

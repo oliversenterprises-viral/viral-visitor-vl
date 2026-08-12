@@ -1,6 +1,12 @@
 /** Shared test/owner/smoke detection for visitor_events — client + admin-action edge. */
 
-export const ADMIN_FUNNEL_EXCLUDED_IPS = ['161.38.136.60', '57.138.135.240'] as const;
+import {
+  ADMIN_FUNNEL_EXCLUDED_IPS as OWNER_FUNNEL_IPS,
+  isAutomationUserAgent,
+  isTestReferrerCode,
+} from './test-referral.ts';
+
+export const ADMIN_FUNNEL_EXCLUDED_IPS = OWNER_FUNNEL_IPS;
 
 /** ip_hash values (VISITOR_IP_HASH_SALT viralrefer-visitor-v1). */
 export const ADMIN_FUNNEL_EXCLUDED_IP_HASHES = [
@@ -21,18 +27,9 @@ export function getVisitorEventIp(event: Record<string, unknown>): string {
   return String(meta.client_ip || event.client_ip || event.clientIp || '').trim();
 }
 
-/** Agent/smoke/E2E ref codes — aligned with share-analytics-helpers + unit-test landings. */
+/** Agent/smoke/E2E ref codes — same source as isTestReferrerCode. */
 export function isTestVisitorFunnelRefCode(code: string | null | undefined): boolean {
-  const c = (code || '').trim().toUpperCase();
-  if (!c) return false;
-  if (c === 'VIRAL-READY') return true;
-  if (/PROBE/.test(c)) return true;
-  if (/SMOKETEST/.test(c)) return true;
-  if (/DEMOCODE/.test(c)) return true;
-  if (/^DEMO\d+$/.test(c)) return true;
-  if (/TESTFIX/.test(c)) return true;
-  if (/^VIRAL-(LANDING|FUNNEL|TOAST|FAIL|RETRY|ATTRIB|DEMO)/.test(c)) return true;
-  return false;
+  return isTestReferrerCode(code);
 }
 
 export function isOwnerVisitorFunnelEvent(
@@ -74,6 +71,9 @@ export function isTestVisitorFunnelEvent(
 ): boolean {
   if (isOwnerVisitorFunnelEvent(event, excludedIps, excludedHashes)) return true;
   if (isTestVisitorFunnelRefCode(String(event.ref_code || event.refCode || ''))) return true;
+
+  const ua = String(metadataRecord(event).user_agent || event.user_agent || event.userAgent || '');
+  if (isAutomationUserAgent(ua)) return true;
 
   const ip = getVisitorEventIp(event);
   if (/^203\.0\.113\./.test(ip)) return true;

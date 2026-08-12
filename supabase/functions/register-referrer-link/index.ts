@@ -5,6 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { registerReferrerLink } from '../_shared/referrer-share-deadline.ts';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
+import { isAutomationUserAgent, isTestReferrerCode } from '../_shared/test-referral.ts';
 import {
   hashClaimOwnershipToken,
   mintClaimOwnershipToken,
@@ -44,6 +45,13 @@ Deno.serve(async (req: Request) => {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    if (isTestReferrerCode(code) || isAutomationUserAgent(req.headers.get('user-agent'))) {
+      return new Response(
+        JSON.stringify({ success: true, skipped: true, data: { status: 'pending_share', exempt: true } }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
     const supabaseAdmin = createClient(

@@ -12,6 +12,7 @@ import {
   normalizeSharePlatform,
 } from '../_shared/referrer-share-deadline.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
+import { isAutomationUserAgent, isTestReferrerCode } from '../_shared/test-referral.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -87,6 +88,12 @@ Deno.serve(async (req: Request) => {
     if (!referral_link || !referrer_code) {
       return new Response(JSON.stringify({ success: false, error: 'Missing referral link or code' }), {
         status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (isTestReferrerCode(referrer_code) || isAutomationUserAgent(req.headers.get('user-agent'))) {
+      return new Response(JSON.stringify({ success: true, skipped: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
