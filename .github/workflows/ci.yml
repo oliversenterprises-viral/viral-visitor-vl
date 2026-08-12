@@ -98,6 +98,11 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
+      - name: Wait until live version.json matches this commit
+        run: node scripts/wait-for-live-version.mjs
+        env:
+          LIVE_VERSION_WAIT_MS: 180000
+
       - name: Live site audit (viralrefer.app)
         run: node tests/site-audit.mjs
 
