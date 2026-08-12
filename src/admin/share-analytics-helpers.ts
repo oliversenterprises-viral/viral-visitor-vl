@@ -1,3 +1,5 @@
+import { isTestReferrerCode } from '../../supabase/functions/_shared/test-referral';
+
 /** Shape of a single share event as used by this analytics tab */
 export type ShareAbVariantTag = 'a' | 'b' | 'unknown';
 
@@ -24,13 +26,7 @@ export function extractReferrerCodeFromLink(link: string | null | undefined): st
 export function isTestShareReferrerCode(code: string): boolean {
   const c = (code || '').trim().toUpperCase();
   if (!c || c === 'UNKNOWN') return true;
-  if (c === 'VIRAL-READY') return true;
-  if (/PROBE/.test(c)) return true;
-  if (/SMOKETEST/.test(c)) return true;
-  if (/DEMOCODE/.test(c)) return true;
-  if (/^DEMO\d+$/.test(c)) return true;
-  if (/TESTFIX/.test(c)) return true;
-  return false;
+  return isTestReferrerCode(c);
 }
 
 export function countTestShares(shares: readonly ShareEvent[]): number {

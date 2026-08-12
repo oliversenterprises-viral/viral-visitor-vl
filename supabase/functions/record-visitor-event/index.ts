@@ -108,6 +108,8 @@ Deno.serve(async (req: Request) => {
     if (ip && ip !== 'unknown') {
       clientMetadata.client_ip = ip;
     }
+    const userAgent = String(req.headers.get('user-agent') || '').slice(0, 300);
+    if (userAgent) clientMetadata.user_agent = userAgent;
 
     const row = {
       event_name: eventName.slice(0, 80),

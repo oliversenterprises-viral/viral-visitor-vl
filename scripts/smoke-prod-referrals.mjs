@@ -419,10 +419,11 @@ async function checkLiveSitePlaywright() {
     });
 
     const btn = page.getByRole('button', { name: /referral link|get my|join/i }).first();
-    if ((await btn.count()) > 0) {
-      await btn.click();
-      await page.waitForTimeout(10000);
-    }
+    record(
+      'live: get-link button present (does not click — clicking would mint a prod test referrer)',
+      (await btn.count()) > 0,
+      'hero CTA must stay on the live homepage',
+    );
 
     if (recordReferralHit) {
       const bodyText = JSON.stringify(recordReferralHit.body || {});
