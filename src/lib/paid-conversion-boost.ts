@@ -55,12 +55,13 @@ export function resolvePaidTrafficSignals(
   win: Window = typeof window !== 'undefined' ? window : ({} as Window),
 ): PaidTrafficSignals {
   const utm = getStoredUtmAttribution();
-  let search = '';
-  try {
-    search = loc.search || '';
-  } catch {
-    search = '';
-  }
+  const search = (() => {
+    try {
+      return loc.search || '';
+    } catch {
+      return '';
+    }
+  })();
   const params = search ? new URLSearchParams(search) : null;
 
   return {

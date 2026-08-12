@@ -20,7 +20,7 @@ test.describe('ViralRefer - Prize Claim Flow & Admin', () => {
   });
 
   test('Admin button opens password modal', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?owner=1');
     await waitForAppReady(page);
 
     await page.locator('#admin-btn').click();
@@ -35,7 +35,7 @@ test.describe('ViralRefer - Prize Claim Flow & Admin', () => {
     const adminPass = process.env.ADMIN_TEST_PASSWORD;
     test.skip(!adminPass, 'ADMIN_TEST_PASSWORD not set — skip in CI until GitHub secret is configured');
 
-    await page.goto('/');
+    await page.goto('/?owner=1');
     await waitForAppReady(page);
     await page.locator('#admin-btn').click();
     await page.fill('#admin-password-input', adminPass!);

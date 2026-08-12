@@ -7,6 +7,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { computeClaimLeader, isSafeHttpUrl } from '../_shared/claim-leader.ts';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
+import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
+import {
+  hashClaimOwnershipToken,
+  resolveClaimOwnershipSecret,
+  verifyClaimOwnershipToken,
+} from '../_shared/claim-ownership.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,9 +21,7 @@ const corsHeaders = {
 };
 
 function getClientIp(req: Request): string {
-  return req.headers.get('cf-connecting-ip') ||
-         req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-         'unknown';
+  return getTrustedClientIp(req);
 }
 
 async function verifyTurnstile(token: string, ip: string): Promise<{ success: boolean; error?: string }> {
@@ -171,6 +175,30 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ success: false, error: 'Referrer code or authentication required' }), {
       status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+  }
+
+  const ownershipSecret = resolveClaimOwnershipSecret({ get: (k) => Deno.env.get(k) });
+  if (ownershipSecret) {
+    const { data: linkRow } = await supabaseAdmin
+      .from('referrer_links')
+      .select('ownership_hash')
+      .eq('referrer_code', userReferrerCode)
+      .maybeSingle();
+    const storedHash = String((linkRow as { ownership_hash?: string } | null)?.ownership_hash || '');
+    if (storedHash) {
+      const presented = String(payload.ownershipToken ?? payload.ownership_token ?? '');
+      const tokenOk = await verifyClaimOwnershipToken(ownershipSecret, presented, userReferrerCode);
+      const hashOk = tokenOk && (await hashClaimOwnershipToken(ownershipSecret, presented)) === storedHash;
+      if (!tokenOk || !hashOk) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Claim must be submitted from the device that created this link',
+          }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+    }
   }
 
   // SERVER-SIDE TOP-1: prefer get_leaderboard RPC (same filters/tie-break as public board)

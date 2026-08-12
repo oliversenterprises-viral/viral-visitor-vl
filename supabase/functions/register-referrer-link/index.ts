@@ -4,6 +4,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { registerReferrerLink } from '../_shared/referrer-share-deadline.ts';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
+import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
+import {
+  hashClaimOwnershipToken,
+  mintClaimOwnershipToken,
+  resolveClaimOwnershipSecret,
+} from '../_shared/claim-ownership.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,11 +18,7 @@ const corsHeaders = {
 };
 
 function getClientIp(req: Request): string {
-  const cfIp = req.headers.get('cf-connecting-ip');
-  if (cfIp) return cfIp.trim();
-  const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return 'unknown';
+  return getTrustedClientIp(req);
 }
 
 Deno.serve(async (req: Request) => {
@@ -56,6 +58,23 @@ Deno.serve(async (req: Request) => {
     }
     const result = await registerReferrerLink(supabaseAdmin, code, { clientIp });
 
+    let ownership_token: string | undefined;
+    const secret = resolveClaimOwnershipSecret({ get: (k) => Deno.env.get(k) });
+    if (secret && result.created) {
+      try {
+        const token = await mintClaimOwnershipToken(secret, code);
+        const hash = await hashClaimOwnershipToken(secret, token);
+        const { error: hashErr } = await supabaseAdmin
+          .from('referrer_links')
+          .update({ ownership_hash: hash })
+          .eq('referrer_code', code)
+          .is('ownership_hash', null);
+        if (!hashErr) ownership_token = token;
+      } catch (ownErr) {
+        console.warn('[register-referrer-link] ownership mint skipped:', ownErr);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: result.ok || result.status === 'pending_share' || result.status === 'active',
@@ -65,6 +84,7 @@ Deno.serve(async (req: Request) => {
           deadline_at: result.deadline_at ?? null,
           share_required: result.exempt ? false : result.status === 'pending_share',
           exempt: Boolean(result.exempt),
+          ownership_token: ownership_token ?? null,
           message: result.exempt
             ? 'Owner IP exempt — no first-friend deadline.'
             : result.status === 'expired'

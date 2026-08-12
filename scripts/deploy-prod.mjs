@@ -25,6 +25,8 @@ console.log('Vercel project: viralrefer-premium → https://www.viralrefer.app\n
 
 // Fail before deploy if partner splash / tools files are missing from public/
 run('npm run test:smoke:static', 'Preflight: required static routes present in public/');
+run('npm run lint', 'Preflight: eslint (CI lint must be green)');
+run('npx tsc --noEmit', 'Preflight: typecheck');
 
 /** All production edge entrypoints — keep in sync with supabase/functions/* (exclude empty/archived). */
 const EDGE_FUNCTIONS = [

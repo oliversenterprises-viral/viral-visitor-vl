@@ -172,9 +172,13 @@ export function scrollToShareFirstPrimary(): void {
       document.getElementById('share-first-strip') ||
       document.getElementById('share-buttons-panel') ||
       document.getElementById('referral-section');
-    void import('./smooth-scroll').then(({ smoothScrollToElement }) => {
-      smoothScrollToElement(el, { block: 'center', force: true });
-    });
+    void import('./smooth-scroll')
+      .then(({ smoothScrollToElement }) => {
+        smoothScrollToElement(el, { block: 'center', force: true });
+      })
+      .catch(() => {
+        /* test teardown / chunk fail — non-fatal */
+      });
     el?.classList.add('share-first-pulse');
     window.setTimeout(() => el?.classList.remove('share-first-pulse'), 2800);
   };
@@ -212,12 +216,16 @@ export function invokeShareFirstPrimary(): void {
     }
   }
   if (primary === 'sms') {
-    document.getElementById('share-first-sms')?.click() ||
-      (document.querySelector('[onclick="shareTo(\'sms\')"]') as HTMLElement | null)?.click();
+    const sms =
+      document.getElementById('share-first-sms') ||
+      (document.querySelector('[onclick="shareTo(\'sms\')"]') as HTMLElement | null);
+    sms?.click();
     return;
   }
-  document.getElementById('share-first-whatsapp')?.click() ||
-    document.getElementById('share-whatsapp-primary')?.click();
+  const wa =
+    document.getElementById('share-first-whatsapp') ||
+    document.getElementById('share-whatsapp-primary');
+  wa?.click();
 }
 
 /**

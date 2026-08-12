@@ -19,6 +19,9 @@ export const REQUIRED_STATIC_ROUTES = [
   { url: '/manifest.json', file: 'manifest.json' },
   { url: '/security.txt', file: 'security.txt' },
   { url: '/llms.txt', file: 'llms.txt', note: 'AEO / AI crawlers' },
+  { url: '/privacy/', file: 'privacy/index.html' },
+  { url: '/terms/', file: 'terms/index.html' },
+  { url: '/rules/', file: 'rules/index.html' },
 
   // Tools hub
   { url: '/tools/', file: 'tools/index.html' },

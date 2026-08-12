@@ -18,6 +18,9 @@ Signup: None required
 - Homepage: https://www.viralrefer.app/
 - How it works: https://www.viralrefer.app/#how
 - FAQ: https://www.viralrefer.app/#faq
+- Official rules: https://www.viralrefer.app/rules/
+- Privacy: https://www.viralrefer.app/privacy/
+- Terms: https://www.viralrefer.app/terms/
 - Leaderboard: https://www.viralrefer.app/#leaderboard
 - Homepage feature: https://www.viralrefer.app/#prize
 

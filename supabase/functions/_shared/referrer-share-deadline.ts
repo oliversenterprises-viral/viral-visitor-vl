@@ -146,6 +146,7 @@ export async function registerReferrerLink(
   exempt?: boolean;
   error?: string;
   share_grace_count?: number;
+  created?: boolean;
 }> {
   const code = String(referrerCode || '').trim().toUpperCase();
   if (!code) return { ok: false, status: 'unknown', error: 'Missing code' };
@@ -258,6 +259,7 @@ export async function registerReferrerLink(
       created_at,
       deadline_at,
       share_grace_count: 0,
+      created: true,
     };
   } catch (err) {
     console.warn('[referrer-share-deadline] register exception:', err);
@@ -390,7 +392,7 @@ export async function extendShareDeadlineGrace(
 
 /**
  * Whether this code may still earn referrals.
- * Fail-open on DB errors so production never bricks referrals.
+ * Fail-closed on DB errors so expired/unknown codes cannot earn during outages.
  */
 export async function assertReferrerLinkAllowsReferrals(
   supabase: Supa,
@@ -409,8 +411,8 @@ export async function assertReferrerLinkAllowsReferrals(
       .maybeSingle();
 
     if (error) {
-      console.warn('[referrer-share-deadline] assert select failed:', error.message);
-      return { allowed: true, status: 'unknown' };
+      console.error('[referrer-share-deadline] assert select failed closed:', error.message);
+      return { allowed: false, status: 'unknown', reason: 'Temporarily unavailable' };
     }
 
     if (!data) {
@@ -448,7 +450,7 @@ export async function assertReferrerLinkAllowsReferrals(
 
     return { allowed: true, status: data.status };
   } catch (err) {
-    console.warn('[referrer-share-deadline] assert exception:', err);
-    return { allowed: true, status: 'unknown' };
+    console.error('[referrer-share-deadline] assert exception fail-closed:', err);
+    return { allowed: false, status: 'unknown', reason: 'Temporarily unavailable' };
   }
 }

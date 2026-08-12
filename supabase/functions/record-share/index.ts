@@ -11,6 +11,7 @@ import {
   isVerifiedSharePlatform,
   normalizeSharePlatform,
 } from '../_shared/referrer-share-deadline.ts';
+import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,6 +20,21 @@ const corsHeaders = {
 };
 
 const REF_CODE_FROM_LINK_RE = /\/r\/([A-Za-z0-9_-]+)/i;
+
+const SHARE_RATE_WINDOW_MS = 60_000;
+const SHARE_RATE_MAX = 20;
+const shareAttemptsByIp = new Map<string, { count: number; windowStart: number }>();
+
+function isShareRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = shareAttemptsByIp.get(ip);
+  if (!entry || now - entry.windowStart > SHARE_RATE_WINDOW_MS) {
+    shareAttemptsByIp.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > SHARE_RATE_MAX;
+}
 
 function normalizePlatform(raw: string): string {
   return normalizeSharePlatform(raw);
@@ -55,6 +71,14 @@ Deno.serve(async (req: Request) => {
       { auth: { persistSession: false } },
     );
 
+    const clientIp = getTrustedClientIp(req);
+    if (isShareRateLimited(clientIp)) {
+      return new Response(JSON.stringify({ success: false, error: 'Rate limit exceeded' }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const body = await req.json();
     const platform = normalizePlatform(body.platform);
     const referral_link = String(body.referral_link || body.referralLink || '').slice(0, 500);
@@ -67,7 +91,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const created_at = body.timestamp || new Date().toISOString();
+    const created_at = new Date().toISOString();
     const ab_variant = normalizeAbVariant(body.ab_variant || body.abVariant);
     const attempts: Record<string, unknown>[] = [
       ...(ab_variant

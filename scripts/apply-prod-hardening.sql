@@ -1,4 +1,8 @@
--- Idempotent prod hardening (safe to re-run)
+-- DO NOT APPLY ON PRODUCTION as a full file.
+-- Later CREATE OR REPLACE get_leaderboard in this script omits is_test_referral_row.
+-- Use supabase/migrations/ instead. Left here only as history.
+--
+-- Idempotent prod hardening (NOT safe to re-run blindly)
 -- Aligns site_content public read + key column with app expectations
 
 -- 1. site_content: ensure key column exists (0007 alignment)

@@ -1,3 +1,9 @@
+-- DO NOT APPLY ON PRODUCTION.
+-- Historical helper. CREATE OR REPLACE get_leaderboard here does NOT filter
+-- is_test_referral_row / owner IPs. Re-running this would put smoke and owner
+-- rows back on the public board and into #1 claim ranking.
+-- Live definition: supabase/migrations/0015_* and 0039_*.
+--
 -- Prod-schema RPCs (referrals table — no profiles dependency)
 CREATE OR REPLACE FUNCTION public.get_leaderboard(min_referrals int DEFAULT 1)
 RETURNS TABLE (referrer_code TEXT, referral_count INTEGER, rank INTEGER)
