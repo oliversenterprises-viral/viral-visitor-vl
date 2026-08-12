@@ -205,6 +205,26 @@ async function checkRlsLockdown() {
     bannerInsertErr?.message || 'insert succeeded (regression — 0047)',
   );
 
+  const { error: visitorUpdateErr } = await supabase
+    .from('visitor_events')
+    .update({ event_name: 'SiteLanding' })
+    .eq('visitor_id', 'smoke-0049');
+  record(
+    'rls: anon blocked from visitor_events UPDATE',
+    Boolean(visitorUpdateErr),
+    visitorUpdateErr?.message || 'update succeeded (regression — 0049)',
+  );
+
+  const { error: referralInsertErr } = await supabase.from('referrals').insert({
+    referrer_code: 'VIRAL-SMOKETEST',
+    referred_ip: '203.0.113.49',
+  });
+  record(
+    'rls: anon blocked from referrals INSERT',
+    Boolean(referralInsertErr),
+    referralInsertErr?.message || 'insert succeeded (regression — 0049)',
+  );
+
   for (const table of ['visits', 'reddit_events', 'site_analytics']) {
     const { data, error } = await supabase.from(table).select('id').limit(1);
     const blocked = Boolean(error) || (Array.isArray(data) && data.length === 0);
