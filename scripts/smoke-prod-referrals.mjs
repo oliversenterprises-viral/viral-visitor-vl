@@ -42,6 +42,13 @@ function errors() {
   return results.filter((r) => !r.ok && r.severity === 'error').length;
 }
 
+/** REST-only anon client. Smoke never uses Realtime; persist nothing. */
+function createAnonClient() {
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 function readRecordReferralSource() {
   const files = [
     'supabase/functions/record-referral/index.ts',
@@ -136,7 +143,7 @@ async function checkEdgeFunctionContract() {
 }
 
 async function checkRlsLockdown() {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabase = createAnonClient();
 
   const sensitiveTables = [
     'referrals',
@@ -225,7 +232,7 @@ async function checkRlsLockdown() {
 }
 
 async function checkLeaderboardRpc() {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabase = createAnonClient();
   const { data, error } = await supabase.rpc('get_leaderboard', { min_referrals: 1 });
   record(
     'db: get_leaderboard RPC reachable',
@@ -242,7 +249,7 @@ async function checkLeaderboardRpc() {
 }
 
 async function checkViralLoopsRpc() {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabase = createAnonClient();
 
   const { data: sprint, error: sprintErr } = await supabase.rpc('get_weekly_sprint_leaderboard', {
     p_limit: 5,
