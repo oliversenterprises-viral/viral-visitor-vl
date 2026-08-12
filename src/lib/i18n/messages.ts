@@ -42,9 +42,9 @@ export const en = {
 
   'funnel.badge': '3 EASY STEPS',
   'funnel.step1': '1. Get link',
-  'funnel.step2': '2. Share it',
+  'funnel.step2': '2. Send it',
   'funnel.step3': '3. Climb',
-  'funnel.coach': 'Step 1: tap Get my link. Free. No sign-up.',
+  'funnel.coach': 'Step 1: tap Get my free link.',
 
   'how.badge': '3 EASY STEPS',
   'how.title': 'How ViralRefer Works',

@@ -422,7 +422,9 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #challe
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #community-unlock-meter,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #weekly-sprint-board,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #daily-crown-section,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-campaign-badge {
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-campaign-badge,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #referral-section,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey {
   display: none !important;
 }
 
