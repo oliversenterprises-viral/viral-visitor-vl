@@ -4,6 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- Before CSS: hide kid-simple extras on first paint. Keep in sync with isEmbedMode(). -->
+    <script>
+    (function () {
+      var p = location.pathname || '';
+      if (/^\/embed\/?$/i.test(p)) return;
+      var q = location.search || '';
+      if (/(?:^|[?&])(?:embed|iframe)=1(?:&|$)/.test(q)) return;
+      document.documentElement.setAttribute('data-vr-kid-simple', '1');
+    })();
+    </script>
     
     <!-- SEO (organic Google + social) -->
     <title>ViralRefer • Free Worldwide Referral Leaderboard</title>

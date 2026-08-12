@@ -51,7 +51,8 @@ function watchLockForExtras(): void {
   mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-vr-share-locked'] });
 }
 
-/** Turn on kid-simple for the public site (not embeds). */
+/** Turn on kid-simple for the public site (not embeds).
+ * First paint is bootstrapped in index.html <head> with the same embed skip. */
 export function initKidSimple(loc: Location = location): void {
   if (isEmbedMode(loc)) {
     document.documentElement.removeAttribute(ATTR);
