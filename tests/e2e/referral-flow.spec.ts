@@ -111,6 +111,7 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
   test('Prize cards + banner area visual snapshot', async ({ page }) => {
     await page.goto('/');
     await waitForAppReady(page);
+    await page.evaluate(() => document.documentElement.setAttribute('data-vr-kid-more', '1'));
     const prizeSection = page.locator('#prize');
     await expect(prizeSection).toBeVisible({ timeout: 10000 });
     await expect(page.locator('body')).toHaveScreenshot('prize-banner-area.png', {
