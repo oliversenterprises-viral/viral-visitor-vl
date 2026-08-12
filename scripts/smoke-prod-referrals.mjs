@@ -129,15 +129,15 @@ async function checkEdgeFunctionContract() {
       : valid.json?.error || `status=${valid.status}`,
   );
   record(
-    'edge: invalid Turnstile token does NOT block recording',
-    valid.status === 200 && valid.json?.success === true,
-    valid.json?.error || `status=${valid.status}`,
+    'edge: smoke code with bad Turnstile is skipped (not credited)',
+    valid.status === 200 && valid.json?.success === true && valid.json?.skipped === true,
+    valid.json?.error || `status=${valid.status} ${valid.text.slice(0, 120)}`,
   );
 
   const noTurnstile = await invokeRecordReferral({ referrerCode: SMOKE_REF_CODE });
   record(
-    'edge: records referral without Turnstile (server-protected path)',
-    noTurnstile.status === 200 && noTurnstile.json?.success === true,
+    'edge: smoke code without Turnstile is skipped (not credited)',
+    noTurnstile.status === 200 && noTurnstile.json?.success === true && noTurnstile.json?.skipped === true,
     `status=${noTurnstile.status} ${noTurnstile.text.slice(0, 120)}`,
   );
 
