@@ -101,7 +101,7 @@ jobs:
       - name: Live site audit (viralrefer.app)
         run: node tests/site-audit.mjs
 
-      - name: Production referral smoke test (post-deploy gate)
+      - name: Production referral smoke (live check; does not block Vercel)
         run: npm run test:smoke:prod
         env:
           SMOKE_LIVE_URL: https://www.viralrefer.app
