@@ -100,11 +100,11 @@ Security headers and SPA fallback are provided by the committed `vercel.json`.
 
 ## Security & Compliance Notes
 
-- **Never** commit real service role keys, Turnstile secrets, or production `VITE_ADMIN_PASSWORD`.
+- **Never** commit real service role keys, Turnstile secrets, or `ADMIN_OWNER_PASSWORD`.
 - After RLS migrations, the anon key cannot insert fake referrals or claims.
 - Prize claims must go through the `submit-claim` Edge Function (server-side validation + Turnstile).
-- Cloudflare Turnstile is active on the claim path.
-- Admin access is currently a client-side password gate (`VITE_ADMIN_PASSWORD`). This is temporary and not backed by Supabase Auth sessions. The `admin-action` Edge Function supports this flow via a temporary bypass.
+- Cloudflare Turnstile is fail-closed on the referral path (live Edge).
+- Owner login is `/?owner=1` or Ctrl+Shift+O → `verify_owner_password` + 8-hour HMAC session. Do **not** put the password in a `VITE_` variable.
 - Legal / prize disclaimers are linked from the footer (see `docs/rules.md`).
 
 ## Documentation
