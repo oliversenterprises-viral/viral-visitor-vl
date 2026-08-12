@@ -20,8 +20,39 @@ function buildSupabaseMock(overrides: {
   const insertError = overrides.insertError ?? null;
   let headCountCalls = 0;
 
+  const linkChain = () => {
+    const chain: {
+      eq: () => unknown;
+      not: () => unknown;
+      lt: () => unknown;
+      is: () => unknown;
+      select: () => Promise<{ data: unknown[]; error: null }>;
+      maybeSingle: () => Promise<{
+        data: { status: string; created_at: string; deadline_at: null };
+        error: null;
+      }>;
+    } = {
+      eq: () => chain,
+      not: () => chain,
+      lt: () => chain,
+      is: () => chain,
+      select: async () => ({ data: [], error: null }),
+      maybeSingle: async () => ({
+        data: { status: 'active', created_at: '2026-01-01T00:00:00Z', deadline_at: null },
+        error: null,
+      }),
+    };
+    return chain;
+  };
+
   return {
     from: (table: string) => {
+      if (table === 'referrer_links') {
+        return {
+          update: () => linkChain(),
+          select: () => linkChain(),
+        };
+      }
       if (table !== 'referrals') throw new Error(`unexpected table ${table}`);
       return {
         select: (_cols: string, opts?: { count?: string; head?: boolean }) => {
@@ -96,16 +127,19 @@ describe('record-referral handler (edge index delegates here)', () => {
     expect(await res.json()).toMatchObject({ error: 'Self-referral is not allowed.' });
   });
 
-  it('POST with failed Turnstile still records (non-blocking hardening)', async () => {
+  it('POST with failed Turnstile is rejected (fail-closed)', async () => {
     const res = await handleRecordReferral(
-      post({ referrerCode: 'VIRAL-OK', turnstileToken: 'bad' }),
+      post(
+        { referrerCode: 'VIRAL-OK', turnstileToken: 'bad' },
+        { 'cf-connecting-ip': '182.62.227.19' },
+      ),
       {
         verifyTurnstile: vi.fn().mockResolvedValue({ success: false, error: 'verification_failed' }),
         supabaseAdmin: buildSupabaseMock(),
       },
     );
-    expect(res.status).toBe(200);
-    expect(await res.json()).toMatchObject({ success: true });
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ success: false, error: 'Bot check failed' });
   });
 
   it('POST skips smoke/owner/automation without inserting', async () => {
@@ -123,7 +157,7 @@ describe('record-referral handler (edge index delegates here)', () => {
     expect(verifyTurnstile).not.toHaveBeenCalled();
   });
 
-  it('POST without turnstile token still inserts (server-protected path)', async () => {
+  it('POST without turnstile token is rejected (fail-closed)', async () => {
     const verifyTurnstile = vi.fn();
     const res = await handleRecordReferral(
       post(
@@ -133,8 +167,8 @@ describe('record-referral handler (edge index delegates here)', () => {
       { verifyTurnstile, supabaseAdmin: buildSupabaseMock() },
     );
     const json = await res.json();
-    expect(res.status).toBe(200);
-    expect(json).toMatchObject({ success: true, referralId: 'ref-uuid-1' });
+    expect(res.status).toBe(403);
+    expect(json).toMatchObject({ success: false, error: 'Bot check required' });
     expect(verifyTurnstile).not.toHaveBeenCalled();
   });
 
@@ -160,14 +194,32 @@ describe('record-referral handler (edge index delegates here)', () => {
     expect(getClientIp(req)).toBe('1.2.3.4');
   });
 
+  it('getClientIp uses rightmost X-Forwarded-For hop', () => {
+    const req = new Request('https://x/', {
+      headers: { 'x-forwarded-for': '1.1.1.1, 2.2.2.2, 9.9.9.9' },
+    });
+    expect(getClientIp(req)).toBe('9.9.9.9');
+  });
+
+  it('POST without a trusted IP is rejected', async () => {
+    const res = await handleRecordReferral(
+      post({ referrerCode: 'VIRAL-NOIP', turnstileToken: 'good' }),
+      {
+        verifyTurnstile: vi.fn().mockResolvedValue({ success: true }),
+        supabaseAdmin: buildSupabaseMock(),
+      },
+    );
+    expect(res.status).toBe(403);
+  });
+
   it('POST returns duplicate for lifetime same IP + same referrer (no time window)', async () => {
     const res = await handleRecordReferral(
       post(
-        { referrerCode: 'VIRAL-LIFE' },
+        { referrerCode: 'VIRAL-LIFE', turnstileToken: 'good' },
         { 'cf-connecting-ip': '182.62.227.19', 'user-agent': 'Mozilla/5.0 Chrome' },
       ),
       {
-        verifyTurnstile: vi.fn(),
+        verifyTurnstile: vi.fn().mockResolvedValue({ success: true }),
         supabaseAdmin: buildSupabaseMock({
           existing: { id: 'old-ref-id', created_at: '2025-01-01T00:00:00Z' },
         }),
@@ -187,11 +239,11 @@ describe('record-referral handler (edge index delegates here)', () => {
   it('POST fails closed with 503 when lifetime dedupe query errors', async () => {
     const res = await handleRecordReferral(
       post(
-        { referrerCode: 'VIRAL-LIFE' },
+        { referrerCode: 'VIRAL-LIFE', turnstileToken: 'good' },
         { 'cf-connecting-ip': '182.62.227.20', 'user-agent': 'Mozilla/5.0 Chrome' },
       ),
       {
-        verifyTurnstile: vi.fn(),
+        verifyTurnstile: vi.fn().mockResolvedValue({ success: true }),
         supabaseAdmin: buildSupabaseMock({ dedupeError: { message: 'db down' } }),
       },
     );

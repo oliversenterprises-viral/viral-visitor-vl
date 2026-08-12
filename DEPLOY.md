@@ -1,85 +1,73 @@
 # ViralRefer — Deployment Runbook
 
-**Production Platform**: Vercel (vercel.json is the active configuration).
+**Production platform:** Vercel project `viralrefer-premium` (this repo).
 
-**Vercel project (only one)**: `viralrefer-premium` — linked from this repo (`viral-visitor-vl`).
+**Canonical live URL:** https://www.viralrefer.app  
+Apex `https://viralrefer.app` redirects to www.
 
-**Canonical live URLs** (all serve the same production build):
+**Do not** create a second Vercel project for this repo.
 
-- https://www.viralrefer.app (primary — use for sharing)
-- https://viralrefer.app (redirects to www)
-- https://viral-visitor-vl.vercel.app (legacy alias → same build as www)
+## What actually ships
 
-**Do not** create a second Vercel project for this repo; duplicate projects caused drift and confusion.
+Two paths exist. Only path B deploys Edge Functions and runs smoke tests.
 
-## Vercel Deployment (Primary / Production)
+| Path | Trigger | Ships | Gates |
+|------|---------|-------|--------|
+| A — Git push to `main` | Vercel Git integration | Frontend only | Vercel `tsc && vite build` — **CI does not block this** |
+| B — operator | `npm run deploy:prod` | 9 Edge Functions + Vercel prod + smoke | Static preflight, lint, live referral smoke |
 
-1. Push the repository to GitHub.
-2. In the Vercel Dashboard, import the Git repository.
-3. Framework preset: Vite.
-4. Build command: `npm run build`
-5. Output directory: `dist`
-6. Vercel automatically uses the existing `vercel.json` for security headers and SPA fallback rewrites.
+**Prefer path B** after Edge or SQL changes. Path A is frontend-only and can drift from Deno.
 
-### Environment Variables (Vercel Dashboard — Production and Preview environments)
+### Edge Functions (path B)
 
-Add the following **VITE_** prefixed variables (these are exposed to the client):
+`record-referral`, `admin-action`, `record-share`, `record-visitor-event`, `record-banner-event`, `record-interaction`, `submit-claim`, `optimizer-cron`, `register-referrer-link`
+
+### Do not re-run these SQL files on production
+
+- `scripts/apply-prod-rpcs.sql`
+- `scripts/apply-prod-hardening.sql`
+
+They redefine `get_leaderboard` **without** test/owner filters and would put smoke rows back on the public board. Live RPCs live in `supabase/migrations/` (especially 0015 / 0039).
+
+New migrations `0046`–`0048` are **not auto-applied**. Inventory duplicates before 0046.
+
+## Environment
+
+### Vercel (client — `VITE_*` is public in the JS bundle)
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_TURNSTILE_SITEKEY`
 
-- `VITE_ADMIN_PASSWORD` (client-side admin gate password; change from the development default for production)
+**Never** put the owner password or admin secret in a `VITE_` variable.
 
-**Note on Admin Access**: The current production admin mechanism is a client-side password gate using `VITE_ADMIN_PASSWORD`. This is a temporary implementation and is **not** real Supabase Auth. The `admin-action` Edge Function currently contains a temporary bypass to support this flow. Plan to migrate to proper Supabase Auth + server-side verification in the future.
+### Supabase Edge secrets (server only)
 
-## Edge Functions (Supabase)
-
-All three Edge Functions must be deployed:
-
-```bash
-supabase login
-supabase link --project-ref YOUR_PROJECT_REF
-supabase functions deploy record-referral
-supabase functions deploy submit-claim
-supabase functions deploy admin-action
-```
-
-### Supabase Secrets (Edge Functions → Secrets in Supabase Dashboard)
-
-These are server-only secrets used by the Deno runtime:
-
+- `ADMIN_OWNER_PASSWORD` — owner gate (verified on the edge)
+- `ADMIN_ACTION_SECRET` — HMAC sessions + scripts
 - `TURNSTILE_SECRET_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `OPTIMIZER_CRON_SECRET` / Vercel `CRON_SECRET`
+- Optional: `CLAIM_OWNERSHIP_SECRET` (falls back to `ADMIN_ACTION_SECRET`)
+- Optional: `ALLOW_TURNSTILE_DEV_BYPASS=true` on **local/staging only**
 
-## Security Headers
+## Admin access
 
-Security headers are already configured in `vercel.json` (CSP, HSTS, X-Frame-Options, etc.) and are applied automatically on Vercel. No additional `_headers` file or Cloudflare rules are required.
+Owner password is checked by `admin-action` → `verify_owner_password`. The browser stores an 8-hour HMAC session (`x-admin-session`). The public ADMIN button is hidden; open `/?owner=1` or press Ctrl+Shift+O.
 
-## Post-Deploy Checklist
+## Post-deploy (path B)
 
-- [ ] RLS migrations applied (all files in `supabase/migrations/`)
-- [ ] All three Edge Functions deployed (`record-referral`, `submit-claim`, `admin-action`)
-- [ ] Supabase secrets set (`TURNSTILE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)
-- [ ] Vercel environment variables set for both Production and Preview
-- [ ] Custom domain (viralrefer.app) configured with SSL
-- [ ] Admin password gate functional via `VITE_ADMIN_PASSWORD` (temporary client-side implementation)
-- [ ] Turnstile protection active on claim submissions
-- [ ] Anon key cannot insert referrals or claims from browser console
-- [ ] Realtime leaderboard and activity updates work across tabs
-- [ ] All E2E tests pass (`npm run test:e2e`)
-- [ ] Lighthouse scores acceptable (Performance ≥ 95, Accessibility 100 where feasible)
+- [ ] `https://www.viralrefer.app/version.json` matches the commit
+- [ ] `/privacy/` `/terms/` `/rules/` return 200 (not the homepage)
+- [ ] Get-link + referral smoke passed
+- [ ] Owner gate still works via `/?owner=1`
 
 ## Rollback
 
-- Revert the Git commit that introduced the problematic change.
-- Supabase provides point-in-time recovery for the database.
-- Vercel provides instant rollback to previous deployments via the dashboard.
+- Frontend: Vercel Instant Rollback (does **not** roll back Edge or SQL)
+- Edge: redeploy the previous function SHA via `deploy:prod` from that commit
+- SQL: Supabase point-in-time recovery
 
-## Monitoring
+## CI
 
-- Supabase Dashboard → Logs (Database + Edge Functions)
-- Vercel Analytics / Deployment logs
-- Browser console for defensive `[ViralRefer]` logs during testing
-
-**Production ready. Ship with confidence.**
+`.github/workflows/ci.yml`: lint is a **separate** job so unit tests still run if lint is red. Fix lint before pushing `main`. Last green CI should be required before you treat a push as ship-ready. Vercel will still auto-promote `main` until a GitHub required-check is enabled (do that in the dashboard; do not lock yourself out of admin overrides).

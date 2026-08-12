@@ -551,11 +551,14 @@ export const submitPrizeClaim = async () => {
     }
 
     const { data: sessionData } = await supabase.auth.getSession();
+    const { getClaimOwnershipToken } = await import('../lib/claim-ownership');
+    const ownershipToken = getClaimOwnershipToken();
     const body: Record<string, string> = {
       turnstileToken,
       website,
       message,
       referrerCode: myCode,
+      ...(ownershipToken ? { ownershipToken } : {}),
     };
 
     const invokeOptions: { body: Record<string, string>; headers?: Record<string, string> } = { body };

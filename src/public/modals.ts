@@ -95,11 +95,46 @@ const openAdminPasswordModal = () => {
   });
 };
 
+const OWNER_REVEAL_KEY = 'vr_show_owner';
+
+function revealOwnerTools(): void {
+  const adminBtn = document.getElementById('admin-btn');
+  if (adminBtn) adminBtn.classList.remove('hidden');
+  try {
+    localStorage.setItem(OWNER_REVEAL_KEY, '1');
+  } catch {
+    /* ignore */
+  }
+}
+
+function shouldRevealOwnerTools(): boolean {
+  try {
+    if (localStorage.getItem(OWNER_REVEAL_KEY) === '1') return true;
+  } catch {
+    /* ignore */
+  }
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('owner') === '1') return true;
+  } catch {
+    /* ignore */
+  }
+  return location.hash === '#owner';
+}
+
 function wireAdminButton(): void {
   const adminBtn = document.getElementById('admin-btn');
   if (!adminBtn || adminBtn.dataset.vrWired) return;
   adminBtn.dataset.vrWired = '1';
   adminBtn.addEventListener('click', openAdminPasswordModal);
+  if (shouldRevealOwnerTools()) revealOwnerTools();
+  document.addEventListener('keydown', (ev) => {
+    if (ev.ctrlKey && ev.shiftKey && ev.key.toLowerCase() === 'o') {
+      ev.preventDefault();
+      revealOwnerTools();
+      openAdminPasswordModal();
+    }
+  });
 }
 
 if (document.readyState === 'loading') {
@@ -157,6 +192,7 @@ const submitAdminPassword = async () => {
 
   if (authorized) {
     if (errorEl) errorEl.classList.add('hidden');
+    revealOwnerTools();
     closeAdminPasswordModal();
     void unlockAdminLiveSound();
     await ViralRefer.openAdminPanel();

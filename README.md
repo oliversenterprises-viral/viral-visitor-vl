@@ -1,6 +1,6 @@
 # ViralRefer — Production Ready
 
-The viral referral platform. Refer friends, climb the real-time leaderboard, and win prizes for top referrers.
+The viral referral platform. Refer friends, climb the live leaderboard, and #1 can claim a homepage banner feature (no cash prize).
 
 **Status**: Production deployment on Vercel with Supabase Edge Functions, RLS security, realtime leaderboard, and multi-tab admin dashboard.
 
@@ -20,27 +20,21 @@ Open http://localhost:5173 to see the full experience:
 - Live realtime leaderboard from Supabase `referrals` table
 - Referral link generation + QR codes + 7-platform sharing
 - Profile/referral attribution via `?ref=`
-- Admin dashboard (client-side password gate using `VITE_ADMIN_PASSWORD`)
-- Turnstile-protected prize claim flow
+- Owner dashboard (`/?owner=1` or Ctrl+Shift+O — password verified on the edge)
+- Turnstile-protected homepage-feature claim flow
 
 ## Supabase Setup (One-time)
 
 1. Go to your Supabase project.
 2. SQL Editor → run the full content of all migrations in `supabase/migrations/` (in order).
 3. This creates the tables (`profiles`, `referrals`, `shares`, `prize_claims`, `site_content`), applies strict RLS, indexes, and security triggers.
-4. Deploy the Edge Functions:
-
-```bash
-supabase login
-supabase link --project-ref YOUR_PROJECT_REF
-supabase functions deploy record-referral
-supabase functions deploy submit-claim
-supabase functions deploy admin-action
-```
+4. Deploy Edge Functions with `npm run deploy:prod` (nine functions + Vercel + smoke). Do not follow old “three function” lists.
 
 5. Add secrets in Supabase Dashboard → Edge Functions → Secrets:
    - `TURNSTILE_SECRET_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+   - `ADMIN_OWNER_PASSWORD`
+   - `ADMIN_ACTION_SECRET`
 
 ## Environment Variables
 
@@ -49,12 +43,14 @@ supabase functions deploy admin-action
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_TURNSTILE_SITEKEY`
-- `VITE_ADMIN_PASSWORD` (client-side admin access password — treat as sensitive)
+- Do **not** set `VITE_ADMIN_PASSWORD` — that would publish the owner password in the JS bundle
 
 ### Supabase Edge Function Secrets (Deno)
 
 - `TURNSTILE_SECRET_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_OWNER_PASSWORD`
+- `ADMIN_ACTION_SECRET`
 
 The app uses the values from the current Supabase project for immediate testing when properly configured.
 
@@ -62,7 +58,7 @@ The app uses the values from the current Supabase project for immediate testing 
 
 - **Frontend**: Vite 8 + TypeScript (strict) + Tailwind CSS v4 via `@tailwindcss/vite`
 - **Backend**: Supabase (Postgres + Realtime + RLS + Edge Functions on Deno)
-- **Security**: All high-value writes go through Edge Functions using `service_role`. RLS blocks anon writes. Admin dashboard currently uses a client-side `VITE_ADMIN_PASSWORD` gate (temporary — not real Supabase Auth).
+- **Security**: High-value writes go through Edge Functions using `service_role`. RLS blocks anon writes. Owner login is `verify_owner_password` + HMAC session (not a client password compare).
 - **Deployment**: Vercel (static Vite build + `vercel.json` for headers and SPA routing) + Supabase Edge Functions.
 
 See `docs/adr/001-architecture.md` and `ARCHITECTURE.md` for deeper details.

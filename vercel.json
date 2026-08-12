@@ -108,7 +108,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/((?!api/|go/|embed/|tools/|assets/|favicon\\.svg|robots\\.txt|sitemap\\.xml|manifest\\.json|llms\\.txt|security\\.txt|version\\.json|icons\\.svg).*)",
+      "source": "/((?!api/|go/|embed/|tools/|privacy/|terms/|rules/|assets/|favicon\\.svg|robots\\.txt|sitemap\\.xml|manifest\\.json|llms\\.txt|security\\.txt|version\\.json|icons\\.svg).*)",
       "destination": "/index.html"
     }
   ],

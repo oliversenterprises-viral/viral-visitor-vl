@@ -16,8 +16,25 @@ import {
 } from '../../src/lib/referrer-code';
 
 function buildSupabaseMock() {
+  const linkChain = () => {
+    const chain: Record<string, unknown> = {};
+    chain.eq = () => chain;
+    chain.not = () => chain;
+    chain.lt = () => chain;
+    chain.is = () => chain;
+    chain.select = async () => ({ data: [], error: null });
+    chain.maybeSingle = async () => ({
+      data: { status: 'active', created_at: '2026-01-01T00:00:00Z', deadline_at: null },
+      error: null,
+    });
+    return chain;
+  };
   return {
-    from: () => ({
+    from: (table?: string) => {
+      if (table === 'referrer_links') {
+        return { update: () => linkChain(), select: () => linkChain() };
+      }
+      return {
       select: (_cols: string, opts?: { head?: boolean }) => {
         if (opts?.head) {
           return { eq: () => ({ gte: async () => ({ count: 0, error: null }) }) };
@@ -25,10 +42,8 @@ function buildSupabaseMock() {
         return {
           eq: () => ({
             eq: () => ({
-              gte: () => ({
-                order: () => ({
-                  limit: () => ({ maybeSingle: async () => ({ data: null, error: null }) }),
-                }),
+              order: () => ({
+                limit: () => ({ maybeSingle: async () => ({ data: null, error: null }) }),
               }),
             }),
           }),
@@ -42,7 +57,8 @@ function buildSupabaseMock() {
           }),
         }),
       }),
-    }),
+    };
+    },
   };
 }
 

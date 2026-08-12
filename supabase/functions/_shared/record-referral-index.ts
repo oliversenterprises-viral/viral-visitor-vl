@@ -59,5 +59,6 @@ export function buildRecordReferralIndexDeps(
   return {
     verifyTurnstile: (token, ip) => verifyTurnstileForRecordReferral(token, ip, env),
     supabaseAdmin,
+    allowTurnstileDevBypass: env.get('ALLOW_TURNSTILE_DEV_BYPASS') === 'true',
   };
 }

@@ -42,6 +42,15 @@ import { activateShareFirstAfterGetLink } from './lib/share-first-ui';
 import { activateSendModeAfterGetLink } from './lib/send-mode';
 
 // Track attribution for the current page load
+function mintReferrerCode(): string {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const bytes = new Uint8Array(7);
+  crypto.getRandomValues(bytes);
+  let suffix = '';
+  for (const b of bytes) suffix += alphabet[b % 36];
+  return `VIRAL-${suffix}`;
+}
+
 let pendingReferrerCode: string | null = null;
 let referralRecordedThisSession = false;
 let referralRecordingInFlight = false;
@@ -106,7 +115,7 @@ async function recordReferralIfAttributed(options: {
         ? visitorCode
         : null;
 
-    const turnstileToken = await tryOptionalTurnstileToken(800);
+    const turnstileToken = await tryOptionalTurnstileToken(8000);
 
     const { data, error } = await supabase.functions.invoke('record-referral', {
       body: {
@@ -335,7 +344,7 @@ export async function getMyReferralLinkInstant(): Promise<void> {
     let code = getMyReferralCode();
 
     if (!code) {
-      code = 'VIRAL-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+      code = mintReferrerCode();
       localStorage.setItem('vr_my_ref_code', code);
       setMyReferralCode(code);
     }
@@ -364,7 +373,13 @@ export async function getMyReferralLinkInstant(): Promise<void> {
 
     // FOMO ticker unlocks once this visitor has a referral link
     void import('./app')
-      .then((m) => m.onReferralLinkReadyForTicker?.())
+      .then((m) => {
+        try {
+          m.onReferralLinkReadyForTicker?.();
+        } catch {
+          /* circular init in unit tests */
+        }
+      })
       .catch(() => {});
 
     syncMobileReferralCta();
@@ -443,7 +458,7 @@ async function writeLinkToClipboard(link: string): Promise<boolean> {
  * Generates a new random referral code for the user and updates the UI.
  */
 export async function generateNewCode(): Promise<void> {
-  const code = 'VIRAL-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+  const code = mintReferrerCode();
   localStorage.setItem('vr_my_ref_code', code);
   setMyReferralCode(code);
   await getMyReferralLinkInstant();

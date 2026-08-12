@@ -8,6 +8,7 @@ import {
   LOCK_PLATFORM_FIRST_REFERRAL,
   markReferrerLinkShared,
 } from './referrer-share-deadline.ts';
+import { getTrustedClientIp } from './trusted-ip.ts';
 
 export const RECORD_REFERRAL_CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -32,13 +33,7 @@ const UNKNOWN_IP_RATE_MAX = 1;
 export const REFERRER_IP_DEDUPE_LIFETIME = true;
 
 export function getClientIp(req: Request): string {
-  const cfIp = req.headers.get('cf-connecting-ip');
-  if (cfIp) return cfIp.trim();
-
-  const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
-
-  return 'unknown';
+  return getTrustedClientIp(req);
 }
 
 export type RecordReferralDeps = {
@@ -53,6 +48,8 @@ export type RecordReferralDeps = {
    * Kept so older callers/tests that pass dedupeWindowMs still type-check.
    */
   dedupeWindowMs?: number;
+  /** Staging only — accept turnstileToken === 'dev-bypass-token'. */
+  allowTurnstileDevBypass?: boolean;
 };
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -123,22 +120,34 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
       );
     }
   } catch (gateErr) {
-    console.warn('[record-referral] share-deadline gate skipped:', gateErr);
+    console.error('[record-referral] share-deadline gate failed closed:', gateErr);
+    return jsonResponse(
+      { success: false, error: 'Temporarily unavailable. Please try again.' },
+      503,
+    );
+  }
+
+  if (ip === 'unknown') {
+    return jsonResponse(
+      { success: false, error: 'Could not verify your network. Please retry.' },
+      403,
+    );
   }
 
   const rateLimitWindowMs = deps.rateLimitWindowMs ?? DEFAULT_RATE_LIMIT_WINDOW_MS;
   const rateLimitMax = deps.rateLimitMax ?? DEFAULT_RATE_LIMIT_MAX;
   // deps.dedupeWindowMs intentionally ignored — lifetime per (referrer, IP)
 
-  const shouldVerifyTurnstile = Boolean(
-    turnstileToken && turnstileToken !== 'dev-bypass-token',
-  );
+  const allowDevBypass =
+    turnstileToken === 'dev-bypass-token' && deps.allowTurnstileDevBypass === true;
 
-  if (shouldVerifyTurnstile) {
-    const turnstileResult = await deps.verifyTurnstile(turnstileToken!, ip);
+  if (!allowDevBypass) {
+    if (!turnstileToken) {
+      return jsonResponse({ success: false, error: 'Bot check required' }, 403);
+    }
+    const turnstileResult = await deps.verifyTurnstile(turnstileToken, ip);
     if (!turnstileResult.success) {
-      // Never block real referrals when Turnstile is misconfigured or tokens fail.
-      console.warn('[record-referral] Turnstile failed — continuing with server limits:', turnstileResult.error);
+      return jsonResponse({ success: false, error: 'Bot check failed' }, 403);
     }
   }
 

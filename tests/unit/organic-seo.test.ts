@@ -39,7 +39,8 @@ describe('organic-seo', () => {
     const xml = buildSitemapXml(SEO_SITE_ORIGIN, '2026-07-04');
     expect(xml).toContain('<loc>https://www.viralrefer.app/</loc>');
     expect(xml).toContain('<lastmod>2026-07-04</lastmod>');
-    expect(xml).toContain('#leaderboard');
+    expect(xml).toContain('/rules/');
+    expect(xml).not.toContain('#leaderboard');
   });
 
   it('initOrganicSeo sets canonical on homepage', () => {

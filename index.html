@@ -116,7 +116,7 @@
                 <button type="button" id="nav-get-link-btn" data-vr-zone="nav-get-link" class="sm:hidden px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl text-xs font-semibold min-h-[44px]" data-i18n="nav.get_link">
                     Get link
                 </button>
-                <button id="admin-btn" class="px-3 py-2 sm:px-6 sm:py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-3xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2 min-h-[44px] min-w-[44px] sm:min-w-0 justify-center" aria-label="Admin dashboard">
+                <button id="admin-btn" class="hidden px-3 py-2 sm:px-6 sm:py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-3xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2 min-h-[44px] min-w-[44px] sm:min-w-0 justify-center" aria-label="Owner dashboard">
                     <i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span class="hidden sm:inline">ADMIN</span>
                 </button>
             </div>
@@ -892,6 +892,28 @@
             </div>
         </div>
 
+        <div id="faq" data-vr-below-fold class="mt-12 glass border border-white/10 rounded-3xl p-8 md:p-10">
+            <h2 class="text-3xl font-bold tracking-tight mb-6">FAQ</h2>
+            <div class="space-y-5 text-left text-zinc-300">
+                <div>
+                    <h3 class="font-semibold text-white">How do I get a ViralRefer referral link?</h3>
+                    <p class="text-zinc-400 mt-1">Tap Get my referral link. You receive a unique trackable link in about 30 seconds — free, no signup or email.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white">Is ViralRefer free?</h3>
+                    <p class="text-zinc-400 mt-1">Yes. No payment, no email, no cash prize. #1 may claim a homepage banner feature after verification.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white">What does #1 get?</h3>
+                    <p class="text-zinc-400 mt-1">A homepage banner for their website after verification. There is no cash prize.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white">How does the board work?</h3>
+                    <p class="text-zinc-400 mt-1">A friend must open your link and tap Get my link. Copying alone does not count.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- HOMEPAGE FEATURE (no cash prize) -->
         <div id="prize" data-vr-below-fold class="mt-12 glass border border-white/10 rounded-3xl p-8 md:p-10">
             <div class="text-center mb-8">
@@ -1053,9 +1075,9 @@
               <span class="font-semibold text-zinc-300">Key Rules:</span> <span id="rules-text">No self-referrals. Unique IPs only. Fair play enforced. Turnstile protected.</span>
             </div>
             <div class="pt-1">
-                <a id="footer-link-rules" href="#rules" onclick="showRulesModal(); return false;" class="underline hover:text-white transition-colors" data-i18n="footer.rules_link">Official Rules &amp; Full Disclaimers</a> • 
-                <a id="footer-link-privacy" href="#privacy" class="underline hover:text-white transition-colors" data-i18n="footer.privacy">Privacy Policy</a> • 
-                <a id="footer-link-terms" href="#terms" class="underline hover:text-white transition-colors" data-i18n="footer.terms">Terms</a> •
+                <a id="footer-link-rules" href="/rules/" class="underline hover:text-white transition-colors" data-i18n="footer.rules_link">Official Rules &amp; Full Disclaimers</a> • 
+                <a id="footer-link-privacy" href="/privacy/" class="underline hover:text-white transition-colors" data-i18n="footer.privacy">Privacy Policy</a> • 
+                <a id="footer-link-terms" href="/terms/" class="underline hover:text-white transition-colors" data-i18n="footer.terms">Terms</a> •
                 <a id="footer-link-telegram-helper" href="https://t.me/myviralreferbot?start=site_footer" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors" title="ViralRefer helper bot on Telegram">Telegram helper</a> •
                 <a href="#" onclick="openTimer(); return false;" class="underline hover:text-white transition-colors" title="Elite focus timer">Focus Timer</a>
             </div>

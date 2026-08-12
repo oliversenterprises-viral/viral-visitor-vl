@@ -91,9 +91,10 @@ export function buildSitemapXml(origin = SEO_SITE_ORIGIN, lastmod?: string): str
   const date = lastmod || new Date().toISOString().slice(0, 10);
   const urls = [
     { loc: `${base}/`, changefreq: 'daily', priority: '1.0' },
-    { loc: `${base}/#how`, changefreq: 'weekly', priority: '0.8' },
-    { loc: `${base}/#leaderboard`, changefreq: 'daily', priority: '0.9' },
-    { loc: `${base}/#prize`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${base}/tools/`, changefreq: 'weekly', priority: '0.9' },
+    { loc: `${base}/rules/`, changefreq: 'monthly', priority: '0.7' },
+    { loc: `${base}/privacy/`, changefreq: 'monthly', priority: '0.5' },
+    { loc: `${base}/terms/`, changefreq: 'monthly', priority: '0.5' },
   ];
   const body = urls
     .map(

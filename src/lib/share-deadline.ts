@@ -206,9 +206,17 @@ export async function registerReferrerLinkDeadline(
         share_required?: boolean;
         exempt?: boolean;
         share_grace_count?: number;
+        ownership_token?: string | null;
       };
       error?: string;
     };
+
+    const ownership = String(envelope?.data?.ownership_token || '').trim();
+    if (ownership) {
+      void import('./claim-ownership')
+        .then((m) => m.setClaimOwnershipToken(ownership))
+        .catch(() => {});
+    }
 
     const status = (envelope?.data?.status || 'pending_share') as ShareDeadlineStatus;
     const exempt =
