@@ -39,7 +39,7 @@ Migrations `0046`–`0049` were applied 2026-08-12 after Edge `deploy:prod`. Do 
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_TURNSTILE_SITEKEY`
 
-**Never** put the owner password or admin secret in a `VITE_` variable.
+**Never** put the owner password or admin secret in a `VITE_` variable. Do not create a `VITE_ADMIN_PASSWORD` Edge or Vercel secret (removed 2026-08-12).
 
 ### Supabase Edge secrets (server only)
 
