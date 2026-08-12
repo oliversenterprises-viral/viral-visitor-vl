@@ -1,19 +1,20 @@
 import { test, expect } from '@playwright/test';
-import { waitForAppReady } from './helpers';
+import { ensureReferralLink, waitForAppReady } from './helpers';
 
 test.describe('ViralRefer - Prize Claim Flow & Admin', () => {
   test('Claim button exists and opens modal', async ({ page }) => {
     await page.goto('/');
     await waitForAppReady(page);
+    await ensureReferralLink(page);
 
     const claimBtn = page.locator('#prize button[onclick="claimBanner()"]');
     await expect(claimBtn).toBeVisible({ timeout: 8000 });
     await claimBtn.scrollIntoViewIfNeeded();
     await claimBtn.click();
 
-    await expect(
-      page.locator('#winner-modal, text=Claim Homepage Feature, text=not currently the #1, text=not yet eligible'),
-    ).toBeVisible({ timeout: 8000 });
+    const modal = page.locator('#winner-modal');
+    await expect(modal).toBeVisible({ timeout: 8000 });
+    await expect(modal).not.toHaveClass(/hidden/);
   });
 
   test('Admin button opens password modal', async ({ page }) => {
