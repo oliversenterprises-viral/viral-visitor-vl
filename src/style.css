@@ -2650,6 +2650,11 @@ html:not([data-vr-has-link]) #my-stats {
   display: none !important;
 }
 
+/* Claim block is not the first job — hide even before kid-simple JS runs */
+html:not([data-vr-has-link]) #prize {
+  display: none !important;
+}
+
 /* NEW CODE only after they have a code */
 html:not([data-vr-has-link]) #new-code-button {
   display: none !important;
