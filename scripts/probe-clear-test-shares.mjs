@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Probe clear_test_shares edge action (dry-run). */
 import https from 'node:https';
+import { resolveAdminActionSecret } from './admin-secret-from-env.mjs';
 
 const SUPABASE_URL = 'https://wqbefjzpgsezzwdrvvua.supabase.co';
 const ANON_KEY =
@@ -16,17 +17,12 @@ function get(url) {
   });
 }
 
-async function extractAdminSecret() {
+async function bundleHasClearTestShares() {
   const html = await get('https://www.viralrefer.app/');
   const m = html.match(/assets\/index-[^"']+\.js/);
-  if (!m) throw new Error('bundle not found');
+  if (!m) return false;
   const js = await get(`https://www.viralrefer.app/${m[0]}`);
-  const idx = js.indexOf('admin-action');
-  const near = js.slice(Math.max(0, idx - 500), idx + 500);
-  const hits = [...near.matchAll(/["']?([A-Za-z0-9]{30,34})["']?/g)]
-    .map((x) => x[1])
-    .filter((s) => !s.startsWith('eyJ') && !s.startsWith('0x'));
-  return { secret: hits[0] || '', hasClear: js.includes('clear_test_shares') };
+  return js.includes('clear_test_shares');
 }
 
 async function invoke(action, payload, secret) {
@@ -50,9 +46,10 @@ async function invoke(action, payload, secret) {
   return { status: res.status, json };
 }
 
-const { secret, hasClear } = await extractAdminSecret();
+const secret = resolveAdminActionSecret();
+const hasClear = await bundleHasClearTestShares();
 console.log('bundle has clear_test_shares:', hasClear);
-console.log('extracted secret length:', secret?.length || 0);
+console.log('admin secret from env: yes');
 
 const getShares = await invoke('get_shares', {}, secret);
 console.log('\nget_shares status:', getShares.status);

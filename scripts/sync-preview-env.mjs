@@ -5,19 +5,8 @@
 import { readFileSync, existsSync } from 'fs';
 import { homedir } from 'os';
 import path from 'path';
-import https from 'https';
 
 const PROJECT_ID = 'prj_lEguzmle2JOlyRyzO0zHjG2HtpNv';
-
-function get(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, (r) => {
-      let d = '';
-      r.on('data', (c) => (d += c));
-      r.on('end', () => resolve(d));
-    }).on('error', reject);
-  });
-}
 
 function loadVercelToken() {
   const candidates = [
@@ -30,20 +19,6 @@ function loadVercelToken() {
     if (auth.token) return auth.token;
   }
   return process.env.VERCEL_TOKEN || '';
-}
-
-async function extractAdminSecret() {
-  const html = await get('https://www.viralrefer.app/');
-  const m = html.match(/assets\/index-[^"']+\.js/);
-  if (!m) return '';
-  const js = await get(`https://www.viralrefer.app/${m[0]}`);
-  const idx = js.indexOf('admin-action');
-  if (idx < 0) return '';
-  const near = js.slice(Math.max(0, idx - 500), idx + 500);
-  const hits = [...near.matchAll(/["']?([A-Za-z0-9]{30,34})["']?/g)]
-    .map((x) => x[1])
-    .filter((s) => !s.startsWith('eyJ') && !s.startsWith('0x'));
-  return hits[0] || '';
 }
 
 async function listProjectEnvs(token) {
