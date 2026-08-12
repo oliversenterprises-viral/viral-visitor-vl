@@ -6,8 +6,9 @@ Optional Reddit Ads Pixel for **retargeting audiences** + conversion signals.
 
 | Guard | Behavior |
 |--------|----------|
-| `VITE_REDDIT_PIXEL_ID` empty | **No script loads** (prod-safe default) |
-| Set to your pixel id | Loads `redditstatic.com/ads/pixel.js`, fires events |
+| `VITE_REDDIT_PIXEL_ENABLED` unset/false | **No script loads** (prod-safe default; leftover pixel id is ignored) |
+| Enabled + `VITE_REDDIT_PIXEL_ID` set | Loads `redditstatic.com/ads/pixel.js`, fires events |
+| Pixel id only (no enable flag) | **No script** — current production state |
 | `/embed` traffic exchanges | Pixel **skipped** |
 | Failures | Never break get-link / share funnel |
 
@@ -30,8 +31,10 @@ Code: `src/lib/reddit-pixel.ts` · wired from `main.ts` + `trackVisitorFunnel`.
 1. Reddit Ads → **Events Manager** → create/copy **Pixel ID** (looks like `a2_...`).
 2. Vercel → Project → Settings → Environment Variables → Production:
    ```
+   VITE_REDDIT_PIXEL_ENABLED=1
    VITE_REDDIT_PIXEL_ID=a2_xxxxxxxxxxxx
    ```
+   Also allow `https://www.redditstatic.com` in the site CSP before turning this on, or the script is blocked and live-audit fails.
 3. Redeploy production (`npm run deploy:prod` when you are ready).
 4. Visit `https://www.viralrefer.app/` → Reddit Events Manager should show **PageVisit** (may take minutes).
 5. Get a link on the site → should show **Lead**.

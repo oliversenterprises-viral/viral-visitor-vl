@@ -2,7 +2,9 @@
  * Reddit Ads Pixel — optional retargeting + conversion tracking.
  *
  * Safe-by-default:
- * - Loads ONLY when `VITE_REDDIT_PIXEL_ID` is a non-empty pixel id
+ * - Loads ONLY when BOTH `VITE_REDDIT_PIXEL_ENABLED=1` and a pixel id are set
+ * - A leftover `VITE_REDDIT_PIXEL_ID` alone does not inject pixel.js
+ *   (CSP blocks redditstatic.com; live-audit forbids the script tag)
  * - Never throws; never blocks the public funnel
  * - Skipped on /embed (traffic exchanges)
  * - No PII / advanced matching
@@ -41,8 +43,13 @@ export function getRedditPixelId(): string {
   return raw;
 }
 
+function isRedditPixelFlagOn(): boolean {
+  const raw = String(import.meta.env.VITE_REDDIT_PIXEL_ENABLED ?? '').trim().toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'yes';
+}
+
 export function isRedditPixelEnabled(): boolean {
-  return getRedditPixelId().length > 0;
+  return isRedditPixelFlagOn() && getRedditPixelId().length > 0;
 }
 
 function ensureRdtStub(): RdtFn {
