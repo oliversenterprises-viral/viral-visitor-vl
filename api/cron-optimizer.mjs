@@ -15,10 +15,7 @@ const SUPABASE_ANON_KEY =
 
 const CRON_SECRET = process.env.CRON_SECRET || '';
 const OPTIMIZER_SECRET =
-  process.env.OPTIMIZER_CRON_SECRET ||
-  process.env.ADMIN_ACTION_SECRET ||
-  process.env.VITE_ADMIN_ACTION_SECRET ||
-  '';
+  process.env.OPTIMIZER_CRON_SECRET || process.env.ADMIN_ACTION_SECRET || '';
 
 function isAuthorized(req) {
   const header = req.headers?.authorization || req.headers?.Authorization || '';

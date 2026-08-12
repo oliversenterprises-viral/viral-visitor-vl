@@ -27,7 +27,7 @@ export function loadLocalEnv() {
 export function resolveAdminActionSecret() {
   loadLocalEnv();
   const secret = String(
-    process.env.ADMIN_ACTION_SECRET || process.env.VITE_ADMIN_ACTION_SECRET || '',
+    process.env.ADMIN_ACTION_SECRET || '',
   ).trim();
   if (!secret) {
     throw new Error('Set ADMIN_ACTION_SECRET in .env.local — do not scrape the public bundle');

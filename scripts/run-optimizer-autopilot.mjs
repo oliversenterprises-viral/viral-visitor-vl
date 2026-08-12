@@ -32,10 +32,7 @@ loadEnvFile(resolve(ROOT, '.env.production.local'));
 const dryRun = process.argv.includes('--dry-run');
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const anonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-const secret =
-  process.env.OPTIMIZER_CRON_SECRET ||
-  process.env.ADMIN_ACTION_SECRET ||
-  process.env.VITE_ADMIN_ACTION_SECRET;
+const secret = process.env.OPTIMIZER_CRON_SECRET || process.env.ADMIN_ACTION_SECRET;
 
 if (!supabaseUrl || !anonKey || !secret) {
   console.error('Missing SUPABASE_URL, SUPABASE_ANON_KEY, or ADMIN_ACTION_SECRET');
