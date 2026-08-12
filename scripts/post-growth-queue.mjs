@@ -33,25 +33,14 @@ import {
   updateItemStatus,
   resolveQueueImage,
 } from './growth-post-queue-helpers.mjs';
+import { resolveAdminActionSecret } from './admin-secret-from-env.mjs';
 
 const SUPABASE_URL = 'https://wqbefjzpgsezzwdrvvua.supabase.co';
 const ANON =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxYmVmanpwZ3Nlenp3ZHJ2dnVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTMyNDAsImV4cCI6MjA4OTUyOTI0MH0.pVHqeG0sGPgpUlOlskf7rOvnAsdrzrv5govZXcyxEdk';
 
-async function extractAdminSecret() {
-  const envSecret = process.env.VITE_ADMIN_ACTION_SECRET || process.env.ADMIN_ACTION_SECRET;
-  if (envSecret) return envSecret;
-  const html = await (await fetch('https://www.viralrefer.app/')).text();
-  const m = html.match(/assets\/index-[^"']+\.js/);
-  if (!m) throw new Error('bundle not found');
-  const js = await (await fetch(`https://www.viralrefer.app/${m[0]}`)).text();
-  const idx = js.indexOf('admin-action');
-  const near = js.slice(Math.max(0, idx - 500), idx + 500);
-  return (
-    [...near.matchAll(/["']?([A-Za-z0-9]{30,34})["']?/g)]
-      .map((x) => x[1])
-      .filter((s) => !s.startsWith('eyJ') && !s.startsWith('0x'))[0] || ''
-  );
+function extractAdminSecret() {
+  return resolveAdminActionSecret();
 }
 
 loadLocalEnv();

@@ -2,16 +2,7 @@
  * Verifies all admin stats actions return success against live Supabase.
  */
 import https from 'https';
-
-function get(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, (r) => {
-      let d = '';
-      r.on('data', (c) => (d += c));
-      r.on('end', () => resolve(d));
-    }).on('error', reject);
-  });
-}
+import { resolveAdminActionSecret } from './admin-secret-from-env.mjs';
 
 function post(url, headers, body) {
   return new Promise((resolve, reject) => {
@@ -36,41 +27,18 @@ function post(url, headers, body) {
   });
 }
 
-const BASE = 'https://www.viralrefer.app';
 const SUPABASE_URL = 'https://wqbefjzpgsezzwdrvvua.supabase.co';
 const ANON =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxYmVmanpwZ3Nlenp3ZHJ2dnVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTMyNDAsImV4cCI6MjA4OTUyOTI0MH0.pVHqeG0sGPgpUlOlskf7rOvnAsdrzrv5govZXcyxEdk';
 
-async function fetchAllJsBundles(pageHtml) {
-  const paths = [...new Set([...pageHtml.matchAll(/assets\/[^"']+\.js/g)].map((m) => m[0]))];
-  const chunks = await Promise.all(paths.map((p) => get(`${BASE}/${p}`)));
-  return chunks.join('\n');
-}
-
-function extractAdminSecret(bundleText) {
-  const anchors = ['admin-action', 'get_visitor_stats', 'x-admin-secret'];
-  for (const anchor of anchors) {
-    const idx = bundleText.indexOf(anchor);
-    if (idx < 0) continue;
-    const slice = bundleText.slice(Math.max(0, idx - 600), idx + 600);
-    const hits = [...slice.matchAll(/["']?([A-Za-z0-9_\-]{28,34})["']?/g)]
-      .map((m) => m[1])
-      .filter((s) => !s.startsWith('eyJ') && !s.startsWith('0x') && !/supabase/i.test(s));
-    if (hits[0]) return hits[0];
-  }
-  return '';
-}
-
-const html = await get(`${BASE}/`);
-const js = await fetchAllJsBundles(html);
-const adminSecret = extractAdminSecret(js);
+const adminSecret = resolveAdminActionSecret();
 
 const ACTIONS = ['get_visitor_stats', 'get_banner_stats', 'get_shares'];
 const results = [];
 
 for (const action of ACTIONS) {
   if (!adminSecret) {
-    results.push({ action, pass: false, detail: 'Could not extract admin secret from bundle' });
+    results.push({ action, pass: false, detail: 'ADMIN_ACTION_SECRET missing from env' });
     continue;
   }
   const res = await post(

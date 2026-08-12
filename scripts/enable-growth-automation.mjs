@@ -4,23 +4,11 @@
  * Uses admin-action (same secret resolution as dry-run-autopilot-prod.mjs).
  */
 import { createClient } from '@supabase/supabase-js';
+import { resolveAdminActionSecret } from './admin-secret-from-env.mjs';
 
 const SUPABASE_URL = 'https://wqbefjzpgsezzwdrvvua.supabase.co';
 const ANON =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxYmVmanpwZ3Nlenp3ZHJ2dnVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTMyNDAsImV4cCI6MjA4OTUyOTI0MH0.pVHqeG0sGPgpUlOlskf7rOvnAsdrzrv5govZXcyxEdk';
-
-async function extractAdminSecret() {
-  const html = await (await fetch('https://www.viralrefer.app/')).text();
-  const m = html.match(/assets\/index-[^"']+\.js/);
-  if (!m) throw new Error('bundle not found');
-  const js = await (await fetch(`https://www.viralrefer.app/${m[0]}`)).text();
-  const idx = js.indexOf('admin-action');
-  const near = js.slice(Math.max(0, idx - 500), idx + 500);
-  const hits = [...near.matchAll(/["']?([A-Za-z0-9]{30,34})["']?/g)]
-    .map((x) => x[1])
-    .filter((s) => !s.startsWith('eyJ') && !s.startsWith('0x'));
-  return hits[0] || '';
-}
 
 async function adminAction(secret, body) {
   const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-action`, {
@@ -36,11 +24,7 @@ async function adminAction(secret, body) {
   return res.json();
 }
 
-const secret = await extractAdminSecret();
-if (!secret) {
-  console.error('Could not resolve admin secret');
-  process.exit(1);
-}
+const secret = resolveAdminActionSecret();
 
 const pub = createClient(SUPABASE_URL, ANON);
 const { data: scRows } = await pub.from('site_content').select('key, value').eq('key', 'optimizer_flags');
