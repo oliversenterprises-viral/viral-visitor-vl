@@ -296,6 +296,7 @@ function buildContentListHTML(rows: ContentRow[]): string {
   const bcSpUrl = escapeHtml(contentKeyValue(rows, 'owner_broadcast_sponsor_url'));
   const bcSpImage = escapeHtml(contentKeyValue(rows, 'owner_broadcast_sponsor_image'));
   const bcSpCta = escapeHtml(contentKeyValue(rows, 'owner_broadcast_sponsor_cta'));
+  const bcMedia = escapeHtml(contentKeyValue(rows, 'owner_broadcast_media_url'));
 
   let html = `
     <div class="flex items-center justify-between mb-4">
@@ -353,10 +354,36 @@ function buildContentListHTML(rows: ContentRow[]): string {
       </label>
 
       <div class="mt-4 pt-4 border-t border-violet-400/25">
+        <div class="text-sm font-semibold text-violet-200 mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-image"></i> Message image (optional)
+        </div>
+        <p class="text-[11px] text-zinc-500 mb-3">Upload JPG/PNG/GIF/WebP/SVG (max 2MB) or paste a https:// image URL. Shows under the title for everyone.</p>
+        <div class="flex flex-wrap items-center gap-2 mb-2">
+          <input type="file" id="owner-bc-media-file" accept="${BANNER_UPLOAD_ACCEPT}" class="hidden" />
+          <button type="button" id="owner-bc-media-upload" class="px-4 py-2 rounded-xl bg-violet-700/80 hover:bg-violet-600 text-sm font-semibold">
+            <i class="fa-solid fa-upload mr-1.5"></i>Upload image
+          </button>
+          <button type="button" id="owner-bc-media-clear" class="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-xs font-semibold">
+            Clear
+          </button>
+          <span id="owner-bc-media-status" class="text-[11px] text-zinc-500"></span>
+        </div>
+        <label class="block text-xs text-zinc-400">
+          Image URL
+          <input id="owner-bc-media-url" type="url" maxlength="2000" value="${bcMedia}"
+            class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
+            placeholder="https://…/image.png or upload above" />
+        </label>
+        <div id="owner-bc-media-preview" class="mt-2 ${bcMedia ? '' : 'hidden'}">
+          <img src="${bcMedia || ''}" alt="Broadcast media preview" class="max-h-28 rounded-lg border border-white/10 bg-black/30 object-contain" />
+        </div>
+      </div>
+
+      <div class="mt-4 pt-4 border-t border-violet-400/25">
         <div class="text-sm font-semibold text-amber-200/95 mb-2 flex items-center gap-2">
           <i class="fa-solid fa-rectangle-ad"></i> Sponsor ad (optional)
         </div>
-        <p class="text-[11px] text-zinc-500 mb-3">Requires a valid https:// click URL. Image optional. Shown as a sponsored card under your message.</p>
+        <p class="text-[11px] text-zinc-500 mb-3">Requires a valid https:// click URL. Image optional (upload or URL). Shown as a sponsored card under your message.</p>
         <div class="grid gap-3 md:grid-cols-2">
           <label class="block text-xs text-zinc-400">
             Sponsor name
@@ -376,12 +403,27 @@ function buildContentListHTML(rows: ContentRow[]): string {
               class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
               placeholder="https://getsafelisttraffic.online/" />
           </label>
-          <label class="block text-xs text-zinc-400 md:col-span-2">
-            Sponsor image URL (optional — https image)
-            <input id="owner-bc-sp-image" type="url" maxlength="2000" value="${bcSpImage}"
-              class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
-              placeholder="https://…/banner.png" />
-          </label>
+          <div class="md:col-span-2 space-y-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="file" id="owner-bc-sp-file" accept="${BANNER_UPLOAD_ACCEPT}" class="hidden" />
+              <button type="button" id="owner-bc-sp-upload" class="px-4 py-2 rounded-xl bg-amber-700/70 hover:bg-amber-600 text-sm font-semibold">
+                <i class="fa-solid fa-upload mr-1.5"></i>Upload sponsor image
+              </button>
+              <button type="button" id="owner-bc-sp-clear" class="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-xs font-semibold">
+                Clear image
+              </button>
+              <span id="owner-bc-sp-status" class="text-[11px] text-zinc-500"></span>
+            </div>
+            <label class="block text-xs text-zinc-400">
+              Sponsor image URL (optional)
+              <input id="owner-bc-sp-image" type="url" maxlength="2000" value="${bcSpImage}"
+                class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-violet-500"
+                placeholder="https://…/banner.png or upload above" />
+            </label>
+            <div id="owner-bc-sp-preview" class="mt-1 ${bcSpImage ? '' : 'hidden'}">
+              <img src="${bcSpImage || ''}" alt="Sponsor preview" class="max-h-24 rounded-lg border border-white/10 bg-black/30 object-contain" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -680,18 +722,109 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
     };
   }
 
+  function wireBroadcastImageUpload(opts: {
+    fileInputId: string;
+    uploadBtnId: string;
+    clearBtnId: string;
+    urlInputId: string;
+    previewId: string;
+    statusId: string;
+  }): void {
+    const fileInput = content.querySelector(`#${opts.fileInputId}`) as HTMLInputElement | null;
+    const uploadBtn = content.querySelector(`#${opts.uploadBtnId}`) as HTMLButtonElement | null;
+    const clearBtn = content.querySelector(`#${opts.clearBtnId}`) as HTMLButtonElement | null;
+    const urlInput = content.querySelector(`#${opts.urlInputId}`) as HTMLInputElement | null;
+    const preview = content.querySelector(`#${opts.previewId}`) as HTMLElement | null;
+    const status = content.querySelector(`#${opts.statusId}`) as HTMLElement | null;
+    const previewImg = preview?.querySelector('img') as HTMLImageElement | null;
+
+    const syncPreview = (url: string) => {
+      if (!preview || !previewImg) return;
+      if (url) {
+        previewImg.src = url;
+        preview.classList.remove('hidden');
+      } else {
+        previewImg.removeAttribute('src');
+        preview.classList.add('hidden');
+      }
+    };
+
+    if (uploadBtn && fileInput) {
+      uploadBtn.onclick = () => fileInput.click();
+      fileInput.onchange = async () => {
+        const file = fileInput.files?.[0];
+        fileInput.value = '';
+        if (!file) return;
+        if (status) status.textContent = 'Uploading…';
+        uploadBtn.disabled = true;
+        try {
+          const url = await uploadBannerImage(file);
+          if (urlInput) urlInput.value = url;
+          syncPreview(url);
+          if (status) status.textContent = 'Uploaded — publish to go live';
+          showToast('Image uploaded', 'success');
+        } catch (err) {
+          if (status) status.textContent = '';
+          showToast(formatError(err) || 'Upload failed', 'info');
+        } finally {
+          uploadBtn.disabled = false;
+        }
+      };
+    }
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        if (urlInput) urlInput.value = '';
+        syncPreview('');
+        if (status) status.textContent = 'Cleared';
+      };
+    }
+    if (urlInput) {
+      urlInput.addEventListener('input', () => syncPreview(urlInput.value.trim()));
+    }
+  }
+
+  wireBroadcastImageUpload({
+    fileInputId: 'owner-bc-media-file',
+    uploadBtnId: 'owner-bc-media-upload',
+    clearBtnId: 'owner-bc-media-clear',
+    urlInputId: 'owner-bc-media-url',
+    previewId: 'owner-bc-media-preview',
+    statusId: 'owner-bc-media-status',
+  });
+  wireBroadcastImageUpload({
+    fileInputId: 'owner-bc-sp-file',
+    uploadBtnId: 'owner-bc-sp-upload',
+    clearBtnId: 'owner-bc-sp-clear',
+    urlInputId: 'owner-bc-sp-image',
+    previewId: 'owner-bc-sp-preview',
+    statusId: 'owner-bc-sp-status',
+  });
+
   if (publishBc) {
     publishBc.onclick = async () => {
       const title = (content.querySelector('#owner-bc-title') as HTMLInputElement | null)?.value?.trim() || '';
       const body = (content.querySelector('#owner-bc-body') as HTMLTextAreaElement | null)?.value?.trim() || '';
       const id = (content.querySelector('#owner-bc-id') as HTMLInputElement | null)?.value?.trim() || '';
+      const mediaUrl = (content.querySelector('#owner-bc-media-url') as HTMLInputElement | null)?.value?.trim() || '';
       const spLabel = (content.querySelector('#owner-bc-sp-label') as HTMLInputElement | null)?.value?.trim() || '';
       const spUrl = (content.querySelector('#owner-bc-sp-url') as HTMLInputElement | null)?.value?.trim() || '';
       const spImage = (content.querySelector('#owner-bc-sp-image') as HTMLInputElement | null)?.value?.trim() || '';
       const spCta = (content.querySelector('#owner-bc-sp-cta') as HTMLInputElement | null)?.value?.trim() || '';
-      if (!body && !spUrl) {
-        showToast('Add a message body and/or a sponsor click URL', 'info');
+      if (!body && !spUrl && !mediaUrl) {
+        showToast('Add a message body, image, and/or a sponsor click URL', 'info');
         return;
+      }
+      if (mediaUrl) {
+        try {
+          const u = new URL(mediaUrl);
+          if (u.protocol !== 'https:' && u.protocol !== 'http:') {
+            showToast('Message image URL must start with https://', 'info');
+            return;
+          }
+        } catch {
+          showToast('Message image URL is not valid', 'info');
+          return;
+        }
       }
       if (spUrl) {
         try {
@@ -727,6 +860,7 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
           'owner_broadcast_id',
           id || `bc-${new Date().toISOString().slice(0, 10)}`,
         )) &&
+        (await saveSiteContentEntry('owner_broadcast_media_url', mediaUrl.slice(0, 2000))) &&
         (await saveSiteContentEntry('owner_broadcast_sponsor_label', spLabel.slice(0, 80))) &&
         (await saveSiteContentEntry('owner_broadcast_sponsor_url', spUrl.slice(0, 2000))) &&
         (await saveSiteContentEntry('owner_broadcast_sponsor_image', spImage.slice(0, 2000))) &&

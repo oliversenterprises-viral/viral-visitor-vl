@@ -38,6 +38,17 @@ describe('owner-broadcast', () => {
     expect(msg!.body).toContain('48h');
     expect(msg!.id).toBe('rules-v1');
     expect(msg!.sponsor).toBeNull();
+    expect(msg!.mediaUrl).toBeNull();
+  });
+
+  it('parses media-only broadcast image', () => {
+    const msg = parseOwnerBroadcast({
+      owner_broadcast_enabled: '1',
+      owner_broadcast_media_url: 'https://cdn.example.com/ad.png',
+    });
+    expect(msg).not.toBeNull();
+    expect(msg!.mediaUrl).toBe('https://cdn.example.com/ad.png');
+    expect(msg!.body).toBe('');
   });
 
   it('parses sponsor ad when URL is safe http(s)', () => {

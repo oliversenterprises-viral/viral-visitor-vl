@@ -11,8 +11,9 @@
  * - owner_broadcast_id: optional version id
  * - owner_broadcast_sponsor_label: sponsor name / headline
  * - owner_broadcast_sponsor_url: click destination (http/https)
- * - owner_broadcast_sponsor_image: optional image URL (http/https)
+ * - owner_broadcast_sponsor_image: optional image URL (http/https) — paste or admin upload
  * - owner_broadcast_sponsor_cta: optional button label (default Visit sponsor)
+ * - owner_broadcast_media_url: optional message image (http/https) — paste or admin upload
  */
 
 import { normalizeSiteContentText } from './site-content-value';
@@ -33,6 +34,8 @@ export interface OwnerBroadcastPayload {
   title: string;
   body: string;
   id: string;
+  /** Optional image shown under the title (uploaded or URL). */
+  mediaUrl: string | null;
   sponsor: OwnerBroadcastSponsor | null;
 }
 
@@ -159,18 +162,21 @@ export function parseOwnerBroadcast(content: Record<string, unknown> | null | un
     normalizeSiteContentText(content['owner_broadcast_title'])?.trim() || 'Message from ViralRefer';
   const body = normalizeSiteContentText(content['owner_broadcast_body'])?.trim() || '';
   const sponsor = parseSponsor(content);
+  const mediaRaw = normalizeSiteContentText(content['owner_broadcast_media_url'])?.trim() || '';
+  const mediaUrl = mediaRaw && isSafeHttpUrl(mediaRaw) ? mediaRaw.slice(0, 2000) : null;
 
-  // Need at least a message body or a valid sponsor ad
-  if (!body && !sponsor) return null;
+  // Need at least a message body, media image, or a valid sponsor ad
+  if (!body && !sponsor && !mediaUrl) return null;
 
   const explicitId = normalizeSiteContentText(content['owner_broadcast_id'])?.trim();
-  const id = broadcastMessageId(title, body || sponsor?.url || 'sponsor', explicitId);
+  const id = broadcastMessageId(title, body || sponsor?.url || mediaUrl || 'media', explicitId);
 
   return {
     enabled: true,
     title: title.slice(0, 120),
     body: body.slice(0, 2000),
     id,
+    mediaUrl,
     sponsor,
   };
 }
@@ -294,6 +300,9 @@ export function applyOwnerBroadcast(content: Record<string, unknown>): void {
     const bodyHtml = msg.body
       ? `<div class="vr-bc-body">${formatBroadcastBodyHtml(msg.body)}</div>`
       : '';
+    const mediaHtml = msg.mediaUrl
+      ? `<div class="vr-bc-media"><img src="${escapeHtml(msg.mediaUrl)}" alt="" class="vr-bc-media-img" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></div>`
+      : '';
     const sponsorHtml = msg.sponsor ? renderSponsorHtml(msg.sponsor) : '';
 
     el.className = 'vr-owner-broadcast';
@@ -306,6 +315,7 @@ export function applyOwnerBroadcast(content: Record<string, unknown>): void {
         <div class="vr-bc-main min-w-0">
           <p class="vr-bc-kicker">Update from ViralRefer</p>
           <p class="vr-bc-title">${escapeHtml(msg.title)}</p>
+          ${mediaHtml}
           ${bodyHtml}
           ${sponsorHtml}
         </div>
