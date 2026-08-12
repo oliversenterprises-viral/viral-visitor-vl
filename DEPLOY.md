@@ -77,6 +77,8 @@ Owner password is checked by `admin-action` → `verify_owner_password`. The bro
 
 ## CI
 
-`.github/workflows/ci.yml`: lint is a **separate** job so unit tests still run if lint is red. Fix lint before pushing `main`. Last green CI should be required before you treat a push as ship-ready. Vercel will still auto-promote `main` until a GitHub required-check is enabled (do that in the dashboard; do not lock yourself out of admin overrides).
+`.github/workflows/ci.yml`: lint is a **separate** job so unit tests still run if lint is red. Fix lint before merging to `main`.
 
-Node is **22** (`package.json` `engines`, `.nvmrc`, CI). Vite 8 + live smoke need 22 — Node 20 already broke `main` (no `WebSocket`). The `live-audit` job on `main` is a **best-effort live check**, not a deploy gate. It waits up to 3 minutes for `version.json` to match the commit, then runs site-audit + referral smoke. Vercel can still promote `main` before that job finishes.
+GitHub ruleset **CI before main ships** (id `20766181`) requires a pull request plus green **`quality`**, **`lint`**, and **`e2e`** before `main` updates. Vercel still auto-promotes `main`, so production only ships after those PR checks. Do **not** require `live-audit` — that job runs after deploy and would deadlock. Repository admins can bypass the ruleset for an emergency push.
+
+Node is **22** (`package.json` `engines`, `.nvmrc`, CI). Vite 8 + live smoke need 22 — Node 20 already broke `main` (no `WebSocket`). The `live-audit` job on `main` is a **best-effort live check**, not a deploy gate. It waits up to 3 minutes for `version.json` to match the commit, then runs site-audit + referral smoke.
