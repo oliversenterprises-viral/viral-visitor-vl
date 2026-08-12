@@ -17,4 +17,10 @@ describe('resolveAdminActionSecret', () => {
     delete process.env.VITE_ADMIN_ACTION_SECRET;
     expect(resolveAdminActionSecret()).toBe('unit-test-admin-secret-value');
   });
+
+  it('does not accept VITE_ADMIN_ACTION_SECRET as a fallback', () => {
+    delete process.env.ADMIN_ACTION_SECRET;
+    process.env.VITE_ADMIN_ACTION_SECRET = 'must-not-be-used';
+    expect(() => resolveAdminActionSecret()).toThrow(/ADMIN_ACTION_SECRET/);
+  });
 });

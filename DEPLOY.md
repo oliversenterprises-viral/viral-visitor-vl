@@ -39,7 +39,14 @@ Migrations `0046`–`0049` were applied 2026-08-12 after Edge `deploy:prod`. Do 
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_TURNSTILE_SITEKEY`
 
-**Never** put the owner password or admin secret in a `VITE_` variable. Do not create a `VITE_ADMIN_PASSWORD` Edge or Vercel secret (removed 2026-08-12).
+**Never** put the owner password or admin secret in a `VITE_` variable. Do not create a `VITE_ADMIN_PASSWORD` or `VITE_ADMIN_ACTION_SECRET` Edge or Vercel secret (`VITE_` is public in the JS bundle).
+
+### Vercel (server only — not prefixed `VITE_`)
+
+- `CRON_SECRET` — Vercel Cron `Authorization: Bearer` for `/api/cron-optimizer`
+- `OPTIMIZER_CRON_SECRET` or `ADMIN_ACTION_SECRET` — forwarded to `optimizer-cron` as `x-optimizer-cron-secret`
+
+Scripts and the Vercel cron proxy do **not** read `VITE_ADMIN_ACTION_SECRET`.
 
 ### Supabase Edge secrets (server only)
 
