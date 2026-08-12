@@ -6,7 +6,7 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await page.goto('/');
     await waitForAppReady(page);
 
-    await page.click('text=Get my referral link');
+    await page.locator('#hero-get-link-btn').click();
 
     const refInput = page.locator('#ref-link');
     await expect(refInput).toHaveValue(/\/r\/VIRAL-/i, { timeout: 10000 });
@@ -58,7 +58,7 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await page.goto('/');
     await waitForAppReady(page);
 
-    await page.click('text=Get my referral link');
+    await page.locator('#hero-get-link-btn').click();
     const link = await page.locator('#ref-link').inputValue();
     expect(link).toMatch(/\/join\/r\/VIRAL-/i);
 

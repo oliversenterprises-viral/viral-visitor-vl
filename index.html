@@ -134,14 +134,14 @@
                 </div>
                
                 <h1 id="hero-title" class="vr-hero-title text-[2.25rem] sm:text-[52px] md:text-[64px] lg:text-[76px] font-bold tracking-[-0.05em] logo-font leading-[1.05] mb-3 sm:mb-4" style="color: var(--text-hero-title, #ffffff); text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-                    <span id="hero-title-line1" data-i18n="hero.title_line1">Get your free link in 30 seconds.</span><br>
+                    <span id="hero-title-line1" data-i18n="hero.title_line1">Get a free link.</span><br>
                     <span id="hero-title-accent" data-i18n="hero.title_accent" class="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-cyan-400 drop-shadow-[0_4px_20px_rgba(192,132,252,0.5)]" style="color: var(--text-hero-accent, #c084fc);">
-                        Climb to #1 &mdash; claim homepage feature.
+                        Send it to a friend.
                     </span>
                 </h1>
                
                 <p id="hero-subtitle" data-i18n="hero.subtitle" class="text-base sm:text-lg md:text-xl text-zinc-200 max-w-xl mx-auto mb-5 sm:mb-6 leading-relaxed px-1">
-                    Open worldwide. Free link → share → climb. #1 claims a homepage banner for their website.
+                    Tap the button. Send your link. When a friend taps Get my link, you go up the board.
                 </p>
 
                 <!-- Global proof strip (static + live count) -->
@@ -164,7 +164,7 @@
                     <button id="hero-get-link-btn" data-vr-zone="hero-get-link" onclick="getMyReferralLinkInstant()" 
                             class="btn-primary hero-primary-cta w-full px-8 py-4 sm:px-12 sm:py-5 text-lg sm:text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/40 min-h-[52px]">
                         <i class="fa-solid fa-link" aria-hidden="true"></i>
-                        <span data-i18n="hero.cta">Get my referral link</span>
+                        <span data-i18n="hero.cta">Get my free link</span>
                     </button>
                    
                     <button id="hero-leaderboard-btn" data-vr-zone="hero-leaderboard" onclick="document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth' })" 
@@ -184,7 +184,7 @@
                 </div>
 
                 <p id="hero-trust-line" data-i18n="hero.trust" class="mt-3 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
-                    Free · No signup · No cash prize · #1 gets a homepage feature · Link in ~30 sec
+                    Free. No signup. No cash. Just send your link.
                 </p>
                 <!-- Cold-land CSS hides this; shown after get-link / non-quiet segments for fuller compliance note -->
                 <p id="hero-security-trust" class="mt-1.5 text-[11px] sm:text-xs text-zinc-500 max-w-xl mx-auto leading-relaxed">
@@ -241,20 +241,20 @@
                     <span class="funnel-step-required">required</span>
                 </span>
                 <span class="funnel-step-arrow funnel-step-arrow--flow" data-funnel-arrow="1" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
-                <span data-funnel-step="2" class="funnel-step funnel-step-pending" title="Step 2 — copy your link">
-                    <span class="funnel-step-icon" aria-hidden="true"><i class="fa-solid fa-copy"></i></span>
-                    <span id="funnel-step2-label" class="funnel-step-label" data-i18n="funnel.step2">2. Copy</span>
+                <span data-funnel-step="2" class="funnel-step funnel-step-pending" title="Step 2 — send your link">
+                    <span class="funnel-step-icon" aria-hidden="true"><i class="fa-solid fa-paper-plane"></i></span>
+                    <span id="funnel-step2-label" class="funnel-step-label" data-i18n="funnel.step2">2. Send it</span>
                 </span>
                 <span class="funnel-step-arrow funnel-step-arrow--idle" data-funnel-arrow="2" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
-                <span data-funnel-step="3" class="funnel-step funnel-step-pending" title="Step 3 — share to win">
-                    <span class="funnel-step-icon" aria-hidden="true"><i class="fa-solid fa-share-nodes"></i></span>
-                    <span id="funnel-step3-label" class="funnel-step-label" data-i18n="funnel.step3">3. Share &amp; climb</span>
+                <span data-funnel-step="3" class="funnel-step funnel-step-pending" title="Step 3 — climb the board">
+                    <span class="funnel-step-icon" aria-hidden="true"><i class="fa-solid fa-trophy"></i></span>
+                    <span id="funnel-step3-label" class="funnel-step-label" data-i18n="funnel.step3">3. Climb</span>
                 </span>
             </div>
             <div id="funnel-guide-coach" class="funnel-guide-coach" role="status" aria-live="polite">
                 <div class="funnel-guide-coach-inner">
                     <span class="funnel-guide-coach-icon" aria-hidden="true"><i class="fa-solid fa-arrow-up"></i></span>
-                    <span id="funnel-guide-coach-text" class="funnel-guide-coach-text" data-i18n="funnel.coach">Step 1: tap Get my referral link to start.</span>
+                    <span id="funnel-guide-coach-text" class="funnel-guide-coach-text" data-i18n="funnel.coach">Step 1: tap Get my free link.</span>
                 </div>
             </div>
         </div>
@@ -298,7 +298,7 @@
         <div id="referral-section" class="mt-6" data-vr-zone="referral-section">
             <div class="max-w-2xl mx-auto">
                 <div class="text-center mb-6 sm:mb-8">
-                    <h2 id="winning-link-title" class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter mb-2 sm:mb-3" style="color: var(--text-referral-heading, #ffffff)">Your winning link</h2>
+                    <h2 id="winning-link-title" class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter mb-2 sm:mb-3" style="color: var(--text-referral-heading, #ffffff)">Your link</h2>
                     <p id="winning-link-description" class="text-base sm:text-lg text-zinc-300 max-w-lg mx-auto" data-vr-declutter-secondary>Send your link. When a friend gets their free link through you, you climb — and your link locks.</p>
                     <!-- One clear public rule (i18n) — friend Get link locks; share can add time; copy never locks -->
                     <p id="share-deadline-pre-note" class="share-deadline-pre-note mt-3 max-w-lg mx-auto text-sm font-semibold text-amber-200/95 leading-snug" role="status" data-i18n="deadline.pre_rule">
@@ -781,6 +781,11 @@
                                 aria-expanded="false"
                                 aria-controls="share-buttons-panel">
                             More platforms &amp; tools
+                        </button>
+                        <button id="kid-more-tools-btn" type="button"
+                                class="hidden mt-2 w-full text-sm font-semibold text-zinc-400 hover:text-zinc-200 px-4 py-3 rounded-2xl border border-white/10 bg-zinc-900/40 hover:bg-zinc-800/60 transition-all"
+                                aria-expanded="false">
+                            Show extra tools
                         </button>
                     </div>
 
@@ -1283,7 +1288,7 @@ No self-referrals, shared devices, bots, or fraud. All referrals verified server
 
 #1 (top verified referrers meeting min threshold) may claim a homepage banner feature via secure form after verification. There is no cash prize. All decisions final.
 
-(Admin: Set "rules_full" key in site_content table via Admin panel for live full legal text. This static fallback preserves functionality.)
+Full rules: https://www.viralrefer.app/rules/
             </div>
 
             <div class="mt-8 flex justify-end">

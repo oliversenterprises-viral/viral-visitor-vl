@@ -135,6 +135,7 @@ export async function activatePostShareReturnLoop(): Promise<void> {
 
   document.documentElement.setAttribute('data-vr-post-share-return', '1');
   document.documentElement.setAttribute('data-vr-share-locked', '1');
+  void import('./kid-simple').then((m) => m.syncKidSimpleFromLock()).catch(() => {});
   document.documentElement.removeAttribute('data-vr-share-pending');
   document.documentElement.removeAttribute('data-vr-confirm-dismissed');
   document.getElementById('share-still-pending-chip')?.classList.add('hidden');

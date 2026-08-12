@@ -399,6 +399,54 @@ html[data-vr-send-mode] button[onclick="showQRModal()"] {
   display: none !important;
 }
 
+html[data-vr-send-mode]:not([data-vr-kid-more]) #viral-power-meter,
+html[data-vr-send-mode]:not([data-vr-kid-more]) #promo-kit-teaser,
+html[data-vr-send-mode]:not([data-vr-kid-more]) #catch-up-anxiety-bar,
+html[data-vr-send-mode]:not([data-vr-kid-more]) #community-unlock-meter,
+html[data-vr-send-mode]:not([data-vr-kid-more]) #weekly-sprint-board,
+html[data-vr-send-mode]:not([data-vr-kid-more]) #daily-crown-section,
+html[data-vr-send-mode]:not([data-vr-kid-more]) #challenge-duel-banner {
+  display: none !important;
+}
+
+/* Kid-simple: first paint — one button, no dash counters or extra chrome */
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-telegram-helper-btn,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-global-regions,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-board-meta,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #vr-verified-total,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-prize-fomo,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-security-trust,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-leaderboard-btn,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #daily-champion-strip,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #challenge-duel-banner,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #community-unlock-meter,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #weekly-sprint-board,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #daily-crown-section,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-campaign-badge,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #referral-section,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey {
+  display: none !important;
+}
+
+/* Kid-simple after get-link: extras stay available via More tools */
+html[data-vr-kid-simple]:not([data-vr-kid-more]) #viral-power-meter,
+html[data-vr-kid-simple]:not([data-vr-kid-more]) #growth-command-center,
+html[data-vr-kid-simple]:not([data-vr-kid-more]) #promo-kit-teaser,
+html[data-vr-kid-simple]:not([data-vr-kid-more]) #catch-up-anxiety-bar,
+html[data-vr-kid-simple]:not([data-vr-kid-more]) #community-unlock-meter,
+html[data-vr-kid-simple]:not([data-vr-kid-more]) #weekly-sprint-board,
+html[data-vr-kid-simple]:not([data-vr-kid-more]) #daily-crown-section,
+html[data-vr-kid-simple]:not([data-vr-kid-more]) #challenge-duel-banner {
+  display: none !important;
+}
+
+html[data-vr-kid-simple] #kid-more-tools-btn {
+  display: block;
+}
+html[data-vr-kid-simple]:not([data-vr-has-link]) #kid-more-tools-btn {
+  display: none;
+}
+
 /* De-emphasize clipboard path — copy alone never locks */
 html[data-vr-send-mode] #copy-link-btn {
   opacity: 0.55;

@@ -156,9 +156,11 @@ export function polishShareFirstForSendMode(): void {
       if (root.hasAttribute('data-vr-send-more')) {
         root.removeAttribute('data-vr-send-more');
         more!.textContent = t('send_mode.more');
+        void import('./kid-simple').then((m) => m.setKidMore(false)).catch(() => {});
       } else {
         root.setAttribute('data-vr-send-more', '1');
         more!.textContent = t('send_mode.less');
+        void import('./kid-simple').then((m) => m.setKidMore(true)).catch(() => {});
       }
       polishShareFirstForSendMode();
     });

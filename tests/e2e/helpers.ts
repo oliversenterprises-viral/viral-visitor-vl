@@ -15,6 +15,6 @@ export async function ensureReferralLink(page: Page): Promise<void> {
   const current = await refInput.inputValue().catch(() => '');
   if (current && /\/r\/VIRAL-/i.test(current)) return;
 
-  await page.click('text=Get my referral link');
+  await page.locator('#hero-get-link-btn').click();
   await expect(refInput).toHaveValue(/\/r\/VIRAL-/i, { timeout: 10000 });
 }
