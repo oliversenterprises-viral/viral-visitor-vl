@@ -373,7 +373,13 @@ export async function getMyReferralLinkInstant(): Promise<void> {
 
     // FOMO ticker unlocks once this visitor has a referral link
     void import('./app')
-      .then((m) => m.onReferralLinkReadyForTicker?.())
+      .then((m) => {
+        try {
+          m.onReferralLinkReadyForTicker?.();
+        } catch {
+          /* circular init in unit tests */
+        }
+      })
       .catch(() => {});
 
     syncMobileReferralCta();

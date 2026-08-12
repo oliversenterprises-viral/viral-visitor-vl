@@ -159,7 +159,9 @@ async function refreshFunnelTicker(activityRows?: PublicActivityRow[]): Promise<
 
 /** Call after GetReferralLink so the ticker appears immediately for new participants. */
 export function onReferralLinkReadyForTicker(): void {
-  void refreshFunnelTicker();
+  void refreshFunnelTicker().catch(() => {
+    /* circular import during tests / ticker optional */
+  });
 }
 
 async function renderRecentActivity(options: { pulse?: boolean } = {}) {

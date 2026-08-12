@@ -395,15 +395,16 @@ export function importConfig(cfg: Partial<TimerState>) {
 
 // Bootstrap side-effect: hydrate once on module load (safe, idempotent)
 if (typeof window !== 'undefined') {
-  // Delay slightly to allow UI mount
+  // Delay slightly to allow UI mount. Re-check document — Vitest tears down jsdom
+  // before this timer if a file finishes quickly.
   setTimeout(() => {
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
     try { hydrate(); } catch { /* storage unavailable */ }
-    // Global visibility recovery (cheap)
     document.addEventListener('visibilitychange', () => {
+      if (typeof document === 'undefined') return;
       if (!document.hidden) forceSyncFromWorker();
     });
     window.addEventListener('focus', forceSyncFromWorker);
-    // Page lifecycle for Chrome freeze
     document.addEventListener('resume', forceSyncFromWorker as any);
   }, 40);
 }
