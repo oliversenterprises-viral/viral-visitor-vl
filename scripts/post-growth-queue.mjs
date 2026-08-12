@@ -24,6 +24,7 @@ import {
   X_QR_IMAGE,
   X_SAFE_BIO,
   assertNoXUrls,
+  assertNoCashPrize,
   loadLocalEnv,
   readQueue,
   writeQueue,
@@ -79,7 +80,7 @@ async function postTelegramViaAdmin(item) {
   const secret = await extractAdminSecret();
   if (!secret) throw new Error('Admin secret not found for server-side Telegram post');
 
-  const text = item.copy?.text || '';
+  const text = assertNoCashPrize(item.copy?.text || '');
   const imagePath = resolveQueueImage(item);
   const payload = {
     text,
@@ -129,7 +130,7 @@ async function postTelegram(item) {
     return postTelegramViaAdmin(item);
   }
 
-  const text = item.copy?.text || '';
+  const text = assertNoCashPrize(item.copy?.text || '');
   const imagePath = resolveQueueImage(item);
 
   if (dryRun) {
@@ -171,7 +172,7 @@ async function postXApi(item) {
     throw new Error('X API credentials missing — use --assist or set X_API_* in .env.local');
   }
 
-  const text = item.copy?.text || '';
+  const text = assertNoCashPrize(item.copy?.text || '');
   if (dryRun) {
     console.log('[dry-run] X API tweet:');
     console.log(text);
@@ -227,7 +228,7 @@ function resolveQueueQr(item) {
 }
 
 function postXAssist(item) {
-  const text = item.copy?.text || '';
+  const text = assertNoCashPrize(item.copy?.text || '');
   const isNoUrl = item.xLinkPolicy === 'no-url' || item.platform === 'x';
   if (isNoUrl) assertNoXUrls(text);
 

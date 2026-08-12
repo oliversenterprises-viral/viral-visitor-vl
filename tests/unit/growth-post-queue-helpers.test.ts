@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   appendCompliance,
+  assertNoCashPrize,
   buildOwnerAdUrl,
   buildEmbedAdUrl,
   buildUtmUrl,
@@ -59,6 +60,18 @@ describe('growth-post-queue-helpers', () => {
     const tweet = buildXSafeTweet('Free contest — climb the board.');
     expect(tweet).not.toMatch(/viralrefer\.app|https?:\/\//i);
     expect(tweet).toContain('QR');
+  });
+
+  it('assertNoCashPrize blocks $10 / Cash App copy', () => {
+    expect(() => assertNoCashPrize('win $10 + homepage banner')).toThrow(/cash/i);
+    expect(assertNoCashPrize('claim a homepage feature (no cash prize)')).toContain('homepage');
+  });
+
+  it('buildWeekQueue copy never promises cash', () => {
+    const q = buildWeekQueue(stats);
+    for (const item of q.items) {
+      expect(item.copy?.text || '').not.toMatch(/\$10|cash app|win \$\d/i);
+    }
   });
 
   it('buildWeekQueue X items use no-url policy', () => {
