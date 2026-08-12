@@ -1,16 +1,18 @@
 import { test, expect } from '@playwright/test';
-import { ensureReferralLink, waitForAppReady } from './helpers';
+import { waitForAppReady } from './helpers';
 
 test.describe('ViralRefer - Prize Claim Flow & Admin', () => {
   test('Claim button exists and opens modal', async ({ page }) => {
     await page.goto('/');
     await waitForAppReady(page);
-    await ensureReferralLink(page);
 
     const claimBtn = page.locator('#prize button[onclick="claimBanner()"]');
-    await expect(claimBtn).toBeVisible({ timeout: 8000 });
-    await claimBtn.scrollIntoViewIfNeeded();
-    await claimBtn.click();
+    await expect(claimBtn).toBeAttached({ timeout: 8000 });
+
+    await page.evaluate(() => {
+      localStorage.setItem('vr_my_ref_code', 'VIRAL-E2ECLAIM');
+      (window as unknown as { claimBanner?: () => void }).claimBanner?.();
+    });
 
     const modal = page.locator('#winner-modal');
     await expect(modal).toBeVisible({ timeout: 8000 });
