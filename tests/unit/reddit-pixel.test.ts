@@ -31,8 +31,18 @@ describe('reddit-pixel', () => {
     expect(mod.isRedditPixelEnabled()).toBe(false);
   });
 
-  it('inits pixel script and PageVisit when id is set', async () => {
+  it('stays off when a leftover pixel id is set without the enable flag', async () => {
     vi.stubEnv('VITE_REDDIT_PIXEL_ID', 'a2_testpixel123');
+    vi.stubEnv('VITE_REDDIT_PIXEL_ENABLED', '');
+    const mod = await import('../../src/lib/reddit-pixel');
+    expect(mod.isRedditPixelEnabled()).toBe(false);
+    mod.initRedditPixel();
+    expect(document.querySelector('script[src*="redditstatic.com"]')).toBeNull();
+  });
+
+  it('inits pixel script and PageVisit when enabled and id is set', async () => {
+    vi.stubEnv('VITE_REDDIT_PIXEL_ID', 'a2_testpixel123');
+    vi.stubEnv('VITE_REDDIT_PIXEL_ENABLED', '1');
     // not embed
     window.history.replaceState(null, '', '/');
 
@@ -51,6 +61,7 @@ describe('reddit-pixel', () => {
 
   it('skips on embed path', async () => {
     vi.stubEnv('VITE_REDDIT_PIXEL_ID', 'a2_testpixel123');
+    vi.stubEnv('VITE_REDDIT_PIXEL_ENABLED', '1');
     window.history.replaceState(null, '', '/embed');
 
     const mod = await import('../../src/lib/reddit-pixel');
@@ -60,6 +71,7 @@ describe('reddit-pixel', () => {
 
   it('maps GetReferralLink to Lead track calls when enabled', async () => {
     vi.stubEnv('VITE_REDDIT_PIXEL_ID', 'a2_testpixel123');
+    vi.stubEnv('VITE_REDDIT_PIXEL_ENABLED', '1');
     window.history.replaceState(null, '', '/');
 
     const calls: unknown[][] = [];

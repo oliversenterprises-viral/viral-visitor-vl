@@ -59,7 +59,7 @@ initVisitorSlim();
 initKidSimple();
 initAttributedReferralRecording();
 initVisitorTracking();
-// Reddit retargeting pixel — only loads when VITE_REDDIT_PIXEL_ID is set (safe no-op otherwise)
+// Reddit retargeting pixel — no-op unless VITE_REDDIT_PIXEL_ENABLED=1 and a pixel id are set
 initRedditPixel();
 initInteractionTracking();
 initOrganicSeo();

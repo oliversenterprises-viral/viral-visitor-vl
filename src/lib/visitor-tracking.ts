@@ -242,7 +242,7 @@ export function trackVisitorFunnel(
   if (isAdminStatsReadOnlyRefresh()) return;
   pushLocalVisitorEvent(step, metadata);
   logVisitorEventServer(step, metadata);
-  // Optional Reddit Ads pixel (no-op unless VITE_REDDIT_PIXEL_ID is set)
+  // Optional Reddit Ads pixel (no-op unless explicitly enabled)
   trackRedditFunnelStep(step);
 }
 
