@@ -25,18 +25,18 @@ export const en = {
   'nav.lang': 'Language',
 
   'hero.badge': 'WORLDWIDE • FREE',
-  'hero.title_line1': 'Get your free link in 30 seconds.',
-  'hero.title_accent': 'Climb to #1 — claim homepage feature.',
+  'hero.title_line1': 'Get a free link.',
+  'hero.title_accent': 'Send it to a friend.',
   'hero.subtitle':
-    'Open worldwide. Free link → share → climb. #1 claims a homepage banner for their website.',
+    'Tap the button. Send your link. When a friend taps Get my link, you go up the board.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',
   'hero.proof_no_email': 'No email',
   'hero.proof_live': 'Live free leaderboard',
-  'hero.cta': 'Get my referral link',
+  'hero.cta': 'Get my free link',
   'hero.cta_secondary': 'See leaderboard',
   'hero.trust':
-    'Free · No signup · No cash prize · #1 gets a homepage feature · Link in ~30 sec',
+    'Free. No signup. No cash. Just send your link.',
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 
@@ -186,14 +186,14 @@ export const en = {
   // Send mode — one primary action after get-link (main funnel fix)
   'send_mode.primary_cta': 'Send to a friend now',
   'send_mode.sticky_cta': 'Send to a friend now',
-  'send_mode.sticky_hint': 'Locks when a friend taps Get my link · copy never locks',
-  'send_mode.status': 'Link ready. Send it to a friend now.',
+  'send_mode.sticky_hint': 'A friend must tap Get my link. Copying is not enough.',
+  'send_mode.status': 'Your link is ready. Send it to a friend.',
   'send_mode.sub':
-    'One tap. Send to a friend. They open your link and tap Get my link. Copy never locks.',
+    'Send this to a friend. They open it and tap Get my link. That counts. Copying does not count.',
   'send_mode.next_step':
-    'Tap Send to a friend now — then they must Get my link to lock yours.',
+    'Tap Send to a friend. They must tap Get my link.',
   'send_mode.reminder':
-    'Send your link now. Copy alone never locks. Sharing can add time.',
+    'Send your link. Copying does not count.',
   'send_mode.more': 'More ways to send',
   'send_mode.less': 'Hide extra options',
 

@@ -9,6 +9,7 @@ import { initVisitorTracking } from './lib/visitor-tracking';
 import { initRedditPixel } from './lib/reddit-pixel';
 import { initInteractionTracking } from './lib/interaction-tracking';
 import { initVisitorSlim } from './lib/visitor-slim';
+import { initKidSimple } from './lib/kid-simple';
 import { initMobileOptimize } from './lib/mobile-optimize';
 import { initPublicClarity, refreshPublicClarityState } from './lib/public-clarity';
 import { initPublicPolish } from './lib/public-polish';
@@ -55,6 +56,7 @@ revealReferralAttributionBanner();
 initFunnelConversion();
 initViralLoops();
 initVisitorSlim();
+initKidSimple();
 initAttributedReferralRecording();
 initVisitorTracking();
 // Reddit retargeting pixel — only loads when VITE_REDDIT_PIXEL_ID is set (safe no-op otherwise)
