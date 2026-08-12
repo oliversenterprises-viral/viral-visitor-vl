@@ -19,6 +19,7 @@ import {
   isFunnelOffsiteNotifyEnabled,
 } from '../_shared/funnel-notify.ts';
 import { mintAdminSessionToken, verifyAdminSessionToken } from '../_shared/admin-session.ts';
+import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -104,11 +105,7 @@ const PASSWORD_RATE_MAX = 10;
 const passwordAttemptsByIp = new Map<string, { count: number; windowStart: number }>();
 
 function clientIp(req: Request): string {
-  return (
-    req.headers.get('cf-connecting-ip')?.trim() ||
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    'unknown'
-  );
+  return getTrustedClientIp(req);
 }
 
 function isPasswordRateLimited(ip: string): boolean {

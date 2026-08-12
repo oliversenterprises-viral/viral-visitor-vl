@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { dispatchFunnelOffsiteNotify } from '../_shared/funnel-notify.ts';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
+import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,11 +10,8 @@ const corsHeaders = {
 };
 
 function getClientIp(req: Request): string {
-  const cfIp = req.headers.get('cf-connecting-ip');
-  if (cfIp) return cfIp.trim();
-  const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return '';
+  const ip = getTrustedClientIp(req);
+  return ip === 'unknown' ? '' : ip;
 }
 
 function normalizeCountryCode(raw: string | null | undefined): string | null {
