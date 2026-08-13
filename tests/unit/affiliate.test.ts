@@ -2,12 +2,15 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   addAffiliate,
   buildAffiliateLink,
+  computeAffiliateRewards,
   computeAffiliateStats,
   isValidAffiliateCode,
   markAffiliatePaid,
+  mintAffiliateCode,
   normalizeAffiliateCode,
   parseAffiliateFromLocation,
   parseAffiliatesProgram,
+  pickWeeklyTopPromoter,
 } from '../../src/lib/affiliate';
 
 describe('affiliate attribution', () => {
@@ -68,5 +71,70 @@ describe('affiliate attribution', () => {
     expect(added.row?.code).toBe('MAYA');
     const paid = markAffiliatePaid(added.program, 'MAYA', 3);
     expect(paid.affiliates[0]?.paid_count).toBe(3);
+  });
+
+  it('mints a new code when the name is already taken', () => {
+    const first = addAffiliate(parseAffiliatesProgram({}), { name: 'Maya', source: 'self' });
+    const second = addAffiliate(first.program, { name: 'Maya', source: 'self' });
+    expect(second.error).toBeUndefined();
+    expect(second.row?.code).not.toBe('MAYA');
+    expect(second.row?.code.startsWith('MAYA')).toBe(true);
+  });
+
+  it('treats ad credit as the default reward and cash after a threshold', () => {
+    const program = parseAffiliatesProgram({ cash_threshold: 10 });
+    const stats = { landings: 12, getLinks: 12, uniqueGetLinkVisitors: 12, unpaid: 12 };
+    const due = computeAffiliateRewards(stats, program, { paid_count: 0, ad_credit_granted: 2 });
+    expect(due.adCreditOwed).toBe(10);
+    expect(due.cashDue).toBe(true);
+    expect(due.cashUnpaid).toBe(12);
+    const early = computeAffiliateRewards(
+      { landings: 3, getLinks: 3, uniqueGetLinkVisitors: 3, unpaid: 3 },
+      program,
+      { paid_count: 0, ad_credit_granted: 0 },
+    );
+    expect(early.cashDue).toBe(false);
+    expect(early.adCreditOwed).toBe(3);
+  });
+
+  it('picks this week’s top promoter from Get my link counts', () => {
+    const now = Date.parse('2026-08-13T12:00:00Z');
+    const program = addAffiliate(parseAffiliatesProgram({}), { name: 'Maya' }).program;
+    const withSam = addAffiliate(program, { name: 'Sam' }).program;
+    const events = [
+      {
+        event_name: 'GetReferralLink',
+        visitor_id: 'a',
+        metadata: { aff_code: 'MAYA' },
+        created_at: '2026-08-12T10:00:00Z',
+      },
+      {
+        event_name: 'GetReferralLink',
+        visitor_id: 'b',
+        metadata: { aff_code: 'MAYA' },
+        created_at: '2026-08-12T11:00:00Z',
+      },
+      {
+        event_name: 'GetReferralLink',
+        visitor_id: 'c',
+        metadata: { aff_code: 'SAM' },
+        created_at: '2026-08-12T11:00:00Z',
+      },
+      {
+        event_name: 'GetReferralLink',
+        visitor_id: 'old',
+        metadata: { aff_code: 'SAM' },
+        created_at: '2026-07-01T11:00:00Z',
+      },
+    ];
+    const top = pickWeeklyTopPromoter(events, withSam, now);
+    expect(top?.code).toBe('MAYA');
+    expect(top?.uniqueGetLinkVisitors).toBe(2);
+  });
+
+  it('mintAffiliateCode skips taken slugs', () => {
+    const code = mintAffiliateCode('Maya', new Set(['MAYA']));
+    expect(code).not.toBe('MAYA');
+    expect(isValidAffiliateCode(code)).toBe(true);
   });
 });

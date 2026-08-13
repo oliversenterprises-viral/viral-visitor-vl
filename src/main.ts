@@ -3,6 +3,7 @@ import { applyClientReferralOgMeta, scheduleReferralOgEnrichment } from './lib/c
 import { initOrganicSeo } from './lib/organic-seo';
 import { captureReferralAttribution, revealReferralAttributionBanner } from './lib/referral-url';
 import { captureAffiliateAttribution } from './lib/affiliate';
+import { initAffiliatePublicUi } from './lib/affiliate-public-ui';
 import { initFunnelConversion } from './lib/funnel-conversion';
 import { initAttributedReferralRecording, syncMobileReferralCta } from './referral';
 import { captureUtmAttribution } from './lib/utm-attribution';
@@ -68,6 +69,11 @@ initOrganicSeo();
 applyClientReferralOgMeta();
 scheduleReferralOgEnrichment();
 initPublic();
+try {
+  initAffiliatePublicUi();
+} catch (err) {
+  console.warn('[ViralRefer] promoter UI skipped:', err);
+}
 initApp().catch((err) => {
   console.warn('[ViralRefer] initApp failed (degraded mode):', err);
 }).finally(() => {
