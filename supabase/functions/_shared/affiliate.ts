@@ -212,6 +212,28 @@ export function eventTimeMs(event: Record<string, unknown>): number {
   return Number.isFinite(t) ? t : 0;
 }
 
+export function pickWeeklyTopFromLedger(
+  grants: readonly { affiliate_code?: string | null }[],
+  program: AffiliatesProgram,
+): { code: string; name: string; uniqueGetLinkVisitors: number } | null {
+  const counts = new Map<string, number>();
+  for (const row of grants) {
+    const code = normalizeAffiliateCode(row.affiliate_code);
+    if (!isValidAffiliateCode(code)) continue;
+    counts.set(code, (counts.get(code) || 0) + 1);
+  }
+  let best: { code: string; name: string; uniqueGetLinkVisitors: number } | null = null;
+  for (const [code, n] of counts) {
+    if (n <= 0) continue;
+    const named = program.affiliates.find((a) => a.code === code && a.active !== false);
+    if (program.affiliates.length && !named) continue;
+    if (!best || n > best.uniqueGetLinkVisitors) {
+      best = { code, name: named?.name || code, uniqueGetLinkVisitors: n };
+    }
+  }
+  return best;
+}
+
 export function pickWeeklyTopPromoter(
   events: readonly Record<string, unknown>[],
   program: AffiliatesProgram,

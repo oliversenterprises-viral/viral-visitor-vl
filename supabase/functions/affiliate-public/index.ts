@@ -13,7 +13,7 @@ import {
   computeAffiliateStats,
   countRecentSignupsForIp,
   parseAffiliatesProgram,
-  pickWeeklyTopPromoter,
+  pickWeeklyTopFromLedger,
   normalizeAffiliateCode,
   type AffiliatesProgram,
 } from '../_shared/affiliate.ts';
@@ -75,14 +75,34 @@ async function saveProgram(
   if (error) throw error;
 }
 
-async function loadEvents(supabaseAdmin: ReturnType<typeof adminClient>): Promise<Record<string, unknown>[]> {
+async function loadEventsForCode(
+  supabaseAdmin: ReturnType<typeof adminClient>,
+  code: string,
+): Promise<Record<string, unknown>[]> {
   const { data, error } = await supabaseAdmin
     .from('visitor_events')
     .select('event_name, visitor_id, metadata, created_at')
+    .eq('metadata->>aff_code', code)
     .order('created_at', { ascending: false })
-    .limit(2000);
+    .limit(400);
   if (error) throw error;
   return ((data || []) as Record<string, unknown>[]).filter((row) => !isTestVisitorFunnelEvent(row));
+}
+
+async function loadWeeklyLedger(
+  supabaseAdmin: ReturnType<typeof adminClient>,
+): Promise<Array<{ affiliate_code?: string | null }>> {
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabaseAdmin
+    .from('ad_board_credit_ledger')
+    .select('affiliate_code')
+    .gte('created_at', since)
+    .limit(400);
+  if (error) {
+    console.error('[affiliate-public] weekly ledger', error.message || error);
+    return [];
+  }
+  return (data || []) as Array<{ affiliate_code?: string | null }>;
 }
 
 Deno.serve(async (req: Request) => {
@@ -100,8 +120,11 @@ Deno.serve(async (req: Request) => {
     const supabaseAdmin = adminClient();
 
     if (action === 'board') {
-      const [program, events] = await Promise.all([loadProgram(supabaseAdmin), loadEvents(supabaseAdmin)]);
-      const top = pickWeeklyTopPromoter(events, program);
+      const [program, grants] = await Promise.all([
+        loadProgram(supabaseAdmin),
+        loadWeeklyLedger(supabaseAdmin),
+      ]);
+      const top = pickWeeklyTopFromLedger(grants, program);
       return json({
         success: true,
         data: {
@@ -116,8 +139,12 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'stats') {
       const code = String(body.code || '').trim();
-      const [program, events] = await Promise.all([loadProgram(supabaseAdmin), loadEvents(supabaseAdmin)]);
-      const row = program.affiliates.find((a) => a.code === normalizeAffiliateCode(code));
+      const wanted = normalizeAffiliateCode(code);
+      const [program, events] = await Promise.all([
+        loadProgram(supabaseAdmin),
+        loadEventsForCode(supabaseAdmin, wanted),
+      ]);
+      const row = program.affiliates.find((a) => a.code === wanted);
       if (!row || !row.active) {
         return json({ success: false, error: 'Unknown promoter code' }, 404);
       }

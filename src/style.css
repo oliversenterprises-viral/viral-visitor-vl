@@ -446,25 +446,52 @@ html[data-vr-kid-simple]:not([data-vr-kid-more]) #challenge-duel-banner {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem 0.75rem;
-  padding: 0.65rem 1rem;
+  gap: 0.4rem 0.7rem;
+  padding: 0.7rem 0.9rem;
   border-radius: 1rem;
   border: 1px solid rgba(52, 211, 153, 0.28);
   background: rgba(6, 78, 59, 0.35);
-  font-size: 0.875rem;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  text-align: center;
   color: #d1fae5;
 }
 .promoter-week-kicker {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #6ee7b7;
+  width: 100%;
 }
 .promoter-week-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0.35rem 0.85rem;
   font-weight: 700;
-  color: #fff;
-  text-decoration: underline;
+  color: #052e16;
+  background: #6ee7b7;
+  border-radius: 999px;
+  text-decoration: none;
+}
+.promoter-week-cta:hover {
+  background: #a7f3d0;
+}
+@media (min-width: 640px) {
+  .promoter-week-kicker {
+    width: auto;
+  }
+}
+#promoter-dashboard .grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+#promoter-dashboard .grid > div {
+  min-width: 0;
+}
+#hero-promoter-cta {
+  padding-inline: 0.5rem;
 }
 
 html[data-vr-kid-simple] #kid-more-tools-btn {

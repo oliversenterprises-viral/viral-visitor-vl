@@ -10,6 +10,7 @@ import {
   normalizeAffiliateCode,
   parseAffiliateFromLocation,
   parseAffiliatesProgram,
+  pickWeeklyTopFromLedger,
   pickWeeklyTopPromoter,
 } from '../../src/lib/affiliate';
 
@@ -128,6 +129,21 @@ describe('affiliate attribution', () => {
       },
     ];
     const top = pickWeeklyTopPromoter(events, withSam, now);
+    expect(top?.code).toBe('MAYA');
+    expect(top?.uniqueGetLinkVisitors).toBe(2);
+  });
+
+  it('picks weekly top from the credit ledger without scanning all visits', () => {
+    const program = addAffiliate(parseAffiliatesProgram({}), { name: 'Maya' }).program;
+    const withSam = addAffiliate(program, { name: 'Sam' }).program;
+    const top = pickWeeklyTopFromLedger(
+      [
+        { affiliate_code: 'MAYA' },
+        { affiliate_code: 'MAYA' },
+        { affiliate_code: 'SAM' },
+      ],
+      withSam,
+    );
     expect(top?.code).toBe('MAYA');
     expect(top?.uniqueGetLinkVisitors).toBe(2);
   });

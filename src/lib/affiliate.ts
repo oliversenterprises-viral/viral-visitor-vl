@@ -21,6 +21,7 @@ export {
   mintAffiliateCode,
   normalizeAffiliateCode,
   parseAffiliatesProgram,
+  pickWeeklyTopFromLedger,
   pickWeeklyTopPromoter,
   setAffiliateActive,
   slugFromName,
