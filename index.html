@@ -135,7 +135,10 @@
     </nav>
 
     <div class="pt-20 sm:pt-24 pb-12 sm:pb-16 max-w-6xl mx-auto px-4 sm:px-6">
-        <div id="promoter-week-strip" class="promoter-week-strip hidden mb-4 sm:mb-5" role="status"></div>
+        <div id="promoter-week-strip" class="promoter-week-strip mb-4 sm:mb-5" role="status">
+            <span>We want promoters.</span>
+            <a href="#become-promoter" class="promoter-week-cta">Become a promoter</a>
+        </div>
        
         <!-- HERO — conversion polish: one primary action, global proof, quiet first paint -->
         <div class="rounded-2xl sm:rounded-3xl p-6 sm:p-12 md:p-16 text-center hero-gradient shadow-2xl">
@@ -914,15 +917,15 @@
             </div>
         </div>
 
-        <div id="become-promoter" class="mt-12 glass border border-emerald-400/25 rounded-3xl p-8 md:p-10 bg-emerald-950/20">
-            <h2 class="text-3xl font-bold tracking-tight mb-2">Become a promoter</h2>
+        <div id="become-promoter" class="mt-12 glass border border-emerald-400/25 rounded-3xl p-5 sm:p-8 md:p-10 bg-emerald-950/20">
+            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Become a promoter</h2>
             <p class="text-zinc-300 mb-2">We want affiliates. Pick a name, get a link instantly. When someone you send taps Get my link, you earn <strong>ad-board credit</strong> (days on ads.viralrefer.app).</p>
             <p class="text-zinc-500 text-sm mb-5">This is promoter pay — not a contest cash prize. Ad days land on the ad board by themselves. Cash bonus is tracked after 10 people; no owner buttons.</p>
-            <form id="promoter-signup-form" class="flex flex-wrap gap-2 items-end mb-4">
-                <label class="flex-1 min-w-[180px] text-xs text-zinc-400">Your name
-                    <input name="name" required maxlength="80" placeholder="Maya" class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white" />
+            <form id="promoter-signup-form" class="flex flex-col sm:flex-row flex-wrap gap-2 items-stretch sm:items-end mb-4">
+                <label class="flex-1 min-w-0 text-xs text-zinc-400">Your name
+                    <input name="name" required maxlength="80" placeholder="Maya" class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-3 text-base sm:text-sm text-white min-h-[44px]" />
                 </label>
-                <button type="submit" class="px-5 py-2.5 text-sm font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white">Get my promoter link</button>
+                <button type="submit" class="px-5 py-3 text-sm font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white min-h-[44px] w-full sm:w-auto">Get my promoter link</button>
                 <span data-aff-signup-err class="text-sm text-amber-300 w-full"></span>
             </form>
             <div id="promoter-dashboard" class="hidden"></div>

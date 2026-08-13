@@ -85,9 +85,9 @@ function paintDashboard(box: HTMLElement, payload: StatsPayload): void {
     <div class="text-sm font-semibold text-emerald-300 mb-1">Your promoter desk</div>
     <p class="text-zinc-300 text-sm mb-3">Hi ${escapeHtml(payload.name)}. Share this link — not a /r/ friend link.</p>
     <div class="font-mono text-sm break-all bg-black/40 border border-white/10 rounded-xl px-3 py-2 mb-3">${escapeHtml(link)}</div>
-    <div class="flex flex-wrap gap-2 mb-4">
-      <button type="button" data-aff-copy-mine class="px-3 py-1.5 text-xs rounded-xl bg-violet-600 hover:bg-violet-500">Copy my link</button>
-      <a href="${escapeHtml(payload.ad_board_url)}" target="_blank" rel="noopener" class="px-3 py-1.5 text-xs rounded-xl border border-white/15 text-zinc-200">Open ad board</a>
+    <div class="flex flex-col sm:flex-row flex-wrap gap-2 mb-4">
+      <button type="button" data-aff-copy-mine class="px-3 py-3 sm:py-1.5 text-sm sm:text-xs rounded-xl bg-violet-600 hover:bg-violet-500 min-h-[44px]">Copy my link</button>
+      <a href="${escapeHtml(payload.ad_board_url)}" target="_blank" rel="noopener" class="px-3 py-3 sm:py-1.5 text-sm sm:text-xs rounded-xl border border-white/15 text-zinc-200 text-center min-h-[44px] inline-flex items-center justify-center">Open ad board</a>
     </div>
     <div class="grid grid-cols-3 gap-2 mb-3 text-center">
       <div class="rounded-lg bg-white/5 px-2 py-2"><div class="text-[9px] uppercase text-zinc-500">Visits</div><div class="text-xl font-bold">${payload.stats.landings}</div></div>
