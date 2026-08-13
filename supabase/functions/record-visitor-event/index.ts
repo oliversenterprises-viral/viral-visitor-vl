@@ -1,5 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { dispatchFunnelOffsiteNotify } from '../_shared/funnel-notify.ts';
+import { settleGetLinkAdCredit } from '../_shared/affiliate-ads-credit.ts';
+import { isTestVisitorFunnelEvent } from '../_shared/visitor-funnel-test.ts';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 
@@ -132,6 +134,17 @@ Deno.serve(async (req: Request) => {
     dispatchFunnelOffsiteNotify(row).catch((notifyErr) => {
       console.error('[record-visitor-event] funnel notify:', notifyErr);
     });
+
+    if (eventName === 'GetReferralLink' && !isTestVisitorFunnelEvent(row)) {
+      const affCode = String(clientMetadata.aff_code || body.aff_code || '').trim();
+      settleGetLinkAdCredit(supabaseAdmin, {
+        affCode,
+        visitorId,
+        name: affCode,
+      }).catch((creditErr) => {
+        console.error('[record-visitor-event] ad credit:', creditErr);
+      });
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

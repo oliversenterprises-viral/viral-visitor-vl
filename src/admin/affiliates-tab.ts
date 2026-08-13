@@ -15,8 +15,6 @@ import {
   buildAffiliateLink,
   computeAffiliateRewards,
   computeAffiliateStats,
-  markAffiliateAdCredit,
-  markAffiliatePaid,
   parseAffiliatesProgram,
   setAffiliateActive,
   type AffiliatesProgram,
@@ -77,26 +75,20 @@ export async function renderAffiliatesTab(content: HTMLElement): Promise<void> {
               <div class="text-lg font-bold text-emerald-300 tabular-nums">${stats.uniqueGetLinkVisitors}</div>
             </div>
             <div class="rounded-lg bg-white/5 px-2 py-1.5">
-              <div class="text-[8px] uppercase text-zinc-500">Ad days owed</div>
-              <div class="text-lg font-bold text-amber-300 tabular-nums">${rewards.adCreditOwed}</div>
+              <div class="text-[8px] uppercase text-zinc-500">Ad days auto</div>
+              <div class="text-lg font-bold text-amber-300 tabular-nums">${stats.uniqueGetLinkVisitors}</div>
             </div>
           </div>
           ${
             rewards.cashDue
-              ? `<div class="text-[11px] text-amber-300">Cash bonus due · ${rewards.cashUnpaid} unpaid (threshold ${rewards.cashThreshold})</div>`
-              : `<div class="text-[11px] text-zinc-500">Cash bonus after ${rewards.cashThreshold} people (${stats.uniqueGetLinkVisitors} so far)</div>`
+              ? `<div class="text-[11px] text-amber-300">Cash bonus tracked · ${rewards.cashUnpaid} after ${rewards.cashThreshold} people (no button — pay when you want)</div>`
+              : `<div class="text-[11px] text-zinc-500">Ad days grant themselves on Get my link. Cash bonus after ${rewards.cashThreshold} people.</div>`
           }
           <div class="flex flex-wrap gap-2">
             <button type="button" data-aff-copy class="text-[10px] px-2 py-1 rounded-xl bg-white/10 hover:bg-white/15">Copy link</button>
             <button type="button" data-aff-toggle class="text-[10px] px-2 py-1 rounded-xl border border-white/15">${
               row.active ? 'Pause' : 'Turn on'
             }</button>
-            <button type="button" data-aff-ad class="text-[10px] px-2 py-1 rounded-xl border border-emerald-400/30 text-emerald-200" ${
-              stats.uniqueGetLinkVisitors === 0 ? 'disabled' : ''
-            }>Mark ad credit given</button>
-            <button type="button" data-aff-paid class="text-[10px] px-2 py-1 rounded-xl bg-emerald-600/80 hover:bg-emerald-600 text-white" ${
-              !rewards.cashDue ? 'disabled' : ''
-            }>Mark cash paid</button>
           </div>
         </article>`;
       })
@@ -105,7 +97,7 @@ export async function renderAffiliatesTab(content: HTMLElement): Promise<void> {
     content.innerHTML = `
       <div class="mb-5">
         <div class="text-2xl font-bold">Promoters</div>
-        <p class="text-sm text-zinc-400 mt-1">People can sign up on the public site. Default thank-you is ad-board credit. Cash bonus after ${program.cash_threshold} Get my links — you mark it paid.</p>
+        <p class="text-sm text-zinc-400 mt-1">Hands-off: each Get my link adds a spendable ad day on ads.viralrefer.app. Cash bonus is tracked after ${program.cash_threshold} people — no buttons to click.</p>
         <p class="text-[11px] text-zinc-500 mt-2">${escapeHtml(program.payout_note)}</p>
       </div>
 
@@ -181,26 +173,7 @@ export async function renderAffiliatesTab(content: HTMLElement): Promise<void> {
           paint();
         });
       });
-      card.querySelector('[data-aff-ad]')?.addEventListener('click', () => {
-        const stats = computeAffiliateStats(events, code, 0);
-        const next = markAffiliateAdCredit(program, code, stats.uniqueGetLinkVisitors);
-        void saveProgram(next).then((ok) => {
-          if (!ok) return;
-          program = next;
-          showToast('Ad credit marked given', 'success');
-          paint();
-        });
-      });
-      card.querySelector('[data-aff-paid]')?.addEventListener('click', () => {
-        const stats = computeAffiliateStats(events, code, 0);
-        const next = markAffiliatePaid(program, code, stats.uniqueGetLinkVisitors);
-        void saveProgram(next).then((ok) => {
-          if (!ok) return;
-          program = next;
-          showToast('Cash marked paid', 'success');
-          paint();
-        });
-      });
+
     });
   };
 

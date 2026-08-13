@@ -82,7 +82,7 @@ export function defaultAffiliatesProgram(): AffiliatesProgram {
   return {
     bounty_label: '1 ad-board day per person who taps Get my link',
     payout_note:
-      'Default thank-you is ad credit on ads.viralrefer.app. Cash bonus after 10 people get a link. You mark cash paid. This is not a contest prize — the leaderboard prize is still a homepage banner.',
+      'Default thank-you is ad days on ads.viralrefer.app, granted automatically. Cash bonus after 10 people get a link is tracked automatically. This is not a contest prize — the leaderboard prize is still a homepage banner.',
     cash_threshold: DEFAULT_CASH_THRESHOLD,
     ad_board_url: DEFAULT_AD_BOARD_URL,
     affiliates: [],
