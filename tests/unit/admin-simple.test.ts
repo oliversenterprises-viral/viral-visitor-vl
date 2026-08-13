@@ -30,10 +30,11 @@ describe('admin simple-first desk', () => {
     document.documentElement.removeAttribute('data-vr-admin-stats-more');
   });
 
-  it('keeps three primary jobs and three extra tools', () => {
+  it('keeps three primary jobs and extra tools', () => {
     expect(ADMIN_PRIMARY_TABS).toEqual([0, 2, 3]);
-    expect(ADMIN_EXTRA_TABS).toEqual([1, 4, 5]);
+    expect(ADMIN_EXTRA_TABS).toEqual([1, 4, 5, 6]);
     expect(isAdminExtraTab(1)).toBe(true);
+    expect(isAdminExtraTab(6)).toBe(true);
     expect(isAdminExtraTab(0)).toBe(false);
   });
 

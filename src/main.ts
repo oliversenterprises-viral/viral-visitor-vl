@@ -2,6 +2,7 @@ import { initApp } from './app';
 import { applyClientReferralOgMeta, scheduleReferralOgEnrichment } from './lib/client-og-meta';
 import { initOrganicSeo } from './lib/organic-seo';
 import { captureReferralAttribution, revealReferralAttributionBanner } from './lib/referral-url';
+import { captureAffiliateAttribution } from './lib/affiliate';
 import { initFunnelConversion } from './lib/funnel-conversion';
 import { initAttributedReferralRecording, syncMobileReferralCta } from './referral';
 import { captureUtmAttribution } from './lib/utm-attribution';
@@ -51,6 +52,7 @@ try {
 // =====================================================
 
 captureReferralAttribution();
+captureAffiliateAttribution();
 captureUtmAttribution();
 revealReferralAttributionBanner();
 initFunnelConversion();

@@ -79,6 +79,11 @@ export async function switchAdminTab(tab: number) {
       const { renderViralOptimizerTab } = await import('./viral-optimizer-tab');
       if (isStale(requestId)) return;
       await renderViralOptimizerTab(content);
+    } else if (tab === 6) {
+      if (isStale(requestId)) return;
+      const { renderAffiliatesTab } = await import('./affiliates-tab');
+      if (isStale(requestId)) return;
+      await renderAffiliatesTab(content);
     }
   } catch (err) {
     if (isStale(requestId)) return;
