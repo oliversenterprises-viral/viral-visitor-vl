@@ -355,7 +355,7 @@ function renderBannerStatsView(
 
   let html = `
     <div class="flex flex-wrap items-center gap-2 mb-2">
-      <div class="text-[10px] font-semibold text-emerald-400">Banner Performance</div>
+      <div class="text-[10px] font-semibold text-emerald-400">Homepage ads</div>
       ${sourceBadge}
       <span id="banner-live-indicator" class="hidden text-[9px] text-emerald-400/90"><i class="fa-solid fa-circle text-[5px] mr-0.5"></i>live</span>
       <span class="text-[9px] text-zinc-500">Updated ${refreshedAt}${latestLabel ? ` · Latest event ${escapeHtml(latestLabel)}` : ''}${rangeNote} · ${stats.total} events${isServer ? ' (latest 2k)' : ''}</span>
@@ -373,49 +373,51 @@ function renderBannerStatsView(
   html += `
     <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
       <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5">
-        <div class="text-[8px] text-zinc-500 uppercase">Impressions</div>
+        <div class="text-[8px] text-zinc-500 uppercase">Times shown</div>
         <div class="text-lg font-bold text-white tabular-nums">${totals.impressions}</div>
       </div>
       <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5">
-        <div class="text-[8px] text-zinc-500 uppercase">Clicks</div>
+        <div class="text-[8px] text-zinc-500 uppercase">Taps</div>
         <div class="text-lg font-bold text-emerald-400 tabular-nums">${totals.clicks}</div>
       </div>
       <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5">
-        <div class="text-[8px] text-zinc-500 uppercase">Overall CTR</div>
+        <div class="text-[8px] text-zinc-500 uppercase">Tap rate</div>
         <div class="text-lg font-bold text-violet-300 tabular-nums">${totals.ctr}</div>
       </div>
-      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5">
-        <div class="text-[8px] text-zinc-500 uppercase">Banners tracked</div>
+      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5" data-vr-admin-stats-extra>
+        <div class="text-[8px] text-zinc-500 uppercase">Ads tracked</div>
         <div class="text-lg font-bold text-white tabular-nums">${sorted.length}</div>
       </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-2 mb-2">
       <button type="button" data-banner-stats-refresh class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded disabled:opacity-50">↻ Refresh</button>
+      <span data-vr-admin-stats-extra class="inline-flex flex-wrap items-center gap-2">
       ${buildAutorefreshSelectHtml('data-banner-stats-autorefresh', BANNER_AUTOREFRESH_KEY)}
       <button type="button" data-banner-stats-clear-test title="Deletes owner IP and smoke automation rows from visitor_events and banner_events"
         class="text-[9px] px-2 py-0.5 bg-amber-600/80 hover:bg-amber-600 text-white rounded disabled:opacity-50">Clear test events${excludedCount > 0 ? ` (${excludedCount})` : ''}</button>
       ${buildAutoClearTestSelectHtml()}
       <button type="button" data-banner-stats-clear class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">🗑 Clear Local</button>
-      <button type="button" data-banner-stats-copy class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">⎘ Copy JSON</button>
+      <button type="button" data-banner-stats-copy class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">Copy numbers</button>
       <button type="button" data-banner-stats-csv class="text-[9px] px-2 py-0.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded">⬇ CSV</button>
+      </span>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2 mb-2">
+    <div class="flex flex-wrap items-center gap-2 mb-2" data-vr-admin-stats-extra>
       <div class="relative flex-1 min-w-[140px]">
-        <input id="banner-stats-search" type="search" value="${escapeHtml(currentBannerSearch)}" placeholder="Filter banners..."
+        <input id="banner-stats-search" type="search" value="${escapeHtml(currentBannerSearch)}" placeholder="Find an ad..."
                class="w-full bg-zinc-900/80 border border-white/10 rounded-lg px-2 py-1 text-[9px] focus:border-emerald-500/50" />
         ${currentBannerSearch ? '<button type="button" data-banner-search-clear class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 text-[8px]">✕</button>' : ''}
       </div>
-      <div class="flex gap-1">${sortChip('impressions', 'By imps')}${sortChip('clicks', 'By clicks')}${sortChip('ctr', 'By CTR')}</div>
+      <div class="flex gap-1">${sortChip('impressions', 'By views')}${sortChip('clicks', 'By taps')}${sortChip('ctr', 'By tap rate')}</div>
     </div>
   `;
 
   if (topPerformer) {
-    html += `<div class="text-[9px] text-emerald-300/90 mb-2"><i class="fa-solid fa-trophy text-[8px] mr-1"></i>Top performer: <strong>${escapeHtml(topPerformer.label)}</strong> (${formatBannerCtr(topPerformer.impressions, topPerformer.clicks)} CTR)</div>`;
+    html += `<div class="text-[9px] text-emerald-300/90 mb-2"><i class="fa-solid fa-trophy text-[8px] mr-1"></i>Best ad: <strong>${escapeHtml(topPerformer.label)}</strong> (${formatBannerCtr(topPerformer.impressions, topPerformer.clicks)} tap rate)</div>`;
   }
 
-  html += `<div class="text-[9px] text-zinc-400 mb-1">Last ${Math.min(5, stats.lastEvents.length)} events:</div>`;
+  html += `<div data-vr-admin-stats-extra><div class="text-[9px] text-zinc-400 mb-1">Last ${Math.min(5, stats.lastEvents.length)} events:</div>`;
   if (stats.lastEvents.length) {
     html += `<div class="font-mono text-[8px] text-zinc-300 bg-black/40 border border-white/10 p-1.5 rounded mb-2 space-y-0.5">`;
     stats.lastEvents.forEach((ev: Record<string, unknown>) => {
@@ -430,7 +432,9 @@ function renderBannerStatsView(
       html += `<div>${badge} ${timeLabel}${escapeHtml(String(ev.label || ev.redirectUrl || ''))}</div>`;
     });
     html += `</div>`;
-  } else {
+  }
+  html += `</div>`;
+  if (!stats.lastEvents.length) {
     html += `
       <div class="text-[9px] text-zinc-500 mb-2 p-2 border border-dashed border-white/10 rounded-lg">
         <div class="font-medium text-zinc-400 mb-1">No events yet</div>
@@ -445,7 +449,7 @@ function renderBannerStatsView(
   html += `
     <table class="banner-stats-table w-full text-[9px] text-zinc-200 border border-white/10">
       <thead><tr class="text-emerald-300 bg-white/5">
-        <th class="text-left p-1.5">Banner</th><th class="p-1.5 text-center">Imps</th><th class="p-1.5 text-center">Clicks</th><th class="p-1.5 text-center">CTR</th>
+        <th class="text-left p-1.5">Ad</th><th class="p-1.5 text-center">Shown</th><th class="p-1.5 text-center">Taps</th><th class="p-1.5 text-center">Tap rate</th>
       </tr></thead><tbody>
   `;
 

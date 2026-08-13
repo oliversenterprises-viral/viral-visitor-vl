@@ -3011,6 +3011,10 @@ html[data-vr-admin-simple]:not([data-vr-admin-more]) #admin-live-offsite-status 
   display: none !important;
 }
 
+html[data-vr-admin-simple]:not([data-vr-admin-stats-more]) [data-vr-admin-stats-extra] {
+  display: none !important;
+}
+
 /* Admin tab bar — horizontal scroll on mobile */
 .admin-tab-bar {
   -webkit-overflow-scrolling: touch;

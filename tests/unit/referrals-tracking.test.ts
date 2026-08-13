@@ -41,7 +41,7 @@ describe('referrals-tracking hub', () => {
     });
 
     const header = root.querySelector('#referrals-tracking-header-slot');
-    expect(header?.innerHTML).toContain('Referral Analytics');
+    expect(header?.innerHTML).toContain('Friend credits');
     expect(header?.innerHTML).toContain('VIRAL-A');
     expect(header?.innerHTML).toContain('3');
   });

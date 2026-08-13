@@ -1199,7 +1199,10 @@
                 <button type="button" onclick="switchAdminTab(4)" id="tab-4" data-admin-tab="4" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Colors — text colors">Colors<span id="tab-4-badge" class="admin-tab-badge hidden">0</span></button>
                 <button type="button" onclick="switchAdminTab(5)" id="tab-5" data-admin-tab="5" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Auto-pilot — viral optimizer">Auto-pilot<span id="tab-5-badge" class="admin-tab-badge hidden">0</span></button>
             </div>
-            <p id="admin-tab-coach" class="px-8 py-2 text-sm text-zinc-400 border-b border-white/5">Friends who got credit when someone used their link.</p>
+            <div class="px-8 py-2 border-b border-white/5 flex flex-wrap items-center justify-between gap-2">
+                <p id="admin-tab-coach" class="text-sm text-zinc-400">Friends who got credit when someone used their link.</p>
+                <button type="button" id="admin-stats-more-btn" class="text-xs font-semibold px-3 py-1.5 rounded-2xl border border-white/15 text-zinc-300 hover:text-white" aria-expanded="false">More numbers</button>
+            </div>
            
             <div class="p-8 overflow-auto flex-1" id="admin-content"></div>
         </div>

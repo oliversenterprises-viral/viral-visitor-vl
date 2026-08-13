@@ -44,9 +44,9 @@ describe('edit-content-tracking hub', () => {
     });
 
     const header = root.querySelector('#tracking-hub-header-slot');
-    expect(header?.innerHTML).toContain('Landings');
+    expect(header?.innerHTML).toContain('First visits');
     expect(header?.innerHTML).toContain('12');
-    expect(header?.innerHTML).toContain('Banner CTR');
+    expect(header?.innerHTML).toContain('Ad tap rate');
     expect(header?.innerHTML).toContain('12.5%');
   });
 

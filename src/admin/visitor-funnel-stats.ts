@@ -378,26 +378,28 @@ function renderVisitorFunnelView(
   html += `
     <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
       <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Landings</div><div class="text-lg font-bold text-white tabular-nums">${stats.uniqueVisitorsLanding}</div></div>
-      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Engaged</div><div class="text-lg font-bold text-violet-300 tabular-nums">${stats.uniqueVisitorsAny}</div></div>
-      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Sessions</div><div class="text-lg font-bold text-white tabular-nums">${uniqueSessions || '—'}</div></div>
-      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Claim conv.</div><div class="text-lg font-bold text-emerald-300 tabular-nums">${escapeHtml(String(totals.conversion))}</div></div>
+      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5"><div class="text-[8px] text-zinc-500 uppercase">Did more</div><div class="text-lg font-bold text-violet-300 tabular-nums">${stats.uniqueVisitorsAny}</div></div>
+      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5" data-vr-admin-stats-extra><div class="text-[8px] text-zinc-500 uppercase">Different tabs</div><div class="text-lg font-bold text-white tabular-nums">${uniqueSessions || '—'}</div></div>
+      <div class="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5" data-vr-admin-stats-extra><div class="text-[8px] text-zinc-500 uppercase">Got a link %</div><div class="text-lg font-bold text-emerald-300 tabular-nums">${escapeHtml(String(totals.conversion))}</div></div>
     </div>
     <div class="flex flex-wrap items-center gap-2 mb-2">
       <button type="button" data-visitor-stats-refresh class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded disabled:opacity-50">↻ Refresh</button>
+      <span data-vr-admin-stats-extra class="inline-flex flex-wrap items-center gap-2">
       ${buildAutorefreshSelectHtml('data-visitor-stats-autorefresh', VISITOR_AUTOREFRESH_KEY)}
-      <button type="button" data-visitor-stats-copy class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">⎘ Copy JSON</button>
+      <button type="button" data-visitor-stats-copy class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">Copy numbers</button>
       <button type="button" data-visitor-stats-csv class="text-[9px] px-2 py-0.5 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded">⬇ CSV</button>
       <button type="button" data-visitor-stats-clear-test title="Deletes owner IP, smoke automation, and E2E test rows from visitor_events and banner_events"
         class="text-[9px] px-2 py-0.5 bg-amber-600/80 hover:bg-amber-600 text-white rounded disabled:opacity-50">Clear test events${excludedCount > 0 ? ` (${excludedCount})` : ''}</button>
       ${buildAutoClearTestSelectHtml()}
+      </span>
     </div>
-    <table class="w-full text-[9px] text-zinc-200 border border-white/10 mb-2">
+    <table class="w-full text-[9px] text-zinc-200 border border-white/10 mb-2" data-vr-admin-stats-extra>
       <thead><tr class="bg-white/5 text-violet-200">
         <th class="text-left p-1.5">Step</th>
-        <th class="p-1.5 text-right">Events</th>
-        <th class="p-1.5 text-right">Unique</th>
-        <th class="p-1.5 text-right">Step conv.</th>
-        <th class="p-1.5 text-right">From landing</th>
+        <th class="p-1.5 text-right">Times</th>
+        <th class="p-1.5 text-right">People</th>
+        <th class="p-1.5 text-right">Then %</th>
+        <th class="p-1.5 text-right">From first visit</th>
       </tr></thead><tbody>
   `;
 
@@ -429,18 +431,20 @@ function renderVisitorFunnelView(
   const viralLoops = stats.viralLoops || [];
   const viralRows = viralLoops.filter((r) => r.count > 0 || r.unique > 0);
   if (viralRows.length) {
-    html += `<div class="text-[9px] font-semibold text-cyan-300 mt-2 mb-1">Viral loops</div>`;
-    html += `<table class="w-full text-[8px] text-zinc-200 border border-white/10 mb-2"><thead><tr class="bg-white/5 text-cyan-200"><th class="text-left p-1">Loop event</th><th class="p-1 text-right">Events</th><th class="p-1 text-right">Unique</th></tr></thead><tbody>`;
+    html += `<div data-vr-admin-stats-extra>`;
+    html += `<div class="text-[9px] font-semibold text-cyan-300 mt-2 mb-1">Friend loops</div>`;
+    html += `<table class="w-full text-[8px] text-zinc-200 border border-white/10 mb-2"><thead><tr class="bg-white/5 text-cyan-200"><th class="text-left p-1">Loop event</th><th class="p-1 text-right">Times</th><th class="p-1 text-right">People</th></tr></thead><tbody>`;
     for (const row of viralRows) {
       html += `<tr class="border-t border-white/5"><td class="p-1 text-zinc-100">${escapeHtml(row.name)}</td><td class="p-1 text-right tabular-nums">${row.count}</td><td class="p-1 text-right tabular-nums text-cyan-200/90">${row.unique > 0 ? row.unique : '—'}</td></tr>`;
     }
-    html += `</tbody></table>`;
+    html += `</tbody></table></div>`;
   }
 
   const countryRows = topCountries(filterCountryRowsForDisplay(stats.byCountry || []));
-  html += `<div class="text-[9px] text-zinc-400 mb-1">By country (landings):</div>`;
+  html += `<div data-vr-admin-stats-extra>`;
+  html += `<div class="text-[9px] text-zinc-400 mb-1">By country (first visits):</div>`;
   if (countryRows.length) {
-    html += `<table class="w-full text-[8px] text-zinc-200 border border-white/10 mb-2"><thead><tr class="bg-white/5 text-violet-200"><th class="text-left p-1">Country</th><th class="p-1 text-right">Unique</th><th class="p-1 text-right">Landings</th></tr></thead><tbody>`;
+    html += `<table class="w-full text-[8px] text-zinc-200 border border-white/10 mb-2"><thead><tr class="bg-white/5 text-violet-200"><th class="text-left p-1">Country</th><th class="p-1 text-right">People</th><th class="p-1 text-right">Landings</th></tr></thead><tbody>`;
     for (const row of countryRows) {
       const label = `${countryLabel(row.country)} (${row.country})`;
       html += `<tr class="border-t border-white/5"><td class="p-1 text-zinc-100">${escapeHtml(label)}</td><td class="p-1 text-right tabular-nums">${row.unique}</td><td class="p-1 text-right tabular-nums text-zinc-400">${row.events}</td></tr>`;
@@ -451,12 +455,13 @@ function renderVisitorFunnelView(
   }
 
   if (shouldShowUtmSources(stats.bySource || {})) {
-    html += `<div class="text-[9px] text-zinc-400 mb-1">By UTM source (landings):</div><div class="text-[8px] text-zinc-300 mb-2">`;
+    html += `<div class="text-[9px] text-zinc-400 mb-1">Where they came from:</div><div class="text-[8px] text-zinc-300 mb-2">`;
     for (const [src, count] of sortSourceEntries(stats.bySource || {}).slice(0, 6)) {
       html += `<span class="inline-block mr-2 mb-1 px-1.5 py-0.5 bg-violet-900/40 border border-violet-500/30 rounded">${escapeHtml(src)}: ${count}</span>`;
     }
     html += `</div>`;
   }
+  html += `</div>`;
 
   const newReferralCount = countRecentReferralNotifiers(recentReferrals, 60);
   html += `<div class="flex flex-wrap items-center gap-2 mb-1 mt-2">`;

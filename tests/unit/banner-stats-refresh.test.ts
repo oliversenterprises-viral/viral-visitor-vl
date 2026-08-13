@@ -57,7 +57,7 @@ describe('banner stats refresh (edit content)', () => {
     await wireBannerStatsQuick(root);
 
     const panel = root.querySelector('#banner-stats-quick') as HTMLElement;
-    expect(panel.innerHTML).toContain('Banner Performance');
+    expect(panel.innerHTML).toContain('Homepage ads');
     expect(panel.innerHTML).toContain('SERVER');
 
     const refresh = panel.querySelector('[data-banner-stats-refresh]') as HTMLButtonElement;
@@ -67,7 +67,7 @@ describe('banner stats refresh (edit content)', () => {
     await new Promise((r) => setTimeout(r, 50));
 
     const after = root.querySelector('#banner-stats-quick') as HTMLElement;
-    expect(after.innerHTML).toContain('Banner Performance');
+    expect(after.innerHTML).toContain('Homepage ads');
     expect(after.querySelector('[data-banner-stats-refresh]')).toBeTruthy();
     expect((after.querySelector('[data-banner-stats-refresh]') as HTMLButtonElement).disabled).toBe(
       false,
@@ -87,7 +87,7 @@ describe('banner stats refresh (edit content)', () => {
     await wireBannerStatsQuick(root);
 
     const panel = root.querySelector('#banner-stats-quick') as HTMLElement;
-    expect(panel.innerHTML).toContain('Banner Performance');
+    expect(panel.innerHTML).toContain('Homepage ads');
     expect(panel.innerHTML).toContain('LOCAL');
 
     const refresh = panel.querySelector('[data-banner-stats-refresh]') as HTMLButtonElement;
@@ -96,7 +96,7 @@ describe('banner stats refresh (edit content)', () => {
 
     const after = root.querySelector('#banner-stats-quick') as HTMLElement;
     // Still renders — never stuck on "Could not refresh"
-    expect(after.innerHTML).toContain('Banner Performance');
+    expect(after.innerHTML).toContain('Homepage ads');
     expect(after.innerHTML).toContain('LOCAL');
   });
 });

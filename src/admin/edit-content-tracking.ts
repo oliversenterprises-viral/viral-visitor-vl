@@ -59,38 +59,38 @@ function buildHubHeaderHtml(summary: TrackingHubSummary | null = getTrackingHubS
     ? `
       <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2">
         <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">Landings</div>
+          <div class="text-[7px] text-zinc-500 uppercase">First visits</div>
           <div class="text-sm font-bold text-white tabular-nums">${summary.landings}</div>
         </div>
         <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">Sessions</div>
-          <div class="text-sm font-bold text-violet-200 tabular-nums">${summary.sessions}</div>
-        </div>
-        <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">Claim conv.</div>
+          <div class="text-[7px] text-zinc-500 uppercase">Got a link %</div>
           <div class="text-sm font-bold text-emerald-300 tabular-nums">${summary.claimConversion}</div>
         </div>
-        <div class="rounded-lg bg-emerald-950/40 border border-emerald-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">Banner imps</div>
+        <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5" data-vr-admin-stats-extra>
+          <div class="text-[7px] text-zinc-500 uppercase">Different tabs</div>
+          <div class="text-sm font-bold text-violet-200 tabular-nums">${summary.sessions}</div>
+        </div>
+        <div class="rounded-lg bg-emerald-950/40 border border-emerald-500/25 px-2 py-1.5" data-vr-admin-stats-extra>
+          <div class="text-[7px] text-zinc-500 uppercase">Ad views</div>
           <div class="text-sm font-bold text-white tabular-nums">${summary.bannerImpressions}</div>
         </div>
-        <div class="rounded-lg bg-emerald-950/40 border border-emerald-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">Banner CTR</div>
+        <div class="rounded-lg bg-emerald-950/40 border border-emerald-500/25 px-2 py-1.5" data-vr-admin-stats-extra>
+          <div class="text-[7px] text-zinc-500 uppercase">Ad tap rate</div>
           <div class="text-sm font-bold text-emerald-300 tabular-nums">${summary.bannerCtr}</div>
         </div>
       </div>
-      <div class="text-[8px] text-zinc-500 mt-1.5">
+      <div class="text-[8px] text-zinc-500 mt-1.5" data-vr-admin-stats-extra>
         Funnel ${sourceBadge(summary.visitorSource)} ${summary.visitorEvents} events ·
         Banner ${sourceBadge(summary.bannerSource)} ${summary.bannerEvents} events · ${escapeHtml(rangeLabel)}
       </div>`
-    : `<div class="text-[9px] text-zinc-500 mt-2">Loading tracking summary…</div>`;
+    : `<div class="text-[9px] text-zinc-500 mt-2">Loading site numbers…</div>`;
 
   return `
     <div id="tracking-hub-header" class="mb-3 pb-3 border-b border-white/10">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div class="text-xs font-semibold text-zinc-100">Site Analytics</div>
-          <div class="text-[9px] text-zinc-500">Visitor funnel + banner performance (live server data when admin secret is set)</div>
+          <div class="text-xs font-semibold text-zinc-100">Site numbers</div>
+          <div class="text-[9px] text-zinc-500">First visits and who got a link. Extra numbers stay under More numbers.</div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           ${buildTrackingRangeSelectHtml(loadTrackingTimeRange())}
@@ -193,14 +193,14 @@ export function buildTrackingHubShellHtml(): string {
     <div data-vr-tracking-hub="1" class="mb-4 p-3 border border-zinc-600/40 bg-zinc-950/60 rounded-2xl">
       <div id="tracking-hub-header-slot"></div>
       <div class="flex items-center justify-between gap-2 mb-2">
-        <div class="text-[10px] font-semibold text-violet-300">Site Visitor Funnel</div>
+        <div class="text-[10px] font-semibold text-violet-300">How people use the site</div>
         <button type="button" data-tracking-collapse="visitor" aria-expanded="${visitorCollapsed ? 'false' : 'true'}"
           class="text-[8px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-300 rounded">${visitorCollapsed ? 'Show' : 'Hide'}</button>
       </div>
       <div id="visitor-stats-quick" data-tracking-section="visitor"
         class="${visitorCollapsed ? 'hidden ' : ''}mb-3 p-3 border border-violet-500/30 bg-zinc-900/50 rounded-2xl"></div>
       <div class="flex items-center justify-between gap-2 mb-2">
-        <div class="text-[10px] font-semibold text-emerald-400">Banner Performance</div>
+        <div class="text-[10px] font-semibold text-emerald-400">Homepage ads</div>
         <button type="button" data-tracking-collapse="banner" aria-expanded="${bannerCollapsed ? 'false' : 'true'}"
           class="text-[8px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-300 rounded">${bannerCollapsed ? 'Show' : 'Hide'}</button>
       </div>
