@@ -122,6 +122,11 @@ Deno.serve(async (req: Request) => {
       }
       const stats = computeAffiliateStats(events, row.code, row.paid_count);
       const rewards = computeAffiliateRewards(stats, program, row);
+      const { data: wallet } = await supabaseAdmin
+        .from('ad_board_affiliates')
+        .select('credit_days')
+        .eq('code', row.code)
+        .maybeSingle();
       return json({
         success: true,
         data: {
@@ -129,8 +134,9 @@ Deno.serve(async (req: Request) => {
           name: row.name,
           stats,
           rewards,
+          credit_days: Number(wallet?.credit_days) || rewards.adCreditGranted || 0,
           bounty_label: program.bounty_label,
-          ad_board_url: program.ad_board_url,
+          ad_board_url: `${program.ad_board_url.split('#')[0]}?promoter=${encodeURIComponent(row.code)}`,
           payout_note: program.payout_note,
         },
       });

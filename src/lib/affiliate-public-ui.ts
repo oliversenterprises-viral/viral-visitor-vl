@@ -34,6 +34,7 @@ type StatsPayload = {
   bounty_label: string;
   ad_board_url: string;
   payout_note: string;
+  credit_days?: number;
 };
 
 async function callAffiliatePublic(
@@ -76,8 +77,9 @@ function paintWeekStrip(board: BoardPayload): void {
 function paintDashboard(box: HTMLElement, payload: StatsPayload): void {
   const link = buildAffiliateLink(payload.code);
   const r = payload.rewards;
+  const wallet = payload.credit_days ?? r.adCreditGranted;
   const cashLine = r.cashDue
-    ? `<p class="text-amber-300 text-sm">Cash bonus is due (${r.cashUnpaid} unpaid after ${r.cashThreshold} people). The owner marks this paid.</p>`
+    ? `<p class="text-amber-300 text-sm">Cash bonus is on the books (${r.cashUnpaid} after ${r.cashThreshold} people). No action needed from you — the owner pays when ready.</p>`
     : `<p class="text-zinc-400 text-sm">Cash bonus starts after ${r.cashThreshold} people get a link. You have ${payload.stats.uniqueGetLinkVisitors}.</p>`;
   box.innerHTML = `
     <div class="text-sm font-semibold text-emerald-300 mb-1">Your promoter desk</div>
@@ -90,7 +92,7 @@ function paintDashboard(box: HTMLElement, payload: StatsPayload): void {
     <div class="grid grid-cols-3 gap-2 mb-3 text-center">
       <div class="rounded-lg bg-white/5 px-2 py-2"><div class="text-[9px] uppercase text-zinc-500">Visits</div><div class="text-xl font-bold">${payload.stats.landings}</div></div>
       <div class="rounded-lg bg-white/5 px-2 py-2"><div class="text-[9px] uppercase text-zinc-500">Got a link</div><div class="text-xl font-bold text-emerald-300">${payload.stats.uniqueGetLinkVisitors}</div></div>
-      <div class="rounded-lg bg-white/5 px-2 py-2"><div class="text-[9px] uppercase text-zinc-500">Ad days owed</div><div class="text-xl font-bold text-amber-300">${r.adCreditOwed}</div></div>
+      <div class="rounded-lg bg-white/5 px-2 py-2"><div class="text-[9px] uppercase text-zinc-500">Ad days ready</div><div class="text-xl font-bold text-amber-300">${wallet}</div></div>
     </div>
     <p class="text-zinc-400 text-sm mb-1">${escapeHtml(payload.bounty_label)}</p>
     ${cashLine}
