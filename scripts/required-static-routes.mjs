@@ -42,6 +42,7 @@ export const REQUIRED_STATIC_ROUTES = [
   { url: '/go/challenge/', file: 'go/challenge/index.html' },
   { url: '/go/herculist/', file: 'go/herculist/index.html' },
   { url: '/go/adsboard/', file: 'go/adsboard/index.html' },
+  { url: '/go/affiliates/', file: 'go/affiliates/index.html' },
 
   // Iframe-safe embed variants (traffic exchanges)
   { url: '/embed/makers/', file: 'embed/makers/index.html' },

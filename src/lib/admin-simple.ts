@@ -12,7 +12,7 @@ const MORE_STORAGE_KEY = 'vr_admin_more';
 const STATS_MORE_STORAGE_KEY = 'vr_admin_stats_more';
 
 export const ADMIN_PRIMARY_TABS = [0, 2, 3] as const;
-export const ADMIN_EXTRA_TABS = [1, 4, 5] as const;
+export const ADMIN_EXTRA_TABS = [1, 4, 5, 6] as const;
 
 const TAB_COACH: Record<number, string> = {
   0: 'Friends who got credit when someone used their link.',
@@ -21,6 +21,7 @@ const TAB_COACH: Record<number, string> = {
   3: 'People asking to put their site on the homepage.',
   4: 'Make the site text easier to read.',
   5: 'Auto helper that tweaks the site to get more shares.',
+  6: 'People you pay when a visitor they send taps Get my link.',
 };
 
 export function isAdminExtraTab(tab: number): boolean {
