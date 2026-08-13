@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 import { isAutomationUserAgent } from '../_shared/test-referral.ts';
+import { dispatchPromoterSignupNotify } from '../_shared/funnel-notify.ts';
 import { isTestVisitorFunnelEvent } from '../_shared/visitor-funnel-test.ts';
 import {
   AFFILIATES_SITE_CONTENT_KEY,
@@ -162,12 +163,20 @@ Deno.serve(async (req: Request) => {
         }
         try {
           await saveProgram(supabaseAdmin, next.program);
+          const link = `https://www.viralrefer.app/a/${next.row.code}`;
+          dispatchPromoterSignupNotify({
+            name: next.row.name,
+            code: next.row.code,
+            link,
+          }).catch((notifyErr) => {
+            console.error('[affiliate-public] promoter notify:', notifyErr);
+          });
           return json({
             success: true,
             data: {
               code: next.row.code,
               name: next.row.name,
-              link: `https://www.viralrefer.app/a/${next.row.code}`,
+              link,
               bounty_label: next.program.bounty_label,
               cash_threshold: next.program.cash_threshold,
               ad_board_url: next.program.ad_board_url,

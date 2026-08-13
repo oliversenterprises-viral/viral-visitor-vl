@@ -8,6 +8,7 @@ import {
   dispatchBroadcastClickNotify,
   isBroadcastClickNotifyEnabled,
   isBroadcastClickZone,
+  buildPromoterSignupNotifyText,
   isFunnelOffsiteNotifyEnabled,
   isImportantFunnelNotifyStep,
   shouldNotifyFunnelEvent,
@@ -140,6 +141,18 @@ describe('funnel-notify', () => {
     const ntfy = buildFunnelNotifyPayload(row, 'https://ntfy.sh/my-topic');
     expect(ntfy.body).toContain('CopyReferralLink');
     expect(ntfy.headers.Title).toBe('ViralRefer funnel');
+  });
+
+  it('buildPromoterSignupNotifyText names the new promoter', () => {
+    const text = buildPromoterSignupNotifyText({
+      name: 'Maya',
+      code: 'MAYA',
+      link: 'https://www.viralrefer.app/a/MAYA',
+    });
+    expect(text).toContain('New promoter');
+    expect(text).toContain('Maya');
+    expect(text).toContain('MAYA');
+    expect(text).toContain('/a/MAYA');
   });
 
   it('isBroadcastClickZone matches broadcaster zones only', () => {

@@ -198,6 +198,74 @@ export async function dispatchFunnelOffsiteNotify(
   return { ok, channel: 'webhook' };
 }
 
+export type PromoterSignupNotifyRow = {
+  name: string;
+  code: string;
+  link?: string | null;
+};
+
+export function buildPromoterSignupNotifyText(row: PromoterSignupNotifyRow): string {
+  const name = String(row.name || '').trim() || 'someone';
+  const code = String(row.code || '').trim() || '—';
+  const link = String(row.link || '').trim() || `https://www.viralrefer.app/a/${code}`;
+  return `🤝 New promoter · ${name} · ${code}\n${link}`;
+}
+
+/** Telegram/webhook when someone self-serves a promoter link. */
+export async function dispatchPromoterSignupNotify(
+  row: PromoterSignupNotifyRow,
+): Promise<{ ok: boolean; skipped?: string; channel?: FunnelNotifyChannel }> {
+  if (!isFunnelOffsiteNotifyEnabled()) {
+    return { ok: false, skipped: 'disabled' };
+  }
+  const channel = getFunnelNotifyChannel();
+  if (!channel) return { ok: false, skipped: 'disabled' };
+
+  const text = buildPromoterSignupNotifyText(row);
+
+  if (channel === 'telegram') {
+    const botToken = getFunnelNotifyTelegramBotToken()!;
+    const chatId = getFunnelNotifyTelegramChatId()!;
+    const ok = await postNotify(
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
+      JSON.stringify({
+        chat_id: chatId,
+        text,
+        disable_web_page_preview: true,
+      }),
+      { 'Content-Type': 'application/json' },
+    );
+    return { ok, channel: 'telegram' };
+  }
+
+  const url = getFunnelNotifyWebhookUrl()!;
+  let body: string;
+  let headers: Record<string, string>;
+  if (url.includes('discord.com/api/webhooks')) {
+    body = JSON.stringify({ content: text });
+    headers = { 'Content-Type': 'application/json' };
+  } else if (url.includes('ntfy.sh')) {
+    body = text;
+    headers = {
+      'Content-Type': 'text/plain; charset=utf-8',
+      Title: 'ViralRefer new promoter',
+      Tags: 'handshake',
+    };
+  } else {
+    body = JSON.stringify({
+      text,
+      title: 'ViralRefer new promoter',
+      name: row.name,
+      code: row.code,
+      link: row.link ?? null,
+      at: new Date().toISOString(),
+    });
+    headers = { 'Content-Type': 'application/json' };
+  }
+  const ok = await postNotify(url, body, headers);
+  return { ok, channel: 'webhook' };
+}
+
 /** Owner broadcaster click zones (must match client viral-zones). */
 export const BROADCAST_CLICK_ZONES = new Set([
   'owner-broadcast-link',
