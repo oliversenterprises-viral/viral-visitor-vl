@@ -6,7 +6,8 @@
  */
 
 export function setActiveTab(tab: number) {
-  document.querySelectorAll<HTMLElement>('.admin-tab').forEach((el, index) => {
+  document.querySelectorAll<HTMLElement>('.admin-tab').forEach((el) => {
+    const index = Number(el.dataset.adminTab ?? el.id.replace(/^tab-/, ''));
     const isActive = index === tab;
     el.setAttribute('aria-selected', isActive ? 'true' : 'false');
     el.setAttribute('tabindex', isActive ? '0' : '-1');

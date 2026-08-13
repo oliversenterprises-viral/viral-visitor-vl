@@ -133,7 +133,7 @@ async function renderReferralsTab(content: HTMLElement) {
     <div class="flex items-center justify-between mb-4">
       <div>
         <div class="text-2xl font-bold">Referrals</div>
-        <div class="text-sm text-zinc-400">Each row = one signup · code = who got credit (referrer) · IP = who joined</div>
+        <div class="text-sm text-zinc-400">Friends who got credit. Each row is one person who used a link.</div>
       </div>
       <div class="flex items-center gap-3">
         <span id="referrals-live-indicator" class="hidden text-[10px] text-emerald-400/80"><i class="fa-solid fa-circle text-[6px] mr-1"></i>live</span>
