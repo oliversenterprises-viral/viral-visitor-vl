@@ -377,6 +377,7 @@ function buildClaimsTableHTML(
     <div class="flex justify-between items-center mb-4">
       <div>
         <div class="text-2xl font-bold">Prize Claims</div>
+        <div class="text-sm text-zinc-400">People asking to put their website on the homepage. No cash.</div>
         <div class="text-sm text-zinc-400">${pendingCount > 0 ? `${pendingCount} pending · ` : ''}${adminClaimsCache.length} total submissions</div>
       </div>
       <div class="flex items-center gap-3">

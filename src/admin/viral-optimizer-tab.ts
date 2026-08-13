@@ -643,7 +643,7 @@ export async function renderViralOptimizerTab(container: HTMLElement): Promise<v
         <h2 class="text-2xl font-bold text-white flex items-center gap-2">
           <i class="fa-solid fa-fire text-orange-400"></i> Viral Optimizer
         </h2>
-        <p class="text-sm text-zinc-400 mt-1">Closed-loop growth cockpit — sense, diagnose, experiment, measure.</p>
+        <p class="text-sm text-zinc-400 mt-1">Auto helper that watches the site and can tweak it to get more shares.</p>
         <p class="text-[11px] text-zinc-500 mt-1">${escapeHtml(sourceNote)}</p>
         ${
           warnings.length

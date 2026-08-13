@@ -69,7 +69,7 @@ export async function renderTextColorsTab(container: HTMLElement) {
     <div class="flex items-center justify-between mb-6">
       <div>
         <div class="text-2xl font-bold">Text Colors</div>
-        <div class="text-sm text-zinc-400">Live control for front page text. Changes appear instantly on the site behind this panel.</div>
+        <div class="text-sm text-zinc-400">Make the front-page words easier to read. Changes show up right away.</div>
       </div>
       <div class="flex items-center gap-3">
         <button id="colors-reset-btn" class="px-4 py-2 text-sm bg-rose-600/80 hover:bg-rose-600 rounded-2xl flex items-center gap-2 text-white">

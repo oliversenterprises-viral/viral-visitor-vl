@@ -1,4 +1,5 @@
 import { setActiveTab } from '../ui';
+import { isAdminExtraTab, setAdminMore, syncAdminTabCoach } from '../lib/admin-simple';
 import { setAdminLiveActiveTab } from './admin-live-hub';
 import {
   renderReferralsTab,
@@ -46,7 +47,9 @@ export async function switchAdminTab(tab: number) {
   }
 
   content.classList.add('admin-tab-content');
+  if (isAdminExtraTab(tab)) setAdminMore(true);
   setActiveTab(tab);
+  syncAdminTabCoach(tab);
   setAdminLiveActiveTab(tab);
   content.innerHTML = ADMIN_LOADING_SKELETON;
 

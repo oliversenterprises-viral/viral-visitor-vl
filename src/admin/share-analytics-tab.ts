@@ -154,6 +154,10 @@ function buildAnalyticsHTML(
 
   let html = `
     ${linkLockHtml}
+    <div class="mb-3">
+      <div class="text-2xl font-bold">Share Analytics</div>
+      <div class="text-sm text-zinc-400">How people send their links. Sending is not the same as a friend opening Get my link.</div>
+    </div>
     <div class="mb-3 text-[11px] text-zinc-400 leading-snug">
       Shares = people opened a share path (app / sheet). That does <strong class="text-zinc-200">not</strong> lock a link.
       Lock = a friend tapped Get my link. See the box above for waiting / locked / timed-out codes.
