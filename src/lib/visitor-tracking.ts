@@ -9,6 +9,7 @@ import { getStoredUtmAttribution } from './utm-attribution';
 import { trackRedditFunnelStep } from './reddit-pixel';
 import { supabase } from './supabase';
 import { eventName, groupBy, latestEvents } from './stats-helpers';
+import { getClientAutomationMetadata } from './test-referral';
 
 const VISITOR_EVENTS_KEY = 'viralrefer_visitor_events';
 const VISITOR_ID_KEY = 'vr_visitor_id';
@@ -202,7 +203,7 @@ function pushLocalVisitorEvent(eventName: string, metadata: Record<string, unkno
     utm_content: utm?.content,
     utm_medium: utm?.medium,
     ref_code: resolveRefCode(),
-    metadata,
+    metadata: { ...getClientAutomationMetadata(), ...metadata },
     created_at: new Date().toISOString(),
   };
   try {
@@ -227,7 +228,7 @@ function logVisitorEventServer(eventName: string, metadata: Record<string, unkno
         utm_content: utm?.content,
         utm_medium: utm?.medium,
         ref_code: resolveRefCode(),
-        metadata,
+        metadata: { ...getClientAutomationMetadata(), ...metadata },
         timestamp: new Date().toISOString(),
       },
     })

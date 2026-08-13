@@ -4,7 +4,8 @@
  * Fallback: generic webhook URL (FUNNEL_NOTIFY_WEBHOOK_URL).
  */
 
-import { isTestVisitorFunnelEvent } from './visitor-funnel-test.ts';
+import { isAgentFunnelNotifyTraffic } from './visitor-funnel-test.ts';
+import { isAgentAutomationMetadata, isAutomationUserAgent } from './test-referral.ts';
 
 export const FUNNEL_NOTIFY_IMPORTANT_STEPS = new Set([
   'getreferrallink',
@@ -79,7 +80,7 @@ export function isImportantFunnelNotifyStep(step: string | undefined): boolean {
 /** Whether this row should trigger an off-site alert (test/owner rows excluded). */
 export function shouldNotifyFunnelEvent(row: FunnelNotifyRow): boolean {
   if (!isFunnelOffsiteNotifyEnabled()) return false;
-  if (isTestVisitorFunnelEvent(row as Record<string, unknown>)) return false;
+  if (isAgentFunnelNotifyTraffic(row as Record<string, unknown>)) return false;
   if (isFunnelNotifyImportantOnly()) {
     return isImportantFunnelNotifyStep(row.event_name);
   }
@@ -228,6 +229,8 @@ export type BroadcastClickNotifyRow = {
   broadcast_id?: string | null;
   label?: string | null;
   path?: string | null;
+  user_agent?: string | null;
+  metadata?: Record<string, unknown> | null;
 };
 
 export function buildBroadcastClickNotifyText(row: BroadcastClickNotifyRow): string {
@@ -257,6 +260,10 @@ export async function dispatchBroadcastClickNotify(
   }
   if (!isBroadcastClickZone(row.zone_id)) {
     return { ok: false, skipped: 'not_broadcast' };
+  }
+  const ua = String(row.user_agent || '').trim();
+  if (!ua || isAutomationUserAgent(ua) || isAgentAutomationMetadata(row.metadata)) {
+    return { ok: false, skipped: 'agent' };
   }
 
   const channel = getFunnelNotifyChannel();

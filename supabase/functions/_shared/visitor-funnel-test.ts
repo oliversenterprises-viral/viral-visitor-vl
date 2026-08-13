@@ -2,6 +2,7 @@
 
 import {
   ADMIN_FUNNEL_EXCLUDED_IPS as OWNER_FUNNEL_IPS,
+  isAgentAutomationMetadata,
   isAutomationUserAgent,
   isTestReferrerCode,
 } from './test-referral.ts';
@@ -72,7 +73,10 @@ export function isTestVisitorFunnelEvent(
   if (isOwnerVisitorFunnelEvent(event, excludedIps, excludedHashes)) return true;
   if (isTestVisitorFunnelRefCode(String(event.ref_code || event.refCode || ''))) return true;
 
-  const ua = String(metadataRecord(event).user_agent || event.user_agent || event.userAgent || '');
+  const meta = metadataRecord(event);
+  if (isAgentAutomationMetadata(meta)) return true;
+
+  const ua = String(meta.user_agent || event.user_agent || event.userAgent || '');
   if (isAutomationUserAgent(ua)) return true;
 
   const ip = getVisitorEventIp(event);
@@ -113,4 +117,17 @@ export function filterTestVisitorFunnelEvents(
 
 export function countTestVisitorFunnelEvents(events: readonly Record<string, unknown>[]): number {
   return events.length - filterTestVisitorFunnelEvents(events).length;
+}
+
+/**
+ * Telegram/webhook only. Broader than credit skip:
+ * empty UA (scripts) + webdriver stamp (Playwright headed / new headless).
+ * Real browsers always send a UA and do not set navigator.webdriver.
+ */
+export function isAgentFunnelNotifyTraffic(event: Record<string, unknown>): boolean {
+  if (isTestVisitorFunnelEvent(event)) return true;
+  const ua = String(
+    metadataRecord(event).user_agent || event.user_agent || event.userAgent || '',
+  ).trim();
+  return !ua;
 }
