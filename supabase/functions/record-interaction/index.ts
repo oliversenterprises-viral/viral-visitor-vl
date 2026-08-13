@@ -66,6 +66,8 @@ Deno.serve(async (req: Request) => {
       body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata)
         ? { ...body.metadata }
         : {};
+    const userAgent = String(req.headers.get('user-agent') || '').slice(0, 300);
+    if (userAgent) clientMetadata.user_agent = userAgent;
 
     const row = {
       event_type: eventType.slice(0, 32),
@@ -102,6 +104,8 @@ Deno.serve(async (req: Request) => {
         broadcast_id: meta.broadcast_id != null ? String(meta.broadcast_id) : null,
         label: meta.label != null ? String(meta.label) : null,
         path: row.path,
+        user_agent: userAgent,
+        metadata: clientMetadata,
       }).catch((notifyErr) => {
         console.error('[record-interaction] broadcast telegram notify:', notifyErr);
       });

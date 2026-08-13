@@ -11,6 +11,7 @@ import { getStoredUtmAttribution } from './utm-attribution';
 import { supabase } from './supabase';
 import { getVisitorSessionId, getVisitorId } from './visitor-tracking';
 import { resolveViralZoneFromTarget, type ViralZoneId } from './viral-zones';
+import { getClientAutomationMetadata } from './test-referral';
 
 const LOCAL_KEY = 'viralrefer_interaction_events';
 /** Disk IO: fewer scroll writes (was 25/50/75/100). */
@@ -63,8 +64,8 @@ function logInteractionServer(payload: Record<string, unknown>): void {
   } = payload;
   const metadata =
     metaFromPayload && typeof metaFromPayload === 'object' && !Array.isArray(metaFromPayload)
-      ? { ...(metaFromPayload as Record<string, unknown>) }
-      : {};
+      ? { ...getClientAutomationMetadata(), ...(metaFromPayload as Record<string, unknown>) }
+      : { ...getClientAutomationMetadata() };
   // Preserve unknown extras inside metadata for admin inspection
   for (const [k, v] of Object.entries(rest)) {
     if (v !== undefined && !(k in metadata)) metadata[k] = v;

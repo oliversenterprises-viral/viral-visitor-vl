@@ -1,11 +1,32 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isAgentAutomationMetadata,
+  isAutomationUserAgent,
   isTestReferralRecord,
   isTestReferrerCode,
   shouldSkipReferralCrediting,
 } from '../../supabase/functions/_shared/test-referral';
+import { getClientAutomationMetadata } from '../../src/lib/test-referral';
 
 describe('test-referral guards', () => {
+  it('flags agent and script user agents, not real Chrome', () => {
+    expect(isAutomationUserAgent('node')).toBe(true);
+    expect(isAutomationUserAgent('curl/8.7.1')).toBe(true);
+    expect(isAutomationUserAgent('Mozilla/5.0 HeadlessChrome/131')).toBe(true);
+    expect(
+      isAutomationUserAgent(
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 playwright',
+      ),
+    ).toBe(true);
+    expect(isAutomationUserAgent('Mozilla/5.0 Chrome')).toBe(false);
+    expect(isAgentAutomationMetadata({ webdriver: true })).toBe(true);
+    expect(isAgentAutomationMetadata({})).toBe(false);
+    Object.defineProperty(navigator, 'webdriver', { configurable: true, get: () => true });
+    expect(getClientAutomationMetadata()).toEqual({ webdriver: true });
+    Object.defineProperty(navigator, 'webdriver', { configurable: true, get: () => false });
+    expect(getClientAutomationMetadata()).toEqual({});
+  });
+
   it('flags smoke referrer codes', () => {
     expect(isTestReferrerCode('VIRAL-SMOKETEST')).toBe(true);
     expect(isTestReferrerCode('VIRAL-E2ECLAIM')).toBe(true);

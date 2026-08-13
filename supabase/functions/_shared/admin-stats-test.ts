@@ -4,6 +4,9 @@
  */
 
 import { ADMIN_FUNNEL_EXCLUDED_IPS } from './visitor-funnel-test.ts';
+import { isAutomationUserAgent } from './test-referral.ts';
+
+export { isAutomationUserAgent };
 
 export {
   ADMIN_FUNNEL_EXCLUDED_IPS,
@@ -16,15 +19,6 @@ export {
 
 /** Azure / GitHub Actions / Playwright egress ranges used by smoke & E2E. */
 export const AZURE_SMOKE_IP_RE = /^20\.|^48\.|^52\.|^74\.|^135\./;
-
-export function isAutomationUserAgent(ua: string | null | undefined): boolean {
-  const s = String(ua || '').trim();
-  if (!s) return false;
-  if (s === 'node') return true;
-  if (/HeadlessChrome/i.test(s)) return true;
-  if (/\b(vitest|playwright|smoke|headless|automation)\b/i.test(s)) return true;
-  return false;
-}
 
 export function isOwnerStatsIp(ip: string | null | undefined): boolean {
   const normalized = String(ip || '').trim();

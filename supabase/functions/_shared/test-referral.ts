@@ -36,8 +36,22 @@ export function isAutomationUserAgent(ua: string | null | undefined): boolean {
   if (s === 'node') return true;
   if (/NovaVerify/i.test(s)) return true;
   if (/HeadlessChrome/i.test(s)) return true;
-  if (/\b(vitest|playwright|smoke|headless|automation)\b/i.test(s)) return true;
+  if (
+    /\b(vitest|playwright|puppeteer|cypress|selenium|phantomjs|headless|automation)\b/i.test(s)
+  ) {
+    return true;
+  }
+  if (/^(curl|wget|axios|undici|node-fetch|python-requests|go-http-client|deno)\//i.test(s)) {
+    return true;
+  }
+  if (/GitHub-Actions|github-actions|actions-runner/i.test(s)) return true;
   return false;
+}
+
+/** Client/server flag that this request came from an agent, not a person. */
+export function isAgentAutomationMetadata(meta: Record<string, unknown> | null | undefined): boolean {
+  if (!meta || typeof meta !== 'object') return false;
+  return meta.webdriver === true || meta.automation === true || meta.vr_test === true;
 }
 
 export function isOwnerReferralIp(ip: string | null | undefined): boolean {

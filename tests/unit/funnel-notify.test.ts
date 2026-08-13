@@ -5,6 +5,7 @@ import {
   buildFunnelNotifyText,
   buildTelegramNotifyRequest,
   getFunnelNotifyChannel,
+  dispatchBroadcastClickNotify,
   isBroadcastClickNotifyEnabled,
   isBroadcastClickZone,
   isFunnelOffsiteNotifyEnabled,
@@ -69,15 +70,37 @@ describe('funnel-notify', () => {
         metadata: { user_agent: 'Mozilla/5.0 HeadlessChrome/131' },
       }),
     ).toBe(false);
+    expect(
+      shouldNotifyFunnelEvent({
+        event_name: 'GetReferralLink',
+        ref_code: 'VIRAL-97UWEGZ',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome', webdriver: true },
+      }),
+    ).toBe(false);
+    expect(
+      shouldNotifyFunnelEvent({
+        event_name: 'GetReferralLink',
+        ref_code: 'VIRAL-97UWEGZ',
+      }),
+    ).toBe(false);
   });
 
   it('shouldNotifyFunnelEvent allows all steps by default', () => {
     process.env.FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN = '123:abc';
     process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID = '999';
-    expect(shouldNotifyFunnelEvent({ event_name: 'SiteLanding' })).toBe(true);
-    expect(shouldNotifyFunnelEvent({ event_name: 'GetReferralLink', ref_code: 'VIRAL-ABC' })).toBe(
-      true,
-    );
+    expect(
+      shouldNotifyFunnelEvent({
+        event_name: 'SiteLanding',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(true);
+    expect(
+      shouldNotifyFunnelEvent({
+        event_name: 'GetReferralLink',
+        ref_code: 'VIRAL-ABC',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(true);
   });
 
   it('shouldNotifyFunnelEvent respects important-only mode', () => {
@@ -85,7 +108,12 @@ describe('funnel-notify', () => {
     process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID = '999';
     process.env.FUNNEL_NOTIFY_IMPORTANT_ONLY = 'true';
     expect(shouldNotifyFunnelEvent({ event_name: 'SiteLanding' })).toBe(false);
-    expect(shouldNotifyFunnelEvent({ event_name: 'ShareReferral' })).toBe(true);
+    expect(
+      shouldNotifyFunnelEvent({
+        event_name: 'ShareReferral',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(true);
   });
 
   it('buildFunnelNotifyText includes ref or direct', () => {
@@ -127,6 +155,22 @@ describe('funnel-notify', () => {
     expect(isBroadcastClickNotifyEnabled()).toBe(true);
     process.env.FUNNEL_NOTIFY_BROADCAST_CLICKS = 'false';
     expect(isBroadcastClickNotifyEnabled()).toBe(false);
+  });
+
+  it('skips broadcast Telegram for agent browsers', async () => {
+    process.env.FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN = '123:abc';
+    process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID = '999';
+    const skipped = await dispatchBroadcastClickNotify({
+      zone_id: 'owner-broadcast-link',
+      href: 'https://example.com',
+      user_agent: 'Mozilla/5.0 HeadlessChrome/131',
+    });
+    expect(skipped.skipped).toBe('agent');
+    const empty = await dispatchBroadcastClickNotify({
+      zone_id: 'owner-broadcast-link',
+      href: 'https://example.com',
+    });
+    expect(empty.skipped).toBe('agent');
   });
 
   it('buildBroadcastClickNotifyText includes kind and href', () => {
