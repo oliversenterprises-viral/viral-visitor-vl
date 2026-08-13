@@ -46,7 +46,7 @@ describe('share-analytics-tracking hub', () => {
     });
 
     const header = hub.querySelector('#share-tracking-header-slot');
-    expect(header?.innerHTML).toContain('Share Analytics');
+    expect(header?.innerHTML).toContain('Link sends');
     expect(header?.innerHTML).toContain('twitter');
     expect(header?.innerHTML).toContain('Variant A');
   });

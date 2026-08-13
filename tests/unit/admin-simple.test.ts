@@ -5,7 +5,9 @@ import {
   initAdminSimple,
   isAdminExtraTab,
   isAdminMoreOpen,
+  isAdminStatsMoreOpen,
   setAdminMore,
+  setAdminStatsMore,
   syncAdminTabCoach,
 } from '../../src/lib/admin-simple';
 
@@ -13,9 +15,11 @@ describe('admin simple-first desk', () => {
   beforeEach(() => {
     document.documentElement.removeAttribute('data-vr-admin-simple');
     document.documentElement.removeAttribute('data-vr-admin-more');
+    document.documentElement.removeAttribute('data-vr-admin-stats-more');
     sessionStorage.clear();
     document.body.innerHTML = `
       <button id="admin-more-tools-btn" type="button">More tools</button>
+      <button id="admin-stats-more-btn" type="button">More numbers</button>
       <p id="admin-tab-coach"></p>
     `;
   });
@@ -23,6 +27,7 @@ describe('admin simple-first desk', () => {
   afterEach(() => {
     document.documentElement.removeAttribute('data-vr-admin-simple');
     document.documentElement.removeAttribute('data-vr-admin-more');
+    document.documentElement.removeAttribute('data-vr-admin-stats-more');
   });
 
   it('keeps three primary jobs and three extra tools', () => {
@@ -45,5 +50,15 @@ describe('admin simple-first desk', () => {
     initAdminSimple();
     syncAdminTabCoach(3);
     expect(document.getElementById('admin-tab-coach')?.textContent).toMatch(/homepage/i);
+  });
+
+  it('hides extra numbers until More numbers is pressed', () => {
+    initAdminSimple();
+    expect(isAdminStatsMoreOpen()).toBe(false);
+    expect(document.getElementById('admin-stats-more-btn')?.textContent).toBe('More numbers');
+    setAdminStatsMore(true);
+    expect(isAdminStatsMoreOpen()).toBe(true);
+    expect(document.documentElement.getAttribute('data-vr-admin-stats-more')).toBe('1');
+    expect(document.getElementById('admin-stats-more-btn')?.textContent).toBe('Hide extra numbers');
   });
 });

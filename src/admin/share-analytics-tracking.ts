@@ -44,49 +44,51 @@ function setChartsCollapsed(collapsed: boolean): void {
 function buildShareHubHeaderHtml(summary: ShareTrackingSummary | null): string {
   const kpi = summary
     ? `
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2" data-vr-admin-stats-extra>
         <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">In view</div>
+          <div class="text-[7px] text-zinc-500 uppercase">Showing now</div>
           <div class="text-sm font-bold text-white tabular-nums">${summary.inView}</div>
         </div>
         <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">Unique sharers</div>
+          <div class="text-[7px] text-zinc-500 uppercase">People who shared</div>
           <div class="text-sm font-bold text-emerald-300 tabular-nums">${summary.uniqueSharers}</div>
         </div>
         <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">Top platform</div>
+          <div class="text-[7px] text-zinc-500 uppercase">Most used app</div>
           <div class="text-[10px] font-bold text-white truncate">${escapeHtml(summary.topPlatform)}</div>
           <div class="text-[8px] text-zinc-500 tabular-nums">${summary.topPlatformCount} shares</div>
         </div>
         <div class="rounded-lg bg-amber-950/40 border border-amber-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">Peak day</div>
+          <div class="text-[7px] text-zinc-500 uppercase">Busiest day</div>
           <div class="text-[10px] font-bold text-amber-300 truncate">${escapeHtml(summary.peakDay)}</div>
           <div class="text-[8px] text-zinc-500 tabular-nums">${summary.peakDayCount} shares</div>
         </div>
         <div class="rounded-lg bg-emerald-950/40 border border-emerald-500/25 px-2 py-1.5">
-          <div class="text-[7px] text-zinc-500 uppercase">A/B leader</div>
+          <div class="text-[7px] text-zinc-500 uppercase">Winning message</div>
           <div class="text-sm font-bold text-emerald-300 tabular-nums">${escapeHtml(summary.conversionLeader)}</div>
         </div>
       </div>
       <div class="text-[8px] text-zinc-500 mt-1.5">
-        ${summary.totalAllTime} shares all time · ${summary.platforms} platforms ·
-        ${summary.testShareCount > 0 ? `${summary.testShareCount} test rows filtered from view · ` : ''}
+        ${summary.totalAllTime} shares all time · ${summary.platforms} apps ·
+        ${summary.testShareCount > 0 ? `${summary.testShareCount} test rows hidden · ` : ''}
         Range ${escapeHtml(String(summary.filterDays === 0 ? 'all time' : `${summary.filterDays}d`))}
       </div>`
-    : `<div class="text-[9px] text-zinc-500 mt-2">Loading share tracking…</div>`;
+    : `<div class="text-[9px] text-zinc-500 mt-2">Loading share numbers…</div>`;
 
   return `
     <div id="share-tracking-header" class="mb-3 pb-3 border-b border-white/10">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div class="text-xs font-semibold text-zinc-100">Share Analytics</div>
-          <div class="text-[9px] text-zinc-500">Platform breakdown, A/B variants, and signup conversion proxy</div>
+          <div class="text-xs font-semibold text-zinc-100">Link sends</div>
+          <div class="text-[9px] text-zinc-500">Extra numbers stay under More numbers.</div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           ${buildAdminTabDaysSelectHtml(SHARES_DAYS_STORAGE_KEY, 'data-share-tracking-range', summary?.filterDays)}
+          <span data-vr-admin-stats-extra class="inline-flex flex-wrap items-center gap-2">
           ${buildAutorefreshSelectHtml('data-share-tracking-autorefresh', SHARES_AUTOREFRESH_KEY)}
           <button type="button" data-share-tracking-copy
-            class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">⎘ Copy JSON</button>
+            class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">Copy numbers</button>
+          </span>
           <button type="button" data-share-tracking-refresh
             class="text-[9px] px-2 py-0.5 bg-violet-600/80 hover:bg-violet-600 text-white rounded disabled:opacity-50">↻ Refresh</button>
         </div>
@@ -116,7 +118,7 @@ export function buildShareTrackingShellOpenHtml(): string {
       <div id="share-tracking-header-slot"></div>
       <div class="flex items-center justify-end gap-2 mb-2">
         <button type="button" data-share-tracking-collapse aria-expanded="${collapsed ? 'false' : 'true'}"
-          class="text-[8px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-300 rounded">${collapsed ? 'Show charts' : 'Hide charts'}</button>
+          class="text-[8px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-300 rounded">${collapsed ? 'Show pictures' : 'Hide pictures'}</button>
       </div>
       <div data-tracking-section="share-charts" class="${collapsed ? 'hidden ' : ''}share-charts-section">`;
 }

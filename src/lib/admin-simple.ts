@@ -5,8 +5,11 @@
 
 const ATTR = 'data-vr-admin-simple';
 const MORE_ATTR = 'data-vr-admin-more';
+const STATS_MORE_ATTR = 'data-vr-admin-stats-more';
 const MORE_BTN_ID = 'admin-more-tools-btn';
+const STATS_MORE_BTN_ID = 'admin-stats-more-btn';
 const MORE_STORAGE_KEY = 'vr_admin_more';
+const STATS_MORE_STORAGE_KEY = 'vr_admin_stats_more';
 
 export const ADMIN_PRIMARY_TABS = [0, 2, 3] as const;
 export const ADMIN_EXTRA_TABS = [1, 4, 5] as const;
@@ -26,6 +29,22 @@ export function isAdminExtraTab(tab: number): boolean {
 
 export function isAdminMoreOpen(): boolean {
   return document.documentElement.hasAttribute(MORE_ATTR);
+}
+
+export function isAdminStatsMoreOpen(): boolean {
+  return document.documentElement.hasAttribute(STATS_MORE_ATTR);
+}
+
+export function setAdminStatsMore(open: boolean): void {
+  const root = document.documentElement;
+  if (open) root.setAttribute(STATS_MORE_ATTR, '1');
+  else root.removeAttribute(STATS_MORE_ATTR);
+  try {
+    sessionStorage.setItem(STATS_MORE_STORAGE_KEY, open ? '1' : '0');
+  } catch {
+    /* ignore */
+  }
+  syncAdminStatsMoreButton();
 }
 
 export function setAdminMore(open: boolean): void {
@@ -54,6 +73,21 @@ function syncAdminMoreButton(): void {
   btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
+function syncAdminStatsMoreButton(): void {
+  const btn = document.getElementById(STATS_MORE_BTN_ID);
+  if (!btn) return;
+  const open = isAdminStatsMoreOpen();
+  btn.textContent = open ? 'Hide extra numbers' : 'More numbers';
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function wireAdminStatsMoreButton(): void {
+  const btn = document.getElementById(STATS_MORE_BTN_ID);
+  if (!btn || btn.dataset.vrAdminBound === '1') return;
+  btn.dataset.vrAdminBound = '1';
+  btn.addEventListener('click', () => setAdminStatsMore(!isAdminStatsMoreOpen()));
+}
+
 function wireAdminMoreButton(): void {
   const btn = document.getElementById(MORE_BTN_ID);
   if (!btn || btn.dataset.vrAdminBound === '1') return;
@@ -79,10 +113,15 @@ export function initAdminSimple(): void {
     if (sessionStorage.getItem(MORE_STORAGE_KEY) === '1') {
       document.documentElement.setAttribute(MORE_ATTR, '1');
     }
+    if (sessionStorage.getItem(STATS_MORE_STORAGE_KEY) === '1') {
+      document.documentElement.setAttribute(STATS_MORE_ATTR, '1');
+    }
   } catch {
     /* ignore */
   }
   wireAdminMoreButton();
+  wireAdminStatsMoreButton();
   syncAdminMoreButton();
+  syncAdminStatsMoreButton();
   syncAdminTabCoach(0);
 }

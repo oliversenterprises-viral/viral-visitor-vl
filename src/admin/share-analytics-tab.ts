@@ -155,19 +155,19 @@ function buildAnalyticsHTML(
   let html = `
     ${linkLockHtml}
     <div class="mb-3">
-      <div class="text-2xl font-bold">Share Analytics</div>
+      <div class="text-2xl font-bold">Link sends</div>
       <div class="text-sm text-zinc-400">How people send their links. Sending is not the same as a friend opening Get my link.</div>
     </div>
     <div class="mb-3 text-[11px] text-zinc-400 leading-snug">
-      Shares = people opened a share path (app / sheet). That does <strong class="text-zinc-200">not</strong> lock a link.
+      A send = they opened a share app or copied the link. That does <strong class="text-zinc-200">not</strong> lock a link.
       Lock = a friend tapped Get my link. See the box above for waiting / locked / timed-out codes.
     </div>
     <div class="mb-6">
       <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
         <div class="admin-stat-card">
-          <div class="text-sm text-zinc-400">TOTAL SHARES (ALL TIME)</div>
+          <div class="text-sm text-zinc-400">All shares</div>
           <div id="share-stat-total" class="text-5xl md:text-6xl font-bold text-white">${formatNumber(globalTotal)}</div>
-          <div id="share-stat-subtitle" class="text-xs text-zinc-500 mt-1">From ${formatNumber(viewData.uniqueSharers)} unique sharers in view • Avg ${viewData.avgPerDay}/day</div>
+          <div id="share-stat-subtitle" class="text-xs text-zinc-500 mt-1">From ${formatNumber(viewData.uniqueSharers)} people · about ${viewData.avgPerDay} each day</div>
         </div>
         <div class="flex flex-col items-end gap-2">
           <div class="flex items-center gap-3 flex-wrap justify-end">
@@ -183,9 +183,9 @@ function buildAnalyticsHTML(
             <button data-days="30" class="share-time-filter px-3 py-1.5 text-sm rounded-2xl border border-white/20 hover:bg-white/10">30 days</button>
             <button data-days="0" class="share-time-filter px-3 py-1.5 text-sm rounded-2xl bg-violet-600 text-white">All time</button>
           </div>
-          <div class="flex gap-2 flex-wrap justify-end">
+          <div data-vr-admin-stats-extra class="flex gap-2 flex-wrap justify-end">
             <button id="export-shares-btn" class="px-4 py-1.5 text-sm bg-emerald-600/90 hover:bg-emerald-600 rounded-2xl flex items-center gap-1.5">
-              <i class="fa-solid fa-download text-xs"></i> Export CSV
+              <i class="fa-solid fa-download text-xs"></i> Download list
             </button>
             <button id="clear-test-shares-btn" type="button"
                     title="Removes agent/smoke test rows only (PROBE, READY, SMOKETEST, DEMOCODE, unknown, etc.). Real user shares are never deleted."
@@ -199,7 +199,7 @@ function buildAnalyticsHTML(
 
     <div class="flex flex-col md:flex-row gap-3 items-center mb-3">
       <div class="relative flex-1 w-full">
-        <input id="share-search" type="search" placeholder="Search referrer code or platform..."
+        <input id="share-search" type="search" placeholder="Find a friend code or app..."
                class="w-full bg-zinc-900 border border-white/10 rounded-2xl px-4 py-2 pr-10 text-sm focus:border-violet-500" />
         <button type="button" id="share-search-clear" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs" aria-label="Clear search">✕</button>
       </div>
@@ -225,19 +225,19 @@ function buildAnalyticsHTML(
   html += `
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <div class="glass admin-stat-card rounded-2xl p-4">
-        <div class="text-xs text-zinc-400">IN VIEW</div>
+        <div class="text-xs text-zinc-400">Showing now</div>
         <div class="text-3xl font-bold text-white mt-1">${formatNumber(filteredCount)}</div>
       </div>
       <div class="glass admin-stat-card rounded-2xl p-4">
-        <div class="text-xs text-zinc-400">UNIQUE SHARERS</div>
+        <div class="text-xs text-zinc-400">People who shared</div>
         <div class="text-3xl font-bold text-emerald-400 mt-1">${formatNumber(viewData.uniqueSharers)}</div>
       </div>
-      <div class="glass admin-stat-card rounded-2xl p-4">
-        <div class="text-xs text-zinc-400">PLATFORMS</div>
+      <div class="glass admin-stat-card rounded-2xl p-4" data-vr-admin-stats-extra>
+        <div class="text-xs text-zinc-400">Apps used</div>
         <div class="text-3xl font-bold text-white mt-1">${formatNumber(viewData.sortedPlatforms.length)}</div>
       </div>
-      <div class="glass admin-stat-card rounded-2xl p-4">
-        <div class="text-xs text-zinc-400">PEAK DAY</div>
+      <div class="glass admin-stat-card rounded-2xl p-4" data-vr-admin-stats-extra>
+        <div class="text-xs text-zinc-400">Busiest day</div>
         <div class="text-lg font-bold text-amber-400 mt-1">${escapeHtml(viewData.peakDay.day)}</div>
         <div class="text-xs text-zinc-500">${viewData.peakDay.count} shares</div>
       </div>
@@ -245,25 +245,25 @@ function buildAnalyticsHTML(
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
       <div>
-        <h4 class="text-sm font-semibold text-zinc-300 mb-2">Shares by Platform</h4>
+        <h4 class="text-sm font-semibold text-zinc-300 mb-2">Shares by app</h4>
         <canvas id="share-chart" style="max-height: 260px;"></canvas>
       </div>
       <div>
-        <h4 class="text-sm font-semibold text-zinc-300 mb-2">Shares Over Time (last 14 days)</h4>
+        <h4 class="text-sm font-semibold text-zinc-300 mb-2">Shares over the last 14 days</h4>
         <canvas id="trend-chart" style="max-height: 260px;"></canvas>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" data-vr-admin-stats-extra>
       <div class="bg-zinc-900 border border-white/10 rounded-2xl p-4">
-        <h4 class="text-sm font-semibold text-zinc-300 mb-3">Key Insights</h4>
+        <h4 class="text-sm font-semibold text-zinc-300 mb-3">What stands out</h4>
         <ul class="space-y-2 text-sm text-zinc-300">
           ${viewData.insights.map((i) => `<li>• ${i}</li>`).join('')}
         </ul>
       </div>
 
       <div>
-        <h4 class="text-sm font-semibold text-zinc-300 mb-3">Top Referrers by Shares</h4>
+        <h4 class="text-sm font-semibold text-zinc-300 mb-3">Who sent the most</h4>
         <div class="space-y-1.5">
   `;
 
@@ -283,7 +283,7 @@ function buildAnalyticsHTML(
   });
 
   if (viewData.abVariantBreakdown.some((r) => r.count > 0)) {
-    html += `</div></div><div><h4 class="text-sm font-semibold text-zinc-300 mb-3">A/B Message Variants</h4><div class="space-y-2">`;
+    html += `</div></div><div><h4 class="text-sm font-semibold text-zinc-300 mb-3">Two message versions</h4><div class="space-y-2">`;
     viewData.abVariantBreakdown.forEach((row) => {
       if (row.count === 0 && row.variant === 'unknown') return;
       const label =
@@ -307,8 +307,8 @@ function buildAnalyticsHTML(
   }
 
   const convRows = conversion.rows.filter((r) => r.shareCount > 0);
-  html += `<div><h4 class="text-sm font-semibold text-zinc-300 mb-2">A/B → Signup Conversion (proxy)</h4>`;
-  html += `<p class="text-[11px] text-zinc-500 mb-3">Referrals ÷ tagged shares per variant cohort (excludes test codes).</p>`;
+  html += `<div><h4 class="text-sm font-semibold text-zinc-300 mb-2">Which message got more friends</h4>`;
+  html += `<p class="text-[11px] text-zinc-500 mb-3">Friends who joined ÷ sends for each message. Test codes are left out.</p>`;
   if (convRows.length === 0) {
     html += `<div class="text-xs text-zinc-500 bg-zinc-900/80 border border-white/10 rounded-xl px-4 py-3">${escapeHtml(conversion.insight)}</div>`;
   } else {
@@ -331,7 +331,7 @@ function buildAnalyticsHTML(
     });
     html += `</div><p class="text-[11px] text-zinc-500">${escapeHtml(conversion.insight)}</p>`;
   }
-  html += `</div><div><h4 class="text-sm font-semibold text-zinc-300 mb-3">Platform Breakdown</h4><div class="space-y-2">`;
+  html += `</div><div><h4 class="text-sm font-semibold text-zinc-300 mb-3">By app</h4><div class="space-y-2">`;
 
   viewData.sortedPlatforms.forEach(([platform, count]) => {
     const percentage = Math.round((count / viewData.total) * 100);

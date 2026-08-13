@@ -86,10 +86,10 @@ export function formatReferralCreditNotifierLine(opts: {
 
 /** Plain-English sublabels for admin referral stat cards. */
 export const REFERRAL_STAT_HINTS = {
-  total: 'People who joined via someone’s link (all real records)',
-  unique: 'How many different referrer codes got credit',
-  today: 'New credited signups since local midnight',
-  risk: 'Visitor IPs with 3+ referrals (click to filter)',
+  total: 'How many friends got credit',
+  unique: 'How many different people got credit',
+  today: 'Credits since this morning',
+  risk: 'Same computer used 3+ times — tap to look',
 } as const;
 
 /** Table / modal column title — never ambiguous. */

@@ -44,7 +44,7 @@ function setStatsCollapsed(collapsed: boolean): void {
 function buildReferralsHubHeaderHtml(summary: ReferralTrackingSummary | null): string {
   const kpi = summary
     ? `
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2" data-vr-admin-stats-extra>
         <div class="rounded-lg bg-violet-950/40 border border-violet-500/25 px-2 py-1.5" title="Signups in the current filter">
           <div class="text-[7px] text-zinc-500 uppercase">Signups in view</div>
           <div class="text-sm font-bold text-white tabular-nums">${summary.inView}</div>
@@ -80,14 +80,16 @@ function buildReferralsHubHeaderHtml(summary: ReferralTrackingSummary | null): s
     <div id="referrals-tracking-header" class="mb-3 pb-3 border-b border-white/10">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div class="text-xs font-semibold text-zinc-100">Referral Analytics</div>
-          <div class="text-[9px] text-zinc-500">Code = who got credit · IP = visitor who joined · abuse filters built-in</div>
+          <div class="text-xs font-semibold text-zinc-100">Friend credits</div>
+          <div class="text-[9px] text-zinc-500">Code = who got credit. Extra numbers stay under More numbers.</div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           ${buildAdminTabDaysSelectHtml(REFERRALS_DAYS_STORAGE_KEY, 'data-referrals-tracking-range', summary?.filterDays)}
+          <span data-vr-admin-stats-extra class="inline-flex flex-wrap items-center gap-2">
           ${buildAutorefreshSelectHtml('data-referrals-tracking-autorefresh', REFERRALS_AUTOREFRESH_KEY)}
           <button type="button" data-referrals-tracking-copy
-            class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">⎘ Copy JSON</button>
+            class="text-[9px] px-2 py-0.5 bg-white/10 hover:bg-white/20 text-zinc-200 rounded">Copy numbers</button>
+          </span>
           <button type="button" data-referrals-tracking-refresh
             class="text-[9px] px-2 py-0.5 bg-violet-600/80 hover:bg-violet-600 text-white rounded disabled:opacity-50">↻ Refresh</button>
         </div>

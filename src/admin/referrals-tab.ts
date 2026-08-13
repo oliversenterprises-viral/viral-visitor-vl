@@ -146,12 +146,12 @@ async function renderReferralsTab(content: HTMLElement) {
 
     <div id="referrals-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <div class="glass admin-stat-card rounded-2xl p-4" title="${REFERRAL_STAT_HINTS.total}">
-        <div class="text-xs text-zinc-400 uppercase tracking-wide">Referrals</div>
+        <div class="text-xs text-zinc-400 uppercase tracking-wide">Credits</div>
         <div id="stat-total" class="text-4xl font-bold text-white mt-1">—</div>
         <div class="text-[10px] text-zinc-500 mt-1 leading-snug">${REFERRAL_STAT_HINTS.total}</div>
       </div>
       <div class="glass admin-stat-card rounded-2xl p-4" title="${REFERRAL_STAT_HINTS.unique}">
-        <div class="text-xs text-emerald-400/90 uppercase tracking-wide">Referrers</div>
+        <div class="text-xs text-emerald-400/90 uppercase tracking-wide">Friends</div>
         <div id="stat-unique" class="text-4xl font-bold text-emerald-400 mt-1">—</div>
         <div class="text-[10px] text-zinc-500 mt-1 leading-snug">${REFERRAL_STAT_HINTS.unique}</div>
       </div>
@@ -162,7 +162,7 @@ async function renderReferralsTab(content: HTMLElement) {
       </div>
       <button type="button" id="stat-risk-card" class="glass admin-stat-card rounded-2xl p-4 border border-red-500/30 text-left hover:border-red-500/50 transition-colors" title="${REFERRAL_STAT_HINTS.risk}">
         <div class="text-xs text-red-400 flex items-center gap-1 uppercase tracking-wide">
-          High-risk IPs
+          Same computer a lot
           <i class="fa-solid fa-info-circle text-[10px] opacity-60"></i>
         </div>
         <div id="stat-risk" class="text-4xl font-bold text-red-400 mt-1">—</div>
@@ -171,14 +171,14 @@ async function renderReferralsTab(content: HTMLElement) {
     </div>
 
     <div id="referrals-top-panel" class="hidden mb-6 rounded-2xl border border-white/10 bg-zinc-900/40 p-4">
-      <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Top referrers in current view</div>
-      <div class="text-[10px] text-zinc-500 mb-3">Who got the most credit (click a code to filter the table)</div>
+      <div class="text-xs uppercase tracking-widest text-zinc-500 mb-1">Biggest friends right now</div>
+      <div class="text-[10px] text-zinc-500 mb-3">Who got the most credit (tap a code to filter the list)</div>
       <div id="referrals-top-list" class="flex flex-wrap gap-2"></div>
     </div>
 
     <div class="flex flex-col md:flex-row gap-3 items-center mb-3">
       <div class="relative flex-1 w-full">
-        <input id="referral-search" type="search" placeholder="Search referrer code, visitor IP, or user agent…"
+        <input id="referral-search" type="search" placeholder="Find a friend code or computer…"
                class="w-full bg-zinc-900 border border-white/10 rounded-2xl px-4 py-2 pr-10 text-sm focus:border-violet-500" />
         <button type="button" id="referral-search-clear" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white text-xs" aria-label="Clear search">✕</button>
       </div>
@@ -190,15 +190,15 @@ async function renderReferralsTab(content: HTMLElement) {
         <button data-days="0" class="time-filter px-3 py-1.5 text-sm rounded-2xl bg-violet-600 text-white">All time</button>
       </div>
 
-      <button id="export-referrals-btn"
+      <button id="export-referrals-btn" data-vr-admin-stats-extra
               class="md:ml-auto px-5 py-2 text-sm bg-emerald-600/90 hover:bg-emerald-600 rounded-2xl flex items-center gap-2 font-medium">
-        <i class="fa-solid fa-download"></i> Export CSV
+        <i class="fa-solid fa-download"></i> Download list
       </button>
     </div>
 
     <div class="flex flex-wrap items-center gap-2 mb-4">
       <button data-risk="all" class="referral-risk-filter px-3 py-1 text-xs rounded-full border border-violet-500 bg-violet-600 text-white">All referrals</button>
-      <button data-risk="high-risk" class="referral-risk-filter px-3 py-1 text-xs rounded-full border border-white/20 text-zinc-400 hover:bg-white/10">High-risk IPs only</button>
+      <button data-risk="high-risk" class="referral-risk-filter px-3 py-1 text-xs rounded-full border border-white/20 text-zinc-400 hover:bg-white/10">Same computer a lot</button>
       <span id="referrals-result-count" class="text-xs text-zinc-500 ml-auto"></span>
     </div>
 

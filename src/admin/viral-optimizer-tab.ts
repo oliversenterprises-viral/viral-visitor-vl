@@ -121,24 +121,24 @@ function renderHealthCards(health: ReturnType<typeof computeViralHealth>): strin
   return `
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
       <div class="glass rounded-2xl p-4 border border-violet-500/20">
-        <div class="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">K score (proxy)</div>
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Growth score</div>
         <div class="text-2xl font-bold text-violet-300">${health.kScore.toFixed(2)}</div>
-        <div class="text-xs text-zinc-500 mt-1">referred × share × referrals/share</div>
+        <div class="text-xs text-zinc-500 mt-1">higher means more friends from each share</div>
       </div>
       <div class="glass rounded-2xl p-4 border border-white/10">
-        <div class="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Referred → get link</div>
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Friend got a link</div>
         <div class="text-2xl font-bold text-emerald-300">${formatPct(health.referredGetLinkRate)}</div>
-        <div class="text-xs text-zinc-500 mt-1">${health.referredGetLink} / ${health.referredLandings} unique</div>
+        <div class="text-xs text-zinc-500 mt-1">${health.referredGetLink} of ${health.referredLandings} people</div>
       </div>
       <div class="glass rounded-2xl p-4 border border-white/10">
-        <div class="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Get link → share</div>
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Then they shared</div>
         <div class="text-2xl font-bold text-cyan-300">${formatPct(health.shareAfterGetLinkRate)}</div>
-        <div class="text-xs text-zinc-500 mt-1">${health.shares} / ${health.getLink} unique</div>
+        <div class="text-xs text-zinc-500 mt-1">${health.shares} of ${health.getLink} people</div>
       </div>
       <div class="glass rounded-2xl p-4 border border-white/10">
-        <div class="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Referrals / share</div>
+        <div class="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Friends per share</div>
         <div class="text-2xl font-bold text-amber-300">${health.referralsPerShare != null ? health.referralsPerShare.toFixed(2) : '—'}</div>
-        <div class="text-xs text-zinc-500 mt-1">from share analytics cohort</div>
+        <div class="text-xs text-zinc-500 mt-1">from recent link sends</div>
       </div>
     </div>`;
 }
@@ -278,7 +278,7 @@ function renderGrowthEngineCard(flags: OptimizerFlags): string {
       }</p>
       <div class="grid grid-cols-2 gap-3 text-sm">
         <div>
-          <div class="text-[10px] uppercase text-zinc-500">K score (stored)</div>
+          <div class="text-[10px] uppercase text-zinc-500">Growth score</div>
           <div class="text-lg font-bold text-orange-300 tabular-nums">${kScore}</div>
         </div>
         <div>
@@ -661,33 +661,33 @@ export async function renderViralOptimizerTab(container: HTMLElement): Promise<v
     </section>
 
     <section class="mb-8">
-      <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Viral health</h3>
+      <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">How sharing is doing</h3>
       ${renderHealthCards(health)}
     </section>
 
     <section class="mb-8">
-      <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Data readiness</h3>
+      <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">What to try next</h3>
+      ${renderOpportunities(opportunities, readiness)}
+    </section>
+
+    <section class="mb-8" data-vr-admin-stats-extra>
+      <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Do we have enough data?</h3>
       ${renderDataReadiness(readiness)}
     </section>
 
-    <div class="grid lg:grid-cols-2 gap-6 mb-8">
+    <div class="grid lg:grid-cols-2 gap-6 mb-8" data-vr-admin-stats-extra>
       <section>
-        <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Opportunity queue</h3>
-        ${renderOpportunities(opportunities, readiness)}
+        <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Where people tap</h3>
+        ${renderZoneHeat(zoneHeat)}
       </section>
       <section>
-        <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Zone heat (clicks)</h3>
-        ${renderZoneHeat(zoneHeat)}
+        <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Tap map (phone screen)</h3>
+        ${renderPixelHeatmap(interactionResult.rows)}
       </section>
     </div>
 
-    <section class="mb-8">
-      <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Pixel heatmap (mobile-normalized)</h3>
-      ${renderPixelHeatmap(interactionResult.rows)}
-    </section>
-
-    <section>
-      <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Experiment ledger</h3>
+    <section data-vr-admin-stats-extra>
+      <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Saved experiments</h3>
       ${renderExperiments(experiments)}
     </section>
   `;
