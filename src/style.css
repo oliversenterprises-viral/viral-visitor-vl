@@ -441,6 +441,32 @@ html[data-vr-kid-simple]:not([data-vr-kid-more]) #challenge-duel-banner {
   display: none !important;
 }
 
+.promoter-week-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem 0.75rem;
+  padding: 0.65rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(52, 211, 153, 0.28);
+  background: rgba(6, 78, 59, 0.35);
+  font-size: 0.875rem;
+  color: #d1fae5;
+}
+.promoter-week-kicker {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6ee7b7;
+}
+.promoter-week-cta {
+  font-weight: 700;
+  color: #fff;
+  text-decoration: underline;
+}
+
 html[data-vr-kid-simple] #kid-more-tools-btn {
   display: block;
 }

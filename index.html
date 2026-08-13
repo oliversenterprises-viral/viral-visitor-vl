@@ -123,6 +123,7 @@
                 <a href="/tools/" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">Tools</a>
                 <a href="#prize" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.feature">Feature</a>
                 <a href="#leaderboard" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.board">Board</a>
+                <a href="#become-promoter" class="vr-nav-link hidden sm:inline text-emerald-300 hover:text-white transition-colors">Promote</a>
                 <button type="button" id="nav-get-link-btn" data-vr-zone="nav-get-link" class="sm:hidden px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl text-xs font-semibold min-h-[44px]" data-i18n="nav.get_link">
                     Get link
                 </button>
@@ -134,6 +135,7 @@
     </nav>
 
     <div class="pt-20 sm:pt-24 pb-12 sm:pb-16 max-w-6xl mx-auto px-4 sm:px-6">
+        <div id="promoter-week-strip" class="promoter-week-strip hidden mb-4 sm:mb-5" role="status"></div>
        
         <!-- HERO — conversion polish: one primary action, global proof, quiet first paint -->
         <div class="rounded-2xl sm:rounded-3xl p-6 sm:p-12 md:p-16 text-center hero-gradient shadow-2xl">
@@ -195,6 +197,11 @@
 
                 <p id="hero-trust-line" data-i18n="hero.trust" class="mt-3 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
                     Free. No signup. No cash. Just send your link.
+                </p>
+                <p id="hero-promoter-cta" class="mt-2 text-sm text-zinc-300">
+                    We want affiliates.
+                    <a href="#become-promoter" class="underline text-violet-300 hover:text-white font-semibold">Become a promoter</a>
+                    — earn ad credit when people you send tap Get my link.
                 </p>
                 <!-- Cold-land CSS hides this; shown after get-link / non-quiet segments for fuller compliance note -->
                 <p id="hero-security-trust" class="mt-1.5 text-[11px] sm:text-xs text-zinc-500 max-w-xl mx-auto leading-relaxed">
@@ -907,6 +914,20 @@
             </div>
         </div>
 
+        <div id="become-promoter" class="mt-12 glass border border-emerald-400/25 rounded-3xl p-8 md:p-10 bg-emerald-950/20">
+            <h2 class="text-3xl font-bold tracking-tight mb-2">Become a promoter</h2>
+            <p class="text-zinc-300 mb-2">We want affiliates. Pick a name, get a link instantly. When someone you send taps Get my link, you earn <strong>ad-board credit</strong> (days on ads.viralrefer.app).</p>
+            <p class="text-zinc-500 text-sm mb-5">This is promoter pay — not a contest cash prize. #1 on the board still gets a homepage banner, not cash. Cash bonus only after 10 people get a link, marked paid by the owner.</p>
+            <form id="promoter-signup-form" class="flex flex-wrap gap-2 items-end mb-4">
+                <label class="flex-1 min-w-[180px] text-xs text-zinc-400">Your name
+                    <input name="name" required maxlength="80" placeholder="Maya" class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-white" />
+                </label>
+                <button type="submit" class="px-5 py-2.5 text-sm font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white">Get my promoter link</button>
+                <span data-aff-signup-err class="text-sm text-amber-300 w-full"></span>
+            </form>
+            <div id="promoter-dashboard" class="hidden"></div>
+        </div>
+
         <div id="faq" data-vr-below-fold class="mt-12 glass border border-white/10 rounded-3xl p-8 md:p-10">
             <h2 class="text-3xl font-bold tracking-tight mb-6">FAQ</h2>
             <div class="space-y-5 text-left text-zinc-300">
@@ -925,6 +946,10 @@
                 <div>
                     <h3 class="font-semibold text-white">How does the board work?</h3>
                     <p class="text-zinc-400 mt-1">A friend must open your link and tap Get my link. Copying alone does not count.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white">Can I get paid for sending visitors?</h3>
+                    <p class="text-zinc-400 mt-1">Yes. Become a promoter, share your /a/ link, and earn ad-board credit when they tap Get my link. That is not a contest cash prize.</p>
                 </div>
             </div>
         </div>
