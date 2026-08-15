@@ -40,6 +40,11 @@ export function refreshVisitorSlimState(): void {
 function updateMoreShareButtonLabel(): void {
   const btn = document.getElementById(MORE_SHARE_BTN_ID);
   if (!btn) return;
+  if (document.documentElement.hasAttribute('data-vr-post-link-one')) {
+    btn.classList.add('hidden');
+    btn.setAttribute('hidden', '');
+    return;
+  }
   const expanded = document.documentElement.hasAttribute('data-vr-slim-share-expanded');
   const hiddenExtras = document.querySelectorAll('[data-vr-slim-share-extra]').length;
   btn.textContent = expanded
@@ -61,6 +66,7 @@ function wireMoreShareOptions(): void {
   if (!btn || btn.dataset.vrSlimBound === '1') return;
   btn.dataset.vrSlimBound = '1';
   btn.addEventListener('click', () => {
+    if (document.documentElement.hasAttribute('data-vr-post-link-one')) return;
     const root = document.documentElement;
     if (root.hasAttribute('data-vr-slim-share-expanded')) {
       root.removeAttribute('data-vr-slim-share-expanded');

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+﻿import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   buildPostLinkShareText,
   buildWhatsAppShareHref,
@@ -8,6 +8,7 @@ import {
   showPostLinkError,
   activatePostLinkShare,
   onPostLinkPrimaryTap,
+  onPostLinkCopyTap,
   POST_LINK_ATTR,
 } from '../../src/lib/post-link-share';
 
@@ -95,5 +96,17 @@ describe('post-link-share', () => {
     onPostLinkPrimaryTap();
     expect(open).toHaveBeenCalled();
     expect(String(open.mock.calls[0]?.[0])).toContain('wa.me');
+  });
+
+  it('copy writes the URL only, not the share sentence', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    activatePostLinkShare(LINK);
+    await onPostLinkCopyTap();
+    expect(writeText).toHaveBeenCalledWith(LINK);
+    expect(writeText.mock.calls[0][0]).not.toMatch(/Race me/);
   });
 });

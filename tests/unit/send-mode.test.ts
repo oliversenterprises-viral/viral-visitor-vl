@@ -11,6 +11,7 @@ import {
 import {
   clearShareFirstFlags,
   markSharePending,
+  renderShareFirstStrip,
 } from '../../src/lib/share-first-ui';
 import { clearShareDeadlineState } from '../../src/lib/share-deadline';
 
@@ -19,6 +20,16 @@ function mountShareFirstDom() {
     <input id="ref-link" value="https://viralrefer.app/r/VIRAL-TEST1" />
     <button id="hero-get-link-btn"><span>Get my referral link</span></button>
     <p id="referral-next-step" class="hidden"></p>
+    <button id="share-more-options-btn">More platforms & tools</button>
+    <button id="kid-more-tools-btn">Show extra tools</button>
+    <div id="post-link-share" class="hidden" hidden>
+      <h2 id="post-link-heading"></h2>
+      <p id="post-link-url" tabindex="0"></p>
+      <button type="button" id="post-link-primary"></button>
+      <button type="button" id="post-link-copy">Copy link</button>
+      <p id="post-link-helper"></p>
+      <p id="post-link-whisper" class="hidden" hidden></p>
+    </div>
     <div id="share-first-strip" class="hidden share-first-strip">
       <div class="flex items-start justify-between gap-2 mb-2">
         <div class="min-w-0">
@@ -53,6 +64,7 @@ describe('send-mode (post–get-link bulletproof)', () => {
     document.documentElement.removeAttribute('data-vr-send-more');
     document.documentElement.removeAttribute('data-vr-has-link');
     document.documentElement.removeAttribute('data-vr-visitor-slim');
+    document.documentElement.removeAttribute('data-vr-post-link-one');
     document.body.className = '';
     document.body.innerHTML = '';
     document.getElementById('mobile-send-cta')?.remove();
@@ -82,11 +94,15 @@ describe('send-mode (post–get-link bulletproof)', () => {
     expect(document.getElementById('mobile-send-cta')?.classList.contains('hidden')).toBe(true);
   });
 
-  it('polish with native: hides SMS/WA/copy until More ways expanded', () => {
+  it('polish with native: no SMS, no More door, pack stays out', () => {
     mountShareFirstDom();
     Object.defineProperty(navigator, 'share', {
       configurable: true,
       value: vi.fn(),
+    });
+    Object.defineProperty(navigator, 'canShare', {
+      configurable: true,
+      value: () => true,
     });
     const native = document.getElementById('native-share-btn') as HTMLButtonElement;
     native.classList.remove('hidden');
@@ -100,21 +116,15 @@ describe('send-mode (post–get-link bulletproof)', () => {
 
     const grid = strip.querySelector('.grid.grid-cols-2') as HTMLElement;
     const copy = strip.querySelector('.share-first-copy-only') as HTMLElement;
-    // Native is the one primary — secondaries collapsed
     expect(grid.classList.contains('hidden')).toBe(true);
     expect(copy.classList.contains('hidden')).toBe(true);
-
-    const more = document.getElementById('send-mode-more-btn') as HTMLButtonElement;
-    expect(more).toBeTruthy();
-    more.click();
-    expect(document.documentElement.getAttribute('data-vr-send-more')).toBe('1');
-    expect(grid.classList.contains('hidden')).toBe(false);
-    expect(copy.classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('share-first-sms')?.classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('share-more-options-btn')?.classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('send-mode-more-btn')).toBeFalsy();
   });
 
-  it('activateSendModeAfterGetLink: one primary CTA + sticky + next-step copy', () => {
+  it('activateSendModeAfterGetLink: Lumina screen, no More, no sticky', () => {
     mountShareFirstDom();
-    // Pretend native share available so primary is native
     Object.defineProperty(navigator, 'share', {
       configurable: true,
       value: vi.fn(),
@@ -127,39 +137,26 @@ describe('send-mode (post–get-link bulletproof)', () => {
     activateSendModeAfterGetLink({ autoCopied: true });
 
     expect(isSendModeActive()).toBe(true);
-    const strip = document.getElementById('share-first-strip')!;
-    expect(strip.classList.contains('hidden')).toBe(false);
-
-    const hero = document.querySelector('#hero-get-link-btn span')?.textContent || '';
-    expect(hero.toLowerCase()).toContain('send');
-    expect(hero.toLowerCase()).toContain('friend');
-
-    const next = document.getElementById('referral-next-step')!;
-    expect(next.classList.contains('hidden')).toBe(false);
-    expect(next.textContent?.toLowerCase()).toContain('send');
-
-    const status = document.getElementById('share-first-status')!;
-    expect(status.textContent?.toLowerCase()).toMatch(/ready|send|friend/);
-
-    // Sticky bar present with send label
-    const stickyLabel = document.querySelector('[data-mobile-send-label]')?.textContent || '';
-    expect(stickyLabel.toLowerCase()).toContain('send');
+    expect(document.documentElement.getAttribute('data-vr-post-link-one')).toBe('1');
+    expect(document.getElementById('share-first-strip')?.classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('share-more-options-btn')?.classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('kid-more-tools-btn')?.classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('post-link-heading')?.textContent).toBe('Your link is ready');
+    const primary = document.getElementById('post-link-primary');
+    expect(primary?.textContent === 'Share with a friend' || primary?.textContent === 'Send on WhatsApp').toBe(
+      true,
+    );
+    expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
+    expect(document.body.classList.contains('has-mobile-send-cta')).toBe(false);
   });
 
-  it('sticky CTA click invokes primary share path (native button)', () => {
+  it('renderShareFirstStrip never unhides More or SMS', () => {
     mountShareFirstDom();
-    Object.defineProperty(navigator, 'share', {
-      configurable: true,
-      value: vi.fn(),
-    });
-    const native = document.getElementById('native-share-btn') as HTMLButtonElement;
-    native.classList.remove('hidden');
-    const clickSpy = vi.fn();
-    native.addEventListener('click', clickSpy);
-
-    activateSendModeAfterGetLink();
-    document.getElementById('mobile-send-cta-btn')?.click();
-    expect(clickSpy).toHaveBeenCalled();
+    markSharePending();
+    renderShareFirstStrip();
+    expect(document.getElementById('share-more-options-btn')?.classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('share-first-sms')?.classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('kid-more-tools-btn')?.classList.contains('hidden')).toBe(true);
   });
 
   it('hideStickySendBar removes body class', () => {

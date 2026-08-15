@@ -146,15 +146,14 @@ export function renderShareFirstStrip(): void {
     else nativeBtn.classList.add('hidden');
   }
   waBtn?.classList.remove('hidden');
-  const showMore = document.documentElement.hasAttribute('data-vr-send-more')
-    || document.documentElement.hasAttribute('data-vr-slim-share-expanded');
-  if (smsBtn) {
-    smsBtn.classList.toggle('hidden', !showMore);
-  }
+  smsBtn?.classList.add('hidden');
 
-  // Soft-hide grid until expanded when pending (reduce choice overload)
+  // First session has no More door — pack stays out entirely.
   const moreBtn = document.getElementById('share-more-options-btn');
-  if (moreBtn && pending) moreBtn.classList.remove('hidden');
+  moreBtn?.classList.add('hidden');
+  moreBtn?.setAttribute('hidden', '');
+  document.getElementById('kid-more-tools-btn')?.classList.add('hidden');
+  document.getElementById('send-mode-more-btn')?.classList.add('hidden');
 
   // Keep send-mode polish if active (status / secondary collapse)
   if (document.documentElement.getAttribute('data-vr-send-mode') === '1') {
