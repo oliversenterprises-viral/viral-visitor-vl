@@ -19,36 +19,43 @@ describe('growth-next-action', () => {
     expect(a.kind).toBe('get_link');
   });
 
-  it('critical urgency when one referral from overtaking', () => {
+  it('one action after link: WhatsApp when native is unavailable', () => {
     const a = resolveGrowthNextAction({ ...base, gapToNext: 1, rank: 2 });
     expect(a.kind).toBe('whatsapp_boost');
     expect(a.urgency).toBe('critical');
+    expect(a.subline).toMatch(/Get my link/i);
   });
 
-  it('defend #1 action', () => {
+  it('one action after link: native share when available', () => {
+    const a = resolveGrowthNextAction({ ...base, nativeShareAvailable: true, isMobile: true });
+    expect(a.kind).toBe('native_share');
+    expect(a.ctaLabel).toMatch(/share now/i);
+    expect(a.subline).toMatch(/Get my link/i);
+  });
+
+  it('defend #1 still uses the single share action', () => {
     const a = resolveGrowthNextAction({ ...base, rank: 1, gapToNext: null });
     expect(a.headline).toMatch(/defend/i);
+    expect(a.kind).toBe('whatsapp_boost');
   });
 
-  it('daily quest nudge uses challenge-first CTA', () => {
+  it('daily quest nudge stays on the single share action', () => {
     const a = resolveGrowthNextAction({ ...base, dailyShares: 1, shareStreak: 2, referrals: 1 });
     expect(a.headline).toMatch(/daily boost/i);
-    expect(a.kind).toBe('duel_invite');
-    expect(a.ctaLabel).toMatch(/challenge/i);
+    expect(['native_share', 'whatsapp_boost']).toContain(a.kind);
   });
 
-  it('prioritizes duel invite for referred/challenge sessions', () => {
+  it('referred sessions still use one share action, not a duel command center', () => {
     const a = resolveGrowthNextAction({
       ...base,
       duelInviteEligible: true,
       landingRef: 'VIRAL-RIVAL',
     });
-    expect(a.kind).toBe('duel_invite');
-    expect(a.urgency).toBe('critical');
-    expect(a.headline).toContain('VIRAL-RIVAL');
+    expect(a.kind).toBe('whatsapp_boost');
+    expect(a.subline).toMatch(/Get my link/i);
   });
 
-  it('challenge-first for brand-new sharers', () => {
+  it('brand-new sharers get WhatsApp, not a challenge wall', () => {
     const a = resolveGrowthNextAction({
       ...base,
       referrals: 0,
@@ -57,7 +64,7 @@ describe('growth-next-action', () => {
       gapToNext: null,
       rank: null,
     });
-    expect(a.kind).toBe('duel_invite');
-    expect(a.ctaLabel).toMatch(/challenge a friend/i);
+    expect(a.kind).toBe('whatsapp_boost');
+    expect(a.ctaLabel).toMatch(/whatsapp/i);
   });
 });

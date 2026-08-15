@@ -430,20 +430,20 @@
                                     <i class="fa-solid fa-share-nodes text-xl" aria-hidden="true"></i>
                                     <span data-i18n="share_first.cta_native">Share now (pick any app)</span>
                                 </button>
+                                <button id="share-first-whatsapp" type="button" onclick="shareTo('whatsapp')"
+                                        class="share-first-alt-btn w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white py-3.5 px-5 rounded-2xl font-bold text-sm"
+                                        title="Share on WhatsApp"
+                                        aria-label="Share on WhatsApp">
+                                    <i class="fa-brands fa-whatsapp text-lg" aria-hidden="true"></i>
+                                    <span>WhatsApp</span>
+                                </button>
                                 <div class="grid grid-cols-2 gap-2">
                                     <button id="share-first-sms" type="button" onclick="shareTo('sms')"
-                                            class="share-first-alt-btn flex items-center justify-center gap-2 bg-emerald-700/90 hover:bg-emerald-600 text-white py-3 px-3 rounded-2xl font-semibold text-sm"
+                                            class="share-first-alt-btn hidden flex items-center justify-center gap-2 bg-emerald-700/90 hover:bg-emerald-600 text-white py-3 px-3 rounded-2xl font-semibold text-sm"
                                             title="Send via SMS / Messages"
                                             aria-label="Share via SMS">
                                         <i class="fa-solid fa-sms" aria-hidden="true"></i>
                                         <span>SMS</span>
-                                    </button>
-                                    <button id="share-first-whatsapp" type="button" onclick="shareTo('whatsapp')"
-                                            class="share-first-alt-btn flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white py-3 px-3 rounded-2xl font-semibold text-sm"
-                                            title="Share on WhatsApp"
-                                            aria-label="Share on WhatsApp">
-                                        <i class="fa-brands fa-whatsapp text-lg" aria-hidden="true"></i>
-                                        <span>WhatsApp</span>
                                     </button>
                                 </div>
                                 <button type="button" onclick="copyLink()"
@@ -520,55 +520,36 @@
                             <canvas id="rank-receipt-canvas" class="hidden" width="1080" height="1350" aria-hidden="true"></canvas>
                         </div>
 
-                        <div id="growth-command-center" data-vr-zone="growth-command" class="hidden growth-command-center mb-4 rounded-2xl border border-violet-400/30 bg-gradient-to-br from-violet-500/10 via-zinc-900/80 to-emerald-500/5 px-4 py-4" role="region" aria-label="Share command center">
-                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-rocket text-violet-300 text-sm" aria-hidden="true"></i>
-                                    <span class="text-[10px] uppercase tracking-wider font-bold text-violet-200">Share Command Center</span>
-                                </div>
+                        <div id="growth-command-center" data-vr-zone="growth-command" class="hidden growth-command-center mb-4 rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-500/10 via-zinc-900/80 to-violet-500/5 px-4 py-4" role="region" aria-label="Share your link">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-share-nodes text-emerald-300 text-sm" aria-hidden="true"></i>
+                                <span class="text-[10px] uppercase tracking-wider font-bold text-emerald-200">Share</span>
                                 <span data-growth-boost-badge class="hidden text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border border-emerald-400/40 text-emerald-300 bg-emerald-500/10">Site boost active</span>
                             </div>
-                            <div class="grid grid-cols-3 gap-2 mb-3 text-center">
-                                <div class="rounded-xl border border-white/10 bg-zinc-950/50 px-2 py-2">
-                                    <div class="text-[9px] uppercase text-zinc-500 tracking-wide">Power</div>
-                                    <div class="flex items-baseline justify-center gap-1">
-                                        <span data-growth-power-score class="text-lg font-black text-white tabular-nums">0</span>
-                                        <span data-growth-power-tier class="text-[8px] text-violet-300 uppercase">Spark</span>
-                                    </div>
-                                    <div class="h-1 bg-zinc-800 rounded-full mt-1 overflow-hidden">
-                                        <div data-growth-power-fill class="growth-command-center__power-fill h-full" style="width:0%"></div>
-                                    </div>
-                                </div>
-                                <div class="rounded-xl border border-white/10 bg-zinc-950/50 px-2 py-2">
-                                    <div class="text-[9px] uppercase text-zinc-500 tracking-wide">Viral K</div>
-                                    <div data-growth-k-display class="text-lg font-black text-emerald-300 tabular-nums">—</div>
-                                    <div data-growth-k-tip class="text-[8px] text-zinc-500 leading-tight mt-0.5 line-clamp-2">Share to unlock</div>
-                                </div>
-                                <div class="rounded-xl border border-white/10 bg-zinc-950/50 px-2 py-2">
-                                    <div data-growth-quest-label class="text-[9px] uppercase text-emerald-400/90 tracking-wide">Quest 0/3</div>
-                                    <div class="h-1 bg-zinc-800 rounded-full mt-2 overflow-hidden">
-                                        <div data-growth-quest-fill class="h-full bg-gradient-to-r from-emerald-400 to-violet-400" style="width:0%"></div>
-                                    </div>
-                                    <div data-growth-combo class="hidden text-[8px] text-amber-300 font-bold mt-1"></div>
-                                </div>
-                            </div>
-                            <div class="rounded-xl border border-white/10 bg-zinc-950/50 px-3 py-2 mb-3 flex flex-wrap items-center justify-between gap-2">
-                                <div class="min-w-0">
-                                    <div class="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold">Distance to glory</div>
-                                    <div data-growth-distance-line class="text-xs font-bold text-white truncate">First referral unlocks rank</div>
-                                </div>
-                                <div class="flex items-center gap-3 text-[11px] shrink-0">
-                                    <span class="text-zinc-500">Rank <strong data-growth-distance-rank class="text-violet-200 tabular-nums">—</strong></span>
-                                    <span class="text-zinc-500">Gap <strong data-growth-distance-gap class="text-amber-300 tabular-nums">—</strong></span>
-                                </div>
-                            </div>
-                            <div class="rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-2.5 mb-3">
-                                <div data-growth-action-headline class="text-sm font-bold text-white">You're in. Sharing is how you climb.</div>
-                                <div data-growth-action-subline class="text-[11px] text-zinc-400 mt-0.5">Challenge a friend — rivalry is the strongest loop.</div>
-                            </div>
-                            <button type="button" id="growth-command-cta" class="growth-command-cta w-full py-3.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 shadow-lg shadow-rose-900/25 transition-all active:scale-[0.98]">
-                                Challenge a friend
+                            <div data-growth-action-headline class="text-sm font-bold text-white">Send your link</div>
+                            <div data-growth-action-subline class="text-[11px] text-zinc-400 mt-0.5 mb-3">A friend must tap Get my link to credit you.</div>
+                            <button type="button" id="growth-command-cta" class="growth-command-cta w-full py-3.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-emerald-600 to-violet-600 hover:from-emerald-500 hover:to-violet-500 shadow-lg shadow-emerald-900/25 transition-all active:scale-[0.98]">
+                                Share now
                             </button>
+                            <button type="button" id="growth-command-whatsapp" onclick="shareTo('whatsapp')"
+                                    class="mt-2 w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white py-3 px-5 rounded-2xl font-bold text-sm transition-all active:scale-[0.98]"
+                                    aria-label="Share on WhatsApp">
+                                <i class="fa-brands fa-whatsapp text-lg" aria-hidden="true"></i>
+                                <span>WhatsApp</span>
+                            </button>
+                            <div class="hidden" aria-hidden="true">
+                                <span data-growth-power-score>0</span>
+                                <span data-growth-power-tier></span>
+                                <span data-growth-power-fill></span>
+                                <span data-growth-k-display></span>
+                                <span data-growth-k-tip></span>
+                                <span data-growth-quest-label></span>
+                                <span data-growth-quest-fill></span>
+                                <span data-growth-combo></span>
+                                <span data-growth-distance-line></span>
+                                <span data-growth-distance-rank></span>
+                                <span data-growth-distance-gap></span>
+                            </div>
                         </div>
 
                         <div id="viral-power-meter" data-vr-zone="viral-power" class="hidden viral-power-meter mb-3 rounded-2xl border border-violet-400/25 bg-violet-500/5 px-4 py-3" role="status" aria-live="polite">

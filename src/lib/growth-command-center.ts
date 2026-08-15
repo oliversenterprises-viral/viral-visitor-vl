@@ -162,6 +162,11 @@ export function syncGrowthCommandCenter(): void {
     cta.classList.toggle('growth-command-cta--high', action.urgency === 'high');
   }
 
+  const waBtn = document.getElementById('growth-command-whatsapp');
+  if (waBtn) {
+    waBtn.classList.toggle('hidden', action.kind === 'whatsapp_boost' || action.kind === 'get_link');
+  }
+
   root.classList.toggle('growth-command-center--rush', power.isOvertakeRush);
 
   if (boostBadge) {

@@ -10,6 +10,7 @@ import {
   extractReferralCodeFromLink,
   shouldCopyShareMessage,
   isNativeShareSupported,
+  stripViralReferAppUrls,
 } from '../../src/lib/share-power';
 
 const LINK = 'https://www.viralrefer.app/r/VIRAL-TEST01';
@@ -150,5 +151,26 @@ describe('share-power', () => {
     expect(embed).toContain(LINK);
     expect(embed).toContain('VIRAL-TEST01');
     expect(embed).toContain('<a href=');
+  });
+
+  it('X copy never includes a raw viralrefer.app URL', () => {
+    const msg = buildShareMessage(LINK, { platform: 'x', trackUtm: true });
+    expect(msg.toLowerCase()).not.toContain('viralrefer.app');
+    expect(msg).not.toMatch(/https?:\/\//i);
+    expect(msg).toMatch(/ViralRefer/i);
+
+    const forced = buildShareMessage(LINK, {
+      platform: 'x',
+      template: 'Race me {link}',
+      trackUtm: false,
+    });
+    expect(forced.toLowerCase()).not.toContain('viralrefer.app');
+    expect(stripViralReferAppUrls('join https://www.viralrefer.app/r/VIRAL-TEST01 now')).not.toMatch(
+      /viralrefer\.app/i,
+    );
+
+    const intent = buildPlatformShareUrl('x', LINK, `Beat me ${LINK}`);
+    expect(intent).toContain('x.com/intent/tweet');
+    expect(decodeURIComponent(intent || '')).not.toMatch(/viralrefer\.app/i);
   });
 });

@@ -32,8 +32,8 @@ describe('share-first-ui', () => {
     expect(resolveShareFirstPrimary({ nativeSupported: true, mobile: false })).toBe('native');
   });
 
-  it('falls back to sms on mobile without native, whatsapp on desktop', () => {
-    expect(resolveShareFirstPrimary({ nativeSupported: false, mobile: true })).toBe('sms');
+  it('falls back to WhatsApp when native share is unavailable', () => {
+    expect(resolveShareFirstPrimary({ nativeSupported: false, mobile: true })).toBe('whatsapp');
     expect(resolveShareFirstPrimary({ nativeSupported: false, mobile: false })).toBe('whatsapp');
   });
 

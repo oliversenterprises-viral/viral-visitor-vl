@@ -5,7 +5,6 @@
  */
 
 import { isNativeShareSupported } from './share-power';
-import { isMobileShareContext } from './share-context';
 import { readShareDeadlineState } from './share-deadline';
 import { t } from './i18n';
 
@@ -19,9 +18,8 @@ export function resolveShareFirstPrimary(
     opts.nativeSupported ??
     (typeof navigator !== 'undefined' && isNativeShareSupported());
   if (native) return 'native';
-  const mobile = opts.mobile ?? isMobileShareContext();
-  // SMS is strong on US mobile without Web Share; WhatsApp otherwise (incl. desktop web).
-  return mobile ? 'sms' : 'whatsapp';
+  // WhatsApp is the named first channel. SMS stays a quiet fallback, never the primary.
+  return 'whatsapp';
 }
 
 /** True when local deadline state still requires a verified platform share. */
@@ -142,13 +140,17 @@ export function renderShareFirstStrip(): void {
     el.classList.toggle('share-first-secondary', !isPrimary);
   }
 
-  // Native only when supported; always show SMS + WhatsApp as alternatives
+  // Native when supported; WhatsApp always first named channel; SMS behind More.
   if (nativeBtn) {
     if (isNativeShareSupported()) nativeBtn.classList.remove('hidden');
     else nativeBtn.classList.add('hidden');
   }
   waBtn?.classList.remove('hidden');
-  smsBtn?.classList.remove('hidden');
+  const showMore = document.documentElement.hasAttribute('data-vr-send-more')
+    || document.documentElement.hasAttribute('data-vr-slim-share-expanded');
+  if (smsBtn) {
+    smsBtn.classList.toggle('hidden', !showMore);
+  }
 
   // Soft-hide grid until expanded when pending (reduce choice overload)
   const moreBtn = document.getElementById('share-more-options-btn');

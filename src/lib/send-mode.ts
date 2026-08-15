@@ -129,7 +129,7 @@ export function polishShareFirstForSendMode(): void {
     heading.textContent = t('send_mode.primary_cta');
   }
 
-  // Hide secondary row behind "More ways" until expanded
+  // SMS / extra alts stay behind More. WhatsApp stays visible as the first named channel.
   const altGrid = strip.querySelector('.grid.grid-cols-2');
   if (altGrid instanceof HTMLElement) {
     altGrid.dataset.vrSendSecondary = '1';
@@ -139,6 +139,8 @@ export function polishShareFirstForSendMode(): void {
       altGrid.classList.remove('hidden');
     }
   }
+  document.getElementById('share-first-whatsapp')?.classList.remove('hidden');
+
   const copyOnly = strip.querySelector('.share-first-copy-only');
   if (copyOnly instanceof HTMLElement) {
     copyOnly.classList.toggle('hidden', !document.documentElement.hasAttribute('data-vr-send-more'));

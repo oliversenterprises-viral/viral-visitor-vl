@@ -73,12 +73,25 @@ const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
     'ViralRefer — live worldwide referral leaderboard. Free, no signup. #1 can claim a homepage feature.',
   discord:
     "**ViralRefer** — live worldwide referral leaderboard\nFree · ~30 sec · no signup · #1 can claim a homepage feature\nCan you beat my rank?\n\n{link}",
-  x: "Live referral leaderboard on ViralRefer 🏆 Free · no signup · #1 can claim a homepage feature. Can you beat me?\n\n{link}",
+  x: "Live referral leaderboard on ViralRefer 🏆 Free · no signup · #1 can claim a homepage feature. Can you beat me? Search ViralRefer to join.",
   tiktok:
     'POV: climbing a live worldwide referral leaderboard 🏆 Free in ~30 sec · no signup · #1 claims homepage feature\n\n{link}\n\n#referral #leaderboard #viral #fyp #marketing',
   snapchat:
     "I'm on ViralRefer's live leaderboard 🏆 Free link in ~30 sec — can you beat me?\n\n{link}\n\nAdd to your story or send to friends!",
 };
+
+
+/** X blocks viralrefer.app URLs - never put a raw product URL in tweet copy. */
+const VIRALREFER_URL_RE = /(?:https?:\/\/)?(?:www\.)?viralrefer\.app(?:\/[^\s]*)?/gi;
+
+export function stripViralReferAppUrls(text: string): string {
+  return text
+    .replace(VIRALREFER_URL_RE, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
 
 /** Append UTM params so you can see which platform drove each visit. */
 export function buildTrackedShareLink(link: string, platform: SharePlatform): string {
@@ -166,11 +179,12 @@ export function buildShareMessage(
     raw = PLATFORM_MESSAGE_OVERRIDES[platform]!;
   }
 
-  return applySharePlaceholders(raw, linkTrimmed, {
+  const rendered = applySharePlaceholders(raw, linkTrimmed, {
     referralCount: options.referralCount,
     leaderboardRank: options.leaderboardRank,
     gapToNextRank: options.gapToNextRank,
   });
+  return platform === 'x' ? stripViralReferAppUrls(rendered) : rendered;
 }
 
 /** Markdown formatted share blurb for Reddit, GitHub, Notion, etc. */
@@ -212,8 +226,10 @@ export function buildPlatformShareUrl(
   const encodedText = encodeURIComponent(text);
 
   switch (platform) {
-    case 'x':
-      return `https://x.com/intent/tweet?text=${encodedText}`;
+    case 'x': {
+      const safeText = encodeURIComponent(stripViralReferAppUrls(text));
+      return `https://x.com/intent/tweet?text=${safeText}`;
+    }
     case 'whatsapp':
       return `https://wa.me/?text=${encodedText}`;
     case 'linkedin':
