@@ -379,26 +379,6 @@ export async function getMyReferralLinkInstant(): Promise<void> {
   }
 }
 
-/** Auto-copy on Get link (same gesture). Returns true when clipboard wrote. */
-async function tryAutoCopyAfterGetLink(link: string): Promise<boolean> {
-  const ok = await writeLinkToClipboard(link);
-  if (!ok) return false;
-
-  const code = getMyReferralCode();
-  if (code) {
-    recordShareEvent({
-      platform: 'copy',
-      referrer_code: code,
-      referral_link: link,
-      ab_variant: resolveShareAbVariant(code),
-    });
-  }
-  trackVisitorFunnel('CopyReferralLink', { via: 'auto_after_get_link' });
-  onReferralLinkCopied();
-  flashCopyButtonBriefly();
-  return true;
-}
-
 function flashCopyButtonBriefly(): void {
   const btn = document.getElementById('copy-link-btn') as HTMLElement | null;
   if (!btn) return;
