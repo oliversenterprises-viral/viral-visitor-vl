@@ -95,6 +95,7 @@ function focusHeading(): void {
 }
 
 export function showPostLinkLoading(): void {
+  wireOnce();
   document.documentElement.setAttribute(POST_LINK_ATTR, '1');
   const root = el(IDS.root);
   if (!root) return;
@@ -120,6 +121,7 @@ export function showPostLinkLoading(): void {
 }
 
 export function showPostLinkError(): void {
+  wireOnce();
   document.documentElement.setAttribute(POST_LINK_ATTR, '1');
   const root = el(IDS.root);
   if (!root) return;
@@ -161,6 +163,7 @@ export function showPostLinkReady(link: string): void {
   const root = el(IDS.root);
   if (!root) return;
 
+  wireOnce();
   setState('ready');
   const heading = el(IDS.heading);
   if (heading) heading.textContent = 'Your link is ready';
