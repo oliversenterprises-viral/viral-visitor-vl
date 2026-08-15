@@ -38,8 +38,6 @@ import {
   registerReferrerLinkDeadline,
   renderShareDeadlineBanner,
 } from './lib/share-deadline';
-import { activateShareFirstAfterGetLink } from './lib/share-first-ui';
-import { activateSendModeAfterGetLink } from './lib/send-mode';
 import { activatePostLinkShare, showPostLinkError, showPostLinkLoading } from './lib/post-link-share';
 
 // Track attribution for the current page load
@@ -353,8 +351,7 @@ export async function getMyReferralLinkInstant(): Promise<void> {
     });
 
     // Same user gesture → auto-copy (helps paste into apps).
-    // Clipboard alone never locks — send-mode / share-first UI is next.
-    const autoCopied = false;
+    // Clipboard alone never locks. First session is Lumina's one-action screen.
 
     // FOMO ticker unlocks once this visitor has a referral link
     void import('./app')
@@ -370,8 +367,7 @@ export async function getMyReferralLinkInstant(): Promise<void> {
     syncMobileReferralCta();
     // Ensure sticky get-link bar is gone before send UI mounts (no double bottom bars)
     document.getElementById('mobile-referral-cta')?.classList.add('hidden');
-    // Bulletproof send mode: one primary action, hide chrome (canonical path)
-    activateSendModeAfterGetLink({ autoCopied });
+    activatePostLinkShare(link);
 
     if (pendingReferrerCode && !referralRecordedThisSession) {
       void runFunnelReferralRecording();
@@ -480,7 +476,7 @@ function performCopyToClipboard(link: string): void {
     trackVisitorFunnel('CopyReferralLink');
     onReferralLinkCopied();
     flashCopyButtonBriefly();
-    activateShareFirstAfterGetLink({ autoCopied: true });
+    activatePostLinkShare(link);
   })();
 }
 

@@ -8,11 +8,8 @@ import {
   invokeShareFirstPrimary,
   isSharePendingLocal,
   markSharePending,
-  renderShareFirstStrip,
   resolveShareFirstPrimary,
-  scrollToShareFirstPrimary,
   shareFirstHeroLabel,
-  updateHeroCtaToShareFirst,
 } from './share-first-ui';
 import { t } from './i18n';
 import { activatePostLinkShare } from './post-link-share';
@@ -159,91 +156,18 @@ export function polishShareFirstForSendMode(): void {
 }
 
 /**
- * Full activation after Get my link — the only conversion moment that matters.
+ * Leftover entry from older Get-my-link callers.
+ * First session is Lumina's one-action screen — never enter send-mode.
  */
-export function activateSendModeAfterGetLink(opts?: { autoCopied?: boolean }): void {
-  enterSendMode();
+export function activateSendModeAfterGetLink(_opts?: { autoCopied?: boolean }): void {
   const link =
     (document.getElementById('ref-link') as HTMLInputElement | null)?.value?.trim() || '';
-  if (link) {
-    activatePostLinkShare(link);
-    document.getElementById('share-first-strip')?.classList.add('hidden');
-    document.getElementById('share-more-options-btn')?.classList.add('hidden');
-    document.getElementById('kid-more-tools-btn')?.classList.add('hidden');
-    hideStickySendBar();
-    return;
-  }
-  renderShareFirstStrip();
-  polishShareFirstForSendMode();
-  updateHeroCtaToShareFirst();
-
-  // Hero label: always "Send to a friend now" in send mode
-  const sendLabel = t('send_mode.primary_cta');
-  const heroBtn = document.getElementById('hero-get-link-btn');
-  const heroLabel = heroBtn?.querySelector('span');
-  if (heroLabel) {
-    heroLabel.textContent = sendLabel;
-  }
-  // Sticky nav get-link also retargets when present
-  const navBtn = document.getElementById('nav-get-link-btn');
-  if (navBtn) {
-    navBtn.textContent = sendLabel;
-    navBtn.onclick = (e) => {
-      e.preventDefault();
-      invokeShareFirstPrimary();
-    };
-  }
-
-  const hint = document.getElementById('referral-next-step');
-  if (hint) {
-    hint.classList.remove('hidden');
-    hint.dataset.vrSharePrompted = '1';
-    hint.textContent = t('send_mode.next_step');
-  }
-
-  // Share-reminder strip (if mounted)
-  const reminderText = document.querySelector<HTMLElement>('[data-share-reminder-text]');
-  if (reminderText) {
-    reminderText.textContent = t('send_mode.reminder');
-  }
-  const reminderAction = document.getElementById('share-reminder-action');
-  if (reminderAction) {
-    reminderAction.textContent = sendLabel;
-    reminderAction.onclick = (e) => {
-      e.preventDefault();
-      invokeShareFirstPrimary();
-    };
-  }
-
-  // Sticky bar first so padding/safe-area settle, then scroll once to send UI
-  showStickySendBar();
-  document.documentElement.setAttribute('data-vr-post-get-link', '1');
-  scrollToShareFirstPrimary();
-
-  // Hard-to-skip share: exit/return/poll abandon rescue (no prod side effects)
-  void import('./share-abandon-rescue')
-    .then((m) => m.initShareAbandonRescue())
-    .catch(() => {});
-
-  // Re-sync funnel guide after strip is visible (ring was skipped while strip was hidden)
-  void import('./funnel-conversion')
-    .then((m) => m.setFunnelStep(3))
-    .catch(() => {});
-
-  // Pulse primary after sticky + scroll settle (avoids double-jank with layout shift)
-  window.setTimeout(() => {
-    const primary = resolveShareFirstPrimary();
-    const id =
-      primary === 'native'
-        ? 'native-share-btn'
-        : primary === 'sms'
-          ? 'share-first-sms'
-          : 'share-first-whatsapp';
-    document.getElementById(id)?.classList.add('share-first-pulse');
-    document.getElementById('mobile-send-cta-btn')?.classList.add('share-first-pulse');
-  }, 320);
-
-  void opts; // reserved (autoCopied is informational for future analytics)
+  if (link) activatePostLinkShare(link);
+  document.getElementById('share-first-strip')?.classList.add('hidden');
+  document.getElementById('share-more-options-btn')?.classList.add('hidden');
+  document.getElementById('kid-more-tools-btn')?.classList.add('hidden');
+  document.getElementById('send-mode-more-btn')?.classList.add('hidden');
+  hideStickySendBar();
 }
 
 registerGlobal('invokeShareFirstPrimary', invokeShareFirstPrimary);

@@ -155,12 +155,6 @@ export function renderShareFirstStrip(): void {
   document.getElementById('kid-more-tools-btn')?.classList.add('hidden');
   document.getElementById('send-mode-more-btn')?.classList.add('hidden');
 
-  // Keep send-mode polish if active (status / secondary collapse)
-  if (document.documentElement.getAttribute('data-vr-send-mode') === '1') {
-    void import('./send-mode')
-      .then((m) => m.polishShareFirstForSendMode())
-      .catch(() => {});
-  }
 }
 
 /** Scroll to the share-first primary control. */
@@ -233,18 +227,16 @@ export function invokeShareFirstPrimary(): void {
  * After Get link: full send-mode UX (one primary action, less chrome).
  * Delegates to send-mode so every entry point stays bulletproof.
  */
-export function activateShareFirstAfterGetLink(opts?: { autoCopied?: boolean }): void {
-  void import('./send-mode')
-    .then((m) => m.activateSendModeAfterGetLink(opts))
-    .catch(() => {
-      // Fallback if send-mode fails to load — still mark pending + show strip
-      markSharePending();
-      document.documentElement.setAttribute('data-vr-send-mode', '1');
-      document.documentElement.removeAttribute('data-vr-slim-share-expanded');
-      renderShareFirstStrip();
-      updateHeroCtaToShareFirst();
-      scrollToShareFirstPrimary();
-    });
+export function activateShareFirstAfterGetLink(_opts?: { autoCopied?: boolean }): void {
+  const link =
+    (document.getElementById('ref-link') as HTMLInputElement | null)?.value?.trim() || '';
+  if (link) {
+    void import('./post-link-share').then((m) => m.activatePostLinkShare(link)).catch(() => {});
+  }
+  document.getElementById('share-first-strip')?.classList.add('hidden');
+  document.getElementById('share-more-options-btn')?.classList.add('hidden');
+  document.getElementById('kid-more-tools-btn')?.classList.add('hidden');
+  document.getElementById('send-mode-more-btn')?.classList.add('hidden');
 }
 
 /** Call when first real referral locks the link. */

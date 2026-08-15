@@ -136,8 +136,10 @@ describe('send-mode (post–get-link bulletproof)', () => {
 
     activateSendModeAfterGetLink({ autoCopied: true });
 
-    expect(isSendModeActive()).toBe(true);
+    expect(isSendModeActive()).toBe(false);
     expect(document.documentElement.getAttribute('data-vr-post-link-one')).toBe('1');
+    expect(document.querySelector('#hero-get-link-btn span')?.textContent).not.toMatch(/Send to a friend/);
+    expect(document.getElementById('send-mode-more-btn')).toBeFalsy();
     expect(document.getElementById('share-first-strip')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('share-more-options-btn')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('kid-more-tools-btn')?.classList.contains('hidden')).toBe(true);
