@@ -395,6 +395,8 @@ html[data-vr-send-mode] #prize,
 html[data-vr-send-mode] #copy-message-btn,
 html[data-vr-send-mode] #new-code-button,
 html[data-vr-send-mode] #share-more-options-btn,
+html[data-vr-send-mode] #duel-invite-strip,
+html[data-vr-send-mode] #challenge-duel-banner,
 html[data-vr-send-mode] button[onclick="showQRModal()"] {
   display: none !important;
 }

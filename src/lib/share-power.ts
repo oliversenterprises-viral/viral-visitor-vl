@@ -50,10 +50,14 @@ function defaultShareTemplate(): string {
   return t('share.default');
 }
 
+/** First-screen share copy (native + WhatsApp). Link stays in the text, never a separate url field. */
+export const FIRST_SCREEN_SHARE_TEXT =
+  'Tap this, then tap Get my link. 30 seconds, no signup. Race me on ViralRefer.\n{link}';
+
 /** Status + near-win share copy — competition first, prize second (homepage feature, not cash). */
 const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
-  whatsapp:
-    "I'm on ViralRefer's live worldwide leaderboard 🏆\nFree link in ~30 sec · no signup · #1 can claim a homepage feature\nCan you beat me?\n\n{link}",
+  whatsapp: FIRST_SCREEN_SHARE_TEXT,
+  native: FIRST_SCREEN_SHARE_TEXT,
   boost:
     "I just entered ViralRefer's live worldwide leaderboard 🏆\nFree, ~30 sec, no signup. #1 can claim a homepage feature.\nChallenge: can you beat my rank?\n\n{link}",
   reddit:
@@ -114,6 +118,7 @@ function applySharePlaceholders(
     referralCount?: number;
     leaderboardRank?: number | null;
     gapToNextRank?: number | null;
+    skipStatusPrefix?: boolean;
   } = {},
 ): string {
   let out = raw.replace(/\{link\}/g, link);
@@ -136,7 +141,7 @@ function applySharePlaceholders(
     prefixParts.push(`I'm at ${count} referral${count === 1 ? '' : 's'}`);
   }
 
-  if (prefixParts.length) {
+  if (prefixParts.length && !options.skipStatusPrefix) {
     const combined = `${prefixParts.join(' — ')} — `;
     const alreadyPrefixed = prefixParts.some((p) => out.includes(p));
     if (!alreadyPrefixed && !out.startsWith(combined)) out = combined + out;
@@ -166,13 +171,14 @@ export function buildShareMessage(
   } = {},
 ): string {
   const platform = options.platform ?? 'other';
+  const firstScreen = platform === 'native' || platform === 'whatsapp';
   const linkTrimmed = (options.trackUtm ? buildTrackedShareLink(link, platform) : link).trim();
   const adminTemplate = options.template?.trim();
   const abTemplate = options.abTemplate?.trim();
 
   let raw =
     adminTemplate ||
-    abTemplate ||
+    (firstScreen ? undefined : abTemplate) ||
     PLATFORM_MESSAGE_OVERRIDES[platform] ||
     defaultShareTemplate();
   if (adminTemplate && PLATFORM_MESSAGE_OVERRIDES[platform] && !adminTemplate.includes('{link}')) {
@@ -183,6 +189,7 @@ export function buildShareMessage(
     referralCount: options.referralCount,
     leaderboardRank: options.leaderboardRank,
     gapToNextRank: options.gapToNextRank,
+    skipStatusPrefix: firstScreen && !adminTemplate,
   });
   return platform === 'x' ? stripViralReferAppUrls(rendered) : rendered;
 }
@@ -277,6 +284,15 @@ export function buildEmbedCode(link: string): string {
 /** Whether share should copy message instead of opening a URL. */
 export function shouldCopyShareMessage(platform: SharePlatform): boolean {
   return CLIPBOARD_SHARE_PLATFORMS.has(platform);
+}
+
+/** Web Share payload: text includes the /r/CODE link. Never a separate url (X attaches and blocks it). */
+export function buildNativeShareData(text: string, link?: string): { title: string; text: string } {
+  let body = text.trim();
+  if (link && !/\/r\//i.test(body)) {
+    body = `${body}\n${link}`.trim();
+  }
+  return { title: 'ViralRefer', text: body };
 }
 
 /** True when the browser exposes the Web Share API (mobile + some desktop). */
