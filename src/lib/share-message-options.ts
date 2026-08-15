@@ -25,9 +25,10 @@ export function resolveShareMessageBuildOptions(
   const adminTemplate = getShareMessageTemplate()?.trim() || '';
   const variant = abOverride ?? (code ? resolveShareAbVariant(code) : 'a');
 
+  const firstScreen = platform === 'native' || platform === 'whatsapp';
   return {
     template: adminTemplate || undefined,
-    abTemplate: adminTemplate ? undefined : getShareAbTemplate(variant),
+    abTemplate: adminTemplate || firstScreen ? undefined : getShareAbTemplate(variant),
     platform,
     referralCount: getShareReferralCount(),
     leaderboardRank: getShareLeaderboardRank(),

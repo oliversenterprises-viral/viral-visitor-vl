@@ -50,10 +50,14 @@ function defaultShareTemplate(): string {
   return t('share.default');
 }
 
+/** First-screen share copy (native + WhatsApp). Link stays in the text, never a separate url field. */
+export const FIRST_SCREEN_SHARE_TEXT =
+  'Open this and tap Get my link. 30 seconds, no signup. Race me on ViralRefer.\n{link}';
+
 /** Status + near-win share copy — competition first, prize second (homepage feature, not cash). */
 const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
-  whatsapp:
-    "I'm on ViralRefer's live worldwide leaderboard 🏆\nFree link in ~30 sec · no signup · #1 can claim a homepage feature\nCan you beat me?\n\n{link}",
+  whatsapp: FIRST_SCREEN_SHARE_TEXT,
+  native: FIRST_SCREEN_SHARE_TEXT,
   boost:
     "I just entered ViralRefer's live worldwide leaderboard 🏆\nFree, ~30 sec, no signup. #1 can claim a homepage feature.\nChallenge: can you beat my rank?\n\n{link}",
   reddit:
@@ -73,12 +77,25 @@ const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
     'ViralRefer — live worldwide referral leaderboard. Free, no signup. #1 can claim a homepage feature.',
   discord:
     "**ViralRefer** — live worldwide referral leaderboard\nFree · ~30 sec · no signup · #1 can claim a homepage feature\nCan you beat my rank?\n\n{link}",
-  x: "Live referral leaderboard on ViralRefer 🏆 Free · no signup · #1 can claim a homepage feature. Can you beat me?\n\n{link}",
+  x: "Live referral leaderboard on ViralRefer 🏆 Free · no signup · #1 can claim a homepage feature. Can you beat me? Search ViralRefer to join.",
   tiktok:
     'POV: climbing a live worldwide referral leaderboard 🏆 Free in ~30 sec · no signup · #1 claims homepage feature\n\n{link}\n\n#referral #leaderboard #viral #fyp #marketing',
   snapchat:
     "I'm on ViralRefer's live leaderboard 🏆 Free link in ~30 sec — can you beat me?\n\n{link}\n\nAdd to your story or send to friends!",
 };
+
+
+/** X blocks viralrefer.app URLs - never put a raw product URL in tweet copy. */
+const VIRALREFER_URL_RE = /(?:https?:\/\/)?(?:www\.)?viralrefer\.app(?:\/[^\s]*)?/gi;
+
+export function stripViralReferAppUrls(text: string): string {
+  return text
+    .replace(VIRALREFER_URL_RE, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
 
 /** Append UTM params so you can see which platform drove each visit. */
 export function buildTrackedShareLink(link: string, platform: SharePlatform): string {
@@ -101,6 +118,7 @@ function applySharePlaceholders(
     referralCount?: number;
     leaderboardRank?: number | null;
     gapToNextRank?: number | null;
+    skipStatusPrefix?: boolean;
   } = {},
 ): string {
   let out = raw.replace(/\{link\}/g, link);
@@ -123,7 +141,7 @@ function applySharePlaceholders(
     prefixParts.push(`I'm at ${count} referral${count === 1 ? '' : 's'}`);
   }
 
-  if (prefixParts.length) {
+  if (prefixParts.length && !options.skipStatusPrefix) {
     const combined = `${prefixParts.join(' — ')} — `;
     const alreadyPrefixed = prefixParts.some((p) => out.includes(p));
     if (!alreadyPrefixed && !out.startsWith(combined)) out = combined + out;
@@ -153,24 +171,27 @@ export function buildShareMessage(
   } = {},
 ): string {
   const platform = options.platform ?? 'other';
+  const firstScreen = platform === 'native' || platform === 'whatsapp';
   const linkTrimmed = (options.trackUtm ? buildTrackedShareLink(link, platform) : link).trim();
   const adminTemplate = options.template?.trim();
   const abTemplate = options.abTemplate?.trim();
 
   let raw =
     adminTemplate ||
-    abTemplate ||
+    (firstScreen ? undefined : abTemplate) ||
     PLATFORM_MESSAGE_OVERRIDES[platform] ||
     defaultShareTemplate();
   if (adminTemplate && PLATFORM_MESSAGE_OVERRIDES[platform] && !adminTemplate.includes('{link}')) {
     raw = PLATFORM_MESSAGE_OVERRIDES[platform]!;
   }
 
-  return applySharePlaceholders(raw, linkTrimmed, {
+  const rendered = applySharePlaceholders(raw, linkTrimmed, {
     referralCount: options.referralCount,
     leaderboardRank: options.leaderboardRank,
     gapToNextRank: options.gapToNextRank,
+    skipStatusPrefix: firstScreen && !adminTemplate,
   });
+  return platform === 'x' ? stripViralReferAppUrls(rendered) : rendered;
 }
 
 /** Markdown formatted share blurb for Reddit, GitHub, Notion, etc. */
@@ -212,8 +233,10 @@ export function buildPlatformShareUrl(
   const encodedText = encodeURIComponent(text);
 
   switch (platform) {
-    case 'x':
-      return `https://x.com/intent/tweet?text=${encodedText}`;
+    case 'x': {
+      const safeText = encodeURIComponent(stripViralReferAppUrls(text));
+      return `https://x.com/intent/tweet?text=${safeText}`;
+    }
     case 'whatsapp':
       return `https://wa.me/?text=${encodedText}`;
     case 'linkedin':
@@ -261,6 +284,15 @@ export function buildEmbedCode(link: string): string {
 /** Whether share should copy message instead of opening a URL. */
 export function shouldCopyShareMessage(platform: SharePlatform): boolean {
   return CLIPBOARD_SHARE_PLATFORMS.has(platform);
+}
+
+/** Web Share payload: text includes the /r/CODE link. Never a separate url (X attaches and blocks it). */
+export function buildNativeShareData(text: string, link?: string): { title: string; text: string } {
+  let body = text.trim();
+  if (link && !/\/r\//i.test(body)) {
+    body = `${body}\n${link}`.trim();
+  }
+  return { title: 'ViralRefer', text: body };
 }
 
 /** True when the browser exposes the Web Share API (mobile + some desktop). */

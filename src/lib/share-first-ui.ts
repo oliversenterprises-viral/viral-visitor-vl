@@ -5,7 +5,6 @@
  */
 
 import { isNativeShareSupported } from './share-power';
-import { isMobileShareContext } from './share-context';
 import { readShareDeadlineState } from './share-deadline';
 import { t } from './i18n';
 
@@ -19,9 +18,8 @@ export function resolveShareFirstPrimary(
     opts.nativeSupported ??
     (typeof navigator !== 'undefined' && isNativeShareSupported());
   if (native) return 'native';
-  const mobile = opts.mobile ?? isMobileShareContext();
-  // SMS is strong on US mobile without Web Share; WhatsApp otherwise (incl. desktop web).
-  return mobile ? 'sms' : 'whatsapp';
+  // WhatsApp is the named first channel. SMS stays a quiet fallback, never the primary.
+  return 'whatsapp';
 }
 
 /** True when local deadline state still requires a verified platform share. */
@@ -142,24 +140,21 @@ export function renderShareFirstStrip(): void {
     el.classList.toggle('share-first-secondary', !isPrimary);
   }
 
-  // Native only when supported; always show SMS + WhatsApp as alternatives
+  // Native when supported; WhatsApp always first named channel; SMS behind More.
   if (nativeBtn) {
     if (isNativeShareSupported()) nativeBtn.classList.remove('hidden');
     else nativeBtn.classList.add('hidden');
   }
   waBtn?.classList.remove('hidden');
-  smsBtn?.classList.remove('hidden');
+  smsBtn?.classList.add('hidden');
 
-  // Soft-hide grid until expanded when pending (reduce choice overload)
+  // First session has no More door — pack stays out entirely.
   const moreBtn = document.getElementById('share-more-options-btn');
-  if (moreBtn && pending) moreBtn.classList.remove('hidden');
+  moreBtn?.classList.add('hidden');
+  moreBtn?.setAttribute('hidden', '');
+  document.getElementById('kid-more-tools-btn')?.classList.add('hidden');
+  document.getElementById('send-mode-more-btn')?.classList.add('hidden');
 
-  // Keep send-mode polish if active (status / secondary collapse)
-  if (document.documentElement.getAttribute('data-vr-send-mode') === '1') {
-    void import('./send-mode')
-      .then((m) => m.polishShareFirstForSendMode())
-      .catch(() => {});
-  }
 }
 
 /** Scroll to the share-first primary control. */
@@ -232,18 +227,16 @@ export function invokeShareFirstPrimary(): void {
  * After Get link: full send-mode UX (one primary action, less chrome).
  * Delegates to send-mode so every entry point stays bulletproof.
  */
-export function activateShareFirstAfterGetLink(opts?: { autoCopied?: boolean }): void {
-  void import('./send-mode')
-    .then((m) => m.activateSendModeAfterGetLink(opts))
-    .catch(() => {
-      // Fallback if send-mode fails to load — still mark pending + show strip
-      markSharePending();
-      document.documentElement.setAttribute('data-vr-send-mode', '1');
-      document.documentElement.removeAttribute('data-vr-slim-share-expanded');
-      renderShareFirstStrip();
-      updateHeroCtaToShareFirst();
-      scrollToShareFirstPrimary();
-    });
+export function activateShareFirstAfterGetLink(_opts?: { autoCopied?: boolean }): void {
+  const link =
+    (document.getElementById('ref-link') as HTMLInputElement | null)?.value?.trim() || '';
+  if (link) {
+    void import('./post-link-share').then((m) => m.activatePostLinkShare(link)).catch(() => {});
+  }
+  document.getElementById('share-first-strip')?.classList.add('hidden');
+  document.getElementById('share-more-options-btn')?.classList.add('hidden');
+  document.getElementById('kid-more-tools-btn')?.classList.add('hidden');
+  document.getElementById('send-mode-more-btn')?.classList.add('hidden');
 }
 
 /** Call when first real referral locks the link. */

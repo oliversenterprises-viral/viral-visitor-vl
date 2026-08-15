@@ -10,6 +10,8 @@ import {
   extractReferralCodeFromLink,
   shouldCopyShareMessage,
   isNativeShareSupported,
+  stripViralReferAppUrls,
+  buildNativeShareData,
 } from '../../src/lib/share-power';
 
 const LINK = 'https://www.viralrefer.app/r/VIRAL-TEST01';
@@ -22,11 +24,15 @@ describe('share-power', () => {
     expect(msg).toBe(`Check this out: ${LINK}`);
   });
 
-  it('buildShareMessage uses platform-optimized defaults', () => {
-    const wa = buildShareMessage(LINK, { platform: 'whatsapp' });
-    expect(wa).toContain('🏆');
-    expect(wa).toMatch(/beat me|leaderboard/i);
+  it('first-screen WhatsApp/native copy is Helix contract text with the link', () => {
+    const wa = buildShareMessage(LINK, { platform: 'whatsapp', trackUtm: false });
+    expect(wa).toContain('Open this and tap Get my link');
+    expect(wa).toContain('Race me on ViralRefer');
     expect(wa).toContain(LINK);
+    expect(wa).not.toMatch(/^I'm #/ );
+
+    const native = buildShareMessage(LINK, { platform: 'native', trackUtm: false });
+    expect(native).toBe(wa);
 
     const reddit = buildShareMessage(LINK, { platform: 'reddit' });
     expect(reddit).not.toContain(LINK);
@@ -103,7 +109,7 @@ describe('share-power', () => {
 
   it('buildShareMessage prefixes leaderboard rank when provided', () => {
     const msg = buildShareMessage(LINK, {
-      platform: 'whatsapp',
+      platform: 'telegram',
       leaderboardRank: 2,
       trackUtm: false,
     });
@@ -113,7 +119,7 @@ describe('share-power', () => {
 
   it('buildShareMessage includes gap nudge when chasing rank', () => {
     const msg = buildShareMessage(LINK, {
-      platform: 'whatsapp',
+      platform: 'telegram',
       leaderboardRank: 3,
       gapToNextRank: 2,
       trackUtm: false,
@@ -150,5 +156,37 @@ describe('share-power', () => {
     expect(embed).toContain(LINK);
     expect(embed).toContain('VIRAL-TEST01');
     expect(embed).toContain('<a href=');
+  });
+
+  it('X copy never includes a raw viralrefer.app URL', () => {
+    const msg = buildShareMessage(LINK, { platform: 'x', trackUtm: true });
+    expect(msg.toLowerCase()).not.toContain('viralrefer.app');
+    expect(msg).not.toMatch(/https?:\/\//i);
+    expect(msg).toMatch(/ViralRefer/i);
+
+    const forced = buildShareMessage(LINK, {
+      platform: 'x',
+      template: 'Race me {link}',
+      trackUtm: false,
+    });
+    expect(forced.toLowerCase()).not.toContain('viralrefer.app');
+    expect(stripViralReferAppUrls('join https://www.viralrefer.app/r/VIRAL-TEST01 now')).not.toMatch(
+      /viralrefer\.app/i,
+    );
+
+    const intent = buildPlatformShareUrl('x', LINK, `Beat me ${LINK}`);
+    expect(intent).toContain('x.com/intent/tweet');
+    expect(decodeURIComponent(intent || '')).not.toMatch(/viralrefer\.app/i);
+  });
+
+  it('buildNativeShareData never includes a url field', () => {
+    const data = buildNativeShareData(
+      'Open this and tap Get my link. 30 seconds, no signup. Race me on ViralRefer.\n' + LINK,
+      LINK,
+    );
+    expect(data.text).toContain(LINK);
+    expect(data.text).toMatch(/Get my link/);
+    expect(data).not.toHaveProperty('url');
+    expect(Object.keys(data).sort()).toEqual(['text', 'title']);
   });
 });

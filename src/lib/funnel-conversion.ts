@@ -204,14 +204,13 @@ export function onReferralCredited(): void {
 
   updateCreditGate('credited', creditMsg);
   triggerDuelInviteMoment(ref);
-  // Push into send mode (one primary: native / SMS / WhatsApp) — not clipboard
-  void import('./send-mode')
-    .then((m) => m.activateSendModeAfterGetLink({ autoCopied: false }))
-    .catch(() => {
-      void import('./share-first-ui')
-        .then((m) => m.activateShareFirstAfterGetLink({ autoCopied: false }))
-        .catch(() => {});
-    });
+  const link =
+    (document.getElementById('ref-link') as HTMLInputElement | null)?.value?.trim() || '';
+  if (link) {
+    void import('./post-link-share')
+      .then((m) => m.activatePostLinkShare(link))
+      .catch(() => {});
+  }
 
   window.setTimeout(() => {
     const gate = document.getElementById('funnel-credit-gate');

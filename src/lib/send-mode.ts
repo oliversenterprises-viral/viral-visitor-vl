@@ -8,13 +8,11 @@ import {
   invokeShareFirstPrimary,
   isSharePendingLocal,
   markSharePending,
-  renderShareFirstStrip,
   resolveShareFirstPrimary,
-  scrollToShareFirstPrimary,
   shareFirstHeroLabel,
-  updateHeroCtaToShareFirst,
 } from './share-first-ui';
 import { t } from './i18n';
+import { activatePostLinkShare } from './post-link-share';
 
 const SEND_MODE_ATTR = 'data-vr-send-mode';
 const STICKY_ID = 'mobile-send-cta';
@@ -129,149 +127,47 @@ export function polishShareFirstForSendMode(): void {
     heading.textContent = t('send_mode.primary_cta');
   }
 
-  // Hide secondary row behind "More ways" until expanded
+  // First session: no SMS, no platform pack, no More door.
   const altGrid = strip.querySelector('.grid.grid-cols-2');
   if (altGrid instanceof HTMLElement) {
     altGrid.dataset.vrSendSecondary = '1';
-    if (!document.documentElement.hasAttribute('data-vr-send-more')) {
-      altGrid.classList.add('hidden');
-    } else {
-      altGrid.classList.remove('hidden');
-    }
+    altGrid.classList.add('hidden');
   }
+  document.getElementById('share-first-sms')?.classList.add('hidden');
+  document.getElementById('share-more-options-btn')?.classList.add('hidden');
+  document.getElementById('kid-more-tools-btn')?.classList.add('hidden');
+  const existingMore = document.getElementById('send-mode-more-btn');
+  existingMore?.classList.add('hidden');
+  existingMore?.setAttribute('hidden', '');
+
   const copyOnly = strip.querySelector('.share-first-copy-only');
-  if (copyOnly instanceof HTMLElement) {
-    copyOnly.classList.toggle('hidden', !document.documentElement.hasAttribute('data-vr-send-more'));
-  }
+  if (copyOnly instanceof HTMLElement) copyOnly.classList.add('hidden');
 
-  let more = document.getElementById('send-mode-more-btn') as HTMLButtonElement | null;
-  if (!more) {
-    more = document.createElement('button');
-    more.id = 'send-mode-more-btn';
-    more.type = 'button';
-    more.className =
-      'send-mode-more-btn w-full text-center text-xs font-semibold text-zinc-400 hover:text-zinc-200 py-2';
-    more.addEventListener('click', () => {
-      const root = document.documentElement;
-      if (root.hasAttribute('data-vr-send-more')) {
-        root.removeAttribute('data-vr-send-more');
-        more!.textContent = t('send_mode.more');
-        void import('./kid-simple').then((m) => m.setKidMore(false)).catch(() => {});
-      } else {
-        root.setAttribute('data-vr-send-more', '1');
-        more!.textContent = t('send_mode.less');
-        void import('./kid-simple').then((m) => m.setKidMore(true)).catch(() => {});
-      }
-      polishShareFirstForSendMode();
-    });
-    const actions = strip.querySelector('.flex.flex-col.gap-2');
-    actions?.appendChild(more);
-  }
-  more.textContent = document.documentElement.hasAttribute('data-vr-send-more')
-    ? t('send_mode.less')
-    : t('send_mode.more');
-
-  // If no native, promote SMS/WhatsApp as the single visible primary
   const nativeBtn = document.getElementById('native-share-btn');
-  const smsBtn = document.getElementById('share-first-sms');
   const waBtn = document.getElementById('share-first-whatsapp');
-  if (primary !== 'native' && (!nativeBtn || nativeBtn.classList.contains('hidden'))) {
-    // Show the alt grid with primary highlighted
+  if (primary !== 'native' && (!nativeBtn || nativeBtn.classList.contains('hidden')) && waBtn) {
     const grid = strip.querySelector('[data-vr-send-secondary]');
     if (grid instanceof HTMLElement) grid.classList.remove('hidden');
-    if (primary === 'sms' && smsBtn) {
-      smsBtn.classList.add('share-first-primary-btn', 'col-span-2');
-      smsBtn.classList.remove('share-first-alt-btn');
-      const span = smsBtn.querySelector('span');
-      if (span) span.textContent = sendLabel;
-      waBtn?.classList.add('hidden');
-    }
-    if (primary === 'whatsapp' && waBtn) {
-      waBtn.classList.add('share-first-primary-btn', 'col-span-2');
-      waBtn.classList.remove('share-first-alt-btn');
-      const span = waBtn.querySelector('span');
-      if (span) span.textContent = sendLabel;
-      smsBtn?.classList.add('hidden');
-    }
+    waBtn.classList.add('share-first-primary-btn', 'col-span-2');
+    waBtn.classList.remove('share-first-alt-btn', 'hidden');
+    const span = waBtn.querySelector('span');
+    if (span) span.textContent = sendLabel;
   }
 }
 
 /**
- * Full activation after Get my link — the only conversion moment that matters.
+ * Leftover entry from older Get-my-link callers.
+ * First session is Lumina's one-action screen — never enter send-mode.
  */
-export function activateSendModeAfterGetLink(opts?: { autoCopied?: boolean }): void {
-  enterSendMode();
-  renderShareFirstStrip();
-  polishShareFirstForSendMode();
-  updateHeroCtaToShareFirst();
-
-  // Hero label: always "Send to a friend now" in send mode
-  const sendLabel = t('send_mode.primary_cta');
-  const heroBtn = document.getElementById('hero-get-link-btn');
-  const heroLabel = heroBtn?.querySelector('span');
-  if (heroLabel) {
-    heroLabel.textContent = sendLabel;
-  }
-  // Sticky nav get-link also retargets when present
-  const navBtn = document.getElementById('nav-get-link-btn');
-  if (navBtn) {
-    navBtn.textContent = sendLabel;
-    navBtn.onclick = (e) => {
-      e.preventDefault();
-      invokeShareFirstPrimary();
-    };
-  }
-
-  const hint = document.getElementById('referral-next-step');
-  if (hint) {
-    hint.classList.remove('hidden');
-    hint.dataset.vrSharePrompted = '1';
-    hint.textContent = t('send_mode.next_step');
-  }
-
-  // Share-reminder strip (if mounted)
-  const reminderText = document.querySelector<HTMLElement>('[data-share-reminder-text]');
-  if (reminderText) {
-    reminderText.textContent = t('send_mode.reminder');
-  }
-  const reminderAction = document.getElementById('share-reminder-action');
-  if (reminderAction) {
-    reminderAction.textContent = sendLabel;
-    reminderAction.onclick = (e) => {
-      e.preventDefault();
-      invokeShareFirstPrimary();
-    };
-  }
-
-  // Sticky bar first so padding/safe-area settle, then scroll once to send UI
-  showStickySendBar();
-  document.documentElement.setAttribute('data-vr-post-get-link', '1');
-  scrollToShareFirstPrimary();
-
-  // Hard-to-skip share: exit/return/poll abandon rescue (no prod side effects)
-  void import('./share-abandon-rescue')
-    .then((m) => m.initShareAbandonRescue())
-    .catch(() => {});
-
-  // Re-sync funnel guide after strip is visible (ring was skipped while strip was hidden)
-  void import('./funnel-conversion')
-    .then((m) => m.setFunnelStep(3))
-    .catch(() => {});
-
-  // Pulse primary after sticky + scroll settle (avoids double-jank with layout shift)
-  window.setTimeout(() => {
-    const primary = resolveShareFirstPrimary();
-    const id =
-      primary === 'native'
-        ? 'native-share-btn'
-        : primary === 'sms'
-          ? 'share-first-sms'
-          : 'share-first-whatsapp';
-    document.getElementById(id)?.classList.add('share-first-pulse');
-    document.getElementById('mobile-send-cta-btn')?.classList.add('share-first-pulse');
-  }, 320);
-
-  void opts; // reserved (autoCopied is informational for future analytics)
+export function activateSendModeAfterGetLink(_opts?: { autoCopied?: boolean }): void {
+  const link =
+    (document.getElementById('ref-link') as HTMLInputElement | null)?.value?.trim() || '';
+  if (link) activatePostLinkShare(link);
+  document.getElementById('share-first-strip')?.classList.add('hidden');
+  document.getElementById('share-more-options-btn')?.classList.add('hidden');
+  document.getElementById('kid-more-tools-btn')?.classList.add('hidden');
+  document.getElementById('send-mode-more-btn')?.classList.add('hidden');
+  hideStickySendBar();
 }
 
 registerGlobal('invokeShareFirstPrimary', invokeShareFirstPrimary);

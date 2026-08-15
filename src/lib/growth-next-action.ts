@@ -1,5 +1,7 @@
 /**
- * Growth Engine — smart next-best-action for maximum viral conversion.
+ * Growth Engine - next-best share action.
+ * After Get my link: one obvious action - native share, else WhatsApp.
+ * Credit still requires the friend to tap Get my link.
  */
 
 import { DAILY_SHARE_QUEST_GOAL } from './daily-share-quest';
@@ -25,7 +27,6 @@ export interface GrowthNextActionInput {
   shareStreak: number;
   isMobile: boolean;
   nativeShareAvailable: boolean;
-  /** Referred or ?challenge=1 session with a known rival code */
   duelInviteEligible?: boolean;
   landingRef?: string | null;
 }
@@ -39,117 +40,100 @@ export interface GrowthNextAction {
   ctaLabel: string;
 }
 
+const CREDIT_SUB = 'A friend must tap Get my link to credit you.';
+
+function shareKind(native: boolean): 'native_share' | 'whatsapp_boost' {
+  return native ? 'native_share' : 'whatsapp_boost';
+}
+
+function shareCta(native: boolean): string {
+  return native ? 'Share now' : 'Share on WhatsApp';
+}
+
+function shareIcon(native: boolean): string {
+  return native ? 'fa-share-nodes' : 'fa-whatsapp';
+}
+
 /** Single highest-impact action for this visitor right now. */
 export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNextAction {
   if (!input.hasLink) {
     return {
       kind: 'get_link',
       headline: 'Start the viral loop',
-      subline: 'Get your free link in ~30 seconds — no signup.',
+      subline: 'Get your free link in ~30 seconds - no signup.',
       urgency: 'high',
       icon: 'fa-gift',
       ctaLabel: 'Get my referral link',
     };
   }
 
-  // Named rival (referred / challenge landing) — highest conversion path
-  if (input.duelInviteEligible && input.landingRef) {
-    const rival = input.landingRef.trim().toUpperCase();
-    return {
-      kind: 'duel_invite',
-      headline: `Challenge ${rival} to a duel`,
-      subline: 'Rivalry link with ?challenge=1 — friends race your rank.',
-      urgency: 'critical',
-      icon: 'fa-fire',
-      ctaLabel: 'Challenge a friend',
-    };
-  }
+  const native = input.nativeShareAvailable;
+  const kind = shareKind(native);
+  const ctaLabel = shareCta(native);
+  const icon = shareIcon(native);
 
   if (input.gapToNext === 1 && input.rank != null && input.rank > 1) {
     return {
-      kind: 'whatsapp_boost',
+      kind,
       headline: 'One referral from overtaking!',
-      subline: 'Share now — someone could sign up before you refresh.',
+      subline: CREDIT_SUB,
       urgency: 'critical',
-      icon: 'fa-bolt',
-      ctaLabel: 'Share to overtake',
+      icon,
+      ctaLabel,
     };
   }
 
   if (input.rank === 1) {
     return {
-      kind: 'whatsapp_boost',
+      kind,
       headline: 'Defend your #1 throne',
-      subline: 'Every share keeps competitors off the homepage feature.',
+      subline: CREDIT_SUB,
       urgency: 'high',
-      icon: 'fa-crown',
-      ctaLabel: 'Quick Boost — defend #1',
+      icon,
+      ctaLabel,
     };
   }
 
-  // Challenge-first for brand-new sharers (P0 share desire)
   if (input.referrals === 0 && input.shareStreak === 0) {
     return {
-      kind: 'duel_invite',
-      headline: "You're in. Sharing is how you climb.",
-      subline: 'Challenge a friend — rivalry is the strongest viral loop.',
+      kind,
+      headline: "You're in. Send your link.",
+      subline: CREDIT_SUB,
       urgency: 'high',
-      icon: 'fa-fire',
-      ctaLabel: 'Challenge a friend',
+      icon,
+      ctaLabel,
     };
   }
 
   if (input.dailyShares < DAILY_SHARE_QUEST_GOAL) {
     const left = DAILY_SHARE_QUEST_GOAL - input.dailyShares;
     return {
-      kind: 'duel_invite',
+      kind,
       headline: `Daily boost: ${left} share${left === 1 ? '' : 's'} left`,
-      subline: 'Challenge another friend — keep the race alive.',
+      subline: CREDIT_SUB,
       urgency: 'high',
-      icon: 'fa-trophy',
-      ctaLabel: 'Challenge a friend',
-    };
-  }
-
-  if (input.funnelStep === 2) {
-    return {
-      kind: 'copy_link',
-      headline: 'Copy your link first',
-      subline: 'Step 2 — then challenge a friend to beat you.',
-      urgency: 'normal',
-      icon: 'fa-copy',
-      ctaLabel: 'Copy my link',
+      icon,
+      ctaLabel,
     };
   }
 
   if (input.gapToNext != null && input.gapToNext > 1 && input.rank != null && input.rank > 1) {
     return {
-      kind: 'duel_invite',
+      kind,
       headline: `${input.gapToNext} referrals from rank #${input.rank - 1}`,
-      subline: 'Challenge friends who will actually open your link.',
+      subline: CREDIT_SUB,
       urgency: 'high',
-      icon: 'fa-fire',
-      ctaLabel: 'Challenge a friend',
-    };
-  }
-
-  if (input.isMobile && input.nativeShareAvailable) {
-    return {
-      kind: 'native_share',
-      headline: 'Keep the momentum going',
-      subline: 'One-tap share — or challenge a friend below.',
-      urgency: 'normal',
-      icon: 'fa-share-nodes',
-      ctaLabel: 'Share everywhere',
+      icon,
+      ctaLabel,
     };
   }
 
   return {
-    kind: 'duel_invite',
-    headline: 'Your next viral push',
-    subline: 'Challenge a friend — tracked WhatsApp duel link.',
+    kind,
+    headline: 'Send your link',
+    subline: CREDIT_SUB,
     urgency: 'normal',
-    icon: 'fa-fire',
-    ctaLabel: 'Challenge a friend',
+    icon,
+    ctaLabel,
   };
 }

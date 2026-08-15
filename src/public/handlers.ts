@@ -18,6 +18,7 @@ import {
   buildTrackedShareLink,
   extractReferralCodeFromLink,
   isNativeShareSupported,
+  buildNativeShareData,
   shouldCopyShareMessage,
   type SharePlatform,
 } from '../lib/share-power';
@@ -240,17 +241,12 @@ export const nativeShare = () => {
       } catch {
         /* fall through to direct channel */
       }
-      const sms = document.getElementById('share-first-sms');
       const wa = document.getElementById('share-first-whatsapp');
-      if (sms && !sms.classList.contains('hidden')) {
-        sms.click();
-        return;
-      }
       if (wa && !wa.classList.contains('hidden')) {
         wa.click();
         return;
       }
-      shareTo('sms');
+      shareTo('whatsapp');
       return;
     }
 
@@ -276,11 +272,7 @@ export const nativeShare = () => {
     showToast('Send your link in the share sheet — come back to confirm (not instant)', 'info');
 
     try {
-      await navigator.share({
-        title: 'ViralRefer — Live Referral Leaderboard',
-        text,
-        url: tracked,
-      });
+      await navigator.share(buildNativeShareData(text, tracked));
       // Settled ≠ sent. Analytics only; confirm stays gated.
       logShare('native', ctx.code, tracked, { confirmLock: false });
       markShareSheetSettled();
@@ -302,17 +294,9 @@ export const nativeShare = () => {
         showToast('Share cancelled — still pending until you send your link', 'info');
         return;
       }
-      // Expand secondary send options + fall through to SMS/WhatsApp (one only)
-      document.documentElement.setAttribute('data-vr-send-more', '1');
-      void import('../lib/send-mode')
-        .then((m) => m.polishShareFirstForSendMode())
-        .catch(() => {});
-      showToast('Share sheet failed — try SMS or WhatsApp', 'info');
-      const sms = document.getElementById('share-first-sms');
+      showToast('Share sheet failed — try WhatsApp', 'info');
       const wa = document.getElementById('share-first-whatsapp');
-      if (sms && !sms.classList.contains('hidden')) {
-        sms.click();
-      } else if (wa && !wa.classList.contains('hidden')) {
+      if (wa && !wa.classList.contains('hidden')) {
         wa.click();
       } else {
         shareTo('whatsapp');
