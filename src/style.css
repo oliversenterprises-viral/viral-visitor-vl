@@ -4200,3 +4200,120 @@ html[data-vr-has-link] #referral-section .glass {
   border-color: rgba(255, 255, 255, 0.18);
   background: rgba(24, 24, 27, 0.85);
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   Lumina post-link one-action screen
+   ═══════════════════════════════════════════════════════════ */
+.post-link-share {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem max(1.5rem, env(safe-area-inset-bottom));
+  text-align: center;
+}
+.post-link-share__heading {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #e4e4e7;
+  margin: 0 0 0.75rem;
+  outline: none;
+}
+.post-link-share__url {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  color: #86efac;
+  word-break: break-all;
+  user-select: text;
+  -webkit-user-select: text;
+  margin: 0 0 1.25rem;
+  padding: 0.15rem 0;
+  animation: post-link-settle 160ms ease-out;
+}
+.post-link-url--skeleton {
+  min-height: 1.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  animation: none;
+}
+@keyframes post-link-settle {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .post-link-share__url { animation: none; }
+}
+.post-link-share__primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.9rem 1.25rem;
+  border: 0;
+  border-radius: 1rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(90deg, #059669, #7c3aed);
+  box-shadow: 0 10px 28px rgba(16, 185, 129, 0.22);
+  cursor: pointer;
+}
+.post-link-share__primary:disabled { opacity: 0.5; cursor: default; }
+.post-link-share__copy {
+  display: block;
+  width: 100%;
+  margin: 0.85rem 0 0;
+  padding: 0.45rem;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: #a1a1aa;
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+}
+.post-link-share__copy:hover { color: #e4e4e7; }
+.post-link-share__helper {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #a1a1aa;
+}
+.post-link-share__whisper {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #71717a;
+}
+
+html[data-vr-post-link-one] [data-vr-legacy-share],
+html[data-vr-post-link-one] #share-first-strip,
+html[data-vr-post-link-one] #share-buttons-panel,
+html[data-vr-post-link-one] #share-tools-row,
+html[data-vr-post-link-one] #share-ab-wrap,
+html[data-vr-post-link-one] #share-preview-wrap,
+html[data-vr-post-link-one] #referral-qr-block,
+html[data-vr-post-link-one] #share-more-options-btn,
+html[data-vr-post-link-one] #growth-command-center,
+html[data-vr-post-link-one] #duel-invite-strip,
+html[data-vr-post-link-one] #challenge-duel-banner,
+html[data-vr-post-link-one] #viral-power-meter,
+html[data-vr-post-link-one] #daily-share-quest,
+html[data-vr-post-link-one] #catch-up-anxiety-bar,
+html[data-vr-post-link-one] #rank-receipt-cta,
+html[data-vr-post-link-one] #distance-glory-meter,
+html[data-vr-post-link-one] #distance-glory-sticky,
+html[data-vr-post-link-one] #share-deadline-banner,
+html[data-vr-post-link-one] #copy-message-btn,
+html[data-vr-post-link-one] #new-code-button,
+html[data-vr-post-link-one] #mobile-send-cta,
+html[data-vr-post-link-one] #share-reminder-banner,
+html[data-vr-post-link-one] #share-rank-cta,
+html[data-vr-post-link-one] button[onclick="showQRModal()"] {
+  display: none !important;
+}
+html[data-vr-post-link-one] #post-link-share:not(.hidden) {
+  display: block;
+}

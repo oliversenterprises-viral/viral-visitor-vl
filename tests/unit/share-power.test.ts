@@ -26,7 +26,7 @@ describe('share-power', () => {
 
   it('first-screen WhatsApp/native copy is Helix contract text with the link', () => {
     const wa = buildShareMessage(LINK, { platform: 'whatsapp', trackUtm: false });
-    expect(wa).toContain('Tap this, then tap Get my link');
+    expect(wa).toContain('Open this and tap Get my link');
     expect(wa).toContain('Race me on ViralRefer');
     expect(wa).toContain(LINK);
     expect(wa).not.toMatch(/^I'm #/ );
@@ -181,7 +181,7 @@ describe('share-power', () => {
 
   it('buildNativeShareData never includes a url field', () => {
     const data = buildNativeShareData(
-      'Tap this, then tap Get my link. 30 seconds, no signup. Race me on ViralRefer.\n' + LINK,
+      'Open this and tap Get my link. 30 seconds, no signup. Race me on ViralRefer.\n' + LINK,
       LINK,
     );
     expect(data.text).toContain(LINK);

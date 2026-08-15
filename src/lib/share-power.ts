@@ -52,7 +52,7 @@ function defaultShareTemplate(): string {
 
 /** First-screen share copy (native + WhatsApp). Link stays in the text, never a separate url field. */
 export const FIRST_SCREEN_SHARE_TEXT =
-  'Tap this, then tap Get my link. 30 seconds, no signup. Race me on ViralRefer.\n{link}';
+  'Open this and tap Get my link. 30 seconds, no signup. Race me on ViralRefer.\n{link}';
 
 /** Status + near-win share copy — competition first, prize second (homepage feature, not cash). */
 const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {

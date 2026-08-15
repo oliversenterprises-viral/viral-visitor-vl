@@ -40,6 +40,7 @@ import {
 } from './lib/share-deadline';
 import { activateShareFirstAfterGetLink } from './lib/share-first-ui';
 import { activateSendModeAfterGetLink } from './lib/send-mode';
+import { activatePostLinkShare, showPostLinkError, showPostLinkLoading } from './lib/post-link-share';
 
 // Track attribution for the current page load
 function mintReferrerCode(): string {
@@ -290,29 +291,15 @@ export function applyExistingReferralLink(code: string): void {
     syncMobileReferralCta();
     return;
   }
-  populateReferralLinkUI(code, buildReferralLink(code));
+  const link = buildReferralLink(code);
+  populateReferralLinkUI(code, link);
   syncMobileReferralCta();
   initShareDeadlineUi();
-  // Wait for server deadline status before send-mode vs locked (avoids race leaving
-  // owners/active codes stuck in pending send-mode without promo kit).
+  activatePostLinkShare(link);
   void registerReferrerLinkDeadline(code).then((state) => {
     if (state?.status === 'expired') {
       enforceLocalShareDeadlineExpiry(code);
-      return;
     }
-    void import('./lib/share-first-ui').then((m) => {
-      if (m.isSharePendingLocal()) {
-        void import('./lib/send-mode').then((sm) =>
-          sm.activateSendModeAfterGetLink({ autoCopied: false }),
-        );
-      } else {
-        m.markShareLocked();
-        m.renderShareFirstStrip();
-        void import('./lib/promo-kit')
-          .then((pk) => pk.syncPromoKitUI())
-          .catch(() => {});
-      }
-    });
   });
   if (pendingReferrerCode && !referralRecordedThisSession) {
     void runFunnelReferralRecording();
@@ -340,6 +327,7 @@ let getLinkInFlight = false;
 export async function getMyReferralLinkInstant(): Promise<void> {
   if (getLinkInFlight) return;
   getLinkInFlight = true;
+  showPostLinkLoading();
   try {
     let code = getMyReferralCode();
 
@@ -366,10 +354,7 @@ export async function getMyReferralLinkInstant(): Promise<void> {
 
     // Same user gesture → auto-copy (helps paste into apps).
     // Clipboard alone never locks — send-mode / share-first UI is next.
-    const autoCopied = await tryAutoCopyAfterGetLink(link);
-
-    // Clear, single next step — send to a friend (copy alone never finishes the job)
-    showToast('Link ready — send it to a friend now!', 'success');
+    const autoCopied = false;
 
     // FOMO ticker unlocks once this visitor has a referral link
     void import('./app')
@@ -391,6 +376,8 @@ export async function getMyReferralLinkInstant(): Promise<void> {
     if (pendingReferrerCode && !referralRecordedThisSession) {
       void runFunnelReferralRecording();
     }
+  } catch {
+    showPostLinkError();
   } finally {
     getLinkInFlight = false;
   }

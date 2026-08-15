@@ -15,6 +15,7 @@ import {
   updateHeroCtaToShareFirst,
 } from './share-first-ui';
 import { t } from './i18n';
+import { activatePostLinkShare } from './post-link-share';
 
 const SEND_MODE_ATTR = 'data-vr-send-mode';
 const STICKY_ID = 'mobile-send-cta';
@@ -203,6 +204,9 @@ export function polishShareFirstForSendMode(): void {
  */
 export function activateSendModeAfterGetLink(opts?: { autoCopied?: boolean }): void {
   enterSendMode();
+  const link =
+    (document.getElementById('ref-link') as HTMLInputElement | null)?.value?.trim() || '';
+  if (link) activatePostLinkShare(link);
   renderShareFirstStrip();
   polishShareFirstForSendMode();
   updateHeroCtaToShareFirst();

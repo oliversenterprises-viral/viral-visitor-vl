@@ -316,7 +316,15 @@
 
         <!-- REFERRAL LINK + SOCIAL SHARING -->
         <div id="referral-section" class="mt-6" data-vr-zone="referral-section">
-            <div class="max-w-2xl mx-auto">
+            <div id="post-link-share" class="hidden post-link-share" hidden data-state="hidden" role="region" aria-label="Your referral link">
+                <h2 id="post-link-heading" class="post-link-share__heading" tabindex="-1">Your link is ready</h2>
+                <p id="post-link-url" class="post-link-share__url" tabindex="0"></p>
+                <button type="button" id="post-link-primary" class="post-link-share__primary" hidden></button>
+                <button type="button" id="post-link-copy" class="post-link-share__copy">Copy link</button>
+                <p id="post-link-helper" class="post-link-share__helper">A friend opens it and taps Get my link. That’s what counts.</p>
+                <p id="post-link-whisper" class="post-link-share__whisper hidden" hidden></p>
+            </div>
+            <div class="max-w-2xl mx-auto" data-vr-legacy-share>
                 <div class="text-center mb-6 sm:mb-8">
                     <h2 id="winning-link-title" class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter mb-2 sm:mb-3" style="color: var(--text-referral-heading, #ffffff)">Your link</h2>
                     <p id="winning-link-description" class="text-base sm:text-lg text-zinc-300 max-w-lg mx-auto" data-vr-declutter-secondary>Send your link. When a friend gets their free link through you, you climb — and your link locks.</p>
