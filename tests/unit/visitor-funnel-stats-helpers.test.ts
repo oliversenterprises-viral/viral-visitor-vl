@@ -55,20 +55,17 @@ describe('visitor funnel stats helpers (pure)', () => {
     expect(shouldShowUtmSources({ reddit: 1 })).toBe(true);
   });
 
-  it('computeFunnelTotals uses get-link / landings, not claims', () => {
+  it('computeFunnelTotals uses unique visitors for conversion', () => {
     const funnel = [
       funnelRow('SiteLanding', 100, 50),
-      funnelRow('GetReferralLink', 40, 20),
       funnelRow('SubmitPrizeClaim', 25, 10),
       funnelRow('Other', 10, 8),
     ];
     const totals = computeFunnelTotals(funnel);
-    expect(totals.totalEvents).toBe(175);
+    expect(totals.totalEvents).toBe(135);
     expect(totals.landings).toBe(50);
-    expect(totals.getLink).toBe(20);
     expect(totals.claims).toBe(10);
-    expect(totals.getLinkRate).toBe('40.0%');
-    expect(totals.conversion).toBe('40.0%');
+    expect(totals.conversion).toBe('20.0%');
   });
 
   it('topCountries returns at most limit rows', () => {

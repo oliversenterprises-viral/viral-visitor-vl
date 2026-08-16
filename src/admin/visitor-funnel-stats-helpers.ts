@@ -62,21 +62,19 @@ export function shouldShowUtmSources(bySource: Record<string, number>): boolean 
 export function computeFunnelTotals(funnel: readonly FunnelRow[]) {
   const totalEvents = funnel.reduce((s, r) => s + r.count, 0);
   const landingUnique = funnel.find((r) => r.name === 'SiteLanding')?.unique ?? 0;
-  const getLinkUnique = funnel.find((r) => r.name === 'GetReferralLink')?.unique ?? 0;
   const claimUnique = funnel.find((r) => r.name === 'SubmitPrizeClaim')?.unique ?? 0;
-  const getLinkRate =
+  const conversion =
     landingUnique > 0
-      ? `${((getLinkUnique / landingUnique) * 100).toFixed(1)}%`
-      : '0%';
+      ? `${((claimUnique / landingUnique) * 100).toFixed(1)}%`
+      : '—';
   return {
     totalEvents,
     landings: landingUnique,
-    getLink: getLinkUnique,
     claims: claimUnique,
-    getLinkRate,
-    conversion: getLinkRate,
+    conversion,
   };
 }
+
 /** Exported for testability (pure function). */
 export function topCountries(rows: readonly CountryRow[], limit = 10): CountryRow[] {
   return [...rows].slice(0, limit);
