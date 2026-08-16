@@ -6,7 +6,10 @@ import {
   formatOwnerRate,
   isDeskVerifiedShare,
   isLockedReferrer,
+  isOwnerFunnelRpcMissingError,
+  pageAllOwnerFunnelRows,
   parseOwnerFunnelDeskCounts,
+  resolveOwnerFunnelDeskMetrics,
   resolveOwnerFunnelVia,
 } from '../../src/admin/owner-funnel-desk-helpers';
 import { renderOwnerFunnelDeskView } from '../../src/admin/owner-funnel-desk';
@@ -239,6 +242,87 @@ describe('owner funnel desk metrics', () => {
     });
     expect(desk!.getLinkRate).toBe('40.0%');
     expect(desk!.getLinkRate).not.toBe(claimsOverLandings);
+  });
+
+  it('pages every row and does not treat a full first page as the whole window', async () => {
+    const pages = [
+      Array.from({ length: 1000 }, (_, i) => ({ id: i })),
+      [{ id: 1000 }],
+    ];
+    let calls = 0;
+    const rows = await pageAllOwnerFunnelRows(async () => {
+      const page = pages[calls++] || [];
+      return { data: page };
+    });
+    expect(rows).toHaveLength(1001);
+    expect(calls).toBe(2);
+  });
+
+  it('throws when a later page errors so a truncated dump is not treated as truth', async () => {
+    await expect(
+      pageAllOwnerFunnelRows(async (offset) => {
+        if (offset === 0) return { data: Array.from({ length: 1000 }, (_, i) => ({ id: i })) };
+        return { data: null, error: { message: 'boom' } };
+      }),
+    ).rejects.toThrow(/boom/);
+  });
+
+  it('detects a missing get_owner_funnel_desk_counts RPC', () => {
+    expect(isOwnerFunnelRpcMissingError({ code: 'PGRST202', message: 'Could not find the function' })).toBe(true);
+    expect(isOwnerFunnelRpcMissingError({ code: '42883', message: 'function does not exist' })).toBe(true);
+    expect(isOwnerFunnelRpcMissingError({ message: 'permission denied' })).toBe(false);
+  });
+
+  it('uses RPC COUNT DISTINCT when the function exists', async () => {
+    const metrics = await resolveOwnerFunnelDeskMetrics({
+      rpcData: { landings: 9, get_link: 3, share: 1, locked: 1, window_days: 7 },
+      loadFeedWindow: async () => ({ events: [landing('a')], shares: [], referrals: [] }),
+      loadCompleteWindow: async () => {
+        throw new Error('should not load complete window when RPC works');
+      },
+      now,
+    });
+    expect(metrics.landings).toBe(9);
+    expect(metrics.getLink).toBe(3);
+    expect(metrics.share).toBe(1);
+    expect(metrics.locked).toBe(1);
+  });
+
+  it('computes DISTINCT 7-day counts from a complete window when RPC is missing', async () => {
+    const metrics = await resolveOwnerFunnelDeskMetrics({
+      rpcData: null,
+      rpcError: { code: 'PGRST202', message: 'Could not find the function' },
+      loadCompleteWindow: async () => ({
+        events: [landing('a'), landing('a'), landing('b'), getLink('a')],
+        shares: [
+          { platform: 'native', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:00:00Z' },
+          { platform: 'whatsapp', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:01:00Z' },
+          { platform: 'copy', referrer_code: 'VIRAL-REAL2', created_at: '2026-08-16T12:02:00Z' },
+          { platform: 'intent-open', referrer_code: 'VIRAL-REAL3', created_at: '2026-08-16T12:03:00Z' },
+        ],
+        referrals: [],
+        referrerLinks: [],
+      }),
+      now,
+    });
+    expect(metrics.landings).toBe(2);
+    expect(metrics.getLink).toBe(1);
+    expect(metrics.share).toBe(1);
+    expect(metrics.locked).toBe(0);
+    expect(metrics.getLinkRate).toBe('50.0%');
+  });
+
+  it('returns zero tiles for an empty window instead of can’t load', async () => {
+    const metrics = await resolveOwnerFunnelDeskMetrics({
+      rpcData: null,
+      loadCompleteWindow: async () => ({ events: [], shares: [], referrals: [], referrerLinks: [] }),
+      now,
+    });
+    expect(metrics.landings).toBe(0);
+    expect(metrics.getLink).toBe(0);
+    expect(metrics.share).toBe(0);
+    expect(metrics.locked).toBe(0);
+    expect(metrics.getLinkRate).toBe('0%');
   });
 });
 

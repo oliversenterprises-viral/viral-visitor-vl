@@ -406,7 +406,7 @@ export function parseOwnerFunnelDeskCounts(raw: unknown): {
   return { landings, getLink, share, locked, windowDays };
 }
 
-/** Tile counts come from the RPC only. The event page is feed-only. */
+/** Tile counts come from the RPC when present. A paged dump is feed-only. */
 export function assembleOwnerFunnelDeskFromServer(input: {
   counts: unknown;
   events?: readonly OwnerFunnelEvent[];
@@ -434,6 +434,95 @@ export function assembleOwnerFunnelDeskFromServer(input: {
     getLinkRate: formatOwnerRate(counts.getLink, counts.landings),
     feed: feedOnly.feed,
   };
+}
+
+
+export const OWNER_FUNNEL_PAGE_SIZE = 1000;
+
+export function isOwnerFunnelRpcMissingError(
+  error: { message?: string; code?: string } | null | undefined,
+): boolean {
+  if (!error) return false;
+  const code = String(error.code || '').toUpperCase();
+  if (code === 'PGRST202' || code === 'PGRST204' || code === '42883') return true;
+  const msg = String(error.message || '').toLowerCase();
+  return (
+    msg.includes('does not exist') ||
+    msg.includes('could not find the function') ||
+    msg.includes('schema cache')
+  );
+}
+
+/** Page until exhausted. A full first page is not treated as the whole window. */
+export async function pageAllOwnerFunnelRows(
+  fetchPage: (
+    offset: number,
+    limit: number,
+  ) => Promise<{ data: unknown[] | null; error?: { message?: string } | null }>,
+  pageSize = OWNER_FUNNEL_PAGE_SIZE,
+): Promise<Record<string, unknown>[]> {
+  const rows: Record<string, unknown>[] = [];
+  let offset = 0;
+  while (true) {
+    const { data, error } = await fetchPage(offset, pageSize);
+    if (error) {
+      throw new Error(error.message || 'owner funnel page failed');
+    }
+    const batch = (data || []) as Record<string, unknown>[];
+    rows.push(...batch);
+    if (batch.length < pageSize) break;
+    offset += pageSize;
+  }
+  return rows;
+}
+
+/**
+ * RPC COUNT DISTINCT when the function exists. Otherwise DISTINCT over a
+ * complete 7-day service-role window (not last-1000, not a truncated dump).
+ */
+export async function resolveOwnerFunnelDeskMetrics(input: {
+  rpcData?: unknown;
+  rpcError?: { message?: string; code?: string } | null;
+  loadCompleteWindow: () => Promise<{
+    events?: readonly OwnerFunnelEvent[];
+    shares?: readonly OwnerFunnelShareRow[];
+    referrals?: readonly OwnerFunnelReferralRow[];
+    referrerLinks?: readonly OwnerFunnelLinkRow[];
+  }>;
+  loadFeedWindow?: () => Promise<{
+    events?: readonly OwnerFunnelEvent[];
+    shares?: readonly OwnerFunnelShareRow[];
+    referrals?: readonly OwnerFunnelReferralRow[];
+    referrerLinks?: readonly OwnerFunnelLinkRow[];
+  }>;
+  now?: number;
+}): Promise<OwnerFunnelDeskMetrics> {
+  const counts = parseOwnerFunnelDeskCounts(input.rpcData);
+  if (counts) {
+    try {
+      const feed = input.loadFeedWindow ? await input.loadFeedWindow() : {};
+      const assembled = assembleOwnerFunnelDeskFromServer({
+        counts: input.rpcData,
+        events: feed.events,
+        shares: feed.shares,
+        referrals: feed.referrals,
+        referrerLinks: feed.referrerLinks,
+        now: input.now,
+      });
+      if (assembled) return assembled;
+    } catch {
+      /* complete-window fallback below */
+    }
+  }
+  const window = await input.loadCompleteWindow();
+  return computeOwnerFunnelDeskMetrics({
+    events: window.events,
+    shares: window.shares,
+    referrals: window.referrals,
+    referrerLinks: window.referrerLinks,
+    now: input.now,
+    windowDays: OWNER_FUNNEL_WINDOW_DAYS,
+  });
 }
 
 export function stripOwnerFunnelPii(row: Record<string, unknown>): Record<string, unknown> {

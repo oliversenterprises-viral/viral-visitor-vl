@@ -2,6 +2,7 @@
 
 export {
   OWNER_FUNNEL_FEED_LIMIT,
+  OWNER_FUNNEL_PAGE_SIZE,
   OWNER_FUNNEL_WINDOW_DAYS,
   assembleOwnerFunnelDeskFromServer,
   computeOwnerFunnelDeskMetrics,
@@ -13,9 +14,12 @@ export {
   isDeskVerifiedShare,
   isIntentSharePlatform,
   isLockedReferrer,
+  isOwnerFunnelRpcMissingError,
   ownerFunnelCutoffIso,
   ownerFunnelViaLabel,
+  pageAllOwnerFunnelRows,
   parseOwnerFunnelDeskCounts,
+  resolveOwnerFunnelDeskMetrics,
   resolveOwnerFunnelVia,
   stripOwnerFunnelPii,
   uniqueVisitorsForEvent,
