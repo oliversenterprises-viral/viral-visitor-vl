@@ -207,10 +207,10 @@ export const en = {
   // Helix post-link status (quiet; visit/copy does not credit)
   'post_link.status_in': "You're in.",
   'post_link.status_in_line': 'Send this. A friend must tap Get my link.',
-  'post_link.status_waiting': 'Waiting.',
-  'post_link.status_waiting_line': '1 friend must tap Get my link.',
-  'post_link.status_locked': 'Locked.',
-  'post_link.status_locked_line': 'A friend tapped Get my link.',
+  'post_link.status_waiting': 'Waiting',
+  'post_link.status_waiting_line': '1 friend must tap Get my link',
+  'post_link.status_locked': 'Locked',
+  'post_link.status_locked_line': "A friend tapped Get my link. You're on the board.",
   'post_link.copy_toast': 'Link copied. A friend still has to tap Get my link.',
 
   // After first friend locks the link
