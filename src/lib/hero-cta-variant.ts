@@ -19,19 +19,19 @@ export interface HeroCtaCopy {
 export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
   control: {
     badge: 'WORLDWIDE • FREE',
-    titleLine1: 'Get your free link in 30 seconds.',
-    titleAccent: 'Climb to #1 — claim homepage feature.',
-    subtitle: 'Open worldwide. No signup. One tap, then share anywhere.',
-    trustLine: 'Free recognition for #1 • Your link in ~5 seconds',
-    buttonLabel: 'Get my referral link',
+    titleLine1: '#1 gets a homepage banner',
+    titleAccent: 'for their site.',
+    subtitle: 'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+    trustLine: 'Free. No signup. No cash. Just send your link.',
+    buttonLabel: 'Get my link',
   },
   prize: {
     badge: 'WORLDWIDE • FREE',
-    titleLine1: 'Get your free link in 30 seconds.',
-    titleAccent: 'Climb to #1 — claim homepage feature.',
-    subtitle: 'Open worldwide. Free forever. Tap below, then share once.',
-    trustLine: 'Homepage feature for #1 • No email • ~5 seconds',
-    buttonLabel: 'Get my free link',
+    titleLine1: '#1 gets a homepage banner',
+    titleAccent: 'for their site.',
+    subtitle: 'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+    trustLine: 'Free. No signup. No cash. Just send your link.',
+    buttonLabel: 'Get my link',
   },
 };
 

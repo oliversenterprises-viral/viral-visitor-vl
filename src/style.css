@@ -411,7 +411,24 @@ html[data-vr-send-mode]:not([data-vr-kid-more]) #challenge-duel-banner {
   display: none !important;
 }
 
+
+/* Helix P1: first viewport is the contest — no promoter chrome, no second CTA, no dash-proof */
+html:not([data-vr-has-link]) #promoter-week-strip,
+html:not([data-vr-has-link]) #hero-promoter-cta,
+html:not([data-vr-has-link]) #hero-leaderboard-btn,
+html:not([data-vr-has-link]) #hero-leaderboard-link,
+html:not([data-vr-has-link]) #hero-telegram-helper-btn {
+  display: none !important;
+}
+
+#vr-verified-total:not(.vr-verified-total--ready) {
+  display: none !important;
+}
+
 /* Kid-simple: first paint — one button, no dash counters or extra chrome */
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #promoter-week-strip,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-promoter-cta,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-leaderboard-link,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-telegram-helper-btn,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-global-regions,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-board-meta,
