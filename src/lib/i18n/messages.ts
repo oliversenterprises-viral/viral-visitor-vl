@@ -28,12 +28,12 @@ export const en = {
   'hero.title_line1': 'Win the homepage.',
   'hero.title_accent': '#1 gets a banner for their site.',
   'hero.subtitle':
-    'Tap Get my free link. A friend does the same. You climb.',
+    'Tap Get my link. A friend does the same. You climb.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',
   'hero.proof_no_email': 'No email',
   'hero.proof_live': 'Live free leaderboard',
-  'hero.cta': 'Get my free link',
+  'hero.cta': 'Get my link',
   'hero.cta_secondary': 'See leaderboard',
   'hero.trust':
     'Free. No email. No cash. Recognition only.',
