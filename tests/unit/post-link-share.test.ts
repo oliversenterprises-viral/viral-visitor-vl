@@ -108,5 +108,6 @@ describe('post-link-share', () => {
     await onPostLinkCopyTap();
     expect(writeText).toHaveBeenCalledWith(LINK);
     expect(writeText.mock.calls[0][0]).not.toMatch(/Race me/);
+    expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
   });
 });
