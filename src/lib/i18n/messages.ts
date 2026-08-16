@@ -204,6 +204,15 @@ export const en = {
   'share_abandon.cta': 'Send to a friend now',
   'share_abandon.later': "I'll send in a few minutes",
 
+  // Helix post-link status (quiet; visit/copy does not credit)
+  'post_link.status_in': "You're in.",
+  'post_link.status_in_line': 'Send this. A friend must tap Get my link.',
+  'post_link.status_waiting': 'Waiting',
+  'post_link.status_waiting_line': '1 friend must tap Get my link',
+  'post_link.status_locked': 'Locked',
+  'post_link.status_locked_line': "A friend tapped Get my link. You're on the board.",
+  'post_link.copy_toast': 'Link copied. A friend still has to tap Get my link.',
+
   // After first friend locks the link
   'post_share.title': "You're in — a friend joined!",
   'post_share.sub':

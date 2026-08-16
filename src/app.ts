@@ -72,6 +72,7 @@ import { celebrateMilestonesIfAny } from './lib/referral-milestones';
 
 import { initGrowthCommandCenter } from './lib/growth-command-center';
 import { initPostLinkShare } from './lib/post-link-share';
+import { initPostLinkStatus } from './lib/post-link-status';
 import { initViralLoopUI, syncViralLoopUI } from './lib/viral-loop-ui';
 import { initViralLoopsConfigFromContent } from './lib/viral-loops-config';
 import { loadPublicViralLoops, onViralLoopsLinkReady, syncUserViralLoops } from './lib/viral-loops';
@@ -398,6 +399,7 @@ export async function initApp() {
     initViralLoopUI();
     initGrowthCommandCenter();
     initPostLinkShare();
+    initPostLinkStatus();
     void import('./lib/promo-kit')
       .then((m) => m.initPromoKit())
       .catch(() => {});

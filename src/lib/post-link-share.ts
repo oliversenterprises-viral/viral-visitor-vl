@@ -8,6 +8,7 @@ import { buildNativeShareData } from './share-power';
 import { recordShareEvent } from './record-share';
 import { trackVisitorFunnel } from './visitor-tracking';
 import { isSharePendingLocal } from './share-first-ui';
+import { showToast } from '../ui';
 
 export const POST_LINK_ATTR = 'data-vr-post-link-one';
 
@@ -194,6 +195,7 @@ export function showPostLinkReady(link: string): void {
 
 export function activatePostLinkShare(link: string): void {
   showPostLinkReady(link);
+  void import('./post-link-status').then((m) => m.renderPostLinkStatus()).catch(() => {});
 }
 
 function openWhatsApp(link: string): boolean {
@@ -259,22 +261,16 @@ export function onPostLinkPrimaryTap(event?: Event): void {
   void onPostLinkCopyTap();
 }
 
-let copyResetTimer = 0;
-
 export async function onPostLinkCopyTap(): Promise<void> {
   const link = readReadyLink();
   if (!link) return;
   const copy = el<HTMLButtonElement>(IDS.copy);
   try {
     await navigator.clipboard.writeText(link);
+    showToast('Link copied. A friend still has to tap Get my link.', 'info');
     if (copy) {
-      copy.textContent = 'Copied';
-      copy.setAttribute('aria-label', 'Copied');
-      window.clearTimeout(copyResetTimer);
-      copyResetTimer = window.setTimeout(() => {
-        copy.textContent = 'Copy link';
-        copy.setAttribute('aria-label', 'Copy link');
-      }, 2000);
+      copy.textContent = 'Copy link';
+      copy.setAttribute('aria-label', 'Copy link');
     }
   } catch {
     selectLinkText();

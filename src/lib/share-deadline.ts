@@ -125,14 +125,10 @@ export function msUntilDeadline(state: ShareDeadlineState, now = Date.now()): nu
 }
 
 export function formatDeadlineCountdown(ms: number): string {
-  if (ms <= 0) return '0h 0m';
+  if (ms <= 0) return "Time's up";
   const totalMin = Math.floor(ms / 60_000);
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h >= 24) {
-    const d = Math.floor(h / 24);
-    return `${d}d ${h % 24}h`;
-  }
   return `${h}h ${m}m`;
 }
 
@@ -344,6 +340,13 @@ export function applyGraceDeadlineFromServer(deadlineAt: string | null | undefin
  * Returns true when the code was purged.
  */
 export function enforceLocalShareDeadlineExpiry(myCode: string | null): boolean {
+  if (typeof document !== 'undefined' && (
+    document.documentElement.hasAttribute('data-vr-post-link-one') ||
+    document.documentElement.hasAttribute('data-vr-post-link-status')
+  )) {
+    renderShareDeadlineBanner();
+    return false;
+  }
   // Owner IP exempt codes never expire client-side
   if (isExemptCode(myCode)) {
     clearShareDeadlineState();
@@ -376,6 +379,10 @@ export function enforceLocalShareDeadlineExpiry(myCode: string | null): boolean 
   return true;
 }
 
+function syncPostLinkStatus(): void {
+  void import('./post-link-status').then((m) => m.renderPostLinkStatus()).catch(() => {});
+}
+
 export function renderShareDeadlineBanner(): void {
   const banner = document.getElementById('share-deadline-banner');
   const countdown = document.getElementById('share-deadline-countdown');
@@ -397,6 +404,7 @@ export function renderShareDeadlineBanner(): void {
   if (isExemptCode()) {
     if (banner) banner.classList.add('hidden');
     hideEducation();
+    syncPostLinkStatus();
     return;
   }
 
@@ -406,7 +414,10 @@ export function renderShareDeadlineBanner(): void {
   if (state?.status === 'active') {
     showEducation();
     if (preNote) preNote.classList.add('hidden');
-    if (!banner) return;
+    if (!banner) {
+      syncPostLinkStatus();
+      return;
+    }
     banner.classList.remove('hidden');
     banner.classList.add('share-deadline-banner--locked');
     banner.classList.remove(
@@ -428,19 +439,24 @@ export function renderShareDeadlineBanner(): void {
       const label = timeWrap.querySelector('[data-i18n="deadline.time_left"]');
       if (label) label.textContent = t('deadline.locked_badge');
     }
+    syncPostLinkStatus();
     return;
   }
 
   // Everyone else sees the educational rule (i18n)
   showEducation();
 
-  if (!banner) return;
+  if (!banner) {
+    syncPostLinkStatus();
+    return;
+  }
 
   // No pending state yet — keep countdown banner hidden; pre-note still shows
   if (!state) {
     banner.classList.add('hidden');
     banner.classList.remove('share-deadline-banner--locked');
     if (statusPill) statusPill.classList.add('hidden');
+    syncPostLinkStatus();
     return;
   }
 
@@ -470,6 +486,7 @@ export function renderShareDeadlineBanner(): void {
       'share-deadline-banner--pending',
       'share-deadline-banner--locked',
     );
+    syncPostLinkStatus();
     return;
   }
 
@@ -484,6 +501,7 @@ export function renderShareDeadlineBanner(): void {
     title.setAttribute('data-i18n', key);
   }
   if (countdown) countdown.textContent = formatDeadlineCountdown(ms);
+  syncPostLinkStatus();
 }
 
 let countdownTimer: ReturnType<typeof setInterval> | null = null;

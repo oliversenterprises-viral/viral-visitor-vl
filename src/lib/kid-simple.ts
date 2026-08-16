@@ -42,6 +42,7 @@ function wireKidMoreButton(): void {
 }
 
 export function syncKidSimpleFromLock(): void {
+  if (document.documentElement.hasAttribute('data-vr-post-link-one')) return;
   if (document.documentElement.hasAttribute('data-vr-share-locked')) setKidMore(true);
 }
 

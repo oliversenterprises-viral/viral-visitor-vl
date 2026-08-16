@@ -175,6 +175,11 @@ function fillDistanceMeter(root: HTMLElement, hasLink: boolean): void {
 
 /** In-panel + sticky "distance to glory" meters. */
 export function syncDistanceGloryUI(): void {
+  if (document.documentElement.hasAttribute('data-vr-post-link-one')) {
+    document.getElementById('distance-glory-sticky')?.remove();
+    document.getElementById('distance-glory-meter')?.remove();
+    return;
+  }
   const hasLink = !!(
     document.getElementById('ref-link') as HTMLInputElement | null
   )?.value?.trim();

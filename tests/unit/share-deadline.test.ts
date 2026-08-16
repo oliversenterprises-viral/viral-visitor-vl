@@ -49,7 +49,7 @@ describe('share-deadline', () => {
 
   it('formats countdown', () => {
     expect(formatDeadlineCountdown(2 * 60 * 60 * 1000 + 15 * 60 * 1000)).toBe('2h 15m');
-    expect(formatDeadlineCountdown(0)).toBe('0h 0m');
+    expect(formatDeadlineCountdown(0)).toBe("Time's up");
   });
 
   it('tracks local pending → active on first_referral lock only', () => {
