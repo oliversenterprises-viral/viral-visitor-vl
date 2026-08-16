@@ -6,7 +6,7 @@
 import { ViralRefer, registerGlobal } from '../lib/global';
 import { switchAdminTab } from '../admin';
 import { initAdminSimple } from '../lib/admin-simple';
-import { stopAdminLiveHub } from '../admin/admin-live-hub';
+import { startAdminLiveHub, stopAdminLiveHub } from '../admin/admin-live-hub';
 import { unlockAdminLiveSound } from '../admin/admin-live-sound';
 import { supabase } from '../lib/supabase';
 import { setAdminSessionToken, clearAdminSessionToken } from '../lib/admin-session';
@@ -34,6 +34,7 @@ registerGlobal('openAdminPanel', async () => {
   if (modal) {
     modal.classList.remove('hidden');
     initAdminSimple();
+    startAdminLiveHub();
     await ViralRefer.switchAdminTab(0);
   }
 });
