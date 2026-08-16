@@ -28,9 +28,35 @@ const EMPTY_METRICS: OwnerFunnelDeskMetrics = {
   getLink: 0,
   share: 0,
   locked: 0,
-  getLinkRate: '—',
+  getLinkRate: '0%',
   feed: [],
 };
+
+/** Deployed admin-action may not know get_owner_funnel_desk yet. */
+export function isOwnerFunnelDeskActionMissing(error: string | undefined | null): boolean {
+  const msg = String(error || '').toLowerCase();
+  if (!msg) return false;
+  if (msg.includes('unknown action')) return true;
+  return (
+    msg.includes('get_owner_funnel_desk') &&
+    /not found|does not exist|could not find|unsupported|unrecognized/.test(msg)
+  );
+}
+
+/** Unknown action still loads zero tiles. Real server errors stay can't load. */
+export function ownerFunnelDeskFromInvokeResult(result: {
+  success: boolean;
+  data?: OwnerFunnelDeskMetrics | null;
+  error?: string;
+}): { metrics: OwnerFunnelDeskMetrics; error?: string } {
+  if (result.success) {
+    return { metrics: result.data || EMPTY_METRICS };
+  }
+  if (isOwnerFunnelDeskActionMissing(result.error)) {
+    return { metrics: EMPTY_METRICS };
+  }
+  return { metrics: EMPTY_METRICS, error: result.error || "can't load." };
+}
 
 function tile(label: string, value: string | number, note: string): string {
   return `
@@ -160,9 +186,6 @@ export async function renderOwnerFunnelDesk(container: HTMLElement): Promise<voi
   bindRefresh(container);
   container.innerHTML = SKELETON;
   const result = await invokeAdminAction<OwnerFunnelDeskMetrics>('get_owner_funnel_desk');
-  if (!result.success) {
-    renderOwnerFunnelDeskView(container, EMPTY_METRICS, result.error || 'can’t load.');
-    return;
-  }
-  renderOwnerFunnelDeskView(container, result.data);
+  const loaded = ownerFunnelDeskFromInvokeResult(result);
+  renderOwnerFunnelDeskView(container, loaded.metrics, loaded.error);
 }

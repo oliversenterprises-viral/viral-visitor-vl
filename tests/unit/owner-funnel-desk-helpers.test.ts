@@ -12,7 +12,11 @@ import {
   resolveOwnerFunnelDeskMetrics,
   resolveOwnerFunnelVia,
 } from '../../src/admin/owner-funnel-desk-helpers';
-import { renderOwnerFunnelDeskView } from '../../src/admin/owner-funnel-desk';
+import {
+  isOwnerFunnelDeskActionMissing,
+  ownerFunnelDeskFromInvokeResult,
+  renderOwnerFunnelDeskView,
+} from '../../src/admin/owner-funnel-desk';
 
 const now = Date.parse('2026-08-16T18:00:00Z');
 
@@ -323,6 +327,38 @@ describe('owner funnel desk metrics', () => {
     expect(metrics.share).toBe(0);
     expect(metrics.locked).toBe(0);
     expect(metrics.getLinkRate).toBe('0%');
+  });
+
+  it('still loads five tiles when the deployed function does not know get_owner_funnel_desk', () => {
+    expect(isOwnerFunnelDeskActionMissing('Unknown action')).toBe(true);
+    expect(isOwnerFunnelDeskActionMissing('permission denied')).toBe(false);
+    const loaded = ownerFunnelDeskFromInvokeResult({
+      success: false,
+      error: 'Unknown action',
+    });
+    expect(loaded.error).toBeUndefined();
+    expect(loaded.metrics.landings).toBe(0);
+    expect(loaded.metrics.share).toBe(0);
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, loaded.metrics, loaded.error);
+    expect(el.textContent).toMatch(/Landings/);
+    expect(el.textContent).toMatch(/Get-link/);
+    expect(el.textContent).toMatch(/Share/);
+    expect(el.textContent).toMatch(/Locked/);
+    expect(el.textContent).not.toMatch(/can.t load/i);
+    expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(5);
+  });
+
+  it('keeps can’t load only for a real server error', () => {
+    const loaded = ownerFunnelDeskFromInvokeResult({
+      success: false,
+      error: "can't load.",
+    });
+    expect(loaded.error).toMatch(/can.t load/i);
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, loaded.metrics, loaded.error);
+    expect(el.textContent).toMatch(/can.t load/i);
+    expect(el.querySelector('[data-owner-desk-tiles]')).toBeNull();
   });
 });
 
