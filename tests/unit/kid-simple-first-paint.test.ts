@@ -20,4 +20,51 @@ describe('kid-simple first paint', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #prize/);
   });
+
+  it('first screen is prize-first with one Get my link CTA', () => {
+    const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
+    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="daily-champion-strip"'));
+    expect(hero).toMatch(/Win the homepage/);
+    expect(hero).toMatch(/#1 gets a banner for their site/);
+    expect(hero).toMatch(/Tap Get my link\. A friend does the same\. You climb/);
+    expect(hero).toContain('id="hero-get-link-btn"');
+    expect(hero).toContain('Get my link');
+    expect(hero).not.toContain('Get my free link');
+    expect(hero).toMatch(/Free\. No email\. No cash\. Recognition only/);
+    expect(hero).not.toMatch(/Get a free link\./);
+    expect(hero).not.toContain('See leaderboard');
+    expect(hero).not.toContain('id="hero-leaderboard-btn"');
+    expect(hero).not.toContain('Telegram');
+    expect(hero).not.toContain('id="hero-telegram-helper-btn"');
+    expect(hero).not.toContain('id="hero-leaderboard-link"');
+    expect(hero).not.toContain('id="promoter-week-strip"');
+    expect(hero).not.toContain('id="hero-promoter-cta"');
+    expect(hero).not.toContain('We want promoters');
+    expect(hero).not.toContain('We want affiliates');
+  });
+
+  it('keeps promoter chrome below the fold in #become-promoter', () => {
+    const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
+    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="daily-champion-strip"'));
+    const promoter = html.slice(html.indexOf('id="become-promoter"'), html.indexOf('id="faq"'));
+    expect(hero).not.toContain('id="promoter-week-strip"');
+    expect(promoter).toContain('id="promoter-week-strip"');
+    expect(promoter).toContain('We want affiliates');
+  });
+
+  it('hides promoter chrome and unhydrated dash-proof on first viewport', () => {
+    const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
+    expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #promoter-week-strip/);
+    expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #vr-verified-total/);
+    expect(css).toMatch(/#vr-verified-total:not\(\.vr-verified-total--ready\)/);
+  });
+
+  it('does not paint em-dash referral proof before hydration', () => {
+    const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
+    const hero = html.slice(html.indexOf('id="vr-verified-total"'), html.indexOf('id="daily-champion-strip"'));
+    expect(hero).not.toMatch(/—\s*verified referrals/);
+    expect(hero).not.toContain('— people got a link today');
+    expect(hero).toContain('id="total-referrers"');
+    expect(hero).toContain('id="hero-got-link-today"');
+  });
 });

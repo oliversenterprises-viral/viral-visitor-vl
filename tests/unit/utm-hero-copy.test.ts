@@ -42,13 +42,13 @@ describe('utm-hero-copy', () => {
   it('resolveUtmHeroCopy paid segment emphasizes get-link then share', () => {
     const copy = resolveUtmHeroCopy('facebook', 'paid');
     expect(copy?.buttonLabel.toLowerCase()).toMatch(/link|share/);
-    expect(copy?.titleAccent.toLowerCase()).toMatch(/share|climb|board/);
+    expect(copy?.titleLine1.toLowerCase()).toMatch(/#1|banner|homepage/);
   });
 
   it('resolveUtmHeroCopy returns tailored button for trafficadbar', () => {
     const copy = resolveUtmHeroCopy('trafficadbar', 'traffic_exchange');
-    expect(copy?.buttonLabel).toBe('Get my free link now');
-    expect(copy?.titleLine1).toMatch(/free|leaderboard/i);
+    expect(copy?.buttonLabel).toBe('Get my link');
+    expect(copy?.titleLine1).toMatch(/Win the homepage/i);
     expect(copy?.titleLine1).not.toMatch(/\$10|Cash App/i);
   });
 
@@ -59,7 +59,7 @@ describe('utm-hero-copy', () => {
     });
     captureUtmAttribution();
     expect(applyUtmHeroCopy()).toBe(true);
-    expect(document.getElementById('hero-title-line1')?.textContent).toMatch(/free|leaderboard/i);
+    expect(document.getElementById('hero-title-line1')?.textContent).toMatch(/Win the homepage/i);
     expect(document.getElementById('hero-title-line1')?.textContent).not.toMatch(/\$10|Cash App/i);
     expect(document.documentElement.getAttribute('data-vr-utm-source')).toBe('trafficadbar');
   });
