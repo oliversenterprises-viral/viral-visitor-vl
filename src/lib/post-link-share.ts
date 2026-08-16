@@ -8,7 +8,6 @@ import { buildNativeShareData } from './share-power';
 import { recordShareEvent } from './record-share';
 import { trackVisitorFunnel } from './visitor-tracking';
 import { isSharePendingLocal } from './share-first-ui';
-import { showToast } from '../ui';
 
 export const POST_LINK_ATTR = 'data-vr-post-link-one';
 
@@ -269,10 +268,14 @@ export async function onPostLinkCopyTap(): Promise<void> {
   const copy = el<HTMLButtonElement>(IDS.copy);
   try {
     await navigator.clipboard.writeText(link);
-    showToast('Link copied. A friend still has to tap Get my link.', 'info');
     if (copy) {
-      copy.textContent = 'Copy link';
-      copy.setAttribute('aria-label', 'Copy link');
+      copy.textContent = 'Copied';
+      copy.setAttribute('aria-label', 'Copied');
+      window.clearTimeout(copyResetTimer);
+      copyResetTimer = window.setTimeout(() => {
+        copy.textContent = 'Copy link';
+        copy.setAttribute('aria-label', 'Copy link');
+      }, 2000);
     }
   } catch {
     selectLinkText();
