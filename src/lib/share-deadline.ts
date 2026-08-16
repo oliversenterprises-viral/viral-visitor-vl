@@ -376,6 +376,10 @@ export function enforceLocalShareDeadlineExpiry(myCode: string | null): boolean 
   return true;
 }
 
+function syncPostLinkStatus(): void {
+  void import('./post-link-status').then((m) => m.renderPostLinkStatus()).catch(() => {});
+}
+
 export function renderShareDeadlineBanner(): void {
   const banner = document.getElementById('share-deadline-banner');
   const countdown = document.getElementById('share-deadline-countdown');
@@ -397,6 +401,7 @@ export function renderShareDeadlineBanner(): void {
   if (isExemptCode()) {
     if (banner) banner.classList.add('hidden');
     hideEducation();
+    syncPostLinkStatus();
     return;
   }
 
@@ -406,7 +411,10 @@ export function renderShareDeadlineBanner(): void {
   if (state?.status === 'active') {
     showEducation();
     if (preNote) preNote.classList.add('hidden');
-    if (!banner) return;
+    if (!banner) {
+      syncPostLinkStatus();
+      return;
+    }
     banner.classList.remove('hidden');
     banner.classList.add('share-deadline-banner--locked');
     banner.classList.remove(
@@ -428,19 +436,24 @@ export function renderShareDeadlineBanner(): void {
       const label = timeWrap.querySelector('[data-i18n="deadline.time_left"]');
       if (label) label.textContent = t('deadline.locked_badge');
     }
+    syncPostLinkStatus();
     return;
   }
 
   // Everyone else sees the educational rule (i18n)
   showEducation();
 
-  if (!banner) return;
+  if (!banner) {
+    syncPostLinkStatus();
+    return;
+  }
 
   // No pending state yet — keep countdown banner hidden; pre-note still shows
   if (!state) {
     banner.classList.add('hidden');
     banner.classList.remove('share-deadline-banner--locked');
     if (statusPill) statusPill.classList.add('hidden');
+    syncPostLinkStatus();
     return;
   }
 
@@ -470,6 +483,7 @@ export function renderShareDeadlineBanner(): void {
       'share-deadline-banner--pending',
       'share-deadline-banner--locked',
     );
+    syncPostLinkStatus();
     return;
   }
 
@@ -484,6 +498,7 @@ export function renderShareDeadlineBanner(): void {
     title.setAttribute('data-i18n', key);
   }
   if (countdown) countdown.textContent = formatDeadlineCountdown(ms);
+  syncPostLinkStatus();
 }
 
 let countdownTimer: ReturnType<typeof setInterval> | null = null;

@@ -286,16 +286,43 @@
         </div>
 
         <!-- REFERRAL LINK + SOCIAL SHARING -->
-        <div id="referral-section" class="mt-6" data-vr-zone="referral-section">
+        <div id="referral-section" class="mt-6" data-vr-zone="referral-section" data-vr-post-link-stack>
+            <div id="post-link-status" class="post-link-status hidden" hidden data-state="hidden" role="status" aria-live="polite">
+                <h2 id="post-link-status-title" class="post-link-status__title"></h2>
+                <p id="post-link-status-line" class="post-link-status__line"></p>
+<div id="share-deadline-banner" class="hidden mb-4 rounded-2xl border border-amber-400/50 bg-gradient-to-r from-amber-500/15 to-rose-500/10 px-4 py-3.5 text-left shadow-lg shadow-amber-500/10" role="status" aria-live="polite">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div class="min-w-0 flex-1 flex items-start gap-2.5">
+                                    <span class="share-deadline-banner__icon shrink-0 mt-0.5 w-8 h-8 rounded-xl bg-amber-500/25 text-amber-200 flex items-center justify-center" aria-hidden="true">
+                                        <i class="fa-solid fa-clock"></i>
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p class="text-[10px] uppercase tracking-wider font-bold text-amber-200/95 mb-1" data-i18n="deadline.badge">Need 1 friend to lock</p>
+                                        <span id="share-deadline-status-pill" class="hidden share-deadline-status-pill mb-1.5" data-status="pending">Waiting for a friend</span>
+                                        <p id="share-deadline-title" class="text-sm font-medium text-amber-50 leading-snug" data-i18n="deadline.pending">
+                                            Not locked yet. Send your link — a friend must Get my link before time runs out.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div id="share-deadline-time-wrap" class="shrink-0 text-right pl-1">
+                                    <div class="text-[10px] uppercase tracking-wider text-amber-200/75" data-i18n="deadline.time_left">Time left</div>
+                                    <div id="share-deadline-countdown" class="text-2xl font-black tabular-nums text-amber-100 leading-none mt-0.5">48h</div>
+                                </div>
+                            </div>
+                        </div>
+            </div>
             <div id="post-link-share" class="hidden post-link-share" hidden data-state="hidden" role="region" aria-label="Your referral link">
-                <h2 id="post-link-heading" class="post-link-share__heading" tabindex="-1">Your link is ready</h2>
-                <p id="post-link-url" class="post-link-share__url" tabindex="0"></p>
+                <h2 id="post-link-heading" class="post-link-share__heading" tabindex="-1">You're in.</h2>
+                <p id="post-link-sub" class="post-link-share__sub">Send this. A friend must tap Get my link.</p>
+                <p id="post-link-clock" class="post-link-share__clock" hidden></p>
+                <p id="post-link-url" class="post-link-share__url" hidden></p>
                 <button type="button" id="post-link-primary" class="post-link-share__primary" hidden></button>
                 <button type="button" id="post-link-copy" class="post-link-share__copy">Copy link</button>
-                <p id="post-link-helper" class="post-link-share__helper">A friend opens it and taps Get my link. That’s what counts.</p>
-                <p id="post-link-whisper" class="post-link-share__whisper hidden" hidden></p>
             </div>
-            <div class="max-w-2xl mx-auto" data-vr-legacy-share>
+                    </div>
+
+        <div id="visitor-legacy-toolkit" class="mt-8 max-w-2xl mx-auto" data-vr-legacy-share data-vr-below-fold hidden>
+
                 <div class="text-center mb-6 sm:mb-8">
                     <h2 id="winning-link-title" class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter mb-2 sm:mb-3" style="color: var(--text-referral-heading, #ffffff)">Your link</h2>
                     <p id="winning-link-description" class="text-base sm:text-lg text-zinc-300 max-w-lg mx-auto" data-vr-declutter-secondary>Send your link. When a friend gets their free link through you, you climb — and your link locks.</p>
@@ -366,27 +393,7 @@
                     </div>
 
 <div id="share-power-block" data-vr-declutter-post-link>
-                        <!-- 48h first-friend lock — live countdown at share step (highest urgency in funnel) -->
-                        <div id="share-deadline-banner" class="hidden mb-4 rounded-2xl border border-amber-400/50 bg-gradient-to-r from-amber-500/15 to-rose-500/10 px-4 py-3.5 text-left shadow-lg shadow-amber-500/10" role="status" aria-live="polite">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
-                                <div class="min-w-0 flex-1 flex items-start gap-2.5">
-                                    <span class="share-deadline-banner__icon shrink-0 mt-0.5 w-8 h-8 rounded-xl bg-amber-500/25 text-amber-200 flex items-center justify-center" aria-hidden="true">
-                                        <i class="fa-solid fa-clock"></i>
-                                    </span>
-                                    <div class="min-w-0">
-                                        <p class="text-[10px] uppercase tracking-wider font-bold text-amber-200/95 mb-1" data-i18n="deadline.badge">Need 1 friend to lock</p>
-                                        <span id="share-deadline-status-pill" class="hidden share-deadline-status-pill mb-1.5" data-status="pending">Waiting for a friend</span>
-                                        <p id="share-deadline-title" class="text-sm font-medium text-amber-50 leading-snug" data-i18n="deadline.pending">
-                                            Not locked yet. Send your link — a friend must Get my link before time runs out.
-                                        </p>
-                                    </div>
-                                </div>
-                                <div id="share-deadline-time-wrap" class="shrink-0 text-right pl-1">
-                                    <div class="text-[10px] uppercase tracking-wider text-amber-200/75" data-i18n="deadline.time_left">Time left</div>
-                                    <div id="share-deadline-countdown" class="text-2xl font-black tabular-nums text-amber-100 leading-none mt-0.5">48h</div>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <!-- Share-first: native sheet primary (any app), then SMS / WhatsApp -->
                         <div id="share-first-strip" class="hidden share-first-strip mb-4 rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-500/10 via-zinc-900/80 to-violet-500/10 px-4 py-4" role="region" aria-label="Send your referral link">
@@ -804,7 +811,6 @@
                     <!-- PRODUCTION-READY DEBUG CONTAINER (hidden by default; used by ?debug=1 Test Real Referral flow + future claim flow) -->
                     <!-- Minimal + safe for live site. JS only shows widget when explicitly triggered. -->
                 </div>
-            </div>
         </div>
 
 

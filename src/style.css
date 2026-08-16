@@ -4336,7 +4336,6 @@ html[data-vr-post-link-one] #catch-up-anxiety-bar,
 html[data-vr-post-link-one] #rank-receipt-cta,
 html[data-vr-post-link-one] #distance-glory-meter,
 html[data-vr-post-link-one] #distance-glory-sticky,
-html[data-vr-post-link-one] #share-deadline-banner,
 html[data-vr-post-link-one] #copy-message-btn,
 html[data-vr-post-link-one] #new-code-button,
 html[data-vr-post-link-one] #mobile-send-cta,
@@ -4345,6 +4344,58 @@ html[data-vr-post-link-one] #share-rank-cta,
 html[data-vr-post-link-one] button[onclick="showQRModal()"] {
   display: none !important;
 }
+html[data-vr-has-link] #visitor-legacy-toolkit,
+html[data-vr-post-link-one] #visitor-legacy-toolkit,
+html[data-vr-has-link] #funnel-journey,
+html[data-vr-post-link-one] #funnel-journey,
+html[data-vr-has-link] #challenge-duel-banner,
+html[data-vr-post-link-one] #challenge-duel-banner,
+html[data-vr-has-link] #kid-more-tools-btn,
+html[data-vr-has-link] #share-more-options-btn,
+html[data-vr-has-link] #send-mode-more-btn,
+html[data-vr-has-link] #promo-kit-teaser,
+html[data-vr-has-link] #post-share-return-hub,
+html[data-vr-post-link-one] #promo-kit-teaser,
+html[data-vr-post-link-one] #promo-kit,
+html[data-vr-post-link-one] #boost-whatsapp-btn,
+html[data-vr-post-link-one] #share-combo-badge,
+html[data-vr-post-link-one] #share-streak-badge,
+html[data-vr-post-link-one] #share-short-code,
+html[data-vr-post-link-one] #referral-next-step,
+html[data-vr-post-link-one] #post-share-return-hub,
+html[data-vr-has-link] [data-vr-declutter-post-link] {
+  display: none !important;
+}
 html[data-vr-post-link-one] #post-link-share:not(.hidden) {
   display: block;
+}
+html[data-vr-post-link-status] #post-link-heading {
+  display: none;
+}
+html[data-vr-post-link-status] #post-link-whisper {
+  display: none;
+}
+
+.post-link-status {
+  max-width: 400px;
+  margin: 0 auto 0.35rem;
+  padding: 0.35rem 1.25rem 0;
+  text-align: center;
+}
+.post-link-status__title {
+  font-size: 1.15rem;
+  font-weight: 650;
+  color: #e4e4e7;
+  margin: 0 0 0.35rem;
+}
+.post-link-status__line {
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #a1a1aa;
+}
+html[data-vr-post-link-status='waiting'] #share-deadline-banner:not(.hidden) {
+  display: block;
+  margin-top: 0.25rem;
+  text-align: left;
 }

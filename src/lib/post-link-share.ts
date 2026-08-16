@@ -194,6 +194,7 @@ export function showPostLinkReady(link: string): void {
 
 export function activatePostLinkShare(link: string): void {
   showPostLinkReady(link);
+  void import('./post-link-status').then((m) => m.renderPostLinkStatus()).catch(() => {});
 }
 
 function openWhatsApp(link: string): boolean {

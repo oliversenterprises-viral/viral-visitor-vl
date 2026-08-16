@@ -1,0 +1,97 @@
+import { readFileSync } from 'fs';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+import { describe, expect, it } from 'vitest';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+
+function sliceById(html: string, id: string, untilId?: string): string {
+  const start = html.indexOf(`id="${id}"`);
+  expect(start).toBeGreaterThan(0);
+  if (!untilId) return html.slice(start);
+  const end = html.indexOf(`id="${untilId}"`, start + 1);
+  expect(end).toBeGreaterThan(start);
+  return html.slice(start, end);
+}
+
+describe('post-link first paint', () => {
+  it('keeps #32 hero first screen unchanged', () => {
+    const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
+    const hero = sliceById(html, 'hero-title', 'daily-champion-strip');
+    expect(hero).toMatch(/Win the homepage/);
+    expect(hero).toMatch(/#1 gets a banner for their site/);
+    expect(hero).toMatch(/Tap Get my link\. A friend does the same\. You climb/);
+    expect(hero).toContain('id="hero-get-link-btn"');
+    expect(hero).toContain('Get my link');
+    expect(hero).not.toContain('See leaderboard');
+    expect(hero).not.toContain('id="hero-leaderboard-btn"');
+    expect(hero).not.toContain('Telegram');
+    expect(hero).not.toContain('id="promoter-week-strip"');
+  });
+
+  it('post-link stack is status + #31 share + existing clock only', () => {
+    const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
+    const stack = sliceById(html, 'referral-section', 'visitor-legacy-toolkit');
+    expect(stack).toContain('id="post-link-status"');
+    expect(stack).toContain('id="post-link-status-title"');
+    expect(stack).toContain('id="post-link-status-line"');
+    expect(stack).toContain('id="share-deadline-banner"');
+    expect(stack).toContain('id="post-link-share"');
+    expect(stack).toContain('id="post-link-primary"');
+    expect(stack).toContain('id="post-link-copy"');
+    expect(stack).toContain('Copy link');
+    const banned = [
+      'Step 2: tap COPY',
+      'id="viral-power-meter"',
+      'id="daily-share-quest"',
+      'id="duel-invite-strip"',
+      'id="share-ab-wrap"',
+      'id="share-buttons-panel"',
+      'id="share-tools-row"',
+      'id="referral-qr-block"',
+      'id="kid-more-tools-btn"',
+      'id="share-more-options-btn"',
+      'id="growth-command-center"',
+      'id="rank-receipt-cta"',
+      'id="catch-up-anxiety-bar"',
+      'id="promo-kit"',
+      'Challenge a friend',
+      'Viral Power',
+      'A/B message test',
+      'More platforms',
+    ];
+    for (const id of banned) {
+      expect(stack, id).not.toContain(id);
+    }
+  });
+
+  it('moved toolkit stays below the fold, not in the post-link stack', () => {
+    const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
+    const toolkit = sliceById(html, 'visitor-legacy-toolkit', 'my-stats');
+    expect(toolkit).toContain('data-vr-below-fold');
+    expect(toolkit).toContain('id="viral-power-meter"');
+    expect(toolkit).toContain('id="share-buttons-panel"');
+    expect(toolkit).toContain('id="referral-qr-block"');
+    expect(html.indexOf('id="referral-section"')).toBeLessThan(html.indexOf('id="visitor-legacy-toolkit"'));
+  });
+
+  it('has-link does not unhide the moved toolkit', () => {
+    const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
+    expect(css).toMatch(/html\[data-vr-has-link\] #visitor-legacy-toolkit/);
+    expect(css).toMatch(/html\[data-vr-post-link-one\] #visitor-legacy-toolkit/);
+    expect(css).toMatch(/html\[data-vr-has-link\] #funnel-journey/);
+    expect(css).toMatch(/html\[data-vr-has-link\] #kid-more-tools-btn/);
+    expect(css).toMatch(/html\[data-vr-post-link-status\] #post-link-heading/);
+  });
+
+  it('three quiet status strings exist in i18n', () => {
+    const messages = readFileSync(resolve(ROOT, 'src/lib/i18n/messages.ts'), 'utf8');
+    expect(messages).toContain("You're in.");
+    expect(messages).toContain('Send this. A friend must tap Get my link.');
+    expect(messages).toContain("'post_link.status_waiting': 'Waiting'");
+    expect(messages).toContain('1 friend must tap Get my link');
+    expect(messages).toContain("'post_link.status_locked': 'Locked'");
+    expect(messages).toContain("A friend tapped Get my link. You're on the board.");
+    expect(messages).toContain('Link copied. A friend still has to tap Get my link.');
+  });
+});
