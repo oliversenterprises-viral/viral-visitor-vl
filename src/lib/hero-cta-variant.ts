@@ -21,17 +21,17 @@ export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
     badge: 'WORLDWIDE • FREE',
     titleLine1: '#1 gets a homepage banner',
     titleAccent: 'for their site.',
-    subtitle: 'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+    subtitle: 'Tap Get my free link. Send it. When a friend taps Get my link, you climb.',
     trustLine: 'Free. No signup. No cash. Just send your link.',
-    buttonLabel: 'Get my link',
+    buttonLabel: 'Get my free link',
   },
   prize: {
     badge: 'WORLDWIDE • FREE',
     titleLine1: '#1 gets a homepage banner',
     titleAccent: 'for their site.',
-    subtitle: 'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+    subtitle: 'Tap Get my free link. Send it. When a friend taps Get my link, you climb.',
     trustLine: 'Free. No signup. No cash. Just send your link.',
-    buttonLabel: 'Get my link',
+    buttonLabel: 'Get my free link',
   },
 };
 

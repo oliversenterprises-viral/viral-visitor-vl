@@ -29,7 +29,7 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
     titleAccent: 'for their site.',
     subtitle: 'Open worldwide. No signup. Share anywhere for homepage feature.',
     trustLine: 'Homepage feature for #1 · Link in ~5 seconds',
-    buttonLabel: 'Get my link now',
+    buttonLabel: 'Get my free link now',
   },
   linkedin: {
     badge: 'WORLDWIDE • FREE',
@@ -37,7 +37,7 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
     titleAccent: 'for their site.',
     subtitle: 'Built for builders — one tap, share, climb the worldwide board.',
     trustLine: 'No email · Free forever · Worldwide 18+',
-    buttonLabel: 'Get my link',
+    buttonLabel: 'Get my free link',
   },
   reddit: {
     badge: 'FREE • NO SIGNUP',
@@ -64,7 +64,7 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
     titleAccent: 'for their site.',
     subtitle: 'Share in chats or channels. Every referral counts live.',
     trustLine: 'Open worldwide · No signup · Instant link',
-    buttonLabel: 'Get my link',
+    buttonLabel: 'Get my free link',
   },
   social: {
     badge: 'WORLDWIDE • FREE',
@@ -72,7 +72,7 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
     titleAccent: 'for their site.',
     subtitle: 'Open worldwide. Free forever. One tap, then share.',
     trustLine: 'Worldwide 18+ · Homepage feature for #1',
-    buttonLabel: 'Get my link',
+    buttonLabel: 'Get my free link',
   },
 };
 

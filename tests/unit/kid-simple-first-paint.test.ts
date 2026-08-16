@@ -21,14 +21,14 @@ describe('kid-simple first paint', () => {
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #prize/);
   });
 
-  it('first screen is prize-first with one Get my link CTA', () => {
+  it('first screen is prize-first with one Get my free link CTA', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="daily-champion-strip"'));
     expect(hero).toMatch(/#1 gets a homepage banner/);
     expect(hero).toMatch(/for their site/);
-    expect(hero).toMatch(/Tap Get my link\. Send it\. When a friend taps Get my link, you climb/);
+    expect(hero).toMatch(/Tap Get my free link\. Send it\. When a friend taps Get my link, you climb/);
     expect(hero).toContain('id="hero-get-link-btn"');
-    expect(hero).toContain('Get my link');
+    expect(hero).toContain('Get my free link');
     expect(hero).not.toMatch(/Get a free link\./);
     expect(hero).not.toContain('See leaderboard');
     expect(hero).not.toContain('id="hero-leaderboard-btn"');
