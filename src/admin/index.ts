@@ -23,4 +23,5 @@ export {
   type AdminClaimRow,
 } from './state';
 
+export { renderOwnerFunnelDesk, renderOwnerFunnelDeskView } from './owner-funnel-desk';
 export { switchAdminTab } from './switcher';

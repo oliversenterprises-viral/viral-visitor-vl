@@ -1,128 +1,58 @@
 /**
- * 5th-grade owner desk: three main jobs first.
- * Extra tabs stay in the DOM and show via "More tools".
+ * One owner desk: run the funnel. Password gate stays. No extra nav.
  */
 
 const ATTR = 'data-vr-admin-simple';
+const DESK_ATTR = 'data-vr-admin-desk';
 const MORE_ATTR = 'data-vr-admin-more';
 const STATS_MORE_ATTR = 'data-vr-admin-stats-more';
 const MORE_BTN_ID = 'admin-more-tools-btn';
 const STATS_MORE_BTN_ID = 'admin-stats-more-btn';
-const MORE_STORAGE_KEY = 'vr_admin_more';
-const STATS_MORE_STORAGE_KEY = 'vr_admin_stats_more';
 
-export const ADMIN_PRIMARY_TABS = [0, 2, 3] as const;
-export const ADMIN_EXTRA_TABS = [1, 4, 5, 6] as const;
+export const ADMIN_PRIMARY_TABS = [0] as const;
+export const ADMIN_EXTRA_TABS = [] as const;
 
-const TAB_COACH: Record<number, string> = {
-  0: 'Friends who got credit when someone used their link.',
-  1: 'How people send links (WhatsApp, copy, and more).',
-  2: 'Change the words and pictures on the public site.',
-  3: 'People asking to put their site on the homepage.',
-  4: 'Make the site text easier to read.',
-  5: 'Auto helper that tweaks the site to get more shares.',
-  6: 'People you pay when a visitor they send taps Get my link.',
-};
+const DESK_COACH = 'Land → get-link → share → lock. Server numbers only.';
 
-export function isAdminExtraTab(tab: number): boolean {
-  return (ADMIN_EXTRA_TABS as readonly number[]).includes(tab);
+export function isAdminExtraTab(_tab: number): boolean {
+  return false;
 }
 
 export function isAdminMoreOpen(): boolean {
-  return document.documentElement.hasAttribute(MORE_ATTR);
+  return false;
 }
 
 export function isAdminStatsMoreOpen(): boolean {
-  return document.documentElement.hasAttribute(STATS_MORE_ATTR);
+  return false;
 }
 
-export function setAdminStatsMore(open: boolean): void {
-  const root = document.documentElement;
-  if (open) root.setAttribute(STATS_MORE_ATTR, '1');
-  else root.removeAttribute(STATS_MORE_ATTR);
-  try {
-    sessionStorage.setItem(STATS_MORE_STORAGE_KEY, open ? '1' : '0');
-  } catch {
-    /* ignore */
-  }
-  syncAdminStatsMoreButton();
+export function setAdminStatsMore(_open: boolean): void {
+  document.documentElement.removeAttribute(STATS_MORE_ATTR);
 }
 
-export function setAdminMore(open: boolean): void {
-  const root = document.documentElement;
-  if (open) root.setAttribute(MORE_ATTR, '1');
-  else root.removeAttribute(MORE_ATTR);
-  try {
-    sessionStorage.setItem(MORE_STORAGE_KEY, open ? '1' : '0');
-  } catch {
-    /* ignore */
-  }
-  syncAdminMoreButton();
+export function setAdminMore(_open: boolean): void {
+  document.documentElement.removeAttribute(MORE_ATTR);
 }
 
-export function syncAdminTabCoach(tab: number): void {
+export function syncAdminTabCoach(_tab?: number): void {
   const el = document.getElementById('admin-tab-coach');
-  if (!el) return;
-  el.textContent = TAB_COACH[tab] || TAB_COACH[0];
+  if (el) el.textContent = DESK_COACH;
 }
 
-function syncAdminMoreButton(): void {
-  const btn = document.getElementById(MORE_BTN_ID);
-  if (!btn) return;
-  const open = isAdminMoreOpen();
-  btn.textContent = open ? 'Hide extra tools' : 'More tools';
-  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+export function initAdminDesk(): void {
+  const root = document.documentElement;
+  root.setAttribute(ATTR, '1');
+  root.setAttribute(DESK_ATTR, '1');
+  root.removeAttribute(MORE_ATTR);
+  root.removeAttribute(STATS_MORE_ATTR);
+  syncAdminTabCoach();
+  const more = document.getElementById(MORE_BTN_ID);
+  if (more) more.setAttribute('hidden', 'true');
+  const statsMore = document.getElementById(STATS_MORE_BTN_ID);
+  if (statsMore) statsMore.setAttribute('hidden', 'true');
 }
 
-function syncAdminStatsMoreButton(): void {
-  const btn = document.getElementById(STATS_MORE_BTN_ID);
-  if (!btn) return;
-  const open = isAdminStatsMoreOpen();
-  btn.textContent = open ? 'Hide extra numbers' : 'More numbers';
-  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-}
-
-function wireAdminStatsMoreButton(): void {
-  const btn = document.getElementById(STATS_MORE_BTN_ID);
-  if (!btn || btn.dataset.vrAdminBound === '1') return;
-  btn.dataset.vrAdminBound = '1';
-  btn.addEventListener('click', () => setAdminStatsMore(!isAdminStatsMoreOpen()));
-}
-
-function wireAdminMoreButton(): void {
-  const btn = document.getElementById(MORE_BTN_ID);
-  if (!btn || btn.dataset.vrAdminBound === '1') return;
-  btn.dataset.vrAdminBound = '1';
-  btn.addEventListener('click', () => {
-    const next = !isAdminMoreOpen();
-    setAdminMore(next);
-    if (!next) {
-      const active = document.querySelector<HTMLElement>('.admin-tab[aria-selected="true"]');
-      const tab = Number(active?.dataset.adminTab || '0');
-      if (isAdminExtraTab(tab)) {
-        const switchFn = (window as unknown as { switchAdminTab?: (n: number) => void }).switchAdminTab;
-        switchFn?.(0);
-      }
-    }
-  });
-}
-
-/** Turn on simple-first admin chrome. Call when the owner desk opens. */
+/** Back-compat alias — desk is the only owner chrome now. */
 export function initAdminSimple(): void {
-  document.documentElement.setAttribute(ATTR, '1');
-  try {
-    if (sessionStorage.getItem(MORE_STORAGE_KEY) === '1') {
-      document.documentElement.setAttribute(MORE_ATTR, '1');
-    }
-    if (sessionStorage.getItem(STATS_MORE_STORAGE_KEY) === '1') {
-      document.documentElement.setAttribute(STATS_MORE_ATTR, '1');
-    }
-  } catch {
-    /* ignore */
-  }
-  wireAdminMoreButton();
-  wireAdminStatsMoreButton();
-  syncAdminMoreButton();
-  syncAdminStatsMoreButton();
-  syncAdminTabCoach(0);
+  initAdminDesk();
 }

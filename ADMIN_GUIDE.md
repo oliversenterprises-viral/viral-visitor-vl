@@ -14,9 +14,9 @@ There is **no** `isAdmin = true` bypass in `admin-action`. Scripts/cron use `ADM
 
 Treat `ADMIN_OWNER_PASSWORD` as a high-privilege secret. Never put it in a `VITE_` env var (that would bake it into the public JS bundle).
 
-## Dashboard tabs
+## Dashboard
 
-Referrals, Share Analytics, Edit Content, Prize Claims, Text Colors, Viral Optimizer, plus the live activity hub.
+One run-the-funnel desk after the owner password. Seven server-side tiles: landings, get-link, share (copy excluded), lock, died waiting (48h), promoters, claims. Hero conversion is get-link/landings then lock/get-link. Banner CTR appears only when a homepage banner is live. The June #1 banner is closed if still enabled.
 
 ## Prize / homepage-feature claims
 

@@ -1,0 +1,24 @@
+﻿/** Re-export owner desk metrics for client tests (same logic as Edge). */
+
+export {
+  OWNER_FUNNEL_FEED_LIMIT,
+  OWNER_FUNNEL_WINDOW_DAYS,
+  assembleOwnerFunnelDeskFromServer,
+  computeOwnerFunnelDeskMetrics,
+  filterDeskReferrals,
+  filterDeskShares,
+  filterOwnerFunnelEvents,
+  formatOwnerRate,
+  inOwnerFunnelWindow,
+  isDeskVerifiedShare,
+  isLockedReferrer,
+  ownerFunnelCutoffIso,
+  ownerFunnelViaLabel,
+  parseOwnerFunnelDeskCounts,
+  resolveOwnerFunnelVia,
+  stripOwnerFunnelPii,
+  uniqueVisitorsForEvent,
+  type OwnerFunnelDeskMetrics,
+  type OwnerFunnelFeedRow,
+  type OwnerFunnelVia,
+} from '../../supabase/functions/_shared/owner-funnel-desk';

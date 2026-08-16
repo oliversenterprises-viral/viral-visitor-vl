@@ -890,6 +890,117 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+
+    if (action === 'get_owner_funnel_desk') {
+      const { computeOwnerFunnelDeskMetrics, closeStaleJuneHomepageBanners, parseDeskBanners } =
+        await import('../_shared/owner-funnel-desk.ts');
+
+      const pageSize = 1000;
+      const maxRows = 50000;
+      const pageAll = async (table: string, columns: string): Promise<Record<string, unknown>[]> => {
+        const rows: Record<string, unknown>[] = [];
+        let start = 0;
+        while (rows.length < maxRows) {
+          let query = supabaseAdmin.from(table).select(columns).order('created_at', { ascending: false });
+          if (table === 'visitor_events') {
+            query = query.in('event_name', ['SiteLanding', 'GetReferralLink', 'ShareReferral']);
+          }
+          const { data, error } = await query.range(start, start + pageSize - 1);
+          if (error) throw error;
+          const batch = (data || []) as Record<string, unknown>[];
+          rows.push(...batch);
+          if (batch.length < pageSize) break;
+          start += pageSize;
+        }
+        return rows;
+      };
+
+      const { data: contentRows, error: contentErr } = await supabaseAdmin
+        .from('site_content')
+        .select('key, value')
+        .in('key', ['banners', 'affiliates_program']);
+      if (contentErr) throw contentErr;
+      const contentMap = new Map<string, unknown>();
+      for (const row of contentRows || []) {
+        contentMap.set(String(row.key), row.value);
+      }
+
+      let bannersValue = contentMap.get('banners');
+      const parsedBanners = parseDeskBanners(bannersValue);
+      const closed = closeStaleJuneHomepageBanners(parsedBanners);
+      const shouldClose = payload?.close_stale_june !== false && closed.closed.length > 0;
+      if (shouldClose) {
+        const { error: closeErr } = await supabaseAdmin.from('site_content').upsert(
+          { key: 'banners', value: closed.banners, updated_at: new Date().toISOString() },
+          { onConflict: 'key' },
+        );
+        if (!closeErr) bannersValue = closed.banners;
+      }
+
+      const [events, shares, referrals, claims, referrerLinks] = await Promise.all([
+        pageAll(
+          'visitor_events',
+          'event_name, visitor_id, session_id, ref_code, ip_hash, metadata, created_at',
+        ),
+        pageAll('shares', '*'),
+        pageAll('referrals', '*'),
+        (async () => {
+          const { data, error } = await supabaseAdmin
+            .from('prize_claims')
+            .select('id, created_at, referrer_code, website, status')
+            .order('created_at', { ascending: false })
+            .limit(200);
+          if (error) throw error;
+          return (data || []) as Record<string, unknown>[];
+        })(),
+        (async () => {
+          const { data, error } = await supabaseAdmin
+            .from('referrer_links')
+            .select('referrer_code, status, created_at, deadline_at')
+            .order('created_at', { ascending: false })
+            .limit(10000);
+          if (error) throw error;
+          return (data || []) as Record<string, unknown>[];
+        })(),
+      ]);
+
+      const preview = computeOwnerFunnelDeskMetrics({
+        events,
+        shares,
+        referrals,
+        claims,
+        referrerLinks,
+        banners: bannersValue,
+        affiliates: contentMap.get('affiliates_program'),
+      });
+
+      let bannerEvents: Record<string, unknown>[] = [];
+      if (preview.liveBanner) {
+        const { data, error } = await supabaseAdmin
+          .from('banner_events')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(2000);
+        if (error) throw error;
+        bannerEvents = (data || []).map((row: Record<string, unknown>) => normalizeBannerEventRow(row));
+      }
+
+      const metrics = computeOwnerFunnelDeskMetrics({
+        events,
+        shares,
+        referrals,
+        claims,
+        referrerLinks,
+        banners: bannersValue,
+        affiliates: contentMap.get('affiliates_program'),
+        bannerEvents,
+      });
+
+      return new Response(JSON.stringify({ success: true, data: metrics }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ success: false, error: 'Unknown action' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
