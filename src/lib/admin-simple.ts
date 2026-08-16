@@ -1,18 +1,25 @@
 /**
- * First screen is the five-number desk. Extra owner tools stay behind More.
+ * First screen is the five-number desk. Extra owner tools stay behind a visible More.
  */
 
 const ATTR = 'data-vr-admin-simple';
-const DESK_ATTR = 'data-vr-admin-desk';
 const MORE_ATTR = 'data-vr-admin-more';
 const STATS_MORE_ATTR = 'data-vr-admin-stats-more';
 const MORE_BTN_ID = 'admin-more-tools-btn';
 const STATS_MORE_BTN_ID = 'admin-stats-more-btn';
 
-export const ADMIN_PRIMARY_TABS = [0] as const;
-export const ADMIN_EXTRA_TABS = [1, 2, 3, 4, 5, 6] as const;
+export const ADMIN_PRIMARY_TABS = [0, 2, 3] as const;
+export const ADMIN_EXTRA_TABS = [1, 4, 5, 6] as const;
 
-const DESK_COACH = 'Land -> get a link -> share -> lock.';
+const TAB_COACH: Record<number, string> = {
+  0: 'Land -> get a link -> share -> lock.',
+  1: 'How people send links (WhatsApp, copy, and more).',
+  2: 'Change the words and pictures on the public site.',
+  3: 'People asking to put their site on the homepage.',
+  4: 'Make the site text easier to read.',
+  5: 'Auto helper that tweaks the site to get more shares.',
+  6: 'People you pay when a visitor they send taps Get my link.',
+};
 
 export function isAdminExtraTab(tab: number): boolean {
   return (ADMIN_EXTRA_TABS as readonly number[]).includes(tab);
@@ -49,9 +56,11 @@ export function setAdminMore(open: boolean): void {
   }
 }
 
-export function syncAdminTabCoach(_tab?: number): void {
+export function syncAdminTabCoach(tab?: number): void {
   const el = document.getElementById('admin-tab-coach');
-  if (el) el.textContent = DESK_COACH;
+  if (!el) return;
+  const key = typeof tab === 'number' && Number.isFinite(tab) ? tab : 0;
+  el.textContent = TAB_COACH[key] || TAB_COACH[0];
 }
 
 function wireAdminMoreButton(): void {
@@ -71,11 +80,13 @@ function wireAdminMoreButton(): void {
 export function initAdminDesk(): void {
   const root = document.documentElement;
   root.setAttribute(ATTR, '1');
-  root.setAttribute(DESK_ATTR, '1');
+  root.removeAttribute('data-vr-admin-desk');
   root.removeAttribute(STATS_MORE_ATTR);
   wireAdminMoreButton();
   setAdminMore(isAdminMoreOpen());
-  syncAdminTabCoach();
+  syncAdminTabCoach(0);
+  const more = document.getElementById(MORE_BTN_ID);
+  if (more) more.removeAttribute('hidden');
   const statsMore = document.getElementById(STATS_MORE_BTN_ID);
   if (statsMore) statsMore.setAttribute('hidden', 'true');
 }
