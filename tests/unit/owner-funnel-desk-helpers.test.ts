@@ -1,198 +1,241 @@
 import { describe, expect, it } from 'vitest';
+import { computeFunnelTotals } from '../../src/admin/visitor-funnel-stats-helpers';
 import {
-  closeStaleJuneHomepageBanners,
-  computeDiedWaiting,
+  assembleOwnerFunnelDeskFromServer,
   computeOwnerFunnelDeskMetrics,
   formatOwnerRate,
-  isStaleJuneHomepageBanner,
-  parseDeskBanners,
+  isDeskVerifiedShare,
+  isLockedReferrer,
+  parseOwnerFunnelDeskCounts,
+  resolveOwnerFunnelVia,
 } from '../../src/admin/owner-funnel-desk-helpers';
 import { renderOwnerFunnelDeskView } from '../../src/admin/owner-funnel-desk';
 
 const now = Date.parse('2026-08-16T18:00:00Z');
 
 function landing(id: string, extra: Record<string, unknown> = {}) {
-  return { event_name: 'SiteLanding', visitor_id: id, created_at: '2026-08-16T10:00:00Z', ...extra };
+  return {
+    event_name: 'SiteLanding',
+    visitor_id: id,
+    created_at: '2026-08-16T10:00:00Z',
+    ...extra,
+  };
 }
 function getLink(id: string, extra: Record<string, unknown> = {}) {
-  return { event_name: 'GetReferralLink', visitor_id: id, created_at: '2026-08-16T11:00:00Z', ...extra };
-}
-function share(id: string, platform: string) {
   return {
-    event_name: 'ShareReferral',
+    event_name: 'GetReferralLink',
     visitor_id: id,
-    created_at: '2026-08-16T12:00:00Z',
-    metadata: { platform },
+    created_at: '2026-08-16T11:00:00Z',
+    ...extra,
   };
 }
 
 describe('owner funnel desk metrics', () => {
-  it('formats rates and never uses claims/landings', () => {
-    expect(formatOwnerRate(2, 4)).toBe('50.0%');
-    expect(formatOwnerRate(0, 0)).toBe('—');
+  it('counts five numbers: unique landings, unique get-link, verified shares, unique locked, get-link rate', () => {
+    expect(formatOwnerRate(1, 2)).toBe('50.0%');
+    expect(formatOwnerRate(0, 0)).toBe('0%');
+
     const metrics = computeOwnerFunnelDeskMetrics({
       events: [
-        landing('a'),
-        landing('b'),
+        landing('a', { metadata: { path: '/' } }),
+        landing('a', { created_at: '2026-08-16T10:05:00Z' }),
+        landing('b', { ref_code: 'VIRAL-REAL1', metadata: { path: '/r/VIRAL-REAL1' } }),
         getLink('a'),
-        share('a', 'whatsapp'),
-        share('a', 'copy'),
+        getLink('a', { created_at: '2026-08-16T11:10:00Z' }),
+        { event_name: 'CopyReferralLink', visitor_id: 'a', created_at: '2026-08-16T12:00:00Z' },
         { event_name: 'SubmitPrizeClaim', visitor_id: 'a', created_at: '2026-08-16T13:00:00Z' },
       ],
       shares: [
-        { platform: 'whatsapp', referrer_code: 'VIRAL-REAL1' },
-        { platform: 'copy', referrer_code: 'VIRAL-REAL1' },
+        { platform: 'native', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:00:00Z' },
+        { platform: 'copy', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:01:00Z' },
+        { platform: 'whatsapp', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:02:00Z' },
       ],
-      referrals: [{ referrer_code: 'VIRAL-REAL1', referred_ip: '8.8.8.8', user_agent: 'Mozilla' }],
-      claims: [{ status: 'pending' }, { status: 'approved' }],
+      referrals: [
+        {
+          referrer_code: 'VIRAL-REAL1',
+          referred_code: 'VIRAL-FRIEND1',
+          created_at: '2026-08-16T12:30:00Z',
+          referred_ip: '8.8.8.8',
+          user_agent: 'Mozilla',
+        },
+        {
+          referrer_code: 'VIRAL-REAL1',
+          created_at: '2026-08-16T13:00:00Z',
+          referred_ip: '9.9.9.9',
+          user_agent: 'Mozilla',
+        },
+      ],
+      referrerLinks: [
+        { referrer_code: 'VIRAL-REAL1', status: 'active', created_at: '2026-08-16T12:30:00Z' },
+        { referrer_code: 'VIRAL-WAIT', status: 'pending_share', created_at: '2026-08-16T12:00:00Z' },
+        { referrer_code: 'VIRAL-OLD', status: 'expired', created_at: '2026-08-10T12:00:00Z' },
+      ],
       now,
     });
+
     expect(metrics.landings).toBe(2);
     expect(metrics.getLink).toBe(1);
-    expect(metrics.getLinkRate).toBe('50.0%');
     expect(metrics.share).toBe(1);
-    expect(metrics.shareRate).toBe('100.0%');
-    expect(metrics.lock).toBe(1);
-    expect(metrics.lockRate).toBe('100.0%');
-    expect(metrics.heroGetLinkRate).toBe('50.0%');
-    expect(metrics.heroLockRate).toBe('100.0%');
-    expect(metrics.heroGetLinkRate).not.toBe('50.0%X');
-    expect(metrics.pendingClaims).toBe(1);
-    expect(metrics.heroGetLinkRate).toBe(metrics.getLinkRate);
+    expect(metrics.locked).toBe(1);
+    expect(metrics.getLinkRate).toBe('50.0%');
+    expect(metrics.windowDays).toBe(7);
+    expect(metrics.feed.some((row) => row.kind === 'locked' && row.code === 'VIRAL-REAL1')).toBe(true);
+    expect(metrics.feed.some((row) => row.kind === 'locked' && row.friendCode === 'VIRAL-FRIEND1')).toBe(true);
+    expect(metrics.feed.some((row) => row.label === 'Landed')).toBe(true);
+    expect(metrics.feed.some((row) => row.label === 'Got a link')).toBe(true);
+    expect(metrics.feed.some((row) => row.label === 'Shared')).toBe(true);
+    expect(JSON.stringify(metrics)).not.toMatch(/8\.8\.8\.8|9\.9\.9\.9/);
   });
 
-  it('excludes copy shares and test/owner locks', () => {
-    const metrics = computeOwnerFunnelDeskMetrics({
-      events: [landing('a'), getLink('a'), share('a', 'copy')],
-      shares: [{ platform: 'copy', referrer_code: 'VIRAL-REAL1' }],
-      referrals: [
-        { referrer_code: 'VIRAL-SMOKETEST', referred_ip: '1.1.1.1' },
-        { referrer_code: 'VIRAL-REAL1', referred_ip: '161.38.136.60' },
-      ],
-      now,
-    });
-    expect(metrics.share).toBe(0);
-    expect(metrics.lock).toBe(0);
-  });
-
-  it('counts died waiting from expired / 48h-old unlocked links', () => {
-    const died = computeDiedWaiting({
-      getLinkEvents: [getLink('old', { created_at: '2026-08-10T10:00:00Z' })],
-      referrals: [],
-      referrerLinks: [
-        { referrer_code: 'VIRAL-WAIT1', status: 'expired', created_at: '2026-08-10T10:00:00Z' },
-        { referrer_code: 'VIRAL-WAIT2', status: 'pending_share', created_at: '2026-08-10T10:00:00Z' },
-        { referrer_code: 'VIRAL-LIVE1', status: 'active', created_at: '2026-08-10T10:00:00Z' },
-        { referrer_code: 'VIRAL-SMOKETEST', status: 'expired', created_at: '2026-08-10T10:00:00Z' },
-      ],
-      now,
-    });
-    expect(died).toBe(2);
-  });
-
-  it('falls back to aged get-link without a lock when link rows are missing', () => {
-    const died = computeDiedWaiting({
-      getLinkEvents: [
-        getLink('old', {
-          created_at: '2026-08-10T10:00:00Z',
-          metadata: { referrer_code: 'VIRAL-WAIT1' },
-        }),
-        getLink('locked', {
-          created_at: '2026-08-10T10:00:00Z',
-          metadata: { referrer_code: 'VIRAL-LIVE1' },
-        }),
-        getLink('fresh', { created_at: '2026-08-16T17:00:00Z' }),
-      ],
-      referrals: [{ referrer_code: 'VIRAL-LIVE1', referred_ip: '8.8.8.8', user_agent: 'Mozilla' }],
-      referrerLinks: [],
-      now,
-    });
-    expect(died).toBe(1);
-  });
-
-  it('counts promoter links plus credited friend Get-links', () => {
+  it('excludes owner IP, test codes, webdriver, copy, and clipboard', () => {
     const metrics = computeOwnerFunnelDeskMetrics({
       events: [
-        getLink('p1', { metadata: { aff_code: 'ALICE' } }),
-        getLink('p1b', { metadata: { aff_code: 'ALICE' } }),
-        getLink('other'),
+        landing('owner', { metadata: { client_ip: '161.38.136.60' } }),
+        landing('bot', { metadata: { webdriver: true } }),
+        landing('ok', { metadata: { client_ip: '8.8.8.8' } }),
+        getLink('ok'),
+        {
+          event_name: 'SiteLanding',
+          visitor_id: 'e2e',
+          ref_code: 'VIRAL-DEMOCODE',
+          created_at: '2026-08-16T10:00:00Z',
+        },
       ],
-      affiliates: {
-        affiliates: [{ code: 'ALICE', name: 'Alice', created_at: '2026-08-01T00:00:00Z', active: true }],
-      },
+      shares: [
+        { platform: 'copy', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:00:00Z' },
+        { platform: 'discord', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:01:00Z' },
+        { platform: 'native', referrer_code: 'VIRAL-SMOKETEST', created_at: '2026-08-16T12:02:00Z' },
+      ],
+      referrals: [
+        { referrer_code: 'VIRAL-SMOKETEST', referred_ip: '1.1.1.1', created_at: '2026-08-16T12:00:00Z' },
+        { referrer_code: 'VIRAL-REAL1', referred_ip: '161.38.136.60', created_at: '2026-08-16T12:00:00Z' },
+      ],
       now,
     });
-    expect(metrics.promoterLinks).toBe(1);
-    expect(metrics.creditedGetLinks).toBe(2);
+    expect(metrics.landings).toBe(1);
+    expect(metrics.getLink).toBe(1);
+    expect(metrics.share).toBe(0);
+    expect(metrics.locked).toBe(0);
   });
 
-  it('closes June #1 stale banners and hides CTR unless another banner is live', () => {
-    const banners = parseDeskBanners([
-      {
-        imageUrl: 'https://cdn.example/june.png',
-        redirectUrl: 'https://winner.example',
-        label: 'June #1',
-        enabled: true,
-      },
-      {
-        imageUrl: 'https://cdn.example/fresh.png',
-        redirectUrl: 'https://fresh.example',
-        label: 'Live winner',
-        enabled: true,
-      },
-    ]);
-    expect(isStaleJuneHomepageBanner(banners[0]!)).toBe(true);
-    expect(isStaleJuneHomepageBanner(banners[1]!)).toBe(false);
-    const closed = closeStaleJuneHomepageBanners(banners);
-    expect(closed.closed).toHaveLength(1);
-    expect(closed.banners[0]?.enabled).toBe(false);
-    expect(closed.banners[1]?.enabled).toBe(true);
+  it('does not count pending or expired links as locked without a referral', () => {
+    expect(isLockedReferrer({ status: 'pending_share', referralCount: 0 })).toBe(false);
+    expect(isLockedReferrer({ status: 'expired', referralCount: 0 })).toBe(false);
+    expect(isLockedReferrer({ status: 'active', referralCount: 0 })).toBe(true);
+    expect(isLockedReferrer({ status: 'pending_share', referralCount: 1 })).toBe(true);
 
-    const juneOnly = computeOwnerFunnelDeskMetrics({
-      banners: [banners[0]],
-      bannerEvents: [
-        { type: 'impression', label: 'June #1', redirect_url: 'https://winner.example' },
-        { type: 'click', label: 'June #1', redirect_url: 'https://winner.example' },
+    const metrics = computeOwnerFunnelDeskMetrics({
+      referrerLinks: [
+        { referrer_code: 'VIRAL-WAIT', status: 'pending_share', created_at: '2026-08-16T12:00:00Z' },
+        { referrer_code: 'VIRAL-DEAD', status: 'expired', created_at: '2026-08-16T12:00:00Z' },
+        { referrer_code: 'VIRAL-LIVE', status: 'active', created_at: '2026-08-16T12:00:00Z' },
       ],
       now,
     });
-    expect(juneOnly.staleJuneBanners).toHaveLength(1);
-    expect(juneOnly.liveBanner).toBe(false);
-    expect(juneOnly.bannerCtr).toBeNull();
-
-    const withLive = computeOwnerFunnelDeskMetrics({
-      banners,
-      bannerEvents: [
-        { type: 'impression', label: 'Live winner', redirect_url: 'https://fresh.example' },
-        { type: 'impression', label: 'Live winner', redirect_url: 'https://fresh.example' },
-        { type: 'click', label: 'Live winner', redirect_url: 'https://fresh.example' },
-      ],
-      now,
-    });
-    expect(withLive.liveBanner).toBe(true);
-    expect(withLive.bannerCtr?.impressions).toBe(2);
-    expect(withLive.bannerCtr?.clicks).toBe(1);
-    expect(withLive.bannerCtr?.ctr).toBe('50.0%');
+    expect(metrics.locked).toBe(1);
   });
 
-  it('renders the seven tiles and hero rates, not claims/landings', () => {
+  it('ignores events older than 7 days', () => {
+    const metrics = computeOwnerFunnelDeskMetrics({
+      events: [
+        landing('old', { created_at: '2026-08-01T10:00:00Z' }),
+        landing('new', { created_at: '2026-08-16T10:00:00Z' }),
+        getLink('old', { created_at: '2026-08-01T11:00:00Z' }),
+      ],
+      now,
+    });
+    expect(metrics.landings).toBe(1);
+    expect(metrics.getLink).toBe(0);
+    expect(metrics.getLinkRate).toBe('0.0%');
+  });
+
+  it('labels via as direct, friend /r/, or promoter /a/', () => {
+    expect(resolveOwnerFunnelVia({ metadata: { path: '/' } })).toBe('direct');
+    expect(resolveOwnerFunnelVia({ ref_code: 'VIRAL-A', metadata: { path: '/r/VIRAL-A' } })).toBe('friend');
+    expect(resolveOwnerFunnelVia({ metadata: { path: '/a/ALICE', aff_code: 'ALICE' } })).toBe('promoter');
+    expect(isDeskVerifiedShare('native')).toBe(true);
+    expect(isDeskVerifiedShare('copy')).toBe(false);
+    expect(isDeskVerifiedShare('copy-message')).toBe(false);
+    expect(isDeskVerifiedShare('first_referral')).toBe(false);
+  });
+
+  it('renders five tiles and one feed, never seven-tile leftovers', () => {
     const el = document.createElement('div');
     const metrics = computeOwnerFunnelDeskMetrics({
-      events: [landing('a'), landing('b'), getLink('a'), share('a', 'whatsapp')],
-      referrals: [{ referrer_code: 'VIRAL-REAL1', referred_ip: '8.8.8.8', user_agent: 'Mozilla' }],
-      claims: [{ status: 'pending' }],
+      events: [
+        landing('a'),
+        landing('b', { ref_code: 'VIRAL-REAL1', metadata: { path: '/r/VIRAL-REAL1' } }),
+        getLink('a'),
+      ],
+      shares: [{ platform: 'native', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:00:00Z' }],
+      referrals: [
+        {
+          referrer_code: 'VIRAL-REAL1',
+          referred_code: 'VIRAL-FRIEND1',
+          created_at: '2026-08-16T12:30:00Z',
+          referred_ip: '8.8.8.8',
+          user_agent: 'Mozilla',
+        },
+      ],
+      referrerLinks: [{ referrer_code: 'VIRAL-REAL1', status: 'active', created_at: '2026-08-16T12:30:00Z' }],
       now,
     });
     renderOwnerFunnelDeskView(el, metrics);
-    expect(el.textContent).toMatch(/Hero conversion/i);
-    expect(el.textContent).toMatch(/Get-link 50\.0%/);
-    expect(el.textContent).toMatch(/Lock 100\.0%/);
+    expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(5);
     expect(el.textContent).toMatch(/Landings/);
-    expect(el.textContent).toMatch(/Died waiting/);
-    expect(el.textContent).toMatch(/Promoters/);
-    expect(el.textContent).toMatch(/Claims/);
-    expect(el.textContent).toMatch(/Copy is not success/);
-    expect(el.textContent).not.toMatch(/Viral Power|quests|A-B/i);
-    expect(el.querySelectorAll('article').length).toBe(7);
+    expect(el.textContent).toMatch(/Get-link/);
+    expect(el.textContent).toMatch(/Share/);
+    expect(el.textContent).toMatch(/Locked/);
+    expect(el.textContent).toMatch(/Get-link rate/);
+    expect(el.textContent).toMatch(/50\.0%/);
+    expect(el.textContent).toMatch(/Landed/);
+    expect(el.textContent).toMatch(/Got a link/);
+    expect(el.textContent).toMatch(/Shared/);
+    expect(el.textContent).toMatch(/VIRAL-REAL1/);
+    expect(el.textContent).toMatch(/VIRAL-FRIEND1/);
+    expect(el.textContent).toMatch(/friend's \/r\//);
+    expect(el.querySelector('[data-owner-desk-tiles]')?.textContent).not.toMatch(/Died waiting|Promoters|Claims|Hero conversion|banner CTR/i);
+    expect(el.innerHTML).not.toContain('8.8.8.8');
+    expect(el.innerHTML).not.toMatch(/LOCAL/i);
+  });
+
+  it('shows can’t load when the server misses', () => {
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(
+      el,
+      { windowDays: 7, landings: 0, getLink: 0, share: 0, locked: 0, getLinkRate: '0%', feed: [] },
+      'Admin session required',
+    );
+    expect(el.textContent).toMatch(/can.t load/i);
+    expect(el.textContent).not.toMatch(/Died waiting|Promoters|Claims/);
+  });
+
+  it('takes tile counts from the RPC, not a paged event dump', () => {
+    expect(parseOwnerFunnelDeskCounts(null)).toBeNull();
+    expect(parseOwnerFunnelDeskCounts({ landings: 1 })).toBeNull();
+    const assembled = assembleOwnerFunnelDeskFromServer({
+      counts: { landings: 99, get_link: 40, share: 7, locked: 3, window_days: 7 },
+      events: [landing('a'), getLink('a')],
+      shares: [],
+      referrals: [],
+      now,
+    });
+    expect(assembled).not.toBeNull();
+    expect(assembled!.landings).toBe(99);
+    expect(assembled!.getLink).toBe(40);
+    expect(assembled!.share).toBe(7);
+    expect(assembled!.locked).toBe(3);
+    expect(assembled!.getLinkRate).toBe('40.4%');
+    expect(assembleOwnerFunnelDeskFromServer({ counts: null, events: [landing('a')] })).toBeNull();
+  });
+
+  it('does not use computeFunnelTotals (claims/landings) as the desk conversion', () => {
+    const claimsOverLandings = '20.0%';
+    const desk = assembleOwnerFunnelDeskFromServer({
+      counts: { landings: 50, get_link: 20, share: 0, locked: 0 },
+    });
+    expect(desk!.getLinkRate).toBe('40.0%');
+    expect(desk!.getLinkRate).not.toBe(claimsOverLandings);
   });
 });
+

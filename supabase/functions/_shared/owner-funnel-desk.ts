@@ -1,71 +1,85 @@
-/**
- * Owner funnel desk — server-side loop metrics.
- * Unique people, not event spam. Copy is not a share. Claims are not conversion.
+﻿/**
+ * Owner funnel desk — five numbers + one feed.
+ * Landings / Get-link / Share / Locked / Get-link rate.
+ * Copy, clipboard, and intent-open are not shares. Pending/expired are not lock.
  */
 
 import { isTestReferralRecord, isTestReferrerCode } from './test-referral.ts';
 import { filterTestVisitorFunnelEvents } from './visitor-funnel-test.ts';
-import { eventAffiliateCode, parseAffiliatesProgram } from './affiliate.ts';
+import {
+  isVerifiedSharePlatform,
+  LOCK_PLATFORM_FIRST_REFERRAL,
+  normalizeSharePlatform,
+} from './referrer-share-deadline.ts';
 
-export const OWNER_FUNNEL_LOCK_MS = 48 * 60 * 60 * 1000;
+export const OWNER_FUNNEL_WINDOW_DAYS = 7;
+export const OWNER_FUNNEL_FEED_LIMIT = 40;
+
+export type OwnerFunnelVia = 'direct' | 'friend' | 'promoter';
+export type OwnerFunnelFeedKind = 'landed' | 'got_link' | 'shared' | 'locked';
+
+export type OwnerFunnelFeedRow = {
+  kind: OwnerFunnelFeedKind;
+  label: 'Landed' | 'Got a link' | 'Shared' | 'Locked';
+  at: string;
+  via: OwnerFunnelVia;
+  viaLabel: string;
+  code?: string;
+  friendCode?: string;
+};
+
+export type OwnerFunnelDeskMetrics = {
+  windowDays: number;
+  landings: number;
+  getLink: number;
+  share: number;
+  locked: number;
+  getLinkRate: string;
+  feed: OwnerFunnelFeedRow[];
+};
 
 export type OwnerFunnelEvent = Record<string, unknown>;
 export type OwnerFunnelShareRow = Record<string, unknown>;
 export type OwnerFunnelReferralRow = Record<string, unknown>;
-export type OwnerFunnelClaimRow = Record<string, unknown>;
 export type OwnerFunnelLinkRow = Record<string, unknown>;
-export type OwnerFunnelBannerEvent = Record<string, unknown>;
 
-export type DeskBanner = {
-  imageUrl: string;
-  redirectUrl: string;
-  label?: string;
-  enabled?: boolean;
-  weight?: number;
-  [key: string]: unknown;
+const FEED_LABEL: Record<OwnerFunnelFeedKind, OwnerFunnelFeedRow['label']> = {
+  landed: 'Landed',
+  got_link: 'Got a link',
+  shared: 'Shared',
+  locked: 'Locked',
 };
 
-export type OwnerFunnelBannerCtr = {
-  label: string;
-  impressions: number;
-  clicks: number;
-  ctr: string;
-};
+export function ownerFunnelCutoffIso(
+  now = Date.now(),
+  days = OWNER_FUNNEL_WINDOW_DAYS,
+): string {
+  return new Date(now - days * 24 * 60 * 60 * 1000).toISOString();
+}
 
-export type OwnerFunnelDeskMetrics = {
-  landings: number;
-  getLink: number;
-  getLinkRate: string;
-  share: number;
-  shareRate: string;
-  lock: number;
-  lockRate: string;
-  diedWaiting: number;
-  promoterLinks: number;
-  creditedGetLinks: number;
-  pendingClaims: number;
-  liveBanner: boolean;
-  liveBannerLabel: string;
-  heroGetLinkRate: string;
-  heroLockRate: string;
-  bannerCtr: OwnerFunnelBannerCtr | null;
-  staleJuneBanners: DeskBanner[];
-};
+export function inOwnerFunnelWindow(
+  iso: string | undefined,
+  cutoffIso: string,
+): boolean {
+  if (!iso) return false;
+  const t = Date.parse(iso);
+  return Number.isFinite(t) && t >= Date.parse(cutoffIso);
+}
 
 function eventName(event: OwnerFunnelEvent): string {
   return String(event.event_name || event.eventName || '').trim();
 }
 
-function visitorKey(event: OwnerFunnelEvent): string {
-  return (
-    String(event.visitor_id || event.visitorId || '').trim() ||
-    String(event.ip_hash || event.ipHash || '').trim()
-  );
+function visitorId(event: OwnerFunnelEvent): string {
+  return String(event.visitor_id || event.visitorId || '').trim();
+}
+
+function createdIso(row: Record<string, unknown>): string {
+  return String(row.created_at || row.createdAt || row.timestamp || '').trim();
 }
 
 function createdMs(row: Record<string, unknown>): number {
-  const raw = row.created_at || row.createdAt || row.timestamp;
-  const t = raw ? Date.parse(String(raw)) : NaN;
+  const t = Date.parse(createdIso(row));
   return Number.isFinite(t) ? t : 0;
 }
 
@@ -87,37 +101,23 @@ function metadataRecord(event: OwnerFunnelEvent): Record<string, unknown> {
   return {};
 }
 
-function sharePlatform(row: Record<string, unknown>): string {
-  const meta = metadataRecord(row);
-  return String(meta.platform || row.platform || '').trim().toLowerCase();
-}
-
-function isCopyShare(row: Record<string, unknown>): boolean {
-  return sharePlatform(row) === 'copy';
-}
-
-function eventCode(event: OwnerFunnelEvent): string {
-  const meta = metadataRecord(event);
-  return String(meta.referrer_code || meta.code || event.ref_code || event.refCode || '')
-    .trim()
-    .toUpperCase();
+function normalizeCode(raw: unknown): string {
+  return String(raw || '').trim().toUpperCase();
 }
 
 export function formatOwnerRate(num: number, den: number): string {
-  if (!den || den <= 0) return '—';
+  if (!den || den <= 0) return '0%';
   return `${((num / den) * 100).toFixed(1)}%`;
 }
 
 export function uniqueVisitorsForEvent(
   events: readonly OwnerFunnelEvent[],
   name: string,
-  extra?: (event: OwnerFunnelEvent) => boolean,
 ): number {
   const ids = new Set<string>();
   for (const event of events) {
     if (eventName(event) !== name) continue;
-    if (extra && !extra(event)) continue;
-    const id = visitorKey(event);
+    const id = visitorId(event);
     if (id) ids.add(id);
   }
   return ids.size;
@@ -129,135 +129,133 @@ export function filterOwnerFunnelEvents(
   return filterTestVisitorFunnelEvents(events);
 }
 
-export function parseDeskBanners(raw: unknown): DeskBanner[] {
-  let value = raw;
-  if (typeof value === 'string' && value.trim()) {
-    try {
-      value = JSON.parse(value);
-    } catch {
-      return [];
-    }
-  }
-  if (!Array.isArray(value)) return [];
-  const out: DeskBanner[] = [];
-  for (const item of value) {
-    if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
-    const rec = item as Record<string, unknown>;
-    const imageUrl = String(rec.imageUrl || rec.image_url || '').trim();
-    const redirectUrl = String(rec.redirectUrl || rec.redirect_url || '').trim();
-    out.push({
-      ...rec,
-      imageUrl,
-      redirectUrl,
-      label: rec.label != null ? String(rec.label).trim() : undefined,
-      enabled: rec.enabled !== false,
-      weight: typeof rec.weight === 'number' && rec.weight > 0 ? Math.floor(rec.weight) : 1,
-    });
-  }
-  return out;
+export function resolveOwnerFunnelVia(row: Record<string, unknown>): OwnerFunnelVia {
+  const meta = metadataRecord(row);
+  const path = String(meta.path || row.path || '').trim();
+  const aff = String(meta.aff_code || meta.affCode || row.aff_code || '').trim();
+  const ref = String(row.ref_code || row.refCode || meta.ref_code || '').trim();
+  if (/^\/a\//i.test(path) || aff) return 'promoter';
+  if (/^\/r\//i.test(path) || ref) return 'friend';
+  return 'direct';
 }
 
-export function liveHomepageBanners(banners: readonly DeskBanner[]): DeskBanner[] {
-  return banners.filter(
-    (banner) =>
-      banner.enabled !== false && banner.imageUrl.length > 0 && banner.redirectUrl.length > 0,
+export function ownerFunnelViaLabel(via: OwnerFunnelVia): string {
+  if (via === 'promoter') return "promoter /a/";
+  if (via === 'friend') return "friend's /r/";
+  return 'direct';
+}
+
+const INTENT_PLATFORMS = new Set([
+  'whatsapp', 'boost-whatsapp', 'sms', 'twitter', 'x', 'linkedin', 'facebook',
+  'telegram', 'email', 'reddit', 'bluesky', 'threads', 'pinterest',
+]);
+
+export function isIntentSharePlatform(platform: string): boolean {
+  const p = normalizeSharePlatform(platform);
+  if (p === 'native') return false;
+  return INTENT_PLATFORMS.has(p) || p.startsWith('boost-');
+}
+
+function shareConfirmed(row: Record<string, unknown>): boolean {
+  const meta = metadataRecord(row);
+  const raw = row.confirmed ?? row.confirm_lock ?? row.confirmLock ?? meta.confirmed;
+  return raw === true || raw === 1 || raw === '1' || raw === 'true';
+}
+
+/** Verified record-share send. Not copy, clipboard, intent-open, or first_referral. */
+export function isDeskVerifiedShare(platformOrRow: string | Record<string, unknown>): boolean {
+  const row = typeof platformOrRow === 'string' ? { platform: platformOrRow } : platformOrRow;
+  const p = normalizeSharePlatform(sharePlatform(row));
+  if (!p || p === LOCK_PLATFORM_FIRST_REFERRAL) return false;
+  if (p === 'intent' || p === 'intent-open' || p === 'clipboard') return false;
+  if (!isVerifiedSharePlatform(p)) return false;
+  if (p === 'native') return true;
+  if (isIntentSharePlatform(p)) return shareConfirmed(row);
+  return true;
+}
+
+function sharePlatform(row: Record<string, unknown>): string {
+  const meta = metadataRecord(row);
+  return String(meta.platform || row.platform || '').trim();
+}
+
+function shareReferrerCode(row: Record<string, unknown>): string {
+  const direct = normalizeCode(row.referrer_code || row.referrerCode);
+  if (direct && direct !== 'UNKNOWN') return direct;
+  const link = String(row.referral_link || row.referralLink || '');
+  const match = link.match(/\/r\/([A-Za-z0-9_-]+)/i);
+  return match?.[1] ? match[1].toUpperCase() : '';
+}
+
+export function filterDeskShares(
+  shares: readonly OwnerFunnelShareRow[],
+): OwnerFunnelShareRow[] {
+  return shares.filter((row) => {
+    if (!isDeskVerifiedShare(row)) return false;
+    const code = shareReferrerCode(row);
+    if (!code || isTestReferrerCode(code)) return false;
+    return true;
+  });
+}
+
+export function filterDeskReferrals(
+  rows: readonly OwnerFunnelReferralRow[],
+): OwnerFunnelReferralRow[] {
+  return rows.filter((row) => !isTestReferralRecord(row));
+}
+
+export function isLockedReferrer(input: {
+  status?: string | null;
+  referralCount: number;
+}): boolean {
+  if (input.referralCount >= 1) return true;
+  return String(input.status || '').toLowerCase() === 'active';
+}
+
+function friendCodeFromReferral(
+  row: OwnerFunnelReferralRow,
+  getLinkEvents: readonly OwnerFunnelEvent[],
+): string {
+  const direct = normalizeCode(
+    row.referred_code || row.referredCode || row.visitor_code || row.visitorCode,
   );
-}
+  if (direct && !isTestReferrerCode(direct)) return direct;
 
-export function isStaleJuneHomepageBanner(banner: DeskBanner): boolean {
-  if (banner.enabled === false) return false;
-  const blob = `${banner.label || ''} ${banner.redirectUrl || ''} ${banner.imageUrl || ''}`.toLowerCase();
-  return /\bjune\b/.test(blob);
-}
+  const referrer = normalizeCode(row.referrer_code);
+  const at = createdMs(row);
+  if (!referrer || !at) return '';
 
-export function closeStaleJuneHomepageBanners(banners: readonly DeskBanner[]): {
-  banners: DeskBanner[];
-  closed: DeskBanner[];
-} {
-  const closed: DeskBanner[] = [];
-  const next = banners.map((banner) => {
-    if (!isStaleJuneHomepageBanner(banner)) return { ...banner };
-    closed.push(banner);
-    return { ...banner, enabled: false };
-  });
-  return { banners: next, closed };
-}
-
-export function computeDiedWaiting(input: {
-  getLinkEvents: readonly OwnerFunnelEvent[];
-  referrals: readonly OwnerFunnelReferralRow[];
-  referrerLinks: readonly OwnerFunnelLinkRow[];
-  now?: number;
-}): number {
-  const now = input.now ?? Date.now();
-  const lockCodes = new Set<string>();
-  for (const row of input.referrals) {
-    const code = String(row.referrer_code || '').trim().toUpperCase();
-    if (code) lockCodes.add(code);
-  }
-
-  const links = input.referrerLinks.filter((row) => {
-    const code = String(row.referrer_code || '').trim();
-    return !isTestReferrerCode(code);
-  });
-
-  if (links.length) {
-    return links.filter((row) => {
-      const status = String(row.status || '').toLowerCase();
-      if (status === 'active') return false;
-      if (status === 'expired') return true;
-      const created = createdMs(row);
-      return created > 0 && created + OWNER_FUNNEL_LOCK_MS <= now;
-    }).length;
-  }
-
-  const agedKeys = new Set<string>();
-  let lockedAged = 0;
-  for (const event of input.getLinkEvents) {
+  let best = '';
+  let bestDelta = Number.POSITIVE_INFINITY;
+  for (const event of getLinkEvents) {
     if (eventName(event) !== 'GetReferralLink') continue;
-    const created = createdMs(event);
-    if (!created || created + OWNER_FUNNEL_LOCK_MS > now) continue;
-    const key = visitorKey(event);
-    if (!key || agedKeys.has(key)) continue;
-    agedKeys.add(key);
-    const code = eventCode(event);
-    if (code && lockCodes.has(code)) lockedAged += 1;
+    if (normalizeCode(event.ref_code || event.refCode) !== referrer) continue;
+    const delta = Math.abs(createdMs(event) - at);
+    if (delta > 15 * 60_000 || delta >= bestDelta) continue;
+    const meta = metadataRecord(event);
+    const code = normalizeCode(meta.code || meta.my_code || meta.new_code);
+    if (code && code !== referrer && !isTestReferrerCode(code)) {
+      best = code;
+      bestDelta = delta;
+    }
   }
-  return Math.max(0, agedKeys.size - lockedAged);
+  return best;
 }
 
-function computeLiveBannerCtr(
-  live: readonly DeskBanner[],
-  bannerEvents: readonly OwnerFunnelBannerEvent[] | undefined,
-): OwnerFunnelBannerCtr | null {
-  if (!live.length || !bannerEvents?.length) return null;
-  const liveKeys = new Set<string>();
-  for (const banner of live) {
-    const label = (banner.label || '').trim();
-    const url = banner.redirectUrl;
-    if (label && url) liveKeys.add(`${label}|${url}`);
-    if (label) liveKeys.add(label);
-    if (url) liveKeys.add(url);
-  }
-  let impressions = 0;
-  let clicks = 0;
-  for (const row of bannerEvents) {
-    const label = String(row.label || row.banner_label || '').trim();
-    const url = String(row.redirect_url || row.redirectUrl || '').trim();
-    const key =
-      String(row.key || '').trim() || (label && url ? `${label}|${url}` : url || label);
-    if (liveKeys.size && !liveKeys.has(key) && !liveKeys.has(label) && !liveKeys.has(url)) {
-      continue;
-    }
-    const type = String(row.type || row.event_type || '').toLowerCase();
-    if (type === 'impression') impressions += 1;
-    else if (type === 'click') clicks += 1;
-  }
+function feedRow(
+  kind: OwnerFunnelFeedKind,
+  at: string,
+  via: OwnerFunnelVia,
+  extra: { code?: string; friendCode?: string } = {},
+): OwnerFunnelFeedRow {
   return {
-    label: live[0]?.label || 'Homepage banner',
-    impressions,
-    clicks,
-    ctr: formatOwnerRate(clicks, impressions),
+    kind,
+    label: FEED_LABEL[kind],
+    at,
+    via,
+    viaLabel: ownerFunnelViaLabel(via),
+    ...(extra.code ? { code: extra.code } : {}),
+    ...(extra.friendCode ? { friendCode: extra.friendCode } : {}),
   };
 }
 
@@ -265,73 +263,108 @@ export function computeOwnerFunnelDeskMetrics(input: {
   events?: readonly OwnerFunnelEvent[];
   shares?: readonly OwnerFunnelShareRow[];
   referrals?: readonly OwnerFunnelReferralRow[];
-  claims?: readonly OwnerFunnelClaimRow[];
   referrerLinks?: readonly OwnerFunnelLinkRow[];
-  banners?: unknown;
-  affiliates?: unknown;
-  bannerEvents?: readonly OwnerFunnelBannerEvent[];
   now?: number;
+  windowDays?: number;
 }): OwnerFunnelDeskMetrics {
-  const events = filterOwnerFunnelEvents(input.events || []);
-  const referrals = (input.referrals || []).filter((row) => !isTestReferralRecord(row));
-  const shares = (input.shares || []).filter((row) => {
-    if (isCopyShare(row)) return false;
-    const code = String(row.referrer_code || row.referrerCode || '').trim();
-    return !isTestReferrerCode(code);
+  const now = input.now ?? Date.now();
+  const windowDays = input.windowDays ?? OWNER_FUNNEL_WINDOW_DAYS;
+  const cutoff = ownerFunnelCutoffIso(now, windowDays);
+
+  const events = filterOwnerFunnelEvents(input.events || []).filter((event) =>
+    inOwnerFunnelWindow(createdIso(event), cutoff),
+  );
+  const shares = filterDeskShares(input.shares || []).filter((row) =>
+    inOwnerFunnelWindow(createdIso(row), cutoff),
+  );
+  const referrals = filterDeskReferrals(input.referrals || []).filter((row) =>
+    inOwnerFunnelWindow(createdIso(row), cutoff),
+  );
+  const links = (input.referrerLinks || []).filter((row) => {
+    const code = normalizeCode(row.referrer_code);
+    return !!code && !isTestReferrerCode(code);
   });
-  const claims = input.claims || [];
-  const banners = parseDeskBanners(input.banners);
-  const staleJuneBanners = banners.filter(isStaleJuneHomepageBanner);
-  const afterClose = closeStaleJuneHomepageBanners(banners).banners;
-  const live = liveHomepageBanners(afterClose);
-  const program = parseAffiliatesProgram(input.affiliates);
 
   const landings = uniqueVisitorsForEvent(events, 'SiteLanding');
   const getLink = uniqueVisitorsForEvent(events, 'GetReferralLink');
-  const shareFromEvents = uniqueVisitorsForEvent(events, 'ShareReferral', (event) => !isCopyShare(event));
-  const share = shareFromEvents > 0 ? shareFromEvents : shares.length;
-  const lock = referrals.length;
-  const diedWaiting = computeDiedWaiting({
-    getLinkEvents: events.filter((event) => eventName(event) === 'GetReferralLink'),
-    referrals,
-    referrerLinks: input.referrerLinks || [],
-    now: input.now,
-  });
+  const share = shares.length;
 
-  const promoterCodes = new Set(program.affiliates.map((row) => row.code));
-  const creditedIds = new Set<string>();
-  for (const event of events) {
-    if (eventName(event) !== 'GetReferralLink') continue;
-    const aff = eventAffiliateCode(event);
-    if (!aff || !promoterCodes.has(aff)) continue;
-    const id = visitorKey(event);
-    if (id) creditedIds.add(id);
+  const referralCount = new Map<string, number>();
+  for (const row of referrals) {
+    const code = normalizeCode(row.referrer_code);
+    if (!code) continue;
+    referralCount.set(code, (referralCount.get(code) || 0) + 1);
   }
 
-  const pendingClaims = claims.filter(
-    (row) => String(row.status || 'pending').toLowerCase() === 'pending',
-  ).length;
-  const liveBanner = live.length > 0;
-  const liveBannerLabel = live[0]?.label || (liveBanner ? 'Homepage banner' : '');
+  const linkByCode = new Map<string, OwnerFunnelLinkRow>();
+  for (const row of links) {
+    const code = normalizeCode(row.referrer_code);
+    if (code && !linkByCode.has(code)) linkByCode.set(code, row);
+  }
+
+  const lockedCodes = new Set<string>();
+  for (const [code, count] of referralCount) {
+    if (isLockedReferrer({ referralCount: count, status: linkByCode.get(code)?.status })) {
+      lockedCodes.add(code);
+    }
+  }
+  for (const [code, row] of linkByCode) {
+    if (String(row.status || '').toLowerCase() !== 'active') continue;
+    const lockAt = createdIso(row) || String(row.first_verified_share_at || '');
+    if (!inOwnerFunnelWindow(lockAt, cutoff) && !referralCount.has(code)) continue;
+    if (isLockedReferrer({ referralCount: referralCount.get(code) || 0, status: 'active' })) {
+      lockedCodes.add(code);
+    }
+  }
+
+  const getLinkEvents = events.filter((event) => eventName(event) === 'GetReferralLink');
+  const feed: OwnerFunnelFeedRow[] = [];
+
+  for (const event of events) {
+    const name = eventName(event);
+    const at = createdIso(event);
+    if (!at) continue;
+    const via = resolveOwnerFunnelVia(event);
+    if (name === 'SiteLanding') {
+      feed.push(feedRow('landed', at, via));
+    } else if (name === 'GetReferralLink') {
+      feed.push(feedRow('got_link', at, via));
+    }
+  }
+
+  for (const row of shares) {
+    const at = createdIso(row);
+    if (!at) continue;
+    feed.push(
+      feedRow('shared', at, resolveOwnerFunnelVia(row), {
+        code: shareReferrerCode(row) || undefined,
+      }),
+    );
+  }
+
+  for (const row of referrals) {
+    const at = createdIso(row);
+    const code = normalizeCode(row.referrer_code);
+    if (!at || !code || !lockedCodes.has(code)) continue;
+    const friendCode = friendCodeFromReferral(row, getLinkEvents);
+    const via = resolveOwnerFunnelVia({
+      ...row,
+      ref_code: code,
+      metadata: { path: '/r/' + code },
+    });
+    feed.push(feedRow('locked', at, via, { code, friendCode: friendCode || undefined }));
+  }
+
+  feed.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 
   return {
+    windowDays,
     landings,
     getLink,
-    getLinkRate: formatOwnerRate(getLink, landings),
     share,
-    shareRate: formatOwnerRate(share, getLink),
-    lock,
-    lockRate: formatOwnerRate(lock, getLink),
-    diedWaiting,
-    promoterLinks: program.affiliates.length,
-    creditedGetLinks: creditedIds.size,
-    pendingClaims,
-    liveBanner,
-    liveBannerLabel,
-    heroGetLinkRate: formatOwnerRate(getLink, landings),
-    heroLockRate: formatOwnerRate(lock, getLink),
-    bannerCtr: liveBanner ? computeLiveBannerCtr(live, input.bannerEvents) : null,
-    staleJuneBanners,
+    locked: lockedCodes.size,
+    getLinkRate: formatOwnerRate(getLink, landings),
+    feed: feed.slice(0, OWNER_FUNNEL_FEED_LIMIT),
   };
 }
 
@@ -410,3 +443,5 @@ export function stripOwnerFunnelPii(row: Record<string, unknown>): Record<string
   }
   return copy;
 }
+
+

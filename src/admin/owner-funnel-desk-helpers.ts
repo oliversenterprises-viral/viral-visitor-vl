@@ -11,6 +11,7 @@ export {
   formatOwnerRate,
   inOwnerFunnelWindow,
   isDeskVerifiedShare,
+  isIntentSharePlatform,
   isLockedReferrer,
   ownerFunnelCutoffIso,
   ownerFunnelViaLabel,

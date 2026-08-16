@@ -16,7 +16,7 @@ Treat `ADMIN_OWNER_PASSWORD` as a high-privilege secret. Never put it in a `VITE
 
 ## Dashboard
 
-One run-the-funnel desk after the owner password. Seven server-side tiles: landings, get-link, share (copy excluded), lock, died waiting (48h), promoters, claims. Hero conversion is get-link/landings then lock/get-link. Banner CTR appears only when a homepage banner is live. The June #1 banner is closed if still enabled.
+Five numbers + one feed after the owner password. Last 7 days; owner IP, test codes, and webdriver excluded. Tiles come from SQL RPC get_owner_funnel_desk_counts: Landings, Get-link, Share (verified send, not copy), Locked, Get-link rate (Get-link / Landings only). One feed: Landed · Got a link · Shared · Locked. Extra owner tools stay behind More. No Died waiting / Promoters / Claims tiles on the first screen.
 
 ## Prize / homepage-feature claims
 

@@ -3096,12 +3096,11 @@ html[data-vr-admin-desk]:not([data-vr-admin-more]) #admin-stats-more-btn {
   display: none !important;
 }
 
-/* One owner desk: hide the old tab pile + live extra chrome */
-html[data-vr-admin-desk] .admin-tab-bar,
-html[data-vr-admin-desk] #admin-tab-coach-row,
+/* One owner desk: hide the old tab pile until More tools */
+html[data-vr-admin-desk]:not([data-vr-admin-more]) .admin-tab-bar,
+html[data-vr-admin-desk]:not([data-vr-admin-more]) #admin-tab-coach-row,
 html[data-vr-admin-desk] #admin-live-hub,
 html[data-vr-admin-desk] #admin-pending-banner,
-html[data-vr-admin-desk] #admin-more-tools-btn,
 html[data-vr-admin-desk] #admin-stats-more-btn {
   display: none !important;
 }
