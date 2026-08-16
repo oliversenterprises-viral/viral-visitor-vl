@@ -31,7 +31,7 @@ describe('post-link first paint', () => {
 
   it('post-link stack is status + #31 share + existing clock only', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    const stack = sliceById(html, 'referral-section', 'visitor-legacy-toolkit');
+    const stack = sliceById(html, 'referral-section', 'my-stats');
     expect(stack).toContain('id="post-link-status"');
     expect(stack).toContain('id="post-link-status-title"');
     expect(stack).toContain('id="post-link-status-line"');
@@ -65,20 +65,21 @@ describe('post-link first paint', () => {
     }
   });
 
-  it('moved toolkit stays below the fold, not in the post-link stack', () => {
+  it('legacy toolkit is gone from the visitor homepage, not CSS-hidden', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    const toolkit = sliceById(html, 'visitor-legacy-toolkit', 'my-stats');
-    expect(toolkit).toContain('data-vr-below-fold');
-    expect(toolkit).toContain('id="viral-power-meter"');
-    expect(toolkit).toContain('id="share-buttons-panel"');
-    expect(toolkit).toContain('id="referral-qr-block"');
-    expect(html.indexOf('id="referral-section"')).toBeLessThan(html.indexOf('id="visitor-legacy-toolkit"'));
+    expect(html).not.toContain('id="visitor-legacy-toolkit"');
+    expect(html).not.toContain('id="viral-power-meter"');
+    expect(html).not.toContain('id="share-buttons-panel"');
+    expect(html).not.toContain('id="referral-qr-block"');
+    expect(html).not.toContain('id="daily-share-quest"');
+    expect(html).not.toContain('id="share-ab-wrap"');
+    expect(html).not.toContain('id="growth-command-center"');
+    expect(html).not.toContain('Step 2: tap COPY');
   });
 
-  it('has-link does not unhide the moved toolkit', () => {
+  it('has-link does not resurrect toolkit chrome', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
-    expect(css).toMatch(/html\[data-vr-has-link\] #visitor-legacy-toolkit/);
-    expect(css).toMatch(/html\[data-vr-post-link-one\] #visitor-legacy-toolkit/);
+    expect(css).not.toMatch(/#visitor-legacy-toolkit/);
     expect(css).toMatch(/html\[data-vr-has-link\] #funnel-journey/);
     expect(css).toMatch(/html\[data-vr-has-link\] #kid-more-tools-btn/);
     expect(css).toMatch(/html\[data-vr-post-link-status\] #post-link-heading/);
