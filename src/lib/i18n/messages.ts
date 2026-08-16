@@ -24,11 +24,11 @@ export const en = {
   'nav.get_link': 'Get link',
   'nav.lang': 'Language',
 
-  'hero.badge': 'WORLDWIDE • FREE',
-  'hero.title_line1': '#1 gets a homepage banner',
-  'hero.title_accent': 'for their site.',
+  'hero.badge': 'WORLDWIDE • FREE • NO SIGNUP',
+  'hero.title_line1': 'Win the homepage.',
+  'hero.title_accent': '#1 gets a banner for their site.',
   'hero.subtitle':
-    'Tap Get my free link. Send it. When a friend taps Get my link, you climb.',
+    'Tap Get my free link. A friend does the same. You climb.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',
   'hero.proof_no_email': 'No email',
@@ -36,7 +36,7 @@ export const en = {
   'hero.cta': 'Get my free link',
   'hero.cta_secondary': 'See leaderboard',
   'hero.trust':
-    'Free. No signup. No cash. Just send your link.',
+    'Free. No email. No cash. Recognition only.',
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 

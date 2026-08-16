@@ -8,12 +8,12 @@ import { parseRefFromLocation } from './referral-url';
 export const SEO_SITE_ORIGIN = 'https://www.viralrefer.app';
 
 export const HOMEPAGE_SEO = {
-  title: 'ViralRefer • #1 gets a free homepage banner',
+  title: 'Win the ViralRefer homepage — #1 gets a banner',
   description:
-    'Open this and tap Get my link. 30 seconds, no signup. Race for a homepage banner on ViralRefer.',
+    'Tap Get my link. 30 seconds, no signup. A friend does the same. You climb.',
   keywords:
     'referral program, viral marketing, free referral link, live leaderboard, homepage feature, worldwide, no signup',
-  ogImage: `${SEO_SITE_ORIGIN}/assets/og-homepage-banner.png`,
+  ogImage: `${SEO_SITE_ORIGIN}/assets/og-homepage-banner-v2.png`,
 } as const;
 
 export interface FaqEntry {

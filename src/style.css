@@ -425,6 +425,17 @@ html:not([data-vr-has-link]) #hero-telegram-helper-btn {
   display: none !important;
 }
 
+
+/* Lumina first screen: nothing else above the fold on a cold land */
+html:not([data-vr-has-link]) #hero-global-proof,
+html:not([data-vr-has-link]) #hero-global-regions,
+html:not([data-vr-has-link]) #hero-referred-social-proof,
+html:not([data-vr-has-link]) #hero-referred-trust-pack,
+html:not([data-vr-has-link]) #hero-prize-fomo,
+html:not([data-vr-has-link]) #hero-security-trust {
+  display: none !important;
+}
+
 /* Kid-simple: first paint — one button, no dash counters or extra chrome */
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #promoter-week-strip,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-promoter-cta,

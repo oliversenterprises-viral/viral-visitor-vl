@@ -24,11 +24,12 @@ describe('kid-simple first paint', () => {
   it('first screen is prize-first with one Get my free link CTA', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="daily-champion-strip"'));
-    expect(hero).toMatch(/#1 gets a homepage banner/);
-    expect(hero).toMatch(/for their site/);
-    expect(hero).toMatch(/Tap Get my free link\. Send it\. When a friend taps Get my link, you climb/);
+    expect(hero).toMatch(/Win the homepage/);
+    expect(hero).toMatch(/#1 gets a banner for their site/);
+    expect(hero).toMatch(/Tap Get my free link\. A friend does the same\. You climb/);
     expect(hero).toContain('id="hero-get-link-btn"');
     expect(hero).toContain('Get my free link');
+    expect(hero).toMatch(/Free\. No email\. No cash\. Recognition only/);
     expect(hero).not.toMatch(/Get a free link\./);
     expect(hero).not.toContain('See leaderboard');
     expect(hero).not.toContain('id="hero-leaderboard-btn"');
