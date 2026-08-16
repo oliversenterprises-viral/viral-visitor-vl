@@ -154,8 +154,11 @@ describe('owner funnel desk metrics', () => {
     expect(resolveOwnerFunnelVia({ ref_code: 'VIRAL-A', metadata: { path: '/r/VIRAL-A' } })).toBe('friend');
     expect(resolveOwnerFunnelVia({ metadata: { path: '/a/ALICE', aff_code: 'ALICE' } })).toBe('promoter');
     expect(isDeskVerifiedShare('native')).toBe(true);
+    expect(isDeskVerifiedShare('whatsapp')).toBe(true);
     expect(isDeskVerifiedShare('copy')).toBe(false);
     expect(isDeskVerifiedShare('copy-message')).toBe(false);
+    expect(isDeskVerifiedShare('clipboard')).toBe(false);
+    expect(isDeskVerifiedShare('intent-open')).toBe(false);
     expect(isDeskVerifiedShare('first_referral')).toBe(false);
   });
 

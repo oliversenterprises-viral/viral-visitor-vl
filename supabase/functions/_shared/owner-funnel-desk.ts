@@ -169,7 +169,7 @@ export function isDeskVerifiedShare(platformOrRow: string | Record<string, unkno
   if (!p || p === LOCK_PLATFORM_FIRST_REFERRAL) return false;
   if (p === 'intent' || p === 'intent-open' || p === 'clipboard') return false;
   if (!isVerifiedSharePlatform(p)) return false;
-  if (p === 'native') return true;
+  if (p === 'native' || p === 'whatsapp' || p === 'boost-whatsapp') return true;
   if (isIntentSharePlatform(p)) return shareConfirmed(row);
   return true;
 }
@@ -287,7 +287,12 @@ export function computeOwnerFunnelDeskMetrics(input: {
 
   const landings = uniqueVisitorsForEvent(events, 'SiteLanding');
   const getLink = uniqueVisitorsForEvent(events, 'GetReferralLink');
-  const share = shares.length;
+  const shareCodes = new Set<string>();
+  for (const row of shares) {
+    const code = shareReferrerCode(row);
+    if (code) shareCodes.add(code);
+  }
+  const share = shareCodes.size;
 
   const referralCount = new Map<string, number>();
   for (const row of referrals) {
@@ -304,7 +309,9 @@ export function computeOwnerFunnelDeskMetrics(input: {
 
   const lockedCodes = new Set<string>();
   for (const [code, count] of referralCount) {
-    if (isLockedReferrer({ referralCount: count, status: linkByCode.get(code)?.status })) {
+    const rawStatus = linkByCode.get(code)?.status;
+    const status = typeof rawStatus === 'string' ? rawStatus : undefined;
+    if (isLockedReferrer({ referralCount: count, status })) {
       lockedCodes.add(code);
     }
   }

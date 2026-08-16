@@ -2,7 +2,7 @@ import { setActiveTab } from '../ui';
 import { isAdminExtraTab, setAdminMore, syncAdminTabCoach } from '../lib/admin-simple';
 import { setAdminLiveActiveTab } from './admin-live-hub';
 import { renderOwnerFunnelDesk } from './owner-funnel-desk';
-import { renderReferralsTab, renderEditContentTab, renderPrizeClaimsTab } from './index';
+import { renderEditContentTab, renderPrizeClaimsTab } from './index';
 
 /** Guards against out-of-order tab renders when the user clicks quickly. */
 let tabRequestId = 0;

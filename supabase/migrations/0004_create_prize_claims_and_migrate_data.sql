@@ -31,8 +31,17 @@ CREATE TABLE IF NOT EXISTS public.prize_claims (
   reviewed_at timestamp with time zone
 );
 
--- Add primary key
-ALTER TABLE public.prize_claims ADD PRIMARY KEY (id);
+-- Add primary key only when 0001 did not already set one
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.prize_claims'::regclass
+      AND contype = 'p'
+  ) THEN
+    ALTER TABLE public.prize_claims ADD PRIMARY KEY (id);
+  END IF;
+END $$;
 
 -- 2. Add useful indexes
 CREATE INDEX IF NOT EXISTS idx_prize_claims_referrer_code ON public.prize_claims(referrer_code);
@@ -57,30 +66,37 @@ END $$;
 -- Column mapping:
 --   claims.website_url     → prize_claims.website
 --   claims.cashapp_cashtag → prize_claims.cashtag
-INSERT INTO public.prize_claims (
-  id,
-  created_at,
-  referrer_code,
-  website,
-  cashtag,
-  message,
-  status,
-  paid_at,
-  claimed_at,
-  rank_at_claim
-)
-SELECT 
-  id,
-  created_at,
-  referrer_code,
-  website_url,           -- mapped
-  cashapp_cashtag,       -- mapped
-  message,
-  status,
-  paid_at,
-  created_at,            -- backfill claimed_at with original creation date
-  1                      -- default rank (we can improve this later if needed)
-FROM public.claims;
+DO $$
+BEGIN
+  IF to_regclass('public.claims') IS NULL THEN
+    RAISE NOTICE 'skip 0004 claims copy — leftover public.claims not present';
+    RETURN;
+  END IF;
+  INSERT INTO public.prize_claims (
+    id,
+    created_at,
+    referrer_code,
+    website,
+    cashtag,
+    message,
+    status,
+    paid_at,
+    claimed_at,
+    rank_at_claim
+  )
+  SELECT
+    id,
+    created_at,
+    referrer_code,
+    website_url,
+    cashapp_cashtag,
+    message,
+    status,
+    paid_at,
+    created_at,
+    1
+  FROM public.claims;
+END $$;
 
 -- 5. Enable Row Level Security (we will add proper policies in 0005)
 ALTER TABLE public.prize_claims ENABLE ROW LEVEL SECURITY;

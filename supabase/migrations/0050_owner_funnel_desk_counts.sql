@@ -93,11 +93,11 @@ AS $$
       AND NOT public.is_owner_funnel_excluded_event(e.ref_code, e.ip_hash, e.metadata)
   ),
   verified_shares AS (
-    SELECT s.id
+    SELECT DISTINCT upper(btrim(s.referrer_code)) AS code
     FROM public.shares s, bounds b
     WHERE s.created_at >= b.cutoff
       AND public.is_owner_funnel_verified_share(s.platform)
-      AND lower(btrim(coalesce(s.platform, ''))) = 'native'
+      AND btrim(coalesce(s.referrer_code, '')) <> ''
       AND NOT public.is_test_referrer_code(s.referrer_code)
       AND upper(btrim(coalesce(s.referrer_code, ''))) !~ 'LIVECHK'
       AND upper(btrim(coalesce(s.referrer_code, ''))) !~ '^VIRAL-E2E'
@@ -145,7 +145,7 @@ REVOKE ALL ON FUNCTION public.get_owner_funnel_desk_counts(INTEGER) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_owner_funnel_desk_counts(INTEGER) FROM anon, authenticated;
 
 COMMENT ON FUNCTION public.get_owner_funnel_desk_counts(INTEGER) IS
-  'Owner desk tiles: COUNT DISTINCT landings/get-link, verified shares, unique locked codes. service_role only.';
+  'Owner desk tiles: DISTINCT landings/get-link visitors, unique referrer_code verified sends (native+WhatsApp, not copy/clipboard/intent-open), unique locked codes. service_role only.';
 
 
 
