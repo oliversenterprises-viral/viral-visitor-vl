@@ -340,6 +340,13 @@ export function applyGraceDeadlineFromServer(deadlineAt: string | null | undefin
  * Returns true when the code was purged.
  */
 export function enforceLocalShareDeadlineExpiry(myCode: string | null): boolean {
+  if (typeof document !== 'undefined' && (
+    document.documentElement.hasAttribute('data-vr-post-link-one') ||
+    document.documentElement.hasAttribute('data-vr-post-link-status')
+  )) {
+    renderShareDeadlineBanner();
+    return false;
+  }
   // Owner IP exempt codes never expire client-side
   if (isExemptCode(myCode)) {
     clearShareDeadlineState();

@@ -4367,9 +4367,10 @@ html[data-vr-has-link] [data-vr-declutter-post-link] {
 html[data-vr-post-link-one] #post-link-share:not(.hidden) {
   display: block;
 }
-html[data-vr-post-link-status] #post-link-heading {
-  display: none;
-}
+html[data-vr-post-link-status] #post-link-heading,
+html[data-vr-post-link-status] #post-link-sub,
+html[data-vr-post-link-status] #post-link-clock,
+html[data-vr-post-link-status] #post-link-helper,
 html[data-vr-post-link-status] #post-link-whisper {
   display: none;
 }
@@ -4394,6 +4395,17 @@ html[data-vr-post-link-status] #post-link-whisper {
 }
 html[data-vr-post-link-status='waiting'] #share-deadline-banner:not(.hidden) {
   display: block;
-  margin-top: 0.25rem;
-  text-align: left;
+  margin: 0.15rem auto 0.85rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  text-align: center;
+}
+.post-link-status__clock,
+html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: #fde68a;
+  text-align: center;
 }

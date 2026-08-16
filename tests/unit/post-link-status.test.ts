@@ -55,7 +55,7 @@ describe('post-link status', () => {
     expect(resolvePostLinkStatus()).toBe('in');
     renderPostLinkStatus();
     expect(document.getElementById('post-link-status-title')?.textContent).toBe("You're in.");
-    expect(document.getElementById('post-link-status-line')?.textContent).toMatch(/Get my link/);
+    expect(document.getElementById('post-link-status-line')?.textContent).toBe('Send this. A friend must tap Get my link.');
     expect(document.getElementById('share-deadline-banner')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('post-link-primary')).toBeTruthy();
   });
@@ -68,17 +68,30 @@ describe('post-link status', () => {
       deadlineAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
     });
     renderPostLinkStatus();
-    expect(document.getElementById('post-link-status-title')?.textContent).toMatch(/^Waiting/);
-    expect(document.getElementById('post-link-status-line')?.textContent).toMatch(/1 friend must tap Get my link/);
+    expect(document.getElementById('post-link-status-title')?.textContent).toBe('Waiting');
+    expect(document.getElementById('post-link-status-line')?.textContent).toBe('1 friend must tap Get my link');
     expect(document.getElementById('share-deadline-banner')?.classList.contains('hidden')).toBe(false);
     expect(document.querySelectorAll('#referral-section button').length).toBe(2);
+  });
+
+  it('expired clock stays Waiting and reads Time\'s up', () => {
+    writeShareDeadlineState({
+      code: 'VIRAL-TEST01',
+      status: 'pending_share',
+      createdAt: new Date(Date.now() - 50 * 60 * 60 * 1000).toISOString(),
+      deadlineAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    });
+    renderPostLinkStatus();
+    expect(document.getElementById('post-link-status-title')?.textContent).toBe('Waiting');
+    expect(document.getElementById('share-deadline-countdown')?.textContent).toBe("Time's up");
+    expect(document.getElementById('share-deadline-banner')?.classList.contains('hidden')).toBe(false);
   });
 
   it('Locked is quiet and hides the clock', () => {
     document.documentElement.setAttribute('data-vr-share-locked', '1');
     renderPostLinkStatus();
-    expect(document.getElementById('post-link-status-title')?.textContent).toMatch(/^Locked/);
-    expect(document.getElementById('post-link-status-line')?.textContent).toMatch(/tapped Get my link/);
+    expect(document.getElementById('post-link-status-title')?.textContent).toBe('Locked');
+    expect(document.getElementById('post-link-status-line')?.textContent).toBe("A friend tapped Get my link. You're on the board.");
     expect(document.getElementById('share-deadline-banner')?.classList.contains('hidden')).toBe(true);
   });
 });

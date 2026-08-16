@@ -4,8 +4,6 @@
  */
 
 import { msUntilDeadline, readShareDeadlineState } from './share-deadline';
-import { showToast } from '../ui';
-
 export const POST_LINK_STATUS_ATTR = 'data-vr-post-link-status';
 
 export type PostLinkStatus = 'in' | 'waiting' | 'locked';
@@ -115,15 +113,6 @@ export function renderPostLinkStatus(): void {
   );
 }
 
-function wireCopyToast(): void {
-  const copy = el(IDS.copy);
-  if (!copy || copy.dataset.vrStatusToast === '1') return;
-  copy.dataset.vrStatusToast = '1';
-  copy.addEventListener('click', () => {
-    showToast(POST_LINK_COPY_TOAST, 'info');
-  });
-}
-
 function observeLinkFlags(): void {
   if (typeof MutationObserver === 'undefined') return;
   const root = document.documentElement;
@@ -138,7 +127,6 @@ function observeLinkFlags(): void {
 }
 
 export function initPostLinkStatus(): void {
-  wireCopyToast();
   observeLinkFlags();
   renderPostLinkStatus();
   if (typeof window === 'undefined') return;
