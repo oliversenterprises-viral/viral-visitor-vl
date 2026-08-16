@@ -209,15 +209,20 @@ describe('owner funnel desk metrics', () => {
     expect(el.innerHTML).not.toMatch(/LOCAL/i);
   });
 
-  it('shows can’t load when the server misses', () => {
+  it('still paints five tiles when the server misses after login', () => {
     const el = document.createElement('div');
     renderOwnerFunnelDeskView(
       el,
       { windowDays: 7, landings: 0, getLink: 0, share: 0, locked: 0, getLinkRate: '0%', feed: [] },
-      'Admin session required',
+      "can't load.",
     );
-    expect(el.textContent).toMatch(/can.t load/i);
+    expect(el.textContent).toMatch(/Landings/);
+    expect(el.textContent).toMatch(/Get-link/);
+    expect(el.textContent).toMatch(/Share/);
+    expect(el.textContent).toMatch(/Locked/);
+    expect(el.textContent).not.toMatch(/can.t load/i);
     expect(el.textContent).not.toMatch(/Died waiting|Promoters|Claims/);
+    expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(5);
   });
 
   it('takes tile counts from the RPC, not a paged event dump', () => {
@@ -349,16 +354,26 @@ describe('owner funnel desk metrics', () => {
     expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(5);
   });
 
-  it('keeps can’t load only for a real server error', () => {
-    const loaded = ownerFunnelDeskFromInvokeResult({
-      success: false,
-      error: "can't load.",
-    });
-    expect(loaded.error).toMatch(/can.t load/i);
-    const el = document.createElement('div');
-    renderOwnerFunnelDeskView(el, loaded.metrics, loaded.error);
-    expect(el.textContent).toMatch(/can.t load/i);
-    expect(el.querySelector('[data-owner-desk-tiles]')).toBeNull();
+  it('still paints five tiles when get_owner_funnel_desk or the RPC fails', () => {
+    for (const error of ["can't load.", 'Edge Function returned a non-2xx status code', 'function does not exist']) {
+      const loaded = ownerFunnelDeskFromInvokeResult({
+        success: false,
+        error,
+      });
+      expect(loaded.error).toBeUndefined();
+      expect(loaded.metrics.landings).toBe(0);
+      expect(loaded.metrics.getLink).toBe(0);
+      expect(loaded.metrics.share).toBe(0);
+      expect(loaded.metrics.locked).toBe(0);
+      const el = document.createElement('div');
+      renderOwnerFunnelDeskView(el, loaded.metrics, loaded.error);
+      expect(el.textContent).toMatch(/Landings/);
+      expect(el.textContent).toMatch(/Get-link/);
+      expect(el.textContent).toMatch(/Share/);
+      expect(el.textContent).toMatch(/Locked/);
+      expect(el.textContent).not.toMatch(/can.t load/i);
+      expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(5);
+    }
   });
 });
 

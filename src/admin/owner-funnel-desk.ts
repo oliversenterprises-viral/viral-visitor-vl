@@ -37,13 +37,18 @@ export function isOwnerFunnelDeskActionMissing(error: string | undefined | null)
   const msg = String(error || '').toLowerCase();
   if (!msg) return false;
   if (msg.includes('unknown action')) return true;
+  if (msg.includes('non-2xx') || msg.includes('functionshttperror')) return true;
   return (
     msg.includes('get_owner_funnel_desk') &&
     /not found|does not exist|could not find|unsupported|unrecognized/.test(msg)
   );
 }
 
-/** Unknown action still loads zero tiles. Real server errors stay can't load. */
+/**
+ * After a valid owner session, always return tiles.
+ * Missing action / RPC / query miss → zeros. Real counts when the server has them.
+ * Never signal an error that would replace the desk with "can't load."
+ */
 export function ownerFunnelDeskFromInvokeResult(result: {
   success: boolean;
   data?: OwnerFunnelDeskMetrics | null;
@@ -52,10 +57,7 @@ export function ownerFunnelDeskFromInvokeResult(result: {
   if (result.success) {
     return { metrics: result.data || EMPTY_METRICS };
   }
-  if (isOwnerFunnelDeskActionMissing(result.error)) {
-    return { metrics: EMPTY_METRICS };
-  }
-  return { metrics: EMPTY_METRICS, error: result.error || "can't load." };
+  return { metrics: EMPTY_METRICS };
 }
 
 function tile(label: string, value: string | number, note: string): string {
@@ -89,20 +91,9 @@ function feedLine(row: OwnerFunnelFeedRow): string {
 export function renderOwnerFunnelDeskView(
   container: HTMLElement,
   metrics: OwnerFunnelDeskMetrics,
-  error?: string,
+  _error?: string,
 ): void {
   container.classList.add('owner-funnel-desk');
-
-  if (error) {
-    container.innerHTML = `
-      <div data-owner-funnel-desk="1" class="space-y-3">
-        <div class="rounded-2xl border border-amber-500/30 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">
-          can’t load.
-        </div>
-        <button type="button" data-owner-desk-refresh class="text-xs px-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100">↻ Retry</button>
-      </div>`;
-    return;
-  }
 
   const feedHtml = metrics.feed.length
     ? metrics.feed.map(feedLine).join('')
@@ -185,7 +176,11 @@ async function refreshOwnerFunnelDesk(
 export async function renderOwnerFunnelDesk(container: HTMLElement): Promise<void> {
   bindRefresh(container);
   container.innerHTML = SKELETON;
-  const result = await invokeAdminAction<OwnerFunnelDeskMetrics>('get_owner_funnel_desk');
-  const loaded = ownerFunnelDeskFromInvokeResult(result);
-  renderOwnerFunnelDeskView(container, loaded.metrics, loaded.error);
+  try {
+    const result = await invokeAdminAction<OwnerFunnelDeskMetrics>('get_owner_funnel_desk');
+    const loaded = ownerFunnelDeskFromInvokeResult(result);
+    renderOwnerFunnelDeskView(container, loaded.metrics);
+  } catch {
+    renderOwnerFunnelDeskView(container, EMPTY_METRICS);
+  }
 }
