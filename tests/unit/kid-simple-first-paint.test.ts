@@ -37,12 +37,25 @@ describe('kid-simple first paint', () => {
     expect(hero).not.toContain('Telegram');
     expect(hero).not.toContain('id="hero-telegram-helper-btn"');
     expect(hero).not.toContain('id="hero-leaderboard-link"');
+    expect(hero).not.toContain('id="promoter-week-strip"');
+    expect(hero).not.toContain('id="hero-promoter-cta"');
+    expect(hero).not.toContain('We want promoters');
+    expect(hero).not.toContain('We want affiliates');
+  });
+
+  it('keeps promoter chrome below the fold in #become-promoter', () => {
+    const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
+    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="daily-champion-strip"'));
+    const promoter = html.slice(html.indexOf('id="become-promoter"'), html.indexOf('id="faq"'));
+    expect(hero).not.toContain('id="promoter-week-strip"');
+    expect(promoter).toContain('id="promoter-week-strip"');
+    expect(promoter).toContain('We want affiliates');
   });
 
   it('hides promoter chrome and unhydrated dash-proof on first viewport', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #promoter-week-strip/);
-    expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #hero-promoter-cta/);
+    expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #vr-verified-total/);
     expect(css).toMatch(/#vr-verified-total:not\(\.vr-verified-total--ready\)/);
   });
 

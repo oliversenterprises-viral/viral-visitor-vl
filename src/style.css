@@ -432,7 +432,8 @@ html:not([data-vr-has-link]) #hero-global-regions,
 html:not([data-vr-has-link]) #hero-referred-social-proof,
 html:not([data-vr-has-link]) #hero-referred-trust-pack,
 html:not([data-vr-has-link]) #hero-prize-fomo,
-html:not([data-vr-has-link]) #hero-security-trust {
+html:not([data-vr-has-link]) #hero-security-trust,
+html:not([data-vr-has-link]) #vr-verified-total {
   display: none !important;
 }
 
