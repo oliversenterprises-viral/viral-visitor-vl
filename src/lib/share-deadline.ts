@@ -125,14 +125,10 @@ export function msUntilDeadline(state: ShareDeadlineState, now = Date.now()): nu
 }
 
 export function formatDeadlineCountdown(ms: number): string {
-  if (ms <= 0) return '0h 0m';
+  if (ms <= 0) return "Time's up";
   const totalMin = Math.floor(ms / 60_000);
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h >= 24) {
-    const d = Math.floor(h / 24);
-    return `${d}d ${h % 24}h`;
-  }
   return `${h}h ${m}m`;
 }
 

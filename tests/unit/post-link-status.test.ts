@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   clearShareDeadlineState,
-  renderShareDeadlineBanner,
   writeShareDeadlineState,
 } from '../../src/lib/share-deadline';
 import {
@@ -65,6 +64,7 @@ describe('post-link status', () => {
   it('first paint is You\'re in with no clock and the #31 share only', () => {
     expect(resolvePostLinkStatus()).toBe('in');
     renderPostLinkStatus();
+    expect(document.documentElement.getAttribute(POST_LINK_STATUS_ATTR)).toBe('in');
     expect(document.getElementById('post-link-status-title')?.textContent).toBe("You're in.");
     expect(document.getElementById('post-link-status-line')?.textContent).toBe(
       'Send this. A friend must tap Get my link.',
@@ -72,23 +72,26 @@ describe('post-link status', () => {
     expect(document.getElementById('share-deadline-banner')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('post-link-primary')?.textContent).toBe('Share with a friend');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
+    expect(document.querySelectorAll('#referral-section button').length).toBe(2);
   });
 
-  it('Waiting shows a readable 48h clock', () => {
+  it('Waiting shows the existing 48h clock and no extra button', () => {
     writeShareDeadlineState({
       code: 'VIRAL-TEST01',
       status: 'pending_share',
       createdAt: new Date().toISOString(),
-      deadlineAt: new Date(Date.now() + 47 * 60 * 60 * 1000 + 12 * 60 * 1000 + 30000).toISOString(),
+      deadlineAt: new Date(Date.now() + 47 * 60 * 60 * 1000 + 12 * 60 * 1000).toISOString(),
     });
+    expect(resolvePostLinkStatus()).toBe('waiting');
     renderPostLinkStatus();
-    renderShareDeadlineBanner();
+    expect(document.documentElement.getAttribute(POST_LINK_STATUS_ATTR)).toBe('waiting');
     expect(document.getElementById('post-link-status-title')?.textContent).toBe('Waiting');
     expect(document.getElementById('post-link-status-line')?.textContent).toBe(
       '1 friend must tap Get my link',
     );
     expect(document.getElementById('share-deadline-banner')?.classList.contains('hidden')).toBe(false);
     expect(document.getElementById('share-deadline-countdown')?.textContent).toBe('47h 12m');
+    expect(document.querySelectorAll('#referral-section button').length).toBe(2);
   });
 
   it('expired stays Waiting and clock reads Time\'s up', () => {
@@ -98,14 +101,16 @@ describe('post-link status', () => {
       createdAt: new Date(Date.now() - 50 * 60 * 60 * 1000).toISOString(),
       deadlineAt: new Date(Date.now() - 1000).toISOString(),
     });
+    expect(resolvePostLinkStatus()).toBe('waiting');
     renderPostLinkStatus();
-    renderShareDeadlineBanner();
     expect(document.getElementById('post-link-status-title')?.textContent).toBe('Waiting');
+    expect(document.getElementById('share-deadline-banner')?.classList.contains('hidden')).toBe(false);
     expect(document.getElementById('share-deadline-countdown')?.textContent).toBe("Time's up");
   });
 
   it('Locked is quiet, hides the clock, and keeps #31 share', () => {
     document.documentElement.setAttribute('data-vr-share-locked', '1');
+    expect(resolvePostLinkStatus()).toBe('locked');
     renderPostLinkStatus();
     expect(document.getElementById('post-link-status-title')?.textContent).toBe('Locked');
     expect(document.getElementById('post-link-status-line')?.textContent).toBe(
@@ -113,6 +118,7 @@ describe('post-link status', () => {
     );
     expect(document.getElementById('share-deadline-banner')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('post-link-primary')?.textContent).toBe('Share with a friend');
+    expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
   });
 
   it('copy toast never looks like done', () => {
