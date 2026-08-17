@@ -511,7 +511,15 @@ export async function resolveOwnerFunnelDeskMetrics(input: {
       });
       if (assembled) return assembled;
     } catch {
-      /* complete-window fallback below */
+      return {
+        windowDays: counts.windowDays,
+        landings: counts.landings,
+        getLink: counts.getLink,
+        share: counts.share,
+        locked: counts.locked,
+        getLinkRate: formatOwnerRate(counts.getLink, counts.landings),
+        feed: [],
+      };
     }
   }
   const window = await input.loadCompleteWindow();

@@ -3668,6 +3668,15 @@ html[data-vr-touch] .share-btn {
   }
 }
 
+#admin-modal {
+  background: rgba(0, 0, 0, 0.92);
+}
+
+#admin-modal .vr-modal-panel {
+  background: #09090b;
+  backdrop-filter: none;
+}
+
 @media (max-width: 639px) {
   .funnel-steps-row {
     gap: 0.35rem 0.4rem;

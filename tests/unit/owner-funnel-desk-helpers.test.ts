@@ -297,6 +297,25 @@ describe('owner funnel desk metrics', () => {
     expect(metrics.locked).toBe(1);
   });
 
+  it('keeps RPC tile counts when the feed window throws', async () => {
+    const metrics = await resolveOwnerFunnelDeskMetrics({
+      rpcData: { landings: 1361, get_link: 33, share: 2, locked: 4, window_days: 7 },
+      loadFeedWindow: async () => {
+        throw new Error('column referrals.referred_code does not exist');
+      },
+      loadCompleteWindow: async () => {
+        throw new Error('should not fall through to complete window');
+      },
+      now,
+    });
+    expect(metrics.landings).toBe(1361);
+    expect(metrics.getLink).toBe(33);
+    expect(metrics.share).toBe(2);
+    expect(metrics.locked).toBe(4);
+    expect(metrics.getLinkRate).toBe('2.4%');
+    expect(metrics.feed).toEqual([]);
+  });
+
   it('computes DISTINCT 7-day counts from a complete window when RPC is missing', async () => {
     const metrics = await resolveOwnerFunnelDeskMetrics({
       rpcData: null,

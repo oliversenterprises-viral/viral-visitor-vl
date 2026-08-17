@@ -947,7 +947,7 @@ Deno.serve(async (req: Request) => {
           take('shares', '*', (q) => q),
           take(
             'referrals',
-            'referrer_code, created_at, referred_ip, user_agent, referred_code',
+            'referrer_code, created_at, referred_ip, user_agent',
             (q) => q,
           ),
           complete
