@@ -78,9 +78,6 @@ function paintDashboard(box: HTMLElement, payload: StatsPayload): void {
   const link = buildAffiliateLink(payload.code);
   const r = payload.rewards;
   const wallet = payload.credit_days ?? r.adCreditGranted;
-  const cashLine = r.cashDue
-    ? `<p class="text-amber-300 text-sm">Cash bonus is on the books (${r.cashUnpaid} after ${r.cashThreshold} people). No action needed from you — the owner pays when ready.</p>`
-    : `<p class="text-zinc-400 text-sm">Cash bonus starts after ${r.cashThreshold} people get a link. You have ${payload.stats.uniqueGetLinkVisitors}.</p>`;
   box.innerHTML = `
     <div class="text-sm font-semibold text-emerald-300 mb-1">Your promoter desk</div>
     <p class="text-zinc-300 text-sm mb-3">Hi ${escapeHtml(payload.name)}. Share this link — not a /r/ friend link.</p>
@@ -95,7 +92,7 @@ function paintDashboard(box: HTMLElement, payload: StatsPayload): void {
       <div class="rounded-lg bg-white/5 px-2 py-2"><div class="text-[9px] uppercase text-zinc-500">Ad days ready</div><div class="text-xl font-bold text-amber-300">${wallet}</div></div>
     </div>
     <p class="text-zinc-400 text-sm mb-1">${escapeHtml(payload.bounty_label)}</p>
-    ${cashLine}
+    <p class="text-zinc-400 text-sm">Ad-board days only. Not a contest prize. Not cash.</p>
     <p class="text-[11px] text-zinc-500 mt-2">${escapeHtml(payload.payout_note)}</p>
   `;
   box.querySelector('[data-aff-copy-mine]')?.addEventListener('click', () => {

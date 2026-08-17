@@ -37,8 +37,55 @@ registerGlobal('openAdminPanel', async () => {
   }
 });
 
+/** Entire owner gate lives in JS so first-paint HTML has no password chrome. */
+function ensureAdminOwnerGateModal(): HTMLElement | null {
+  let modal = document.getElementById('admin-owner-gate-modal');
+  if (modal) return modal;
+  modal = document.createElement('div');
+  modal.id = 'admin-owner-gate-modal';
+  modal.className = 'hidden fixed inset-0 bg-black/90 z-[300] flex items-center justify-center';
+  modal.dataset.vrAdminGate = '1';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'admin-owner-gate-title');
+  modal.addEventListener('click', () => closeAdminPasswordModal());
+  modal.innerHTML = `
+    <div class="glass border border-white/10 rounded-3xl w-full max-w-sm mx-4 p-8" data-vr-owner-gate-panel="1">
+      <div class="flex items-center justify-between mb-6">
+        <div id="admin-owner-gate-title" class="font-bold text-xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-rose-400"></i> Owner tools</div>
+        <button type="button" class="text-2xl text-zinc-400 hover:text-white" aria-label="Close" data-vr-owner-gate-close="1">✕</button>
+      </div>
+      <div class="text-sm text-zinc-400 mb-4">Type the owner password to open your desk. Visitors never see this.</div>
+      <div id="admin-owner-gate-slot" class="mb-4"></div>
+      <div id="admin-owner-gate-error" class="hidden text-rose-400 text-sm mb-4">Incorrect — try again.</div>
+      <div class="flex gap-3">
+        <button type="button" data-vr-owner-gate-close="1"
+                class="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/20 rounded-2xl font-semibold transition-all">
+          Cancel
+        </button>
+        <button type="button" id="admin-owner-gate-submit"
+                class="flex-1 py-4 bg-violet-600 hover:bg-violet-500 rounded-2xl font-semibold text-white transition-all flex items-center justify-center gap-2">
+          <span>Continue</span>
+        </button>
+      </div>
+      <div class="text-[10px] text-center text-zinc-500 mt-4">Owner session only · not for participants</div>
+    </div>`;
+  modal.querySelector('[data-vr-owner-gate-panel]')?.addEventListener('click', (event) => {
+    event.stopImmediatePropagation();
+  });
+  modal.querySelectorAll('[data-vr-owner-gate-close]').forEach((el) => {
+    el.addEventListener('click', () => closeAdminPasswordModal());
+  });
+  modal.querySelector('#admin-owner-gate-submit')?.addEventListener('click', () => {
+    void submitAdminPassword();
+  });
+  document.body.appendChild(modal);
+  return modal;
+}
+
 /** Secret field injected only while owner modal is open — never static in public HTML. */
 function ensureAdminPasswordInput(): HTMLInputElement | null {
+  ensureAdminOwnerGateModal();
   const slot = document.getElementById('admin-owner-gate-slot');
   if (!slot) return document.getElementById('admin-owner-gate-input') as HTMLInputElement | null;
   let input = document.getElementById('admin-owner-gate-input') as HTMLInputElement | null;
@@ -86,7 +133,7 @@ const closeAdminPasswordModal = () => {
 registerGlobal('closeAdminPasswordModal', closeAdminPasswordModal);
 
 const openAdminPasswordModal = () => {
-  const pw = document.getElementById('admin-owner-gate-modal');
+  const pw = ensureAdminOwnerGateModal();
   if (!pw) return;
   pw.classList.remove('hidden');
   const input = ensureAdminPasswordInput();
@@ -99,7 +146,16 @@ const OWNER_REVEAL_KEY = 'vr_show_owner';
 
 function revealOwnerTools(): void {
   const adminBtn = document.getElementById('admin-btn');
-  if (adminBtn) adminBtn.classList.remove('hidden');
+  if (adminBtn) {
+    adminBtn.classList.remove('hidden');
+    if (!adminBtn.querySelector('[data-vr-owner-label]')) {
+      const label = document.createElement('span');
+      label.dataset.vrOwnerLabel = '1';
+      label.className = 'hidden sm:inline';
+      label.textContent = 'Desk';
+      adminBtn.appendChild(label);
+    }
+  }
   try {
     localStorage.setItem(OWNER_REVEAL_KEY, '1');
   } catch {

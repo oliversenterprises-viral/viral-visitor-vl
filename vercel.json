@@ -80,6 +80,18 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/relay",
+      "destination": "/tools/traffic-refer-kit.html",
+      "permanent": true
+    },
+    {
+      "source": "/relay/",
+      "destination": "/tools/traffic-refer-kit.html",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/r/:code",

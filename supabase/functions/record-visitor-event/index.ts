@@ -4,6 +4,7 @@ import { settleGetLinkAdCredit } from '../_shared/affiliate-ads-credit.ts';
 import { isTestVisitorFunnelEvent } from '../_shared/visitor-funnel-test.ts';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
+import { shouldSkipServerLandingWrite } from '../_shared/junk-traffic.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -84,6 +85,12 @@ Deno.serve(async (req: Request) => {
 
     const body = await req.json();
     const eventName = String(body.eventName || body.event_name || '').trim();
+    const utmSource = body.utm_source || body.utmSource || null;
+    if (shouldSkipServerLandingWrite(eventName, utmSource)) {
+      return new Response(JSON.stringify({ success: true, skipped: 'junk_landing' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     if (!eventName) {
       return new Response(JSON.stringify({ success: false, error: 'eventName required' }), {
         status: 400,

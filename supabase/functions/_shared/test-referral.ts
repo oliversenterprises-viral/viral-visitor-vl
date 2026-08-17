@@ -19,6 +19,7 @@ export function isTestReferrerCode(code: string | null | undefined): boolean {
   if (!c) return false;
   if (LEGACY_DEMO_CODES.has(String(code || '').trim())) return true;
   if (c === 'VIRAL-SMOKETEST' || c === 'VIRAL-READY' || c === 'VIRAL-E2ECLAIM' || c === 'VIRAL-TEST01') return true;
+  if (c === 'RELAY') return true;
   if (/SMOKETEST/.test(c)) return true;
   if (/DEMOCODE/.test(c)) return true;
   if (/^DEMO\d+$/.test(c)) return true;

@@ -59,6 +59,15 @@ describe('kid-simple first paint', () => {
     expect(css).toMatch(/#vr-verified-total:not\(\.vr-verified-total--ready\)/);
   });
 
+  it('keeps cash-bonus and owner password chrome out of first-paint HTML', () => {
+    const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
+    expect(html).not.toContain('Cash bonus is tracked');
+    expect(html).not.toContain('Can I get paid');
+    expect(html).not.toContain('Type the owner password');
+    expect(html).not.toContain('admin-owner-gate-modal');
+    expect(html).not.toMatch(/>ADMIN</);
+  });
+
   it('does not paint em-dash referral proof before hydration', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = html.slice(html.indexOf('id="vr-verified-total"'), html.indexOf('id="daily-champion-strip"'));

@@ -32,6 +32,7 @@ describe('test-referral guards', () => {
     expect(isTestReferrerCode('VIRAL-E2ECLAIM')).toBe(true);
     expect(isTestReferrerCode('VIRAL-LIVECHK1')).toBe(true);
     expect(isTestReferrerCode('VIRAL-97UWEGZ')).toBe(false);
+    expect(isTestReferrerCode('RELAY')).toBe(true);
   });
 
   it('skips owner IP and headless automation', () => {

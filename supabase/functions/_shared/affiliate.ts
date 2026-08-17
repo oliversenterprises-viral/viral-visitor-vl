@@ -78,11 +78,23 @@ export function mintAffiliateCode(name: string, taken: ReadonlySet<string>): str
   return `P${Date.now().toString(36).toUpperCase()}`.slice(0, 12);
 }
 
+export const CLEAN_PAYOUT_NOTE =
+  'Thank-you is ad days on ads.viralrefer.app, granted automatically. Not a contest prize. Not cash.';
+
+/** Public notes must never mention cash, bonuses, or getting paid. */
+export function sanitizePayoutNote(raw: string | null | undefined): string {
+  const note = String(raw || '').trim();
+  if (!note) return CLEAN_PAYOUT_NOTE;
+  if (/cash\s*bonus|cash\s*app|get\s*paid|guaranteed\s+income|owner pays/i.test(note)) {
+    return CLEAN_PAYOUT_NOTE;
+  }
+  return note;
+}
+
 export function defaultAffiliatesProgram(): AffiliatesProgram {
   return {
     bounty_label: '1 ad-board day per person who taps Get my link',
-    payout_note:
-      'Default thank-you is ad days on ads.viralrefer.app, granted automatically. Cash bonus after 10 people get a link is tracked automatically. This is not a contest prize — the leaderboard prize is still a homepage banner.',
+    payout_note: CLEAN_PAYOUT_NOTE,
     cash_threshold: DEFAULT_CASH_THRESHOLD,
     ad_board_url: DEFAULT_AD_BOARD_URL,
     affiliates: [],
@@ -124,10 +136,11 @@ export function parseAffiliatesProgram(raw: unknown): AffiliatesProgram {
     typeof rec.bounty_label === 'string' && rec.bounty_label.trim()
       ? rec.bounty_label.trim()
       : fallback.bounty_label;
-  const note =
+  const note = sanitizePayoutNote(
     typeof rec.payout_note === 'string' && rec.payout_note.trim()
       ? rec.payout_note.trim()
-      : fallback.payout_note;
+      : fallback.payout_note,
+  );
   const threshold = Math.max(1, Math.floor(Number(rec.cash_threshold) || fallback.cash_threshold));
   const adUrl =
     typeof rec.ad_board_url === 'string' && rec.ad_board_url.trim()

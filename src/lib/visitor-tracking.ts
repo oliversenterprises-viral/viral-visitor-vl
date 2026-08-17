@@ -11,6 +11,7 @@ import { supabase } from './supabase';
 import { eventName, groupBy, latestEvents } from './stats-helpers';
 import { getClientAutomationMetadata } from './test-referral';
 import { getStoredAffiliateCode } from './affiliate';
+import { shouldSkipServerLandingWrite } from './junk-traffic';
 
 const VISITOR_EVENTS_KEY = 'viralrefer_visitor_events';
 const VISITOR_ID_KEY = 'vr_visitor_id';
@@ -227,6 +228,7 @@ function pushLocalVisitorEvent(eventName: string, metadata: Record<string, unkno
 
 function logVisitorEventServer(eventName: string, metadata: Record<string, unknown> = {}): void {
   const utm = getStoredUtmAttribution();
+  if (shouldSkipServerLandingWrite(eventName, utm?.source ?? null)) return;
   supabase.functions
     .invoke('record-visitor-event', {
       body: {

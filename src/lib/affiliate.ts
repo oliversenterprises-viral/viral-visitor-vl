@@ -6,6 +6,7 @@ import { isValidAffiliateCode, normalizeAffiliateCode } from '../../supabase/fun
 
 export {
   AFFILIATES_SITE_CONTENT_KEY,
+  CLEAN_PAYOUT_NOTE,
   DEFAULT_AD_BOARD_URL,
   DEFAULT_CASH_THRESHOLD,
   addAffiliate,
@@ -21,6 +22,7 @@ export {
   mintAffiliateCode,
   normalizeAffiliateCode,
   parseAffiliatesProgram,
+  sanitizePayoutNote,
   pickWeeklyTopFromLedger,
   pickWeeklyTopPromoter,
   setAffiliateActive,

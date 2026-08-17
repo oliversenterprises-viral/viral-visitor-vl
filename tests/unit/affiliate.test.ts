@@ -10,6 +10,7 @@ import {
   normalizeAffiliateCode,
   parseAffiliateFromLocation,
   parseAffiliatesProgram,
+  sanitizePayoutNote,
   pickWeeklyTopFromLedger,
   pickWeeklyTopPromoter,
 } from '../../src/lib/affiliate';
@@ -80,6 +81,17 @@ describe('affiliate attribution', () => {
     expect(second.error).toBeUndefined();
     expect(second.row?.code).not.toBe('MAYA');
     expect(second.row?.code.startsWith('MAYA')).toBe(true);
+  });
+
+  it('strips cash-bonus language from stored payout notes', () => {
+    expect(sanitizePayoutNote('Cash bonus is tracked after 10 people; no owner buttons.')).not.toMatch(
+      /cash bonus/i,
+    );
+    const parsed = parseAffiliatesProgram({
+      payout_note: 'Cash bonus is tracked after 10 people; no owner buttons.',
+    });
+    expect(parsed.payout_note).not.toMatch(/cash bonus/i);
+    expect(parsed.payout_note).toMatch(/ad days/i);
   });
 
   it('treats ad credit as the default reward and cash after a threshold', () => {

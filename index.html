@@ -128,7 +128,7 @@
                     Get link
                 </button>
                 <button id="admin-btn" class="hidden px-3 py-2 sm:px-6 sm:py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-3xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2 min-h-[44px] min-w-[44px] sm:min-w-0 justify-center" aria-label="Owner dashboard">
-                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span class="hidden sm:inline">ADMIN</span>
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
@@ -388,7 +388,7 @@
                 <span>Telegram helper</span>
             </a>
             <p class="text-zinc-300 mb-2">We want affiliates. Pick a name, get a link instantly. When someone you send taps Get my link, you earn <strong>ad-board credit</strong> (days on ads.viralrefer.app).</p>
-            <p class="text-zinc-500 text-sm mb-5">This is promoter pay — not a contest cash prize. Ad days land on the ad board by themselves. Cash bonus is tracked after 10 people; no owner buttons.</p>
+            <p class="text-zinc-500 text-sm mb-5">This is promoter pay — ad-board days only. It is not a contest cash prize and does not affect the homepage-feature board.</p>
             <form id="promoter-signup-form" class="flex flex-col sm:flex-row flex-wrap gap-2 items-stretch sm:items-end mb-4">
                 <label class="flex-1 min-w-0 text-xs text-zinc-400">Your name
                     <input name="name" required maxlength="80" placeholder="Maya" class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-3 text-base sm:text-sm text-white min-h-[44px]" />
@@ -419,8 +419,8 @@
                     <p class="text-zinc-400 mt-1">A friend must open your link and tap Get my link. Copying alone does not count.</p>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-white">Can I get paid for sending visitors?</h3>
-                    <p class="text-zinc-400 mt-1">Yes. Become a promoter, share your /a/ link, and earn ad-board credit when they tap Get my link. That is not a contest cash prize.</p>
+                    <h3 class="font-semibold text-white">Can I promote ViralRefer?</h3>
+                    <p class="text-zinc-400 mt-1">Yes. Share a promoter /a/ link and earn ad-board credit (days on ads.viralrefer.app) when someone taps Get my link. That is ad-board credit only — not cash, and not the contest homepage-banner prize.</p>
                 </div>
             </div>
         </div>
@@ -596,36 +596,7 @@
         </div>
     </footer>
 
-    <!-- Owner gate: secret field injected only when modal opens (kept out of static HTML for crawlers). -->
-    <div id="admin-owner-gate-modal" onclick="closeAdminPasswordModal()" class="hidden fixed inset-0 bg-black/90 z-[300] flex items-center justify-center" data-vr-admin-gate="1">
-        <div onclick="event.stopImmediatePropagation()" class="glass border border-white/10 rounded-3xl w-full max-w-sm mx-4 p-8">
-            <div class="flex items-center justify-between mb-6">
-                <div class="font-bold text-xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-rose-400"></i> Owner tools</div>
-                <button type="button" onclick="closeAdminPasswordModal()" class="text-2xl text-zinc-400 hover:text-white" aria-label="Close">✕</button>
-            </div>
-
-            <div class="text-sm text-zinc-400 mb-4">Type the owner password to open your desk. Visitors never see this.</div>
-
-            <div id="admin-owner-gate-slot" class="mb-4"></div>
-
-            <div id="admin-owner-gate-error" class="hidden text-rose-400 text-sm mb-4">Incorrect — try again.</div>
-
-            <div class="flex gap-3">
-                <button type="button" onclick="closeAdminPasswordModal()" 
-                        class="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/20 rounded-2xl font-semibold transition-all">
-                    Cancel
-                </button>
-                <button type="button" onclick="submitAdminPassword()" id="admin-owner-gate-submit"
-                        class="flex-1 py-4 bg-violet-600 hover:bg-violet-500 rounded-2xl font-semibold text-white transition-all flex items-center justify-center gap-2">
-                    <span>Continue</span>
-                </button>
-            </div>
-
-            <div class="text-[10px] text-center text-zinc-500 mt-4">
-                Owner session only · not for participants
-            </div>
-        </div>
-    </div>
+    <!-- Owner password gate is created in JS only after an owner gesture. Not in first-paint HTML. -->
 
     <!-- Admin Dashboard Modal -->
     <div id="admin-modal" onclick="closeAdminPanel()" class="hidden fixed inset-0 bg-black/90 z-[400] flex items-center justify-center vr-modal-overlay">

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Free UTM Builder for ViralRefer · Track What Grows</title>
-  <meta name="description" content="Free UTM campaign builder for ViralRefer and Relay. Create tracked links for X, Reddit, email, and more." />
+  <meta name="description" content="Free UTM campaign builder for ViralRefer. Create tracked links for X, Reddit, email, and more." />
   <link rel="canonical" href="https://www.viralrefer.app/tools/utm-builder.html" />
   <meta name="theme-color" content="#6b3acc" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -35,12 +35,12 @@
       <a href="https://www.viralrefer.app/?utm_source=leadmagnet&utm_medium=utm_builder&utm_campaign=get_link#get-link" style="font-weight:700;text-decoration:none;color:#c4b5fd">Get free link →</a>
     </div>
     <h1>UTM Campaign Builder</h1>
-    <p class="sub">Build clean tracked URLs for ViralRefer or Relay so you know which posts actually convert.</p>
+    <p class="sub">Build clean tracked URLs for ViralRefer so you know which posts actually convert.</p>
 
     <label for="base">Base URL</label>
     <select id="base">
       <option value="https://www.viralrefer.app/">Homepage / get link</option>
-      <option value="https://www.viralrefer.app/relay">Relay traffic exchange</option>
+      <option value="https://www.viralrefer.app/tools/traffic-refer-kit.html">Share + referral kit</option>
       <option value="https://www.viralrefer.app/tools/">Tools hub</option>
       <option value="custom">Custom…</option>
     </select>
@@ -79,7 +79,7 @@
       <span class="chip" data-p='{"source":"reddit","medium":"community","campaign":"value_post"}'>Reddit value</span>
       <span class="chip" data-p='{"source":"linkedin","medium":"social","campaign":"founder_story"}'>LinkedIn</span>
       <span class="chip" data-p='{"source":"bio","medium":"profile","campaign":"link_in_bio"}'>Link in bio</span>
-      <span class="chip" data-p='{"base":"relay","source":"twitter","medium":"social","campaign":"relay_share"}'>Relay share</span>
+      <span class="chip" data-p='{"base":"kit","source":"twitter","medium":"social","campaign":"share_kit"}'>Share kit</span>
     </div>
 
     <div class="card">
@@ -128,7 +128,7 @@
     document.querySelectorAll('.chip').forEach((chip) => {
       chip.addEventListener('click', () => {
         const p = JSON.parse(chip.getAttribute('data-p'));
-        if (p.base === 'relay') $('base').value = 'https://www.viralrefer.app/relay';
+        if (p.base === 'kit' || p.base === 'relay') $('base').value = 'https://www.viralrefer.app/tools/traffic-refer-kit.html';
         if (p.source) $('source').value = p.source;
         if (p.medium) $('medium').value = p.medium;
         if (p.campaign) $('campaign').value = p.campaign;
