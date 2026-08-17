@@ -22,9 +22,16 @@ describe('junk-traffic (Disk IO guard)', () => {
     expect(isJunkTrafficSource('leadmagnet')).toBe(false);
   });
 
-  it('skips only SiteLanding writes for junk sources', () => {
+  it('skips every SiteLanding write; conversion events still persist', () => {
     expect(shouldSkipServerLandingWrite('SiteLanding', 'rotate4all')).toBe(true);
+    expect(shouldSkipServerLandingWrite('SiteLanding', 'reddit')).toBe(true);
+    expect(shouldSkipServerLandingWrite('SiteLanding', null)).toBe(true);
+    expect(shouldSkipServerLandingWrite('SiteLanding', '')).toBe(true);
     expect(shouldSkipServerLandingWrite('GetReferralLink', 'rotate4all')).toBe(false);
-    expect(shouldSkipServerLandingWrite('SiteLanding', 'reddit')).toBe(false);
+    expect(shouldSkipServerLandingWrite('GetReferralLink', 'reddit')).toBe(false);
+    expect(shouldSkipServerLandingWrite('CopyReferralLink', null)).toBe(false);
+    expect(shouldSkipServerLandingWrite('ShareReferral', null)).toBe(false);
+    expect(shouldSkipServerLandingWrite('OpenPrizeClaim', null)).toBe(false);
+    expect(shouldSkipServerLandingWrite('SubmitPrizeClaim', null)).toBe(false);
   });
 });

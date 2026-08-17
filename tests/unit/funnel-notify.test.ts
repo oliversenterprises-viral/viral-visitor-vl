@@ -86,7 +86,7 @@ describe('funnel-notify', () => {
     ).toBe(false);
   });
 
-  it('shouldNotifyFunnelEvent allows all steps by default', () => {
+  it('shouldNotifyFunnelEvent defaults to important steps only', () => {
     process.env.FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN = '123:abc';
     process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID = '999';
     expect(
@@ -94,7 +94,7 @@ describe('funnel-notify', () => {
         event_name: 'SiteLanding',
         metadata: { user_agent: 'Mozilla/5.0 Chrome' },
       }),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       shouldNotifyFunnelEvent({
         event_name: 'GetReferralLink',
@@ -102,13 +102,24 @@ describe('funnel-notify', () => {
         metadata: { user_agent: 'Mozilla/5.0 Chrome' },
       }),
     ).toBe(true);
+    expect(
+      shouldNotifyFunnelEvent({
+        event_name: 'ShareReferral',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(true);
   });
 
-  it('shouldNotifyFunnelEvent respects important-only mode', () => {
+  it('shouldNotifyFunnelEvent can alert every recorded step when important-only is off', () => {
     process.env.FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN = '123:abc';
     process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID = '999';
-    process.env.FUNNEL_NOTIFY_IMPORTANT_ONLY = 'true';
-    expect(shouldNotifyFunnelEvent({ event_name: 'SiteLanding' })).toBe(false);
+    process.env.FUNNEL_NOTIFY_IMPORTANT_ONLY = 'false';
+    expect(
+      shouldNotifyFunnelEvent({
+        event_name: 'SiteLanding',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(true);
     expect(
       shouldNotifyFunnelEvent({
         event_name: 'ShareReferral',

@@ -87,7 +87,7 @@ Deno.serve(async (req: Request) => {
     const eventName = String(body.eventName || body.event_name || '').trim();
     const utmSource = body.utm_source || body.utmSource || null;
     if (shouldSkipServerLandingWrite(eventName, utmSource)) {
-      return new Response(JSON.stringify({ success: true, skipped: 'junk_landing' }), {
+      return new Response(JSON.stringify({ success: true, skipped: 'landing' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

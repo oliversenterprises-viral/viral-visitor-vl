@@ -55,8 +55,12 @@ export function getFunnelNotifyWebhookUrl(): string | null {
   return url || null;
 }
 
+/** Default on — only Get/Copy/Share/claim ping Telegram. Set false to alert every recorded step. */
 export function isFunnelNotifyImportantOnly(): boolean {
-  return String(readEnv('FUNNEL_NOTIFY_IMPORTANT_ONLY') || '').trim().toLowerCase() === 'true';
+  const flag = String(readEnv('FUNNEL_NOTIFY_IMPORTANT_ONLY') || 'true')
+    .trim()
+    .toLowerCase();
+  return flag !== 'false' && flag !== '0' && flag !== 'off';
 }
 
 export function getFunnelNotifyChannel(): FunnelNotifyChannel | null {

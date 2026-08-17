@@ -43,10 +43,13 @@ export function isJunkTrafficSource(source: string | null | undefined): boolean 
   return JUNK_NEEDLES.some((needle) => s.includes(needle));
 }
 
+/**
+ * Never persist SiteLanding (rotator / cheap traffic floods the table + ipapi).
+ * Conversion events always persist. utmSource kept so client + Edge stay in sync.
+ */
 export function shouldSkipServerLandingWrite(
   eventName: string,
-  utmSource: string | null | undefined,
+  _utmSource?: string | null,
 ): boolean {
-  if (eventName !== 'SiteLanding') return false;
-  return isJunkTrafficSource(utmSource);
+  return eventName === 'SiteLanding';
 }
