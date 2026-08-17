@@ -129,21 +129,6 @@ function bindRefresh(container: HTMLElement): void {
   container.dataset.ownerDeskBound = '1';
   container.addEventListener('click', (event) => {
     const target = event.target as HTMLElement;
-    const more = target.closest('[data-owner-desk-more]');
-    if (more && container.contains(more)) {
-      event.preventDefault();
-      const panel = container.querySelector<HTMLElement>('[data-owner-desk-more-panel]');
-      if (panel) panel.hidden = !panel.hidden;
-      return;
-    }
-    const tool = target.closest('[data-owner-desk-tool]');
-    if (tool && container.contains(tool)) {
-      event.preventDefault();
-      const tab = Number(tool.getAttribute('data-owner-desk-tool'));
-      const switchFn = (window as unknown as { switchAdminTab?: (n: number) => void }).switchAdminTab;
-      if (Number.isFinite(tab)) switchFn?.(tab);
-      return;
-    }
     const btn = target.closest('[data-owner-desk-refresh]');
     if (!btn || !container.contains(btn)) return;
     event.preventDefault();

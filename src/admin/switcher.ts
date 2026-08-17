@@ -1,9 +1,7 @@
 import { setActiveTab } from '../ui';
 import { isAdminExtraTab, setAdminMore, syncAdminTabCoach } from '../lib/admin-simple';
-import { setAdminLiveActiveTab, startAdminLiveHub } from './admin-live-hub';
 import { renderOwnerFunnelDesk } from './owner-funnel-desk';
 import {
-  renderReferralsTab,
   renderEditContentTab,
   renderPrizeClaimsTab,
 } from './index';
@@ -49,7 +47,6 @@ export async function showOwnerFunnelDesk() {
   setAdminMore(false);
   setActiveTab(-1);
   syncAdminTabCoach(-1);
-  setAdminLiveActiveTab(0);
   content.innerHTML = ADMIN_LOADING_SKELETON;
 
   try {
@@ -61,8 +58,7 @@ export async function showOwnerFunnelDesk() {
 }
 
 /**
- * Extra owner tools (Friends / Prize / Website words / Shares / ...).
- * Opening any tab relocates that chrome into the More host.
+ * Extra owner tools: Prize and Website.
  */
 export async function switchAdminTab(tab: number) {
   const requestId = ++tabRequestId;
@@ -75,42 +71,18 @@ export async function switchAdminTab(tab: number) {
   content.classList.add('admin-tab-content');
   if (isAdminExtraTab(tab)) {
     setAdminMore(true);
-    startAdminLiveHub();
   }
   setActiveTab(tab);
   syncAdminTabCoach(tab);
-  setAdminLiveActiveTab(tab);
   content.innerHTML = ADMIN_LOADING_SKELETON;
 
   try {
-    if (tab === 0) {
-      await renderReferralsTab(content);
-    } else if (tab === 1) {
-      if (isStale(requestId)) return;
-      const { renderShareAnalyticsTab } = await import('./share-analytics-tab');
-      if (isStale(requestId)) return;
-      await renderShareAnalyticsTab(content);
-    } else if (tab === 2) {
+    if (tab === 2) {
       if (isStale(requestId)) return;
       await renderEditContentTab(content);
     } else if (tab === 3) {
       if (isStale(requestId)) return;
       await renderPrizeClaimsTab(content);
-    } else if (tab === 4) {
-      if (isStale(requestId)) return;
-      const { renderTextColorsTab } = await import('./text-colors-tab');
-      if (isStale(requestId)) return;
-      await renderTextColorsTab(content);
-    } else if (tab === 5) {
-      if (isStale(requestId)) return;
-      const { renderViralOptimizerTab } = await import('./viral-optimizer-tab');
-      if (isStale(requestId)) return;
-      await renderViralOptimizerTab(content);
-    } else if (tab === 6) {
-      if (isStale(requestId)) return;
-      const { renderAffiliatesTab } = await import('./affiliates-tab');
-      if (isStale(requestId)) return;
-      await renderAffiliatesTab(content);
     }
   } catch (err) {
     if (isStale(requestId)) return;

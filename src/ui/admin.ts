@@ -22,7 +22,7 @@ export function setActiveTab(tab: number) {
   });
 }
 
-/** Updates the Prize Claims tab badge and optional header banner. */
+/** Updates the Prize tab badge. */
 export function updatePendingClaimsBadge(count: number) {
   const badge = document.getElementById('tab-3-badge');
   if (badge) {
@@ -34,14 +34,4 @@ export function updatePendingClaimsBadge(count: number) {
     }
   }
 
-  const banner = document.getElementById('admin-pending-banner');
-  const countEl = document.getElementById('admin-pending-count');
-  if (banner && countEl) {
-    if (count > 0) {
-      countEl.textContent = String(count);
-      banner.classList.remove('hidden');
-    } else {
-      banner.classList.add('hidden');
-    }
-  }
 }

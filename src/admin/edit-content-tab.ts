@@ -2,14 +2,6 @@ import { supabase } from '../lib/supabase';
 import { uploadBannerImage, BANNER_UPLOAD_ACCEPT } from '../lib/banner-upload';
 import { formatError } from '../lib';
 import { showToast } from '../ui';
-import { renderBannerStats, wireBannerStatsQuick } from './banner-stats';
-import { wireVisitorFunnelStatsQuick } from './visitor-funnel-stats';
-import { buildTrackingHubShellHtml, wireEditContentTrackingHub } from './edit-content-tracking';
-import { registerAdminLiveRefresh, refreshAdminLiveIndicators } from './admin-live-hub';
-import { wireEditContentAutoClearTest } from '../lib/admin-stats-auto-clear-test';
-import { runClearTestAdminStatsForEditContent } from './edit-content-clear-test';
-
-let unregisterContentLive: (() => void) | null = null;
 
 /** Lightweight row shape used by the Edit Content admin tab */
 interface ContentRow {
@@ -128,25 +120,8 @@ async function renderEditContentTab(content: HTMLElement) {
 
       const html = buildContentListHTML(rows);
       content.innerHTML = html;
-      refreshAdminLiveIndicators();
-
       attachContentListeners(content, loadAndRenderList, rows);
-      // Wire hub first so KPI summary updates as each panel finishes loading
-      wireEditContentTrackingHub(content);
-      await Promise.allSettled([
-        wireVisitorFunnelStatsQuick(content),
-        wireBannerStatsQuick(content),
-      ]);
       if (gen !== loadGeneration) return;
-      wireEditContentAutoClearTest(content, async () => {
-        try {
-          await runClearTestAdminStatsForEditContent(content, {
-            toastPrefix: 'Auto-clear: ',
-          });
-        } catch {
-          // missing admin secret or edge error — skip noisy toasts on timer
-        }
-      });
 
   // Wire up the prominent "Create Multi-Banner Rotation (v2)" button if it exists
   const createBannersBtn = content.querySelector('#create-banners-key-btn') as HTMLButtonElement | null;
@@ -193,16 +168,6 @@ async function renderEditContentTab(content: HTMLElement) {
       loadInFlight = false;
     }
   }
-
-  if (unregisterContentLive) unregisterContentLive();
-  // Soft: only full-reload when CMS form is closed; avoid stacking reloads mid-stats-fetch
-  unregisterContentLive = registerAdminLiveRefresh('content', () => {
-    if (!document.body.contains(content)) return;
-    const formArea = document.getElementById('content-form-area');
-    if (formArea && !formArea.classList.contains('hidden')) return;
-    // Debounce: live poll no longer dispatches content; realtime CMS edits still do
-    void loadAndRenderList();
-  });
 
   await loadAndRenderList();
 
@@ -434,16 +399,9 @@ function buildContentListHTML(rows: ContentRow[]): string {
         <button type="button" id="owner-bc-turn-off" class="px-5 py-2.5 bg-zinc-700 hover:bg-zinc-600 rounded-2xl text-sm font-semibold">
           Turn OFF banner (owner only)
         </button>
-        <button type="button" id="owner-bc-refresh-clicks" class="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-white/10 rounded-2xl text-sm font-semibold">
-          Refresh click stats
-        </button>
-      </div>
-      <div id="owner-bc-click-stats" class="mt-4 rounded-xl border border-white/10 bg-zinc-950/60 px-3 py-3 text-xs text-zinc-400">
-        Loading broadcaster click stats…
       </div>
     </div>
 
-    ${buildTrackingHubShellHtml()}
     <div id="content-list" class="space-y-3">
   `;
 
@@ -646,82 +604,6 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
   // Owner broadcast panel (message all site visitors via site_content)
   const publishBc = content.querySelector('#owner-bc-publish') as HTMLButtonElement | null;
   const offBc = content.querySelector('#owner-bc-turn-off') as HTMLButtonElement | null;
-  const refreshClicks = content.querySelector('#owner-bc-refresh-clicks') as HTMLButtonElement | null;
-  const clickStatsEl = content.querySelector('#owner-bc-click-stats') as HTMLElement | null;
-
-  async function loadBroadcastClickStats(): Promise<void> {
-    if (!clickStatsEl) return;
-    clickStatsEl.textContent = 'Loading broadcaster click stats…';
-    try {
-      const { invokeAdminAction } = await import('../lib/admin-action-client');
-      const result = await invokeAdminAction<Array<Record<string, unknown>>>('get_interaction_stats');
-      const rows: Array<Record<string, unknown>> =
-        result.success && Array.isArray(result.data) ? result.data : [];
-      const zones = new Set([
-        'owner-broadcast-link',
-        'owner-broadcast-sponsor',
-        'owner-broadcast-sponsor-img',
-      ]);
-      const clicks = rows.filter(
-        (r: Record<string, unknown>) =>
-          String(r.event_type || '') === 'click' &&
-          zones.has(String(r.zone_id || '')),
-      );
-      const byZone: Record<string, number> = {
-        'owner-broadcast-link': 0,
-        'owner-broadcast-sponsor': 0,
-        'owner-broadcast-sponsor-img': 0,
-      };
-      const byHref: Record<string, number> = {};
-      for (const r of clicks) {
-        const z = String(r.zone_id || '');
-        if (z in byZone) byZone[z] += 1;
-        const meta =
-          r.metadata && typeof r.metadata === 'object'
-            ? (r.metadata as Record<string, unknown>)
-            : {};
-        const href = String(meta.href || '').trim() || '(unknown)';
-        byHref[href] = (byHref[href] || 0) + 1;
-      }
-      const total = clicks.length;
-      const topHrefs = Object.entries(byHref)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8)
-        .map(
-          ([href, n]) =>
-            `<li class="flex justify-between gap-3 py-0.5"><span class="truncate text-zinc-300" title="${escapeHtml(href)}">${escapeHtml(href)}</span><span class="tabular-nums text-emerald-400 shrink-0">${n}</span></li>`,
-        )
-        .join('');
-      clickStatsEl.innerHTML = `
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-          <span class="font-semibold text-violet-200">Broadcaster link clicks</span>
-          <span class="text-emerald-400 font-bold tabular-nums">${total} total</span>
-        </div>
-        <div class="grid grid-cols-3 gap-2 mb-2 text-center">
-          <div class="rounded-lg bg-white/5 px-2 py-1.5"><div class="text-[10px] text-zinc-500">Body links</div><div class="text-sm font-bold text-white tabular-nums">${byZone['owner-broadcast-link']}</div></div>
-          <div class="rounded-lg bg-white/5 px-2 py-1.5"><div class="text-[10px] text-zinc-500">Sponsor CTA</div><div class="text-sm font-bold text-white tabular-nums">${byZone['owner-broadcast-sponsor']}</div></div>
-          <div class="rounded-lg bg-white/5 px-2 py-1.5"><div class="text-[10px] text-zinc-500">Sponsor img</div><div class="text-sm font-bold text-white tabular-nums">${byZone['owner-broadcast-sponsor-img']}</div></div>
-        </div>
-        ${
-          topHrefs
-            ? `<p class="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">Top destinations</p><ul class="space-y-0.5">${topHrefs}</ul>`
-            : `<p class="text-zinc-500">No broadcaster link clicks yet. Publish a message with links, then check back.</p>`
-        }
-        <p class="text-[10px] text-zinc-500 mt-2 leading-relaxed">Telegram: each click also pings your funnel bot when <code class="text-zinc-400">FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN</code> + <code class="text-zinc-400">CHAT_ID</code> are set in Supabase secrets (same bot as get-link alerts). Set <code class="text-zinc-400">FUNNEL_NOTIFY_BROADCAST_CLICKS=false</code> to mute only these.</p>
-        ${!result.success ? `<p class="text-amber-400/90 mt-2">Note: ${escapeHtml(String(result.error || 'stats may be incomplete'))}</p>` : ''}
-      `;
-    } catch (err) {
-      clickStatsEl.innerHTML = `<span class="text-amber-400">Could not load click stats (${escapeHtml(formatError(err))}). Viral Optimizer also shows zone heat including broadcaster zones.</span>`;
-    }
-  }
-
-  void loadBroadcastClickStats();
-  if (refreshClicks) {
-    refreshClicks.onclick = () => {
-      void loadBroadcastClickStats();
-    };
-  }
-
   function wireBroadcastImageUpload(opts: {
     fileInputId: string;
     uploadBtnId: string;
@@ -1235,12 +1117,6 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
       };
     }
 
-    (window as any).__currentBannersForStats = banners;
-    const statsEl = document.createElement('div');
-    statsEl.id = 'banner-stats';
-    statsEl.className = 'mt-3 pt-3 border-t border-white/10';
-    container.appendChild(statsEl);
-    renderBannerStats(statsEl).catch(() => {});
   }
 
   function sync() {

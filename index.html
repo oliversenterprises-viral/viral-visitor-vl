@@ -675,67 +675,9 @@
     </div>
 
     <div id="admin-more-tools-hold" hidden>
-            <div id="admin-live-hub" class="hidden px-8 py-3 border-b border-white/10 bg-zinc-950/60">
-                <div class="flex items-center justify-between gap-3 mb-2">
-                    <div class="flex items-center gap-2 text-sm font-semibold text-emerald-400">
-                        <span id="admin-live-status" class="hidden admin-live-dot text-emerald-400"><i class="fa-solid fa-circle text-[6px] mr-1"></i></span>
-                        <span>What’s happening now</span>
-                        <span id="admin-live-count" class="text-[10px] text-zinc-500 font-normal"></span>
-                        <span id="admin-live-status-text" class="hidden text-[10px] text-amber-400/90 font-normal"></span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" id="admin-live-sound-btn" class="admin-live-sound-btn admin-live-sound-btn--on text-[10px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 min-h-[32px] px-2 rounded-lg border border-white/10" aria-pressed="true" title="Sound alerts on — click to mute funnel chimes">
-                            <i class="fa-solid fa-volume-high" aria-hidden="true"></i><span data-sound-label>Sound on</span>
-                        </button>
-                        <button type="button" id="admin-live-sound-history-toggle" class="admin-live-sound-history-toggle text-[10px] text-zinc-400 hover:text-violet-300 flex items-center gap-1 min-h-[32px] px-2 rounded-lg border border-white/10" aria-expanded="false" aria-controls="admin-live-sound-history" title="Sound alert history">
-                            <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span>History</span><span id="admin-live-sound-history-count" class="admin-live-sound-history-count hidden">0</span>
-                        </button>
-                        <button type="button" id="admin-live-pause-btn" class="text-[10px] text-zinc-500 hover:text-white min-h-[32px]">Pause feed</button>
-                    </div>
-                </div>
-                <div id="admin-live-filters" class="flex flex-wrap items-center gap-1.5 mb-2" role="group" aria-label="Live feed filters">
-                    <button type="button" data-live-filter="referral" class="admin-live-filter-chip admin-live-filter-chip--on">Referrals</button>
-                    <button type="button" data-live-filter="share" class="admin-live-filter-chip admin-live-filter-chip--on">Shares</button>
-                    <button type="button" data-live-filter="visitor" class="admin-live-filter-chip admin-live-filter-chip--on">Funnel</button>
-                    <button type="button" data-live-filter="banner" class="admin-live-filter-chip admin-live-filter-chip--on">Banners</button>
-                    <button type="button" data-live-filter="claim" class="admin-live-filter-chip admin-live-filter-chip--on">Claims</button>
-                    <button type="button" data-live-filter="content" class="admin-live-filter-chip admin-live-filter-chip--on">CMS</button>
-                    <button type="button" data-live-filter="showLandings" class="admin-live-filter-chip" title="Include SiteLanding funnel events (noisy)">Landings</button>
-                    <span class="admin-live-filter-divider" aria-hidden="true"></span>
-                    <span class="text-[9px] text-zinc-600 uppercase tracking-wide">Traffic</span>
-                    <button type="button" data-live-segment="all" class="admin-live-filter-chip admin-live-filter-chip--on" title="Show referred and direct funnel events">All</button>
-                    <button type="button" data-live-segment="referred" class="admin-live-filter-chip" title="Only visitors who landed via a referral link">Referred</button>
-                    <button type="button" data-live-segment="direct" class="admin-live-filter-chip" title="Only visitors without a landing referral code">Direct</button>
-                </div>
-                <p id="admin-live-offsite-status" class="admin-live-offsite-status text-[9px] text-zinc-600 mb-1.5" title="Server webhook alerts work even when this panel is closed"></p>
-                <div id="admin-live-feed" class="admin-live-feed flex gap-2 overflow-x-auto pb-1">
-                    <div class="admin-live-feed-empty text-[10px] text-zinc-500 py-1">Waiting for live events…</div>
-                </div>
-                <div id="admin-live-sound-history" class="hidden admin-live-sound-history mt-2 rounded-xl border border-white/10 bg-zinc-900/70" role="region" aria-label="Sound alert history">
-                    <div class="flex items-center justify-between gap-2 px-3 py-2 border-b border-white/10">
-                        <span class="text-[10px] font-semibold uppercase tracking-wider text-violet-300/90">Sound alert log</span>
-                        <button type="button" id="admin-live-sound-history-clear" class="text-[10px] text-zinc-500 hover:text-rose-300">Clear</button>
-                    </div>
-                    <div id="admin-live-sound-history-list" class="admin-live-sound-history-list max-h-36 overflow-y-auto px-2 py-1.5"></div>
-                </div>
-            </div>
-
-            <div id="admin-pending-banner" class="hidden px-8 py-2 bg-amber-500/15 border-b border-amber-500/30 text-sm text-amber-200">
-                <i class="fa-solid fa-bell mr-2"></i><span id="admin-pending-count">0</span> people asked for the homepage feature — open Prize requests
-            </div>
-           
             <div class="flex border-b border-white/10 px-8 admin-tab-bar overflow-x-auto items-center">
-                <button type="button" onclick="switchAdminTab(0)" id="tab-0" data-admin-tab="0" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold border-b-2 border-violet-500 text-violet-400 whitespace-nowrap" aria-label="Friends — referrals">Friends<span id="tab-0-badge" class="admin-tab-badge hidden">0</span></button>
-                <button type="button" onclick="switchAdminTab(3)" id="tab-3" data-admin-tab="3" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Prize requests — homepage feature claims">Prize requests<span id="tab-3-badge" class="admin-tab-badge hidden">0</span><span id="tab-3-live-badge" class="admin-tab-badge hidden">0</span></button>
-                <button type="button" onclick="switchAdminTab(2)" id="tab-2" data-admin-tab="2" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Website words — edit content">Website words<span id="tab-2-badge" class="admin-tab-badge hidden">0</span></button>
-                <button type="button" onclick="switchAdminTab(1)" id="tab-1" data-admin-tab="1" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Shares — share analytics">Shares<span id="tab-1-badge" class="admin-tab-badge hidden">0</span></button>
-                <button type="button" onclick="switchAdminTab(4)" id="tab-4" data-admin-tab="4" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Colors — text colors">Colors<span id="tab-4-badge" class="admin-tab-badge hidden">0</span></button>
-                <button type="button" onclick="switchAdminTab(5)" id="tab-5" data-admin-tab="5" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Auto-pilot — viral optimizer">Auto-pilot<span id="tab-5-badge" class="admin-tab-badge hidden">0</span></button>
-                <button type="button" onclick="switchAdminTab(6)" id="tab-6" data-admin-tab="6" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Promoters — affiliates">Promoters<span id="tab-6-badge" class="admin-tab-badge hidden">0</span></button>
-            </div>
-            <div id="admin-tab-coach-row" class="px-8 py-2 border-b border-white/5 flex flex-wrap items-center justify-between gap-2">
-                <p id="admin-tab-coach" class="text-sm text-zinc-400">Friends who got credit when someone used their link.</p>
-                <button type="button" id="admin-stats-more-btn" class="text-xs font-semibold px-3 py-1.5 rounded-2xl border border-white/15 text-zinc-300 hover:text-white" aria-expanded="false">More numbers</button>
+                <button type="button" onclick="switchAdminTab(3)" id="tab-3" data-admin-tab="3" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Prize — approve homepage-banner claims">Prize<span id="tab-3-badge" class="admin-tab-badge hidden">0</span></button>
+                <button type="button" onclick="switchAdminTab(2)" id="tab-2" data-admin-tab="2" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Website — edit public words and pictures">Website</button>
             </div>
     </div>
 
@@ -791,27 +733,6 @@
 
             <div class="mt-8 flex justify-end">
                 <button onclick="closeClaimDetailsModal()" 
-                        class="px-6 py-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-2xl font-semibold">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Referral Details Modal (for improved Referrals tab - modeled exactly on claim-details-modal) -->
-    <div id="referral-details-modal" onclick="closeReferralDetailsModal()" class="hidden fixed inset-0 bg-black/90 z-[700] flex items-center justify-center vr-modal-overlay">
-        <div onclick="event.stopImmediatePropagation()" class="vr-modal-panel glass border border-white/10 rounded-3xl w-full max-w-2xl mx-4 p-6 sm:p-8">
-            <div class="flex items-center justify-between mb-6">
-                <div class="font-bold text-2xl">Referral Details</div>
-                <button onclick="closeReferralDetailsModal()" class="text-3xl text-zinc-400 hover:text-white">✕</button>
-            </div>
-
-            <div id="referral-details-content" class="space-y-4 text-sm">
-                <!-- Populated dynamically by JS in showReferralDetails() -->
-            </div>
-
-            <div class="mt-8 flex justify-end gap-3">
-                <button onclick="closeReferralDetailsModal()" 
                         class="px-6 py-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-2xl font-semibold">
                     Close
                 </button>

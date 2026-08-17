@@ -3087,10 +3087,6 @@ input, select, textarea {
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.1);
 }
 
-html[data-vr-admin-simple]:not([data-vr-admin-stats-more]) [data-vr-admin-stats-extra] {
-  display: none !important;
-}
-
 /* Admin tab bar — horizontal scroll on mobile */
 .admin-tab-bar {
   -webkit-overflow-scrolling: touch;
@@ -3099,165 +3095,6 @@ html[data-vr-admin-simple]:not([data-vr-admin-stats-more]) [data-vr-admin-stats-
 
 .admin-tab-bar::-webkit-scrollbar {
   height: 4px;
-}
-
-/* Admin live activity hub */
-.admin-live-feed {
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-
-.admin-live-hub--connected .admin-live-dot {
-  animation: admin-live-dot-pulse 2s ease-in-out infinite;
-}
-
-.admin-live-filter-chip {
-  font-size: 9px;
-  padding: 3px 8px;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgb(161 161 170);
-  background: rgba(24, 24, 27, 0.6);
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
-}
-
-.admin-live-filter-chip:hover {
-  color: rgb(228 228 231);
-  border-color: rgba(255, 255, 255, 0.22);
-}
-
-.admin-live-filter-chip--on {
-  color: rgb(216 180 254);
-  border-color: rgba(167, 139, 250, 0.45);
-  background: rgba(139, 92, 246, 0.15);
-}
-
-.admin-live-filter-chip[data-live-filter="showLandings"].admin-live-filter-chip--on {
-  color: rgb(251 191 36);
-  border-color: rgba(251, 191, 36, 0.4);
-  background: rgba(245, 158, 11, 0.12);
-}
-
-.admin-live-filter-divider {
-  width: 1px;
-  height: 14px;
-  margin: 0 2px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.admin-live-offsite-status--on {
-  color: rgb(52 211 153);
-}
-
-.admin-live-sound-btn {
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-}
-
-.admin-live-sound-btn--on {
-  color: rgb(52 211 153);
-  border-color: rgba(52, 211, 153, 0.35);
-  background: rgba(16, 185, 129, 0.1);
-}
-
-.admin-live-sound-btn--off {
-  color: rgb(161 161 170);
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(24, 24, 27, 0.5);
-}
-
-.admin-live-sound-history-toggle {
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-
-.admin-live-sound-history-count {
-  min-width: 1rem;
-  height: 1rem;
-  padding: 0 0.25rem;
-  border-radius: 9999px;
-  background: rgba(139, 92, 246, 0.35);
-  color: #ede9fe;
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 1rem;
-  text-align: center;
-}
-
-.admin-live-sound-history-list {
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-
-.admin-sound-history-row {
-  display: grid;
-  grid-template-columns: 5.5rem 3.5rem 1fr auto;
-  gap: 0.35rem 0.5rem;
-  align-items: center;
-  padding: 0.35rem 0.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 10px;
-}
-
-.admin-sound-history-row:last-child {
-  border-bottom: none;
-}
-
-.admin-sound-history-row--fresh {
-  animation: vr-activity-fresh 1.5s ease-out;
-}
-
-.admin-sound-history-time {
-  color: #a1a1aa;
-}
-
-.admin-sound-history-profile {
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 9px;
-  letter-spacing: 0.03em;
-}
-
-.admin-sound-history-profile--funnel {
-  color: #7dd3fc;
-}
-
-.admin-sound-history-profile--referral {
-  color: #6ee7b7;
-}
-
-.admin-sound-history-profile--share {
-  color: #c4b5fd;
-}
-
-.admin-sound-history-profile--claim {
-  color: #fcd34d;
-}
-
-.admin-sound-history-label {
-  color: #e4e4e7;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.admin-sound-history-detail {
-  color: #71717a;
-  font-size: 9px;
-}
-
-@media (max-width: 640px) {
-  .admin-sound-history-row {
-    grid-template-columns: 4.5rem 3rem 1fr;
-  }
-
-  .admin-sound-history-detail {
-    grid-column: 1 / -1;
-    padding-left: 0.25rem;
-  }
-}
-
-.admin-live-chip--fresh {
-  animation: vr-activity-fresh 1.5s ease-out;
-  border-color: rgba(52, 211, 153, 0.35) !important;
 }
 
 .admin-tab-badge {
@@ -3280,18 +3117,8 @@ html[data-vr-admin-simple]:not([data-vr-admin-stats-more]) [data-vr-admin-stats-
   animation: badge-pulse 2s ease-in-out infinite;
 }
 
-@keyframes admin-live-dot-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
-}
-
 /* Pending claims badge pulse when visible */
 #tab-3-badge:not(.hidden) {
-  animation: badge-pulse 2s ease-in-out infinite;
-}
-
-#tab-3-live-badge:not(.hidden) {
-  right: -0.25rem;
   animation: badge-pulse 2s ease-in-out infinite;
 }
 
@@ -3314,8 +3141,6 @@ html[data-vr-admin-simple]:not([data-vr-admin-stats-more]) [data-vr-admin-stats-
 
   .admin-tab-content .view-claim-btn,
   .admin-tab-content .action-claim-btn,
-  .admin-tab-content .view-referral-btn,
-  .admin-tab-content .copy-code-btn,
   .admin-tab-content .copy-cashtag-btn {
     min-height: 32px;
     min-width: 32px;
@@ -3827,8 +3652,6 @@ html[data-vr-touch] .share-btn {
 
   .admin-tab-content .view-claim-btn,
   .admin-tab-content .action-claim-btn,
-  .admin-tab-content .view-referral-btn,
-  .admin-tab-content .copy-code-btn,
   .admin-tab-content .copy-cashtag-btn {
     min-height: 44px;
     min-width: 44px;
