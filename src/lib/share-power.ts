@@ -5,6 +5,7 @@
 
 import { appendChallengeParam, formatChallengeSharePrefix } from './challenge-mode';
 import { t } from './i18n';
+import { LOCKED_SHARE_TEXT, sharePayloadHasBannerRace } from './prize-slot';
 import { getStoredLandingRef } from './referral-url';
 import { formatShareGapNudge } from './share-gap';
 import { getViralLoopsConfig } from './viral-loops-config';
@@ -50,21 +51,20 @@ function defaultShareTemplate(): string {
   return t('share.default');
 }
 
-/** First-screen share copy (native + WhatsApp). Link stays in the text, never a separate url field. */
-export const FIRST_SCREEN_SHARE_TEXT =
-  'Open this and tap Get my link. 30 seconds, no signup. Race me on ViralRefer.\n{link}';
+/** First-screen share copy (native + WhatsApp + SMS). Link stays in the text. */
+export const FIRST_SCREEN_SHARE_TEXT = LOCKED_SHARE_TEXT;
 
 /** Status + near-win share copy — competition first, prize second (homepage feature, not cash). */
 const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
   whatsapp: FIRST_SCREEN_SHARE_TEXT,
   native: FIRST_SCREEN_SHARE_TEXT,
+  sms: FIRST_SCREEN_SHARE_TEXT,
   boost:
     "I just entered ViralRefer's live worldwide leaderboard 🏆\nFree, ~30 sec, no signup. #1 can claim a homepage feature.\nChallenge: can you beat my rank?\n\n{link}",
   reddit:
     'ViralRefer — live worldwide referral leaderboard (no signup). Climb ranks in real time; #1 can claim a homepage feature.',
   bluesky:
     "I'm racing the ViralRefer worldwide leaderboard 🏆 Free in ~30 sec · no signup · #1 claims a homepage feature\nCan you beat me?\n\n{link}",
-  sms: "I'm on ViralRefer's live leaderboard 🏆 Free, no signup. Can you beat me? #1 claims homepage feature. {link}",
   email:
     "Hey! I'm competing on ViralRefer — a free worldwide referral leaderboard with live ranks. #1 can claim a homepage feature for their site.\n\nJoin free in ~30 sec (no signup) and try to beat me:\n{link}",
   linkedin:
@@ -171,17 +171,20 @@ export function buildShareMessage(
   } = {},
 ): string {
   const platform = options.platform ?? 'other';
-  const firstScreen = platform === 'native' || platform === 'whatsapp';
+  const lockedScreen =
+    platform === 'native' || platform === 'whatsapp' || platform === 'sms' || platform === 'copy';
   const linkTrimmed = (options.trackUtm ? buildTrackedShareLink(link, platform) : link).trim();
   const adminTemplate = options.template?.trim();
   const abTemplate = options.abTemplate?.trim();
+  const acceptAdmin =
+    !!adminTemplate && (!lockedScreen || sharePayloadHasBannerRace(adminTemplate));
 
   let raw =
-    adminTemplate ||
-    (firstScreen ? undefined : abTemplate) ||
+    (acceptAdmin ? adminTemplate : undefined) ||
+    (lockedScreen ? undefined : abTemplate) ||
     PLATFORM_MESSAGE_OVERRIDES[platform] ||
     defaultShareTemplate();
-  if (adminTemplate && PLATFORM_MESSAGE_OVERRIDES[platform] && !adminTemplate.includes('{link}')) {
+  if (acceptAdmin && adminTemplate && PLATFORM_MESSAGE_OVERRIDES[platform] && !adminTemplate.includes('{link}')) {
     raw = PLATFORM_MESSAGE_OVERRIDES[platform]!;
   }
 
@@ -189,7 +192,7 @@ export function buildShareMessage(
     referralCount: options.referralCount,
     leaderboardRank: options.leaderboardRank,
     gapToNextRank: options.gapToNextRank,
-    skipStatusPrefix: firstScreen && !adminTemplate,
+    skipStatusPrefix: lockedScreen && !acceptAdmin,
   });
   return platform === 'x' ? stripViralReferAppUrls(rendered) : rendered;
 }

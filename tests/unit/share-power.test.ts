@@ -24,15 +24,18 @@ describe('share-power', () => {
     expect(msg).toBe(`Check this out: ${LINK}`);
   });
 
-  it('first-screen WhatsApp/native copy is Helix contract text with the link', () => {
+  it('first-screen WhatsApp/native/SMS copy is Helix Bet 2 banner-race text', () => {
     const wa = buildShareMessage(LINK, { platform: 'whatsapp', trackUtm: false });
-    expect(wa).toContain('Open this and tap Get my link');
-    expect(wa).toContain('Race me on ViralRefer');
+    expect(wa).toContain('racing for the ViralRefer homepage');
+    expect(wa).toContain('banner');
+    expect(wa).toMatch(/beat me/i);
     expect(wa).toContain(LINK);
     expect(wa).not.toMatch(/^I'm #/ );
 
     const native = buildShareMessage(LINK, { platform: 'native', trackUtm: false });
     expect(native).toBe(wa);
+    const sms = buildShareMessage(LINK, { platform: 'sms', trackUtm: false });
+    expect(sms).toBe(wa);
 
     const reddit = buildShareMessage(LINK, { platform: 'reddit' });
     expect(reddit).not.toContain(LINK);
@@ -102,7 +105,7 @@ describe('share-power', () => {
   });
 
   it('buildShareMessage prefixes referral count when provided', () => {
-    const msg = buildShareMessage(LINK, { platform: 'sms', referralCount: 3, trackUtm: false });
+    const msg = buildShareMessage(LINK, { platform: 'email', referralCount: 3, trackUtm: false });
     expect(msg).toContain('3 referrals');
     expect(msg).toContain(LINK);
   });
@@ -181,11 +184,13 @@ describe('share-power', () => {
 
   it('buildNativeShareData never includes a url field', () => {
     const data = buildNativeShareData(
-      'Open this and tap Get my link. 30 seconds, no signup. Race me on ViralRefer.\n' + LINK,
+      "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me. " +
+        LINK,
       LINK,
     );
     expect(data.text).toContain(LINK);
-    expect(data.text).toMatch(/Get my link/);
+    expect(data.text).toMatch(/homepage/);
+    expect(data.text).toMatch(/beat me/i);
     expect(data).not.toHaveProperty('url');
     expect(Object.keys(data).sort()).toEqual(['text', 'title']);
   });

@@ -23,7 +23,7 @@ describe('kid-simple first paint', () => {
 
   it('first screen is one race with Get my referral link', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="daily-champion-strip"'));
+    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).toMatch(/Win the homepage/);
     expect(hero).toMatch(/#1 gets a banner for their site/);
     expect(hero).toMatch(/Tap Get my link\. Send it\. When a friend taps Get my link, you climb/);
@@ -33,6 +33,9 @@ describe('kid-simple first paint', () => {
     expect(hero).toMatch(/Free\. No email\. No cash\. Recognition only/);
     expect(hero).toContain('id="hero-banner-mock"');
     expect(hero).toContain('Your site here');
+    expect(hero).toContain('Your site here · 30 days');
+    expect(hero).not.toContain('yourwebsite.com');
+    expect(hero).toContain('Early ranks are open. #1 puts their website on this page.');
     expect(hero).not.toContain('See leaderboard');
     expect(hero).not.toContain('id="hero-leaderboard-btn"');
     expect(hero).not.toContain('Telegram');
@@ -62,6 +65,7 @@ describe('kid-simple first paint', () => {
 
   it('keeps How visible on a cold land even after visitor-slim', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
+    const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     expect(css).not.toMatch(
       /html\[data-vr-visitor-slim\]\[data-vr-slim-segment='direct'\]:not\(\[data-vr-has-link\]\) #how\s*,/,
     );
@@ -69,6 +73,10 @@ describe('kid-simple first paint', () => {
       /html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-landing\]\) #how\s*\{/,
     );
     expect(css).toMatch(/html:not\(\[data-vr-share-locked\]\) #daily-crown-section/);
+    expect(html).not.toContain('id="daily-crown-section"');
+    expect(html).not.toContain('id="weekly-sprint-board"');
+    expect(html).not.toContain('id="community-unlock-meter"');
+    expect(html).not.toContain('id="daily-champion-strip"');
   });
 
   it('keeps cash-bonus and owner password chrome out of first-paint HTML', () => {
@@ -84,7 +92,7 @@ describe('kid-simple first paint', () => {
 
   it('does not paint em-dash referral proof before hydration', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    const hero = html.slice(html.indexOf('id="vr-verified-total"'), html.indexOf('id="daily-champion-strip"'));
+    const hero = html.slice(html.indexOf('id="vr-verified-total"'), html.indexOf('id="funnel-journey"'));
     expect(hero).not.toMatch(/—\s*verified referrals/);
     expect(hero).not.toContain('— people got a link today');
     expect(hero).toContain('id="total-referrers"');

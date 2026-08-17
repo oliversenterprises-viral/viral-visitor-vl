@@ -17,7 +17,7 @@ function sliceById(html: string, id: string, untilId?: string): string {
 describe('post-link first paint', () => {
   it('keeps #32 hero first screen unchanged', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    const hero = sliceById(html, 'hero-title', 'daily-champion-strip');
+    const hero = sliceById(html, 'hero-title', 'funnel-journey');
     expect(hero).toMatch(/Win the homepage/);
     expect(hero).toMatch(/#1 gets a banner for their site/);
     expect(hero).toMatch(/Tap Get my link\. Send it\. When a friend taps Get my link, you climb/);

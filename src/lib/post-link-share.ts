@@ -4,6 +4,7 @@
  */
 
 import { registerGlobal } from './global';
+import { LOCKED_SHARE_TEXT } from './prize-slot';
 import { buildNativeShareData } from './share-power';
 import { recordShareEvent } from './record-share';
 import { trackVisitorFunnel } from './visitor-tracking';
@@ -12,8 +13,7 @@ import { showToast } from '../ui';
 
 export const POST_LINK_ATTR = 'data-vr-post-link-one';
 
-export const POST_LINK_SHARE_TEXT =
-  'Open this and tap Get my link. 30 seconds, no signup. Race me on ViralRefer.\n{link}';
+export const POST_LINK_SHARE_TEXT = LOCKED_SHARE_TEXT;
 
 const IDS = {
   root: 'post-link-share',

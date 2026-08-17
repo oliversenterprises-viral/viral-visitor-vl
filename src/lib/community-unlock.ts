@@ -2,6 +2,7 @@
  * Community unlock meter — together we hit a weekly referral goal.
  */
 
+import { EMPTY_BOARD_LINE } from './prize-slot';
 import { getViralLoopsConfig } from './viral-loops-config';
 import {
   COMMUNITY_HALF_UNLOCK_PCT,
@@ -26,6 +27,7 @@ export function communityUnlockPercent(current: number, goal: number): number {
 }
 
 export function communityUnlockLabel(current: number, goal: number): string {
+  if (current <= 0) return EMPTY_BOARD_LINE;
   return `Together: ${current.toLocaleString()} / ${goal.toLocaleString()} referrals this week`;
 }
 

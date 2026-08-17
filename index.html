@@ -17,7 +17,7 @@
     
     <!-- SEO (organic Google + social) -->
     <title>Win the ViralRefer homepage — #1 gets a banner</title>
-    <meta name="description" content="Tap Get my link. 30 seconds, no signup. A friend does the same. You climb.">
+    <meta name="description" content="I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me.">
     <meta name="keywords" content="referral program, viral marketing, free referral link, live leaderboard, homepage feature, no signup">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <meta name="googlebot" content="index, follow">
@@ -29,14 +29,14 @@
     <meta property="og:locale" content="en_US">
     <meta property="og:url" content="https://www.viralrefer.app/">
     <meta property="og:title" content="Win the ViralRefer homepage — #1 gets a banner">
-    <meta property="og:description" content="Tap Get my link. 30 seconds, no signup. A friend does the same. You climb.">
+    <meta property="og:description" content="I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me.">
     <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://www.viralrefer.app/">
     <meta name="twitter:title" content="Win the ViralRefer homepage — #1 gets a banner">
-    <meta name="twitter:description" content="Tap Get my link. 30 seconds, no signup. A friend does the same. You climb.">
+    <meta name="twitter:description" content="I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me.">
     <meta name="twitter:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png">
 
     <!-- Favicon -->
@@ -53,7 +53,7 @@
         "@type": "WebSite",
         "name": "ViralRefer",
         "url": "https://www.viralrefer.app",
-        "description": "Open this and tap Get my link. 30 seconds, no signup. Race for a homepage banner on ViralRefer.",
+        "description": "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me.",
         "inLanguage": "en",
         "publisher": { "@type": "Organization", "name": "ViralRefer", "url": "https://www.viralrefer.app" }
       },
@@ -63,7 +63,7 @@
         "name": "ViralRefer",
         "url": "https://www.viralrefer.app",
         "logo": "https://www.viralrefer.app/favicon.svg",
-        "description": "Open this and tap Get my link. 30 seconds, no signup. Race for a homepage banner on ViralRefer."
+        "description": "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me."
       },
       {
         "@context": "https://schema.org",
@@ -73,7 +73,7 @@
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-        "description": "Open this and tap Get my link. 30 seconds, no signup. Race for a homepage banner on ViralRefer."
+        "description": "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me."
       },
       {
         "@context": "https://schema.org",
@@ -92,7 +92,7 @@
           {
             "@type": "Question",
             "name": "What does the #1 referrer get?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Open worldwide. The top referrer on the live leaderboard can claim a homepage banner feature for their website after verification (minimum referrals as shown on site). There is no cash prize." }
+            "acceptedAnswer": { "@type": "Answer", "text": "Open worldwide. Verified #1 with at least 10 friends who tapped Get my link can claim a homepage banner for their website. There is no cash prize." }
           },
           {
             "@type": "Question",
@@ -184,14 +184,14 @@
                 <p id="hero-lock-rule" class="mt-2 text-sm text-zinc-400 max-w-lg mx-auto">
                     Your link counts when a friend taps Get my link.
                 </p>
-                <div id="hero-banner-mock" class="hero-banner-mock mt-6 mx-auto max-w-sm text-left" aria-label="Homepage banner prize preview">
+                <div id="hero-banner-mock" class="hero-banner-mock mt-6 mx-auto max-w-sm text-left" aria-label="Homepage banner prize preview" data-vr-prize-slot="empty">
                     <div class="rounded-2xl border border-white/15 bg-black/30 px-4 py-3.5">
                         <div class="text-[10px] uppercase tracking-wider text-amber-200/90 font-semibold mb-2">30-day homepage banner</div>
                         <div class="flex items-center gap-3">
                             <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-lg ring-1 ring-white/20" aria-hidden="true">#1</div>
                             <div class="min-w-0">
-                                <div class="font-semibold text-white leading-tight">Your site here</div>
-                                <div class="text-xs text-emerald-300/90 font-mono truncate">yourwebsite.com · 30 days</div>
+                                <a id="hero-slot-site" class="font-semibold text-white leading-tight" aria-disabled="true">Your site here</a>
+                                <div id="hero-slot-meta" class="text-xs text-emerald-300/90 font-mono truncate">Your site here · 30 days</div>
                             </div>
                         </div>
                     </div>
@@ -202,7 +202,7 @@
                     #1 may claim a free homepage banner feature after verification — recognition only.
                 </p>
                 <p id="hero-prize-fomo" class="mt-2 text-xs sm:text-sm font-semibold text-amber-200/90 max-w-lg mx-auto leading-snug" data-i18n="share_first.fomo">
-                    Early ranks are still open — #1 can claim a free homepage feature (no cash).
+                    Early ranks are open. #1 puts their website on this page.
                 </p>
 
                 <div id="hero-campaign-badge" data-vr-slim-redundant class="hidden" aria-hidden="true">
@@ -227,9 +227,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- DAILY CHAMPION STRIP (yesterday's UTC #1 — 24h recognition, no cash; not overall homepage feature) -->
-        <div id="daily-champion-strip" class="hidden daily-champion-strip mt-6 max-w-3xl mx-auto rounded-2xl border border-amber-400/35 bg-gradient-to-r from-amber-500/15 via-zinc-900/80 to-amber-600/10 px-4 py-3.5" role="status" aria-live="polite" aria-label="Daily Crown champion"></div>
 
         <!-- FUNNEL JOURNEY — hidden on quiet first paint; expands after get-link (competitive guidance) -->
         <div id="funnel-journey" class="funnel-journey-card funnel-journey-quiet mt-6 max-w-3xl mx-auto" data-vr-zone="funnel-journey" data-vr-declutter-post-link>
@@ -398,7 +395,7 @@
                 </div>
                 <div>
                     <h3 class="font-semibold text-white">What does #1 get?</h3>
-                    <p class="text-zinc-400 mt-1">A homepage banner for their website after verification. There is no cash prize.</p>
+                    <p class="text-zinc-400 mt-1">Verified #1 with at least 10 friends who tapped Get my link can claim a homepage banner for their website. There is no cash prize.</p>
                 </div>
                 <div>
                     <h3 class="font-semibold text-white">How does the board work?</h3>
@@ -428,76 +425,19 @@
                 </div>
 
                 <!-- Visual prize mock (dynamic banner rotation targets #prize-banner-visual) -->
-                <div id="prize-banner-visual" class="mt-6 max-w-md mx-auto">
+                <div id="prize-banner-visual" class="mt-6 max-w-md mx-auto" data-vr-prize-slot="empty">
                     <div class="glass border border-white/10 rounded-3xl p-6 text-left">
+                        <img id="prize-slot-thumb" class="hidden w-full h-auto rounded-2xl mb-3" alt="" />
                         <div class="flex items-center gap-4">
-                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-2xl ring-1 ring-white/20">V</div>
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-2xl ring-1 ring-white/20">#1</div>
                             <div>
-                                <div class="font-semibold">ViralRefer</div>
-                                <div class="text-xs text-zinc-400">Featured Partner</div>
-                                <div class="text-sm text-emerald-400 font-mono">Your site here · 30 days</div>
+                                <a id="prize-slot-site" class="font-semibold text-white" aria-disabled="true">Your site here</a>
+                                <div class="text-xs text-zinc-400">30-day homepage slot</div>
+                                <div id="prize-slot-meta" class="text-sm text-emerald-400 font-mono">Your site here · 30 days</div>
                             </div>
                         </div>
-                        <div class="mt-4 text-xs text-zinc-400">Verified #1 can claim this homepage slot. Recognition only. No cash prize.</div>
+                        <p id="prize-threshold" class="mt-4 text-sm text-zinc-200">Verified #1 with at least <span id="min-referrals-value">10</span> friends who tapped Get my link can claim the banner.</p>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- COMMUNITY UNLOCK METER -->
-        <div id="community-unlock-meter" data-vr-zone="community-unlock" class="hidden community-unlock-meter mt-12 rounded-3xl border border-cyan-400/25 bg-gradient-to-br from-cyan-500/10 via-zinc-900/80 to-violet-500/5 px-6 py-5" role="status" aria-live="polite">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-users text-cyan-300 text-sm" aria-hidden="true"></i>
-                    <span class="text-xs uppercase tracking-wider font-bold text-cyan-200">Community unlock</span>
-                </div>
-                <span data-community-pct class="text-sm font-bold text-cyan-300 tabular-nums">0%</span>
-            </div>
-            <p data-community-label class="text-sm text-zinc-100">Together: 0 / 100 referrals this week</p>
-            <div class="h-2.5 bg-zinc-800 rounded-full overflow-hidden my-3">
-                <div data-community-fill class="community-unlock-meter__fill h-full bg-gradient-to-r from-cyan-400 to-violet-400 transition-all duration-700" style="width:0%"></div>
-            </div>
-            <p data-community-status class="text-[11px] text-zinc-400">Hit the weekly goal together — everyone wins momentum.</p>
-        </div>
-
-        <!-- WEEKLY SPRINT BOARD -->
-        <div id="weekly-sprint-board" data-vr-zone="weekly-sprint" class="hidden mt-8">
-            <div class="flex items-center gap-3 mb-4">
-                <h2 class="text-3xl font-bold tracking-tight text-white">Weekly Sprint</h2>
-                <span class="px-2.5 py-0.5 bg-cyan-500/15 text-cyan-300 text-[10px] font-bold uppercase tracking-wide rounded-full border border-cyan-400/30">7-day board</span>
-            </div>
-            <p class="text-sm text-zinc-400 mb-4">Mini-leaderboard for referrals in the last 7 days — separate from the main board.</p>
-            <div id="weekly-sprint-container" class="min-h-[120px]" aria-busy="true">
-                <!-- Skeleton seeded by public-polish.ts until sprint loads -->
-            </div>
-        </div>
-
-        <!-- DAILY CROWN — 24h UTC race + Hall of Crowns (no cash; separate from overall #1 homepage feature) -->
-        <div id="daily-crown-section" data-vr-zone="daily-crown" class="hidden mt-10">
-            <div class="flex flex-wrap items-center gap-3 mb-2">
-                <h2 class="text-3xl font-bold tracking-tight text-white">Daily Crown</h2>
-                <span class="px-2.5 py-0.5 bg-amber-500/15 text-amber-300 text-[10px] font-bold uppercase tracking-wide rounded-full border border-amber-400/35">24h · UTC</span>
-                <span class="text-[11px] text-zinc-500 tabular-nums">Resets in <span id="daily-crown-countdown">—</span></span>
-            </div>
-            <p class="text-sm text-zinc-400 mb-4 max-w-2xl">
-                Top referrer each UTC day wins the <strong class="text-amber-200/90 font-semibold">Daily Crown</strong> —
-                homepage strip + flair + share card. Recognition only. Not the overall #1 homepage banner prize.
-            </p>
-            <div id="daily-crown-share-panel" class="hidden mb-4"></div>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="rounded-2xl border border-amber-400/20 bg-zinc-950/50 p-4">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span class="text-amber-400" aria-hidden="true">⚡</span>
-                        <h3 class="text-sm font-bold uppercase tracking-wide text-amber-200/90">Today&apos;s race</h3>
-                    </div>
-                    <div id="daily-crown-race-container" class="min-h-[100px]" aria-busy="true"></div>
-                </div>
-                <div class="rounded-2xl border border-white/10 bg-zinc-950/50 p-4">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span class="text-amber-400" aria-hidden="true">👑</span>
-                        <h3 class="text-sm font-bold uppercase tracking-wide text-zinc-200">Hall of Crowns</h3>
-                    </div>
-                    <div id="hall-of-crowns-container" class="min-h-[100px]" aria-busy="true"></div>
                 </div>
             </div>
         </div>

@@ -68,7 +68,8 @@ export const en = {
   'prize.card2_title': 'Free recognition',
   'prize.card2_desc': 'No cash payout — pure visibility & social proof.',
   'prize.card3_title': 'Minimum referrals',
-  'prize.card3_desc': 'Unique, verified signups only (see threshold on site).',
+  'prize.card3_desc':
+    'Verified #1 with at least 10 friends who tapped Get my link can claim the banner.',
   'prize.cta': "I'm #1 — Claim Homepage Feature",
   'prize.winner_badge': 'CURRENT #1 CAN CLAIM THIS',
 
@@ -135,7 +136,7 @@ export const en = {
 
   // Share (default template)
   'share.default':
-    "I'm on ViralRefer's live board 🏆 Free link · no signup · ~30 sec. #1 can feature their website. Can you beat me? {link}",
+    "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me. {link}",
 
   // One clear public rule (everywhere):
   // Friend must Get my link to lock · ~48h base · sharing can add time · copy never locks.
@@ -182,7 +183,7 @@ export const en = {
     'Simple rule: a friend must open your link and tap Get my link. That locks it. Copying alone never locks. Sharing can add extra time.',
   'share_first.copy_only': 'Copy only (does not lock)',
   'share_first.fomo':
-    'Race for #1 — homepage feature for your site. Early ranks are open.',
+    'Early ranks are open. #1 puts their website on this page.',
 
   // Send mode — one primary action after get-link (main funnel fix)
   'send_mode.primary_cta': 'Send to a friend now',
@@ -328,7 +329,7 @@ const es = dict({
   'coach.fallback':
     'Soy tu coach — pregunta por el enlace, copiar, compartir o el destacado en la web.',
   'share.default':
-    'Estoy en el ranking mundial en vivo de ViralRefer 🏆 Gratis · sin registro · ~30 seg. El #1 puede reclamar un destacado. ¿Me ganas? {link}',
+    'Voy a por la portada de ViralRefer — el #1 pone un banner de su web. Consigue un enlace gratis e intenta ganarme. {link}',
 });
 
 const fr = dict({

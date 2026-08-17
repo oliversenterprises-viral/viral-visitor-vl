@@ -81,6 +81,7 @@ describe('community-unlock', () => {
 
   it('formats together label', () => {
     expect(communityUnlockLabel(42, 25)).toBe('Together: 42 / 25 referrals this week');
+    expect(communityUnlockLabel(0, 100)).toBe('Board is open. #1 is winnable this week.');
   });
 });
 

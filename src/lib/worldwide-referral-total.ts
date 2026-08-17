@@ -6,6 +6,7 @@
  */
 
 import { t, type MessageKey } from './i18n';
+import { EMPTY_BOARD_LINE } from './prize-slot';
 
 export function formatVerifiedReferralTotalLabel(total: number): string {
   if (total === 1) return 'verified referral worldwide';
@@ -68,14 +69,21 @@ export function applyWorldwideReferralTotal(input: {
   const numText = total.toLocaleString();
 
   const numEl = document.getElementById('total-referrers');
-  if (numEl) {
-    numEl.textContent = numText;
-    numEl.setAttribute('data-vr-total-verified', String(total));
-  }
-
   const labelEl = document.getElementById('hero-stats-suffix');
-  if (labelEl) {
-    labelEl.textContent = ` ${formatVerifiedReferralTotalLabel(total)}`;
+  if (total <= 0) {
+    if (numEl) {
+      numEl.textContent = '';
+      numEl.setAttribute('data-vr-total-verified', '0');
+    }
+    if (labelEl) labelEl.textContent = EMPTY_BOARD_LINE;
+  } else {
+    if (numEl) {
+      numEl.textContent = numText;
+      numEl.setAttribute('data-vr-total-verified', String(total));
+    }
+    if (labelEl) {
+      labelEl.textContent = ` ${formatVerifiedReferralTotalLabel(total)}`;
+    }
   }
 
   // Prominent second line: get-link activity (what admin funnel "Get link" shows)

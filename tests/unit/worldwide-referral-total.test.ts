@@ -71,4 +71,18 @@ describe('worldwide-referral-total', () => {
       true,
     );
   });
+
+  it('empty totals use the open-board line, not a zero meter', () => {
+    applyWorldwideReferralTotal({ total: 0, uniqueReferrers: 0, leaderCount: 0, peopleGotLinkToday: 0 });
+    expect(document.getElementById('total-referrers')!.textContent).toBe('');
+    expect(document.getElementById('hero-stats-suffix')!.textContent).toBe(
+      'Board is open. #1 is winnable this week.',
+    );
+    expect(document.getElementById('leaderboard-total-label')!.textContent).toBe(
+      'Board is open. #1 is winnable this week.',
+    );
+    expect(document.getElementById('vr-verified-total')!.classList.contains('vr-verified-total--ready')).toBe(
+      false,
+    );
+  });
 });

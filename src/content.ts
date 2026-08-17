@@ -7,6 +7,14 @@ import {
 import { isAdminStatsReadOnlyRefresh } from './lib/admin-stats-refresh-guard';
 import { registerGlobal } from './lib/global';
 import { applyTextColors } from './colors';
+import {
+  LOCKED_SHARE_TEXT,
+  parseMinReferralsForClaim,
+  paintPrizeSlot,
+  paintPrizeThreshold,
+  resolvePrizeSlot,
+  sharePayloadHasBannerRace,
+} from './lib/prize-slot';
 import { supabase } from './lib/supabase';
 import { normalizeSiteContentText } from './lib/site-content-value';
 
@@ -230,72 +238,39 @@ export async function updatePublicContent(content: Record<string, any>) {
   apply('prize-banner-line1', 'prize_banner_line1');
   apply('prize-banner-line2', 'prize_banner_line2');
   apply('prize-banner-description', 'prize_banner_description');
-  apply('min-referrals-value', 'min_referrals_for_claim');  // or 'min_referrals' - using seed convention
   apply('cash-amount-value', 'cash_amount');
 
-  // Phase 2 Banner v2: Multiple banners with simple weighted rotation (option #1)
-  // Uses parseBanners + selectBanner for clean, testable logic supporting weight field.
+  // Helix Bet 2: keep the 30-day slot mock. Featured banners paint site name + link.
   const bannersRaw = content['banners'];
   const parsedBanners = parseBanners(bannersRaw);
-  if (parsedBanners.length > 0) {
-    const selection = selectBanner(parsedBanners);
-    if (selection) {
-      const { banner: activeBanner, displayIndex, total } = selection;
+  const selection = parsedBanners.length > 0 ? selectBanner(parsedBanners) : null;
+  const slot = resolvePrizeSlot({
+    banners: parsedBanners,
+    selected: selection?.banner ?? null,
+  });
+  paintPrizeSlot(slot);
+  if (selection) {
+    logBannerEvent('impression', selection.banner);
+    const slotLink = document.getElementById('prize-slot-site');
+    if (slotLink) {
+      slotLink.addEventListener('click', () => {
+        logBannerEvent('click', selection.banner);
+      }, { once: true });
+    }
+    if (selection.total > 1) {
       const visualContainer = document.getElementById('prize-banner-visual');
-      if (visualContainer) {
-        logBannerEvent('impression', activeBanner);
-
-        const link = document.createElement('a');
-        // Only allow http(s) banner targets — block javascript:/data: open redirects
-        const rawRedirect = String(activeBanner.redirectUrl || '').trim();
-        let safeHref = '#';
-        try {
-          const u = new URL(rawRedirect);
-          if (u.protocol === 'https:' || u.protocol === 'http:') safeHref = u.toString();
-        } catch {
-          safeHref = '#';
-        }
-        link.href = safeHref;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        // LCP/hero-area paint isolation + transform hints (consistent with premium card strategy)
-        link.style.contain = 'layout style paint';
-        link.style.willChange = 'transform';
-        link.className = 'block w-full max-w-[280px] rounded-3xl overflow-hidden shadow-2xl hover:scale-[1.02] transition-transform';
-
-        const img = document.createElement('img');
-        img.src = activeBanner.imageUrl;
-        img.alt = activeBanner.label || 'Featured Banner';
-        img.loading = 'lazy';
-        img.className = 'w-full h-auto';
-        img.style.backfaceVisibility = 'hidden';
-
-        link.appendChild(img);
-
-        if (activeBanner.label) {
-          const labelDiv = document.createElement('div');
-          labelDiv.className = 'bg-white/90 text-zinc-900 text-center py-1 text-xs font-medium';
-          labelDiv.textContent = activeBanner.label;
-          link.appendChild(labelDiv);
-        }
-
-        link.addEventListener('click', () => {
-          logBannerEvent('click', activeBanner);
-        }, { once: true });
-
-        visualContainer.innerHTML = '';
-        visualContainer.appendChild(link);
-
-        // Rotation indicator (only when 2+ enabled banners exist)
-        if (total > 1) {
-          const note = document.createElement('div');
-          note.className = 'text-[10px] text-center text-zinc-500 mt-1.5';
-          note.textContent = `Showing ${displayIndex + 1} of ${total} (rotates)`;
-          visualContainer.appendChild(note);
-        }
+      if (visualContainer && !visualContainer.querySelector('[data-prize-rotation]')) {
+        const note = document.createElement('div');
+        note.dataset.prizeRotation = '1';
+        note.className = 'text-[10px] text-center text-zinc-500 mt-1.5';
+        note.textContent = `Showing ${selection.displayIndex + 1} of ${selection.total} (rotates)`;
+        visualContainer.appendChild(note);
       }
     }
   }
+  paintPrizeThreshold(
+    parseMinReferralsForClaim(content['min_referrals_for_claim'] ?? content['min_referrals']),
+  );
   apply('claim-cash-value', 'cash_amount');
 
   // High-visibility public headings and descriptions
@@ -366,15 +341,19 @@ export async function updatePublicContent(content: Record<string, any>) {
   // hero_title was seeded as "Homepage headline" — maps to line 1, not the gradient accent span
   apply('hero-title-line1', 'hero_title');
   apply('hero-subtitle', 'hero_subtitle');
-  apply('min-referrals-value', 'min_referrals_for_claim');
-  apply('min-referrals-value', 'min_referrals');
+  paintPrizeThreshold(
+    parseMinReferralsForClaim(content['min_referrals_for_claim'] ?? content['min_referrals']),
+  );
 
   // Note: if value is JSONB object, String() will be "[object Object]" — handle json types in future batch
 
   // Share message template (used by shareTo)
   const shareTpl = content['share_message_template'];
-  if (shareTpl != null && shareTpl !== '') {
-    setShareMessageTemplate(String(shareTpl));
+  if (shareTpl != null && String(shareTpl).trim()) {
+    const text = String(shareTpl);
+    setShareMessageTemplate(sharePayloadHasBannerRace(text) ? text : LOCKED_SHARE_TEXT);
+  } else {
+    setShareMessageTemplate(LOCKED_SHARE_TEXT);
   }
 
   // QR modal title (used by showQRModal)

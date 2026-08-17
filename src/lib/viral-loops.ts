@@ -7,6 +7,14 @@ import { initChallengeLanding, onChallengeLinkReady } from './challenge-mode';
 import { syncDuelInviteStrip, triggerDuelInviteMoment } from './duel-invite';
 import { syncCatchUpAnxietyBar } from './catch-up-anxiety';
 import { renderCommunityUnlockMeter } from './community-unlock';
+import { shouldShowWeeklySideWidgets } from './prize-slot';
+import {
+  ensureCommunityUnlockMount,
+  ensureDailyChampionStrip,
+  ensureDailyCrownMount,
+  ensureWeeklySprintMount,
+  isShareLocked,
+} from './side-loop-mounts';
 import { offerRankReceipt } from './rank-receipt-card';
 import { formatSprintHeroLine, renderWeeklySprintBoard } from './weekly-sprint';
 import {
@@ -29,6 +37,12 @@ function hasReferralLink(): boolean {
 /** Call at bootstrap (after attribution capture). */
 export function initViralLoops(): void {
   initChallengeLanding();
+  if (typeof MutationObserver === 'undefined') return;
+  const root = document.documentElement;
+  const mo = new MutationObserver(() => {
+    if (isShareLocked()) void loadPublicViralLoops();
+  });
+  mo.observe(root, { attributes: true, attributeFilter: ['data-vr-share-locked'] });
 }
 
 /** Load public sprint + community + Daily Crown widgets (no user code required). */
@@ -40,11 +54,27 @@ export async function loadPublicViralLoops(myCode?: string | null): Promise<void
       fetchWeeklyReferralCount(),
       fetchDailyCrownStatus(14),
     ]);
-    renderWeeklySprintBoard(sprint, code);
-    renderCommunityUnlockMeter(weeklyCount);
-    paintSprintHeroLine(sprint);
-    const crown = parseDailyCrownStatus(crownRaw);
-    renderDailyCrown(crown, code);
+    if (shouldShowWeeklySideWidgets(weeklyCount)) {
+      ensureWeeklySprintMount();
+      ensureCommunityUnlockMount();
+      renderWeeklySprintBoard(sprint, code);
+      renderCommunityUnlockMeter(weeklyCount);
+      paintSprintHeroLine(sprint);
+    } else {
+      document.getElementById('weekly-sprint-board')?.classList.add('hidden');
+      document.getElementById('community-unlock-meter')?.classList.add('hidden');
+      const sprintLine = document.getElementById('hero-sprint-line');
+      if (sprintLine) {
+        sprintLine.classList.add('hidden');
+        sprintLine.textContent = '';
+      }
+    }
+    if (isShareLocked()) {
+      ensureDailyCrownMount();
+      ensureDailyChampionStrip();
+      const crown = parseDailyCrownStatus(crownRaw);
+      renderDailyCrown(crown, code);
+    }
   } catch {
     // non-fatal
   }

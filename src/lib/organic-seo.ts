@@ -3,14 +3,14 @@
  * Static copies live in index.html + public/ for non-JS crawlers; this module keeps DRY + runtime fixes.
  */
 
+import { formatFaqPrizeAnswer, LOCKED_OG_DESCRIPTION } from './prize-slot';
 import { parseRefFromLocation } from './referral-url';
 
 export const SEO_SITE_ORIGIN = 'https://www.viralrefer.app';
 
 export const HOMEPAGE_SEO = {
   title: 'Win the ViralRefer homepage — #1 gets a banner',
-  description:
-    'Tap Get my link. 30 seconds, no signup. A friend does the same. You climb.',
+  description: LOCKED_OG_DESCRIPTION,
   keywords:
     'referral program, viral marketing, free referral link, live leaderboard, homepage feature, worldwide, no signup',
   ogImage: `${SEO_SITE_ORIGIN}/assets/og-homepage-banner-v2.png`,
@@ -35,8 +35,7 @@ export const HOMEPAGE_FAQ: readonly FaqEntry[] = [
   },
   {
     question: 'What does the #1 referrer get?',
-    answer:
-      'Open worldwide. The top referrer on the live leaderboard can claim a homepage banner feature for their website after verification (minimum referrals as shown on site). There is no cash prize.',
+    answer: formatFaqPrizeAnswer(),
   },
   {
     question: 'How does the ViralRefer leaderboard work?',
