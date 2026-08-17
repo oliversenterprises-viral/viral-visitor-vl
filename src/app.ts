@@ -309,6 +309,7 @@ export async function loadLeaderboard(options: { pulseCode?: string } = {}) {
       cachedUniqueReferrers,
       cachedLeaderboard[0]?.referral_count ?? 0,
     );
+    void import('./lib/prize-pull').then((m) => m.initPrizePullProof()).catch(() => {});
   } catch {
     container.innerHTML = `<div class="text-zinc-400">Leaderboard temporarily unavailable.</div>`;
   }
@@ -326,6 +327,7 @@ export async function loadSiteContent() {
     initFunnelCopyFromContent(content);
     applyVisitorSlimFromFlags();
     await updatePublicContent(content);
+    void import('./lib/prize-pull').then((m) => m.initPrizePullProof()).catch(() => {});
     if (isReferredLanding()) {
       applyReferredLandingOverrides();
     } else {

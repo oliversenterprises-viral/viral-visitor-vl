@@ -25,6 +25,12 @@ export const ONE_PRIZE_SENTENCE = 'Verified #1 gets a 30-day banner for their we
 export const AD_SLOT_KICKER = 'Live ad · this homepage · 30 days';
 export const EMPTY_AD_NOTE = 'This slot is empty. #1 puts their site here.';
 
+export const EXAMPLE_SLOT_HREF = 'https://www.viralrefer.app/tools/';
+export const EXAMPLE_SLOT_NAME = 'ViralRefer Tools';
+export const EXAMPLE_SLOT_META = 'Example — this is what #1 gets';
+export const EXAMPLE_AD_NOTE = 'Example — this is what #1 gets. Slot still empty.';
+export const EXAMPLE_SLOT_IMAGE = 'https://www.viralrefer.app/assets/hero.png';
+
 export type PrizeBannerInput = {
   imageUrl?: string;
   redirectUrl?: string;
@@ -32,8 +38,10 @@ export type PrizeBannerInput = {
   enabled?: boolean;
 };
 
+export type PrizeSlotKind = 'empty' | 'example' | 'winner';
+
 export type PrizeSlot = {
-  kind: 'empty' | 'winner';
+  kind: PrizeSlotKind;
   siteName: string;
   meta: string;
   href: string | null;
@@ -103,13 +111,42 @@ export function emptyPrizeSlot(): PrizeSlot {
   };
 }
 
+export function examplePrizeSlot(): PrizeSlot {
+  return {
+    kind: 'example',
+    siteName: EXAMPLE_SLOT_NAME,
+    meta: EXAMPLE_SLOT_META,
+    href: EXAMPLE_SLOT_HREF,
+    imageUrl: EXAMPLE_SLOT_IMAGE,
+  };
+}
+
+export function formatVisitInventoryLine(visits: number): string {
+  const n = Math.max(0, Math.floor(Number(visits) || 0));
+  if (n <= 0) return '';
+  return `Seen ${n.toLocaleString('en-US')} times this week on this page.`;
+}
+
+export function formatUnlockRaceLine(
+  leaderReferrals: number,
+  minForClaim = DEFAULT_MIN_REFERRALS_FOR_CLAIM,
+  kind: PrizeSlotKind = 'example',
+): string {
+  if (kind === 'winner') return '';
+  const have = Math.max(0, Math.floor(Number(leaderReferrals) || 0));
+  const need = parseMinReferralsForClaim(minForClaim);
+  if (have <= 0) return `Slot still empty. Verified #1 with ${need} friends can claim it.`;
+  if (have < need) return `Board leader has ${have} of ${need} friends. Slot still empty.`;
+  return `Board leader has ${have} friends. Slot still empty until they claim.`;
+}
+
 export function resolvePrizeSlot(input: {
   banners?: readonly PrizeBannerInput[];
   selected?: PrizeBannerInput | null;
 } = {}): PrizeSlot {
   const enabled = (input.banners || []).filter((b) => b && b.enabled !== false);
   const candidate = input.selected || enabled[0] || null;
-  if (!candidate) return emptyPrizeSlot();
+  if (!candidate) return examplePrizeSlot();
 
   const href = safeHttpUrl(candidate.redirectUrl || '');
   const host = href ? hostnameFromUrl(href) : null;
@@ -154,16 +191,18 @@ function paintSlotName(id: string, slot: PrizeSlot): void {
   }
 }
 
-/** Paint hero + prize mocks. Empty = Your site here · 30 days. Winner = site name + link. */
+function setText(id: string, text: string): void {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+/** Paint hero + prize mocks. Example = /tools/ preview. Winner = claimed site. */
 export function paintPrizeSlot(slot: PrizeSlot): void {
   paintSlotName('hero-slot-site', slot);
   paintSlotName('prize-slot-site', slot);
 
-  const heroMeta = document.getElementById('hero-slot-meta');
-  if (heroMeta) heroMeta.textContent = slot.meta;
-
-  const prizeMeta = document.getElementById('prize-slot-meta');
-  if (prizeMeta) prizeMeta.textContent = slot.meta;
+  setText('hero-slot-meta', slot.meta);
+  setText('prize-slot-meta', slot.meta);
 
   const hero = document.getElementById('hero-banner-mock');
   if (hero) hero.setAttribute('data-vr-prize-slot', slot.kind);
@@ -171,16 +210,20 @@ export function paintPrizeSlot(slot: PrizeSlot): void {
   const prize = document.getElementById('prize-banner-visual');
   if (prize) prize.setAttribute('data-vr-prize-slot', slot.kind);
 
+  setText('hero-ad-kicker-kind', slot.kind === 'example' ? 'Example ad' : 'Live ad');
+  setText('hero-ad-mark', slot.kind === 'example' ? 'Ex' : '#1');
+
   const thumbs = [
     document.getElementById('hero-slot-thumb') as HTMLImageElement | null,
     document.getElementById('prize-slot-thumb') as HTMLImageElement | null,
   ];
+  const showThumb = slot.kind === 'winner' || slot.kind === 'example';
   for (const thumb of thumbs) {
     if (!thumb) continue;
-    const src = slot.kind === 'winner' ? slot.imageUrl : undefined;
+    const src = showThumb ? slot.imageUrl : undefined;
     if (src) {
       thumb.src = src;
-      thumb.alt = `${slot.siteName} homepage banner`;
+      thumb.alt = slot.kind === 'example' ? `${slot.siteName} example ad` : `${slot.siteName} homepage banner`;
       thumb.classList.remove('hidden');
     } else {
       thumb.removeAttribute('src');
@@ -191,11 +234,12 @@ export function paintPrizeSlot(slot: PrizeSlot): void {
 
   const note = document.getElementById('hero-ad-note');
   if (note) {
-    note.textContent = slot.kind === 'winner' ? slot.meta : EMPTY_AD_NOTE;
+    note.textContent =
+      slot.kind === 'winner' ? slot.meta : slot.kind === 'example' ? EXAMPLE_AD_NOTE : EMPTY_AD_NOTE;
   }
   const visit = document.getElementById('hero-ad-visit') as HTMLAnchorElement | null;
   if (visit) {
-    if (slot.kind === 'winner' && slot.href) {
+    if (slot.href && slot.kind !== 'empty') {
       visit.href = slot.href;
       visit.classList.remove('hidden');
       visit.removeAttribute('hidden');
@@ -204,6 +248,32 @@ export function paintPrizeSlot(slot: PrizeSlot): void {
       visit.classList.add('hidden');
       visit.setAttribute('hidden', '');
     }
+  }
+}
+
+export function paintPrizePullProof(input: {
+  visits7d?: number;
+  leaderReferrals?: number;
+  minForClaim?: number;
+  kind?: PrizeSlotKind;
+}): void {
+  const inventory = document.getElementById('hero-ad-inventory');
+  if (inventory) {
+    const line = formatVisitInventoryLine(input.visits7d ?? 0);
+    inventory.textContent = line;
+    inventory.hidden = !line;
+    inventory.classList.toggle('hidden', !line);
+  }
+  const race = document.getElementById('hero-ad-race');
+  if (race) {
+    const line = formatUnlockRaceLine(
+      input.leaderReferrals ?? 0,
+      input.minForClaim,
+      input.kind || 'example',
+    );
+    race.textContent = line;
+    race.hidden = !line;
+    race.classList.toggle('hidden', !line);
   }
 }
 

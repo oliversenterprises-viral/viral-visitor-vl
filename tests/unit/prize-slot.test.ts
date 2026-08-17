@@ -5,6 +5,10 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import {
   DEFAULT_MIN_REFERRALS_FOR_CLAIM,
   EMPTY_SLOT_META,
+  EXAMPLE_AD_NOTE,
+  EXAMPLE_SLOT_HREF,
+  EXAMPLE_SLOT_META,
+  EXAMPLE_SLOT_NAME,
   LOCKED_OG_DESCRIPTION,
   LOCKED_SHARE_TEXT,
   ONE_PRIZE_SENTENCE,
@@ -12,7 +16,10 @@ import {
   formatFaqPrizeAnswer,
   formatPrizeThresholdLine,
   parseMinReferralsForClaim,
+  formatUnlockRaceLine,
+  formatVisitInventoryLine,
   paintPrizeSlot,
+  paintPrizePullProof,
   paintPrizeThreshold,
   resolvePrizeSlot,
   sharePayloadHasBannerRace,
@@ -29,10 +36,14 @@ describe('prize-slot (Helix Bet 2)', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <div id="hero-banner-mock">
+        <span id="hero-ad-kicker-kind">Live ad</span>
+        <div id="hero-ad-mark">#1</div>
         <img id="hero-slot-thumb" class="hidden" alt="" />
         <a id="hero-slot-site" aria-disabled="true">Your site here</a>
         <div id="hero-slot-meta">${EMPTY_SLOT_META}</div>
         <p id="hero-ad-note"></p>
+        <p id="hero-ad-inventory" hidden></p>
+        <p id="hero-ad-race" hidden></p>
         <a id="hero-ad-visit" class="hidden" hidden></a>
       </div>
       <div id="prize-banner-visual">
@@ -55,9 +66,13 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(formatFaqPrizeAnswer(10)).not.toMatch(/see threshold/i);
   });
 
-  it('resolves empty slot vs featured winner', () => {
-    expect(resolvePrizeSlot({}).kind).toBe('empty');
-    expect(resolvePrizeSlot({}).meta).toBe(EMPTY_SLOT_META);
+  it('resolves tools example when no claimed banner, winner when there is one', () => {
+    const example = resolvePrizeSlot({});
+    expect(example.kind).toBe('example');
+    expect(example.siteName).toBe(EXAMPLE_SLOT_NAME);
+    expect(example.meta).toBe(EXAMPLE_SLOT_META);
+    expect(example.href).toBe(EXAMPLE_SLOT_HREF);
+    expect(example.meta.toLowerCase()).not.toContain('current #1');
 
     const winner = resolvePrizeSlot({
       selected: {
@@ -72,13 +87,17 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(winner.href).toContain('https://www.acme.example/go');
   });
 
-  it('paints winner site + link, or Your site here · 30 days', () => {
+  it('paints tools example, or a claimed winner site', () => {
     paintPrizeSlot(resolvePrizeSlot({}));
-    expect(document.getElementById('hero-slot-meta')?.textContent).toBe(EMPTY_SLOT_META);
+    expect(document.getElementById('hero-slot-meta')?.textContent).toBe(EXAMPLE_SLOT_META);
     expect(document.getElementById('hero-banner-mock')?.getAttribute('data-vr-prize-slot')).toBe(
-      'empty',
+      'example',
     );
-    expect(document.getElementById('hero-slot-site')?.getAttribute('aria-disabled')).toBe('true');
+    expect(document.getElementById('hero-ad-mark')?.textContent).toBe('Ex');
+    expect(document.getElementById('hero-ad-kicker-kind')?.textContent).toBe('Example ad');
+    expect(document.getElementById('hero-ad-note')?.textContent).toBe(EXAMPLE_AD_NOTE);
+    expect((document.getElementById('hero-slot-site') as HTMLAnchorElement).href).toContain('/tools/');
+    expect(document.getElementById('hero-ad-visit')?.classList.contains('hidden')).toBe(false);
 
     paintPrizeSlot(
       resolvePrizeSlot({
@@ -151,8 +170,10 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).toContain('id="min-referrals-value">10<');
     expect(html).toContain(PRIZE_FOMO_LINE);
     expect(html).toContain(ONE_PRIZE_SENTENCE);
-    expect(html).toContain('This slot is empty. #1 puts their site here.');
-    expect(html).toContain('Live ad');
+    expect(html).toContain(EXAMPLE_AD_NOTE);
+    expect(html).toContain('Example ad');
+    expect(html).toContain('/tools/');
+    expect(html).not.toMatch(/CURRENT #1 CAN CLAIM THIS/);
     expect(html).toContain(LOCKED_OG_DESCRIPTION);
     expect(html).not.toContain('Together: 0 / 100');
     expect(html).not.toContain('0 / 100');
@@ -165,5 +186,21 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).not.toMatch(/see threshold on site/i);
     expect(html).not.toMatch(/minimum referrals as shown/i);
     expect(HOMEPAGE_FAQ[2]?.answer).toContain('at least 10 friends');
+  });
+
+  it('formats inventory and unlock lines without naming a fake winner', () => {
+    expect(formatVisitInventoryLine(0)).toBe('');
+    expect(formatVisitInventoryLine(2041)).toBe('Seen 2,041 times this week on this page.');
+    expect(formatUnlockRaceLine(7, 10, 'example')).toBe(
+      'Board leader has 7 of 10 friends. Slot still empty.',
+    );
+    expect(formatUnlockRaceLine(10, 10, 'example')).toContain('until they claim');
+    expect(formatUnlockRaceLine(7, 10, 'winner')).toBe('');
+    paintPrizePullProof({ visits7d: 2041, leaderReferrals: 7, minForClaim: 10, kind: 'example' });
+    expect(document.getElementById('hero-ad-inventory')?.textContent).toContain('2,041');
+    expect(document.getElementById('hero-ad-race')?.textContent).toContain('7 of 10');
+    expect(document.getElementById('hero-ad-race')?.textContent?.toLowerCase()).not.toContain(
+      'current #1',
+    );
   });
 });

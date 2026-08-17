@@ -71,7 +71,7 @@ export const en = {
   'prize.card3_desc':
     'Verified #1 with at least 10 friends who tapped Get my link can claim the banner.',
   'prize.cta': "I'm #1 — Claim Homepage Feature",
-  'prize.winner_badge': 'CURRENT #1 CAN CLAIM THIS',
+  'prize.winner_badge': 'Verified #1 can claim this',
 
   'leaderboard.title': 'Live Leaderboard',
   'leaderboard.subtitle': 'Rankings update from verified referrals.',

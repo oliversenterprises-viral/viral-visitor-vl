@@ -88,6 +88,12 @@ export type PublicGetLinkStats = {
   windowHours: number;
 };
 
+export type PublicPrizePull = {
+  visits7d: number;
+  leaderReferrals: number;
+  minForClaim: number;
+};
+
 /**
  * How many unique people tapped Get my referral link recently (default last 24h).
  * Additive public RPC — returns zeros if not deployed yet.
@@ -111,6 +117,24 @@ export async function fetchPublicGetLinkStats(hours = 24): Promise<PublicGetLink
     };
   } catch {
     return { uniquePeople: 0, events: 0, windowHours: hours };
+  }
+}
+
+/** Homepage ad-slot proof. Zeros if the RPC is not applied yet. */
+export async function fetchPublicPrizePull(): Promise<PublicPrizePull> {
+  const empty: PublicPrizePull = { visits7d: 0, leaderReferrals: 0, minForClaim: 10 };
+  if (!isSupabaseConfigured) return empty;
+  try {
+    const { data, error } = await supabase.rpc('get_public_prize_pull');
+    if (error || data == null) return empty;
+    const payload = typeof data === 'object' ? (data as Record<string, unknown>) : {};
+    return {
+      visits7d: Number(payload.visits_7d) || 0,
+      leaderReferrals: Number(payload.leader_referrals) || 0,
+      minForClaim: Number(payload.min_for_claim) || 10,
+    };
+  } catch {
+    return empty;
   }
 }
 
