@@ -41,9 +41,6 @@ import {
   reportTrackingHubSummary,
 } from './edit-content-tracking-helpers';
 
-import { registerAdminLiveRefresh, refreshAdminLiveIndicators } from './admin-live-hub';
-
-let unregisterBannerLive: (() => void) | null = null;
 
 let currentBannerSearch = '';
 let currentBannerSort: BannerSortKey = 'impressions';
@@ -483,7 +480,6 @@ function renderBannerStatsView(
   html += `</tbody></table>`;
   container.innerHTML = html;
   wireBannerAutorefresh(container);
-  refreshAdminLiveIndicators();
 }
 
 /**
@@ -524,14 +520,6 @@ export async function renderBannerStats(container: HTMLElement, preloadedEvents?
 export async function wireBannerStatsQuick(root: HTMLElement) {
   const el = root.querySelector('#banner-stats-quick') as HTMLElement | null;
   if (!el) return;
-
-  if (unregisterBannerLive) unregisterBannerLive();
-  unregisterBannerLive = registerAdminLiveRefresh('banner', () => {
-    const panel = root.querySelector('#banner-stats-quick') as HTMLElement | null;
-    if (panel && document.body.contains(panel)) {
-      void silentRefreshBannerStats(panel);
-    }
-  });
 
   bindBannerStatsActions(el);
   const local = getLocalBannerEvents();

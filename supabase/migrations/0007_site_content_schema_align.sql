@@ -31,8 +31,14 @@ ALTER TABLE public.site_content
 DROP CONSTRAINT IF EXISTS site_content_pkey;  -- if existed on id
 
 -- Ensure unique on key (as PK in migration).
-ALTER TABLE public.site_content 
-ADD CONSTRAINT IF NOT EXISTS site_content_key_unique UNIQUE (key);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'site_content_key_unique'
+  ) THEN
+    ALTER TABLE public.site_content ADD CONSTRAINT site_content_key_unique UNIQUE (key);
+  END IF;
+END $$;
 
 -- Set key as PK if not already (for full alignment).
 -- (Postgres allows one PK; this assumes after backfill.)

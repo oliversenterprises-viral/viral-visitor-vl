@@ -48,7 +48,7 @@ test.describe('ViralRefer - Prize Claim Flow & Admin', () => {
 
     expect(page.url()).not.toMatch(/nocache=|force=/);
     await expect(page.locator('#admin-modal')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('#admin-content')).toContainText(/Referrals|Share|Prize/i, {
+    await expect(page.locator('#admin-content')).toContainText(/Landings|Get-link|Share|Locked/i, {
       timeout: 10000,
     });
   });

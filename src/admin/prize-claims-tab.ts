@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase';
 import { invokeAdminAction } from '../lib/admin-action-client';
-import { registerAdminLiveRefresh } from './admin-live-hub';
 import { formatError } from '../lib';
 import { showToast, updatePendingClaimsBadge } from '../ui';
 import { adminClaimsCache, replaceClaimsCache, updateClaimInCache, type AdminClaimRow } from './state';
@@ -16,8 +15,6 @@ const STATUS_PRIORITY: Record<string, number> = {
 };
 
 let currentClaimStatusFilter: ClaimStatusFilter = 'all';
-let unregisterClaimsLive: (() => void) | null = null;
-
 function getClaimsTabRoot(from: HTMLElement): HTMLElement {
   return (from.closest('#admin-content') as HTMLElement) || from;
 }
@@ -131,14 +128,10 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
           <p class="text-sm text-zinc-500 mt-2 max-w-sm">Use Owner Test Tools above to submit test claims, or wait for the real #1 referrer to claim.</p>
           <button onclick="window.switchAdminTab(3)" class="mt-4 px-5 py-2 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">Refresh</button>
         </div>`;
-      wireClaimsLiveRefresh(content);
       return;
     }
 
     renderClaimsList(mainArea, currentClaimStatusFilter);
-
-    // Safe realtime so new claims or status changes appear without manual refresh
-    wireClaimsLiveRefresh(content);
 
   } catch (e) {
     mainArea.innerHTML = `<div class="p-6 text-amber-400">Unable to load prize claims. ${formatError(e)}</div>`;
@@ -330,15 +323,6 @@ function wireOwnerTestTools(content: HTMLElement) {
   }
 }
 
-function wireClaimsLiveRefresh(container: HTMLElement) {
-  if (unregisterClaimsLive) unregisterClaimsLive();
-  unregisterClaimsLive = registerAdminLiveRefresh('claim', () => {
-    const main = container.querySelector('#prize-claims-main') || container;
-    if (main && document.body.contains(main)) {
-      void renderPrizeClaimsTab(container).catch(() => {});
-    }
-  });
-}
 
 function renderClaimsList(mainArea: HTMLElement, statusFilter: ClaimStatusFilter) {
   const sorted = sortClaimsByPriority(adminClaimsCache);

@@ -4,21 +4,20 @@
  */
 
 import { ViralRefer, registerGlobal } from '../lib/global';
-import { switchAdminTab } from '../admin';
-import { initAdminSimple } from '../lib/admin-simple';
-import { startAdminLiveHub, stopAdminLiveHub } from '../admin/admin-live-hub';
-import { unlockAdminLiveSound } from '../admin/admin-live-sound';
+import { switchAdminTab, showOwnerFunnelDesk } from '../admin';
+import { initAdminSimple, setAdminMore } from '../lib/admin-simple';
 import { supabase } from '../lib/supabase';
 import { setAdminSessionToken, clearAdminSessionToken } from '../lib/admin-session';
 
 registerGlobal('closeAdminPanel', () => {
-  stopAdminLiveHub();
   clearAdminSessionToken();
+  setAdminMore(false);
   const modal = document.getElementById('admin-modal');
   if (modal) modal.classList.add('hidden');
 });
 
 registerGlobal('switchAdminTab', switchAdminTab);
+registerGlobal('showOwnerFunnelDesk', showOwnerFunnelDesk);
 
 const triggerRefreshSpin = (el?: HTMLElement) => {
   if (el) {
@@ -34,8 +33,7 @@ registerGlobal('openAdminPanel', async () => {
   if (modal) {
     modal.classList.remove('hidden');
     initAdminSimple();
-    startAdminLiveHub();
-    await ViralRefer.switchAdminTab(0);
+    await showOwnerFunnelDesk();
   }
 });
 
@@ -196,7 +194,6 @@ const submitAdminPassword = async () => {
     if (errorEl) errorEl.classList.add('hidden');
     revealOwnerTools();
     closeAdminPasswordModal();
-    void unlockAdminLiveSound();
     await ViralRefer.openAdminPanel();
   } else {
     if (errorEl) errorEl.classList.remove('hidden');
@@ -218,11 +215,6 @@ const closeClaimDetailsModal = () => {
 };
 registerGlobal('closeClaimDetailsModal', closeClaimDetailsModal);
 
-const closeReferralDetailsModal = () => {
-  const m = document.getElementById('referral-details-modal');
-  if (m) m.classList.add('hidden');
-};
-registerGlobal('closeReferralDetailsModal', closeReferralDetailsModal);
 
 // Rules modal (footer link)
 const showRulesModal = () => {

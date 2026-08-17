@@ -1,6 +1,6 @@
 /**
- * Owner desk — promoters you pay when they send real Get my link visitors.
- * Does not change leaderboard credit.
+ * Owner desk — promoter /a/ codes and credited Get-links.
+ * Recognition only. No cash, no mint, no payout UI.
  */
 
 import { invokeAdminAction } from '../lib/admin-action-client';
@@ -13,7 +13,6 @@ import {
   AFFILIATES_SITE_CONTENT_KEY,
   addAffiliate,
   buildAffiliateLink,
-  computeAffiliateRewards,
   computeAffiliateStats,
   parseAffiliatesProgram,
   setAffiliateActive,
@@ -47,16 +46,14 @@ export async function renderAffiliatesTab(content: HTMLElement): Promise<void> {
     const rows = program.affiliates
       .map((row) => {
         const stats = computeAffiliateStats(events, row.code, row.paid_count);
-        const rewards = computeAffiliateRewards(stats, program, row);
         const link = buildAffiliateLink(row.code);
         const status = row.active ? 'On' : 'Paused';
-        const source = row.source === 'self' ? 'Signed up' : 'Added by you';
         return `
         <article class="rounded-2xl border border-white/10 bg-zinc-900/50 p-4 space-y-2" data-aff-code="${escapeHtml(row.code)}">
           <div class="flex flex-wrap items-start justify-between gap-2">
             <div>
               <div class="text-sm font-semibold text-white">${escapeHtml(row.name)}</div>
-              <div class="text-[11px] text-zinc-500 font-mono">${escapeHtml(row.code)} · ${source}</div>
+              <div class="text-[11px] text-zinc-500 font-mono">${escapeHtml(row.code)}</div>
             </div>
             <span class="text-[10px] px-2 py-0.5 rounded-full border ${
               row.active
@@ -65,25 +62,10 @@ export async function renderAffiliatesTab(content: HTMLElement): Promise<void> {
             }">${status}</span>
           </div>
           <div class="text-[12px] text-zinc-300 break-all font-mono">${escapeHtml(link)}</div>
-          <div class="grid grid-cols-3 gap-2 text-center">
-            <div class="rounded-lg bg-white/5 px-2 py-1.5">
-              <div class="text-[8px] uppercase text-zinc-500">Visits</div>
-              <div class="text-lg font-bold tabular-nums">${stats.landings}</div>
-            </div>
-            <div class="rounded-lg bg-white/5 px-2 py-1.5">
-              <div class="text-[8px] uppercase text-zinc-500">Got a link</div>
-              <div class="text-lg font-bold text-emerald-300 tabular-nums">${stats.uniqueGetLinkVisitors}</div>
-            </div>
-            <div class="rounded-lg bg-white/5 px-2 py-1.5">
-              <div class="text-[8px] uppercase text-zinc-500">Ad days auto</div>
-              <div class="text-lg font-bold text-amber-300 tabular-nums">${stats.uniqueGetLinkVisitors}</div>
-            </div>
+          <div class="rounded-lg bg-white/5 px-3 py-2">
+            <div class="text-[8px] uppercase text-zinc-500">Credited Get-links</div>
+            <div class="text-lg font-bold text-emerald-300 tabular-nums">${stats.uniqueGetLinkVisitors}</div>
           </div>
-          ${
-            rewards.cashDue
-              ? `<div class="text-[11px] text-amber-300">Cash bonus tracked · ${rewards.cashUnpaid} after ${rewards.cashThreshold} people (no button — pay when you want)</div>`
-              : `<div class="text-[11px] text-zinc-500">Ad days grant themselves on Get my link. Cash bonus after ${rewards.cashThreshold} people.</div>`
-          }
           <div class="flex flex-wrap gap-2">
             <button type="button" data-aff-copy class="text-[10px] px-2 py-1 rounded-xl bg-white/10 hover:bg-white/15">Copy link</button>
             <button type="button" data-aff-toggle class="text-[10px] px-2 py-1 rounded-xl border border-white/15">${
@@ -97,41 +79,27 @@ export async function renderAffiliatesTab(content: HTMLElement): Promise<void> {
     content.innerHTML = `
       <div class="mb-5">
         <div class="text-2xl font-bold">Promoters</div>
-        <p class="text-sm text-zinc-400 mt-1">Hands-off: each Get my link adds a spendable ad day on ads.viralrefer.app. Cash bonus is tracked after ${program.cash_threshold} people — no buttons to click.</p>
-        <p class="text-[11px] text-zinc-500 mt-2">${escapeHtml(program.payout_note)}</p>
+        <p class="text-sm text-zinc-400 mt-1">/a/ codes and credited Get-links. Recognition only.</p>
       </div>
-
       <form id="affiliate-add-form" class="mb-5 rounded-2xl border border-violet-500/25 bg-violet-950/20 p-4 space-y-3">
-        <div class="text-xs font-semibold text-violet-200">Add one by hand (optional)</div>
+        <div class="text-xs font-semibold text-violet-200">Add one</div>
         <div class="flex flex-wrap gap-2">
           <input name="name" required placeholder="Name" class="flex-1 min-w-[140px] bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm" />
           <input name="code" placeholder="Code (optional)" class="w-36 bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm" />
           <button type="submit" class="px-4 py-2 text-sm font-semibold rounded-xl bg-violet-600 hover:bg-violet-500">Add</button>
         </div>
-        <p class="text-[10px] text-zinc-500">Their link will look like viralrefer.app/a/CODE — not a /r/ friend link.</p>
+        <p class="text-[10px] text-zinc-500">Their link will look like viralrefer.app/a/CODE.</p>
       </form>
-
-      <label class="block mb-5 text-[11px] text-zinc-400">
-        What you pay
-        <input id="affiliate-bounty" value="${escapeHtml(program.bounty_label)}"
-          class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-sm text-zinc-100" />
-      </label>
-
       <div class="grid md:grid-cols-2 gap-3">
-        ${rows || '<p class="text-sm text-zinc-500">No promoters yet. They can sign up on the homepage.</p>'}
+        ${rows || '<p class="text-sm text-zinc-500">No promoters yet. Add one above.</p>'}
       </div>
-      ${
-        funnel.fetchError
-          ? `<p class="text-[11px] text-amber-400/90 mt-3">Counts use ${escapeHtml(funnel.source)} data (${escapeHtml(funnel.fetchError)}).</p>`
-          : `<p class="text-[10px] text-zinc-600 mt-3">Counts from ${escapeHtml(funnel.source)} visitor events.</p>`
-      }
     `;
 
     content.querySelector('#affiliate-add-form')?.addEventListener('submit', (e) => {
       e.preventDefault();
-      const form = e.target as HTMLFormElement;
-      const name = String(new FormData(form).get('name') || '');
-      const code = String(new FormData(form).get('code') || '');
+      const formEl = e.target as HTMLFormElement;
+      const name = String(new FormData(formEl).get('name') || '');
+      const code = String(new FormData(formEl).get('code') || '');
       const next = addAffiliate(program, { name, code: code || undefined, source: 'owner' });
       if (next.error || !next.program) {
         showToast(next.error || 'Could not add', 'info');
@@ -145,27 +113,17 @@ export async function renderAffiliatesTab(content: HTMLElement): Promise<void> {
       });
     });
 
-    content.querySelector('#affiliate-bounty')?.addEventListener('change', (e) => {
-      const label = String((e.target as HTMLInputElement).value || '').trim();
-      if (!label) return;
-      const next = { ...program, bounty_label: label };
-      void saveProgram(next).then((ok) => {
-        if (!ok) return;
-        program = next;
-        showToast('Pay note saved', 'success');
-      });
-    });
-
-    content.querySelectorAll<HTMLElement>('[data-aff-code]').forEach((card) => {
-      const code = card.dataset.affCode || '';
+    content.querySelectorAll('[data-aff-code]').forEach((card) => {
+      const el = card as HTMLElement;
+      const code = el.dataset.affCode || '';
       const row = program.affiliates.find((a) => a.code === code);
       if (!row) return;
-      card.querySelector('[data-aff-copy]')?.addEventListener('click', () => {
+      el.querySelector('[data-aff-copy]')?.addEventListener('click', () => {
         void navigator.clipboard.writeText(buildAffiliateLink(code)).then(() => {
           showToast('Link copied', 'success');
         });
       });
-      card.querySelector('[data-aff-toggle]')?.addEventListener('click', () => {
+      el.querySelector('[data-aff-toggle]')?.addEventListener('click', () => {
         const next = setAffiliateActive(program, code, !row.active);
         void saveProgram(next).then((ok) => {
           if (!ok) return;
@@ -173,7 +131,6 @@ export async function renderAffiliatesTab(content: HTMLElement): Promise<void> {
           paint();
         });
       });
-
     });
   };
 

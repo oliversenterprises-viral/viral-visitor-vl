@@ -890,6 +890,105 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+
+    if (action === 'get_owner_funnel_desk') {
+      const {
+        filterDeskReferrals,
+        ownerFunnelCutoffIso,
+        OWNER_FUNNEL_FEED_LIMIT,
+        OWNER_FUNNEL_PAGE_SIZE,
+        pageAllOwnerFunnelRows,
+        resolveOwnerFunnelDeskMetrics,
+        stripOwnerFunnelPii,
+      } = await import('../_shared/owner-funnel-desk.ts');
+
+      const windowDays = 7;
+      const cutoff = ownerFunnelCutoffIso();
+      const { data: counts, error: countErr } = await supabaseAdmin.rpc(
+        'get_owner_funnel_desk_counts',
+        { p_days: windowDays },
+      );
+
+      const pageWindow = async (complete: boolean) => {
+        const feedLimit = OWNER_FUNNEL_FEED_LIMIT;
+        const take = async (
+          table: string,
+          columns: string,
+          apply: (q: any) => any,
+        ) => {
+          if (!complete) {
+            const { data, error } = await apply(
+              supabaseAdmin
+                .from(table)
+                .select(columns)
+                .gte('created_at', cutoff)
+                .order('created_at', { ascending: false }),
+            ).limit(feedLimit);
+            if (error) throw error;
+            return (data || []) as Record<string, unknown>[];
+          }
+          return pageAllOwnerFunnelRows(async (offset, pageSize) => {
+            return apply(
+              supabaseAdmin
+                .from(table)
+                .select(columns)
+                .gte('created_at', cutoff)
+                .order('created_at', { ascending: false }),
+            ).range(offset, offset + pageSize - 1);
+          }, OWNER_FUNNEL_PAGE_SIZE);
+        };
+
+        const eventSelect =
+          'event_name, visitor_id, ref_code, ip_hash, metadata, created_at';
+        const [events, shares, referrals, referrerLinks] = await Promise.all([
+          take('visitor_events', eventSelect, (q) =>
+            q.in('event_name', ['SiteLanding', 'GetReferralLink']),
+          ),
+          take('shares', '*', (q) => q),
+          take(
+            'referrals',
+            'referrer_code, created_at, referred_ip, user_agent, referred_code',
+            (q) => q,
+          ),
+          complete
+            ? pageAllOwnerFunnelRows(async (offset, pageSize) => {
+                return supabaseAdmin
+                  .from('referrer_links')
+                  .select('referrer_code, status, created_at, first_verified_share_at')
+                  .eq('status', 'active')
+                  .order('created_at', { ascending: false })
+                  .range(offset, offset + pageSize - 1);
+              }, OWNER_FUNNEL_PAGE_SIZE)
+            : Promise.resolve([] as Record<string, unknown>[]),
+        ]);
+
+        return {
+          events,
+          shares,
+          referrals: filterDeskReferrals(referrals).map((row) => stripOwnerFunnelPii(row)),
+          referrerLinks,
+        };
+      };
+
+      try {
+        const metrics = await resolveOwnerFunnelDeskMetrics({
+          rpcData: countErr ? null : counts,
+          rpcError: countErr,
+          loadFeedWindow: () => pageWindow(false),
+          loadCompleteWindow: () => pageWindow(true),
+        });
+        return new Response(JSON.stringify({ success: true, data: metrics }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (deskErr) {
+        console.error('[admin-action] get_owner_funnel_desk:', deskErr);
+        return new Response(JSON.stringify({ success: false, error: "can't load." }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     return new Response(JSON.stringify({ success: false, error: 'Unknown action' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

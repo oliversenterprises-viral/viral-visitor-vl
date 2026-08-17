@@ -4,6 +4,8 @@
 -- Counts from referrals table (filtered), not raw profiles.referral_count.
 -- ============================================================================
 
+-- Preview replay: 0001 creates referrals.ip_address only. Production already has referred_ip.
+ALTER TABLE public.referrals ADD COLUMN IF NOT EXISTS referred_ip TEXT;
 CREATE OR REPLACE FUNCTION public.is_test_referrer_code(p_code TEXT)
 RETURNS BOOLEAN
 LANGUAGE sql

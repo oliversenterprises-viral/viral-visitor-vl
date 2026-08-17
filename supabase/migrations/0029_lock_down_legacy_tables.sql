@@ -4,49 +4,89 @@
 -- ── Drop permissive policies on legacy tables ───────────────────────────────
 
 -- submissions
-DROP POLICY IF EXISTS "public read submissions" ON public.submissions;
-DROP POLICY IF EXISTS "public insert submissions" ON public.submissions;
-DROP POLICY IF EXISTS "Block direct writes on submissions" ON public.submissions;
-DROP POLICY IF EXISTS "Service role full access submissions" ON public.submissions;
-DROP POLICY IF EXISTS "Only service_role can write to submissions" ON public.submissions;
-DROP POLICY IF EXISTS "Service role can do everything on submissions" ON public.submissions;
+DO $$
+BEGIN
+  IF to_regclass('public.submissions') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "public read submissions" ON public.submissions;
+    DROP POLICY IF EXISTS "public insert submissions" ON public.submissions;
+    DROP POLICY IF EXISTS "Block direct writes on submissions" ON public.submissions;
+    DROP POLICY IF EXISTS "Service role full access submissions" ON public.submissions;
+    DROP POLICY IF EXISTS "Only service_role can write to submissions" ON public.submissions;
+    DROP POLICY IF EXISTS "Service role can do everything on submissions" ON public.submissions;
+  END IF;
+END $$;
 
 -- winner_submissions
-DROP POLICY IF EXISTS "Allow anonymous inserts" ON public.winner_submissions;
-DROP POLICY IF EXISTS "Allow public read" ON public.winner_submissions;
-DROP POLICY IF EXISTS "Allow public update" ON public.winner_submissions;
+DO $$
+BEGIN
+  IF to_regclass('public.winner_submissions') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Allow anonymous inserts" ON public.winner_submissions;
+    DROP POLICY IF EXISTS "Allow public read" ON public.winner_submissions;
+    DROP POLICY IF EXISTS "Allow public update" ON public.winner_submissions;
+  END IF;
+END $$;
 
 -- participants
-DROP POLICY IF EXISTS "public read participants" ON public.participants;
-DROP POLICY IF EXISTS "public insert participants" ON public.participants;
-DROP POLICY IF EXISTS "Block direct writes on participants" ON public.participants;
-DROP POLICY IF EXISTS "Service role full access participants" ON public.participants;
-DROP POLICY IF EXISTS "Only service_role can write to participants" ON public.participants;
-DROP POLICY IF EXISTS "Service role can do everything on participants" ON public.participants;
+DO $$
+BEGIN
+  IF to_regclass('public.participants') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "public read participants" ON public.participants;
+    DROP POLICY IF EXISTS "public insert participants" ON public.participants;
+    DROP POLICY IF EXISTS "Block direct writes on participants" ON public.participants;
+    DROP POLICY IF EXISTS "Service role full access participants" ON public.participants;
+    DROP POLICY IF EXISTS "Only service_role can write to participants" ON public.participants;
+    DROP POLICY IF EXISTS "Service role can do everything on participants" ON public.participants;
+  END IF;
+END $$;
 
 -- referrers
-DROP POLICY IF EXISTS "Allow anon insert" ON public.referrers;
-DROP POLICY IF EXISTS "Allow anon update referrals" ON public.referrers;
-DROP POLICY IF EXISTS "Allow public read" ON public.referrers;
-DROP POLICY IF EXISTS "Public can read referrers" ON public.referrers;
-DROP POLICY IF EXISTS "Block direct writes on referrers" ON public.referrers;
-DROP POLICY IF EXISTS "Service role full access referrers" ON public.referrers;
-DROP POLICY IF EXISTS "Only service_role can write to referrers" ON public.referrers;
-DROP POLICY IF EXISTS "Service role can do everything on referrers" ON public.referrers;
+DO $$
+BEGIN
+  IF to_regclass('public.referrers') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Allow anon insert" ON public.referrers;
+    DROP POLICY IF EXISTS "Allow anon update referrals" ON public.referrers;
+    DROP POLICY IF EXISTS "Allow public read" ON public.referrers;
+    DROP POLICY IF EXISTS "Public can read referrers" ON public.referrers;
+    DROP POLICY IF EXISTS "Block direct writes on referrers" ON public.referrers;
+    DROP POLICY IF EXISTS "Service role full access referrers" ON public.referrers;
+    DROP POLICY IF EXISTS "Only service_role can write to referrers" ON public.referrers;
+    DROP POLICY IF EXISTS "Service role can do everything on referrers" ON public.referrers;
+  END IF;
+END $$;
 
 -- visits (archived)
-DROP POLICY IF EXISTS "Allow public read on visits for admin UI" ON public.visits;
+DO $$
+BEGIN
+  IF to_regclass('public.visits') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Allow public read on visits for admin UI" ON public.visits;
+  END IF;
+END $$;
 
 -- site_analytics (archived)
-DROP POLICY IF EXISTS "Allow public insert" ON public.site_analytics;
-DROP POLICY IF EXISTS "Allow public update" ON public.site_analytics;
-DROP POLICY IF EXISTS "Policy to implement Time To Live (TTL)" ON public.site_analytics;
+DO $$
+BEGIN
+  IF to_regclass('public.site_analytics') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Allow public insert" ON public.site_analytics;
+    DROP POLICY IF EXISTS "Allow public update" ON public.site_analytics;
+    DROP POLICY IF EXISTS "Policy to implement Time To Live (TTL)" ON public.site_analytics;
+  END IF;
+END $$;
 
 -- config
-DROP POLICY IF EXISTS "public read config" ON public.config;
+DO $$
+BEGIN
+  IF to_regclass('public.config') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "public read config" ON public.config;
+  END IF;
+END $$;
 
 -- reddit_events (archived per 0014)
-DROP POLICY IF EXISTS "Allow public insert for reddit events (via Edge)" ON public.reddit_events;
+DO $$
+BEGIN
+  IF to_regclass('public.reddit_events') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Allow public insert for reddit events (via Edge)" ON public.reddit_events;
+  END IF;
+END $$;
 
 -- ── Drop empty unused legacy tables ─────────────────────────────────────────
 
@@ -59,15 +99,21 @@ DROP TABLE IF EXISTS public.config;
 
 -- ── Lock archived tables that retain historical rows ────────────────────────
 
-REVOKE ALL ON public.visits FROM anon, authenticated;
-REVOKE ALL ON public.site_analytics FROM anon, authenticated;
-REVOKE ALL ON public.reddit_events FROM anon, authenticated;
-
-COMMENT ON TABLE public.visits IS
-  'ARCHIVED: legacy visit log. No client access — admin/service_role only if needed.';
-
-COMMENT ON TABLE public.site_analytics IS
-  'ARCHIVED: legacy analytics row(s). No client access.';
-
-COMMENT ON TABLE public.reddit_events IS
-  'ARCHIVED (0014): historical Reddit ad events only. No client access. Use visitor_events for live funnel.';
+DO $$
+BEGIN
+  IF to_regclass('public.visits') IS NOT NULL THEN
+    REVOKE ALL ON public.visits FROM anon, authenticated;
+    COMMENT ON TABLE public.visits IS
+      'ARCHIVED: legacy visit log. No client access — admin/service_role only if needed.';
+  END IF;
+  IF to_regclass('public.site_analytics') IS NOT NULL THEN
+    REVOKE ALL ON public.site_analytics FROM anon, authenticated;
+    COMMENT ON TABLE public.site_analytics IS
+      'ARCHIVED: legacy analytics row(s). No client access.';
+  END IF;
+  IF to_regclass('public.reddit_events') IS NOT NULL THEN
+    REVOKE ALL ON public.reddit_events FROM anon, authenticated;
+    COMMENT ON TABLE public.reddit_events IS
+      'ARCHIVED (0014): historical Reddit ad events only. No client access. Use visitor_events for live funnel.';
+  END IF;
+END $$;

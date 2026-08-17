@@ -31,14 +31,71 @@ CREATE TABLE IF NOT EXISTS public.prize_claims (
   reviewed_at timestamp with time zone
 );
 
--- Add primary key
-ALTER TABLE public.prize_claims ADD PRIMARY KEY (id);
+-- Add primary key only when 0001 did not already set one
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.prize_claims'::regclass
+      AND contype = 'p'
+  ) THEN
+    ALTER TABLE public.prize_claims ADD PRIMARY KEY (id);
+  END IF;
+END $$;
 
--- 2. Add useful indexes
-CREATE INDEX IF NOT EXISTS idx_prize_claims_referrer_code ON public.prize_claims(referrer_code);
-CREATE INDEX IF NOT EXISTS idx_prize_claims_status ON public.prize_claims(status);
-CREATE INDEX IF NOT EXISTS idx_prize_claims_created_at ON public.prize_claims(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_prize_claims_user_id ON public.prize_claims(user_id);
+-- 2. Add useful indexes. 0001 prize_claims has no leftover referrer_code/created_at.
+-- Skip those indexes. Do not add referrer_code. Do not recreate prize_claims.
+CREATE OR REPLACE FUNCTION pg_temp.create_index_if_column(
+  p_table text,
+  p_column text,
+  p_index text,
+  p_sql text
+)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF to_regclass(format('public.%I', p_table)) IS NULL THEN
+    RAISE NOTICE 'skip % — public.% not present', p_index, p_table;
+    RETURN;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = p_table
+      AND column_name = p_column
+  ) THEN
+    RAISE NOTICE 'skip % — leftover %.% not present', p_index, p_table, p_column;
+    RETURN;
+  END IF;
+  EXECUTE p_sql;
+END;
+$$;
+
+SELECT pg_temp.create_index_if_column(
+  'prize_claims',
+  'referrer_code',
+  'idx_prize_claims_referrer_code',
+  'CREATE INDEX IF NOT EXISTS idx_prize_claims_referrer_code ON public.prize_claims(referrer_code)'
+);
+SELECT pg_temp.create_index_if_column(
+  'prize_claims',
+  'status',
+  'idx_prize_claims_status',
+  'CREATE INDEX IF NOT EXISTS idx_prize_claims_status ON public.prize_claims(status)'
+);
+SELECT pg_temp.create_index_if_column(
+  'prize_claims',
+  'created_at',
+  'idx_prize_claims_created_at',
+  'CREATE INDEX IF NOT EXISTS idx_prize_claims_created_at ON public.prize_claims(created_at DESC)'
+);
+SELECT pg_temp.create_index_if_column(
+  'prize_claims',
+  'user_id',
+  'idx_prize_claims_user_id',
+  'CREATE INDEX IF NOT EXISTS idx_prize_claims_user_id ON public.prize_claims(user_id)'
+);
 
 -- 3. Add status check constraint
 DO $$
@@ -57,30 +114,37 @@ END $$;
 -- Column mapping:
 --   claims.website_url     → prize_claims.website
 --   claims.cashapp_cashtag → prize_claims.cashtag
-INSERT INTO public.prize_claims (
-  id,
-  created_at,
-  referrer_code,
-  website,
-  cashtag,
-  message,
-  status,
-  paid_at,
-  claimed_at,
-  rank_at_claim
-)
-SELECT 
-  id,
-  created_at,
-  referrer_code,
-  website_url,           -- mapped
-  cashapp_cashtag,       -- mapped
-  message,
-  status,
-  paid_at,
-  created_at,            -- backfill claimed_at with original creation date
-  1                      -- default rank (we can improve this later if needed)
-FROM public.claims;
+DO $$
+BEGIN
+  IF to_regclass('public.claims') IS NULL THEN
+    RAISE NOTICE 'skip 0004 claims copy — leftover public.claims not present';
+    RETURN;
+  END IF;
+  INSERT INTO public.prize_claims (
+    id,
+    created_at,
+    referrer_code,
+    website,
+    cashtag,
+    message,
+    status,
+    paid_at,
+    claimed_at,
+    rank_at_claim
+  )
+  SELECT
+    id,
+    created_at,
+    referrer_code,
+    website_url,
+    cashapp_cashtag,
+    message,
+    status,
+    paid_at,
+    created_at,
+    1
+  FROM public.claims;
+END $$;
 
 -- 5. Enable Row Level Security (we will add proper policies in 0005)
 ALTER TABLE public.prize_claims ENABLE ROW LEVEL SECURITY;

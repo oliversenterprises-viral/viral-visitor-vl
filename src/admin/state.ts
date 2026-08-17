@@ -9,20 +9,6 @@
  * This keeps the admin layer flexible while still giving us decent type safety.
  */
 
-export interface AdminReferralRow {
-  id?: string;
-  referrer_code: string;
-  created_at: string;
-  /** Production referrals table column (record-referral edge function). */
-  referred_ip?: string;
-  /** Legacy column name from earlier schema migrations. */
-  ip_address?: string;
-  user_agent?: string;
-  referrer_user_id?: string;
-  referred_user_id?: string;
-  [key: string]: unknown; // Allow extra DB columns without breaking
-}
-
 export interface AdminClaimRow {
   id: string;
   created_at: string;
@@ -37,20 +23,9 @@ export interface AdminClaimRow {
 
 // Private mutable storage (only this module mutates them)
 const _adminClaimsCache: AdminClaimRow[] = [];
-const _adminReferralsCache: AdminReferralRow[] = [];
 
 // Public readonly views — all external code must use the helper functions below
 export const adminClaimsCache: readonly AdminClaimRow[] = _adminClaimsCache;
-export const adminReferralsCache: readonly AdminReferralRow[] = _adminReferralsCache;
-
-/**
- * Safely replace the entire referrals cache.
- * Use this instead of direct array mutation.
- */
-export function replaceReferralsCache(rows: AdminReferralRow[]) {
-  _adminReferralsCache.length = 0;
-  _adminReferralsCache.push(...rows);
-}
 
 /**
  * Safely replace the entire claims cache.
@@ -58,16 +33,6 @@ export function replaceReferralsCache(rows: AdminReferralRow[]) {
 export function replaceClaimsCache(rows: AdminClaimRow[]) {
   _adminClaimsCache.length = 0;
   _adminClaimsCache.push(...rows);
-}
-
-/**
- * Apply a partial update to a single item in the referrals cache by index.
- * Used for optimistic status updates, etc.
- */
-export function updateReferralInCache(index: number, patch: Partial<AdminReferralRow>) {
-  if (_adminReferralsCache[index]) {
-    Object.assign(_adminReferralsCache[index], patch);
-  }
 }
 
 /**

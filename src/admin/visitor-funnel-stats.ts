@@ -49,7 +49,6 @@ import {
 } from './edit-content-tracking-helpers';
 import { isTestReferralRecord } from '../lib/test-referral';
 import { getAdminSessionToken } from '../lib/admin-session';
-import { registerAdminLiveRefresh, refreshAdminLiveIndicators } from './admin-live-hub';
 import { invokeAdminAction } from '../lib/admin-action-client';
 import {
   buildReferrerLinkStatsHtml,
@@ -57,8 +56,6 @@ import {
   type ReferrerLinkRow,
   type ReferrerLinkStatsSummary,
 } from './referrer-link-stats-helpers';
-
-let unregisterVisitorLive: (() => void) | null = null;
 
 const SKELETON =
   '<div class="space-y-2 py-1"><div class="h-4 w-56 skeleton rounded"></div><div class="h-16 skeleton rounded"></div></div>';
@@ -521,7 +518,6 @@ function renderVisitorFunnelView(
 
   container.innerHTML = html;
   wireVisitorAutorefresh(container);
-  refreshAdminLiveIndicators();
 }
 
 export async function renderVisitorFunnelStats(
@@ -570,14 +566,6 @@ export async function renderVisitorFunnelStats(
 export async function wireVisitorFunnelStatsQuick(root: HTMLElement): Promise<void> {
   const el = root.querySelector('#visitor-stats-quick') as HTMLElement | null;
   if (!el) return;
-
-  if (unregisterVisitorLive) unregisterVisitorLive();
-  unregisterVisitorLive = registerAdminLiveRefresh('visitor', () => {
-    const panel = root.querySelector('#visitor-stats-quick') as HTMLElement | null;
-    if (panel && document.body.contains(panel)) {
-      void silentRefreshVisitorFunnelStats(panel);
-    }
-  });
 
   bindVisitorStatsRefresh(el);
   el.innerHTML = SKELETON;

@@ -1,8 +1,7 @@
 import { setActiveTab } from '../ui';
 import { isAdminExtraTab, setAdminMore, syncAdminTabCoach } from '../lib/admin-simple';
-import { setAdminLiveActiveTab } from './admin-live-hub';
+import { renderOwnerFunnelDesk } from './owner-funnel-desk';
 import {
-  renderReferralsTab,
   renderEditContentTab,
   renderPrizeClaimsTab,
 } from './index';
@@ -33,10 +32,33 @@ function isStale(requestId: number): boolean {
 }
 
 /**
- * Main admin tab switcher.
- *
- * Handles tab selection, lazy-loading of heavy tabs (Share Analytics & Text Colors),
- * loading skeletons, race guards, and rendering the correct admin view.
+ * First screen after the owner password: five-number desk only.
+ * Extra tools stay behind More and never replace this path with "can't load."
+ */
+export async function showOwnerFunnelDesk() {
+  const requestId = ++tabRequestId;
+  const content = document.getElementById('admin-content') as HTMLElement | null;
+  if (!content) {
+    console.error('Admin content container not found');
+    return;
+  }
+
+  content.classList.add('admin-tab-content');
+  setAdminMore(false);
+  setActiveTab(-1);
+  syncAdminTabCoach(-1);
+  content.innerHTML = ADMIN_LOADING_SKELETON;
+
+  try {
+    await renderOwnerFunnelDesk(content);
+  } catch {
+    /* renderOwnerFunnelDesk paints zeros — never "can't load" after login */
+  }
+  if (isStale(requestId)) return;
+}
+
+/**
+ * Extra owner tools: Prize, Website, and Promoters.
  */
 export async function switchAdminTab(tab: number) {
   const requestId = ++tabRequestId;
@@ -47,41 +69,23 @@ export async function switchAdminTab(tab: number) {
   }
 
   content.classList.add('admin-tab-content');
-  if (isAdminExtraTab(tab)) setAdminMore(true);
+  if (isAdminExtraTab(tab)) {
+    setAdminMore(true);
+  }
   setActiveTab(tab);
   syncAdminTabCoach(tab);
-  setAdminLiveActiveTab(tab);
   content.innerHTML = ADMIN_LOADING_SKELETON;
 
   try {
-    if (tab === 0) {
-      await renderReferralsTab(content);
-    } else if (tab === 1) {
-      if (isStale(requestId)) return;
-      // console.log('%c[ViralRefer] Opening Share Analytics tab (Chart.js lazy-loaded)', 'color:#a78bfa'); // silenced for prod (audit)
-      const { renderShareAnalyticsTab } = await import('./share-analytics-tab');
-      if (isStale(requestId)) return;
-      await renderShareAnalyticsTab(content);
-    } else if (tab === 2) {
+    if (tab === 2) {
       if (isStale(requestId)) return;
       await renderEditContentTab(content);
     } else if (tab === 3) {
       if (isStale(requestId)) return;
       await renderPrizeClaimsTab(content);
-    } else if (tab === 4) {
-      if (isStale(requestId)) return;
-      // console.log('%c[ViralRefer] Opening Text Colors tab (live preview active)', 'color:#a78bfa'); // silenced for prod (audit)
-      const { renderTextColorsTab } = await import('./text-colors-tab');
-      if (isStale(requestId)) return;
-      await renderTextColorsTab(content);
-    } else if (tab === 5) {
-      if (isStale(requestId)) return;
-      const { renderViralOptimizerTab } = await import('./viral-optimizer-tab');
-      if (isStale(requestId)) return;
-      await renderViralOptimizerTab(content);
     } else if (tab === 6) {
       if (isStale(requestId)) return;
-      const { renderAffiliatesTab } = await import('./affiliates-tab');
+      const { renderAffiliatesTab } = await import("./affiliates-tab");
       if (isStale(requestId)) return;
       await renderAffiliatesTab(content);
     }
@@ -89,7 +93,6 @@ export async function switchAdminTab(tab: number) {
     if (isStale(requestId)) return;
     console.error('[Admin] Tab render failed:', err);
     const msg = err instanceof Error ? err.message : String(err);
-    // Avoid nested HTML injection from error strings
     const safe = msg.replace(/[<>&"']/g, (c) =>
       ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c] || c,
     );

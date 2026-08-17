@@ -14,9 +14,9 @@ There is **no** `isAdmin = true` bypass in `admin-action`. Scripts/cron use `ADM
 
 Treat `ADMIN_OWNER_PASSWORD` as a high-privilege secret. Never put it in a `VITE_` env var (that would bake it into the public JS bundle).
 
-## Dashboard tabs
+## Dashboard
 
-Referrals, Share Analytics, Edit Content, Prize Claims, Text Colors, Viral Optimizer, plus the live activity hub.
+Five numbers + one feed after the owner password. Last 7 days; owner IP, test codes, and webdriver excluded. Tiles come from SQL RPC get_owner_funnel_desk_counts (COUNT DISTINCT) when that function exists; if it is missing, the same 7-day DISTINCT counts are computed via service-role queries on visitor_events / shares / referrals / referrer_links (not last-1000). Landings, Get-link, Share (verified send, not copy), Locked, Get-link rate (Get-link / Landings only). One feed: Landed · Got a link · Shared · Locked. More opens only Prize (approve/reject homepage-banner claims) and Website (public words and pictures). Friends, live hub, Share Analytics, Text Colors, Viral Optimizer, Promoters, Banner CTR, and extra numbers are deleted from the product — not CSS-hidden.
 
 ## Prize / homepage-feature claims
 
