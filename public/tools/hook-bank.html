@@ -10,17 +10,17 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <style>
     :root{--bg:#09090b;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--text:#f4f4f5;--muted:#a1a1aa}
-    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(700px 360px at 80% 0%,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5}
-    .w{max-width:760px;margin:0 auto;padding:1rem 1rem 3rem}a{color:#c4b5fd}
+    *{box-sizing:border-box}html,body{overflow-x:clip}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(700px 360px at 80% 0%,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+    .w{max-width:760px;margin:0 auto;padding:1rem max(1rem,env(safe-area-inset-right)) max(3rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left))}a{color:#c4b5fd}
     h1{font-size:clamp(1.35rem,4.5vw,1.85rem);margin:.4rem 0}.sub{color:var(--muted)}
     .nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem}
     .brand{font-weight:800;color:#fff;text-decoration:none}
     .filters{display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0}
-    .chip{border:1px solid var(--border);background:rgba(255,255,255,.05);color:#e4e4e7;border-radius:999px;padding:.4rem .75rem;font-size:.82rem;font-weight:600;cursor:pointer;min-height:40px}
+    .chip{border:1px solid var(--border);background:rgba(255,255,255,.05);color:#e4e4e7;border-radius:999px;padding:.4rem .75rem;font-size:.82rem;font-weight:600;cursor:pointer;min-height:44px}
     .chip[aria-pressed="true"]{background:rgba(134,76,255,.3);border-color:rgba(196,181,253,.5);color:#fff}
     .hook{background:var(--card);border:1px solid var(--border);border-radius:.9rem;padding:.85rem 1rem;margin:.55rem 0;display:flex;gap:.65rem;align-items:flex-start;justify-content:space-between}
     .hook p{margin:0;flex:1;font-size:.95rem}
-    .hook button{flex-shrink:0;min-height:40px;padding:.4rem .7rem;border-radius:.65rem;border:1px solid var(--border);background:rgba(255,255,255,.08);color:#fff;font-weight:700;cursor:pointer}
+    .hook button{flex-shrink:0;min-height:44px;padding:.4rem .7rem;border-radius:.65rem;border:1px solid var(--border);background:rgba(255,255,255,.08);color:#fff;font-weight:700;cursor:pointer}
     .btn{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:.8rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff;font-weight:700;text-decoration:none;margin-top:1.25rem}
     .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#18181b;border:1px solid #864cff;padding:.55rem 1rem;border-radius:999px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
     .toast.show{opacity:1}

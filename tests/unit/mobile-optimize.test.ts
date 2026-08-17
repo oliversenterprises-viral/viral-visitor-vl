@@ -5,12 +5,15 @@ import {
   initMobileOptimize,
   isCoarsePointer,
   isNarrowViewport,
+  isShortViewport,
 } from '../../src/lib/mobile-optimize';
 
 describe('mobile-optimize', () => {
   beforeEach(() => {
     document.documentElement.removeAttribute('data-vr-touch');
     document.documentElement.removeAttribute('data-vr-mobile');
+    document.documentElement.removeAttribute('data-vr-short');
+    document.documentElement.removeAttribute('data-vr-tiny');
     document.documentElement.style.removeProperty('--vr-vh');
     document.documentElement.style.removeProperty('--vr-vh-unit');
   });
@@ -52,12 +55,19 @@ describe('mobile-optimize', () => {
     expect(isNarrowViewport()).toBe(true);
   });
 
+  it('isShortViewport detects short phones', () => {
+    vi.stubGlobal('window', {
+      matchMedia: (q: string) => ({ matches: q.includes('max-height') }),
+    } as unknown as Window);
+    expect(isShortViewport()).toBe(true);
+  });
+
   it('initMobileOptimize sets touch and mobile attrs', () => {
     vi.stubGlobal('window', {
       innerHeight: 700,
       visualViewport: { height: 680, addEventListener: vi.fn() },
       matchMedia: (q: string) => ({
-        matches: q.includes('coarse') || q.includes('767'),
+        matches: q.includes('coarse') || q.includes('767') || q.includes('max-height: 740'),
       }),
       addEventListener: vi.fn(),
     } as unknown as Window);
@@ -65,6 +75,7 @@ describe('mobile-optimize', () => {
     initMobileOptimize();
     expect(document.documentElement.getAttribute('data-vr-touch')).toBe('1');
     expect(document.documentElement.getAttribute('data-vr-mobile')).toBe('1');
+    expect(document.documentElement.getAttribute('data-vr-short')).toBe('1');
     expect(document.documentElement.style.getPropertyValue('--vr-vh')).toBe('680px');
   });
 });

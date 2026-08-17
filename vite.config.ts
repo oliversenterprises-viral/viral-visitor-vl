@@ -32,6 +32,28 @@ function stampVersionJson() {
   };
 }
 
+/** Map /tools/ and /privacy/ onto the real public file so SPA fallback cannot steal them. */
+function resolvePublicStaticUrl(pathname: string): string | null {
+  const decoded = decodeURIComponent((pathname.split('?')[0] || '/').replace(/\\/g, '/'));
+  const rel = decoded.replace(/^\/+/, '').replace(/\/+$/, '');
+  if (!rel) return null;
+  const base = path.resolve(__dirname, 'public');
+  const candidates = [
+    { file: path.join(base, rel), url: `/${rel}` },
+    { file: path.join(base, rel, 'index.html'), url: `/${rel}/index.html` },
+  ];
+  for (const candidate of candidates) {
+    const resolved = path.resolve(candidate.file);
+    if (!resolved.startsWith(base + path.sep) && resolved !== base) continue;
+    try {
+      if (fs.existsSync(resolved) && fs.statSync(resolved).isFile()) return candidate.url;
+    } catch {
+      /* ignore */
+    }
+  }
+  return null;
+}
+
 /** SPA fallback — match vercel.json catch-all for non-asset routes in dev + preview. */
 function spaFallback() {
   const fallback = (req: { url?: string; method?: string }, _res: unknown, next: () => void) => {
@@ -47,6 +69,12 @@ function spaFallback() {
       pathname.startsWith('/src/') ||
       pathname === '/index.html';
     const isAsset = pathname.startsWith('/assets/') || /\.[a-zA-Z0-9]{2,8}$/.test(pathname);
+    const publicUrl = !isViteInternal && !isAsset ? resolvePublicStaticUrl(pathname) : null;
+    if (publicUrl) {
+      req.url = search ? `${publicUrl}?${search}` : publicUrl;
+      next();
+      return;
+    }
     if (!isViteInternal && !isAsset) {
       const embedPath = pathname === '/embed' || pathname === '/embed/';
       req.url = search ? `/index.html?${search}` : '/index.html';

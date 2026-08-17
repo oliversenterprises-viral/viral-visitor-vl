@@ -10,8 +10,8 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <style>
     :root { --bg:#09090b; --card:rgba(255,255,255,.06); --border:rgba(255,255,255,.12); --text:#f4f4f5; --muted:#a1a1aa; --accent:#864cff; --ok:#86efac; }
-    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0% 0%,rgba(134,76,255,.3),transparent),var(--bg);color:var(--text);line-height:1.5;-webkit-text-size-adjust:100%}
-    .w{max-width:720px;margin:0 auto;padding:1rem 1rem 3rem}
+    *{box-sizing:border-box} html,body{overflow-x:clip} body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0% 0%,rgba(134,76,255,.3),transparent),var(--bg);color:var(--text);line-height:1.5;-webkit-text-size-adjust:100%;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+    .w{max-width:720px;margin:0 auto;padding:1rem max(1rem,env(safe-area-inset-right)) max(3rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left))}
     a{color:#c4b5fd} h1{font-size:clamp(1.4rem,4.5vw,1.9rem);margin:.5rem 0 .4rem;letter-spacing:-.02em}
     .sub{color:var(--muted);margin:0 0 1.2rem}
     .nav{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:space-between;align-items:center;margin-bottom:1rem}
@@ -26,7 +26,7 @@
     .btn-p{background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff}
     .btn-s{background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--border);margin-top:.5rem}
     .pill{display:inline-block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:.2rem .5rem;border-radius:999px;background:rgba(134,76,255,.2);color:#ddd6fe;margin-bottom:.5rem}
-    .out{white-space:pre-wrap;background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:.8rem;padding:.85rem;font-size:.95rem;min-height:5rem}
+    .out{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:.8rem;padding:.85rem;font-size:.95rem;min-height:5rem}
     .toast{color:var(--ok);font-size:.85rem;min-height:1.2rem;margin-top:.4rem}
     .cta-bar{margin-top:1.25rem;padding:1rem;border-radius:1rem;background:linear-gradient(135deg,rgba(134,76,255,.25),rgba(107,58,204,.15));border:1px solid rgba(196,181,253,.3)}
     .cta-bar a.btn{text-decoration:none;margin-top:.6rem}

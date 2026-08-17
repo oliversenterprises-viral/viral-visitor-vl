@@ -10,15 +10,15 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <style>
     :root{--bg:#09090b;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--text:#f4f4f5;--muted:#a1a1aa}
-    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(700px 360px at 50% 0%,rgba(134,76,255,.25),transparent),var(--bg);color:var(--text);line-height:1.5}
-    .w{max-width:720px;margin:0 auto;padding:1rem 1rem 3rem}a{color:#c4b5fd}
+    *{box-sizing:border-box}html,body{overflow-x:clip}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(700px 360px at 50% 0%,rgba(134,76,255,.25),transparent),var(--bg);color:var(--text);line-height:1.5;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+    .w{max-width:720px;margin:0 auto;padding:1rem max(1rem,env(safe-area-inset-right)) max(3rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left))}a{color:#c4b5fd}
     h1{font-size:clamp(1.35rem,4.5vw,1.85rem);margin:.4rem 0}.sub{color:var(--muted)}
     .nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem}
     .brand{font-weight:800;color:#fff;text-decoration:none}
     label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin:.65rem 0 .3rem}
     input,select{width:100%;min-height:48px;border-radius:.8rem;border:1px solid var(--border);background:rgba(0,0,0,.35);color:#fff;padding:.7rem .9rem;font-size:16px}
     .card{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:1rem;margin-top:1rem}
-    .out{word-break:break-all;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:.8rem;padding:.85rem;font-size:.92rem;min-height:3rem}
+    .out{word-break:break-all;overflow-wrap:anywhere;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:.8rem;padding:.85rem;font-size:.92rem;min-height:3rem}
     .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;width:100%;border:none;border-radius:.8rem;font-weight:700;cursor:pointer;margin-top:.55rem;font-size:.95rem}
     .btn-p{background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff}
     .btn-s{background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--border)}

@@ -4277,11 +4277,11 @@ html[data-vr-post-link-one] #hero-prize-one {
   letter-spacing: 0.01em;
 }
 .hero-ad-site {
-  padding: 0.85rem 0.8rem 0.95rem;
+  padding: 0.7rem 0.75rem 0.8rem;
   background:
     radial-gradient(280px 80px at 8% 0%, rgba(134, 76, 255, 0.35), transparent 60%),
     #09090b;
-  min-height: 8.5rem;
+  min-height: 6.25rem;
   text-align: left;
 }
 .hero-ad-site-brand {
@@ -4373,4 +4373,231 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
   font-weight: 650;
   color: #fde68a;
   text-align: center;
+}
+
+/* ============================================
+   ALL DEVICES — first screen, tap targets, wrap
+   ============================================ */
+
+.hero-ad-slot-kicker {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+#hero-ad-visit {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+#hero-slot-site,
+#hero-slot-meta,
+.hero-ad-browser-url {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Short phones / small laptops: title + ad + prize + CTA stay in the first view */
+@media (max-width: 639px) {
+  .vr-page-shell {
+    padding-top: 4.25rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  .vr-hero-panel {
+    padding: 1.1rem 0.9rem 1.2rem !important;
+  }
+
+  #hero-title {
+    font-size: clamp(1.5rem, 7vw, 2.05rem) !important;
+    margin-bottom: 0.5rem !important;
+    line-height: 1.08 !important;
+  }
+
+  #hero-subtitle {
+    font-size: 0.95rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0.7rem !important;
+  }
+
+  #hero-banner-mock {
+    margin-top: 0.15rem !important;
+    margin-bottom: 0.7rem !important;
+  }
+
+  #hero-prize-one {
+    font-size: 0.875rem !important;
+    margin-bottom: 0.7rem !important;
+  }
+
+  .hero-ad-site {
+    min-height: 5.1rem;
+    padding: 0.55rem 0.65rem 0.6rem;
+  }
+
+  .hero-ad-site-title {
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .hero-ad-visit-row {
+    padding: 0.65rem 0.75rem !important;
+  }
+
+  #hero-ad-note {
+    padding-bottom: 0.55rem;
+  }
+}
+
+@media (max-width: 360px) {
+  #hero-title {
+    font-size: 1.42rem !important;
+  }
+
+  .hero-ad-site-cards {
+    display: none;
+  }
+
+  .hero-ad-site {
+    min-height: 4rem;
+  }
+
+  #hero-ad-note {
+    display: none;
+  }
+}
+
+@media (max-height: 780px) {
+  html:not([data-vr-has-link]) #hero-subtitle {
+    display: none;
+  }
+
+  .vr-hero-panel {
+    padding-top: 1.15rem !important;
+    padding-bottom: 1.15rem !important;
+  }
+
+  #hero-banner-mock,
+  #hero-prize-one {
+    margin-bottom: 0.7rem !important;
+  }
+}
+
+@media (max-height: 820px) and (min-width: 1024px) {
+  #hero-title {
+    font-size: 3.35rem !important;
+  }
+
+  .vr-hero-panel {
+    padding: 2rem 2.25rem !important;
+  }
+}
+
+/* Landscape phones: two-column so the ad and CTA share the first view */
+@media (max-height: 500px) and (min-width: 560px) {
+  .vr-page-shell {
+    padding-top: 3.6rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  .vr-hero-panel {
+    padding: 0.75rem 0.9rem !important;
+  }
+
+  .vr-hero-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem);
+    grid-template-areas:
+      "copy ad"
+      "action ad";
+    column-gap: 1rem;
+    row-gap: 0.35rem;
+    max-width: none;
+    text-align: left;
+  }
+
+  .vr-hero-copy { grid-area: copy; }
+  .vr-hero-ad {
+    grid-area: ad;
+    margin: 0 !important;
+    max-width: none;
+  }
+  .vr-hero-action { grid-area: action; }
+
+  #hero-title {
+    font-size: 1.35rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  #hero-title br {
+    display: none;
+  }
+
+  #hero-prize-one {
+    margin-bottom: 0.45rem !important;
+    font-size: 0.8rem !important;
+    text-align: left;
+  }
+
+  .hero-cta-stack {
+    max-width: none;
+  }
+
+  .hero-primary-cta {
+    min-height: 48px;
+    padding: 0.65rem 1rem !important;
+    font-size: 1rem !important;
+  }
+
+  .hero-ad-site {
+    min-height: 4.1rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .hero-ad-site-cards {
+    display: none;
+  }
+
+  #hero-ad-note {
+    display: none;
+  }
+}
+
+@media (max-height: 500px) and (max-width: 559px) {
+  .vr-page-shell {
+    padding-top: 3.4rem !important;
+  }
+
+  .vr-hero-panel {
+    padding: 0.65rem 0.7rem !important;
+  }
+
+  #hero-title {
+    font-size: 1.2rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  #hero-slot-preview {
+    display: none;
+  }
+
+  #hero-ad-note {
+    display: none;
+  }
+
+  #hero-prize-one {
+    margin-bottom: 0.4rem !important;
+  }
+
+  #hero-banner-mock {
+    margin-bottom: 0.4rem !important;
+  }
+}
+
+html[data-vr-tiny] #hero-subtitle,
+html[data-vr-short]:not([data-vr-has-link]) #hero-subtitle {
+  display: none;
 }
