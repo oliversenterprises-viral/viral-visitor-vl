@@ -3087,14 +3087,6 @@ input, select, textarea {
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.1);
 }
 
-/* Admin simple-first: extras stay in the DOM */
-html[data-vr-admin-simple]:not([data-vr-admin-more]) .admin-tab[data-vr-admin-extra],
-html[data-vr-admin-simple]:not([data-vr-admin-more]) #admin-live-filters,
-html[data-vr-admin-simple]:not([data-vr-admin-more]) #admin-live-sound-history-toggle,
-html[data-vr-admin-simple]:not([data-vr-admin-more]) #admin-live-offsite-status {
-  display: none !important;
-}
-
 html[data-vr-admin-simple]:not([data-vr-admin-stats-more]) [data-vr-admin-stats-extra] {
   display: none !important;
 }

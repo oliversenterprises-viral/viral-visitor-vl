@@ -1,8 +1,12 @@
 import { setActiveTab } from '../ui';
 import { isAdminExtraTab, setAdminMore, syncAdminTabCoach } from '../lib/admin-simple';
-import { setAdminLiveActiveTab } from './admin-live-hub';
+import { setAdminLiveActiveTab, startAdminLiveHub } from './admin-live-hub';
 import { renderOwnerFunnelDesk } from './owner-funnel-desk';
-import { renderEditContentTab, renderPrizeClaimsTab } from './index';
+import {
+  renderReferralsTab,
+  renderEditContentTab,
+  renderPrizeClaimsTab,
+} from './index';
 
 /** Guards against out-of-order tab renders when the user clicks quickly. */
 let tabRequestId = 0;
@@ -30,7 +34,35 @@ function isStale(requestId: number): boolean {
 }
 
 /**
- * Tab 0 is the five-number desk. Extra owner tools stay on the other tabs.
+ * First screen after the owner password: five-number desk only.
+ * Extra tools stay behind More and never replace this path with "can't load."
+ */
+export async function showOwnerFunnelDesk() {
+  const requestId = ++tabRequestId;
+  const content = document.getElementById('admin-content') as HTMLElement | null;
+  if (!content) {
+    console.error('Admin content container not found');
+    return;
+  }
+
+  content.classList.add('admin-tab-content');
+  setAdminMore(false);
+  setActiveTab(-1);
+  syncAdminTabCoach(-1);
+  setAdminLiveActiveTab(0);
+  content.innerHTML = ADMIN_LOADING_SKELETON;
+
+  try {
+    await renderOwnerFunnelDesk(content);
+  } catch {
+    /* renderOwnerFunnelDesk paints zeros — never "can't load" after login */
+  }
+  if (isStale(requestId)) return;
+}
+
+/**
+ * Extra owner tools (Friends / Prize / Website words / Shares / ...).
+ * Opening any tab relocates that chrome into the More host.
  */
 export async function switchAdminTab(tab: number) {
   const requestId = ++tabRequestId;
@@ -41,7 +73,10 @@ export async function switchAdminTab(tab: number) {
   }
 
   content.classList.add('admin-tab-content');
-  if (isAdminExtraTab(tab)) setAdminMore(true);
+  if (isAdminExtraTab(tab)) {
+    setAdminMore(true);
+    startAdminLiveHub();
+  }
   setActiveTab(tab);
   syncAdminTabCoach(tab);
   setAdminLiveActiveTab(tab);
@@ -49,7 +84,7 @@ export async function switchAdminTab(tab: number) {
 
   try {
     if (tab === 0) {
-      await renderOwnerFunnelDesk(content);
+      await renderReferralsTab(content);
     } else if (tab === 1) {
       if (isStale(requestId)) return;
       const { renderShareAnalyticsTab } = await import('./share-analytics-tab');

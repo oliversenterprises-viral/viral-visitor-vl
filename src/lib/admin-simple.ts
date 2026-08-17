@@ -1,5 +1,6 @@
 /**
  * First screen is the five-number desk. Extra owner tools stay behind a visible More.
+ * Chrome is relocated into #admin-more-tools-hold — not CSS-hidden in the first view.
  */
 
 const ATTR = 'data-vr-admin-simple';
@@ -7,12 +8,16 @@ const MORE_ATTR = 'data-vr-admin-more';
 const STATS_MORE_ATTR = 'data-vr-admin-stats-more';
 const MORE_BTN_ID = 'admin-more-tools-btn';
 const STATS_MORE_BTN_ID = 'admin-stats-more-btn';
+const MORE_HOLD_ID = 'admin-more-tools-hold';
+const MORE_HOST_ID = 'admin-more-tools-host';
 
-export const ADMIN_PRIMARY_TABS = [0, 2, 3] as const;
-export const ADMIN_EXTRA_TABS = [1, 4, 5, 6] as const;
+export const ADMIN_PRIMARY_TABS = [] as const;
+export const ADMIN_EXTRA_TABS = [0, 1, 2, 3, 4, 5, 6] as const;
+
+const DESK_COACH = 'Land -> get a link -> share -> lock.';
 
 const TAB_COACH: Record<number, string> = {
-  0: 'Land -> get a link -> share -> lock.',
+  0: 'Friends who got credit when someone used their link.',
   1: 'How people send links (WhatsApp, copy, and more).',
   2: 'Change the words and pictures on the public site.',
   3: 'People asking to put their site on the homepage.',
@@ -34,9 +39,9 @@ export function isAdminStatsMoreOpen(): boolean {
 }
 
 export function setAdminStatsMore(open: boolean): void {
-  const root = document.documentElement;
-  if (open) root.setAttribute(STATS_MORE_ATTR, '1');
-  else root.removeAttribute(STATS_MORE_ATTR);
+  const rootEl = document.documentElement;
+  if (open) rootEl.setAttribute(STATS_MORE_ATTR, '1');
+  else rootEl.removeAttribute(STATS_MORE_ATTR);
   const btn = document.getElementById(STATS_MORE_BTN_ID);
   if (btn) {
     btn.textContent = open ? 'Hide extra numbers' : 'More numbers';
@@ -44,14 +49,31 @@ export function setAdminStatsMore(open: boolean): void {
   }
 }
 
+function relocateMoreChrome(open: boolean): void {
+  const hold = document.getElementById(MORE_HOLD_ID);
+  const host = document.getElementById(MORE_HOST_ID);
+  if (!hold || !host) return;
+  if (open) {
+    while (hold.firstChild) host.appendChild(hold.firstChild);
+  } else {
+    while (host.firstChild) hold.appendChild(host.firstChild);
+  }
+}
+
 export function setAdminMore(open: boolean): void {
-  const root = document.documentElement;
-  if (open) root.setAttribute(MORE_ATTR, '1');
-  else root.removeAttribute(MORE_ATTR);
+  const rootEl = document.documentElement;
+  if (open) rootEl.setAttribute(MORE_ATTR, '1');
+  else rootEl.removeAttribute(MORE_ATTR);
+  relocateMoreChrome(open);
+  const hub = document.getElementById('admin-live-hub');
+  if (hub) {
+    if (open) hub.classList.remove('hidden');
+    else hub.classList.add('hidden');
+  }
   const btn = document.getElementById(MORE_BTN_ID);
   if (btn) {
     btn.removeAttribute('hidden');
-    btn.textContent = open ? 'Back to desk' : 'More tools';
+    btn.textContent = open ? 'Back to desk' : 'More';
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 }
@@ -59,8 +81,11 @@ export function setAdminMore(open: boolean): void {
 export function syncAdminTabCoach(tab?: number): void {
   const el = document.getElementById('admin-tab-coach');
   if (!el) return;
-  const key = typeof tab === 'number' && Number.isFinite(tab) ? tab : 0;
-  el.textContent = TAB_COACH[key] || TAB_COACH[0];
+  if (typeof tab !== 'number' || !Number.isFinite(tab) || tab < 0) {
+    el.textContent = DESK_COACH;
+    return;
+  }
+  el.textContent = TAB_COACH[tab] || DESK_COACH;
 }
 
 function wireAdminMoreButton(): void {
@@ -70,21 +95,24 @@ function wireAdminMoreButton(): void {
   btn.addEventListener('click', () => {
     const next = !isAdminMoreOpen();
     setAdminMore(next);
-    if (!next) {
-      const switchFn = (window as unknown as { switchAdminTab?: (n: number) => void }).switchAdminTab;
-      switchFn?.(0);
+    if (next) {
+      void import('../admin/admin-live-hub').then((m) => m.startAdminLiveHub());
+    } else {
+      const showDesk = (window as unknown as { showOwnerFunnelDesk?: () => void }).showOwnerFunnelDesk;
+      showDesk?.();
     }
   });
 }
 
 export function initAdminDesk(): void {
-  const root = document.documentElement;
-  root.setAttribute(ATTR, '1');
-  root.removeAttribute('data-vr-admin-desk');
-  root.removeAttribute(STATS_MORE_ATTR);
+  const rootEl = document.documentElement;
+  rootEl.setAttribute(ATTR, '1');
+  rootEl.removeAttribute('data-vr-admin-desk');
+  rootEl.removeAttribute(STATS_MORE_ATTR);
+  rootEl.removeAttribute(MORE_ATTR);
   wireAdminMoreButton();
-  setAdminMore(isAdminMoreOpen());
-  syncAdminTabCoach(0);
+  setAdminMore(false);
+  syncAdminTabCoach(-1);
   const more = document.getElementById(MORE_BTN_ID);
   if (more) more.removeAttribute('hidden');
   const statsMore = document.getElementById(STATS_MORE_BTN_ID);

@@ -16,7 +16,7 @@ Treat `ADMIN_OWNER_PASSWORD` as a high-privilege secret. Never put it in a `VITE
 
 ## Dashboard
 
-Five numbers + one feed after the owner password. Last 7 days; owner IP, test codes, and webdriver excluded. Tiles come from SQL RPC get_owner_funnel_desk_counts (COUNT DISTINCT) when that function exists; if it is missing, the same 7-day DISTINCT counts are computed via service-role queries on visitor_events / shares / referrals / referrer_links (not last-1000). Landings, Get-link, Share (verified send, not copy), Locked, Get-link rate (Get-link / Landings only). One feed: Landed · Got a link · Shared · Locked. Extra owner tools stay behind a visible More (Friends, Prize, and Website words stay on the strip). The old tab bar is not CSS-hidden. No Died waiting / Promoters / Claims tiles on the first screen.
+Five numbers + one feed after the owner password. Last 7 days; owner IP, test codes, and webdriver excluded. Tiles come from SQL RPC get_owner_funnel_desk_counts (COUNT DISTINCT) when that function exists; if it is missing, the same 7-day DISTINCT counts are computed via service-role queries on visitor_events / shares / referrals / referrer_links (not last-1000). Landings, Get-link, Share (verified send, not copy), Locked, Get-link rate (Get-link / Landings only). One feed: Landed · Got a link · Shared · Locked. Extra owner tools (Friends, Prize, Website words, live hub, Referrals/Shares/Funnel/Banners/Claims/CMS) stay behind a visible More control. That chrome is relocated out of the first screen — not CSS-hidden in the first view. No Died waiting / Promoters / Claims tiles on the first screen.
 
 ## Prize / homepage-feature claims
 

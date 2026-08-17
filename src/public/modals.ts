@@ -4,9 +4,9 @@
  */
 
 import { ViralRefer, registerGlobal } from '../lib/global';
-import { switchAdminTab } from '../admin';
-import { initAdminSimple } from '../lib/admin-simple';
-import { startAdminLiveHub, stopAdminLiveHub } from '../admin/admin-live-hub';
+import { switchAdminTab, showOwnerFunnelDesk } from '../admin';
+import { initAdminSimple, setAdminMore } from '../lib/admin-simple';
+import { stopAdminLiveHub } from '../admin/admin-live-hub';
 import { unlockAdminLiveSound } from '../admin/admin-live-sound';
 import { supabase } from '../lib/supabase';
 import { setAdminSessionToken, clearAdminSessionToken } from '../lib/admin-session';
@@ -14,11 +14,13 @@ import { setAdminSessionToken, clearAdminSessionToken } from '../lib/admin-sessi
 registerGlobal('closeAdminPanel', () => {
   stopAdminLiveHub();
   clearAdminSessionToken();
+  setAdminMore(false);
   const modal = document.getElementById('admin-modal');
   if (modal) modal.classList.add('hidden');
 });
 
 registerGlobal('switchAdminTab', switchAdminTab);
+registerGlobal('showOwnerFunnelDesk', showOwnerFunnelDesk);
 
 const triggerRefreshSpin = (el?: HTMLElement) => {
   if (el) {
@@ -34,8 +36,7 @@ registerGlobal('openAdminPanel', async () => {
   if (modal) {
     modal.classList.remove('hidden');
     initAdminSimple();
-    startAdminLiveHub();
-    await ViralRefer.switchAdminTab(0);
+    await showOwnerFunnelDesk();
   }
 });
 

@@ -635,9 +635,46 @@
                     <div class="font-bold text-2xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-rose-400"></i> Run the funnel</div>
                     <p class="text-sm text-zinc-400 mt-1">One loop desk. Server numbers only.</p>
                 </div>
-                <button onclick="closeAdminPanel()" class="text-3xl text-zinc-400 hover:text-white">✕</button>
+                <div class="flex items-center gap-3">
+                    <button type="button" id="admin-more-tools-btn" class="px-3 py-2 text-xs font-semibold rounded-2xl border border-white/15 text-zinc-300 hover:text-white whitespace-nowrap" aria-expanded="false">More</button>
+                    <button onclick="closeAdminPanel()" class="text-3xl text-zinc-400 hover:text-white">✕</button>
+                </div>
             </div>
 
+            <div id="admin-more-tools-host"></div>
+            <div class="p-8 overflow-auto flex-1" id="admin-content">
+                <div data-owner-funnel-desk="1" class="space-y-4">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3" data-owner-desk-tiles>
+                        <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+                            <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Landings</div>
+                            <div class="text-2xl font-bold text-white tabular-nums mt-1">0</div>
+                        </article>
+                        <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+                            <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Get-link</div>
+                            <div class="text-2xl font-bold text-white tabular-nums mt-1">0</div>
+                        </article>
+                        <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+                            <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Share</div>
+                            <div class="text-2xl font-bold text-white tabular-nums mt-1">0</div>
+                        </article>
+                        <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+                            <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Locked</div>
+                            <div class="text-2xl font-bold text-white tabular-nums mt-1">0</div>
+                        </article>
+                        <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+                            <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Get-link rate</div>
+                            <div class="text-2xl font-bold text-white tabular-nums mt-1">0%</div>
+                        </article>
+                    </div>
+                    <section class="rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3">
+                        <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-2">Landed · Got a link · Shared · Locked</div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-more-tools-hold" hidden>
             <div id="admin-live-hub" class="hidden px-8 py-3 border-b border-white/10 bg-zinc-950/60">
                 <div class="flex items-center justify-between gap-3 mb-2">
                     <div class="flex items-center gap-2 text-sm font-semibold text-emerald-400">
@@ -688,10 +725,9 @@
             </div>
            
             <div class="flex border-b border-white/10 px-8 admin-tab-bar overflow-x-auto items-center">
-                <button type="button" onclick="switchAdminTab(0)" id="tab-0" data-admin-tab="0" class="admin-tab relative px-4 py-4 font-semibold border-b-2 border-violet-500 text-violet-400 whitespace-nowrap" aria-label="Friends — referrals">Friends<span id="tab-0-badge" class="admin-tab-badge hidden">0</span></button>
-                <button type="button" onclick="switchAdminTab(3)" id="tab-3" data-admin-tab="3" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Prize requests — homepage feature claims">Prize requests<span id="tab-3-badge" class="admin-tab-badge hidden">0</span><span id="tab-3-live-badge" class="admin-tab-badge hidden">0</span></button>
-                <button type="button" onclick="switchAdminTab(2)" id="tab-2" data-admin-tab="2" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Website words — edit content">Website words<span id="tab-2-badge" class="admin-tab-badge hidden">0</span></button>
-                <button type="button" id="admin-more-tools-btn" class="px-3 py-2 ml-1 mr-1 text-xs font-semibold rounded-2xl border border-white/15 text-zinc-300 hover:text-white whitespace-nowrap" aria-expanded="false">More tools</button>
+                <button type="button" onclick="switchAdminTab(0)" id="tab-0" data-admin-tab="0" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold border-b-2 border-violet-500 text-violet-400 whitespace-nowrap" aria-label="Friends — referrals">Friends<span id="tab-0-badge" class="admin-tab-badge hidden">0</span></button>
+                <button type="button" onclick="switchAdminTab(3)" id="tab-3" data-admin-tab="3" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Prize requests — homepage feature claims">Prize requests<span id="tab-3-badge" class="admin-tab-badge hidden">0</span><span id="tab-3-live-badge" class="admin-tab-badge hidden">0</span></button>
+                <button type="button" onclick="switchAdminTab(2)" id="tab-2" data-admin-tab="2" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Website words — edit content">Website words<span id="tab-2-badge" class="admin-tab-badge hidden">0</span></button>
                 <button type="button" onclick="switchAdminTab(1)" id="tab-1" data-admin-tab="1" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Shares — share analytics">Shares<span id="tab-1-badge" class="admin-tab-badge hidden">0</span></button>
                 <button type="button" onclick="switchAdminTab(4)" id="tab-4" data-admin-tab="4" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Colors — text colors">Colors<span id="tab-4-badge" class="admin-tab-badge hidden">0</span></button>
                 <button type="button" onclick="switchAdminTab(5)" id="tab-5" data-admin-tab="5" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Auto-pilot — viral optimizer">Auto-pilot<span id="tab-5-badge" class="admin-tab-badge hidden">0</span></button>
@@ -701,9 +737,6 @@
                 <p id="admin-tab-coach" class="text-sm text-zinc-400">Friends who got credit when someone used their link.</p>
                 <button type="button" id="admin-stats-more-btn" class="text-xs font-semibold px-3 py-1.5 rounded-2xl border border-white/15 text-zinc-300 hover:text-white" aria-expanded="false">More numbers</button>
             </div>
-           
-            <div class="p-8 overflow-auto flex-1" id="admin-content"></div>
-        </div>
     </div>
 
     <!-- #1 Homepage Feature Claim Modal (no cash) -->

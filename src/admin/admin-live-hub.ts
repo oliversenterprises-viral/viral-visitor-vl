@@ -405,8 +405,7 @@ export function startAdminLiveHub(): void {
   for (const k of Object.keys(tabPulseCounts)) tabPulseCounts[Number(k)] = 0;
   for (let t = 0; t <= 5; t++) updateTabBadge(t);
 
-  const hub = document.getElementById('admin-live-hub');
-  if (hub) hub.classList.remove('hidden');
+  // Do not unhide the hub here — first screen stays desk-only until More.
   wireHubControls();
   wireAdminLiveSoundControls();
   void unlockAdminLiveSound();
