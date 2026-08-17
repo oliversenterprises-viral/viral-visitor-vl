@@ -140,12 +140,31 @@ export function formatUnlockRaceLine(
   return `Board leader has ${have} friends. Slot still empty until they claim.`;
 }
 
+/** Promo / placeholder CMS rows are not a claimed #1 site. */
+export function isClaimedPrizeBanner(banner: PrizeBannerInput | null | undefined): boolean {
+  if (!banner || banner.enabled === false) return false;
+  const href = safeHttpUrl(banner.redirectUrl || '');
+  if (!href) return false;
+  const host = (hostnameFromUrl(href) || '').toLowerCase();
+  if (!host) return false;
+  if (host === 'viralrefer.app' || host.endsWith('.viralrefer.app')) return false;
+  if ((host === 'x.com' || host === 'twitter.com') && /viralrefer/i.test(href)) return false;
+  const img = String(banner.imageUrl || '').toLowerCase();
+  if (img.includes('winner-spotlight') || img.includes('featured-partner')) return false;
+  const label = String(banner.label || '').trim().toLowerCase();
+  if (label === 'winner spotlight' || label === 'featured partner') return false;
+  return true;
+}
+
 export function resolvePrizeSlot(input: {
   banners?: readonly PrizeBannerInput[];
   selected?: PrizeBannerInput | null;
 } = {}): PrizeSlot {
-  const enabled = (input.banners || []).filter((b) => b && b.enabled !== false);
-  const candidate = input.selected || enabled[0] || null;
+  const enabled = (input.banners || []).filter((b) => isClaimedPrizeBanner(b));
+  const candidate =
+    (input.selected && isClaimedPrizeBanner(input.selected) ? input.selected : null) ||
+    enabled[0] ||
+    null;
   if (!candidate) return examplePrizeSlot();
 
   const href = safeHttpUrl(candidate.redirectUrl || '');

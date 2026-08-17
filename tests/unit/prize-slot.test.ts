@@ -75,6 +75,24 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(example.href).toBe(EXAMPLE_SLOT_HREF);
     expect(example.meta.toLowerCase()).not.toContain('current #1');
 
+    const promo = resolvePrizeSlot({
+      banners: [
+        {
+          label: 'Winner Spotlight',
+          imageUrl: 'https://www.viralrefer.app/assets/banners/winner-spotlight.svg',
+          redirectUrl: 'https://viralrefer.app/?ref=VIRAL-97UWEGZ',
+          enabled: true,
+        },
+        {
+          imageUrl: 'https://example.com/x.jpg',
+          redirectUrl: 'https://x.com/viralrefer',
+          enabled: true,
+        },
+      ],
+    });
+    expect(promo.kind).toBe('example');
+    expect(promo.href).toBe(EXAMPLE_SLOT_HREF);
+
     const winner = resolvePrizeSlot({
       selected: {
         label: 'Acme Tools',

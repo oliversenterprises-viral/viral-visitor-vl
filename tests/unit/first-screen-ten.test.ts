@@ -28,6 +28,9 @@ describe('five-layer first screen (Helix order)', () => {
     expect(css).toMatch(/html\[data-vr-has-link\] #hero-get-link-btn/);
     expect(css).toMatch(/html\[data-vr-has-link\] #funnel-expand-wrap/);
     expect(css).toMatch(/html\[data-vr-has-link\] \[data-vr-below-fold\]/);
+    expect(css).toMatch(
+      /html\[data-vr-has-link\] #hero-banner-mock,\s*html\[data-vr-post-link-one\] #hero-banner-mock/,
+    );
     expect(css).toMatch(/html\[data-vr-has-link\] #hero-telegram-helper-btn/);
     expect(css).toMatch(/html\[data-vr-has-link\] #hero-leaderboard-btn/);
     expect(css).not.toMatch(/html\[data-vr-has-link\] #hero-telegram-helper-btn \{\s*display: flex;/);

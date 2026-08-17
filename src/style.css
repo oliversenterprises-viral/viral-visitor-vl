@@ -4223,14 +4223,20 @@ html[data-vr-has-link] .hero-cta-stack,
 html[data-vr-has-link] #hero-title,
 html[data-vr-has-link] #hero-subtitle,
 html[data-vr-has-link] #hero-badge,
-html[data-vr-has-link] #hero-banner-mock,
-html[data-vr-has-link] #hero-prize-one,
 html[data-vr-has-link] #hero-trust-line,
 html[data-vr-has-link] #hero-lock-rule,
 html[data-vr-has-link] #hero-global-proof,
 html[data-vr-has-link] #funnel-expand-wrap,
 html[data-vr-has-link] [data-vr-below-fold] {
   display: none !important;
+}
+
+/* Keep the example / claimed ad visible even after Get my link or a saved code. */
+html[data-vr-has-link] #hero-banner-mock,
+html[data-vr-post-link-one] #hero-banner-mock,
+html[data-vr-has-link] #hero-prize-one,
+html[data-vr-post-link-one] #hero-prize-one {
+  display: block !important;
 }
 
 .hero-ad-site-preview {
@@ -4271,11 +4277,11 @@ html[data-vr-has-link] [data-vr-below-fold] {
   letter-spacing: 0.01em;
 }
 .hero-ad-site {
-  padding: 0.7rem 0.75rem 0.8rem;
+  padding: 0.85rem 0.8rem 0.95rem;
   background:
     radial-gradient(280px 80px at 8% 0%, rgba(134, 76, 255, 0.35), transparent 60%),
     #09090b;
-  min-height: 7.25rem;
+  min-height: 8.5rem;
   text-align: left;
 }
 .hero-ad-site-brand {
