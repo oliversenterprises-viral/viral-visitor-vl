@@ -55,12 +55,22 @@ BEGIN
 END $$;
 
 -- visits (archived)
-DROP POLICY IF EXISTS "Allow public read on visits for admin UI" ON public.visits;
+DO $$
+BEGIN
+  IF to_regclass('public.visits') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Allow public read on visits for admin UI" ON public.visits;
+  END IF;
+END $$;
 
 -- site_analytics (archived)
-DROP POLICY IF EXISTS "Allow public insert" ON public.site_analytics;
-DROP POLICY IF EXISTS "Allow public update" ON public.site_analytics;
-DROP POLICY IF EXISTS "Policy to implement Time To Live (TTL)" ON public.site_analytics;
+DO $$
+BEGIN
+  IF to_regclass('public.site_analytics') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Allow public insert" ON public.site_analytics;
+    DROP POLICY IF EXISTS "Allow public update" ON public.site_analytics;
+    DROP POLICY IF EXISTS "Policy to implement Time To Live (TTL)" ON public.site_analytics;
+  END IF;
+END $$;
 
 -- config
 DO $$
@@ -71,7 +81,12 @@ BEGIN
 END $$;
 
 -- reddit_events (archived per 0014)
-DROP POLICY IF EXISTS "Allow public insert for reddit events (via Edge)" ON public.reddit_events;
+DO $$
+BEGIN
+  IF to_regclass('public.reddit_events') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Allow public insert for reddit events (via Edge)" ON public.reddit_events;
+  END IF;
+END $$;
 
 -- ── Drop empty unused legacy tables ─────────────────────────────────────────
 
@@ -84,15 +99,21 @@ DROP TABLE IF EXISTS public.config;
 
 -- ── Lock archived tables that retain historical rows ────────────────────────
 
-REVOKE ALL ON public.visits FROM anon, authenticated;
-REVOKE ALL ON public.site_analytics FROM anon, authenticated;
-REVOKE ALL ON public.reddit_events FROM anon, authenticated;
-
-COMMENT ON TABLE public.visits IS
-  'ARCHIVED: legacy visit log. No client access — admin/service_role only if needed.';
-
-COMMENT ON TABLE public.site_analytics IS
-  'ARCHIVED: legacy analytics row(s). No client access.';
-
-COMMENT ON TABLE public.reddit_events IS
-  'ARCHIVED (0014): historical Reddit ad events only. No client access. Use visitor_events for live funnel.';
+DO $$
+BEGIN
+  IF to_regclass('public.visits') IS NOT NULL THEN
+    REVOKE ALL ON public.visits FROM anon, authenticated;
+    COMMENT ON TABLE public.visits IS
+      'ARCHIVED: legacy visit log. No client access — admin/service_role only if needed.';
+  END IF;
+  IF to_regclass('public.site_analytics') IS NOT NULL THEN
+    REVOKE ALL ON public.site_analytics FROM anon, authenticated;
+    COMMENT ON TABLE public.site_analytics IS
+      'ARCHIVED: legacy analytics row(s). No client access.';
+  END IF;
+  IF to_regclass('public.reddit_events') IS NOT NULL THEN
+    REVOKE ALL ON public.reddit_events FROM anon, authenticated;
+    COMMENT ON TABLE public.reddit_events IS
+      'ARCHIVED (0014): historical Reddit ad events only. No client access. Use visitor_events for live funnel.';
+  END IF;
+END $$;
