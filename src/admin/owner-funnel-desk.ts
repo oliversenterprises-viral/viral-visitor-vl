@@ -162,6 +162,7 @@ export async function renderOwnerFunnelDesk(container: HTMLElement): Promise<voi
   bindRefresh(container);
   container.innerHTML = SKELETON;
   try {
+    // Tiles come from get_owner_funnel_desk_counts (0052: exclusion must be true/false, never NULL).
     const result = await invokeAdminAction<OwnerFunnelDeskMetrics>('get_owner_funnel_desk');
     const loaded = ownerFunnelDeskFromInvokeResult(result);
     renderOwnerFunnelDeskView(container, loaded.metrics);
