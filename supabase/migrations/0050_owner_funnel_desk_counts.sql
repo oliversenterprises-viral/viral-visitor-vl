@@ -1,4 +1,4 @@
-﻿-- 0050_owner_funnel_desk_counts.sql
+-- 0050_owner_funnel_desk_counts.sql
 -- Owner desk tiles: server-side DISTINCT counts for the last N days.
 -- Not last-1000. Not a paged visitor_events dump. service_role only.
 
