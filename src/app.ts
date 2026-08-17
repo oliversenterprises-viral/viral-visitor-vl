@@ -36,7 +36,7 @@ import { reapplyI18n } from './lib/i18n';
 import { applyUtmHeroCopy } from './lib/utm-hero-copy';
 import { syncFunnelGuide } from './lib/funnel-guide';
 import { initFunnelCopyFromContent } from './lib/funnel-copy';
-import { registerGlobal } from './lib/global';
+import { registerGlobal, setWindowProp } from './lib/global';
 import { initOptimizerFlagsFromContent } from './lib/optimizer-flags';
 import { applyVisitorSlimFromFlags } from './lib/visitor-slim';
 import {
@@ -90,8 +90,8 @@ let cachedPeopleGotLinkToday = 0;
 // Central place for bootstrapping the public-facing homepage.
 // Handles loading dynamic content, leaderboard, referral link prefill, etc.
 
-let referralsChannel: any = null;
-let siteContentChannel: any = null;
+let referralsChannel: { unsubscribe: () => void } | null = null;
+let siteContentChannel: ReturnType<typeof supabase.channel> | null = null;
 let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
@@ -419,7 +419,7 @@ export async function initApp() {
 }
 
 // Expose for referral.ts after code generation
-(window as any).renderMyStats = renderMyStats;
+setWindowProp('renderMyStats', renderMyStats);
 
 /**
  * Renders the richer "Your Stats" section with actual personal progress.

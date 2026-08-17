@@ -107,7 +107,7 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
   const mainArea = content.querySelector('#prize-claims-main') as HTMLElement;
 
   try {
-    let rows: any[] = [];
+    let rows: AdminClaimRow[] = [];
 
     // Prefer Edge Function (service_role) so the full list (including pending) is visible
     // even for password-only admin (no real auth session) or when RLS own/approved policies would hide data.
@@ -264,8 +264,8 @@ function wireOwnerTestTools(content: HTMLElement) {
         const u = (await supabase.auth.getUser()).data.user;
         if (attempts > 12 || u) clearInterval(poll);
       }, 2500);
-    } catch (e: any) {
-      statusEl.textContent = `Error: ${e?.message || e}`;
+    } catch (e: unknown) {
+      statusEl.textContent = `Error: ${formatError(e)}`;
       statusEl.className = 'text-sm text-red-400';
     } finally {
       magicBtn.disabled = false;
@@ -313,8 +313,8 @@ function wireOwnerTestTools(content: HTMLElement) {
           resultEl.innerHTML = `<span class="text-emerald-400">Edge OK — rejected as expected: ${escapeHtml(String(data?.error || 'unknown'))}</span>`;
           showToast('submit-claim edge healthy (rejected probe)', 'success');
         }
-      } catch (e: any) {
-        resultEl.textContent = `Edge probe failed: ${e?.message || e}`;
+      } catch (e: unknown) {
+        resultEl.textContent = `Edge probe failed: ${formatError(e)}`;
         resultEl.className = 'mt-1 text-xs text-red-400';
       } finally {
         testBtn.disabled = false;

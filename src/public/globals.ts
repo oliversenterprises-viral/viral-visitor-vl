@@ -6,7 +6,7 @@
  * global `window` / `ViralRefer` objects.
  */
 
-import { registerGlobal, ViralRefer } from '../lib/global';
+import { registerGlobal, setWindowProp, ViralRefer } from '../lib/global';
 
 let _referralBaseUrl = 'https://www.viralrefer.app';
 let _shareMessageTemplate = '';
@@ -34,9 +34,8 @@ export function getReferralBaseUrl(): string {
  */
 export function setShareMessageTemplate(template: string): void {
   _shareMessageTemplate = template;
-  (window as any).shareMessageTemplate = _shareMessageTemplate;
-  (window as any).ViralRefer = (window as any).ViralRefer || {};
-  (window as any).ViralRefer.shareMessageTemplate = _shareMessageTemplate;
+  setWindowProp('shareMessageTemplate', _shareMessageTemplate);
+  ViralRefer.shareMessageTemplate = _shareMessageTemplate;
 }
 
 export function getShareMessageTemplate(): string {
@@ -49,7 +48,7 @@ export function getShareMessageTemplate(): string {
  */
 export function setQrModalTitle(title: string): void {
   _qrModalTitle = title;
-  (window as any).qrModalTitle = _qrModalTitle;
+  setWindowProp('qrModalTitle', _qrModalTitle);
 }
 
 export function getQrModalTitle(): string {
@@ -64,9 +63,8 @@ export function getQrModalTitle(): string {
 export function setMyReferralCode(code: string): void {
   _myReferralCode = code;
   localStorage.setItem('vr_my_ref_code', _myReferralCode);
-  (window as any).myReferralCode = _myReferralCode;
-  (window as any).ViralRefer = (window as any).ViralRefer || {};
-  (window as any).ViralRefer.myReferralCode = _myReferralCode;
+  setWindowProp('myReferralCode', _myReferralCode);
+  ViralRefer.myReferralCode = _myReferralCode;
 }
 
 /**
@@ -78,9 +76,8 @@ export function getMyReferralCode(): string {
     const fromStorage = localStorage.getItem('vr_my_ref_code');
     if (fromStorage) {
       _myReferralCode = fromStorage;
-      (window as any).myReferralCode = _myReferralCode;
-      (window as any).ViralRefer = (window as any).ViralRefer || {};
-      (window as any).ViralRefer.myReferralCode = _myReferralCode;
+      setWindowProp('myReferralCode', _myReferralCode);
+      ViralRefer.myReferralCode = _myReferralCode;
     }
   }
   return _myReferralCode;

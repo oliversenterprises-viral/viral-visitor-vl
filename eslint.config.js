@@ -50,8 +50,7 @@ export default tseslint.config(
         },
       ],
 
-      // Discourage explicit any (we have a deliberate handful for globals + edge functions; keep as warning)
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
 
       // Allow console for ViralRefer debug namespace + error reporting
       'no-console': 'off',

@@ -335,7 +335,11 @@ export async function fetchSiteContent(): Promise<Record<string, unknown>> {
  * @param payload - JSON payload to send in the request body
  * @param token - Optional auth token (Bearer)
  */
-export async function callEdgeFunction(name: string, payload: any, token?: string) {
+export async function callEdgeFunction(
+  name: string,
+  payload: Record<string, unknown>,
+  token?: string,
+) {
   const { data, error } = await supabase.functions.invoke(name, {
     body: payload,
     headers: token ? { Authorization: `Bearer ${token}` } : {},

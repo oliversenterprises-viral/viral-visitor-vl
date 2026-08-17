@@ -4,6 +4,7 @@
  */
 
 import { ViralRefer, registerGlobal } from '../lib/global';
+import { formatError } from '../lib/error';
 import { ensureReferralLinkReady } from '../referral';
 import { getMyReferralCode } from './globals';
 import { supabase } from '../lib/supabase';
@@ -569,11 +570,11 @@ export const submitPrizeClaim = async () => {
       closeWinnerModal();
       const adminModal = document.getElementById('admin-modal');
       if (adminModal && !adminModal.classList.contains('hidden')) {
-        ViralRefer.switchAdminTab(3);
+        ViralRefer.switchAdminTab?.(3);
       }
     }, 2200);
-  } catch (err: any) {
-    const msg = err?.message || err?.error || 'Submission failed. You may not be #1 yet or already have a pending claim.';
+  } catch (err: unknown) {
+    const msg = formatError(err) || 'Submission failed. You may not be #1 yet or already have a pending claim.';
     if (resultEl) resultEl.innerHTML = `<span class="text-red-400">${escapeHtml(String(msg))}</span>`;
     showToast('Claim not accepted — see message in form.', 'info');
   } finally {
@@ -583,6 +584,6 @@ export const submitPrizeClaim = async () => {
 registerGlobal('submitPrizeClaim', submitPrizeClaim);
 
 export const joinViaReferral = () => {
-  ViralRefer.getMyReferralLinkInstant();
+  ViralRefer.getMyReferralLinkInstant?.();
 };
 registerGlobal('joinViaReferral', joinViaReferral);

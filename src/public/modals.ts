@@ -250,7 +250,7 @@ const submitAdminPassword = async () => {
     if (errorEl) errorEl.classList.add('hidden');
     revealOwnerTools();
     closeAdminPasswordModal();
-    await ViralRefer.openAdminPanel();
+    await ViralRefer.openAdminPanel?.();
   } else {
     if (errorEl) errorEl.classList.remove('hidden');
     if (btn) {

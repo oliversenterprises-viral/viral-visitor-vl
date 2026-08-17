@@ -1,6 +1,6 @@
 /**
  * Traffic-exchange / rotator sources that burn Disk IO (writes + homepage polls)
- * without converting. Keep in sync with supabase/functions/_shared/junk-traffic.ts.
+ * without converting. Edge re-exports this file from supabase/functions/_shared/junk-traffic.ts.
  */
 
 const JUNK_SOURCES = new Set([

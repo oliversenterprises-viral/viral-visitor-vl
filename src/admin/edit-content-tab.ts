@@ -9,6 +9,14 @@ interface ContentRow {
   value?: unknown;
 }
 
+interface Banner {
+  imageUrl: string;
+  redirectUrl: string;
+  label?: string;
+  enabled?: boolean;
+  weight?: number;
+}
+
 /** Escape text for safe insertion into admin innerHTML templates. */
 function escapeHtml(text: string): string {
   return String(text)
@@ -176,7 +184,9 @@ async function renderEditContentTab(content: HTMLElement) {
   if (openV2Btn) {
     openV2Btn.onclick = () => {
       // Find or create the banners row by triggering add/edit for "banners"
-      const existingBannersRow = Array.from(content.querySelectorAll('.edit-btn')).find((btn: any) => btn.dataset.id === 'banners') as HTMLButtonElement | null;
+      const existingBannersRow = Array.from(content.querySelectorAll('.edit-btn')).find(
+        (el): el is HTMLButtonElement => el instanceof HTMLButtonElement && el.dataset.id === 'banners',
+      );
       if (existingBannersRow) {
         existingBannersRow.click();
       } else {
@@ -216,7 +226,9 @@ async function renderEditContentTab(content: HTMLElement) {
       const injectBtn = v2Section.querySelector('#inject-v2-editor-btn') as HTMLButtonElement | null;
       if (injectBtn) {
         injectBtn.onclick = () => {
-          const existingBanners = Array.from(content.querySelectorAll('.edit-btn')).find((btn: any) => btn.dataset.id === 'banners') as HTMLButtonElement | null;
+          const existingBanners = Array.from(content.querySelectorAll('.edit-btn')).find(
+            (el): el is HTMLButtonElement => el instanceof HTMLButtonElement && el.dataset.id === 'banners',
+          );
           if (existingBanners) {
             existingBanners.click();
           } else {
@@ -854,14 +866,19 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
   container.className = 'mt-2 p-3 border border-white/10 bg-zinc-900 rounded-2xl';
   container.setAttribute('data-banners-editor-active', 'true');
 
-  let banners: any[] = [];
+  let banners: Banner[] = [];
   try {
     const parsed = valInput.value ? JSON.parse(valInput.value) : [];
     if (Array.isArray(parsed)) {
-      banners = parsed.map((b: any) => ({
-        ...b,
-        weight: (typeof b.weight === 'number' && b.weight > 0) ? b.weight : 1,
-      }));
+      banners = parsed.map((raw) => {
+        const b = raw && typeof raw === 'object' ? (raw as Banner) : ({} as Banner);
+        return {
+          ...b,
+          imageUrl: String(b.imageUrl || ''),
+          redirectUrl: String(b.redirectUrl || ''),
+          weight: typeof b.weight === 'number' && b.weight > 0 ? b.weight : 1,
+        };
+      });
     }
   } catch (_) {
     banners = [];
@@ -1001,18 +1018,24 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
       `;
 
       // Live updates + live thumbnail refresh
-      card.querySelectorAll('input').forEach((inp: any) => {
+      card.querySelectorAll('input').forEach((el) => {
+        const inp = el as HTMLInputElement;
         inp.addEventListener('input', () => {
-          const idx = parseInt(inp.dataset.idx);
+          const idx = parseInt(inp.dataset.idx || '', 10);
           const field = inp.dataset.field;
+          if (!Number.isFinite(idx) || !banners[idx]) return;
 
           if (field === 'enabled') {
-            banners[idx][field] = inp.checked;
+            banners[idx].enabled = inp.checked;
           } else if (field === 'weight') {
             const n = parseInt(inp.value, 10);
-            banners[idx][field] = (isFinite(n) && n > 0) ? n : 1;
-          } else {
-            banners[idx][field] = inp.value.trim();
+            banners[idx].weight = Number.isFinite(n) && n > 0 ? n : 1;
+          } else if (field === 'imageUrl') {
+            banners[idx].imageUrl = inp.value.trim();
+          } else if (field === 'redirectUrl') {
+            banners[idx].redirectUrl = inp.value.trim();
+          } else if (field === 'label') {
+            banners[idx].label = inp.value.trim();
           }
 
           sync();
@@ -1072,9 +1095,10 @@ function setupBannersArrayEditor(valInput: HTMLTextAreaElement, formArea: HTMLEl
       }
 
       // Buttons
-      card.querySelectorAll('button[data-action]').forEach((btn: any) => {
+      card.querySelectorAll('button[data-action]').forEach((el) => {
+        const btn = el as HTMLButtonElement;
         btn.addEventListener('click', () => {
-          const idx = parseInt(btn.dataset.idx);
+          const idx = parseInt(btn.dataset.idx || '', 10);
           const act = btn.dataset.action;
           if (act === 'upload') return;
           if (act === 'del') {

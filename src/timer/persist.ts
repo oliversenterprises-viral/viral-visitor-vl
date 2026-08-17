@@ -26,7 +26,6 @@ export function saveState(state: TimerState): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   } catch (e) {
     // Quota / private mode — silent graceful (timer still works in-memory this session)
-    // eslint-disable-next-line no-console
     if (import.meta.env.DEV) console.warn('[timer] persist save failed', e);
   }
 }

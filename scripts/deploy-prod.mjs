@@ -27,6 +27,10 @@ console.log('Vercel project: viralrefer-premium → https://www.viralrefer.app\n
 run('npm run test:smoke:static', 'Preflight: required static routes present in public/');
 run('npm run lint', 'Preflight: eslint (CI lint must be green)');
 run('npx tsc --noEmit', 'Preflight: typecheck');
+run(
+  'node scripts/apply-pending-prod-migrations.mjs',
+  'Apply new supabase/migrations/*.sql not yet recorded on production',
+);
 
 /** All production edge entrypoints — keep in sync with supabase/functions/* (exclude empty/archived). */
 const EDGE_FUNCTIONS = [
@@ -61,6 +65,7 @@ if (deployUrl) {
     console.warn('Legacy alias sync skipped (non-fatal).');
   }
 }
+run('npx playwright install chromium', 'Ensure Playwright Chromium for live smoke');
 run('npm run test:smoke:prod', 'Run production referral smoke test');
 run('npm run test:smoke:static:live', 'Post-deploy: required static routes return 200 on www');
 run(

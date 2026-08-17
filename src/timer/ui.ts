@@ -459,7 +459,7 @@ export function closeTimerOverlay() {
   unsubscribeStatus?.(); unsubscribeStatus = null;
   unsubscribeComplete?.(); unsubscribeComplete = null;
   if (keydownHandler) {
-    document.removeEventListener('keydown', keydownHandler, { capture: true } as any);
+    document.removeEventListener('keydown', keydownHandler, true);
     keydownHandler = null;
   }
 

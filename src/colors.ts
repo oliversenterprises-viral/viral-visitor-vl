@@ -19,7 +19,7 @@ export interface ColorControl {
  *   color_minimum_label    →  --text-minimum-label
  *   etc.
  */
-export function applyTextColors(content: Record<string, any>) {
+export function applyTextColors(content: Record<string, unknown>) {
   if (!content || typeof content !== 'object') return;
 
   const root = document.documentElement;

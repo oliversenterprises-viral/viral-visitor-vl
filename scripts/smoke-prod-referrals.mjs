@@ -486,8 +486,7 @@ async function checkLiveSite() {
       record(
         'live: playwright attribution probe',
         false,
-        'Skipped — run npx playwright install for full browser probe (fetch checks above still ran)',
-        'warn',
+        'Playwright browser missing. Run: npx playwright install chromium',
       );
       return;
     }

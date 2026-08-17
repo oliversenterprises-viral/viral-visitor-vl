@@ -24,6 +24,7 @@
     "splash:create": "node scripts/create-splash.mjs",
     "splash:list": "node scripts/create-splash.mjs --list",
     "dba:apply-migration": "node scripts/dba-apply-migration.mjs",
+    "dba:apply-pending": "node scripts/apply-pending-prod-migrations.mjs",
     "dba:migration-repair": "node scripts/dba-migration-repair.mjs",
     "dba:inventory": "node scripts/dba-inventory.mjs",
     "dba:snapshot": "node scripts/dba-stats-snapshot.mjs",

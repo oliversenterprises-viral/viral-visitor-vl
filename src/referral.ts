@@ -26,6 +26,7 @@ import { parseEdgeFunctionBody } from './lib/edge-response';
 import { tryOptionalTurnstileToken } from './lib/turnstile';
 import { escapeHtml } from './content';
 import { showToast } from './ui';
+import { ViralRefer } from './lib/global';
 import { getReferralBaseUrl, getQrModalTitle, getMyReferralCode, setMyReferralCode } from './public/globals';
 import { syncSharePowerUI } from './lib/share-ui';
 import { buildQrImageUrl } from './lib/share-power';
@@ -246,8 +247,8 @@ function populateReferralLinkUI(code: string, link: string): void {
     qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(link)}`;
   }
 
-  if ((window as any).renderMyStats) {
-    (window as any).renderMyStats(code);
+  if (typeof ViralRefer.renderMyStats === 'function') {
+    void ViralRefer.renderMyStats(code);
   }
 
   const sharePanel = document.getElementById('share-buttons-panel');

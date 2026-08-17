@@ -178,8 +178,9 @@ function bindBannerStatsActions(container: HTMLElement) {
     const input = (e.target as HTMLElement).closest('#banner-stats-search');
     if (!input || !container.contains(input)) return;
     currentBannerSearch = (input as HTMLInputElement).value;
-    clearTimeout((container as any)._bannerSearchTimer);
-    (container as any)._bannerSearchTimer = window.setTimeout(() => {
+    const host = container as HTMLElement & { _bannerSearchTimer?: number };
+    window.clearTimeout(host._bannerSearchTimer);
+    host._bannerSearchTimer = window.setTimeout(() => {
       void rerenderFromContainerState(container);
     }, 200);
   });

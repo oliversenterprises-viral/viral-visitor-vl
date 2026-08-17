@@ -17,12 +17,12 @@ registerGlobal('openTimer', openTimer);
 registerGlobal('closeTimer', closeTimerOverlay);
 
 // Optional: allow deep link control e.g. ViralRefer.openTimerWith({durationMs: 300000})
-registerGlobal('openTimerWith', (cfg: any) => {
-  if (cfg) {
-    // Apply safe subset
-    if (typeof cfg.durationMs === 'number') Engine.setDuration(cfg.durationMs);
-    if (cfg.label) Engine.setLabel(cfg.label);
-    if (cfg.soundKey) Engine.setSound(cfg.soundKey);
+registerGlobal('openTimerWith', (cfg: unknown) => {
+  if (cfg && typeof cfg === 'object') {
+    const opts = cfg as { durationMs?: unknown; label?: unknown; soundKey?: unknown };
+    if (typeof opts.durationMs === 'number') Engine.setDuration(opts.durationMs);
+    if (typeof opts.label === 'string') Engine.setLabel(opts.label);
+    if (typeof opts.soundKey === 'string') Engine.setSound(opts.soundKey);
   }
   openTimerOverlay();
 });

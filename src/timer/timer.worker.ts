@@ -19,7 +19,7 @@ let tickInterval: number | null = null;
 let tickMs = 250; // Tunable: 50-500ms. 250 good balance accuracy / power.
 
 function post(msg: WorkerToMain) {
-  (self as any).postMessage(msg);
+  (self as unknown as DedicatedWorkerGlobalScope).postMessage(msg);
 }
 
 function computeAndPost(_reason: 'tick' | 'sync' | 'init' | 'adjust' = 'tick') {

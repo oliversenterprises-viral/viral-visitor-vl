@@ -22,7 +22,8 @@ let tickListeners: TickListener[] = [];
 let completeListeners: CompleteListener[] = [];
 let statusListeners: StatusListener[] = [];
 let alarmPlaying = false;
-let wakeLock: any = null; // WakeLockSentinel | null
+type WakeLockSentinelLike = { release: () => Promise<void> };
+let wakeLock: WakeLockSentinelLike | null = null;
 
 // --- Worker bootstrap (Vite ?worker aware + blob fallback for export) ---
 function createWorker(): Worker {
@@ -355,8 +356,11 @@ export function forceSyncFromWorker() {
 
 async function requestWakeLockIfPossible() {
   try {
-    if ('wakeLock' in navigator && (navigator as any).wakeLock?.request) {
-      wakeLock = await (navigator as any).wakeLock.request('screen');
+    const nav = navigator as Navigator & {
+      wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinelLike> };
+    };
+    if (nav.wakeLock?.request) {
+      wakeLock = await nav.wakeLock.request('screen');
       // Release automatically on visibility hidden is good UX
       document.addEventListener('visibilitychange', releaseWakeLock, { once: true });
     }
@@ -405,6 +409,6 @@ if (typeof window !== 'undefined') {
       if (!document.hidden) forceSyncFromWorker();
     });
     window.addEventListener('focus', forceSyncFromWorker);
-    document.addEventListener('resume', forceSyncFromWorker as any);
+    document.addEventListener('resume', forceSyncFromWorker as EventListener);
   }, 40);
 }

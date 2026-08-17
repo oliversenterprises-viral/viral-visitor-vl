@@ -10,7 +10,12 @@ let unlocked = false;
 export async function ensureAudioContext(): Promise<AudioContext | null> {
   if (typeof window === 'undefined') return null;
   if (!audioCtx) {
-    const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
+    type AudioContextCtor = new () => AudioContext;
+    const w = window as unknown as {
+      AudioContext?: AudioContextCtor;
+      webkitAudioContext?: AudioContextCtor;
+    };
+    const AC = w.AudioContext || w.webkitAudioContext;
     if (!AC) return null;
     audioCtx = new AC();
   }

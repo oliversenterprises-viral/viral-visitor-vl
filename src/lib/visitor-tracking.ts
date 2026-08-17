@@ -339,7 +339,7 @@ function uniqueByCountry(
     .sort((a, b) => b.unique - a.unique || b.events - a.events);
 }
 
-export function computeVisitorFunnelStats(events: Array<Record<string, any>>) {
+export function computeVisitorFunnelStats(events: Array<Record<string, unknown>>) {
   const counts: Record<string, number> = {};
   for (const e of events) {
     const name = eventName(e);

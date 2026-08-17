@@ -5,7 +5,7 @@ import {
 } from './public/globals';
 
 import { isAdminStatsReadOnlyRefresh } from './lib/admin-stats-refresh-guard';
-import { registerGlobal } from './lib/global';
+import { registerGlobal, setWindowProp } from './lib/global';
 import { applyTextColors } from './colors';
 import {
   LOCKED_SHARE_TEXT,
@@ -37,12 +37,20 @@ import {
 // Re-export from leaf module (admin panels should import escape-html directly to avoid cycles)
 export { escapeHtml } from './lib/escape-html';
 
+export interface Banner {
+  imageUrl: string;
+  redirectUrl: string;
+  label?: string;
+  enabled?: boolean;
+  weight?: number;
+}
+
 /**
  * Basic banner event tracking (Phase 2 MVP)
  * Logs impression and click events.
  * Stores in localStorage for easy inspection + console output.
  */
-function logBannerEvent(type: 'impression' | 'click', banner: any) {
+function logBannerEvent(type: 'impression' | 'click', banner: Banner) {
   if (isAdminStatsReadOnlyRefresh()) return;
   const event = {
     type,
@@ -72,39 +80,24 @@ function logBannerEvent(type: 'impression' | 'click', banner: any) {
   }).catch(() => {});
 }
 
-// Expose a debug helper globally for admins/devs
-(window as any).debugBannerEvents = () => {
+setWindowProp('debugBannerEvents', () => {
   try {
     const events = getLocalBannerEvents();
     console.table(events);
     return events;
-  } catch (_) {
+  } catch {
     console.log('No banner events recorded yet.');
     return [];
   }
-};
+});
 
-// Admin/dev helper: reset rotation counter so you immediately see the first banner again
-(window as any).resetBannerRotation = () => {
+setWindowProp('resetBannerRotation', () => {
   localStorage.removeItem('viralrefer_banner_rotation_index');
   console.log('[Banner] Rotation index reset. Reload the page to see banner #1 next.');
-};
+});
 
-// Expose rotation helpers for console inspection / manual testing by admins
-(window as any).parseBanners = parseBanners;
-(window as any).selectBanner = selectBanner;
-
-/**
- * Banner System v2 (Phase 2)
- * Data shape produced by the admin banners array editor + consumed on public site.
- */
-export interface Banner {
-  imageUrl: string;
-  redirectUrl: string;
-  label?: string;
-  enabled?: boolean;
-  weight?: number; // optional positive int; higher = shown more frequently in rotation
-}
+setWindowProp('parseBanners', parseBanners);
+setWindowProp('selectBanner', selectBanner);
 
 /**
  * Parses raw banners value (string JSON or array) into clean Banner objects.
@@ -116,13 +109,16 @@ export function parseBanners(raw: unknown): Banner[] {
     const arr = typeof raw === 'string' ? JSON.parse(raw) : raw;
     if (!Array.isArray(arr)) return [];
     return arr
-      .map((b: any) => ({
-        imageUrl: String(b.imageUrl || '').trim(),
-        redirectUrl: String(b.redirectUrl || '').trim(),
-        label: b.label ? String(b.label).trim() : undefined,
-        enabled: b.enabled !== false,
-        weight: (typeof b.weight === 'number' && b.weight > 0) ? Math.floor(b.weight) : 1,
-      }))
+      .map((raw) => {
+        const b = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+        return {
+          imageUrl: String(b.imageUrl || '').trim(),
+          redirectUrl: String(b.redirectUrl || '').trim(),
+          label: b.label ? String(b.label).trim() : undefined,
+          enabled: b.enabled !== false,
+          weight: typeof b.weight === 'number' && b.weight > 0 ? Math.floor(b.weight) : 1,
+        };
+      })
       .filter(b => b.imageUrl.length > 0 && b.redirectUrl.length > 0);
   } catch {
     return [];
@@ -195,7 +191,7 @@ export function selectBanner(banners: Banner[]): { banner: Banner; displayIndex:
  *
  * @param content - Record of key → value pairs fetched from Supabase `site_content` table
  */
-export async function updatePublicContent(content: Record<string, any>) {
+export async function updatePublicContent(content: Record<string, unknown>) {
   if (!content || typeof content !== 'object') return;
 
   // Small helper: set textContent if key present (safe, no HTML injection for v1)

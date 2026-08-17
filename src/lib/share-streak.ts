@@ -18,7 +18,7 @@ export function getShareStreakCount(): number {
 /** Increment streak; resets daily counter display but keeps total momentum. */
 export function incrementShareStreak(): number {
   const today = new Date().toISOString().slice(0, 10);
-  let count = getShareStreakCount() + 1;
+  const count = getShareStreakCount() + 1;
   try {
     localStorage.setItem(STREAK_KEY, String(count));
     localStorage.setItem(STREAK_DAY_KEY, today);

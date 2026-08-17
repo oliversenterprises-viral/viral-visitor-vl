@@ -25,19 +25,30 @@ export function clearBannerEvents(): void {
   localStorage.removeItem(BANNER_EVENTS_KEY);
 }
 
-export function computeBannerStats(events: Array<Record<string, any>>) {
+export function computeBannerStats(events: Array<Record<string, unknown>>) {
   const perBannerMap: Record<
     string,
     { key: string; label: string; redirectUrl: string; impressions: number; clicks: number }
   > = {};
 
   for (const e of events) {
-    const key = e.key || getBannerKey(e);
+    const key = String(
+      e.key ||
+        getBannerKey({
+          label: typeof e.label === 'string' ? e.label : undefined,
+          redirectUrl:
+            typeof e.redirectUrl === 'string'
+              ? e.redirectUrl
+              : typeof e.redirect_url === 'string'
+                ? e.redirect_url
+                : undefined,
+        }),
+    );
     if (!perBannerMap[key]) {
       perBannerMap[key] = {
         key,
-        label: e.label || key.split('|')[0] || 'untitled',
-        redirectUrl: e.redirectUrl || e.redirect_url || '',
+        label: String(e.label || key.split('|')[0] || 'untitled'),
+        redirectUrl: String(e.redirectUrl || e.redirect_url || ''),
         impressions: 0,
         clicks: 0,
       };
