@@ -10,7 +10,12 @@ DROP POLICY IF EXISTS banner_events_select_admin_live ON public.banner_events;
 DROP POLICY IF EXISTS prize_claims_select_admin_live ON public.prize_claims;
 
 DROP POLICY IF EXISTS "Public can read referrals for leaderboard" ON public.referrals;
-DROP POLICY IF EXISTS "Public can read referrers" ON public.referrers;
+DO $$
+BEGIN
+  IF to_regclass('public.referrers') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Public can read referrers" ON public.referrers;
+  END IF;
+END $$;
 
 -- ── Revoke anon SELECT on PII-bearing tables ────────────────────────────────
 

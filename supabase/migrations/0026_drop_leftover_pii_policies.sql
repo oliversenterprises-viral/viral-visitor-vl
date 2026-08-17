@@ -26,7 +26,12 @@ DROP POLICY IF EXISTS "Allow all reads on prize_claims (testing only)" ON public
 DROP POLICY IF EXISTS "Allow all updates on prize_claims (testing only)" ON public.prize_claims;
 
 -- referrers
-DROP POLICY IF EXISTS "Public can read referrers" ON public.referrers;
+DO $$
+BEGIN
+  IF to_regclass('public.referrers') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Public can read referrers" ON public.referrers;
+  END IF;
+END $$;
 
 -- Revoke direct SELECT for anon + authenticated (admin uses service_role via edge).
 REVOKE SELECT ON public.referrals FROM anon, authenticated;
