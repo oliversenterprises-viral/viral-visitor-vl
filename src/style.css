@@ -4470,7 +4470,7 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
   }
 }
 
-@media (max-height: 780px) {
+@media (max-height: 820px) {
   html:not([data-vr-has-link]) #hero-subtitle {
     display: none;
   }
@@ -4488,11 +4488,11 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
 
 @media (max-height: 820px) and (min-width: 1024px) {
   #hero-title {
-    font-size: 3.35rem !important;
+    font-size: 3.1rem !important;
   }
 
   .vr-hero-panel {
-    padding: 2rem 2.25rem !important;
+    padding: 1.5rem 2rem !important;
   }
 }
 

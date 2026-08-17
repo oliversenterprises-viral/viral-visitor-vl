@@ -14,7 +14,7 @@ describe('all-devices layout locks', () => {
     const css = read('src/style.css');
     expect(css).toContain('ALL DEVICES');
     expect(css).toMatch(/@media \(max-width: 639px\)/);
-    expect(css).toMatch(/@media \(max-height: 780px\)/);
+    expect(css).toMatch(/@media \(max-height: 820px\)/);
     expect(css).toMatch(/@media \(max-height: 500px\) and \(min-width: 560px\)/);
     expect(css).toContain('grid-template-areas');
     expect(css).toContain('#hero-ad-visit');
