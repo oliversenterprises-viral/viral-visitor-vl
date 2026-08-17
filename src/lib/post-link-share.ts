@@ -5,6 +5,7 @@
 
 import { registerGlobal } from './global';
 import { LOCKED_SHARE_TEXT } from './prize-slot';
+import { SEND_NOW_LABEL } from './referred-race';
 import { buildNativeShareData } from './share-power';
 import { recordShareEvent } from './record-share';
 import { trackVisitorFunnel } from './visitor-tracking';
@@ -82,7 +83,7 @@ function paintPrimaryForDetection(link: string): void {
   const payload = buildNativeShareData(text, link);
   const native = canUseNativeShare(payload);
   btn.dataset.mode = native ? 'native' : 'whatsapp';
-  setPrimaryLabel(native ? 'Share with a friend' : 'Send on WhatsApp');
+  setPrimaryLabel(SEND_NOW_LABEL);
   btn.classList.remove('hidden');
   btn.hidden = false;
   btn.disabled = false;
@@ -198,6 +199,22 @@ export function activatePostLinkShare(link: string): void {
   void import('./post-link-status').then((m) => m.renderPostLinkStatus()).catch(() => {});
 }
 
+/** Same user-gesture share sheet (mobile). No-op when Web Share is missing. */
+export function maybeOfferSameGestureShare(link: string): boolean {
+  const trimmed = link.trim();
+  if (!trimmed || !/\/r\//i.test(trimmed)) return false;
+  const text = buildPostLinkShareText(trimmed);
+  const payload = buildNativeShareData(text, trimmed);
+  if (!canUseNativeShare(payload)) return false;
+  try {
+    const sharePromise = navigator.share(payload);
+    void sharePromise.catch(() => {});
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function openWhatsApp(link: string): boolean {
   const href = buildWhatsAppShareHref(link);
   const opened = window.open(href, '_blank', 'noopener,noreferrer');
@@ -267,6 +284,7 @@ export async function onPostLinkCopyTap(): Promise<void> {
   const copy = el<HTMLButtonElement>(IDS.copy);
   try {
     await navigator.clipboard.writeText(link);
+    trackVisitorFunnel('CopyReferralLink');
     showToast('Link copied. A friend still has to tap Get my link.', 'info');
     if (copy) {
       copy.textContent = 'Copy link';

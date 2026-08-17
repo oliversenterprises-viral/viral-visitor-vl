@@ -6,6 +6,7 @@ import { getStoredLandingRef, parseRefFromLocation } from './referral-url';
 import { triggerDuelInviteMoment } from './duel-invite';
 import { initFunnelCoachChat } from './funnel-coach-chat';
 import { initFunnelGuide, syncFunnelGuide } from './funnel-guide';
+import { paintReferredRaceHero } from './referred-race';
 
 export type FunnelStep = 1 | 2 | 3;
 
@@ -46,48 +47,9 @@ function wireExpandToggle(): void {
 }
 
 function tuneHeroForReferred(ref: string): void {
-  const line1 = document.getElementById('hero-title-line1');
-  if (line1) line1.textContent = 'One tap so they get credit.';
-
-  const subtitle = document.getElementById('hero-subtitle');
-  if (subtitle) {
-    subtitle.textContent =
-      `You opened ${ref}'s invite. Visiting alone does not count — tap Get my link once, then send yours to play.`;
-  }
-
-  const badge = document.getElementById('hero-badge');
-  if (badge) badge.textContent = 'REFERRED • TAP GET LINK';
-
-  const trust = document.getElementById('hero-trust-line');
-  if (trust) {
-    trust.innerHTML =
-      '<strong class="text-amber-300">Just visiting does not credit them.</strong> Tap <strong class="text-white">Get my link</strong> below — about 30 seconds.';
-  }
-
-  // Micro-flow: hide secondary hero CTAs noise
+  paintReferredRaceHero(ref);
   const secondary = document.getElementById('hero-leaderboard-btn');
   if (secondary) secondary.classList.add('opacity-70');
-}
-
-function tuneAttributionBanner(ref: string): void {
-  const headline = document.getElementById('referrer-invite-headline');
-  if (headline) {
-    headline.textContent = `Tap once to credit ${ref} — then you play too`;
-  }
-
-  const hint = document.getElementById('referrer-invite-hint');
-  if (hint) {
-    hint.textContent = `Step 1 only: Get YOUR link. Same contest. Free. ~30 seconds.`;
-    hint.classList.remove('hidden');
-  }
-
-  const inline = document.getElementById('referrer-code-inline');
-  if (inline) inline.textContent = ref;
-
-  // Attribution CTA — make label unmistakable
-  const attrBtn = document.getElementById('attribution-get-link-btn');
-  const attrLabel = attrBtn?.querySelector('span');
-  if (attrLabel) attrLabel.textContent = 'Get my link — credit this visit';
 }
 
 function revealFunnelCreditGate(ref: string): void {
@@ -142,6 +104,7 @@ export function initFunnelConversion(loc: Location = location): void {
   document.documentElement.setAttribute('data-vr-referred-landing', '1');
   document.documentElement.setAttribute('data-vr-referred-micro', '1');
   document.documentElement.setAttribute('data-vr-credit-pending', '1');
+  paintReferredRaceHero(ref);
   revealFunnelCreditGate(ref);
   highlightHeroGetLink();
   wireExpandToggle();
@@ -153,7 +116,6 @@ export function applyReferredLandingOverrides(loc: Location = location): void {
   const ref = resolveLandingReferrerCode(loc);
   if (!ref) return;
   tuneHeroForReferred(ref);
-  tuneAttributionBanner(ref);
 }
 
 /** Update the 1 → 2 → 3 progress strip in #referral-section. */

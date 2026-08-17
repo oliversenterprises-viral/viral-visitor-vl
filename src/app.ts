@@ -357,6 +357,9 @@ export async function loadSiteContent() {
     } catch {
       /* non-fatal */
     }
+    if (isReferredLanding()) {
+      applyReferredLandingOverrides();
+    }
   }
 }
 

@@ -448,7 +448,7 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-p
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-security-trust,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-leaderboard-btn,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #daily-champion-strip,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #challenge-duel-banner,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]):not([data-vr-challenge-landing]) #challenge-duel-banner,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #community-unlock-meter,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #weekly-sprint-board,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #daily-crown-section,
@@ -467,8 +467,12 @@ html[data-vr-kid-simple]:not([data-vr-kid-more]) #catch-up-anxiety-bar,
 html[data-vr-kid-simple]:not([data-vr-kid-more]) #community-unlock-meter,
 html[data-vr-kid-simple]:not([data-vr-kid-more]) #weekly-sprint-board,
 html[data-vr-kid-simple]:not([data-vr-kid-more]) #daily-crown-section,
-html[data-vr-kid-simple]:not([data-vr-kid-more]) #challenge-duel-banner {
+html[data-vr-kid-simple]:not([data-vr-kid-more]):not([data-vr-challenge-landing]) #challenge-duel-banner {
   display: none !important;
+}
+
+html[data-vr-challenge-landing]:not([data-vr-has-link]) #challenge-duel-banner {
+  display: block !important;
 }
 
 .promoter-week-strip {
@@ -692,11 +696,19 @@ html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-security-trust,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-prize-fomo,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #vr-verified-total,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #daily-champion-strip,
-html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-expand-wrap,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-journey,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #how,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #prize,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #faq,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #leaderboard,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-banner-mock,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-title-accent,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-badge,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-trust-line,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-lock-rule,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #referral-attribution,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-expand-wrap,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-credit-gate,
 html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link {
   display: none !important;
 }
@@ -2258,7 +2270,7 @@ html[data-vr-funnel-guide-step='3'] .funnel-guide-target-ring {
   display: none;
 }
 
-html[data-vr-referred-landing] #funnel-expand-wrap {
+html[data-vr-referred-landing][data-vr-has-link] #funnel-expand-wrap {
   display: block;
 }
 

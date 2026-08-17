@@ -12,6 +12,10 @@
       var q = location.search || '';
       if (/(?:^|[?&])(?:embed|iframe)=1(?:&|$)/.test(q)) return;
       document.documentElement.setAttribute('data-vr-kid-simple', '1');
+      if (/\/r\/[A-Za-z0-9_-]+\/?$/i.test(p) || /(?:^|[?&])ref=/.test(q)) {
+        document.documentElement.setAttribute('data-vr-referred-landing', '1');
+        document.documentElement.setAttribute('data-vr-referred-micro', '1');
+      }
     })();
     </script>
     
@@ -177,6 +181,29 @@
                     </button>
                    
                 </div>
+                <script>
+                (function () {
+                  if (!document.documentElement.hasAttribute('data-vr-referred-micro')) return;
+                  var p = location.pathname || '';
+                  var q = location.search || '';
+                  var code = '';
+                  var m = p.match(/\/r\/([A-Za-z0-9_-]+)\/?$/i);
+                  if (m) code = String(m[1] || '').toUpperCase();
+                  else {
+                    var rm = q.match(/(?:^|[?&])ref=([^&]+)/i);
+                    if (rm) {
+                      try { code = decodeURIComponent(rm[1] || '').toUpperCase(); } catch (e) { code = String(rm[1] || '').toUpperCase(); }
+                    }
+                  }
+                  if (!code) return;
+                  var line = document.getElementById('hero-title-line1');
+                  if (line) line.textContent = "You're in the same race as " + code + ".";
+                  var sub = document.getElementById('hero-subtitle');
+                  if (sub) sub.textContent = 'Tap Get my link so they get credit — then send yours and try to beat them.';
+                  var cta = document.querySelector('#hero-get-link-btn span');
+                  if (cta) cta.textContent = 'Get my link';
+                })();
+                </script>
 
                 <p id="hero-trust-line" data-i18n="hero.trust" class="mt-3 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
                     Free. No email. No cash. Recognition only.

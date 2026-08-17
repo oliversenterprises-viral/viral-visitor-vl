@@ -65,14 +65,17 @@ describe('funnel-conversion helpers', () => {
 
     vi.stubGlobal('location', { pathname: '/r/VIRAL-GATE01', search: '' });
     initFunnelConversion();
-    applyReferredLandingOverrides();
 
     expect(document.documentElement.getAttribute('data-vr-referred-landing')).toBe('1');
     expect(document.documentElement.getAttribute('data-vr-referred-micro')).toBe('1');
     expect(document.documentElement.getAttribute('data-vr-credit-pending')).toBe('1');
     expect(document.getElementById('funnel-credit-gate')?.classList.contains('hidden')).toBe(false);
     expect(document.getElementById('funnel-gate-ref')?.textContent).toBe('VIRAL-GATE01');
-    expect(document.getElementById('hero-trust-line')?.textContent).toMatch(/does not credit/i);
+    expect(document.getElementById('hero-title-line1')?.textContent).toContain(
+      'same race as VIRAL-GATE01',
+    );
+    expect(document.getElementById('hero-subtitle')?.textContent).toMatch(/Get my link/);
+    expect(document.getElementById('hero-subtitle')?.textContent).toMatch(/beat them/);
   });
 
   it('onReferralCredited clears credit-pending and marks gate credited', () => {

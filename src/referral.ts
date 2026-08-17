@@ -38,7 +38,12 @@ import {
   registerReferrerLinkDeadline,
   renderShareDeadlineBanner,
 } from './lib/share-deadline';
-import { activatePostLinkShare, showPostLinkError, showPostLinkLoading } from './lib/post-link-share';
+import {
+  activatePostLinkShare,
+  maybeOfferSameGestureShare,
+  showPostLinkError,
+  showPostLinkLoading,
+} from './lib/post-link-share';
 
 // Track attribution for the current page load
 function mintReferrerCode(): string {
@@ -109,10 +114,11 @@ async function recordReferralIfAttributed(options: {
   referralRecordingInFlight = true;
   try {
     const visitorCode = getMyReferralCode() || localStorage.getItem('vr_my_ref_code') || null;
-    const referredCode =
-      visitorCode && visitorCode.toUpperCase() !== pendingReferrerCode.toUpperCase()
-        ? visitorCode
-        : null;
+    if (visitorCode && visitorCode.toUpperCase() === pendingReferrerCode.toUpperCase()) {
+      onReferralSelfReferralBlocked();
+      return 'skipped';
+    }
+    const referredCode = visitorCode;
 
     const turnstileToken = await tryOptionalTurnstileToken(8000);
 
@@ -368,6 +374,9 @@ export async function getMyReferralLinkInstant(): Promise<void> {
     // Ensure sticky get-link bar is gone before send UI mounts (no double bottom bars)
     document.getElementById('mobile-referral-cta')?.classList.add('hidden');
     activatePostLinkShare(link);
+    if (pendingReferrerCode) {
+      maybeOfferSameGestureShare(link);
+    }
 
     if (pendingReferrerCode && !referralRecordedThisSession) {
       void runFunnelReferralRecording();

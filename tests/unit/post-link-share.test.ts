@@ -59,9 +59,7 @@ describe('post-link-share', () => {
     expect(document.getElementById('post-link-url')?.textContent).toBe(LINK);
     const primary = document.getElementById('post-link-primary') as HTMLButtonElement;
     expect(primary.hidden).toBe(false);
-    expect(primary.textContent === 'Share with a friend' || primary.textContent === 'Send on WhatsApp').toBe(
-      true,
-    );
+    expect(primary.textContent).toBe('Send to a friend now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
     expect(document.getElementById('post-link-helper')?.textContent).toMatch(/Get my link/);
     expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(2);

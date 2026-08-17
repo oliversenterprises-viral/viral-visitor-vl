@@ -14,6 +14,8 @@ describe('kid-simple first paint', () => {
     expect(attrAt).toBeGreaterThan(0);
     expect(cssAt).toBeGreaterThan(attrAt);
     expect(head).toContain('/embed');
+    expect(head).toContain("setAttribute('data-vr-referred-micro'");
+    expect(head).toContain("setAttribute('data-vr-referred-landing'");
   });
 
   it('hides #prize before a link without waiting for kid-simple JS', () => {

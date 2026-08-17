@@ -145,9 +145,7 @@ describe('send-mode (post–get-link bulletproof)', () => {
     expect(document.getElementById('kid-more-tools-btn')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('post-link-heading')?.textContent).toBe('Your link is ready');
     const primary = document.getElementById('post-link-primary');
-    expect(primary?.textContent === 'Share with a friend' || primary?.textContent === 'Send on WhatsApp').toBe(
-      true,
-    );
+    expect(primary?.textContent).toBe('Send to a friend now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
     expect(document.body.classList.contains('has-mobile-send-cta')).toBe(false);
   });

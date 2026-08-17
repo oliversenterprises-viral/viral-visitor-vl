@@ -99,6 +99,23 @@ describe('referral recording (funnel-gated Step 1)', () => {
     expect(isReferralCreditedThisSession()).toBe(false);
   });
 
+  it('own-code tap does not invoke record-referral', async () => {
+    invokeMock.mockResolvedValue({ data: { success: true }, error: null });
+
+    vi.stubGlobal('location', {
+      pathname: '/r/VIRAL-SELF01',
+      search: '',
+      href: 'http://localhost/r/VIRAL-SELF01',
+    } as Location);
+
+    detectAndStoreAttribution();
+    localStorage.setItem('vr_my_ref_code', 'VIRAL-SELF01');
+    await getMyReferralLinkInstant();
+    await flushMicrotasks(40);
+
+    expect(recordReferralCalls()).toHaveLength(0);
+  });
+
   it('applyExistingReferralLink invokes record-referral for returning attributed visitors', async () => {
     invokeMock.mockResolvedValue({ data: { success: true }, error: null });
 

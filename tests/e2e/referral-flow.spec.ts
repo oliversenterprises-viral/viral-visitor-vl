@@ -16,24 +16,32 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
   test('Referral attribution via ?ref= parameter', async ({ page }) => {
     await page.goto('/?ref=DEMO1234');
 
-    await expect(page.locator('#referral-attribution')).toBeVisible({ timeout: 5000 });
-    await expect(page.locator('#referrer-code-display')).toHaveText('DEMO1234');
-    await expect(page.locator('#referrer-invite-headline')).toContainText(/Step 1/i);
-    await expect(page.locator('#hero-trust-line')).toContainText(/No email/i);
+    await expect(page.locator('#hero-title-line1')).toContainText(/same race as DEMO1234/i, {
+      timeout: 5000,
+    });
+    await expect(page.locator('#hero-subtitle')).toContainText(/Get my link/);
+    await expect(page.locator('#hero-get-link-btn')).toBeVisible();
+    await expect(page.locator('#hero-get-link-btn')).toContainText(/Get my link/i);
+    await expect(page.locator('#how')).toBeHidden();
+    await expect(page.locator('#faq')).toBeHidden();
+    await expect(page.locator('#prize')).toBeHidden();
 
-    await page.getByRole('button', { name: /get my referral link/i }).nth(1).click();
+    await page.locator('#hero-get-link-btn').click();
     await expect(page.locator('#ref-link')).toHaveValue(/\/r\/VIRAL-/i, { timeout: 10000 });
+    await expect(page.locator('#post-link-primary')).toContainText(/Send to a friend now/i);
   });
 
   test('Clean /r/ path attribution', async ({ page }) => {
     await page.goto('/r/VIRAL-DEMOCODE');
-    await expect(page.locator('#referral-attribution')).toBeVisible({ timeout: 8000 });
-    await expect(page.locator('#referrer-code-display')).toHaveText('VIRAL-DEMOCODE');
-    await expect(page.locator('#my-stats')).toBeHidden();
-    await expect(page.locator('#funnel-expand-wrap')).toBeVisible();
-    await expect(page.locator('#funnel-credit-gate')).toBeVisible();
-    await expect(page.locator('#funnel-credit-gate')).toContainText(/does not credit|Step 1/i);
-    await expect(page.locator('#hero-trust-line')).toContainText(/does not credit/i);
+    await expect(page.locator('#hero-title-line1')).toContainText(/same race as VIRAL-DEMOCODE/i, {
+      timeout: 8000,
+    });
+    await expect(page.locator('#hero-subtitle')).toContainText(/beat them/i);
+    await expect(page.locator('#hero-get-link-btn')).toBeVisible();
+    await expect(page.locator('#how')).toBeHidden();
+    await expect(page.locator('#faq')).toBeHidden();
+    await expect(page.locator('#funnel-expand-wrap')).toBeHidden();
+    await expect(page.locator('#hero-security-trust')).toBeHidden();
   });
 
   test('SPA preview serves index.html for bare /join path', async ({ page }) => {
@@ -64,8 +72,9 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
 
     const referrerCode = new URL(link).pathname.split('/').pop()!;
     await page.goto(new URL(link).pathname);
-    await expect(page.locator('#referral-attribution')).toBeVisible({ timeout: 8000 });
-    await expect(page.locator('#referrer-code-display')).toHaveText(referrerCode);
+    await expect(page.locator('#hero-title-line1')).toContainText(new RegExp(`same race as ${referrerCode}`, 'i'), {
+      timeout: 8000,
+    });
   });
 
   test('All 15 share buttons are present and functional', async ({ page }) => {
