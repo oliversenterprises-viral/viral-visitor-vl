@@ -74,6 +74,7 @@ export function highlightHeroGetLink(): void {
 export function initDirectLandingConversionBoost(loc: Location = location): void {
   if (resolveLandingReferrerCode(loc)) return;
   highlightHeroGetLink();
+  wireExpandToggle();
 }
 
 /**

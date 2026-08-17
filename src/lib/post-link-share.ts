@@ -173,8 +173,15 @@ export function showPostLinkReady(link: string): void {
   if (url) {
     url.textContent = trimmed;
     url.classList.remove('post-link-url--skeleton');
+    url.hidden = false;
+    url.removeAttribute('hidden');
   }
   paintPrimaryForDetection(trimmed);
+  const tool = document.getElementById('post-link-tool');
+  if (tool) {
+    tool.textContent = 'This is your public link. Paste it in any bio, story, or text.';
+    tool.removeAttribute('hidden');
+  }
   const copy = el<HTMLButtonElement>(IDS.copy);
   if (copy) {
     copy.textContent = 'Copy link';

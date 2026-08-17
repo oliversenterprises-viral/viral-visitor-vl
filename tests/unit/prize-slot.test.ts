@@ -7,6 +7,7 @@ import {
   EMPTY_SLOT_META,
   LOCKED_OG_DESCRIPTION,
   LOCKED_SHARE_TEXT,
+  ONE_PRIZE_SENTENCE,
   PRIZE_FOMO_LINE,
   formatFaqPrizeAnswer,
   formatPrizeThresholdLine,
@@ -28,8 +29,11 @@ describe('prize-slot (Helix Bet 2)', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <div id="hero-banner-mock">
+        <img id="hero-slot-thumb" class="hidden" alt="" />
         <a id="hero-slot-site" aria-disabled="true">Your site here</a>
         <div id="hero-slot-meta">${EMPTY_SLOT_META}</div>
+        <p id="hero-ad-note"></p>
+        <a id="hero-ad-visit" class="hidden" hidden></a>
       </div>
       <div id="prize-banner-visual">
         <img id="prize-slot-thumb" class="hidden" alt="" />
@@ -91,6 +95,8 @@ describe('prize-slot (Helix Bet 2)', () => {
       'https://northwind.test',
     );
     expect(document.getElementById('prize-slot-thumb')?.classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('hero-slot-thumb')?.classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('hero-ad-visit')?.classList.contains('hidden')).toBe(false);
   });
 
   it('paints the numeric threshold into the prize card', () => {
@@ -144,6 +150,9 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).toContain('id="prize-threshold"');
     expect(html).toContain('id="min-referrals-value">10<');
     expect(html).toContain(PRIZE_FOMO_LINE);
+    expect(html).toContain(ONE_PRIZE_SENTENCE);
+    expect(html).toContain('This slot is empty. #1 puts their site here.');
+    expect(html).toContain('Live ad');
     expect(html).toContain(LOCKED_OG_DESCRIPTION);
     expect(html).not.toContain('Together: 0 / 100');
     expect(html).not.toContain('0 / 100');

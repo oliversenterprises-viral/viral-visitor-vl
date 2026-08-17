@@ -37,7 +37,7 @@ export const en = {
   'hero.cta': 'Get my referral link',
   'hero.cta_secondary': 'See leaderboard',
   'hero.trust':
-    'Free. No email. No cash. Recognition only.',
+    'Verified #1 gets a 30-day banner for their website.',
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 
@@ -57,12 +57,12 @@ export const en = {
     'Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.',
   'how.step3_title': '3. Climb the board',
   'how.step3_desc':
-    'When friends get their own free link through you, you move up. #1 can put their website on our homepage (no cash prize).',
+    'When friends get their own free link through you, you move up. #1 puts their website on this homepage for 30 days.',
 
   'prize.badge': 'HOMEPAGE FEATURE',
   'prize.title': 'Homepage Banner Feature',
   'prize.subtitle':
-    'Open worldwide. #1 on the live board can claim a homepage feature for their website — free recognition, no cash prize.',
+    'Verified #1 gets a 30-day banner for their website on this homepage.',
   'prize.card1_title': 'Homepage Banner',
   'prize.card1_desc': 'Your website + custom banner featured on our homepage.',
   'prize.card2_title': 'Free recognition',

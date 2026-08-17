@@ -19,6 +19,12 @@ export const LOCKED_OG_DESCRIPTION =
 
 export const PRIZE_FOMO_LINE = 'Early ranks are open. #1 puts their website on this page.';
 
+/** One trust sentence — say the prize once. Do not repeat “no cash” on the first screen. */
+export const ONE_PRIZE_SENTENCE = 'Verified #1 gets a 30-day banner for their website.';
+
+export const AD_SLOT_KICKER = 'Live ad · this homepage · 30 days';
+export const EMPTY_AD_NOTE = 'This slot is empty. #1 puts their site here.';
+
 export type PrizeBannerInput = {
   imageUrl?: string;
   redirectUrl?: string;
@@ -165,8 +171,12 @@ export function paintPrizeSlot(slot: PrizeSlot): void {
   const prize = document.getElementById('prize-banner-visual');
   if (prize) prize.setAttribute('data-vr-prize-slot', slot.kind);
 
-  const thumb = document.getElementById('prize-slot-thumb') as HTMLImageElement | null;
-  if (thumb) {
+  const thumbs = [
+    document.getElementById('hero-slot-thumb') as HTMLImageElement | null,
+    document.getElementById('prize-slot-thumb') as HTMLImageElement | null,
+  ];
+  for (const thumb of thumbs) {
+    if (!thumb) continue;
     const src = slot.kind === 'winner' ? slot.imageUrl : undefined;
     if (src) {
       thumb.src = src;
@@ -176,6 +186,23 @@ export function paintPrizeSlot(slot: PrizeSlot): void {
       thumb.removeAttribute('src');
       thumb.alt = '';
       thumb.classList.add('hidden');
+    }
+  }
+
+  const note = document.getElementById('hero-ad-note');
+  if (note) {
+    note.textContent = slot.kind === 'winner' ? slot.meta : EMPTY_AD_NOTE;
+  }
+  const visit = document.getElementById('hero-ad-visit') as HTMLAnchorElement | null;
+  if (visit) {
+    if (slot.kind === 'winner' && slot.href) {
+      visit.href = slot.href;
+      visit.classList.remove('hidden');
+      visit.removeAttribute('hidden');
+    } else {
+      visit.removeAttribute('href');
+      visit.classList.add('hidden');
+      visit.setAttribute('hidden', '');
     }
   }
 }

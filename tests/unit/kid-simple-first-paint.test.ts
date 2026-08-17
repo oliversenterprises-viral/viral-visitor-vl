@@ -32,10 +32,12 @@ describe('kid-simple first paint', () => {
     expect(hero).toContain('id="hero-get-link-btn"');
     expect(hero).toContain('Get my referral link');
     expect(hero).not.toContain('Get my free link');
-    expect(hero).toMatch(/Free\. No email\. No cash\. Recognition only/);
+    expect(hero).toContain('Verified #1 gets a 30-day banner for their website.');
     expect(hero).toContain('id="hero-banner-mock"');
     expect(hero).toContain('Your site here');
     expect(hero).toContain('Your site here · 30 days');
+    expect(hero).toContain('Live ad');
+    expect(hero).toContain('This slot is empty. #1 puts their site here.');
     expect(hero).not.toContain('yourwebsite.com');
     expect(hero).toContain('Early ranks are open. #1 puts their website on this page.');
     expect(hero).not.toContain('See leaderboard');
@@ -65,15 +67,11 @@ describe('kid-simple first paint', () => {
     expect(css).toMatch(/#vr-verified-total:not\(\.vr-verified-total--ready\)/);
   });
 
-  it('keeps How visible on a cold land even after visitor-slim', () => {
+  it('hides How / FAQ / board on a cold land until expand', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    expect(css).not.toMatch(
-      /html\[data-vr-visitor-slim\]\[data-vr-slim-segment='direct'\]:not\(\[data-vr-has-link\]\) #how\s*,/,
-    );
-    expect(css).not.toMatch(
-      /html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-landing\]\) #how\s*\{/,
-    );
+    expect(css).toMatch(/html:not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]/);
+    expect(css).toMatch(/html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-micro\]\) #funnel-expand-wrap/);
     expect(css).toMatch(/html:not\(\[data-vr-share-locked\]\) #daily-crown-section/);
     expect(html).not.toContain('id="daily-crown-section"');
     expect(html).not.toContain('id="weekly-sprint-board"');

@@ -157,6 +157,29 @@
                     Tap Get my link. Send it. When a friend taps Get my link, you climb.
                 </p>
 
+                <div id="hero-banner-mock" class="hero-banner-mock hero-ad-slot mt-2 mb-5 mx-auto max-w-sm text-left" aria-label="Homepage banner ad slot" data-vr-prize-slot="empty">
+                    <div class="hero-ad-slot-inner rounded-2xl border border-white/15 bg-black/40 overflow-hidden">
+                        <div class="hero-ad-slot-kicker flex items-center justify-between gap-2 px-3 py-1.5 bg-white/5 border-b border-white/10 text-[10px] uppercase tracking-wider font-semibold text-zinc-400">
+                            <span>Live ad</span>
+                            <span>viralrefer.app</span>
+                            <span>30 days</span>
+                        </div>
+                        <img id="hero-slot-thumb" class="hidden w-full h-28 object-cover bg-zinc-900" alt="" />
+                        <div class="flex items-center gap-3 px-4 py-3.5">
+                            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-lg ring-1 ring-white/20 shrink-0" aria-hidden="true">#1</div>
+                            <div class="min-w-0 flex-1">
+                                <a id="hero-slot-site" class="font-semibold text-white leading-tight" aria-disabled="true">Your site here</a>
+                                <div id="hero-slot-meta" class="text-xs text-emerald-300/90 font-mono truncate">Your site here · 30 days</div>
+                            </div>
+                            <a id="hero-ad-visit" class="hidden shrink-0 text-[11px] font-semibold px-2.5 py-1.5 rounded-xl bg-white/10 text-white hover:bg-white/20" hidden rel="noopener noreferrer" target="_blank">Visit</a>
+                        </div>
+                        <p id="hero-ad-note" class="px-4 pb-3 text-[11px] text-zinc-400 leading-snug">This slot is empty. #1 puts their site here.</p>
+                    </div>
+                </div>
+                <p id="hero-prize-one" class="mb-5 text-sm sm:text-base font-semibold text-amber-100/95 max-w-lg mx-auto leading-snug">
+                    Verified #1 gets a 30-day banner for their website.
+                </p>
+
                 <!-- Global proof strip (static + live count) -->
                 <div id="hero-global-proof" class="hero-global-proof mb-3 sm:mb-4" role="status" aria-live="polite">
                     <span class="hero-global-proof-item" data-i18n="hero.proof_worldwide"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i><span data-i18n-text> Open worldwide</span></span>
@@ -206,23 +229,11 @@
                 </script>
 
                 <p id="hero-trust-line" data-i18n="hero.trust" class="mt-3 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
-                    Free. No email. No cash. Recognition only.
+                    Verified #1 gets a 30-day banner for their website.
                 </p>
                 <p id="hero-lock-rule" class="mt-2 text-sm text-zinc-400 max-w-lg mx-auto">
                     Your link counts when a friend taps Get my link.
                 </p>
-                <div id="hero-banner-mock" class="hero-banner-mock mt-6 mx-auto max-w-sm text-left" aria-label="Homepage banner prize preview" data-vr-prize-slot="empty">
-                    <div class="rounded-2xl border border-white/15 bg-black/30 px-4 py-3.5">
-                        <div class="text-[10px] uppercase tracking-wider text-amber-200/90 font-semibold mb-2">30-day homepage banner</div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-lg ring-1 ring-white/20" aria-hidden="true">#1</div>
-                            <div class="min-w-0">
-                                <a id="hero-slot-site" class="font-semibold text-white leading-tight" aria-disabled="true">Your site here</a>
-                                <div id="hero-slot-meta" class="text-xs text-emerald-300/90 font-mono truncate">Your site here · 30 days</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <!-- Cold-land CSS hides this; shown after get-link / non-quiet segments for fuller compliance note -->
                 <p id="hero-security-trust" class="mt-1.5 text-[11px] sm:text-xs text-zinc-500 max-w-xl mx-auto leading-relaxed">
                     Not a bank, wallet, or investment app. No account login required for the public board.
@@ -337,6 +348,7 @@
                 <p id="post-link-url" class="post-link-share__url" hidden></p>
                 <button type="button" id="post-link-primary" class="post-link-share__primary" hidden></button>
                 <button type="button" id="post-link-copy" class="post-link-share__copy">Copy link</button>
+                <p id="post-link-tool" class="post-link-share__tool">This is your public link. Paste it in any bio, story, or text.</p>
             </div>
                     </div>
 
@@ -404,7 +416,7 @@
                         <i class="fa-solid fa-trophy"></i>
                     </div>
                     <div id="how-step3-title" data-i18n="how.step3_title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">3. Climb &amp; get featured</div>
-                    <p id="how-it-works-step3" data-i18n="how.step3_desc" class="text-zinc-400 leading-relaxed">When friends get their own free link through you, you move up. #1 can put their website on our homepage (no cash prize).</p>
+                    <p id="how-it-works-step3" data-i18n="how.step3_desc" class="text-zinc-400 leading-relaxed">When friends get their own free link through you, you move up. #1 puts their website on this homepage for 30 days.</p>
                 </div>
             </div>
         </div>
@@ -418,11 +430,11 @@
                 </div>
                 <div>
                     <h3 class="font-semibold text-white">Is ViralRefer free?</h3>
-                    <p class="text-zinc-400 mt-1">Yes. No payment, no email, no cash prize. #1 may claim a homepage banner feature after verification.</p>
+                    <p class="text-zinc-400 mt-1">Yes. Free, no email, no payment. #1 may claim a homepage banner after verification.</p>
                 </div>
                 <div>
                     <h3 class="font-semibold text-white">What does #1 get?</h3>
-                    <p class="text-zinc-400 mt-1">Verified #1 with at least 10 friends who tapped Get my link can claim a homepage banner for their website. There is no cash prize.</p>
+                    <p class="text-zinc-400 mt-1">Verified #1 with at least 10 friends who tapped Get my link can claim a 30-day homepage banner for their website. Recognition only — there is no cash prize.</p>
                 </div>
                 <div>
                     <h3 class="font-semibold text-white">How does the board work?</h3>
@@ -439,7 +451,7 @@
                     <span id="prize-badge" data-i18n="prize.badge">HOMEPAGE FEATURE</span>
                 </div>
                 <h2 id="prize-title" data-i18n="prize.title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-prize-title)">Homepage Banner Feature</h2>
-                <p id="prize-subtitle" data-i18n="prize.subtitle" class="text-xl text-zinc-300 mt-2">Open worldwide. Climb to #1 on the live board — claim a homepage banner for <em>your</em> website. Free recognition. No cash prize. Early ranks are wide open.</p>
+                <p id="prize-subtitle" data-i18n="prize.subtitle" class="text-xl text-zinc-300 mt-2">Verified #1 gets a 30-day banner for their website on this homepage.</p>
             </div>
 
             <div class="mt-8 text-center">
