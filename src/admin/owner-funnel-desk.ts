@@ -1,5 +1,5 @@
 /**
- * First screen after the owner password: five numbers + one feed.
+ * First screen after the owner password: six numbers + one feed.
  * Server only. No Claims / Promoters / Died-waiting tiles.
  */
 
@@ -11,7 +11,8 @@ import type { OwnerFunnelDeskMetrics, OwnerFunnelFeedRow } from './owner-funnel-
 
 const SKELETON = `
   <div class="space-y-4 py-1" data-owner-funnel-desk="1">
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div class="h-24 skeleton rounded-2xl"></div>
       <div class="h-24 skeleton rounded-2xl"></div>
       <div class="h-24 skeleton rounded-2xl"></div>
       <div class="h-24 skeleton rounded-2xl"></div>
@@ -24,6 +25,8 @@ const SKELETON = `
 
 const EMPTY_METRICS: OwnerFunnelDeskMetrics = {
   windowDays: 7,
+  visits: 0,
+  friendLandings: 0,
   landings: 0,
   getLink: 0,
   share: 0,
@@ -102,12 +105,17 @@ export function renderOwnerFunnelDeskView(
   container.innerHTML = `
     <div data-owner-funnel-desk="1" class="space-y-4">
       <p class="text-sm text-zinc-400">Last ${metrics.windowDays} days · owner IP, test codes, and webdriver excluded.</p>
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-3" data-owner-desk-tiles>
-        ${tile('Landings', metrics.landings, 'Unique people who landed')}
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3" data-owner-desk-tiles>
+        ${tile('Visits', metrics.visits, 'All page views — cheap counter')}
+        ${tile('Friend landings', metrics.friendLandings, 'Unique people on /r/ or /a/')}
         ${tile('Get-link', metrics.getLink, 'Unique people who tapped Get my link')}
         ${tile('Share', metrics.share, 'Verified send — not copy')}
         ${tile('Locked', metrics.locked, 'Codes with a real friend credit')}
-        ${tile('Get-link rate', metrics.getLinkRate, 'Get-link / Landings')}
+        ${tile(
+          'Get-link rate',
+          metrics.getLinkRate,
+          metrics.friendLandings > 0 ? 'Get-link / Friend landings' : 'Get-link / Visits',
+        )}
       </div>
       <section class="rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3">
         <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-2">

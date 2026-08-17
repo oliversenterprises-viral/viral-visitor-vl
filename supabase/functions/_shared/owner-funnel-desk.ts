@@ -1,6 +1,6 @@
 ﻿/**
- * Owner funnel desk — five numbers + one feed.
- * Landings / Get-link / Share / Locked / Get-link rate.
+ * Owner funnel desk — six numbers + one feed.
+ * Visits / Friend landings / Get-link / Share / Locked / Get-link rate.
  * Copy, clipboard, and intent-open are not shares. Pending/expired are not lock.
  */
 
@@ -30,6 +30,8 @@ export type OwnerFunnelFeedRow = {
 
 export type OwnerFunnelDeskMetrics = {
   windowDays: number;
+  visits: number;
+  friendLandings: number;
   landings: number;
   getLink: number;
   share: number;
@@ -137,6 +139,26 @@ export function resolveOwnerFunnelVia(row: Record<string, unknown>): OwnerFunnel
   if (/^\/a\//i.test(path) || aff) return 'promoter';
   if (/^\/r\//i.test(path) || ref) return 'friend';
   return 'direct';
+}
+
+export function isOwnerFunnelAttributedLanding(row: Record<string, unknown>): boolean {
+  return resolveOwnerFunnelVia(row) !== 'direct';
+}
+
+export function uniqueAttributedLandingVisitors(events: readonly OwnerFunnelEvent[]): number {
+  const ids = new Set<string>();
+  for (const event of events) {
+    if (eventName(event) !== 'SiteLanding') continue;
+    if (!isOwnerFunnelAttributedLanding(event)) continue;
+    const id = visitorId(event);
+    if (id) ids.add(id);
+  }
+  return ids.size;
+}
+
+export function deskGetLinkRate(getLink: number, friendLandings: number, visits: number): string {
+  if (friendLandings > 0) return formatOwnerRate(getLink, friendLandings);
+  return formatOwnerRate(getLink, visits);
 }
 
 export function ownerFunnelViaLabel(via: OwnerFunnelVia): string {
@@ -266,6 +288,7 @@ export function computeOwnerFunnelDeskMetrics(input: {
   referrerLinks?: readonly OwnerFunnelLinkRow[];
   now?: number;
   windowDays?: number;
+  visits?: number;
 }): OwnerFunnelDeskMetrics {
   const now = input.now ?? Date.now();
   const windowDays = input.windowDays ?? OWNER_FUNNEL_WINDOW_DAYS;
@@ -285,7 +308,8 @@ export function computeOwnerFunnelDeskMetrics(input: {
     return !!code && !isTestReferrerCode(code);
   });
 
-  const landings = uniqueVisitorsForEvent(events, 'SiteLanding');
+  const visits = Number.isFinite(input.visits) && (input.visits as number) >= 0 ? (input.visits as number) : 0;
+  const landings = uniqueAttributedLandingVisitors(events);
   const getLink = uniqueVisitorsForEvent(events, 'GetReferralLink');
   const shareCodes = new Set<string>();
   for (const row of shares) {
@@ -333,6 +357,7 @@ export function computeOwnerFunnelDeskMetrics(input: {
     if (!at) continue;
     const via = resolveOwnerFunnelVia(event);
     if (name === 'SiteLanding') {
+      if (via === 'direct') continue;
       feed.push(feedRow('landed', at, via));
     } else if (name === 'GetReferralLink') {
       feed.push(feedRow('got_link', at, via));
@@ -366,16 +391,20 @@ export function computeOwnerFunnelDeskMetrics(input: {
 
   return {
     windowDays,
+    visits,
+    friendLandings: landings,
     landings,
     getLink,
     share,
     locked: lockedCodes.size,
-    getLinkRate: formatOwnerRate(getLink, landings),
+    getLinkRate: deskGetLinkRate(getLink, landings, visits),
     feed: feed.slice(0, OWNER_FUNNEL_FEED_LIMIT),
   };
 }
 
 export function parseOwnerFunnelDeskCounts(raw: unknown): {
+  visits: number;
+  friendLandings: number;
   landings: number;
   getLink: number;
   share: number;
@@ -397,13 +426,15 @@ export function parseOwnerFunnelDeskCounts(raw: unknown): {
     }
     return null;
   };
-  const landings = num('landings');
+  const friendLandings = num('friend_landings', 'friendLandings') ?? num('landings');
+  const landings = friendLandings;
+  const visits = num('visits') ?? 0;
   const getLink = num('get_link', 'getLink');
   const share = num('share');
   const locked = num('locked');
   const windowDays = num('window_days', 'windowDays') ?? OWNER_FUNNEL_WINDOW_DAYS;
   if (landings == null || getLink == null || share == null || locked == null) return null;
-  return { landings, getLink, share, locked, windowDays };
+  return { visits, friendLandings: landings, landings, getLink, share, locked, windowDays };
 }
 
 /** Tile counts come from the RPC when present. A paged dump is feed-only. */
@@ -427,11 +458,13 @@ export function assembleOwnerFunnelDeskFromServer(input: {
   });
   return {
     windowDays: counts.windowDays,
+    visits: counts.visits,
+    friendLandings: counts.friendLandings,
     landings: counts.landings,
     getLink: counts.getLink,
     share: counts.share,
     locked: counts.locked,
-    getLinkRate: formatOwnerRate(counts.getLink, counts.landings),
+    getLinkRate: deskGetLinkRate(counts.getLink, counts.friendLandings, counts.visits),
     feed: feedOnly.feed,
   };
 }
@@ -513,11 +546,13 @@ export async function resolveOwnerFunnelDeskMetrics(input: {
     } catch {
       return {
         windowDays: counts.windowDays,
+        visits: counts.visits,
+        friendLandings: counts.friendLandings,
         landings: counts.landings,
         getLink: counts.getLink,
         share: counts.share,
         locked: counts.locked,
-        getLinkRate: formatOwnerRate(counts.getLink, counts.landings),
+        getLinkRate: deskGetLinkRate(counts.getLink, counts.friendLandings, counts.visits),
         feed: [],
       };
     }

@@ -1,5 +1,5 @@
 /**
- * First screen is the five-number desk. Prize, Website, and Promoters stay behind a visible More.
+ * First screen is the six-number desk. Prize, Website, and Promoters stay behind a visible More.
  * Chrome is relocated into #admin-more-tools-hold — not CSS-hidden in the first view.
  */
 

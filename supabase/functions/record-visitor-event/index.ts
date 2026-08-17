@@ -86,8 +86,21 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const eventName = String(body.eventName || body.event_name || '').trim();
     const utmSource = body.utm_source || body.utmSource || null;
-    if (shouldSkipServerLandingWrite(eventName, utmSource)) {
-      return new Response(JSON.stringify({ success: true, skipped: 'landing' }), {
+    const rawMeta =
+      body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata)
+        ? body.metadata
+        : {};
+    const attribution = {
+      refCode: body.ref_code || body.refCode || null,
+      affCode: rawMeta.aff_code || rawMeta.affCode || body.aff_code || null,
+      path: rawMeta.path || body.path || null,
+    };
+    if (eventName === 'SiteLanding') {
+      const { error: incErr } = await supabaseAdmin.rpc('increment_landing_daily');
+      if (incErr) console.error('[record-visitor-event] increment_landing_daily:', incErr);
+    }
+    if (shouldSkipServerLandingWrite(eventName, utmSource, attribution)) {
+      return new Response(JSON.stringify({ success: true, skipped: 'landing', visit: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

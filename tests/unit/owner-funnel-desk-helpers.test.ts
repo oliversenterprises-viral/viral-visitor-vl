@@ -38,11 +38,12 @@ function getLink(id: string, extra: Record<string, unknown> = {}) {
 }
 
 describe('owner funnel desk metrics', () => {
-  it('counts five numbers: unique landings, unique get-link, verified shares, unique locked, get-link rate', () => {
+  it('counts six numbers: visits, unique friend landings, unique get-link, verified shares, unique locked, get-link rate', () => {
     expect(formatOwnerRate(1, 2)).toBe('50.0%');
     expect(formatOwnerRate(0, 0)).toBe('0%');
 
     const metrics = computeOwnerFunnelDeskMetrics({
+      visits: 80,
       events: [
         landing('a', { metadata: { path: '/' } }),
         landing('a', { created_at: '2026-08-16T10:05:00Z' }),
@@ -80,11 +81,13 @@ describe('owner funnel desk metrics', () => {
       now,
     });
 
-    expect(metrics.landings).toBe(2);
+    expect(metrics.visits).toBe(80);
+    expect(metrics.friendLandings).toBe(1);
+    expect(metrics.landings).toBe(1);
     expect(metrics.getLink).toBe(1);
     expect(metrics.share).toBe(1);
     expect(metrics.locked).toBe(1);
-    expect(metrics.getLinkRate).toBe('50.0%');
+    expect(metrics.getLinkRate).toBe('100.0%');
     expect(metrics.windowDays).toBe(7);
     expect(metrics.feed.some((row) => row.kind === 'locked' && row.code === 'VIRAL-REAL1')).toBe(true);
     expect(metrics.feed.some((row) => row.kind === 'locked' && row.friendCode === 'VIRAL-FRIEND1')).toBe(true);
@@ -99,7 +102,10 @@ describe('owner funnel desk metrics', () => {
       events: [
         landing('owner', { metadata: { client_ip: '161.38.136.60' } }),
         landing('bot', { metadata: { webdriver: true } }),
-        landing('ok', { metadata: { client_ip: '8.8.8.8' } }),
+        landing('ok', {
+          ref_code: 'VIRAL-OK',
+          metadata: { client_ip: '8.8.8.8', path: '/r/VIRAL-OK' },
+        }),
         getLink('ok'),
         {
           event_name: 'SiteLanding',
@@ -145,8 +151,16 @@ describe('owner funnel desk metrics', () => {
   it('ignores events older than 7 days', () => {
     const metrics = computeOwnerFunnelDeskMetrics({
       events: [
-        landing('old', { created_at: '2026-08-01T10:00:00Z' }),
-        landing('new', { created_at: '2026-08-16T10:00:00Z' }),
+        landing('old', {
+          created_at: '2026-08-01T10:00:00Z',
+          ref_code: 'VIRAL-OLD',
+          metadata: { path: '/r/VIRAL-OLD' },
+        }),
+        landing('new', {
+          created_at: '2026-08-16T10:00:00Z',
+          ref_code: 'VIRAL-NEW',
+          metadata: { path: '/r/VIRAL-NEW' },
+        }),
         getLink('old', { created_at: '2026-08-01T11:00:00Z' }),
       ],
       now,
@@ -169,7 +183,7 @@ describe('owner funnel desk metrics', () => {
     expect(isDeskVerifiedShare('first_referral')).toBe(false);
   });
 
-  it('renders five tiles and one feed, never seven-tile leftovers', () => {
+  it('renders six tiles and one feed, never seven-tile leftovers', () => {
     const el = document.createElement('div');
     const metrics = computeOwnerFunnelDeskMetrics({
       events: [
@@ -191,13 +205,14 @@ describe('owner funnel desk metrics', () => {
       now,
     });
     renderOwnerFunnelDeskView(el, metrics);
-    expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(5);
-    expect(el.textContent).toMatch(/Landings/);
+    expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
+    expect(el.textContent).toMatch(/Visits/);
+    expect(el.textContent).toMatch(/Friend landings/);
     expect(el.textContent).toMatch(/Get-link/);
     expect(el.textContent).toMatch(/Share/);
     expect(el.textContent).toMatch(/Locked/);
     expect(el.textContent).toMatch(/Get-link rate/);
-    expect(el.textContent).toMatch(/50\.0%/);
+    expect(el.textContent).toMatch(/100\.0%/);
     expect(el.textContent).toMatch(/Landed/);
     expect(el.textContent).toMatch(/Got a link/);
     expect(el.textContent).toMatch(/Shared/);
@@ -209,33 +224,46 @@ describe('owner funnel desk metrics', () => {
     expect(el.innerHTML).not.toMatch(/LOCAL/i);
   });
 
-  it('still paints five tiles when the server misses after login', () => {
+  it('still paints six tiles when the server misses after login', () => {
     const el = document.createElement('div');
     renderOwnerFunnelDeskView(
       el,
-      { windowDays: 7, landings: 0, getLink: 0, share: 0, locked: 0, getLinkRate: '0%', feed: [] },
+      {
+        windowDays: 7,
+        visits: 0,
+        friendLandings: 0,
+        landings: 0,
+        getLink: 0,
+        share: 0,
+        locked: 0,
+        getLinkRate: '0%',
+        feed: [],
+      },
       "can't load.",
     );
-    expect(el.textContent).toMatch(/Landings/);
+    expect(el.textContent).toMatch(/Visits/);
+    expect(el.textContent).toMatch(/Friend landings/);
     expect(el.textContent).toMatch(/Get-link/);
     expect(el.textContent).toMatch(/Share/);
     expect(el.textContent).toMatch(/Locked/);
     expect(el.textContent).not.toMatch(/can.t load/i);
     expect(el.textContent).not.toMatch(/Died waiting|Promoters|Claims/);
-    expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(5);
+    expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
   });
 
   it('takes tile counts from the RPC, not a paged event dump', () => {
     expect(parseOwnerFunnelDeskCounts(null)).toBeNull();
     expect(parseOwnerFunnelDeskCounts({ landings: 1 })).toBeNull();
     const assembled = assembleOwnerFunnelDeskFromServer({
-      counts: { landings: 99, get_link: 40, share: 7, locked: 3, window_days: 7 },
+      counts: { visits: 500, friend_landings: 99, landings: 99, get_link: 40, share: 7, locked: 3, window_days: 7 },
       events: [landing('a'), getLink('a')],
       shares: [],
       referrals: [],
       now,
     });
     expect(assembled).not.toBeNull();
+    expect(assembled!.visits).toBe(500);
+    expect(assembled!.friendLandings).toBe(99);
     expect(assembled!.landings).toBe(99);
     expect(assembled!.getLink).toBe(40);
     expect(assembled!.share).toBe(7);
@@ -284,14 +312,16 @@ describe('owner funnel desk metrics', () => {
 
   it('uses RPC COUNT DISTINCT when the function exists', async () => {
     const metrics = await resolveOwnerFunnelDeskMetrics({
-      rpcData: { landings: 9, get_link: 3, share: 1, locked: 1, window_days: 7 },
+      rpcData: { visits: 40, friend_landings: 9, landings: 9, get_link: 3, share: 1, locked: 1, window_days: 7 },
       loadFeedWindow: async () => ({ events: [landing('a')], shares: [], referrals: [] }),
       loadCompleteWindow: async () => {
         throw new Error('should not load complete window when RPC works');
       },
       now,
     });
+    expect(metrics.visits).toBe(40);
     expect(metrics.landings).toBe(9);
+    expect(metrics.friendLandings).toBe(9);
     expect(metrics.getLink).toBe(3);
     expect(metrics.share).toBe(1);
     expect(metrics.locked).toBe(1);
@@ -299,7 +329,7 @@ describe('owner funnel desk metrics', () => {
 
   it('keeps RPC tile counts when the feed window throws', async () => {
     const metrics = await resolveOwnerFunnelDeskMetrics({
-      rpcData: { landings: 1361, get_link: 33, share: 2, locked: 4, window_days: 7 },
+      rpcData: { visits: 1361, friend_landings: 16, landings: 16, get_link: 33, share: 2, locked: 4, window_days: 7 },
       loadFeedWindow: async () => {
         throw new Error('column referrals.referred_code does not exist');
       },
@@ -308,11 +338,13 @@ describe('owner funnel desk metrics', () => {
       },
       now,
     });
-    expect(metrics.landings).toBe(1361);
+    expect(metrics.visits).toBe(1361);
+    expect(metrics.landings).toBe(16);
+    expect(metrics.friendLandings).toBe(16);
     expect(metrics.getLink).toBe(33);
     expect(metrics.share).toBe(2);
     expect(metrics.locked).toBe(4);
-    expect(metrics.getLinkRate).toBe('2.4%');
+    expect(metrics.getLinkRate).toBe('206.3%');
     expect(metrics.feed).toEqual([]);
   });
 
@@ -321,7 +353,12 @@ describe('owner funnel desk metrics', () => {
       rpcData: null,
       rpcError: { code: 'PGRST202', message: 'Could not find the function' },
       loadCompleteWindow: async () => ({
-        events: [landing('a'), landing('a'), landing('b'), getLink('a')],
+        events: [
+          landing('a'),
+          landing('a'),
+          landing('b', { ref_code: 'VIRAL-B', metadata: { path: '/r/VIRAL-B' } }),
+          getLink('a'),
+        ],
         shares: [
           { platform: 'native', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:00:00Z' },
           { platform: 'whatsapp', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:01:00Z' },
@@ -333,11 +370,13 @@ describe('owner funnel desk metrics', () => {
       }),
       now,
     });
-    expect(metrics.landings).toBe(2);
+    expect(metrics.visits).toBe(0);
+    expect(metrics.landings).toBe(1);
+    expect(metrics.friendLandings).toBe(1);
     expect(metrics.getLink).toBe(1);
     expect(metrics.share).toBe(1);
     expect(metrics.locked).toBe(0);
-    expect(metrics.getLinkRate).toBe('50.0%');
+    expect(metrics.getLinkRate).toBe('100.0%');
   });
 
   it('returns zero tiles for an empty window instead of can’t load', async () => {
@@ -346,14 +385,16 @@ describe('owner funnel desk metrics', () => {
       loadCompleteWindow: async () => ({ events: [], shares: [], referrals: [], referrerLinks: [] }),
       now,
     });
+    expect(metrics.visits).toBe(0);
     expect(metrics.landings).toBe(0);
+    expect(metrics.friendLandings).toBe(0);
     expect(metrics.getLink).toBe(0);
     expect(metrics.share).toBe(0);
     expect(metrics.locked).toBe(0);
     expect(metrics.getLinkRate).toBe('0%');
   });
 
-  it('still loads five tiles when the deployed function does not know get_owner_funnel_desk', () => {
+  it('still loads six tiles when the deployed function does not know get_owner_funnel_desk', () => {
     expect(isOwnerFunnelDeskActionMissing('Unknown action')).toBe(true);
     expect(isOwnerFunnelDeskActionMissing('permission denied')).toBe(false);
     const loaded = ownerFunnelDeskFromInvokeResult({
@@ -361,38 +402,65 @@ describe('owner funnel desk metrics', () => {
       error: 'Unknown action',
     });
     expect(loaded.error).toBeUndefined();
+    expect(loaded.metrics.visits).toBe(0);
     expect(loaded.metrics.landings).toBe(0);
     expect(loaded.metrics.share).toBe(0);
     const el = document.createElement('div');
     renderOwnerFunnelDeskView(el, loaded.metrics, loaded.error);
-    expect(el.textContent).toMatch(/Landings/);
+    expect(el.textContent).toMatch(/Visits/);
+    expect(el.textContent).toMatch(/Friend landings/);
     expect(el.textContent).toMatch(/Get-link/);
     expect(el.textContent).toMatch(/Share/);
     expect(el.textContent).toMatch(/Locked/);
     expect(el.textContent).not.toMatch(/can.t load/i);
-    expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(5);
+    expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
   });
 
-  it('still paints five tiles when get_owner_funnel_desk or the RPC fails', () => {
+  it('still paints six tiles when get_owner_funnel_desk or the RPC fails', () => {
     for (const error of ["can't load.", 'Edge Function returned a non-2xx status code', 'function does not exist']) {
       const loaded = ownerFunnelDeskFromInvokeResult({
         success: false,
         error,
       });
       expect(loaded.error).toBeUndefined();
+      expect(loaded.metrics.visits).toBe(0);
       expect(loaded.metrics.landings).toBe(0);
       expect(loaded.metrics.getLink).toBe(0);
       expect(loaded.metrics.share).toBe(0);
       expect(loaded.metrics.locked).toBe(0);
       const el = document.createElement('div');
       renderOwnerFunnelDeskView(el, loaded.metrics, loaded.error);
-      expect(el.textContent).toMatch(/Landings/);
+      expect(el.textContent).toMatch(/Visits/);
+      expect(el.textContent).toMatch(/Friend landings/);
       expect(el.textContent).toMatch(/Get-link/);
       expect(el.textContent).toMatch(/Share/);
       expect(el.textContent).toMatch(/Locked/);
       expect(el.textContent).not.toMatch(/can.t load/i);
-      expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(5);
+      expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
     }
+  });
+
+  it('rates get-link against visits when there are no friend landings', () => {
+    const metrics = computeOwnerFunnelDeskMetrics({
+      visits: 200,
+      events: [landing('a', { metadata: { path: '/' } }), getLink('a')],
+      now,
+    });
+    expect(metrics.friendLandings).toBe(0);
+    expect(metrics.getLink).toBe(1);
+    expect(metrics.getLinkRate).toBe('0.5%');
+  });
+
+  it('reads visits from a new RPC and defaults visits to 0 on an old payload', () => {
+    expect(parseOwnerFunnelDeskCounts({ landings: 12, get_link: 3, share: 1, locked: 1 })).toEqual({
+      visits: 0,
+      friendLandings: 12,
+      landings: 12,
+      getLink: 3,
+      share: 1,
+      locked: 1,
+      windowDays: 7,
+    });
   });
 });
 

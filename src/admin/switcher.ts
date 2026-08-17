@@ -32,7 +32,7 @@ function isStale(requestId: number): boolean {
 }
 
 /**
- * First screen after the owner password: five-number desk only.
+ * First screen after the owner password: six-number desk only.
  * Extra tools stay behind More and never replace this path with "can't load."
  */
 export async function showOwnerFunnelDesk() {

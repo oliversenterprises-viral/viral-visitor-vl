@@ -62,11 +62,13 @@ describe('admin one-loop desk', () => {
     expect(isAdminExtraTab(6)).toBe(true);
   });
 
-  it('keeps first screen to five tiles, one feed, and visible More', () => {
+  it('keeps first screen to six tiles, one feed, and visible More', () => {
     initAdminDesk();
     const content = document.getElementById('admin-content') as HTMLElement;
     renderOwnerFunnelDeskView(content, {
       windowDays: 7,
+      visits: 0,
+      friendLandings: 0,
       landings: 0,
       getLink: 0,
       share: 0,
@@ -76,11 +78,13 @@ describe('admin one-loop desk', () => {
     });
 
     const first = firstScreenHtml();
-    expect(first).toMatch(/Landings/);
+    expect(first).toMatch(/Visits/);
+    expect(first).toMatch(/Friend landings/);
     expect(first).toMatch(/Get-link/);
     expect(first).toMatch(/Share/);
     expect(first).toMatch(/Locked/);
     expect(first).toMatch(/Get-link rate/);
+    expect(content.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
     expect(first).not.toMatch(/Friends/);
     expect(first).not.toMatch(/Prize/);
     expect(first).not.toMatch(/Website/);
@@ -138,7 +142,8 @@ describe('admin one-loop desk', () => {
     expect(modalStart).toBeGreaterThan(-1);
     expect(holdStart).toBeGreaterThan(modalStart);
     const modal = html.slice(modalStart, holdStart);
-    expect(modal).toMatch(/Landings/);
+    expect(modal).toMatch(/Visits/);
+    expect(modal).toMatch(/Friend landings/);
     expect(modal).toMatch(/Get-link/);
     expect(modal).toMatch(/>Share</);
     expect(modal).toMatch(/Locked/);

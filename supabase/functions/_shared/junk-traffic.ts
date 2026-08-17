@@ -43,13 +43,31 @@ export function isJunkTrafficSource(source: string | null | undefined): boolean 
   return JUNK_NEEDLES.some((needle) => s.includes(needle));
 }
 
+export type LandingAttribution = {
+  refCode?: string | null;
+  affCode?: string | null;
+  path?: string | null;
+};
+
+/** Friend /r/ or promoter /a/ arrival — these SiteLanding rows may persist. */
+export function isAttributedLanding(attr?: LandingAttribution | null): boolean {
+  if (!attr) return false;
+  if (String(attr.refCode || '').trim()) return true;
+  if (String(attr.affCode || '').trim()) return true;
+  const path = String(attr.path || '').trim();
+  return /^\/r\//i.test(path) || /^\/a\//i.test(path);
+}
+
 /**
- * Never persist SiteLanding (rotator / cheap traffic floods the table + ipapi).
+ * Persist SiteLanding only for friend / promoter arrivals.
+ * Homepage / rotator landings increment the daily visit counter instead.
  * Conversion events always persist. utmSource kept so client + Edge stay in sync.
  */
 export function shouldSkipServerLandingWrite(
   eventName: string,
   _utmSource?: string | null,
+  attribution?: LandingAttribution | null,
 ): boolean {
-  return eventName === 'SiteLanding';
+  if (eventName !== 'SiteLanding') return false;
+  return !isAttributedLanding(attribution);
 }
