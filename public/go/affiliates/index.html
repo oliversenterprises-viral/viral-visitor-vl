@@ -23,29 +23,78 @@
     .steps { display:grid; gap:.75rem; margin:1.5rem 0; }
     .step { border:1px solid rgba(255,255,255,.1); border-radius:1rem; padding:1rem 1.1rem; background:rgba(24,24,27,.7); }
     .step strong { display:block; color:#fff; margin-bottom:.25rem; }
-    a.cta { display:flex; align-items:center; justify-content:center; margin-top:.35rem; background:#059669; color:#fff; font-weight:700; padding:.9rem 1.2rem; min-height:48px; border-radius:999px; text-decoration:none; }
-    a.cta:hover { background:#047857; }
+    form { display:grid; gap:.65rem; margin:1.25rem 0; }
+    input { width:100%; min-height:48px; border-radius:999px; border:1px solid rgba(255,255,255,.14); background:#18181b; color:#fff; padding:.8rem 1.1rem; font-size:1rem; }
+    button.cta, a.cta { display:flex; align-items:center; justify-content:center; background:#059669; color:#fff; font-weight:700; padding:.9rem 1.2rem; min-height:48px; border-radius:999px; text-decoration:none; border:0; cursor:pointer; font-size:1rem; }
+    button.cta:hover, a.cta:hover { background:#047857; }
+    button.cta:disabled { opacity:.55; cursor:default; }
     .fine { font-size:.8rem; color:#71717a; }
     a { color:var(--violet); }
+    .desk { border:1px solid rgba(255,255,255,.1); border-radius:1rem; padding:1rem; background:rgba(24,24,27,.75); word-break:break-all; }
+    .err { color:#fbbf24; min-height:1.2rem; font-size:.9rem; }
   </style>
 </head>
 <body>
   <main>
     <p class="ok">Instant signup · no waiting for an invite</p>
-    <h1>We want affiliates. Get your promoter link in one tap.</h1>
+    <h1>Promote ViralRefer. Earn ad-board days.</h1>
     <p>
-      Share your link. When a visitor taps <strong>Get my link</strong>, you earn <strong>ad-board credit</strong>
-      (days on ads.viralrefer.app). Days are added automatically. After 10 people get a link, a cash bonus is tracked automatically.
+      Share your <strong>/a/</strong> link. When a visitor taps <strong>Get my link</strong>, you earn
+      <strong>ad-board credit</strong> (days on ads.viralrefer.app). Days are added automatically.
+      That is ad-board credit only — not cash.
     </p>
-    <p>The public contest is still free. #1 gets a homepage banner. There is still <strong>no cash prize</strong> for climbing the board.</p>
+    <p>The public contest is still free. #1 gets a homepage banner. There is <strong>no cash prize</strong> for climbing the board.</p>
     <div class="steps">
-      <div class="step"><strong>1. Sign up yourself</strong>Type your name on the site. You get a code automatically — nobody has to assign one.</div>
+      <div class="step"><strong>1. Sign up here</strong>Type your name. You get a promoter code automatically.</div>
       <div class="step"><strong>2. Share /a/YOURCODE</strong>That is a promoter link, not a friend-rank /r/ link.</div>
       <div class="step"><strong>3. They tap Get my link</strong>A visit is not enough. That tap is the credit.</div>
-      <div class="step"><strong>4. Thank-you = ad days</strong>Cash is a later bonus after 10 people, not the contest prize.</div>
+      <div class="step"><strong>4. Thank-you = ad days</strong>Ad-board days only — not the contest homepage-banner prize.</div>
     </div>
-    <a class="cta" href="https://www.viralrefer.app/?become=promoter#become-promoter">Get my promoter link</a>
-    <p class="fine">Open worldwide · 18+ · no purchase needed to play · promoter pay is separate from the leaderboard.</p>
+    <form id="aff-form">
+      <input name="name" required maxlength="80" placeholder="Your name" autocomplete="name" />
+      <button class="cta" type="submit">Get my promoter link</button>
+      <p class="err" id="aff-err"></p>
+    </form>
+    <div id="aff-desk" class="desk" hidden></div>
+    <p class="fine">Open worldwide · 18+ · no purchase needed · promoter pay is separate from the leaderboard. <a href="https://www.viralrefer.app/">Back to the race</a></p>
   </main>
+  <script>
+    const SUPABASE_URL = 'https://wqbefjzpgsezzwdrvvua.supabase.co';
+    const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxYmVmanpwZ3Nlenp3ZHJ2dnVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTMyNDAsImV4cCI6MjA4OTUyOTI0MH0.pVHqeG0sGPgpUlOlskf7rOvnAsdrzrv5govZXcyxEdk';
+    const form = document.getElementById('aff-form');
+    const err = document.getElementById('aff-err');
+    const desk = document.getElementById('aff-desk');
+    async function register(name) {
+      const res = await fetch(SUPABASE_URL + '/functions/v1/affiliate-public', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + ANON },
+        body: JSON.stringify({ action: 'register', name: name }),
+      });
+      return res.json();
+    }
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.textContent = '';
+      const btn = form.querySelector('button');
+      const name = String(new FormData(form).get('name') || '').trim();
+      if (btn) btn.disabled = true;
+      try {
+        const out = await register(name);
+        if (!out.success || !out.data || !out.data.code) {
+          err.textContent = String(out.error || 'Could not create a promoter link.');
+          return;
+        }
+        const code = String(out.data.code);
+        const link = 'https://www.viralrefer.app/a/' + encodeURIComponent(code);
+        desk.hidden = false;
+        desk.innerHTML = '<strong>Your promoter link</strong><div style="margin-top:.4rem;color:#86efac">' + link + '</div>';
+        form.hidden = true;
+      } catch {
+        err.textContent = 'Could not reach signup. Try again.';
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>

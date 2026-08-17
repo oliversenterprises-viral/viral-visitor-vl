@@ -97,7 +97,7 @@
           {
             "@type": "Question",
             "name": "How does the ViralRefer leaderboard work?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Every person who signs up through your unique referral link counts toward your total. Share on X, WhatsApp, LinkedIn, Telegram, SMS, or anywhere — then watch your rank climb on the live board." }
+            "acceptedAnswer": { "@type": "Answer", "text": "A friend opens your unique referral link and taps Get my link. Visiting or copying alone does not count." }
           }
         ]
       }
@@ -120,10 +120,9 @@
             </a>
             <div class="vr-nav-links flex items-center gap-2 sm:gap-6 text-sm font-medium shrink-0">
                 <a href="#how" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.how">How</a>
-                <a href="/tools/" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">Tools</a>
                 <a href="#prize" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.feature">Feature</a>
                 <a href="#leaderboard" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.board">Board</a>
-                <a href="#become-promoter" class="vr-nav-link hidden sm:inline text-emerald-300 hover:text-white transition-colors">Promote</a>
+                <a href="/tools/" class="vr-nav-link hidden sm:inline text-zinc-400 hover:text-violet-400 transition-colors">Tools</a>
                 <button type="button" id="nav-get-link-btn" data-vr-zone="nav-get-link" class="sm:hidden px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl text-xs font-semibold min-h-[44px]" data-i18n="nav.get_link">
                     Get link
                 </button>
@@ -151,7 +150,7 @@
                 </h1>
                
                 <p id="hero-subtitle" data-i18n="hero.subtitle" class="text-base sm:text-lg md:text-xl text-zinc-200 max-w-xl mx-auto mb-5 sm:mb-6 leading-relaxed px-1">
-                    Tap Get my link. A friend does the same. You climb.
+                    Tap Get my link. Send it. When a friend taps Get my link, you climb.
                 </p>
 
                 <!-- Global proof strip (static + live count) -->
@@ -174,7 +173,7 @@
                     <button id="hero-get-link-btn" data-vr-zone="hero-get-link" onclick="getMyReferralLinkInstant()" 
                             class="btn-primary hero-primary-cta w-full px-8 py-4 sm:px-12 sm:py-5 text-lg sm:text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/40 min-h-[52px]">
                         <i class="fa-solid fa-link" aria-hidden="true"></i>
-                        <span data-i18n="hero.cta">Get my link</span>
+                        <span data-i18n="hero.cta">Get my referral link</span>
                     </button>
                    
                 </div>
@@ -182,6 +181,21 @@
                 <p id="hero-trust-line" data-i18n="hero.trust" class="mt-3 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
                     Free. No email. No cash. Recognition only.
                 </p>
+                <p id="hero-lock-rule" class="mt-2 text-sm text-zinc-400 max-w-lg mx-auto">
+                    Your link counts when a friend taps Get my link.
+                </p>
+                <div id="hero-banner-mock" class="hero-banner-mock mt-6 mx-auto max-w-sm text-left" aria-label="Homepage banner prize preview">
+                    <div class="rounded-2xl border border-white/15 bg-black/30 px-4 py-3.5">
+                        <div class="text-[10px] uppercase tracking-wider text-amber-200/90 font-semibold mb-2">30-day homepage banner</div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-lg ring-1 ring-white/20" aria-hidden="true">#1</div>
+                            <div class="min-w-0">
+                                <div class="font-semibold text-white leading-tight">Your site here</div>
+                                <div class="text-xs text-emerald-300/90 font-mono truncate">yourwebsite.com · 30 days</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Cold-land CSS hides this; shown after get-link / non-quiet segments for fuller compliance note -->
                 <p id="hero-security-trust" class="mt-1.5 text-[11px] sm:text-xs text-zinc-500 max-w-xl mx-auto leading-relaxed">
                     Not a bank, wallet, or investment app. No account login required for the public board.
@@ -335,7 +349,7 @@
         </div>
 
         <!-- HOW IT WORKS -->
-        <div id="how" data-vr-below-fold data-vr-slim-defer-until-link class="mt-12">
+        <div id="how" data-vr-below-fold class="mt-12">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">
                     <i class="fa-solid fa-lightbulb"></i>
@@ -358,8 +372,8 @@
                         <i class="fa-solid fa-share-alt"></i>
                     </div>
                     <div id="how-step2-title" data-i18n="how.step2_title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">2. Share anywhere</div>
-                    <p id="how-step2-desc" data-i18n="how.step2_desc" class="text-zinc-400 leading-relaxed">Share it with friends (any app). Your link stays safe only if a friend uses it — a friend must open your link and get their own free link.</p>
-                    <p id="how-step2-deadline" data-i18n="deadline.how_note" class="text-xs font-semibold text-amber-300/90 mt-3 leading-snug">Simple rule: a friend must open your link and tap Get my link within about 2 days (48h). That locks it. Copying alone never locks. Sharing can add extra time.</p>
+                    <p id="how-step2-desc" data-i18n="how.step2_desc" class="text-zinc-400 leading-relaxed">Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.</p>
+                    <p id="how-step2-deadline" data-i18n="hero.lock_rule" class="text-xs font-semibold text-zinc-300/90 mt-3 leading-snug">Your link counts when a friend taps Get my link.</p>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-amber-400/50 transition-all">
                     <div class="mx-auto w-14 h-14 bg-amber-400/20 text-amber-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
@@ -369,34 +383,6 @@
                     <p id="how-it-works-step3" data-i18n="how.step3_desc" class="text-zinc-400 leading-relaxed">When friends get their own free link through you, you move up. #1 can put their website on our homepage (no cash prize).</p>
                 </div>
             </div>
-        </div>
-
-        <div id="become-promoter" class="mt-12 glass border border-emerald-400/25 rounded-3xl p-5 sm:p-8 md:p-10 bg-emerald-950/20">
-            <div id="promoter-week-strip" class="promoter-week-strip hidden mb-4 sm:mb-5" hidden role="status">
-                <span>We want promoters.</span>
-                <a href="#become-promoter" class="promoter-week-cta">Become a promoter</a>
-            </div>
-            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Become a promoter</h2>
-            <a id="hero-telegram-helper-btn"
-               data-vr-zone="below-fold-telegram-helper"
-               href="https://t.me/myviralreferbot?start=site_hero"
-               target="_blank"
-               rel="noopener noreferrer"
-               class="hero-telegram-helper-cta inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm min-h-[40px] rounded-full font-semibold transition-all mb-4"
-               title="Open ViralRefer helper bot on Telegram">
-                <i class="fa-brands fa-telegram-plane text-base" aria-hidden="true"></i>
-                <span>Telegram helper</span>
-            </a>
-            <p class="text-zinc-300 mb-2">We want affiliates. Pick a name, get a link instantly. When someone you send taps Get my link, you earn <strong>ad-board credit</strong> (days on ads.viralrefer.app).</p>
-            <p class="text-zinc-500 text-sm mb-5">This is promoter pay — ad-board days only. It is not a contest cash prize and does not affect the homepage-feature board.</p>
-            <form id="promoter-signup-form" class="flex flex-col sm:flex-row flex-wrap gap-2 items-stretch sm:items-end mb-4">
-                <label class="flex-1 min-w-0 text-xs text-zinc-400">Your name
-                    <input name="name" required maxlength="80" placeholder="Maya" class="mt-1 w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-3 text-base sm:text-sm text-white min-h-[44px]" />
-                </label>
-                <button type="submit" class="px-5 py-3 text-sm font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white min-h-[44px] w-full sm:w-auto">Get my promoter link</button>
-                <span data-aff-signup-err class="text-sm text-amber-300 w-full"></span>
-            </form>
-            <div id="promoter-dashboard" class="hidden"></div>
         </div>
 
         <div id="faq" data-vr-below-fold class="mt-12 glass border border-white/10 rounded-3xl p-8 md:p-10">
@@ -416,11 +402,7 @@
                 </div>
                 <div>
                     <h3 class="font-semibold text-white">How does the board work?</h3>
-                    <p class="text-zinc-400 mt-1">A friend must open your link and tap Get my link. Copying alone does not count.</p>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-white">Can I promote ViralRefer?</h3>
-                    <p class="text-zinc-400 mt-1">Yes. Share a promoter /a/ link and earn ad-board credit (days on ads.viralrefer.app) when someone taps Get my link. That is ad-board credit only — not cash, and not the contest homepage-banner prize.</p>
+                    <p class="text-zinc-400 mt-1">A friend opens your link and taps Get my link. Visiting or copying alone does not count.</p>
                 </div>
             </div>
         </div>
@@ -434,24 +416,6 @@
                 </div>
                 <h2 id="prize-title" data-i18n="prize.title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-prize-title)">Homepage Banner Feature</h2>
                 <p id="prize-subtitle" data-i18n="prize.subtitle" class="text-xl text-zinc-300 mt-2">Open worldwide. Climb to #1 on the live board — claim a homepage banner for <em>your</em> website. Free recognition. No cash prize. Early ranks are wide open.</p>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                <div class="glass border border-white/10 rounded-3xl p-6 text-center">
-                    <div class="text-4xl mb-2">🏆</div>
-                    <div class="text-lg font-semibold mb-1" style="color: var(--text-prize-title)" data-i18n="prize.card1_title">Homepage Banner</div>
-                    <div class="text-sm text-zinc-400" data-i18n="prize.card1_desc">Your website + custom banner featured on our homepage.</div>
-                </div>
-                <div class="glass border border-white/10 rounded-3xl p-6 text-center">
-                    <div class="text-4xl mb-2">✨</div>
-                    <div class="text-lg font-semibold mb-1" style="color: var(--text-prize-title)" data-i18n="prize.card2_title">Free recognition</div>
-                    <div class="text-sm text-zinc-400" data-i18n="prize.card2_desc">No cash payout — pure visibility &amp; social proof.</div>
-                </div>
-                <div class="glass border border-white/10 rounded-3xl p-6 text-center">
-                    <div class="text-4xl mb-2">📈</div>
-                    <div class="text-lg font-semibold mb-1" style="color: var(--text-prize-title)" data-i18n="prize.card3_title">Minimum referrals</div>
-                    <div class="text-sm text-zinc-400" data-i18n="prize.card3_desc">Unique, verified signups only (see threshold on site).</div>
-                </div>
             </div>
 
             <div class="mt-8 text-center">
@@ -471,10 +435,10 @@
                             <div>
                                 <div class="font-semibold">ViralRefer</div>
                                 <div class="text-xs text-zinc-400">Featured Partner</div>
-                                <div class="text-sm text-emerald-400 font-mono">yourwebsite.com</div>
+                                <div class="text-sm text-emerald-400 font-mono">Your site here · 30 days</div>
                             </div>
                         </div>
-                        <div class="mt-4 text-xs text-zinc-400">Your website featured on the ViralRefer homepage for 30 days.</div>
+                        <div class="mt-4 text-xs text-zinc-400">Verified #1 can claim this homepage slot. Recognition only. No cash prize.</div>
                     </div>
                 </div>
             </div>
@@ -552,10 +516,10 @@
                     </div>
                     <p id="leaderboard-description" class="mt-1" style="color: var(--text-muted, #a1a1aa)">Rankings from verified referrals only · test traffic excluded</p>
                     <p class="mt-2 text-sm text-emerald-300/95 font-medium tabular-nums" role="status" aria-live="polite">
-                        <span id="leaderboard-total-referrals">—</span>
-                        <span id="leaderboard-total-label"> verified referrals worldwide</span>
+                        <span id="leaderboard-total-referrals"></span>
+                        <span id="leaderboard-total-label">Board is open. #1 is winnable this week.</span>
                     </p>
-                    <p id="leaderboard-got-link-today" class="mt-1 text-sm text-amber-200/90 font-semibold" role="status" aria-live="polite">— people got a link today</p>
+                    <p id="leaderboard-got-link-today" class="mt-1 text-sm text-amber-200/90 font-semibold" role="status" aria-live="polite"></p>
                 </div>
                 <button id="demo-referral-btn" onclick="simulateNewReferral()" 
                         class="hidden px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-sm font-semibold flex items-center gap-2 transition-all">
@@ -589,9 +553,7 @@
                 <a id="footer-link-rules" href="/rules/" class="underline hover:text-white transition-colors" data-i18n="footer.rules_link">Official Rules &amp; Full Disclaimers</a> • 
                 <a id="footer-link-privacy" href="/privacy/" class="underline hover:text-white transition-colors" data-i18n="footer.privacy">Privacy Policy</a> • 
                 <a id="footer-link-terms" href="/terms/" class="underline hover:text-white transition-colors" data-i18n="footer.terms">Terms</a> •
-                <a id="footer-link-telegram-helper" href="https://t.me/myviralreferbot?start=site_footer" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors" title="ViralRefer helper bot on Telegram">Telegram helper</a> •
-                <a id="footer-link-affiliates" href="/go/affiliates/" class="underline hover:text-white transition-colors">Promote this site</a> •
-                <a href="#" onclick="openTimer(); return false;" class="underline hover:text-white transition-colors" title="Elite focus timer">Focus Timer</a>
+                <a id="footer-link-telegram-helper" href="https://t.me/myviralreferbot?start=site_footer" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors" title="ViralRefer helper bot on Telegram">Telegram helper</a>
             </div>
         </div>
     </footer>

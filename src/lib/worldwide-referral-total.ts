@@ -103,17 +103,21 @@ export function applyWorldwideReferralTotal(input: {
   }
 
   const lbTotal = document.getElementById('leaderboard-total-referrals');
-  if (lbTotal) lbTotal.textContent = numText;
-
   const lbLabel = document.getElementById('leaderboard-total-label');
-  if (lbLabel) {
-    lbLabel.textContent =
-      total === 1 ? 'verified referral worldwide' : 'verified referrals worldwide';
+  if (total <= 0 && unique <= 0) {
+    if (lbTotal) lbTotal.textContent = '';
+    if (lbLabel) lbLabel.textContent = 'Board is open. #1 is winnable this week.';
+  } else {
+    if (lbTotal) lbTotal.textContent = numText;
+    if (lbLabel) {
+      lbLabel.textContent =
+        total === 1 ? 'verified referral worldwide' : 'verified referrals worldwide';
+    }
   }
 
   const lbGotLink = document.getElementById('leaderboard-got-link-today');
   if (lbGotLink) {
-    lbGotLink.textContent = formatPeopleGotLinkToday(gotLink);
+    lbGotLink.textContent = gotLink > 0 ? formatPeopleGotLinkToday(gotLink) : '';
     lbGotLink.setAttribute('data-vr-got-link-today', String(gotLink));
   }
 

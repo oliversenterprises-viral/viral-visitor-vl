@@ -426,8 +426,7 @@ html:not([data-vr-has-link]) #hero-telegram-helper-btn {
 }
 
 
-/* Lumina first screen: nothing else above the fold on a cold land */
-html:not([data-vr-has-link]) #hero-global-proof,
+/* Lumina first screen: keep one proof line + banner mock; hide the rest */
 html:not([data-vr-has-link]) #hero-global-regions,
 html:not([data-vr-has-link]) #hero-referred-social-proof,
 html:not([data-vr-has-link]) #hero-referred-trust-pack,
@@ -2679,13 +2678,8 @@ html[data-vr-visitor-slim]:not([data-vr-slim-share-expanded]) #share-preview-wra
   display: none !important;
 }
 
-html[data-vr-visitor-slim][data-vr-slim-segment='direct']:not([data-vr-has-link]) #how,
-html[data-vr-visitor-slim][data-vr-slim-segment='direct']:not([data-vr-has-link]) [data-vr-slim-defer-until-link] {
+html[data-vr-visitor-slim][data-vr-slim-segment='direct']:not([data-vr-has-link]) [data-vr-slim-defer-until-link]:not(#how) {
   display: none !important;
-}
-
-html[data-vr-visitor-slim][data-vr-slim-segment='direct']:not([data-vr-has-link]) nav a[href='#how'] {
-  display: none;
 }
 
 html[data-vr-visitor-slim][data-vr-slim-segment='direct'] [data-vr-slim-redundant] {
@@ -2780,8 +2774,11 @@ html[data-vr-visitor-slim]:not([data-vr-slim-share-expanded]) #share-buttons-pan
   }
 }
 
-/* Defer “How it works” for all pre-link visitors (direct already handled above) */
-html:not([data-vr-has-link]):not([data-vr-referred-landing]) #how {
+/* Phase 1: How stays on the first session. Daily Crown / sprint / unlock wait for a friend lock. */
+html:not([data-vr-share-locked]) #community-unlock-meter,
+html:not([data-vr-share-locked]) #weekly-sprint-board,
+html:not([data-vr-share-locked]) #daily-crown-section,
+html:not([data-vr-share-locked]) #daily-champion-strip {
   display: none !important;
 }
 

@@ -84,7 +84,7 @@ export function buildPromoterDashboardLink(
 ): string {
   const normalized = normalizeAffiliateCode(code);
   const base = String(baseUrl || 'https://www.viralrefer.app').replace(/\/$/, '');
-  return `${base}/?promoter=${encodeURIComponent(normalized)}#become-promoter`;
+  return `${base}/go/affiliates/?promoter=${encodeURIComponent(normalized)}`;
 }
 
 export function getMyAffiliateCode(): string | null {

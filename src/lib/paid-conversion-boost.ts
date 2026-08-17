@@ -121,7 +121,7 @@ export function forceMobileGetLinkBar(): void {
   if (!bar || hasReferralLinkInUI()) return;
   bar.classList.remove('hidden');
   const label = bar.querySelector('span');
-  if (label) label.textContent = 'Get my free link — then share';
+  if (label) label.textContent = 'Get my referral link — then share';
 }
 
 function scrollHeroCtaIntoView(): void {
@@ -151,7 +151,7 @@ function showPaidGetLinkNudge(): void {
       <button type="button" class="vr-paid-getlink-nudge-close" aria-label="Dismiss">&times;</button>
       <p id="vr-paid-nudge-title" class="vr-paid-getlink-nudge-title">One tap to get your link</p>
       <p class="vr-paid-getlink-nudge-body">Free · no signup. Get your unique link, share it once, climb the live board.</p>
-      <button type="button" class="vr-paid-getlink-nudge-cta">Get my free link now</button>
+      <button type="button" class="vr-paid-getlink-nudge-cta">Get my referral link now</button>
       <button type="button" class="vr-paid-getlink-nudge-dismiss">Not now</button>
     </div>
   `;

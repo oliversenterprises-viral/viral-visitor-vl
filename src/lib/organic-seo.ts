@@ -41,7 +41,7 @@ export const HOMEPAGE_FAQ: readonly FaqEntry[] = [
   {
     question: 'How does the ViralRefer leaderboard work?',
     answer:
-      'Every person who signs up through your unique referral link counts toward your total. Share on X, WhatsApp, LinkedIn, Telegram, SMS, or anywhere — then watch your rank climb on the live board.',
+      'A friend opens your unique referral link and taps Get my link. Visiting or copying alone does not count.',
   },
 ] as const;
 

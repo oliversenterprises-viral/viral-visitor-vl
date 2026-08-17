@@ -28,12 +28,13 @@ export const en = {
   'hero.title_line1': 'Win the homepage.',
   'hero.title_accent': '#1 gets a banner for their site.',
   'hero.subtitle':
-    'Tap Get my link. A friend does the same. You climb.',
+    'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+  'hero.lock_rule': 'Your link counts when a friend taps Get my link.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',
   'hero.proof_no_email': 'No email',
   'hero.proof_live': 'Live free leaderboard',
-  'hero.cta': 'Get my link',
+  'hero.cta': 'Get my referral link',
   'hero.cta_secondary': 'See leaderboard',
   'hero.trust':
     'Free. No email. No cash. Recognition only.',
@@ -44,7 +45,7 @@ export const en = {
   'funnel.step1': '1. Get link',
   'funnel.step2': '2. Send it',
   'funnel.step3': '3. Climb',
-  'funnel.coach': 'Step 1: tap Get my free link.',
+  'funnel.coach': 'Step 1: tap Get my referral link.',
 
   'how.badge': '3 EASY STEPS',
   'how.title': 'How ViralRefer Works',
@@ -53,7 +54,7 @@ export const en = {
   'how.step1_desc': 'Tap the big button. You get your own free link in a few seconds. No email needed.',
   'how.step2_title': '2. Send your link',
   'how.step2_desc':
-    'Share it with friends (any app). Your link stays safe only if a friend uses it — see the lock rule below.',
+    'Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.',
   'how.step3_title': '3. Climb the board',
   'how.step3_desc':
     'When friends get their own free link through you, you move up. #1 can put their website on our homepage (no cash prize).',
@@ -110,7 +111,7 @@ export const en = {
   // Exit intent
   'exit.title': 'Wait — free worldwide link',
   'exit.body': 'One tap (~30 sec). Open worldwide. No signup. Get your link and climb the live board.',
-  'exit.cta': 'Get my free link',
+  'exit.cta': 'Get my referral link',
 
   // Coach (simple words)
   'coach.greet_direct':

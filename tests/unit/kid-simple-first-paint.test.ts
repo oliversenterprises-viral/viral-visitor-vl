@@ -21,17 +21,18 @@ describe('kid-simple first paint', () => {
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #prize/);
   });
 
-  it('first screen is prize-first with one Get my link CTA', () => {
+  it('first screen is one race with Get my referral link', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="daily-champion-strip"'));
     expect(hero).toMatch(/Win the homepage/);
     expect(hero).toMatch(/#1 gets a banner for their site/);
-    expect(hero).toMatch(/Tap Get my link\. A friend does the same\. You climb/);
+    expect(hero).toMatch(/Tap Get my link\. Send it\. When a friend taps Get my link, you climb/);
     expect(hero).toContain('id="hero-get-link-btn"');
-    expect(hero).toContain('Get my link');
+    expect(hero).toContain('Get my referral link');
     expect(hero).not.toContain('Get my free link');
     expect(hero).toMatch(/Free\. No email\. No cash\. Recognition only/);
-    expect(hero).not.toMatch(/Get a free link\./);
+    expect(hero).toContain('id="hero-banner-mock"');
+    expect(hero).toContain('Your site here');
     expect(hero).not.toContain('See leaderboard');
     expect(hero).not.toContain('id="hero-leaderboard-btn"');
     expect(hero).not.toContain('Telegram');
@@ -43,13 +44,13 @@ describe('kid-simple first paint', () => {
     expect(hero).not.toContain('We want affiliates');
   });
 
-  it('keeps promoter chrome below the fold in #become-promoter', () => {
+  it('keeps promoter chrome off the homepage', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="daily-champion-strip"'));
-    const promoter = html.slice(html.indexOf('id="become-promoter"'), html.indexOf('id="faq"'));
-    expect(hero).not.toContain('id="promoter-week-strip"');
-    expect(promoter).toContain('id="promoter-week-strip"');
-    expect(promoter).toContain('We want affiliates');
+    expect(html).not.toContain('id="become-promoter"');
+    expect(html).not.toContain('Get my promoter link');
+    expect(html).not.toContain('Become a promoter');
+    expect(html).not.toContain('href="#become-promoter"');
+    expect(html).not.toContain('Can I promote ViralRefer');
   });
 
   it('hides promoter chrome and unhydrated dash-proof on first viewport', () => {
@@ -59,6 +60,17 @@ describe('kid-simple first paint', () => {
     expect(css).toMatch(/#vr-verified-total:not\(\.vr-verified-total--ready\)/);
   });
 
+  it('keeps How visible on a cold land even after visitor-slim', () => {
+    const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
+    expect(css).not.toMatch(
+      /html\[data-vr-visitor-slim\]\[data-vr-slim-segment='direct'\]:not\(\[data-vr-has-link\]\) #how\s*,/,
+    );
+    expect(css).not.toMatch(
+      /html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-landing\]\) #how\s*\{/,
+    );
+    expect(css).toMatch(/html:not\(\[data-vr-share-locked\]\) #daily-crown-section/);
+  });
+
   it('keeps cash-bonus and owner password chrome out of first-paint HTML', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     expect(html).not.toContain('Cash bonus is tracked');
@@ -66,6 +78,8 @@ describe('kid-simple first paint', () => {
     expect(html).not.toContain('Type the owner password');
     expect(html).not.toContain('admin-owner-gate-modal');
     expect(html).not.toMatch(/>ADMIN</);
+    expect(html).not.toContain('ad-board');
+    expect(html).not.toContain('48h');
   });
 
   it('does not paint em-dash referral proof before hydration', () => {

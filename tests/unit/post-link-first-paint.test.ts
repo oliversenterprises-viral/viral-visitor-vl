@@ -20,9 +20,9 @@ describe('post-link first paint', () => {
     const hero = sliceById(html, 'hero-title', 'daily-champion-strip');
     expect(hero).toMatch(/Win the homepage/);
     expect(hero).toMatch(/#1 gets a banner for their site/);
-    expect(hero).toMatch(/Tap Get my link\. A friend does the same\. You climb/);
+    expect(hero).toMatch(/Tap Get my link\. Send it\. When a friend taps Get my link, you climb/);
     expect(hero).toContain('id="hero-get-link-btn"');
-    expect(hero).toContain('Get my link');
+    expect(hero).toContain('Get my referral link');
     expect(hero).not.toContain('See leaderboard');
     expect(hero).not.toContain('id="hero-leaderboard-btn"');
     expect(hero).not.toContain('Telegram');

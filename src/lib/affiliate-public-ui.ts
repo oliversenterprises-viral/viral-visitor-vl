@@ -64,13 +64,13 @@ function paintWeekStrip(board: BoardPayload): void {
       <strong>${escapeHtml(top.name)}</strong>
       <span class="text-zinc-400">· ${top.uniqueGetLinkVisitors} friend${top.uniqueGetLinkVisitors === 1 ? '' : 's'} got a link</span>
       <span class="text-zinc-500 text-[11px]">(promoter · not contest #1)</span>
-      <a href="#become-promoter" class="promoter-week-cta">Become a promoter</a>`;
+      <a href="/go/affiliates/" class="promoter-week-cta">Become a promoter</a>`;
     el.classList.remove('hidden');
     return;
   }
   el.innerHTML = `<span>We want promoters.</span>
     <span class="text-zinc-400">Send people here. When they tap Get my link, you earn ad credit.</span>
-    <a href="#become-promoter" class="promoter-week-cta">Become a promoter</a>`;
+    <a href="/go/affiliates/" class="promoter-week-cta">Become a promoter</a>`;
   el.classList.remove('hidden');
 }
 
@@ -169,7 +169,10 @@ export function initAffiliatePublicUi(): void {
     })
     .catch(() => paintWeekStrip({}));
 
-  if (new URLSearchParams(location.search).has('become') || location.hash === '#become-promoter') {
-    document.getElementById('become-promoter')?.scrollIntoView({ behavior: 'smooth' });
+  const params = new URLSearchParams(location.search);
+  if (params.has('become') || params.has('promoter') || location.hash === '#become-promoter') {
+    if (!location.pathname.startsWith('/go/affiliates')) {
+      location.replace(`/go/affiliates/${location.search || ''}`);
+    }
   }
 }
