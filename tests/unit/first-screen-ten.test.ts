@@ -52,6 +52,9 @@ describe('five-layer first screen (Helix order)', () => {
     expect(html).toContain('id="hero-ad-inventory"');
     expect(html).toContain('id="hero-ad-race"');
     expect(html).toContain('https://www.viralrefer.app/tools/');
+    expect(html).toContain('id="hero-slot-preview"');
+    expect(html).toContain('Free growth tools');
+    expect(html).toContain('Share generator');
     expect(html).toContain('id="post-link-tool"');
     expect(html).toContain('Paste it in any bio, story, or text');
     const share = read('src/lib/post-link-share.ts');

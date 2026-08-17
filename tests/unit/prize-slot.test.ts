@@ -39,6 +39,7 @@ describe('prize-slot (Helix Bet 2)', () => {
         <span id="hero-ad-kicker-kind">Live ad</span>
         <div id="hero-ad-mark">#1</div>
         <img id="hero-slot-thumb" class="hidden" alt="" />
+        <a id="hero-slot-preview" class="hero-ad-site-preview"></a>
         <a id="hero-slot-site" aria-disabled="true">Your site here</a>
         <div id="hero-slot-meta">${EMPTY_SLOT_META}</div>
         <p id="hero-ad-note"></p>
@@ -97,6 +98,8 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(document.getElementById('hero-ad-kicker-kind')?.textContent).toBe('Example ad');
     expect(document.getElementById('hero-ad-note')?.textContent).toBe(EXAMPLE_AD_NOTE);
     expect((document.getElementById('hero-slot-site') as HTMLAnchorElement).href).toContain('/tools/');
+    expect(document.getElementById('hero-slot-preview')?.classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('hero-slot-thumb')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('hero-ad-visit')?.classList.contains('hidden')).toBe(false);
 
     paintPrizeSlot(
@@ -115,6 +118,7 @@ describe('prize-slot (Helix Bet 2)', () => {
     );
     expect(document.getElementById('prize-slot-thumb')?.classList.contains('hidden')).toBe(false);
     expect(document.getElementById('hero-slot-thumb')?.classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('hero-slot-preview')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('hero-ad-visit')?.classList.contains('hidden')).toBe(false);
   });
 
@@ -173,6 +177,10 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).toContain(EXAMPLE_AD_NOTE);
     expect(html).toContain('Example ad');
     expect(html).toContain('/tools/');
+    expect(html).toContain('id="hero-slot-preview"');
+    expect(html).toContain('viralrefer.app/tools');
+    expect(html).toContain('Free growth tools');
+    expect(html).toContain('Share generator');
     expect(html).not.toMatch(/CURRENT #1 CAN CLAIM THIS/);
     expect(html).toContain(LOCKED_OG_DESCRIPTION);
     expect(html).not.toContain('Together: 0 / 100');

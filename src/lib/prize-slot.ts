@@ -213,17 +213,24 @@ export function paintPrizeSlot(slot: PrizeSlot): void {
   setText('hero-ad-kicker-kind', slot.kind === 'example' ? 'Example ad' : 'Live ad');
   setText('hero-ad-mark', slot.kind === 'example' ? 'Ex' : '#1');
 
+  const preview = document.getElementById('hero-slot-preview');
+  if (preview) {
+    const showPreview = slot.kind === 'example';
+    preview.classList.toggle('hidden', !showPreview);
+    preview.toggleAttribute('hidden', !showPreview);
+  }
+
   const thumbs = [
     document.getElementById('hero-slot-thumb') as HTMLImageElement | null,
     document.getElementById('prize-slot-thumb') as HTMLImageElement | null,
   ];
-  const showThumb = slot.kind === 'winner' || slot.kind === 'example';
+  const showThumb = slot.kind === 'winner';
   for (const thumb of thumbs) {
     if (!thumb) continue;
     const src = showThumb ? slot.imageUrl : undefined;
     if (src) {
       thumb.src = src;
-      thumb.alt = slot.kind === 'example' ? `${slot.siteName} example ad` : `${slot.siteName} homepage banner`;
+      thumb.alt = `${slot.siteName} homepage banner`;
       thumb.classList.remove('hidden');
     } else {
       thumb.removeAttribute('src');

@@ -38,6 +38,8 @@ describe('kid-simple first paint', () => {
     expect(hero).toContain('Example — this is what #1 gets');
     expect(hero).toContain('/tools/');
     expect(hero).toContain('Example ad');
+    expect(hero).toContain('Free growth tools');
+    expect(hero).toContain('Share generator');
     expect(hero).not.toMatch(/CURRENT #1/);
     expect(hero).not.toContain('yourwebsite.com');
     expect(hero).toContain('Early ranks are open. #1 puts their website on this page.');
