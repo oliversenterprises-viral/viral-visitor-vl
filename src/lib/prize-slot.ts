@@ -7,7 +7,7 @@ export const DEFAULT_MIN_REFERRALS_FOR_CLAIM = 10;
 export const WEEKLY_SIDE_WIDGET_MIN = 10;
 
 export const EMPTY_SLOT_NAME = 'Your site here';
-export const EMPTY_SLOT_META = 'Your site here · 30 days';
+export const EMPTY_SLOT_META = 'Your site here · 7 days';
 export const EMPTY_BOARD_LINE = 'Board is open. #1 is winnable this week.';
 export const DAILY_CROWN_NOT_BANNER = 'Not the homepage banner.';
 
@@ -22,9 +22,9 @@ export const LOCKED_OG_DESCRIPTION =
 export const PRIZE_FOMO_LINE = 'Early ranks are open. #1 puts their website on this page.';
 
 /** One trust sentence — say the prize once. Do not repeat “no cash” on the first screen. */
-export const ONE_PRIZE_SENTENCE = 'Verified #1 gets a 30-day banner for their website.';
+export const ONE_PRIZE_SENTENCE = 'Verified #1 gets a 7-day banner for their website.';
 
-export const AD_SLOT_KICKER = 'Live ad · this homepage · 30 days';
+export const AD_SLOT_KICKER = 'Live ad · this homepage · 7 days';
 export const EMPTY_AD_NOTE = 'This slot is empty. #1 puts their site here.';
 
 export const EXAMPLE_SLOT_HREF = 'https://www.viralrefer.app/tools/';

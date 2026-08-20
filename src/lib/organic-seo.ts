@@ -26,7 +26,7 @@ export const HOMEPAGE_FAQ: readonly FaqEntry[] = [
   {
     question: 'How do I get a ViralRefer referral link?',
     answer:
-      'Click "Get my referral link" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required.',
+      'Click "Get my link" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required.',
   },
   {
     question: 'Is ViralRefer free to use?',

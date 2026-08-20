@@ -21,7 +21,11 @@ export function getVisitorSlimSegment(loc: Location = location): VisitorSlimSegm
 
 export function hasReferralLinkInUI(): boolean {
   const input = document.getElementById('ref-link') as HTMLInputElement | null;
-  return !!input?.value?.trim();
+  if (input?.value?.trim()) return true;
+  const painted = document.getElementById('post-link-url')?.textContent?.trim() || '';
+  if (painted && /\/r\//i.test(painted)) return true;
+  // Get-my-link already succeeded — do not let a missing #ref-link un-hide the send screen.
+  return document.documentElement.hasAttribute('data-vr-post-link-one');
 }
 
 /** Sync html attrs used by visitor-slim CSS. */
@@ -32,7 +36,7 @@ export function refreshVisitorSlimState(): void {
   root.setAttribute('data-vr-slim-segment', getVisitorSlimSegment());
 
   if (hasReferralLinkInUI()) root.setAttribute('data-vr-has-link', '1');
-  else root.removeAttribute('data-vr-has-link');
+  else if (!root.hasAttribute('data-vr-post-link-one')) root.removeAttribute('data-vr-has-link');
 
   updateMoreShareButtonLabel();
 }

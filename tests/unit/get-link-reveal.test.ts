@@ -1,0 +1,167 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'fs';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+import { getMyReferralLinkInstant, resetReferralRecordingStateForTests } from '../../src/referral';
+import {
+  POST_LINK_ATTR,
+  POST_LINK_HEADING_READY,
+  revealReferralSection,
+  showPostLinkReady,
+} from '../../src/lib/post-link-share';
+import { SEND_NOW_LABEL } from '../../src/lib/referred-race';
+import {
+  hasReferralLinkInUI,
+  initVisitorSlim,
+  refreshVisitorSlimState,
+} from '../../src/lib/visitor-slim';
+import { refreshPublicClarityState } from '../../src/lib/public-clarity';
+import { initPaidConversionBoost } from '../../src/lib/paid-conversion-boost';
+import { captureUtmAttribution } from '../../src/lib/utm-attribution';
+import { initExitIntentRescue } from '../../src/lib/exit-intent-rescue';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const LINK = 'https://viralrefer.app/r/VIRAL-REVEAL1';
+
+function mountKidSimpleSendDom() {
+  document.documentElement.setAttribute('data-vr-kid-simple', '1');
+  document.body.innerHTML = `
+    <button id="hero-get-link-btn"><span>Get my link</span></button>
+    <div id="mobile-referral-cta" class="hidden"><span>Get my link</span></div>
+    <div id="referral-section" hidden class="hidden" style="display:none">
+      <input id="ref-link" value="" />
+      <div id="post-link-share" class="hidden" hidden>
+        <h2 id="post-link-heading">You're racing</h2>
+        <p id="post-link-url"></p>
+        <button type="button" id="post-link-primary"></button>
+        <button type="button" id="post-link-copy">Copy link</button>
+        <p id="post-link-helper"></p>
+        <p id="post-link-whisper" class="hidden" hidden></p>
+      </div>
+    </div>
+  `;
+}
+
+describe('Get my link reveal (last-night lock)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    resetReferralRecordingStateForTests();
+    document.documentElement.removeAttribute('data-vr-has-link');
+    document.documentElement.removeAttribute(POST_LINK_ATTR);
+    document.documentElement.removeAttribute('data-vr-kid-simple');
+    document.documentElement.removeAttribute('data-vr-visitor-slim');
+    document.documentElement.removeAttribute('data-vr-paid-landing');
+    delete document.documentElement.dataset.vrPaidBoostBound;
+    delete document.documentElement.dataset.vrExitBound;
+    mountKidSimpleSendDom();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    document.body.innerHTML = '';
+    document.getElementById('vr-paid-getlink-nudge')?.remove();
+    document.getElementById('vr-exit-rescue')?.remove();
+    document.documentElement.removeAttribute('data-vr-has-link');
+    document.documentElement.removeAttribute(POST_LINK_ATTR);
+    document.documentElement.removeAttribute('data-vr-kid-simple');
+    document.documentElement.removeAttribute('data-vr-visitor-slim');
+    document.documentElement.removeAttribute('data-vr-paid-landing');
+  });
+
+  it('first-paint HTML is prize-first with one Get my link verb', () => {
+    const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
+    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
+    expect(hero).toContain('Get my link');
+    expect(hero).not.toContain('Get my referral link');
+    expect(hero).toContain('7-day banner');
+    expect(html).toContain('id="ref-link"');
+    expect(html).toContain("You're racing");
+    expect(html).not.toContain('Your link is ready');
+    expect(html).toContain("rdt('init','a2_ir6sjdbsj2n4')");
+    expect(html).not.toContain('One tap to get your link');
+    expect(html).not.toContain('Wait — free worldwide link');
+    expect(html).not.toContain('LIVE WORLDWIDE');
+  });
+
+  it('CSS un-hides #referral-section after has-link / post-link', () => {
+    const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
+    expect(css).toMatch(/html\[data-vr-has-link\] #referral-section/);
+    expect(css).toMatch(/html\[data-vr-post-link-one\] #referral-section/);
+    expect(css).toMatch(/html\[data-vr-kid-simple\]:not\(\[data-vr-kid-more\]\) #vr-funnel-ticker/);
+  });
+
+  it('showPostLinkReady paints You\'re racing / Send it now / Copy link and reveals the section', () => {
+    showPostLinkReady(LINK);
+    const section = document.getElementById('referral-section');
+    expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
+    expect(document.documentElement.getAttribute(POST_LINK_ATTR)).toBe('1');
+    expect(section?.hidden).toBe(false);
+    expect(section?.classList.contains('hidden')).toBe(false);
+    expect(section?.style.display).not.toBe('none');
+    expect(document.getElementById('post-link-heading')?.textContent).toBe(POST_LINK_HEADING_READY);
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
+    expect(document.getElementById('post-link-primary')?.textContent).toBe(SEND_NOW_LABEL);
+    expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
+    expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
+    expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(2);
+  });
+
+  it('getMyReferralLinkInstant reveals the send screen and survives slim/clarity refresh', async () => {
+    initVisitorSlim();
+    await getMyReferralLinkInstant();
+
+    const section = document.getElementById('referral-section');
+    const input = document.getElementById('ref-link') as HTMLInputElement;
+    expect(input.value).toMatch(/\/r\/VIRAL-/i);
+    expect(hasReferralLinkInUI()).toBe(true);
+    expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
+    expect(section?.hidden).toBe(false);
+    expect(section?.style.display).not.toBe('none');
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
+    expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
+
+    refreshVisitorSlimState();
+    refreshPublicClarityState();
+    expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
+    expect(document.getElementById('referral-section')?.hidden).toBe(false);
+  });
+
+  it('reveal survives a missing #ref-link after a later slim refresh', () => {
+    showPostLinkReady(LINK);
+    document.getElementById('ref-link')?.remove();
+    initVisitorSlim();
+    refreshVisitorSlimState();
+    refreshPublicClarityState();
+    expect(hasReferralLinkInUI()).toBe(true);
+    expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
+    expect(document.getElementById('referral-section')?.hidden).toBe(false);
+  });
+
+  it('paid Reddit landings do not spawn interstitial popups', () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('location', {
+      search: '?utm_source=reddit&utm_medium=paid&utm_campaign=get_my_link',
+      pathname: '/',
+    });
+    captureUtmAttribution();
+    expect(initPaidConversionBoost(location as Location, window)).toBe(true);
+    initExitIntentRescue(window);
+    vi.advanceTimersByTime(30_000);
+    expect(document.getElementById('vr-paid-getlink-nudge')).toBeNull();
+    expect(document.getElementById('vr-exit-rescue')).toBeNull();
+    expect(document.getElementById('mobile-referral-cta')?.classList.contains('hidden')).toBe(true);
+  });
+
+  it('revealReferralSection dismisses leftover popups', () => {
+    const nudge = document.createElement('div');
+    nudge.id = 'vr-paid-getlink-nudge';
+    document.body.appendChild(nudge);
+    const exit = document.createElement('div');
+    exit.id = 'vr-exit-rescue';
+    document.body.appendChild(exit);
+    revealReferralSection();
+    expect(document.getElementById('vr-paid-getlink-nudge')).toBeNull();
+    expect(document.getElementById('vr-exit-rescue')).toBeNull();
+  });
+});

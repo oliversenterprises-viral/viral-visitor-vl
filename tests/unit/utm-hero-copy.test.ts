@@ -47,7 +47,7 @@ describe('utm-hero-copy', () => {
 
   it('resolveUtmHeroCopy returns tailored button for trafficadbar', () => {
     const copy = resolveUtmHeroCopy('trafficadbar', 'traffic_exchange');
-    expect(copy?.buttonLabel).toBe('Get my referral link');
+    expect(copy?.buttonLabel).toBe('Get my link');
     expect(copy?.titleLine1).toMatch(/Win the homepage/i);
     expect(copy?.titleLine1).not.toMatch(/\$10|Cash App/i);
   });

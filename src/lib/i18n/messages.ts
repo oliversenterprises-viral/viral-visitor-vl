@@ -21,7 +21,7 @@ export const en = {
   'nav.how': 'How',
   'nav.feature': 'Feature',
   'nav.board': 'Board',
-  'nav.get_link': 'Get link',
+  'nav.get_link': 'Get my link',
   'nav.lang': 'Language',
 
   'hero.badge': 'WORLDWIDE • FREE • NO SIGNUP',
@@ -34,10 +34,10 @@ export const en = {
   'hero.proof_age': '18+',
   'hero.proof_no_email': 'No email',
   'hero.proof_live': 'Live free leaderboard',
-  'hero.cta': 'Get my referral link',
+  'hero.cta': 'Get my link',
   'hero.cta_secondary': 'See leaderboard',
   'hero.trust':
-    'Verified #1 gets a 30-day banner for their website.',
+    'Verified #1 gets a 7-day banner for their website.',
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 
@@ -45,7 +45,7 @@ export const en = {
   'funnel.step1': '1. Get link',
   'funnel.step2': '2. Send it',
   'funnel.step3': '3. Climb',
-  'funnel.coach': 'Step 1: tap Get my referral link.',
+  'funnel.coach': 'Step 1: tap Get my link.',
 
   'how.badge': '3 EASY STEPS',
   'how.title': 'How ViralRefer Works',
@@ -57,12 +57,12 @@ export const en = {
     'Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.',
   'how.step3_title': '3. Climb the board',
   'how.step3_desc':
-    'When friends get their own free link through you, you move up. #1 puts their website on this homepage for 30 days.',
+    'When friends get their own free link through you, you move up. #1 puts their website on this homepage for 7 days.',
 
   'prize.badge': 'HOMEPAGE FEATURE',
   'prize.title': 'Homepage Banner Feature',
   'prize.subtitle':
-    'Verified #1 gets a 30-day banner for their website on this homepage.',
+    'Verified #1 gets a 7-day banner for their website on this homepage.',
   'prize.card1_title': 'Homepage Banner',
   'prize.card1_desc': 'Your website + custom banner featured on our homepage.',
   'prize.card2_title': 'Free recognition',
@@ -186,8 +186,8 @@ export const en = {
     'Early ranks are open. #1 puts their website on this page.',
 
   // Send mode — one primary action after get-link (main funnel fix)
-  'send_mode.primary_cta': 'Send to a friend now',
-  'send_mode.sticky_cta': 'Send to a friend now',
+  'send_mode.primary_cta': 'Send it now',
+  'send_mode.sticky_cta': 'Send it now',
   'send_mode.sticky_hint': 'A friend must tap Get my link. Copying is not enough.',
   'send_mode.status': 'Your link is ready. Send it to a friend.',
   'send_mode.sub':
@@ -203,7 +203,7 @@ export const en = {
   'share_abandon.title': "Don't leave without sending",
   'share_abandon.body':
     'Your free link is ready. Send it now — it locks when a friend taps Get my link. Copy alone never locks.',
-  'share_abandon.cta': 'Send to a friend now',
+  'share_abandon.cta': 'Send it now',
   'share_abandon.later': "I'll send in a few minutes",
 
   // Helix post-link status (quiet; visit/copy does not credit)

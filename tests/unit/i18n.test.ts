@@ -44,7 +44,7 @@ describe('i18n phase 1', () => {
   });
 
   it('t falls back to English for missing keys/locale', () => {
-    expect(t('hero.cta', 'en')).toMatch(/get my referral link/i);
+    expect(t('hero.cta', 'en')).toMatch(/get my link/i);
     expect(t('hero.cta', 'es')).toMatch(/enlace/i);
     expect(isLocale('es')).toBe(true);
     expect(isLocale('xx')).toBe(false);

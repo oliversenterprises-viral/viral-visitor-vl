@@ -87,7 +87,7 @@ const bannerHasContent = await bannerVisual.evaluate((el) => {
 });
 assert('banner rotation DOM populated', bannerHasContent, await bannerVisual.innerText().catch(() => ''));
 
-await page.click('text=Get my referral link');
+await page.click('text=Get my link');
 const refVal = await page.inputValue('#ref-link');
 assert('generate link updates #ref-link', /\/r\/VIRAL-/i.test(refVal), refVal);
 

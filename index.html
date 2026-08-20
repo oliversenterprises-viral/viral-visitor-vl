@@ -86,7 +86,7 @@
           {
             "@type": "Question",
             "name": "How do I get a ViralRefer referral link?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Click \"Get my referral link\" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required." }
+            "acceptedAnswer": { "@type": "Answer", "text": "Click \"Get my link\" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required." }
           },
           {
             "@type": "Question",
@@ -141,7 +141,7 @@
                 <a href="#leaderboard" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.board">Board</a>
                 <a href="/tools/" class="vr-nav-link hidden sm:inline text-zinc-400 hover:text-violet-400 transition-colors">Tools</a>
                 <button type="button" id="nav-get-link-btn" data-vr-zone="nav-get-link" class="sm:hidden px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl text-xs font-semibold min-h-[44px]" data-i18n="nav.get_link">
-                    Get link
+                    Get my link
                 </button>
                 <button id="admin-btn" class="hidden px-3 py-2 sm:px-6 sm:py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-3xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2 min-h-[44px] min-w-[44px] sm:min-w-0 justify-center" aria-label="Owner dashboard">
                     <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
@@ -177,7 +177,7 @@
                         <div class="hero-ad-slot-kicker flex items-center justify-between gap-2 px-3 py-1.5 bg-white/5 border-b border-white/10 text-[10px] uppercase tracking-wider font-semibold text-zinc-400">
                             <span id="hero-ad-kicker-kind">Example ad</span>
                             <span>viralrefer.app</span>
-                            <span>30 days</span>
+                            <span>7 days</span>
                         </div>
                         <img id="hero-slot-thumb" class="hidden w-full h-28 object-cover bg-zinc-900" alt="" />
                         <a id="hero-slot-preview" class="hero-ad-site-preview" href="https://www.viralrefer.app/tools/" target="_blank" rel="noopener noreferrer" aria-label="Open ViralRefer Tools example">
@@ -210,7 +210,7 @@
                 </div>
                 <div class="vr-hero-action">
                 <p id="hero-prize-one" class="mb-5 text-sm sm:text-base font-semibold text-amber-100/95 max-w-lg mx-auto leading-snug">
-                    Verified #1 gets a 30-day banner for their website.
+                    Verified #1 gets a 7-day banner for their website.
                 </p>
 
                 <!-- Global proof strip (static + live count) -->
@@ -233,7 +233,7 @@
                     <button id="hero-get-link-btn" data-vr-zone="hero-get-link" onclick="getMyReferralLinkInstant()" 
                             class="btn-primary hero-primary-cta w-full px-8 py-4 sm:px-12 sm:py-5 text-lg sm:text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/40 min-h-[52px]">
                         <i class="fa-solid fa-link" aria-hidden="true"></i>
-                        <span data-i18n="hero.cta">Get my referral link</span>
+                        <span data-i18n="hero.cta">Get my link</span>
                     </button>
                    
                 </div>
@@ -263,7 +263,7 @@
                 </script>
 
                 <p id="hero-trust-line" data-i18n="hero.trust" class="mt-3 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
-                    Verified #1 gets a 30-day banner for their website.
+                    Verified #1 gets a 7-day banner for their website.
                 </p>
                 <p id="hero-lock-rule" class="mt-2 text-sm text-zinc-400 max-w-lg mx-auto">
                     Your link counts when a friend taps Get my link.
@@ -375,8 +375,9 @@
                 <p id="post-link-status-line" class="post-link-status__line"></p>
 <p id="share-deadline-banner" class="post-link-status__clock hidden" hidden role="status" aria-live="polite"><span id="share-deadline-countdown"></span></p>
             </div>
+            <input id="ref-link" type="text" readonly hidden class="sr-only" aria-hidden="true" tabindex="-1" value="" />
             <div id="post-link-share" class="hidden post-link-share" hidden data-state="hidden" role="region" aria-label="Your referral link">
-                <h2 id="post-link-heading" class="post-link-share__heading" tabindex="-1">You're in.</h2>
+                <h2 id="post-link-heading" class="post-link-share__heading" tabindex="-1">You're racing</h2>
                 <p id="post-link-sub" class="post-link-share__sub">Send this. A friend must tap Get my link.</p>
                 <p id="post-link-clock" class="post-link-share__clock" hidden></p>
                 <p id="post-link-url" class="post-link-share__url" hidden></p>
@@ -450,7 +451,7 @@
                         <i class="fa-solid fa-trophy"></i>
                     </div>
                     <div id="how-step3-title" data-i18n="how.step3_title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">3. Climb &amp; get featured</div>
-                    <p id="how-it-works-step3" data-i18n="how.step3_desc" class="text-zinc-400 leading-relaxed">When friends get their own free link through you, you move up. #1 puts their website on this homepage for 30 days.</p>
+                    <p id="how-it-works-step3" data-i18n="how.step3_desc" class="text-zinc-400 leading-relaxed">When friends get their own free link through you, you move up. #1 puts their website on this homepage for 7 days.</p>
                 </div>
             </div>
         </div>
@@ -460,7 +461,7 @@
             <div class="space-y-5 text-left text-zinc-300">
                 <div>
                     <h3 class="font-semibold text-white">How do I get a ViralRefer referral link?</h3>
-                    <p class="text-zinc-400 mt-1">Tap Get my referral link. You receive a unique trackable link in about 30 seconds — free, no signup or email.</p>
+                    <p class="text-zinc-400 mt-1">Tap Get my link. You receive a unique trackable link in about 30 seconds — free, no signup or email.</p>
                 </div>
                 <div>
                     <h3 class="font-semibold text-white">Is ViralRefer free?</h3>
@@ -468,7 +469,7 @@
                 </div>
                 <div>
                     <h3 class="font-semibold text-white">What does #1 get?</h3>
-                    <p class="text-zinc-400 mt-1">Verified #1 with at least 10 friends who tapped Get my link can claim a 30-day homepage banner for their website. Recognition only — there is no cash prize.</p>
+                    <p class="text-zinc-400 mt-1">Verified #1 with at least 10 friends who tapped Get my link can claim a 7-day homepage banner for their website. Recognition only — there is no cash prize.</p>
                 </div>
                 <div>
                     <h3 class="font-semibold text-white">How does the board work?</h3>
@@ -485,7 +486,7 @@
                     <span id="prize-badge" data-i18n="prize.badge">HOMEPAGE FEATURE</span>
                 </div>
                 <h2 id="prize-title" data-i18n="prize.title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-prize-title)">Homepage Banner Feature</h2>
-                <p id="prize-subtitle" data-i18n="prize.subtitle" class="text-xl text-zinc-300 mt-2">Verified #1 gets a 30-day banner for their website on this homepage.</p>
+                <p id="prize-subtitle" data-i18n="prize.subtitle" class="text-xl text-zinc-300 mt-2">Verified #1 gets a 7-day banner for their website on this homepage.</p>
             </div>
 
             <div class="mt-8 text-center">
@@ -505,8 +506,8 @@
                             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-2xl ring-1 ring-white/20">#1</div>
                             <div>
                                 <a id="prize-slot-site" class="font-semibold text-white" aria-disabled="true">Your site here</a>
-                                <div class="text-xs text-zinc-400">30-day homepage slot</div>
-                                <div id="prize-slot-meta" class="text-sm text-emerald-400 font-mono">Your site here · 30 days</div>
+                                <div class="text-xs text-zinc-400">7-day homepage slot</div>
+                                <div id="prize-slot-meta" class="text-sm text-emerald-400 font-mono">Your site here · 7 days</div>
                             </div>
                         </div>
                         <p id="prize-threshold" class="mt-4 text-sm text-zinc-200">Verified #1 with at least <span id="min-referrals-value">10</span> friends who tapped Get my link can claim the banner.</p>
@@ -725,8 +726,8 @@ Full rules: https://www.viralrefer.app/rules/
     <div id="mobile-referral-cta" class="hidden md:hidden fixed bottom-0 inset-x-0 z-[800] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-zinc-950/95 border-t border-white/10 backdrop-blur-md">
         <button type="button" onclick="getMyReferralLinkInstant()"
                 class="btn-primary w-full py-4 text-base font-semibold flex items-center justify-center gap-2 shadow-lg shadow-violet-500/25 funnel-step-cta">
-            <i class="fa-solid fa-circle-1"></i>
-            <span>Step 1: Get my link</span>
+            <i class="fa-solid fa-link"></i>
+            <span>Get my link</span>
         </button>
     </div>
 

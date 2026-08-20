@@ -463,6 +463,16 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #prize 
   display: none !important;
 }
 
+/* Last-night lock: after Get my link the send screen must paint */
+html[data-vr-has-link] #referral-section,
+html[data-vr-post-link-one] #referral-section {
+  display: block !important;
+}
+
+html[data-vr-kid-simple]:not([data-vr-kid-more]) #vr-funnel-ticker {
+  display: none !important;
+}
+
 /* Kid-simple after get-link: extras stay available via More tools */
 html[data-vr-kid-simple]:not([data-vr-kid-more]) #viral-power-meter,
 html[data-vr-kid-simple]:not([data-vr-kid-more]) #growth-command-center,

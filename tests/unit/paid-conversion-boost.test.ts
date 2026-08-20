@@ -84,10 +84,10 @@ describe('paid-conversion-boost', () => {
     forceMobileGetLinkBar();
     const bar = document.getElementById('mobile-referral-cta');
     expect(bar?.classList.contains('hidden')).toBe(false);
-    expect(bar?.textContent).toMatch(/share/i);
+    expect(bar?.textContent).toMatch(/Get my link/i);
   });
 
-  it('initPaidConversionBoost marks paid landing and schedules nudge', () => {
+  it('initPaidConversionBoost marks paid landing without interstitial or sticky bar', () => {
     vi.useFakeTimers();
     vi.stubGlobal('location', {
       search: '?utm_source=reddit&utm_medium=paid',
@@ -99,13 +99,12 @@ describe('paid-conversion-boost', () => {
     expect(ok).toBe(true);
     expect(document.documentElement.getAttribute('data-vr-paid-landing')).toBe('1');
     expect(document.getElementById('mobile-referral-cta')?.classList.contains('hidden')).toBe(
-      false,
+      true,
     );
 
     vi.advanceTimersByTime(PAID_MOBILE_DWELL_MS + 50);
-    // coarse pointer may not match in jsdom — desktop path uses 8s
     vi.advanceTimersByTime(10_000);
-    expect(document.getElementById('vr-paid-getlink-nudge')).toBeTruthy();
+    expect(document.getElementById('vr-paid-getlink-nudge')).toBeNull();
   });
 
   it('initPaidConversionBoost skips non-paid traffic', () => {

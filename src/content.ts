@@ -236,7 +236,7 @@ export async function updatePublicContent(content: Record<string, unknown>) {
   apply('prize-banner-description', 'prize_banner_description');
   apply('cash-amount-value', 'cash_amount');
 
-  // Helix Bet 2: keep the 30-day slot mock. Featured banners paint site name + link.
+  // Helix Bet 2: keep the 7-day slot mock. Featured banners paint site name + link.
   const bannersRaw = content['banners'];
   const parsedBanners = parseBanners(bannersRaw);
   const selection = parsedBanners.length > 0 ? selectBanner(parsedBanners) : null;

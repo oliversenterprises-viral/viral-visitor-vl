@@ -14,7 +14,27 @@ import { showToast } from '../ui';
 
 export const POST_LINK_ATTR = 'data-vr-post-link-one';
 
+export const POST_LINK_HEADING_READY = "You're racing";
+
 export const POST_LINK_SHARE_TEXT = LOCKED_SHARE_TEXT;
+
+/** Un-hide the send screen after Get my link. Missing #ref-link must not keep it display:none. */
+export function revealReferralSection(): void {
+  const root = document.documentElement;
+  root.setAttribute(POST_LINK_ATTR, '1');
+  root.setAttribute('data-vr-has-link', '1');
+  const section = document.getElementById('referral-section');
+  if (section) {
+    section.hidden = false;
+    section.removeAttribute('hidden');
+    section.classList.remove('hidden');
+    if (section.style.display === 'none') section.style.removeProperty('display');
+  }
+  document.getElementById('vr-paid-getlink-nudge')?.remove();
+  document.getElementById('vr-exit-rescue')?.remove();
+  root.removeAttribute('data-vr-paid-nudge');
+  root.removeAttribute('data-vr-exit-rescue');
+}
 
 const IDS = {
   root: 'post-link-share',
@@ -98,7 +118,7 @@ function focusHeading(): void {
 
 export function showPostLinkLoading(): void {
   wireOnce();
-  document.documentElement.setAttribute(POST_LINK_ATTR, '1');
+  revealReferralSection();
   const root = el(IDS.root);
   if (!root) return;
   setState('loading');
@@ -124,7 +144,7 @@ export function showPostLinkLoading(): void {
 
 export function showPostLinkError(): void {
   wireOnce();
-  document.documentElement.setAttribute(POST_LINK_ATTR, '1');
+  revealReferralSection();
   const root = el(IDS.root);
   if (!root) return;
   setState('error');
@@ -160,15 +180,14 @@ export function showPostLinkReady(link: string): void {
     return;
   }
 
-  document.documentElement.setAttribute(POST_LINK_ATTR, '1');
-  document.documentElement.setAttribute('data-vr-has-link', '1');
+  revealReferralSection();
   const root = el(IDS.root);
   if (!root) return;
 
   wireOnce();
   setState('ready');
   const heading = el(IDS.heading);
-  if (heading) heading.textContent = 'Your link is ready';
+  if (heading) heading.textContent = POST_LINK_HEADING_READY;
   const url = el(IDS.url);
   if (url) {
     url.textContent = trimmed;
@@ -198,7 +217,10 @@ export function showPostLinkReady(link: string): void {
     whisper.classList.toggle('hidden', !pending);
     whisper.hidden = !pending;
   }
-  requestAnimationFrame(() => focusHeading());
+  requestAnimationFrame(() => {
+    focusHeading();
+    document.getElementById('referral-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 export function activatePostLinkShare(link: string): void {

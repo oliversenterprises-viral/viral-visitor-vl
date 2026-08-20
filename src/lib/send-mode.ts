@@ -52,7 +52,7 @@ function ensureStickySendBar(): HTMLElement {
              bg-gradient-to-r from-emerald-600 to-violet-600 hover:from-emerald-500 hover:to-violet-500
              shadow-lg shadow-emerald-900/30 ring-2 ring-emerald-300/35 active:scale-[0.99] transition">
       <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-      <span data-mobile-send-label>Send to a friend now</span>
+      <span data-mobile-send-label>Send it now</span>
     </button>
     <p class="text-[10px] text-center text-zinc-400 mt-1.5 leading-snug" data-mobile-send-hint>
       A friend must open your link and tap Get my link

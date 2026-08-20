@@ -4,7 +4,6 @@ import {
   fetchUniqueReferrerCount,
   fetchPublicGetLinkStats,
   fetchPublicRecentActivity,
-  fetchPublicFunnelTicker,
   fetchSiteContent,
   fetchMyReferralCount,
   fetchMyLeaderboardRank,
@@ -13,14 +12,7 @@ import {
 } from './lib/supabase';
 import { applyExistingReferralLink, syncMobileReferralCta } from './referral';
 import { buildActivityVelocityHtml, type PublicActivityRow } from './lib/public-activity';
-import {
-  ensureFunnelTickerDom,
-  mergeFunnelTickerRows,
-  publicActivityToTickerRows,
-  renderFunnelTickerRows,
-  setFunnelTickerVisible,
-  shouldShowFunnelTicker,
-} from './lib/funnel-ticker';
+import { setFunnelTickerVisible } from './lib/funnel-ticker';
 import { applyWorldwideReferralTotal } from './lib/worldwide-referral-total';
 import { renderHeroSocialProof } from './lib/referred-landing-social-proof';
 import { applyHeroStatsSubtext } from './lib/public-clarity';
@@ -134,29 +126,9 @@ function updateActivityVelocity(count: number): void {
   }
 }
 
-async function refreshFunnelTicker(activityRows?: PublicActivityRow[]): Promise<void> {
-  const myCode = getMyReferralCode();
-  if (!shouldShowFunnelTicker(myCode)) {
-    setFunnelTickerVisible(false);
-    return;
-  }
-  ensureFunnelTickerDom();
-  setFunnelTickerVisible(true);
-  try {
-    const tickerRows = await fetchPublicFunnelTicker(24);
-    let fallbackSource = activityRows;
-    if (!fallbackSource?.length) {
-      const activity = await fetchPublicRecentActivity(12);
-      fallbackSource = activity.rows;
-    }
-    const rankRows = publicActivityToTickerRows(
-      mergePublicActivityWithRankMoves(fallbackSource || [], getEphemeralRankMoves(), 8),
-    );
-    const merged = mergeFunnelTickerRows(tickerRows, rankRows, 24);
-    renderFunnelTickerRows(merged);
-  } catch {
-    /* non-fatal FOMO chrome */
-  }
+async function refreshFunnelTicker(_activityRows?: PublicActivityRow[]): Promise<void> {
+  // Last-night lock: no LIVE WORLDWIDE ticker over the hero.
+  setFunnelTickerVisible(false);
 }
 
 /** Call after GetReferralLink so the ticker appears immediately for new participants. */
@@ -438,7 +410,7 @@ async function renderMyStats(myCode: string | null): Promise<void> {
         <button onclick="getMyReferralLinkInstant()" 
                 class="px-6 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold rounded-2xl inline-flex items-center gap-2 transition-all active:scale-[0.985]">
           <i class="fa-solid fa-link"></i>
-          <span>Get my referral link</span>
+          <span>Get my link</span>
         </button>
       </div>
     `;

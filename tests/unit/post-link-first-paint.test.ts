@@ -22,7 +22,7 @@ describe('post-link first paint', () => {
     expect(hero).toMatch(/#1 gets a banner for their site/);
     expect(hero).toMatch(/Tap Get my link\. Send it\. When a friend taps Get my link, you climb/);
     expect(hero).toContain('id="hero-get-link-btn"');
-    expect(hero).toContain('Get my referral link');
+    expect(hero).toContain('Get my link');
     expect(hero).not.toContain('See leaderboard');
     expect(hero).not.toContain('id="hero-leaderboard-btn"');
     expect(hero).not.toContain('Telegram');

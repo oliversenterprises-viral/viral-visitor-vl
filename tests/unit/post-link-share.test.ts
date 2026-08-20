@@ -55,11 +55,11 @@ describe('post-link-share', () => {
   it('ready state is one primary + quiet copy, no second door', () => {
     showPostLinkReady(LINK);
     expect(document.documentElement.getAttribute(POST_LINK_ATTR)).toBe('1');
-    expect(document.getElementById('post-link-heading')?.textContent).toBe('Your link is ready');
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
     expect(document.getElementById('post-link-url')?.textContent).toBe(LINK);
     const primary = document.getElementById('post-link-primary') as HTMLButtonElement;
     expect(primary.hidden).toBe(false);
-    expect(primary.textContent).toBe('Send to a friend now');
+    expect(primary.textContent).toBe('Send it now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
     expect(document.getElementById('post-link-helper')?.textContent).toMatch(/Get my link/);
     expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(2);

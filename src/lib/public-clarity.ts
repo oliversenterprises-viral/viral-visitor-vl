@@ -83,7 +83,7 @@ export function refreshPublicClarityState(): void {
   markLandingSegment();
   const root = document.documentElement;
   if (hasReferralLinkInUI()) root.setAttribute('data-vr-has-link', '1');
-  else root.removeAttribute('data-vr-has-link');
+  else if (!root.hasAttribute('data-vr-post-link-one')) root.removeAttribute('data-vr-has-link');
 }
 
 function wireNavGetLink(): void {
