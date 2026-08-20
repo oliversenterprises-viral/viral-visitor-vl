@@ -167,8 +167,8 @@ describe('prize-slot (Helix Bet 2)', () => {
       template: stale,
       trackUtm: false,
     });
-    expect(copy).toContain('racing for the ViralRefer homepage');
-    expect(copy).toMatch(/beat me/i);
+    expect(copy).toContain('racing for the homepage this week');
+    expect(copy).toContain('Tap Get my link');
   });
 
   it('locks share + OG + post-link to the banner race sentence', () => {

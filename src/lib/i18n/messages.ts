@@ -136,7 +136,7 @@ export const en = {
 
   // Share (default template)
   'share.default':
-    "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me. {link}",
+    "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count. {link}",
 
   // One clear public rule (everywhere):
   // Friend must Get my link to lock · ~48h base · sharing can add time · copy never locks.
@@ -329,7 +329,7 @@ const es = dict({
   'coach.fallback':
     'Soy tu coach — pregunta por el enlace, copiar, compartir o el destacado en la web.',
   'share.default':
-    'Voy a por la portada de ViralRefer — el #1 pone un banner de su web. Consigue un enlace gratis e intenta ganarme. {link}',
+    "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count. {link}",
 });
 
 const fr = dict({

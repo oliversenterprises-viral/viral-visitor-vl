@@ -60,7 +60,7 @@ function buildOgSvg(code, canonicalUrl, rank, referrals) {
 
   const statsLine = referrals
     ? `${referrals} referral${referrals === 1 ? '' : 's'} and climbing`
-    : 'Free link in ~30 sec — scan QR to join';
+    : 'Tap Get my link. Visiting does not count.';
 
   const yJoin = rank != null ? 260 : 230;
   const yCode = rank != null ? 320 : 290;

@@ -37,6 +37,7 @@ import {
   shareCardFilename,
 } from '../lib/share-cards';
 import { incrementShareStreak } from '../lib/share-streak';
+import { LOCKED_OG_DESCRIPTION } from '../lib/prize-slot';
 import { refreshShareStreakUI, setShareAbVariant, setSharePreviewPlatform } from '../lib/share-ui';
 import { onShareReminderCompleted } from '../lib/share-reminder-ui';
 import { onViralLoopShare } from '../lib/viral-loop-ui';
@@ -399,8 +400,7 @@ export const generateXShareImage = () => {
       return;
     }
 
-    const safeXText =
-      'Live referral leaderboard on ViralRefer 🏆 Free · no signup · #1 can claim a homepage feature. Can you beat me? (See image for my link)';
+    const safeXText = LOCKED_OG_DESCRIPTION;
     openShareIntent(`https://x.com/intent/tweet?text=${encodeURIComponent(safeXText)}`);
 
     showToast('Share image downloaded — attach it to your X post (does not lock link yet)', 'info');

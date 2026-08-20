@@ -8,6 +8,7 @@ import {
   buildReferralCanonicalUrl,
   isSocialCrawler,
 } from '../../src/lib/og-meta';
+import { LOCKED_OG_DESCRIPTION, LOCKED_OG_TITLE } from '../../src/lib/prize-slot';
 
 describe('og-meta', () => {
   it('normalizeOgReferralCode validates VIRAL codes', () => {
@@ -17,11 +18,11 @@ describe('og-meta', () => {
     expect(normalizeOgReferralCode('VIRAL-!@#$')).toBeNull();
   });
 
-  it('buildReferralOgMeta personalizes title and description', () => {
+  it('buildReferralOgMeta uses the locked tap-Get-my-link title and description', () => {
     const meta = buildReferralOgMeta('VIRAL-ABC123');
     expect(meta).not.toBeNull();
-    expect(meta!.title).toContain('VIRAL-ABC123');
-    expect(meta!.description).toContain('VIRAL-ABC123');
+    expect(meta!.title).toBe(LOCKED_OG_TITLE);
+    expect(meta!.description).toBe(LOCKED_OG_DESCRIPTION);
     expect(meta!.canonicalUrl).toBe('https://www.viralrefer.app/r/VIRAL-ABC123');
     expect(meta!.image).toContain('/api/og-image?');
     expect(meta!.image).toContain('code=VIRAL-ABC123');

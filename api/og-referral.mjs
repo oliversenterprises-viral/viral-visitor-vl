@@ -27,8 +27,9 @@ function buildReferralOgMeta(rawCode, subpath = '') {
   return {
     code,
     canonicalUrl,
-    title: `Join ViralRefer via ${code} — Live Referral Leaderboard`,
-    description: `${code} invited you — free worldwide link in ~30 sec. #1 can claim a homepage feature.`,
+    title: 'Win the homepage. #1 gets a banner — tap Get my link',
+    description:
+      "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count.",
     image: `${SITE_ORIGIN}/api/og-image?code=${encodeURIComponent(code)}&format=png`,
   };
 }

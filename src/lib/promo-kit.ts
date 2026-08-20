@@ -13,6 +13,7 @@ import { showToast } from '../ui';
 import { trackViralLoopEvent } from './visitor-tracking';
 import { buildQrImageUrl } from './share-power';
 import { downloadCanvasPng } from './share-cards';
+import { LOCKED_OG_DESCRIPTION, LOCKED_SHARE_TEXT } from './prize-slot';
 
 /** Same-origin path preferred so canvas is not tainted when compositing. */
 const BANNER_PATH = '/assets/banners';
@@ -69,8 +70,8 @@ export function buildPromoCaptions(personalLink: string, code?: string): {
 } {
   const codeHint = code && /^VIRAL-/i.test(code) ? code.toUpperCase() : '';
   return {
-    short: `Get a free ViralRefer link in ~30 seconds. No signup. Climb the live board — #1 can claim a homepage feature.\n\n${personalLink}`,
-    long: `I locked my spot on ViralRefer (free worldwide referral leaderboard).\n\n• Free link in ~30 seconds\n• No email / no signup\n• #1 claims a homepage feature (no cash prize)\n• Open worldwide · 18+\n\nJoin with my link:\n${personalLink}`,
+    short: LOCKED_SHARE_TEXT.replace('{link}', personalLink),
+    long: LOCKED_SHARE_TEXT.replace('{link}', personalLink),
     xSafe: buildXSafePromoCaption(codeHint),
   };
 }
@@ -78,12 +79,7 @@ export function buildPromoCaptions(personalLink: string, code?: string): {
 /** Pure X caption builder — never includes domain or http(s) links. */
 export function buildXSafePromoCaption(code = ''): string {
   const codeLine = code ? `\nCode on image: ${code}` : '';
-  return (
-    `Live free referral leaderboard on ViralRefer 🏆` +
-    `\nNo signup · ~30 sec · #1 can claim a homepage feature (no cash prize).` +
-    `\nScan the QR on my image — or search Google: ViralRefer` +
-    codeLine
-  );
+  return `${LOCKED_OG_DESCRIPTION}${codeLine}`;
 }
 
 /** True if text is safe for X (no domain/url that triggers link filter). */
