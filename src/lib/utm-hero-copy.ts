@@ -3,7 +3,7 @@
  */
 
 import { isReferredLanding } from './funnel-conversion';
-import { applyHeroCopyToDom, type HeroCtaCopy } from './hero-cta-variant';
+import type { HeroCtaCopy } from './hero-cta-variant';
 import { getStoredUtmAttribution } from './utm-attribution';
 
 export type UtmHeroSegment =
@@ -125,7 +125,7 @@ export function applyUtmHeroCopy(): boolean {
   const copy = resolveUtmHeroCopy(utm?.source, utm?.medium);
   if (!copy) return false;
 
-  applyHeroCopyToDom(copy);
+  // 8:44 lock: same homepage for every visitor. Do not paint UTM variants.
   const src = String(utm?.source || '').trim().toLowerCase();
   if (src) document.documentElement.setAttribute('data-vr-utm-source', src);
   return true;

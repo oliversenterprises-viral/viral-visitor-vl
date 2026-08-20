@@ -377,6 +377,9 @@ export async function initApp() {
     initGrowthCommandCenter();
     initPostLinkShare();
     initPostLinkStatus();
+    void import('./lib/prize-slot')
+      .then((m) => m.initWeekRaceClock())
+      .catch(() => {});
     void import('./lib/promo-kit')
       .then((m) => m.initPromoKit())
       .catch(() => {});

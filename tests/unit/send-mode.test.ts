@@ -143,7 +143,7 @@ describe('send-mode (post–get-link bulletproof)', () => {
     expect(document.getElementById('share-first-strip')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('share-more-options-btn')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('kid-more-tools-btn')?.classList.contains('hidden')).toBe(true);
-    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing.");
     const primary = document.getElementById('post-link-primary');
     expect(primary?.textContent).toBe('Send it now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');

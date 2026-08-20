@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { describe, expect, it } from 'vitest';
-import { EXAMPLE_AD_NOTE, ONE_PRIZE_SENTENCE } from '../../src/lib/prize-slot';
+import { EMPTY_AD_NOTE, ONE_PRIZE_SENTENCE } from '../../src/lib/prize-slot';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -40,7 +40,7 @@ describe('five-layer first screen (Helix order)', () => {
     const html = read('index.html');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).toContain(ONE_PRIZE_SENTENCE);
-    expect(hero).toContain(EXAMPLE_AD_NOTE);
+    expect(hero).toContain(EMPTY_AD_NOTE);
     expect(hero).not.toMatch(/Free\. No email\. No cash/);
     expect(hero.toLowerCase()).not.toContain('no cash');
     expect(hero).not.toMatch(/CURRENT #1/);
@@ -48,16 +48,17 @@ describe('five-layer first screen (Helix order)', () => {
 
   it('prize pull: slot is an ad frame and the link is a pasteable tool', () => {
     const html = read('index.html');
-    expect(html).toContain('Example ad');
+    expect(html).toContain('This homepage');
     expect(html).toContain('viralrefer.app');
     expect(html).toContain('id="hero-ad-visit"');
     expect(html).toContain('id="hero-slot-thumb"');
     expect(html).toContain('id="hero-ad-inventory"');
     expect(html).toContain('id="hero-ad-race"');
-    expect(html).toContain('https://www.viralrefer.app/tools/');
+    expect(html).toContain('id="hero-week-clock"');
     expect(html).toContain('id="hero-slot-preview"');
-    expect(html).toContain('Free growth tools');
-    expect(html).toContain('Share generator');
+    expect(html).not.toContain('https://www.viralrefer.app/tools/');
+    expect(html).not.toContain('Free growth tools');
+    expect(html).not.toContain('Share generator');
     expect(html).toContain('id="post-link-tool"');
     expect(html).toContain('Paste it in any bio, story, or text');
     const share = read('src/lib/post-link-share.ts');

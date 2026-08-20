@@ -7,7 +7,7 @@ export const DEFAULT_MIN_REFERRALS_FOR_CLAIM = 10;
 export const WEEKLY_SIDE_WIDGET_MIN = 10;
 
 export const EMPTY_SLOT_NAME = 'Your site here';
-export const EMPTY_SLOT_META = 'Your site here · 30 days';
+export const EMPTY_SLOT_META = 'Your site here · 7 days';
 export const EMPTY_BOARD_LINE = 'Board is open. #1 is winnable this week.';
 export const DAILY_CROWN_NOT_BANNER = 'Not the homepage banner.';
 
@@ -22,10 +22,13 @@ export const LOCKED_OG_DESCRIPTION =
 export const PRIZE_FOMO_LINE = 'Early ranks are open. #1 puts their website on this page.';
 
 /** One trust sentence — say the prize once. Do not repeat “no cash” on the first screen. */
-export const ONE_PRIZE_SENTENCE = 'Verified #1 gets a 30-day banner for their website.';
+export const ONE_PRIZE_SENTENCE = "This week's top racer gets a 7-day banner for their website.";
 
-export const AD_SLOT_KICKER = 'Live ad · this homepage · 30 days';
-export const EMPTY_AD_NOTE = 'This slot is empty. #1 puts their site here.';
+export const AD_SLOT_KICKER = 'This homepage · viralrefer.app · 7 days';
+export const EMPTY_AD_NOTE = 'Empty right now. #1 this week puts their site here.';
+export const EMPTY_AD_KICKER_KIND = 'This homepage';
+export const EMPTY_AD_MARK = '#';
+export const WEEK_RACE_CLOCK_SUFFIX = 'Send now.';
 
 export const EXAMPLE_SLOT_HREF = 'https://www.viralrefer.app/tools/';
 export const EXAMPLE_SLOT_NAME = 'ViralRefer Tools';
@@ -167,7 +170,7 @@ export function resolvePrizeSlot(input: {
     (input.selected && isClaimedPrizeBanner(input.selected) ? input.selected : null) ||
     enabled[0] ||
     null;
-  if (!candidate) return examplePrizeSlot();
+  if (!candidate) return emptyPrizeSlot();
 
   const href = safeHttpUrl(candidate.redirectUrl || '');
   const host = href ? hostnameFromUrl(href) : null;
@@ -178,7 +181,7 @@ export function resolvePrizeSlot(input: {
   return {
     kind: 'winner',
     siteName: display,
-    meta: `${host || display} · 30 days`,
+    meta: `${host || display} · 7 days`,
     href,
     imageUrl: String(candidate.imageUrl || '').trim() || undefined,
   };
@@ -231,8 +234,16 @@ export function paintPrizeSlot(slot: PrizeSlot): void {
   const prize = document.getElementById('prize-banner-visual');
   if (prize) prize.setAttribute('data-vr-prize-slot', slot.kind);
 
-  setText('hero-ad-kicker-kind', slot.kind === 'example' ? 'Example ad' : 'Live ad');
-  setText('hero-ad-mark', slot.kind === 'example' ? 'Ex' : '#1');
+  setText(
+    'hero-ad-kicker-kind',
+    slot.kind === 'example' ? 'Example ad' : slot.kind === 'empty' ? EMPTY_AD_KICKER_KIND : 'Live ad',
+  );
+  setText(
+    'hero-ad-mark',
+    slot.kind === 'example' ? 'Ex' : slot.kind === 'empty' ? EMPTY_AD_MARK : '#1',
+  );
+  const mark = document.getElementById('hero-ad-mark');
+  if (mark) mark.classList.toggle('hero-ad-mark-empty', slot.kind === 'empty');
 
   const preview = document.getElementById('hero-slot-preview');
   if (preview) {
@@ -294,15 +305,43 @@ export function paintPrizePullProof(input: {
   }
   const race = document.getElementById('hero-ad-race');
   if (race) {
-    const line = formatUnlockRaceLine(
-      input.leaderReferrals ?? 0,
-      input.minForClaim,
-      input.kind || 'example',
-    );
-    race.textContent = line;
-    race.hidden = !line;
-    race.classList.toggle('hidden', !line);
+    // 8:44 slot footer is empty-note + live seen-count only.
+    race.textContent = '';
+    race.hidden = true;
+    race.classList.add('hidden');
   }
+}
+
+export function getUtcWeekEndMs(nowMs = Date.now()): number {
+  const now = new Date(nowMs);
+  const day = now.getUTCDay();
+  const add = day === 0 ? 1 : 8 - day;
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + add, 0, 0, 0, 0);
+}
+
+export function formatWeekRaceClock(nowMs = Date.now()): string {
+  let remain = Math.max(0, getUtcWeekEndMs(nowMs) - nowMs);
+  const days = Math.floor(remain / 86_400_000);
+  remain -= days * 86_400_000;
+  const hours = Math.floor(remain / 3_600_000);
+  remain -= hours * 3_600_000;
+  const mins = Math.floor(remain / 60_000);
+  return `This week's race ends in ${days}d ${hours}h ${mins}m. ${WEEK_RACE_CLOCK_SUFFIX}`;
+}
+
+export function paintWeekRaceClock(nowMs = Date.now()): void {
+  const el = document.getElementById('hero-week-clock');
+  if (!el) return;
+  el.textContent = formatWeekRaceClock(nowMs);
+}
+
+export function initWeekRaceClock(): void {
+  paintWeekRaceClock();
+  if (typeof window === 'undefined') return;
+  const root = document.documentElement;
+  if (root.dataset.vrWeekClock === '1') return;
+  root.dataset.vrWeekClock = '1';
+  window.setInterval(() => paintWeekRaceClock(), 30_000);
 }
 
 export function paintPrizeThreshold(min: number): void {

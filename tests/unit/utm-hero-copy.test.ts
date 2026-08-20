@@ -52,15 +52,21 @@ describe('utm-hero-copy', () => {
     expect(copy?.titleLine1).not.toMatch(/\$10|Cash App/i);
   });
 
-  it('applyUtmHeroCopy paints DOM from stored UTM', () => {
+  it('applyUtmHeroCopy tags UTM but does not overwrite the 8:44 homepage', () => {
+    document.getElementById('hero-title-line1')!.textContent = 'Win the homepage.';
+    document.getElementById('hero-title-accent')!.textContent = 'this page.';
+    document.querySelector('#hero-get-link-btn span')!.textContent = 'Get my referral link';
     vi.stubGlobal('location', {
       search: '?utm_source=trafficadbar&utm_medium=traffic_exchange',
       pathname: '/',
     });
     captureUtmAttribution();
     expect(applyUtmHeroCopy()).toBe(true);
-    expect(document.getElementById('hero-title-line1')?.textContent).toMatch(/Win the homepage/i);
-    expect(document.getElementById('hero-title-line1')?.textContent).not.toMatch(/\$10|Cash App/i);
+    expect(document.getElementById('hero-title-line1')?.textContent).toBe('Win the homepage.');
+    expect(document.getElementById('hero-title-accent')?.textContent).toBe('this page.');
+    expect(document.querySelector('#hero-get-link-btn span')?.textContent).toBe(
+      'Get my referral link',
+    );
     expect(document.documentElement.getAttribute('data-vr-utm-source')).toBe('trafficadbar');
   });
 

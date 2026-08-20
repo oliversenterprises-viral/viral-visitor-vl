@@ -9,7 +9,7 @@ import { paintPrizePullProof, type PrizeSlotKind } from './prize-slot';
 function slotKindFromDom(): PrizeSlotKind {
   const raw = document.getElementById('hero-banner-mock')?.getAttribute('data-vr-prize-slot');
   if (raw === 'winner' || raw === 'empty' || raw === 'example') return raw;
-  return 'example';
+  return 'empty';
 }
 
 export async function initPrizePullProof(): Promise<void> {

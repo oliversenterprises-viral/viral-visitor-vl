@@ -38,8 +38,10 @@ function mountKidSimpleSendDom() {
         <p id="share-deadline-banner" class="hidden" hidden><span id="share-deadline-countdown"></span></p>
       </div>
       <div id="post-link-share" class="hidden" hidden>
-        <h2 id="post-link-heading">You're racing</h2>
+        <h2 id="post-link-heading">You're racing.</h2>
+        <p id="post-link-sub">Send it now. A friend must tap Get my link — that's how you climb.</p>
         <p id="post-link-url"></p>
+        <p id="post-link-tool">This is your public link. Paste it in any bio, story, or text.</p>
         <button type="button" id="post-link-primary"></button>
         <button type="button" id="post-link-copy">Copy link</button>
         <p id="post-link-helper"></p>
@@ -76,14 +78,26 @@ describe('Get my link reveal (last-night lock)', () => {
     document.documentElement.removeAttribute('data-vr-paid-landing');
   });
 
-  it('first-paint HTML is the 8:44 homepage: one Get my link, 30-day prize', () => {
+  it('first-paint HTML is the 8:44 homepage: one Get my referral link, 7-day slot', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
-    expect(hero).toContain('Get my link');
-    expect(hero).not.toContain('Get my referral link');
-    expect(hero).toContain('30-day banner');
+    expect(hero).toContain('Win the homepage.');
+    expect(hero).toContain('#1 puts their site on');
+    expect(hero).toContain('this page.');
+    expect(hero).toContain(
+      'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
+    );
+    expect(hero).toContain('Get my referral link');
+    expect(hero).toContain("This week's top racer gets a 7-day banner for their website.");
+    expect(hero).toContain('id="hero-week-clock"');
+    expect(hero).toContain('Your site here · 7 days');
+    expect(hero).toContain('Empty right now. #1 this week puts their site here.');
+    expect(hero).not.toContain('Example ad');
+    expect(hero).not.toContain('ViralRefer Tools');
+    expect(html).toContain('See how it works');
     expect(html).toContain('id="ref-link"');
-    expect(html).toContain("You're racing");
+    expect(html).toContain("You're racing.");
+    expect(html).toContain("Send it now. A friend must tap Get my link — that's how you climb.");
     expect(html).not.toContain('id="post-link-status"');
     expect(html).not.toContain('Your link is ready');
     expect(html).not.toContain('Send to a friend now');
@@ -92,7 +106,7 @@ describe('Get my link reveal (last-night lock)', () => {
       readFileSync(resolve(ROOT, 'src/lib/post-link-share.ts'), 'utf8'),
       readFileSync(resolve(ROOT, 'src/lib/referred-race.ts'), 'utf8'),
     ].join('\n');
-    expect(sendSrc).toContain("You're racing");
+    expect(sendSrc).toContain("You're racing.");
     expect(sendSrc).toContain('Send it now');
     expect(sendSrc).not.toContain('Your link is ready');
     expect(sendSrc).not.toContain('Send to a friend now');
@@ -118,7 +132,10 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(section?.classList.contains('hidden')).toBe(false);
     expect(section?.style.display).not.toBe('none');
     expect(document.getElementById('post-link-heading')?.textContent).toBe(POST_LINK_HEADING_READY);
-    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing.");
+    expect(document.getElementById('post-link-sub')?.textContent).toBe(
+      "Send it now. A friend must tap Get my link — that's how you climb.",
+    );
     expect(document.getElementById('post-link-primary')?.textContent).toBe(SEND_NOW_LABEL);
     expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
@@ -140,7 +157,7 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
     expect(section?.hidden).toBe(false);
     expect(section?.style.display).not.toBe('none');
-    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing.");
     expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
     expect(document.getElementById('referral-section')?.textContent).not.toContain('Your link is ready');
@@ -166,7 +183,7 @@ describe('Get my link reveal (last-night lock)', () => {
     // Live Wa() then async-imports renderPostLinkStatus after ready.
     renderPostLinkStatus();
 
-    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing.");
     expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
     expect(document.getElementById('post-link-status')).toBeNull();
@@ -220,7 +237,7 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(document.documentElement.getAttribute(POST_LINK_ATTR)).toBe('1');
     expect(document.getElementById('referral-section')?.hidden).toBe(false);
     expect(document.getElementById('referral-section')?.style.display).not.toBe('none');
-    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing.");
     expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
     expect(document.getElementById('referral-section')?.textContent).not.toContain('Your link is ready');

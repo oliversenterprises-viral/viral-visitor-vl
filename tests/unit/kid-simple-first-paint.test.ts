@@ -23,23 +23,26 @@ describe('kid-simple first paint', () => {
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #prize/);
   });
 
-  it('first screen is one race with Get my link', () => {
+  it('first screen is one race with Get my referral link', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).toMatch(/Win the homepage/);
-    expect(hero).toMatch(/#1 gets a banner for their site/);
-    expect(hero).toMatch(/Tap Get my link\. Send it\. When a friend taps Get my link, you climb/);
+    expect(hero).toMatch(/#1 puts their site on/);
+    expect(hero).toContain('this page.');
+    expect(hero).toMatch(
+      /Tap Get my link\. Send it\. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days/,
+    );
     expect(hero).toContain('id="hero-get-link-btn"');
-    expect(hero).toContain('Get my link');
+    expect(hero).toContain('Get my referral link');
     expect(hero).not.toContain('Get my free link');
-    expect(hero).toContain('Verified #1 gets a 30-day banner for their website.');
+    expect(hero).toContain("This week's top racer gets a 7-day banner for their website.");
     expect(hero).toContain('id="hero-banner-mock"');
-    expect(hero).toContain('ViralRefer Tools');
-    expect(hero).toContain('Example — this is what #1 gets');
-    expect(hero).toContain('/tools/');
-    expect(hero).toContain('Example ad');
-    expect(hero).toContain('Free growth tools');
-    expect(hero).toContain('Share generator');
+    expect(hero).toContain('Your site here');
+    expect(hero).toContain('Your site here · 7 days');
+    expect(hero).toContain('Empty right now. #1 this week puts their site here.');
+    expect(hero).not.toContain('ViralRefer Tools');
+    expect(hero).not.toContain('Example ad');
+    expect(hero).not.toContain('Free growth tools');
     expect(hero).not.toMatch(/CURRENT #1/);
     expect(hero).not.toContain('yourwebsite.com');
     expect(hero).toContain('Early ranks are open. #1 puts their website on this page.');
