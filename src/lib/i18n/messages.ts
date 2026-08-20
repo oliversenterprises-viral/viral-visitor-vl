@@ -26,15 +26,15 @@ export const en = {
 
   'hero.badge': 'WORLDWIDE • FREE • NO SIGNUP',
   'hero.title_line1': 'Win the homepage.',
-  'hero.title_accent': '#1 gets a banner for their site.',
+  'hero.title_accent': 'this page.',
   'hero.subtitle':
-    'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+    'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
   'hero.lock_rule': 'Your link counts when a friend taps Get my link.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',
   'hero.proof_no_email': 'No email',
   'hero.proof_live': 'Live free leaderboard',
-  'hero.cta': 'Get my link',
+  'hero.cta': 'Get my referral link',
   'hero.cta_secondary': 'See leaderboard',
   'hero.trust':
     'Verified #1 gets a 30-day banner for their website.',

@@ -20,18 +20,20 @@ export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
   control: {
     badge: 'WORLDWIDE • FREE • NO SIGNUP',
     titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+    titleAccent: 'this page.',
+    subtitle:
+      'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
     trustLine: 'Free. No email. No cash. Recognition only.',
-    buttonLabel: 'Get my link',
+    buttonLabel: 'Get my referral link',
   },
   prize: {
     badge: 'WORLDWIDE • FREE • NO SIGNUP',
     titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+    titleAccent: 'this page.',
+    subtitle:
+      'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
     trustLine: 'Free. No email. No cash. Recognition only.',
-    buttonLabel: 'Get my link',
+    buttonLabel: 'Get my referral link',
   },
 };
 
@@ -48,14 +50,19 @@ function setButtonLabel(buttonId: string, label: string): void {
   else btn.textContent = label;
 }
 
-/** Paint hero copy onto the public homepage (direct landings only). */
+/** Paint only the locked 8:44 homepage lines. No extra first-paint copy. */
 export function applyHeroCopyToDom(copy: HeroCtaCopy): void {
-  if (copy.badge) setText('hero-badge', copy.badge);
   setText('hero-title-line1', copy.titleLine1);
   setText('hero-title-accent', copy.titleAccent);
   setText('hero-subtitle', copy.subtitle);
-  setText('hero-trust-line', copy.trustLine);
   setButtonLabel('hero-get-link-btn', copy.buttonLabel);
+}
+
+/** Re-assert the 8:44 homepage after CMS / i18n / A/B. Do not invent new lines. */
+export function lock844HomepageCopy(): void {
+  if (isReferredLanding()) return;
+  applyHeroCopyToDom(HERO_CTA_COPY.control);
+  setText('hero-prize-one', "This week's top racer gets a 7-day banner for their website.");
 }
 
 /** Apply feature-variant hero copy on direct landings (control leaves CMS/static defaults). */

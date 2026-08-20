@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   HERO_CTA_COPY,
   applyHeroCtaVariant,
+  lock844HomepageCopy,
 } from '../../src/lib/hero-cta-variant';
 import { setOptimizerFlags } from '../../src/lib/optimizer-flags';
 
@@ -41,6 +42,29 @@ describe('hero-cta-variant', () => {
     setOptimizerFlags({ hero_cta_variant: 'control' });
     applyHeroCtaVariant();
     expect(line1?.textContent).toBe('CMS headline');
+  });
+
+  it('lock844HomepageCopy restores the two-screen homepage after CMS overwrite', () => {
+    document.getElementById('hero-title-line1')!.textContent = 'CMS headline';
+    document.getElementById('hero-title-accent')!.textContent = 'CMS accent';
+    document.getElementById('hero-subtitle')!.textContent = 'CMS sub';
+    document.querySelector('#hero-get-link-btn span')!.textContent = 'CMS cta';
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<p id="hero-prize-one">CMS prize</p>',
+    );
+    lock844HomepageCopy();
+    expect(document.getElementById('hero-title-line1')?.textContent).toBe('Win the homepage.');
+    expect(document.getElementById('hero-title-accent')?.textContent).toBe('this page.');
+    expect(document.getElementById('hero-subtitle')?.textContent).toBe(
+      HERO_CTA_COPY.control.subtitle,
+    );
+    expect(document.querySelector('#hero-get-link-btn span')?.textContent).toBe(
+      'Get my referral link',
+    );
+    expect(document.getElementById('hero-prize-one')?.textContent).toBe(
+      "This week's top racer gets a 7-day banner for their website.",
+    );
   });
 
   it('skips on referred landings', () => {

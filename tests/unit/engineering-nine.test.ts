@@ -38,18 +38,17 @@ describe('engineering 9 locks', () => {
     expect(warnAfter).not.toMatch(/'warn'/);
   });
 
-  it('has-link may hide the Get-link button but must keep the example ad visible', () => {
+  it('has-link may hide the Get-link button but must keep the prize slot visible', () => {
     const css = read('src/style.css');
     expect(css).toMatch(/html\[data-vr-has-link\] #hero-get-link-btn/);
-    const keepAt = css.indexOf('Keep the example / claimed ad visible');
+    const keepAt = css.indexOf('Keep the prize slot visible after Get my link');
     expect(keepAt).toBeGreaterThan(0);
     expect(css.slice(keepAt, keepAt + 400)).toMatch(/#hero-banner-mock/);
     expect(css.slice(keepAt, keepAt + 400)).toMatch(/display: block !important/);
     const hideBlock = css.slice(
       css.indexOf('/* After Get my link: the only job is send */'),
-      css.indexOf('/* Keep the example / claimed ad visible'),
+      css.indexOf('/* Keep the prize slot visible after Get my link'),
     );
     expect(hideBlock).not.toMatch(/#hero-banner-mock/);
-    expect(hideBlock).not.toMatch(/#hero-prize-one/);
   });
 });

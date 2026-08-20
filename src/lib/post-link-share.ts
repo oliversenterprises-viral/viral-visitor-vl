@@ -10,12 +10,13 @@ import { SEND_NOW_LABEL } from './referred-race';
 import { buildNativeShareData } from './share-power';
 import { recordShareEvent } from './record-share';
 import { trackVisitorFunnel } from './visitor-tracking';
-import { isSharePendingLocal } from './share-first-ui';
 import { showToast } from '../ui';
 
 export const POST_LINK_ATTR = 'data-vr-post-link-one';
 
-export const POST_LINK_HEADING_READY = "You're racing";
+export const POST_LINK_HEADING_READY = "You're racing.";
+export const POST_LINK_SUB_READY =
+  "Send it now. A friend must tap Get my link — that's how you climb.";
 
 export const POST_LINK_SHARE_TEXT = LOCKED_SHARE_TEXT;
 
@@ -190,6 +191,14 @@ export function showPostLinkReady(link: string): void {
   setState('ready');
   const heading = el(IDS.heading);
   if (heading) heading.textContent = POST_LINK_HEADING_READY;
+  const sub = document.getElementById('post-link-sub');
+  if (sub) sub.textContent = POST_LINK_SUB_READY;
+  const clock = document.getElementById('post-link-clock');
+  if (clock) {
+    clock.textContent = '';
+    clock.hidden = true;
+    clock.setAttribute('hidden', '');
+  }
   const url = el(IDS.url);
   if (url) {
     url.textContent = trimmed;
@@ -211,13 +220,16 @@ export function showPostLinkReady(link: string): void {
     copy.hidden = false;
   }
   const helper = el(IDS.helper);
-  if (helper) helper.textContent = 'A friend opens it and taps Get my link. That’s what counts.';
+  if (helper) {
+    helper.textContent = '';
+    helper.hidden = true;
+    helper.setAttribute('hidden', '');
+  }
   const whisper = el(IDS.whisper);
   if (whisper) {
-    const pending = isSharePendingLocal();
-    whisper.textContent = pending ? 'A friend needs to tap Get my link to lock it.' : '';
-    whisper.classList.toggle('hidden', !pending);
-    whisper.hidden = !pending;
+    whisper.textContent = '';
+    whisper.classList.add('hidden');
+    whisper.hidden = true;
   }
   requestAnimationFrame(() => {
     focusHeading();

@@ -19,10 +19,13 @@ function mount() {
     <input id="ref-link" value="" />
     <div id="post-link-share" class="hidden" hidden>
       <h2 id="post-link-heading"></h2>
+      <p id="post-link-sub"></p>
+      <p id="post-link-clock" hidden></p>
       <p id="post-link-url" tabindex="0"></p>
       <button type="button" id="post-link-primary"></button>
       <button type="button" id="post-link-copy">Copy link</button>
       <p id="post-link-helper"></p>
+      <p id="post-link-tool"></p>
       <p id="post-link-whisper" class="hidden" hidden></p>
     </div>
   `;
@@ -55,13 +58,20 @@ describe('post-link-share', () => {
   it('ready state is one primary + quiet copy, no second door', () => {
     showPostLinkReady(LINK);
     expect(document.documentElement.getAttribute(POST_LINK_ATTR)).toBe('1');
-    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing.");
+    expect(document.getElementById('post-link-sub')?.textContent).toBe(
+      "Send it now. A friend must tap Get my link — that's how you climb.",
+    );
+    expect((document.getElementById('post-link-clock') as HTMLElement).hidden).toBe(true);
     expect(document.getElementById('post-link-url')?.textContent).toBe(LINK);
+    expect(document.getElementById('post-link-tool')?.textContent).toContain(
+      'This is your public link. Paste it in any bio, story, or text.',
+    );
     const primary = document.getElementById('post-link-primary') as HTMLButtonElement;
     expect(primary.hidden).toBe(false);
     expect(primary.textContent).toBe('Send it now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
-    expect(document.getElementById('post-link-helper')?.textContent).toMatch(/Get my link/);
+    expect(document.getElementById('post-link-helper')?.textContent).toBe('');
     expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(2);
   });
 

@@ -10,6 +10,7 @@
  */
 
 import { isEmbedMode } from './embed-mode';
+import { dismissFirstVisitOverlays } from './exit-intent-rescue';
 import { isReferredLanding, highlightHeroGetLink } from './funnel-conversion';
 import { getStoredUtmAttribution } from './utm-attribution';
 import { hasReferralLinkInUI } from './visitor-slim';
@@ -125,7 +126,8 @@ export function initPaidConversionBoost(
   root.setAttribute(PAID_ATTR, '1');
   root.dataset.vrPaidBoostBound = '1';
 
-  // Last-night lock: prize-first homepage, one Get my link, no interstitial.
+  // 8:44 lock: no first-visit paid-getlink modal. Homepage CTA stays.
+  dismissFirstVisitOverlays(win.document);
   highlightHeroGetLink();
   win.setTimeout(() => scrollHeroCtaIntoView(), 350);
 

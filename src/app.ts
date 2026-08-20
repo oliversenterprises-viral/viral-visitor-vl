@@ -23,7 +23,7 @@ import {
   isReferredLanding,
   type FunnelStep,
 } from './lib/funnel-conversion';
-import { applyHeroCtaVariant } from './lib/hero-cta-variant';
+import { applyHeroCtaVariant, lock844HomepageCopy } from './lib/hero-cta-variant';
 import { reapplyI18n } from './lib/i18n';
 import { applyUtmHeroCopy } from './lib/utm-hero-copy';
 import { syncFunnelGuide } from './lib/funnel-guide';
@@ -315,9 +315,11 @@ export async function loadSiteContent() {
       /* non-fatal */
     }
 
-    // i18n rewrites data-i18n nodes — re-assert referred micro-flow copy last
+    // i18n rewrites data-i18n nodes — re-assert referred last, else lock 8:44
     if (isReferredLanding()) {
       applyReferredLandingOverrides();
+    } else {
+      lock844HomepageCopy();
     }
 
     const guideStep = document.documentElement.getAttribute('data-vr-funnel-guide-step');
@@ -333,6 +335,8 @@ export async function loadSiteContent() {
     }
     if (isReferredLanding()) {
       applyReferredLandingOverrides();
+    } else {
+      lock844HomepageCopy();
     }
   }
 }
@@ -377,6 +381,9 @@ export async function initApp() {
     initGrowthCommandCenter();
     initPostLinkShare();
     initPostLinkStatus();
+    void import('./lib/prize-slot')
+      .then((m) => m.initWeekRaceClock())
+      .catch(() => {});
     void import('./lib/promo-kit')
       .then((m) => m.initPromoKit())
       .catch(() => {});

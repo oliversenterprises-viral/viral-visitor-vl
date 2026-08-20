@@ -212,11 +212,8 @@ export async function updatePublicContent(content: Record<string, unknown>) {
     else btn.textContent = display;
   };
 
-  // HERO batch (granular ids added for safe dynamic updates without breaking gradient/branding)
+  // 8:44 lock: do not let CMS rewrite homepage title / sub / CTA.
   apply('hero-badge', 'hero_badge');
-  apply('hero-title-line1', 'hero_title_line1');
-  apply('hero-title-accent', 'hero_title_accent');
-  apply('hero-subtitle', 'hero_subtitle');
   apply('hero-trust-line', 'hero_trust_line');
 
   // HOW IT WORKS batch (high priority)
@@ -236,7 +233,7 @@ export async function updatePublicContent(content: Record<string, unknown>) {
   apply('prize-banner-description', 'prize_banner_description');
   apply('cash-amount-value', 'cash_amount');
 
-  // Helix Bet 2: keep the 30-day slot mock. Featured banners paint site name + link.
+  // 8:44 lock: empty 7-day slot unless a claimed winner banner exists.
   const bannersRaw = content['banners'];
   const parsedBanners = parseBanners(bannersRaw);
   const selection = parsedBanners.length > 0 ? selectBanner(parsedBanners) : null;
@@ -285,7 +282,6 @@ export async function updatePublicContent(content: Record<string, unknown>) {
   // Do NOT apply hero_stats_subtext over #hero-stats-subtext — it hosts the live
   // verified worldwide total (#total-referrers). CMS copy would wipe that counter.
   apply('footer-credit', 'footer_credit');
-  applyButtonLabel('hero-get-link-btn', 'cta_button_text');
   applyButtonLabel('hero-leaderboard-btn', 'leaderboard_button_text');
 
   // Funnel journey (above-fold) — editable in Admin → Edit Content
@@ -334,9 +330,7 @@ export async function updatePublicContent(content: Record<string, unknown>) {
   apply('rules-full-content', 'rules_full');
 
   // Back-compat wiring for existing seeded keys in 0001_init_rls.sql (hero_title, hero_subtitle, min_referrals_for_claim, prize_pool, rules_text)
-  // hero_title was seeded as "Homepage headline" — maps to line 1, not the gradient accent span
-  apply('hero-title-line1', 'hero_title');
-  apply('hero-subtitle', 'hero_subtitle');
+  // 8:44 lock: skip hero_title / hero_subtitle CMS overwrite.
   paintPrizeThreshold(
     parseMinReferralsForClaim(content['min_referrals_for_claim'] ?? content['min_referrals']),
   );
