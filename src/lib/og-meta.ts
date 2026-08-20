@@ -3,6 +3,8 @@
  * Used by client-side updates and mirrored in api/og-referral.mjs for crawlers.
  */
 
+import { LOCKED_OG_DESCRIPTION, LOCKED_OG_TITLE } from './prize-slot';
+
 const SITE_ORIGIN = 'https://www.viralrefer.app';
 const DEFAULT_OG_IMAGE = `${SITE_ORIGIN}/assets/hero.png`;
 const REF_CODE_RE = /^VIRAL-[A-Z0-9]{4,12}$/;
@@ -72,20 +74,11 @@ export function buildReferralOgMeta(
   const rank = options.rank ?? null;
   const referrals = options.referrals ?? 0;
 
-  let description = `${code} invited you — free worldwide link in ~30 sec. Scan the QR or tap to join. #1 can claim a homepage feature.`;
-  if (rank === 1) {
-    description = `${code} is #1 on the worldwide leaderboard — join via QR in ~30 sec. #1 can claim a homepage feature.`;
-  } else if (rank != null && rank >= 2) {
-    description = `${code} is #${rank} on the worldwide leaderboard — join via QR in ~30 sec. #1 can claim a homepage feature.`;
-  } else if (referrals > 0) {
-    description = `${code} has ${referrals} referral${referrals === 1 ? '' : 's'} — join via QR in ~30 sec. Climb the worldwide board.`;
-  }
-
   return {
     code,
     canonicalUrl,
-    title: `Join ViralRefer via ${code} — Live Referral Leaderboard`,
-    description,
+    title: LOCKED_OG_TITLE,
+    description: LOCKED_OG_DESCRIPTION,
     image: buildReferralOgImageUrl(code, origin, { rank, referrals, format: 'png' }),
     rank,
     referrals,
