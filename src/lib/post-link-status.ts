@@ -91,6 +91,12 @@ export function hidePostLinkStatus(): void {
     root.hidden = true;
     root.dataset.state = 'hidden';
   }
+  const title = el(IDS.title);
+  const line = el(IDS.line);
+  if (title) title.textContent = '';
+  if (line) line.textContent = '';
+  const countdown = el(IDS.countdown);
+  if (countdown) countdown.textContent = '';
   document.documentElement.removeAttribute(POST_LINK_STATUS_ATTR);
   setClockVisible(false);
 }

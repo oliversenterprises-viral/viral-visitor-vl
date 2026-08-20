@@ -380,7 +380,16 @@ export function enforceLocalShareDeadlineExpiry(myCode: string | null): boolean 
 }
 
 function syncPostLinkStatus(): void {
-  void import('./post-link-status').then((m) => m.renderPostLinkStatus()).catch(() => {});
+  void import('./post-link-status')
+    .then((m) => {
+      // Live Wa() painted Waiting after Get my link. First send is You're racing.
+      if (document.documentElement.hasAttribute('data-vr-post-link-one')) {
+        m.hidePostLinkStatus();
+        return;
+      }
+      m.renderPostLinkStatus();
+    })
+    .catch(() => {});
 }
 
 export function renderShareDeadlineBanner(): void {

@@ -104,6 +104,7 @@ describe('post-link status', () => {
     expect(status?.hidden).toBe(true);
     expect(status?.classList.contains('hidden')).toBe(true);
     expect(document.documentElement.hasAttribute(POST_LINK_STATUS_ATTR)).toBe(false);
+    expect(document.getElementById('post-link-status-title')?.textContent).toBe('');
     expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
   });
 });

@@ -19,6 +19,8 @@ import { refreshPublicClarityState } from '../../src/lib/public-clarity';
 import { initPaidConversionBoost } from '../../src/lib/paid-conversion-boost';
 import { captureUtmAttribution } from '../../src/lib/utm-attribution';
 import { initExitIntentRescue } from '../../src/lib/exit-intent-rescue';
+import { writeShareDeadlineState } from '../../src/lib/share-deadline';
+import { renderPostLinkStatus } from '../../src/lib/post-link-status';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const LINK = 'https://viralrefer.app/r/VIRAL-REVEAL1';
@@ -33,6 +35,7 @@ function mountKidSimpleSendDom() {
       <div id="post-link-status" class="hidden" hidden data-state="hidden">
         <h2 id="post-link-status-title">You're in.</h2>
         <p id="post-link-status-line"></p>
+        <p id="share-deadline-banner" class="hidden" hidden><span id="share-deadline-countdown"></span></p>
       </div>
       <div id="post-link-share" class="hidden" hidden>
         <h2 id="post-link-heading">You're racing</h2>
@@ -102,6 +105,7 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(css).toMatch(/html\[data-vr-has-link\] #referral-section/);
     expect(css).toMatch(/html\[data-vr-post-link-one\] #referral-section/);
     expect(css).toMatch(/html\[data-vr-post-link-one\] #post-link-status/);
+    expect(css).toMatch(/html\[data-vr-post-link-one\] #share-deadline-banner/);
     expect(css).toMatch(/html\[data-vr-kid-simple\]:not\(\[data-vr-kid-more\]\) #vr-funnel-ticker/);
   });
 
@@ -148,6 +152,33 @@ describe('Get my link reveal (last-night lock)', () => {
     refreshPublicClarityState();
     expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
     expect(document.getElementById('referral-section')?.hidden).toBe(false);
+  });
+
+  it('first send is not the live Waiting status view', async () => {
+    writeShareDeadlineState({
+      code: 'VIRAL-WAIT1',
+      status: 'pending_share',
+      createdAt: new Date().toISOString(),
+      deadlineAt: new Date(Date.now() + 47 * 60 * 60 * 1000 + 5 * 60 * 1000).toISOString(),
+    });
+    initVisitorSlim();
+    await getMyReferralLinkInstant();
+    // Live Wa() then async-imports renderPostLinkStatus after ready.
+    renderPostLinkStatus();
+
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
+    expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
+    expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
+    expect(document.getElementById('post-link-status')?.hidden).toBe(true);
+    expect(document.getElementById('post-link-status-title')?.textContent).toBe('');
+    expect(document.documentElement.hasAttribute('data-vr-post-link-status')).toBe(false);
+    expect(document.getElementById('share-deadline-banner')?.hasAttribute('hidden')).toBe(true);
+    expect(document.getElementById('referral-section')?.textContent).not.toContain('Waiting');
+    expect(document.getElementById('referral-section')?.textContent).not.toContain(
+      '1 friend must tap Get my link',
+    );
+    expect(document.getElementById('referral-section')?.textContent).not.toContain('Your link is ready');
+    expect(document.getElementById('referral-section')?.textContent).not.toContain('Send to a friend now');
   });
 
   it('reveal survives a missing #ref-link after a later slim refresh', () => {
