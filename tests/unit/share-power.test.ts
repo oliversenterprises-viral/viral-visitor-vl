@@ -48,10 +48,11 @@ describe('share-power', () => {
     expect(boost).toContain(LINK);
   });
 
-  it('buildRedditShareTitle stays short and link-free', () => {
+  it('buildRedditShareTitle stays short and uses the locked homepage-race text', () => {
     const title = buildRedditShareTitle(LINK);
     expect(title.length).toBeLessThanOrEqual(280);
-    expect(title).not.toContain('http');
+    expect(title).toContain('Tap Get my link');
+    expect(title).toContain('Visiting does not count');
   });
 
   it('buildPlatformShareUrl encodes reddit and bluesky intents', () => {
