@@ -50,14 +50,19 @@ function setButtonLabel(buttonId: string, label: string): void {
   else btn.textContent = label;
 }
 
-/** Paint hero copy onto the public homepage (direct landings only). */
+/** Paint only the locked 8:44 homepage lines. No extra first-paint copy. */
 export function applyHeroCopyToDom(copy: HeroCtaCopy): void {
-  if (copy.badge) setText('hero-badge', copy.badge);
   setText('hero-title-line1', copy.titleLine1);
   setText('hero-title-accent', copy.titleAccent);
   setText('hero-subtitle', copy.subtitle);
-  setText('hero-trust-line', copy.trustLine);
   setButtonLabel('hero-get-link-btn', copy.buttonLabel);
+}
+
+/** Re-assert the 8:44 homepage after CMS / i18n / A/B. Do not invent new lines. */
+export function lock844HomepageCopy(): void {
+  if (isReferredLanding()) return;
+  applyHeroCopyToDom(HERO_CTA_COPY.control);
+  setText('hero-prize-one', "This week's top racer gets a 7-day banner for their website.");
 }
 
 /** Apply feature-variant hero copy on direct landings (control leaves CMS/static defaults). */

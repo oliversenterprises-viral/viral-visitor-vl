@@ -10,7 +10,6 @@ import { SEND_NOW_LABEL } from './referred-race';
 import { buildNativeShareData } from './share-power';
 import { recordShareEvent } from './record-share';
 import { trackVisitorFunnel } from './visitor-tracking';
-import { isSharePendingLocal } from './share-first-ui';
 import { showToast } from '../ui';
 
 export const POST_LINK_ATTR = 'data-vr-post-link-one';
@@ -221,13 +220,16 @@ export function showPostLinkReady(link: string): void {
     copy.hidden = false;
   }
   const helper = el(IDS.helper);
-  if (helper) helper.textContent = 'A friend opens it and taps Get my link. That’s what counts.';
+  if (helper) {
+    helper.textContent = '';
+    helper.hidden = true;
+    helper.setAttribute('hidden', '');
+  }
   const whisper = el(IDS.whisper);
   if (whisper) {
-    const pending = isSharePendingLocal();
-    whisper.textContent = pending ? 'A friend needs to tap Get my link to lock it.' : '';
-    whisper.classList.toggle('hidden', !pending);
-    whisper.hidden = !pending;
+    whisper.textContent = '';
+    whisper.classList.add('hidden');
+    whisper.hidden = true;
   }
   requestAnimationFrame(() => {
     focusHeading();

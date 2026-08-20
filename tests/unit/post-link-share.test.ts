@@ -71,7 +71,7 @@ describe('post-link-share', () => {
     expect(primary.hidden).toBe(false);
     expect(primary.textContent).toBe('Send it now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
-    expect(document.getElementById('post-link-helper')?.textContent).toMatch(/Get my link/);
+    expect(document.getElementById('post-link-helper')?.textContent).toBe('');
     expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(2);
   });
 
