@@ -32,7 +32,7 @@ describe('kid-simple first paint', () => {
     expect(hero).toContain('id="hero-get-link-btn"');
     expect(hero).toContain('Get my link');
     expect(hero).not.toContain('Get my free link');
-    expect(hero).toContain('Verified #1 gets a 7-day banner for their website.');
+    expect(hero).toContain('Verified #1 gets a 30-day banner for their website.');
     expect(hero).toContain('id="hero-banner-mock"');
     expect(hero).toContain('ViralRefer Tools');
     expect(hero).toContain('Example — this is what #1 gets');

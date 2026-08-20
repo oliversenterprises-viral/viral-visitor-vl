@@ -78,7 +78,7 @@ describe('Get my link reveal (last-night lock)', () => {
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).toContain('Get my link');
     expect(hero).not.toContain('Get my referral link');
-    expect(hero).toContain('7-day banner');
+    expect(hero).toContain('30-day banner');
     expect(html).toContain('id="ref-link"');
     expect(html).toContain("You're racing");
     expect(html).not.toContain('Your link is ready');

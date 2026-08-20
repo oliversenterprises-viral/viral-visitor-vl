@@ -184,9 +184,9 @@ describe('prize-slot (Helix Bet 2)', () => {
     }
   });
 
-  it('first-paint HTML has named threshold, 7-day slot, no junk empty meters', () => {
+  it('first-paint HTML has named threshold, 30-day slot, no junk empty meters', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    expect(html).toContain('Your site here · 7 days');
+    expect(html).toContain('Your site here · 30 days');
     expect(html).not.toContain('yourwebsite.com');
     expect(html).toContain('id="prize-threshold"');
     expect(html).toContain('id="min-referrals-value">10<');
