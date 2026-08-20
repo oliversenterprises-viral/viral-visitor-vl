@@ -73,7 +73,7 @@ describe('Get my link reveal (last-night lock)', () => {
     document.documentElement.removeAttribute('data-vr-paid-landing');
   });
 
-  it('first-paint HTML is prize-first with one Get my link verb', () => {
+  it('first-paint HTML is the 8:44 homepage: one Get my link, 30-day prize', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).toContain('Get my link');
