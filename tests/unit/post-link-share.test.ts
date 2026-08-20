@@ -10,6 +10,7 @@ import {
   onPostLinkPrimaryTap,
   onPostLinkCopyTap,
   POST_LINK_ATTR,
+  POST_LINK_DESKTOP_PLATFORMS,
 } from '../../src/lib/post-link-share';
 
 const LINK = 'https://viralrefer.app/r/VIRAL-TEST01';
@@ -24,6 +25,12 @@ function mount() {
       <p id="post-link-url" tabindex="0"></p>
       <button type="button" id="post-link-primary"></button>
       <button type="button" id="post-link-copy">Copy link</button>
+      <div id="post-link-desktop" hidden>
+        <a data-platform="whatsapp">WhatsApp</a>
+        <a data-platform="telegram">Telegram</a>
+        <a data-platform="email">Email</a>
+        <a data-platform="x">X</a>
+      </div>
       <p id="post-link-helper"></p>
       <p id="post-link-tool"></p>
       <p id="post-link-whisper" class="hidden" hidden></p>
@@ -73,6 +80,7 @@ describe('post-link-share', () => {
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
     expect(document.getElementById('post-link-helper')?.textContent).toBe('');
     expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(2);
+    expect((document.getElementById('post-link-desktop') as HTMLElement).hidden).toBe(true);
   });
 
   it('loading hides the share button', () => {
@@ -98,12 +106,48 @@ describe('post-link-share', () => {
     expect(canUseNativeShare({ title: 'ViralRefer', text: 'x' })).toBe(false);
   });
 
-  it('primary tap without native share opens WhatsApp', () => {
+  it('desktop Send it now shows WhatsApp / Telegram / Email / X, not auto-WhatsApp', () => {
     const open = vi.spyOn(window, 'open').mockReturnValue({} as Window);
     activatePostLinkShare(LINK);
     onPostLinkPrimaryTap();
-    expect(open).toHaveBeenCalled();
-    expect(String(open.mock.calls[0]?.[0])).toContain('wa.me');
+    expect(open).not.toHaveBeenCalled();
+    const row = document.getElementById('post-link-desktop') as HTMLElement;
+    expect(row.hidden).toBe(false);
+    const labels = [...row.querySelectorAll('a')].map((a) => a.textContent);
+    expect(labels).toEqual(['WhatsApp', 'Telegram', 'Email', 'X']);
+    expect(POST_LINK_DESKTOP_PLATFORMS).toEqual(['whatsapp', 'telegram', 'email', 'x']);
+    expect((row.querySelector('[data-platform="whatsapp"]') as HTMLAnchorElement).href).toContain(
+      'wa.me',
+    );
+    expect((row.querySelector('[data-platform="telegram"]') as HTMLAnchorElement).href).toContain(
+      't.me',
+    );
+    expect((row.querySelector('[data-platform="email"]') as HTMLAnchorElement).href).toContain(
+      'mailto:',
+    );
+    expect((row.querySelector('[data-platform="x"]') as HTMLAnchorElement).href).toContain(
+      'x.com/intent',
+    );
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing.");
+    expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
+    expect(document.getElementById('referral-section')?.textContent || document.body.textContent).not.toContain(
+      'Send to a friend now',
+    );
+    expect(document.body.textContent).not.toContain('Your link is ready');
+    expect(document.body.textContent).not.toContain('Waiting');
+  });
+
+  it('phone Send it now opens the native share sheet', () => {
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
+    });
+    const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+    activatePostLinkShare(LINK);
+    onPostLinkPrimaryTap();
+    expect(share).toHaveBeenCalled();
+    expect((document.getElementById('post-link-desktop') as HTMLElement).hidden).toBe(true);
   });
 
   it('copy writes the URL only, not the share sentence', async () => {

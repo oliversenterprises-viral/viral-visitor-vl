@@ -7,7 +7,8 @@ import { registerGlobal } from './global';
 import { hidePostLinkStatus } from './post-link-status';
 import { LOCKED_SHARE_TEXT } from './prize-slot';
 import { SEND_NOW_LABEL } from './referred-race';
-import { buildNativeShareData } from './share-power';
+import { isMobileShareContext } from './share-context';
+import { buildNativeShareData, buildPlatformShareUrl, type SharePlatform } from './share-power';
 import { recordShareEvent } from './record-share';
 import { trackVisitorFunnel } from './visitor-tracking';
 import { showToast } from '../ui';
@@ -19,6 +20,8 @@ export const POST_LINK_SUB_READY =
   "Send it now. A friend must tap Get my link — that's how you climb.";
 
 export const POST_LINK_SHARE_TEXT = LOCKED_SHARE_TEXT;
+
+export const POST_LINK_DESKTOP_PLATFORMS = ['whatsapp', 'telegram', 'email', 'x'] as const;
 
 /** Un-hide the send screen after Get my link. Missing #ref-link must not keep it display:none. */
 export function revealReferralSection(): void {
@@ -47,6 +50,7 @@ const IDS = {
   copy: 'post-link-copy',
   helper: 'post-link-helper',
   whisper: 'post-link-whisper',
+  desktop: 'post-link-desktop',
 } as const;
 
 export type PostLinkState = 'hidden' | 'loading' | 'ready' | 'error';
@@ -58,6 +62,50 @@ export function buildPostLinkShareText(link: string): string {
 
 export function buildWhatsAppShareHref(link: string): string {
   return `https://wa.me/?text=${encodeURIComponent(buildPostLinkShareText(link))}`;
+}
+
+export function shouldUseNativeShareSheet(payload: { title: string; text: string }): boolean {
+  return isMobileShareContext() && canUseNativeShare(payload);
+}
+
+function desktopRow(): HTMLElement | null {
+  return el(IDS.desktop);
+}
+
+export function paintDesktopSendRow(link: string): void {
+  const row = desktopRow();
+  if (!row) return;
+  const text = buildPostLinkShareText(link);
+  for (const node of row.querySelectorAll<HTMLAnchorElement>('a[data-platform]')) {
+    const platform = node.dataset.platform as SharePlatform | undefined;
+    if (!platform) continue;
+    const href = buildPlatformShareUrl(platform, link, text);
+    if (href) {
+      node.href = href;
+      if (platform === 'email') {
+        node.removeAttribute('target');
+        node.removeAttribute('rel');
+      } else {
+        node.target = '_blank';
+        node.rel = 'noopener noreferrer';
+      }
+    }
+  }
+}
+
+export function showDesktopSendRow(link: string): void {
+  const row = desktopRow();
+  if (!row) return;
+  paintDesktopSendRow(link);
+  row.hidden = false;
+  row.removeAttribute('hidden');
+}
+
+export function hideDesktopSendRow(): void {
+  const row = desktopRow();
+  if (!row) return;
+  row.hidden = true;
+  row.setAttribute('hidden', '');
 }
 
 export function canUseNativeShare(payload: { title: string; text: string }): boolean {
@@ -104,12 +152,14 @@ function paintPrimaryForDetection(link: string): void {
   if (!btn) return;
   const text = buildPostLinkShareText(link);
   const payload = buildNativeShareData(text, link);
-  const native = canUseNativeShare(payload);
-  btn.dataset.mode = native ? 'native' : 'whatsapp';
+  const native = shouldUseNativeShareSheet(payload);
+  btn.dataset.mode = native ? 'native' : 'desktop';
   setPrimaryLabel(SEND_NOW_LABEL);
   btn.classList.remove('hidden');
   btn.hidden = false;
   btn.disabled = false;
+  paintDesktopSendRow(link);
+  hideDesktopSendRow();
 }
 
 function focusHeading(): void {
@@ -143,6 +193,7 @@ export function showPostLinkLoading(): void {
     copy.classList.add('hidden');
     copy.hidden = true;
   }
+  hideDesktopSendRow();
 }
 
 export function showPostLinkError(): void {
@@ -171,6 +222,7 @@ export function showPostLinkError(): void {
     copy.classList.add('hidden');
     copy.hidden = true;
   }
+  hideDesktopSendRow();
   const helper = el(IDS.helper);
   if (helper) helper.textContent = 'A friend opens it and taps Get my link. That’s what counts.';
 }
@@ -257,12 +309,6 @@ export function maybeOfferSameGestureShare(link: string): boolean {
   }
 }
 
-function openWhatsApp(link: string): boolean {
-  const href = buildWhatsAppShareHref(link);
-  const opened = window.open(href, '_blank', 'noopener,noreferrer');
-  return !!opened;
-}
-
 function selectLinkText(): void {
   const url = el(IDS.url);
   if (!url) return;
@@ -298,26 +344,19 @@ export function onPostLinkPrimaryTap(event?: Event): void {
   const text = buildPostLinkShareText(link);
   const payload = buildNativeShareData(text, link);
 
-  if (canUseNativeShare(payload)) {
+  if (shouldUseNativeShareSheet(payload)) {
     const sharePromise = navigator.share(payload);
     fireShareEvent('native', link);
+    hideDesktopSendRow();
     void sharePromise.catch((err: unknown) => {
       const name = (err as Error)?.name || '';
       if (name === 'AbortError' || name === 'NotAllowedError') return;
-      if (!openWhatsApp(link)) {
-        void onPostLinkCopyTap();
-      } else {
-        fireShareEvent('whatsapp', link);
-      }
+      showDesktopSendRow(link);
     });
     return;
   }
 
-  if (openWhatsApp(link)) {
-    fireShareEvent('whatsapp', link);
-    return;
-  }
-  void onPostLinkCopyTap();
+  showDesktopSendRow(link);
 }
 
 export async function onPostLinkCopyTap(): Promise<void> {
@@ -339,6 +378,14 @@ export async function onPostLinkCopyTap(): Promise<void> {
   }
 }
 
+function onDesktopPlatformTap(event: Event): void {
+  const target = event.currentTarget as HTMLAnchorElement | null;
+  const platform = target?.dataset.platform;
+  const link = readReadyLink();
+  if (!platform || !link) return;
+  fireShareEvent(platform, link);
+}
+
 function wireOnce(): void {
   const root = el(IDS.root);
   if (!root || root.dataset.wired === '1') return;
@@ -346,6 +393,9 @@ function wireOnce(): void {
   el(IDS.primary)?.addEventListener('click', onPostLinkPrimaryTap);
   el(IDS.copy)?.addEventListener('click', () => {
     void onPostLinkCopyTap();
+  });
+  desktopRow()?.querySelectorAll<HTMLAnchorElement>('a[data-platform]').forEach((node) => {
+    node.addEventListener('click', onDesktopPlatformTap);
   });
 }
 

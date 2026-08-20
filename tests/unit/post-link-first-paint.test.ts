@@ -44,6 +44,14 @@ describe('post-link first paint', () => {
     expect(stack).toContain('id="post-link-primary"');
     expect(stack).toContain('id="post-link-copy"');
     expect(stack).toContain('Copy link');
+    expect(stack).toContain('id="post-link-desktop"');
+    expect(stack).toContain('WhatsApp');
+    expect(stack).toContain('Telegram');
+    expect(stack).toContain('Email');
+    expect(stack).toContain('>X<');
+    expect(stack).not.toContain('Send to a friend now');
+    expect(stack).not.toContain('Your link is ready');
+    expect(stack).not.toContain('Waiting');
     const banned = [
       'Step 2: tap COPY',
       'id="viral-power-meter"',
