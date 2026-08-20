@@ -54,34 +54,23 @@ function defaultShareTemplate(): string {
 /** First-screen share copy (native + WhatsApp + SMS). Link stays in the text. */
 export const FIRST_SCREEN_SHARE_TEXT = LOCKED_SHARE_TEXT;
 
-/** Status + near-win share copy — competition first, prize second (homepage feature, not cash). */
+/** Status + near-win share copy — locked homepage race sentence only. */
 const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
   whatsapp: FIRST_SCREEN_SHARE_TEXT,
   native: FIRST_SCREEN_SHARE_TEXT,
   sms: FIRST_SCREEN_SHARE_TEXT,
-  boost:
-    "I just entered ViralRefer's live worldwide leaderboard 🏆\nFree, ~30 sec, no signup. #1 can claim a homepage feature.\nChallenge: can you beat my rank?\n\n{link}",
-  reddit:
-    'ViralRefer — live worldwide referral leaderboard (no signup). Climb ranks in real time; #1 can claim a homepage feature.',
-  bluesky:
-    "I'm racing the ViralRefer worldwide leaderboard 🏆 Free in ~30 sec · no signup · #1 claims a homepage feature\nCan you beat me?\n\n{link}",
-  email:
-    "Hey! I'm competing on ViralRefer — a free worldwide referral leaderboard with live ranks. #1 can claim a homepage feature for their site.\n\nJoin free in ~30 sec (no signup) and try to beat me:\n{link}",
-  linkedin:
-    "I'm on ViralRefer's live worldwide referral leaderboard — free, no signup, real-time ranks. #1 can claim a homepage feature. Join and race me: {link}",
-  telegram:
-    "I'm on ViralRefer's live leaderboard 🏆 Free · no signup · #1 claims homepage feature. Can you beat me?\n\n{link}",
-  threads:
-    "Climbing ViralRefer's live worldwide leaderboard 🏆 Free in ~30 sec · no signup. #1 can claim a homepage feature. Race me?\n\n{link}",
-  pinterest:
-    'ViralRefer — live worldwide referral leaderboard. Free, no signup. #1 can claim a homepage feature.',
-  discord:
-    "**ViralRefer** — live worldwide referral leaderboard\nFree · ~30 sec · no signup · #1 can claim a homepage feature\nCan you beat my rank?\n\n{link}",
-  x: "Live referral leaderboard on ViralRefer 🏆 Free · no signup · #1 can claim a homepage feature. Can you beat me? Search ViralRefer to join.",
-  tiktok:
-    'POV: climbing a live worldwide referral leaderboard 🏆 Free in ~30 sec · no signup · #1 claims homepage feature\n\n{link}\n\n#referral #leaderboard #viral #fyp #marketing',
-  snapchat:
-    "I'm on ViralRefer's live leaderboard 🏆 Free link in ~30 sec — can you beat me?\n\n{link}\n\nAdd to your story or send to friends!",
+  boost: FIRST_SCREEN_SHARE_TEXT,
+  reddit: FIRST_SCREEN_SHARE_TEXT,
+  bluesky: FIRST_SCREEN_SHARE_TEXT,
+  email: FIRST_SCREEN_SHARE_TEXT,
+  linkedin: FIRST_SCREEN_SHARE_TEXT,
+  telegram: FIRST_SCREEN_SHARE_TEXT,
+  threads: FIRST_SCREEN_SHARE_TEXT,
+  pinterest: FIRST_SCREEN_SHARE_TEXT,
+  discord: FIRST_SCREEN_SHARE_TEXT,
+  x: FIRST_SCREEN_SHARE_TEXT,
+  tiktok: FIRST_SCREEN_SHARE_TEXT,
+  snapchat: FIRST_SCREEN_SHARE_TEXT,
 };
 
 

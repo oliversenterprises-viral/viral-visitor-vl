@@ -12,10 +12,12 @@ export const EMPTY_BOARD_LINE = 'Board is open. #1 is winnable this week.';
 export const DAILY_CROWN_NOT_BANNER = 'Not the homepage banner.';
 
 export const LOCKED_SHARE_TEXT =
-  "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me. {link}";
+  "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count. {link}";
+
+export const LOCKED_OG_TITLE = 'Win the homepage. #1 gets a banner — tap Get my link';
 
 export const LOCKED_OG_DESCRIPTION =
-  "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me.";
+  "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count.";
 
 export const PRIZE_FOMO_LINE = 'Early ranks are open. #1 puts their website on this page.';
 
@@ -188,7 +190,7 @@ export function shouldShowWeeklySideWidgets(weeklyVerified: number): boolean {
 
 export function sharePayloadHasBannerRace(text: string): boolean {
   const lower = String(text || '').toLowerCase();
-  return lower.includes('homepage') && (lower.includes('beat me') || lower.includes('banner'));
+  return lower.includes('homepage') && lower.includes('tap get my link');
 }
 
 function paintSlotName(id: string, slot: PrizeSlot): void {

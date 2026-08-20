@@ -3,14 +3,15 @@
  */
 
 import { getOptimizerShareAbDefault } from './optimizer-flags';
+import { LOCKED_SHARE_TEXT } from './prize-slot';
 
 export type ShareAbVariant = 'a' | 'b';
 
 const STORAGE_KEY = 'vr_share_ab_variant';
 
 export const SHARE_AB_TEMPLATES: Record<ShareAbVariant, string> = {
-  a: 'Worldwide free leaderboard — join in ~30 sec. #1 can claim a homepage feature. {link}',
-  b: 'Open worldwide — real-time referral board. Grab your free link in ~30 sec. Top referrer claims homepage feature. {link}',
+  a: LOCKED_SHARE_TEXT,
+  b: LOCKED_SHARE_TEXT,
 };
 
 /** Stable default variant from referral code (50/50 split). */

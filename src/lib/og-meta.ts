@@ -119,7 +119,7 @@ export function buildReferralOgSvg(meta: ReferralOgMeta): string {
 
   const statsLine = referrals
     ? `${referrals} referral${referrals === 1 ? '' : 's'} and climbing`
-    : 'Free link in ~30 sec — scan QR to join';
+    : 'Tap Get my link. Visiting does not count.';
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">

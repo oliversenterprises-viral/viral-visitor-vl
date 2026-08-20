@@ -62,11 +62,11 @@ describe('organic-seo', () => {
     expect(document.querySelector('link[rel="canonical"]')).toBeNull();
   });
 
-  it('homepage SEO + static OG match the prize-first hero', () => {
-    expect(HOMEPAGE_SEO.title).toBe('Win the ViralRefer homepage — #1 gets a banner');
-    expect(HOMEPAGE_SEO.description).toMatch(/racing for the ViralRefer homepage/);
-    expect(HOMEPAGE_SEO.description).toMatch(/banner/);
-    expect(HOMEPAGE_SEO.description).toMatch(/beat me/);
+  it('homepage SEO + static OG match the locked tap-Get-my-link copy', () => {
+    expect(HOMEPAGE_SEO.title).toBe('Win the homepage. #1 gets a banner — tap Get my link');
+    expect(HOMEPAGE_SEO.description).toMatch(/racing for the homepage this week/);
+    expect(HOMEPAGE_SEO.description).toContain('Tap Get my link');
+    expect(HOMEPAGE_SEO.description).toContain('Visiting does not count');
     expect(HOMEPAGE_SEO.ogImage).toBe(`${SEO_SITE_ORIGIN}/assets/og-homepage-banner-v2.png`);
 
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');

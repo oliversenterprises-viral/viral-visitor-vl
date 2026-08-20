@@ -24,11 +24,11 @@ describe('share-power', () => {
     expect(msg).toBe(`Check this out: ${LINK}`);
   });
 
-  it('first-screen WhatsApp/native/SMS copy is Helix Bet 2 banner-race text', () => {
+  it('first-screen WhatsApp/native/SMS copy is the locked homepage-race text', () => {
     const wa = buildShareMessage(LINK, { platform: 'whatsapp', trackUtm: false });
-    expect(wa).toContain('racing for the ViralRefer homepage');
-    expect(wa).toContain('banner');
-    expect(wa).toMatch(/beat me/i);
+    expect(wa).toContain('racing for the homepage this week');
+    expect(wa).toContain('Tap Get my link');
+    expect(wa).toContain('Visiting does not count');
     expect(wa).toContain(LINK);
     expect(wa).not.toMatch(/^I'm #/ );
 
@@ -37,14 +37,14 @@ describe('share-power', () => {
     const sms = buildShareMessage(LINK, { platform: 'sms', trackUtm: false });
     expect(sms).toBe(wa);
 
-    const reddit = buildShareMessage(LINK, { platform: 'reddit' });
-    expect(reddit).not.toContain(LINK);
-    expect(reddit).toContain('ViralRefer');
+    const reddit = buildShareMessage(LINK, { platform: 'reddit', trackUtm: false });
+    expect(reddit).toContain(LINK);
+    expect(reddit).toContain('Tap Get my link');
   });
 
-  it('boost message uses challenge status language', () => {
+  it('boost message uses the locked homepage-race text', () => {
     const boost = buildShareMessage(LINK, { platform: 'boost', trackUtm: false });
-    expect(boost).toMatch(/challenge|beat/i);
+    expect(boost).toContain('Tap Get my link');
     expect(boost).toContain(LINK);
   });
 
@@ -147,9 +147,9 @@ describe('share-power', () => {
     expect(md).toContain('VIRAL-TEST01');
   });
 
-  it('buildShareMessage includes TikTok hashtags', () => {
-    const msg = buildShareMessage(LINK, { platform: 'tiktok' });
-    expect(msg).toContain('#fyp');
+  it('TikTok share uses the locked homepage-race text', () => {
+    const msg = buildShareMessage(LINK, { platform: 'tiktok', trackUtm: false });
+    expect(msg).toContain('Tap Get my link');
     expect(msg).toContain(LINK);
   });
 
@@ -165,7 +165,7 @@ describe('share-power', () => {
     const msg = buildShareMessage(LINK, { platform: 'x', trackUtm: true });
     expect(msg.toLowerCase()).not.toContain('viralrefer.app');
     expect(msg).not.toMatch(/https?:\/\//i);
-    expect(msg).toMatch(/ViralRefer/i);
+    expect(msg).toContain('Tap Get my link');
 
     const forced = buildShareMessage(LINK, {
       platform: 'x',
@@ -184,13 +184,13 @@ describe('share-power', () => {
 
   it('buildNativeShareData never includes a url field', () => {
     const data = buildNativeShareData(
-      "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me. " +
+      "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count. " +
         LINK,
       LINK,
     );
     expect(data.text).toContain(LINK);
     expect(data.text).toMatch(/homepage/);
-    expect(data.text).toMatch(/beat me/i);
+    expect(data.text).toContain('Tap Get my link');
     expect(data).not.toHaveProperty('url');
     expect(Object.keys(data).sort()).toEqual(['text', 'title']);
   });
