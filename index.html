@@ -162,56 +162,65 @@
                 <div class="vr-hero-copy">
                 <h1 id="hero-title" class="vr-hero-title text-[2.25rem] sm:text-[52px] md:text-[64px] lg:text-[76px] font-bold tracking-[-0.05em] logo-font leading-[1.05] mb-3 sm:mb-4" style="color: var(--text-hero-title, #ffffff); text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
                     <span id="hero-title-line1" data-i18n="hero.title_line1">Win the homepage.</span><br>
-                    <span id="hero-title-accent" data-i18n="hero.title_accent" class="bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-500 to-cyan-400 drop-shadow-[0_4px_20px_rgba(192,132,252,0.5)]" style="color: var(--text-hero-accent, #c084fc);">
-                        #1 gets a banner for their site.
-                    </span>
+                    <span id="hero-title-line2">#1 puts their site on <span id="hero-title-accent" data-i18n="hero.title_accent" class="hero-title-this-page">this page.</span></span>
                 </h1>
                
                 <p id="hero-subtitle" data-i18n="hero.subtitle" class="text-base sm:text-lg md:text-xl text-zinc-200 max-w-xl mx-auto mb-5 sm:mb-6 leading-relaxed px-1">
-                    Tap Get my link. Send it. When a friend taps Get my link, you climb.
+                    Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.
                 </p>
                 </div>
 
-                <div id="hero-banner-mock" class="vr-hero-ad hero-banner-mock hero-ad-slot mt-2 mb-5 mx-auto max-w-sm text-left" aria-label="Homepage banner example ad" data-vr-prize-slot="example">
+                <div id="hero-banner-mock" class="vr-hero-ad hero-banner-mock hero-ad-slot mt-2 mb-5 mx-auto max-w-sm text-left" aria-label="Homepage banner slot" data-vr-prize-slot="empty">
                     <div class="hero-ad-slot-inner rounded-2xl border border-white/15 bg-black/40 overflow-hidden">
                         <div class="hero-ad-slot-kicker flex items-center justify-between gap-2 px-3 py-1.5 bg-white/5 border-b border-white/10 text-[10px] uppercase tracking-wider font-semibold text-zinc-400">
-                            <span id="hero-ad-kicker-kind">Example ad</span>
+                            <span id="hero-ad-kicker-kind">This homepage</span>
                             <span>viralrefer.app</span>
-                            <span>30 days</span>
+                            <span id="hero-ad-kicker-days">7 days</span>
                         </div>
                         <img id="hero-slot-thumb" class="hidden w-full h-28 object-cover bg-zinc-900" alt="" />
-                        <a id="hero-slot-preview" class="hero-ad-site-preview" href="https://www.viralrefer.app/tools/" target="_blank" rel="noopener noreferrer" aria-label="Open ViralRefer Tools example">
-                            <div class="hero-ad-browser">
-                                <span class="hero-ad-browser-dots" aria-hidden="true"></span>
-                                <span class="hero-ad-browser-url">viralrefer.app/tools</span>
-                            </div>
-                            <div class="hero-ad-site">
-                                <div class="hero-ad-site-brand">ViralRefer</div>
-                                <div class="hero-ad-site-title">Free growth tools</div>
-                                <div class="hero-ad-site-cards">
-                                    <span>Share generator</span>
-                                    <span>Viral calculator</span>
-                                    <span>UTM builder</span>
-                                </div>
-                            </div>
-                        </a>
+                        <a id="hero-slot-preview" class="hero-ad-site-preview hidden" hidden></a>
                         <div class="hero-ad-visit-row flex items-center gap-3 px-4 py-3.5">
-                            <div id="hero-ad-mark" class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-sm ring-1 ring-white/20 shrink-0" aria-hidden="true">Ex</div>
+                            <div id="hero-ad-mark" class="hero-ad-mark-empty" aria-hidden="true">#</div>
                             <div class="min-w-0 flex-1">
-                                <a id="hero-slot-site" class="font-semibold text-white leading-tight" href="https://www.viralrefer.app/tools/" target="_blank" rel="noopener noreferrer">ViralRefer Tools</a>
-                                <div id="hero-slot-meta" class="text-xs text-emerald-300/90 font-mono truncate">Example — this is what #1 gets</div>
+                                <a id="hero-slot-site" class="font-semibold text-white leading-tight" aria-disabled="true">Your site here</a>
+                                <div id="hero-slot-meta" class="text-xs text-amber-200/80 font-medium truncate">Your site here · 7 days</div>
                             </div>
-                            <a id="hero-ad-visit" class="shrink-0 inline-flex items-center justify-center text-[11px] font-semibold px-3 min-h-[44px] min-w-[44px] rounded-xl bg-white/10 text-white hover:bg-white/20" href="https://www.viralrefer.app/tools/" rel="noopener noreferrer" target="_blank">Visit</a>
+                            <a id="hero-ad-visit" class="hidden shrink-0 inline-flex items-center justify-center text-[11px] font-semibold px-3 min-h-[44px] min-w-[44px] rounded-xl bg-white/10 text-white hover:bg-white/20" hidden></a>
                         </div>
-                        <p id="hero-ad-note" class="px-4 pb-1 text-[11px] text-zinc-400 leading-snug">Example — this is what #1 gets. Slot still empty.</p>
-                        <p id="hero-ad-inventory" class="px-4 text-[11px] text-zinc-500 leading-snug hidden" hidden></p>
-                        <p id="hero-ad-race" class="px-4 pb-3 text-[11px] text-amber-200/80 leading-snug hidden" hidden></p>
+                        <p id="hero-ad-note" class="px-4 text-[11px] text-zinc-400 leading-snug">Empty right now. #1 this week puts their site here.</p>
+                        <p id="hero-ad-inventory" class="px-4 pb-3 text-[11px] text-zinc-500 leading-snug"></p>
+                        <p id="hero-ad-race" class="hidden px-4 pb-3 text-[11px] text-amber-200/80 leading-snug" hidden></p>
                     </div>
                 </div>
                 <div class="vr-hero-action">
-                <p id="hero-prize-one" class="mb-5 text-sm sm:text-base font-semibold text-amber-100/95 max-w-lg mx-auto leading-snug">
-                    Verified #1 gets a 30-day banner for their website.
+                <p id="hero-prize-one" class="mb-2 text-sm sm:text-base font-semibold text-amber-200 max-w-lg mx-auto leading-snug">
+                    This week's top racer gets a 7-day banner for their website.
                 </p>
+                <p id="hero-week-clock" class="mb-5 text-sm sm:text-base font-semibold text-amber-300 max-w-lg mx-auto leading-snug" aria-live="polite"></p>
+                <script>
+                (function () {
+                  var el = document.getElementById('hero-week-clock');
+                  if (!el) return;
+                  function endMs(now) {
+                    var d = new Date(now);
+                    var day = d.getUTCDay();
+                    var add = day === 0 ? 1 : 8 - day;
+                    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + add, 0, 0, 0, 0);
+                  }
+                  function paint() {
+                    var now = Date.now();
+                    var remain = Math.max(0, endMs(now) - now);
+                    var days = Math.floor(remain / 86400000);
+                    remain -= days * 86400000;
+                    var hours = Math.floor(remain / 3600000);
+                    remain -= hours * 3600000;
+                    var mins = Math.floor(remain / 60000);
+                    el.textContent = "This week's race ends in " + days + "d " + hours + "h " + mins + "m. Send now.";
+                  }
+                  paint();
+                  window.setInterval(paint, 30000);
+                })();
+                </script>
 
                 <!-- Global proof strip (static + live count) -->
                 <div id="hero-global-proof" class="hero-global-proof mb-3 sm:mb-4" role="status" aria-live="polite">
@@ -233,7 +242,7 @@
                     <button id="hero-get-link-btn" data-vr-zone="hero-get-link" onclick="getMyReferralLinkInstant()" 
                             class="btn-primary hero-primary-cta w-full px-8 py-4 sm:px-12 sm:py-5 text-lg sm:text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/40 min-h-[52px]">
                         <i class="fa-solid fa-link" aria-hidden="true"></i>
-                        <span data-i18n="hero.cta">Get my link</span>
+                        <span data-i18n="hero.cta">Get my referral link</span>
                     </button>
                    
                 </div>
@@ -364,7 +373,7 @@
         <div id="funnel-expand-wrap" class="text-center mt-6">
             <button type="button" id="funnel-expand-btn" data-vr-zone="funnel-expand"
                     class="text-sm text-violet-300 hover:text-violet-200 underline underline-offset-4 decoration-violet-500/50">
-                See feature details &amp; leaderboard &darr;
+                See how it works &darr;
             </button>
         </div>
 
@@ -372,8 +381,8 @@
         <div id="referral-section" class="mt-6" data-vr-zone="referral-section" data-vr-post-link-stack>
             <input id="ref-link" type="text" readonly hidden class="sr-only" aria-hidden="true" tabindex="-1" value="" />
             <div id="post-link-share" class="hidden post-link-share" hidden data-state="hidden" role="region" aria-label="Your referral link">
-                <h2 id="post-link-heading" class="post-link-share__heading" tabindex="-1">You're racing</h2>
-                <p id="post-link-sub" class="post-link-share__sub">Send this. A friend must tap Get my link.</p>
+                <h2 id="post-link-heading" class="post-link-share__heading" tabindex="-1">You're racing.</h2>
+                <p id="post-link-sub" class="post-link-share__sub">Send it now. A friend must tap Get my link — that's how you climb.</p>
                 <p id="post-link-clock" class="post-link-share__clock" hidden></p>
                 <p id="post-link-url" class="post-link-share__url" hidden></p>
                 <button type="button" id="post-link-primary" class="post-link-share__primary" hidden></button>
@@ -502,7 +511,7 @@
                             <div>
                                 <a id="prize-slot-site" class="font-semibold text-white" aria-disabled="true">Your site here</a>
                                 <div class="text-xs text-zinc-400">30-day homepage slot</div>
-                                <div id="prize-slot-meta" class="text-sm text-emerald-400 font-mono">Your site here · 30 days</div>
+                                <div id="prize-slot-meta" class="text-sm text-emerald-400 font-mono">Your site here · 7 days</div>
                             </div>
                         </div>
                         <p id="prize-threshold" class="mt-4 text-sm text-zinc-200">Verified #1 with at least <span id="min-referrals-value">10</span> friends who tapped Get my link can claim the banner.</p>

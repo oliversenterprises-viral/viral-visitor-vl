@@ -417,7 +417,12 @@ html:not([data-vr-has-link]) #promoter-week-strip,
 html:not([data-vr-has-link]) #hero-promoter-cta,
 html:not([data-vr-has-link]) #hero-leaderboard-btn,
 html:not([data-vr-has-link]) #hero-leaderboard-link,
-html:not([data-vr-has-link]) #hero-telegram-helper-btn {
+html:not([data-vr-has-link]) #hero-telegram-helper-btn,
+html:not([data-vr-has-link]) #nav-get-link-btn {
+  display: none !important;
+}
+
+#vr-nav a[href="/tools/"] {
   display: none !important;
 }
 
@@ -4098,11 +4103,17 @@ html[data-vr-has-link] #referral-section .glass {
   text-align: center;
 }
 .post-link-share__heading {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #e4e4e7;
-  margin: 0 0 0.75rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.55rem;
   outline: none;
+}
+.post-link-share__sub {
+  margin: 0 0 1.15rem;
+  font-size: 0.98rem;
+  line-height: 1.45;
+  color: #a1a1aa;
 }
 .post-link-share__url {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -4241,12 +4252,16 @@ html[data-vr-has-link] [data-vr-below-fold] {
   display: none !important;
 }
 
-/* Keep the example / claimed ad visible even after Get my link or a saved code. */
+/* Keep the prize slot visible after Get my link. Yellow prize/clock lines are homepage-only. */
 html[data-vr-has-link] #hero-banner-mock,
-html[data-vr-post-link-one] #hero-banner-mock,
-html[data-vr-has-link] #hero-prize-one,
-html[data-vr-post-link-one] #hero-prize-one {
+html[data-vr-post-link-one] #hero-banner-mock {
   display: block !important;
+}
+html[data-vr-has-link] #hero-prize-one,
+html[data-vr-post-link-one] #hero-prize-one,
+html[data-vr-has-link] #hero-week-clock,
+html[data-vr-post-link-one] #hero-week-clock {
+  display: none !important;
 }
 
 .hero-ad-site-preview {
@@ -4389,6 +4404,29 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
    ALL DEVICES — first screen, tap targets, wrap
    ============================================ */
 
+.hero-title-this-page {
+  color: #2dd4bf;
+  background: none;
+  -webkit-text-fill-color: #2dd4bf;
+  text-shadow: 0 0 18px rgba(45, 212, 191, 0.35);
+}
+
+.hero-ad-mark-empty,
+#hero-banner-mock[data-vr-prize-slot='empty'] #hero-ad-mark {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  background: #92400e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.35);
+}
+
 .hero-ad-slot-kicker {
   flex-wrap: wrap;
   min-width: 0;
@@ -4476,13 +4514,13 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
   }
 
   #hero-ad-note {
-    display: none;
+    display: block;
   }
 }
 
 @media (max-height: 820px) {
   html:not([data-vr-has-link]) #hero-subtitle {
-    display: none;
+    display: block;
   }
 
   .vr-hero-panel {
@@ -4572,7 +4610,7 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
   }
 
   #hero-ad-note {
-    display: none;
+    display: block;
   }
 }
 
@@ -4595,7 +4633,7 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
   }
 
   #hero-ad-note {
-    display: none;
+    display: block;
   }
 
   #hero-prize-one {
@@ -4609,5 +4647,5 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
 
 html[data-vr-tiny] #hero-subtitle,
 html[data-vr-short]:not([data-vr-has-link]) #hero-subtitle {
-  display: none;
+  display: block;
 }

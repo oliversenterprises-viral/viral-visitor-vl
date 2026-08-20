@@ -19,10 +19,13 @@ describe('post-link first paint', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = sliceById(html, 'hero-title', 'funnel-journey');
     expect(hero).toMatch(/Win the homepage/);
-    expect(hero).toMatch(/#1 gets a banner for their site/);
-    expect(hero).toMatch(/Tap Get my link\. Send it\. When a friend taps Get my link, you climb/);
+    expect(hero).toMatch(/#1 puts their site on/);
+    expect(hero).toContain('this page.');
+    expect(hero).toMatch(
+      /Tap Get my link\. Send it\. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days/,
+    );
     expect(hero).toContain('id="hero-get-link-btn"');
-    expect(hero).toContain('Get my link');
+    expect(hero).toContain('Get my referral link');
     expect(hero).not.toContain('See leaderboard');
     expect(hero).not.toContain('id="hero-leaderboard-btn"');
     expect(hero).not.toContain('Telegram');
@@ -35,7 +38,8 @@ describe('post-link first paint', () => {
     expect(stack).not.toContain('id="post-link-status"');
     expect(stack).not.toContain("You're in.");
     expect(stack).toContain('id="ref-link"');
-    expect(stack).toContain("You're racing");
+    expect(stack).toContain("You're racing.");
+    expect(stack).toContain("Send it now. A friend must tap Get my link — that's how you climb.");
     expect(stack).toContain('id="post-link-share"');
     expect(stack).toContain('id="post-link-primary"');
     expect(stack).toContain('id="post-link-copy"');
