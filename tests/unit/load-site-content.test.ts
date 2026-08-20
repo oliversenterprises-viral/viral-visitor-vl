@@ -25,7 +25,7 @@ describe('loadSiteContent (fetchSiteContent → updatePublicContent → referral
     await loadSiteContent();
 
     expect(getReferralBaseUrl()).toBe('https://mybrand.com/join');
-    expect(document.getElementById('hero-title-line1')?.textContent).toBe('Test Hero');
+    expect(document.getElementById('hero-title-line1')?.textContent).toBe('Win the homepage.');
 
     const link = buildReferralLinkFromBase('VIRAL-LOAD', getReferralBaseUrl());
     expect(parseRefFromLocation(locationFromUrl(link))).toBe('VIRAL-LOAD');
@@ -46,8 +46,12 @@ describe('loadSiteContent (fetchSiteContent → updatePublicContent → referral
 
     await loadSiteContent();
 
-    expect(document.getElementById('hero-title-line1')?.textContent).toBe('Custom headline from admin');
-    expect(document.getElementById('hero-subtitle')?.textContent).toBe('Custom subtitle');
-    expect(document.querySelector('#hero-get-link-btn span')?.textContent).toBe('Tap for your link');
+    expect(document.getElementById('hero-title-line1')?.textContent).toBe('Win the homepage.');
+    expect(document.getElementById('hero-subtitle')?.textContent).toBe(
+      'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
+    );
+    expect(document.querySelector('#hero-get-link-btn span')?.textContent).toBe(
+      'Get my referral link',
+    );
   });
 });
