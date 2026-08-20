@@ -37,6 +37,7 @@ describe('post-link status', () => {
     clearShareDeadlineState();
     document.documentElement.removeAttribute(POST_LINK_STATUS_ATTR);
     document.documentElement.removeAttribute('data-vr-has-link');
+    document.documentElement.removeAttribute('data-vr-post-link-one');
     document.documentElement.removeAttribute('data-vr-share-locked');
     mount();
     document.documentElement.setAttribute('data-vr-has-link', '1');
@@ -48,6 +49,7 @@ describe('post-link status', () => {
     document.body.innerHTML = '';
     document.documentElement.removeAttribute(POST_LINK_STATUS_ATTR);
     document.documentElement.removeAttribute('data-vr-has-link');
+    document.documentElement.removeAttribute('data-vr-post-link-one');
     document.documentElement.removeAttribute('data-vr-share-locked');
   });
 
@@ -93,5 +95,15 @@ describe('post-link status', () => {
     expect(document.getElementById('post-link-status-title')?.textContent).toBe('Locked');
     expect(document.getElementById('post-link-status-line')?.textContent).toBe("A friend tapped Get my link. You're on the board.");
     expect(document.getElementById('share-deadline-banner')?.classList.contains('hidden')).toBe(true);
+  });
+
+  it('stays hidden on data-vr-post-link-one so You\'re in. does not sit above You\'re racing', () => {
+    document.documentElement.setAttribute('data-vr-post-link-one', '1');
+    renderPostLinkStatus();
+    const status = document.getElementById('post-link-status');
+    expect(status?.hidden).toBe(true);
+    expect(status?.classList.contains('hidden')).toBe(true);
+    expect(document.documentElement.hasAttribute(POST_LINK_STATUS_ATTR)).toBe(false);
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("Your link is ready");
   });
 });

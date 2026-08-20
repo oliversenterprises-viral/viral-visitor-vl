@@ -84,15 +84,27 @@ function paintCountdown(): void {
   countdown.textContent = state ? formatPostLinkClock(msUntilDeadline(state)) : '';
 }
 
-export function renderPostLinkStatus(): void {
+export function hidePostLinkStatus(): void {
   const root = el(IDS.root);
-  if (!root) return;
-  if (!hasLink()) {
+  if (root) {
     root.classList.add('hidden');
     root.hidden = true;
     root.dataset.state = 'hidden';
-    document.documentElement.removeAttribute(POST_LINK_STATUS_ATTR);
-    setClockVisible(false);
+  }
+  document.documentElement.removeAttribute(POST_LINK_STATUS_ATTR);
+  setClockVisible(false);
+}
+
+export function renderPostLinkStatus(): void {
+  const root = el(IDS.root);
+  if (!root) return;
+  // Ba6Un3B9 ship: You're racing owns the send screen. Do not paint "You're in."
+  if (document.documentElement.hasAttribute('data-vr-post-link-one')) {
+    hidePostLinkStatus();
+    return;
+  }
+  if (!hasLink()) {
+    hidePostLinkStatus();
     return;
   }
   const status = resolvePostLinkStatus();

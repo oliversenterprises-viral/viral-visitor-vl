@@ -30,6 +30,10 @@ function mountKidSimpleSendDom() {
     <div id="mobile-referral-cta" class="hidden"><span>Get my link</span></div>
     <div id="referral-section" hidden class="hidden" style="display:none">
       <input id="ref-link" value="" />
+      <div id="post-link-status" class="hidden" hidden data-state="hidden">
+        <h2 id="post-link-status-title">You're in.</h2>
+        <p id="post-link-status-line"></p>
+      </div>
       <div id="post-link-share" class="hidden" hidden>
         <h2 id="post-link-heading">You're racing</h2>
         <p id="post-link-url"></p>
@@ -88,6 +92,7 @@ describe('Get my link reveal (last-night lock)', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
     expect(css).toMatch(/html\[data-vr-has-link\] #referral-section/);
     expect(css).toMatch(/html\[data-vr-post-link-one\] #referral-section/);
+    expect(css).toMatch(/html\[data-vr-post-link-one\] #post-link-status/);
     expect(css).toMatch(/html\[data-vr-kid-simple\]:not\(\[data-vr-kid-more\]\) #vr-funnel-ticker/);
   });
 
@@ -105,6 +110,8 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
     expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(2);
+    expect(document.getElementById('post-link-status')?.hidden).toBe(true);
+    expect(document.documentElement.hasAttribute('data-vr-post-link-status')).toBe(false);
   });
 
   it('getMyReferralLinkInstant reveals the send screen and survives slim/clarity refresh', async () => {
@@ -120,6 +127,8 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(section?.style.display).not.toBe('none');
     expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
     expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
+    expect(document.getElementById('post-link-status')?.hidden).toBe(true);
+    expect(document.documentElement.hasAttribute('data-vr-post-link-status')).toBe(false);
 
     refreshVisitorSlimState();
     refreshPublicClarityState();

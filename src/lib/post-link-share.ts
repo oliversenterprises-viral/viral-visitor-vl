@@ -4,6 +4,7 @@
  */
 
 import { registerGlobal } from './global';
+import { hidePostLinkStatus } from './post-link-status';
 import { LOCKED_SHARE_TEXT } from './prize-slot';
 import { SEND_NOW_LABEL } from './referred-race';
 import { buildNativeShareData } from './share-power';
@@ -34,6 +35,7 @@ export function revealReferralSection(): void {
   document.getElementById('vr-exit-rescue')?.remove();
   root.removeAttribute('data-vr-paid-nudge');
   root.removeAttribute('data-vr-exit-rescue');
+  hidePostLinkStatus();
 }
 
 const IDS = {
@@ -225,7 +227,6 @@ export function showPostLinkReady(link: string): void {
 
 export function activatePostLinkShare(link: string): void {
   showPostLinkReady(link);
-  void import('./post-link-status').then((m) => m.renderPostLinkStatus()).catch(() => {});
 }
 
 /** Same user-gesture share sheet (mobile). No-op when Web Share is missing. */

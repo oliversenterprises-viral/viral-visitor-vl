@@ -82,7 +82,10 @@ describe('post-link first paint', () => {
     expect(css).not.toMatch(/#visitor-legacy-toolkit/);
     expect(css).toMatch(/html\[data-vr-has-link\] #funnel-journey/);
     expect(css).toMatch(/html\[data-vr-has-link\] #kid-more-tools-btn/);
-    expect(css).toMatch(/html\[data-vr-post-link-status\] #post-link-heading/);
+    expect(css).toMatch(/html\[data-vr-post-link-one\] #post-link-status/);
+    expect(css).toMatch(
+      /html\[data-vr-post-link-status\]:not\(\[data-vr-post-link-one\]\) #post-link-heading/,
+    );
   });
 
   it('three quiet status strings exist in i18n', () => {

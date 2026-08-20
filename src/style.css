@@ -463,10 +463,15 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #prize 
   display: none !important;
 }
 
-/* Last-night lock: after Get my link the send screen must paint */
+/* Ba6Un3B9 / 12:37 AM CT ship: reveal on post-link-one, not only has-link */
 html[data-vr-has-link] #referral-section,
 html[data-vr-post-link-one] #referral-section {
   display: block !important;
+}
+
+/* You're racing owns the send screen — do not sit "You're in." above it */
+html[data-vr-post-link-one] #post-link-status {
+  display: none !important;
 }
 
 html[data-vr-kid-simple]:not([data-vr-kid-more]) #vr-funnel-ticker {
@@ -4342,11 +4347,11 @@ html[data-vr-post-link-one] #hero-prize-one {
   word-break: break-all;
   color: #e4e4e7;
 }
-html[data-vr-post-link-status] #post-link-heading,
-html[data-vr-post-link-status] #post-link-sub,
-html[data-vr-post-link-status] #post-link-clock,
-html[data-vr-post-link-status] #post-link-helper,
-html[data-vr-post-link-status] #post-link-whisper {
+html[data-vr-post-link-status]:not([data-vr-post-link-one]) #post-link-heading,
+html[data-vr-post-link-status]:not([data-vr-post-link-one]) #post-link-sub,
+html[data-vr-post-link-status]:not([data-vr-post-link-one]) #post-link-clock,
+html[data-vr-post-link-status]:not([data-vr-post-link-one]) #post-link-helper,
+html[data-vr-post-link-status]:not([data-vr-post-link-one]) #post-link-whisper {
   display: none;
 }
 
