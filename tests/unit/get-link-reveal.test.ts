@@ -147,6 +147,49 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(document.getElementById('referral-section')?.hidden).toBe(false);
   });
 
+  it('live 0d13b49 shape: no #ref-link at tap, fo() must create it so slim cannot strip has-link', async () => {
+    document.body.innerHTML = `
+      <button id="hero-get-link-btn"><span>Get my link</span></button>
+      <div id="mobile-referral-cta" class="hidden"><span>Get my link</span></div>
+      <div id="referral-section" hidden class="hidden" style="display:none">
+        <div id="post-link-status" class="hidden" hidden data-state="hidden">
+          <h2 id="post-link-status-title">You're in.</h2>
+          <p id="post-link-status-line"></p>
+        </div>
+        <div id="post-link-share" class="hidden" hidden>
+          <h2 id="post-link-heading">You're racing</h2>
+          <p id="post-link-url"></p>
+          <button type="button" id="post-link-primary"></button>
+          <button type="button" id="post-link-copy">Copy link</button>
+        </div>
+      </div>
+    `;
+    expect(document.getElementById('ref-link')).toBeNull();
+    document.documentElement.setAttribute('data-vr-kid-simple', '1');
+    initVisitorSlim();
+    await getMyReferralLinkInstant();
+
+    const created = document.getElementById('ref-link') as HTMLInputElement | null;
+    expect(created).not.toBeNull();
+    expect(created?.value).toMatch(/\/r\/VIRAL-/i);
+    expect(hasReferralLinkInUI()).toBe(true);
+    expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
+    expect(document.documentElement.getAttribute(POST_LINK_ATTR)).toBe('1');
+    expect(document.getElementById('referral-section')?.hidden).toBe(false);
+    expect(document.getElementById('referral-section')?.style.display).not.toBe('none');
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
+    expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
+    expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
+    expect(document.getElementById('post-link-status')?.hidden).toBe(true);
+
+    refreshVisitorSlimState();
+    refreshPublicClarityState();
+    expect(document.getElementById('ref-link')).not.toBeNull();
+    expect((document.getElementById('ref-link') as HTMLInputElement).value).toMatch(/\/r\/VIRAL-/i);
+    expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
+    expect(document.getElementById('referral-section')?.hidden).toBe(false);
+  });
+
   it('paid Reddit landings do not spawn interstitial popups', () => {
     vi.useFakeTimers();
     vi.stubGlobal('location', {

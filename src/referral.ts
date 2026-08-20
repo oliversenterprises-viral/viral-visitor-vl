@@ -237,10 +237,32 @@ export function resetReferralRecordingStateForTests(): void {
 /**
  * Generates or retrieves the user's referral code and populates the UI
  */
+/**
+ * Live 0d13b49 purged #ref-link from HTML. fo() then wrote the URL onto a missing
+ * node (no-op). ua() / refreshVisitorSlimState keyed data-vr-has-link off
+ * #ref-link.value and stripped it, so kid-simple CSS hid #referral-section.
+ * Recreate the hidden input so has-link stays set after Get my link.
+ */
+function ensureRefLinkInput(): HTMLInputElement {
+  const existing = document.getElementById('ref-link') as HTMLInputElement | null;
+  if (existing) return existing;
+  const input = document.createElement('input');
+  input.id = 'ref-link';
+  input.type = 'text';
+  input.readOnly = true;
+  input.hidden = true;
+  input.className = 'sr-only';
+  input.setAttribute('aria-hidden', 'true');
+  input.tabIndex = -1;
+  const section = document.getElementById('referral-section');
+  (section ?? document.body).appendChild(input);
+  return input;
+}
+
 /** Populate #ref-link, QR, stats — synchronous so the visitor sees value immediately. */
 function populateReferralLinkUI(code: string, link: string): void {
-  const refInput = document.getElementById('ref-link') as HTMLInputElement | null;
-  if (refInput) refInput.value = link;
+  const refInput = ensureRefLinkInput();
+  refInput.value = link;
 
   const qrImg = document.getElementById('qr-code') as HTMLImageElement | null;
   if (qrImg) {
