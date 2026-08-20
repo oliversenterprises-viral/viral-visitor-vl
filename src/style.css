@@ -1699,6 +1699,14 @@ html[data-vr-paid-landing]:not([data-vr-has-link]) #mobile-referral-cta button {
   letter-spacing: 0.01em;
 }
 
+/* First-visit overlay is off. Keep send-page #post-link-sheet. */
+#vr-exit-rescue,
+#vr-paid-getlink-nudge,
+.vr-exit-rescue,
+.vr-paid-getlink-nudge {
+  display: none !important;
+}
+
 .vr-paid-getlink-nudge {
   position: fixed;
   inset: 0;

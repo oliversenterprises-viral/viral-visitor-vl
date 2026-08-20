@@ -49,8 +49,17 @@ export function buildExitRescueMessage(): { title: string; body: string; cta: st
   };
 }
 
-/** Bootstrap is a no-op: no first-paint or dwell interstitial. */
+/** Strip leftover first-visit panels. Never paint exit-rescue or paid-getlink nudge. */
+export function dismissFirstVisitOverlays(doc: Document = document): void {
+  doc.getElementById('vr-exit-rescue')?.remove();
+  doc.getElementById('vr-paid-getlink-nudge')?.remove();
+  doc.documentElement.removeAttribute('data-vr-exit-rescue');
+  doc.documentElement.removeAttribute('data-vr-paid-nudge');
+}
+
+/** Bootstrap: strip leftovers. No first-paint or dwell interstitial. */
 export function initExitIntentRescue(win: Window = window): void {
+  dismissFirstVisitOverlays(win.document);
   if (isEmbedMode(win.location) || win.document.documentElement.dataset.vrExitBound === '1') return;
   win.document.documentElement.dataset.vrExitBound = '1';
 }

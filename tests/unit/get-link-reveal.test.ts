@@ -267,6 +267,39 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(document.getElementById('mobile-referral-cta')?.classList.contains('hidden')).toBe(true);
   });
 
+  it('cold init strips leftover Wait — free worldwide link overlays and leaves the send sheet', () => {
+    const nudge = document.createElement('div');
+    nudge.id = 'vr-paid-getlink-nudge';
+    nudge.innerHTML = '<button class="vr-paid-getlink-nudge-dismiss">Not now</button>';
+    document.body.appendChild(nudge);
+    const exit = document.createElement('div');
+    exit.id = 'vr-exit-rescue';
+    exit.innerHTML =
+      '<p>Wait — free worldwide link</p><button class="vr-exit-rescue-dismiss">Not now</button>';
+    document.body.appendChild(exit);
+    const sheet = document.createElement('div');
+    sheet.id = 'post-link-sheet';
+    sheet.innerHTML = '<button class="post-link-sheet__close">Not now</button>';
+    document.body.appendChild(sheet);
+
+    initExitIntentRescue(window);
+    expect(document.getElementById('vr-paid-getlink-nudge')).toBeNull();
+    expect(document.getElementById('vr-exit-rescue')).toBeNull();
+    expect(document.getElementById('post-link-sheet')).not.toBeNull();
+    expect(document.querySelector('.post-link-sheet__close')?.textContent).toBe('Not now');
+  });
+
+  it('exit-rescue and paid-getlink source never paint the first-visit modal', () => {
+    const exitSrc = readFileSync(resolve(ROOT, 'src/lib/exit-intent-rescue.ts'), 'utf8');
+    const paidSrc = readFileSync(resolve(ROOT, 'src/lib/paid-conversion-boost.ts'), 'utf8');
+    const src = `${exitSrc}\n${paidSrc}`;
+    expect(src).not.toContain('showRescuePanel');
+    expect(src).not.toContain('showPaidGetLinkNudge');
+    expect(src).not.toContain('vr-exit-rescue-dismiss');
+    expect(src).not.toContain('vr-paid-getlink-nudge-dismiss');
+    expect(src).not.toContain('Wait — free worldwide link');
+  });
+
   it('revealReferralSection dismisses leftover popups', () => {
     const nudge = document.createElement('div');
     nudge.id = 'vr-paid-getlink-nudge';
