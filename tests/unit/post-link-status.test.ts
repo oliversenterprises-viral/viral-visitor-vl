@@ -97,14 +97,11 @@ describe('post-link status', () => {
     expect(document.getElementById('share-deadline-banner')?.classList.contains('hidden')).toBe(true);
   });
 
-  it('stays hidden on data-vr-post-link-one so You\'re in. does not sit above You\'re racing', () => {
+  it('unmounts #post-link-status on first send so You\'re in. is not rendered', () => {
     document.documentElement.setAttribute('data-vr-post-link-one', '1');
     renderPostLinkStatus();
-    const status = document.getElementById('post-link-status');
-    expect(status?.hidden).toBe(true);
-    expect(status?.classList.contains('hidden')).toBe(true);
+    expect(document.getElementById('post-link-status')).toBeNull();
     expect(document.documentElement.hasAttribute(POST_LINK_STATUS_ATTR)).toBe(false);
-    expect(document.getElementById('post-link-status-title')?.textContent).toBe('');
     expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
   });
 });

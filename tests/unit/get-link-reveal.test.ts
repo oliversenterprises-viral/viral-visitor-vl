@@ -84,6 +84,7 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(hero).toContain('30-day banner');
     expect(html).toContain('id="ref-link"');
     expect(html).toContain("You're racing");
+    expect(html).not.toContain('id="post-link-status"');
     expect(html).not.toContain('Your link is ready');
     expect(html).not.toContain('Send to a friend now');
     expect(html).toContain("rdt('init','a2_ir6sjdbsj2n4')");
@@ -104,8 +105,7 @@ describe('Get my link reveal (last-night lock)', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
     expect(css).toMatch(/html\[data-vr-has-link\] #referral-section/);
     expect(css).toMatch(/html\[data-vr-post-link-one\] #referral-section/);
-    expect(css).toMatch(/html\[data-vr-post-link-one\] #post-link-status/);
-    expect(css).toMatch(/html\[data-vr-post-link-one\] #share-deadline-banner/);
+    expect(css).not.toMatch(/html\[data-vr-post-link-one\] #post-link-status/);
     expect(css).toMatch(/html\[data-vr-kid-simple\]:not\(\[data-vr-kid-more\]\) #vr-funnel-ticker/);
   });
 
@@ -125,7 +125,7 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(2);
     expect(document.getElementById('referral-section')?.textContent).not.toContain('Your link is ready');
     expect(document.getElementById('referral-section')?.textContent).not.toContain('Send to a friend now');
-    expect(document.getElementById('post-link-status')?.hidden).toBe(true);
+    expect(document.getElementById('post-link-status')).toBeNull();
     expect(document.documentElement.hasAttribute('data-vr-post-link-status')).toBe(false);
   });
 
@@ -145,7 +145,7 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
     expect(document.getElementById('referral-section')?.textContent).not.toContain('Your link is ready');
     expect(document.getElementById('referral-section')?.textContent).not.toContain('Send to a friend now');
-    expect(document.getElementById('post-link-status')?.hidden).toBe(true);
+    expect(document.getElementById('post-link-status')).toBeNull();
     expect(document.documentElement.hasAttribute('data-vr-post-link-status')).toBe(false);
 
     refreshVisitorSlimState();
@@ -169,10 +169,8 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
     expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
-    expect(document.getElementById('post-link-status')?.hidden).toBe(true);
-    expect(document.getElementById('post-link-status-title')?.textContent).toBe('');
+    expect(document.getElementById('post-link-status')).toBeNull();
     expect(document.documentElement.hasAttribute('data-vr-post-link-status')).toBe(false);
-    expect(document.getElementById('share-deadline-banner')?.hasAttribute('hidden')).toBe(true);
     expect(document.getElementById('referral-section')?.textContent).not.toContain('Waiting');
     expect(document.getElementById('referral-section')?.textContent).not.toContain(
       '1 friend must tap Get my link',
@@ -227,7 +225,7 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
     expect(document.getElementById('referral-section')?.textContent).not.toContain('Your link is ready');
     expect(document.getElementById('referral-section')?.textContent).not.toContain('Send to a friend now');
-    expect(document.getElementById('post-link-status')?.hidden).toBe(true);
+    expect(document.getElementById('post-link-status')).toBeNull();
 
     refreshVisitorSlimState();
     refreshPublicClarityState();

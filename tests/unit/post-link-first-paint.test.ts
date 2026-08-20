@@ -29,13 +29,13 @@ describe('post-link first paint', () => {
     expect(hero).not.toContain('id="promoter-week-strip"');
   });
 
-  it('post-link stack is status + #31 share + existing clock only', () => {
+  it('post-link stack is You\'re racing + Send it now + Copy link, no status node', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const stack = sliceById(html, 'referral-section', 'my-stats');
-    expect(stack).toContain('id="post-link-status"');
-    expect(stack).toContain('id="post-link-status-title"');
-    expect(stack).toContain('id="post-link-status-line"');
-    expect(stack).toContain('id="share-deadline-banner"');
+    expect(stack).not.toContain('id="post-link-status"');
+    expect(stack).not.toContain("You're in.");
+    expect(stack).toContain('id="ref-link"');
+    expect(stack).toContain("You're racing");
     expect(stack).toContain('id="post-link-share"');
     expect(stack).toContain('id="post-link-primary"');
     expect(stack).toContain('id="post-link-copy"');
@@ -82,7 +82,7 @@ describe('post-link first paint', () => {
     expect(css).not.toMatch(/#visitor-legacy-toolkit/);
     expect(css).toMatch(/html\[data-vr-has-link\] #funnel-journey/);
     expect(css).toMatch(/html\[data-vr-has-link\] #kid-more-tools-btn/);
-    expect(css).toMatch(/html\[data-vr-post-link-one\] #post-link-status/);
+    expect(css).not.toMatch(/html\[data-vr-post-link-one\] #post-link-status/);
     expect(css).toMatch(
       /html\[data-vr-post-link-status\]:not\(\[data-vr-post-link-one\]\) #post-link-heading/,
     );

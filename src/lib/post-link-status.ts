@@ -85,26 +85,15 @@ function paintCountdown(): void {
 }
 
 export function hidePostLinkStatus(): void {
-  const root = el(IDS.root);
-  if (root) {
-    root.classList.add('hidden');
-    root.hidden = true;
-    root.dataset.state = 'hidden';
-  }
-  const title = el(IDS.title);
-  const line = el(IDS.line);
-  if (title) title.textContent = '';
-  if (line) line.textContent = '';
-  const countdown = el(IDS.countdown);
-  if (countdown) countdown.textContent = '';
+  // First send is You're racing. Do not CSS-hide leftover You're in. — unmount it.
+  el(IDS.root)?.remove();
   document.documentElement.removeAttribute(POST_LINK_STATUS_ATTR);
-  setClockVisible(false);
 }
 
 export function renderPostLinkStatus(): void {
   const root = el(IDS.root);
   if (!root) return;
-  // Ba6Un3B9 ship: You're racing owns the send screen. Do not paint "You're in."
+  // First send: do not render #post-link-status / You're in. at all.
   if (document.documentElement.hasAttribute('data-vr-post-link-one')) {
     hidePostLinkStatus();
     return;
