@@ -254,7 +254,7 @@ export function trackVisitorFunnel(
   if (isAdminStatsReadOnlyRefresh()) return;
   pushLocalVisitorEvent(step, metadata);
   logVisitorEventServer(step, metadata);
-  // Optional Reddit Ads pixel (no-op unless explicitly enabled)
+  // Reddit Ads pixel (Lead / custom events; PageVisit is fired on load)
   trackRedditFunnelStep(step);
 }
 

@@ -62,7 +62,7 @@ initVisitorSlim();
 initKidSimple();
 initAttributedReferralRecording();
 initVisitorTracking();
-// Reddit retargeting pixel — no-op unless VITE_REDDIT_PIXEL_ENABLED=1 and a pixel id are set
+// Reddit Ads pixel — PageVisit + later Lead/share events (skipped on /embed)
 initRedditPixel();
 initInteractionTracking();
 initOrganicSeo();

@@ -6,7 +6,7 @@
 
 **Do not optimize for:** `PageVisit` / site landings alone. That is what “actions that aren’t real” looks like.
 
-Pixel ID (production): set `VITE_REDDIT_PIXEL_ID` (already in project env files). Redeploy after any pixel change.
+Pixel ID (production): `a2_ir6sjdbsj2n4` (shipped in `index.html`). Redeploy after any pixel change.
 
 ---
 

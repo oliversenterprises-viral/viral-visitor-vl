@@ -1,20 +1,16 @@
 /**
- * Reddit Ads Pixel — optional retargeting + conversion tracking.
+ * Reddit Ads Pixel — PageVisit + conversion tracking for paid ads.
  *
- * Safe-by-default:
- * - Loads ONLY when BOTH `VITE_REDDIT_PIXEL_ENABLED=1` and a pixel id are set
- * - A leftover `VITE_REDDIT_PIXEL_ID` alone does not inject pixel.js
- *   (CSP blocks redditstatic.com; live-audit forbids the script tag)
- * - Never throws; never blocks the public funnel
- * - Skipped on /embed (traffic exchanges)
- * - No PII / advanced matching
+ * On by default for public pages (not /embed):
+ * - Pixel ID `a2_ir6sjdbsj2n4` (ViralRefer Ad Account ir6sjdbsj2n4)
+ * - Official snippet also lives in index.html so PageVisit fires on first paint
+ * - This module inits only if the HTML snippet did not already bootstrap `rdt`
+ * - Later funnel steps (Lead / custom) still go through trackRedditFunnelStep
  *
- * Events (best retargeting ladder for ViralRefer):
- * - PageVisit     → all homepage landings (build retargeting pool)
- * - Lead          → GetReferralLink (high-intent converters)
- * - Custom        → CopyReferralLink / ShareReferral (super-intent)
+ * Kill switch: `VITE_REDDIT_PIXEL_ENABLED=0` (JS path only; HTML snippet stays on)
+ * Override: `VITE_REDDIT_PIXEL_ID=...`
  *
- * Reddit Events Manager → create audiences from these events.
+ * Never throws; never blocks the public funnel. No PII / advanced matching.
  */
 
 import { isEmbedMode } from './embed-mode';
@@ -30,26 +26,41 @@ declare global {
   }
 }
 
-const PAGE_VISIT_SESSION_KEY = 'vr_rdt_pagevisit';
+/** Official Reddit Ads pixel for ViralRefer Ad Account (ir6sjdbsj2n4). */
+export const OFFICIAL_REDDIT_PIXEL_ID = 'a2_ir6sjdbsj2n4';
+
 const SCRIPT_SRC = 'https://www.redditstatic.com/ads/pixel.js';
+
+function isBlankEnv(raw: string): boolean {
+  return !raw || raw === '""' || raw === "''" || raw.toLowerCase() === 'undefined';
+}
 
 /** Exported for tests / admin diagnostics. */
 export function getRedditPixelId(): string {
   const raw = String(import.meta.env.VITE_REDDIT_PIXEL_ID ?? '').trim();
-  // Guard empty quotes left in env files
-  if (!raw || raw === '""' || raw === "''" || raw.toLowerCase() === 'undefined') {
-    return '';
+  if (isBlankEnv(raw)) {
+    return OFFICIAL_REDDIT_PIXEL_ID;
   }
   return raw;
 }
 
-function isRedditPixelFlagOn(): boolean {
+function isRedditPixelFlagOff(): boolean {
   const raw = String(import.meta.env.VITE_REDDIT_PIXEL_ENABLED ?? '').trim().toLowerCase();
-  return raw === '1' || raw === 'true' || raw === 'yes';
+  return raw === '0' || raw === 'false' || raw === 'no' || raw === 'off';
 }
 
 export function isRedditPixelEnabled(): boolean {
-  return isRedditPixelFlagOn() && getRedditPixelId().length > 0;
+  return !isRedditPixelFlagOff() && getRedditPixelId().length > 0;
+}
+
+function pixelScriptPresent(): boolean {
+  if (typeof document === 'undefined') return false;
+  return !!document.querySelector(`script[src="${SCRIPT_SRC}"]`);
+}
+
+/** True when the official HTML snippet (or a prior init) already booted the pixel. */
+function isPixelAlreadyBootstrapped(): boolean {
+  return typeof window !== 'undefined' && typeof window.rdt === 'function' && pixelScriptPresent();
 }
 
 function ensureRdtStub(): RdtFn {
@@ -74,7 +85,7 @@ function ensureRdtStub(): RdtFn {
 
 function injectPixelScript(): void {
   if (typeof document === 'undefined') return;
-  if (document.querySelector(`script[src="${SCRIPT_SRC}"]`)) return;
+  if (pixelScriptPresent()) return;
   const t = document.createElement('script');
   t.src = SCRIPT_SRC;
   t.async = true;
@@ -99,35 +110,22 @@ function rdtTrack(eventName: string, payload?: Record<string, unknown>): void {
 }
 
 /**
- * Init base pixel + PageVisit once per tab session.
+ * Init base pixel + PageVisit on each public page load.
  * Call from public bootstrap (main.ts) after UTM capture.
+ * No-ops when the official index.html snippet already ran.
  */
 export function initRedditPixel(): void {
   try {
     if (!isRedditPixelEnabled()) return;
     if (typeof window === 'undefined') return;
     if (isEmbedMode()) return;
+    if (isPixelAlreadyBootstrapped()) return;
 
     const pixelId = getRedditPixelId();
     const rdt = ensureRdtStub();
     injectPixelScript();
     rdt('init', pixelId);
-
-    // One PageVisit per tab session (retargeting pool)
-    let already = false;
-    try {
-      already = sessionStorage.getItem(PAGE_VISIT_SESSION_KEY) === '1';
-    } catch {
-      already = false;
-    }
-    if (!already) {
-      rdtTrack('PageVisit');
-      try {
-        sessionStorage.setItem(PAGE_VISIT_SESSION_KEY, '1');
-      } catch {
-        /* ignore */
-      }
-    }
+    rdtTrack('PageVisit');
   } catch (err) {
     console.warn('[ViralRefer] Reddit pixel init skipped:', err);
   }
@@ -146,7 +144,7 @@ export function trackRedditFunnelStep(step: string): void {
 
     switch (step) {
       case 'SiteLanding':
-        // PageVisit already fired in initRedditPixel (deduped)
+        // PageVisit already fired from the HTML snippet or initRedditPixel
         break;
       case 'GetReferralLink':
         // Best conversion signal for retargeting "got a link but didn't share"

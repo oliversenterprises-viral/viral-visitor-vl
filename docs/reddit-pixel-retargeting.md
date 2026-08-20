@@ -2,17 +2,17 @@
 
 ## What was implemented
 
-Optional Reddit Ads Pixel for **retargeting audiences** + conversion signals.
+Reddit Ads Pixel for **PageVisit** (paid Traffic campaign) + later conversion signals.
 
 | Guard | Behavior |
 |--------|----------|
-| `VITE_REDDIT_PIXEL_ENABLED` unset/false | **No script loads** (prod-safe default; leftover pixel id is ignored) |
-| Enabled + `VITE_REDDIT_PIXEL_ID` set | Loads `redditstatic.com/ads/pixel.js`, fires events |
-| Pixel id only (no enable flag) | **No script** — current production state |
-| `/embed` traffic exchanges | Pixel **skipped** |
+| Default (no env) | Official snippet in `index.html` + `src/lib/reddit-pixel.ts` fire `init` + `PageVisit` on public pages |
+| Pixel ID | `a2_ir6sjdbsj2n4` (ViralRefer Ad Account `ir6sjdbsj2n4`) |
+| `VITE_REDDIT_PIXEL_ENABLED=0` | JS conversion path off; HTML PageVisit snippet still ships |
+| `/embed` traffic exchanges | Pixel **skipped** (HTML + JS) |
 | Failures | Never break get-link / share funnel |
 
-Code: `src/lib/reddit-pixel.ts` · wired from `main.ts` + `trackVisitorFunnel`.
+Code: official snippet in `index.html` · `src/lib/reddit-pixel.ts` · wired from `main.ts` + `trackVisitorFunnel`.
 
 ## Events (best ladder)
 
@@ -26,20 +26,15 @@ Code: `src/lib/reddit-pixel.ts` · wired from `main.ts` + `trackVisitorFunnel`.
 
 **Not used:** `Purchase` (product is free — would mislead optimization).
 
-## Enable in production (does not auto-deploy)
+## Production
 
-1. Reddit Ads → **Events Manager** → create/copy **Pixel ID** (looks like `a2_...`).
-2. Vercel → Project → Settings → Environment Variables → Production:
-   ```
-   VITE_REDDIT_PIXEL_ENABLED=1
-   VITE_REDDIT_PIXEL_ID=a2_xxxxxxxxxxxx
-   ```
-   Also allow `https://www.redditstatic.com` in the site CSP before turning this on, or the script is blocked and live-audit fails.
-3. Redeploy production (`npm run deploy:prod` when you are ready).
-4. Visit `https://www.viralrefer.app/` → Reddit Events Manager should show **PageVisit** (may take minutes).
-5. Get a link on the site → should show **Lead**.
+Pixel ID `a2_ir6sjdbsj2n4` is shipped in homepage HTML. Public CSP allows `redditstatic.com` + Reddit pixel connect hosts. Embed CSP stays free of Reddit.
 
-Historical id once used on this project (if Events Manager still shows it): check Ads account; do not invent a new one if the old pixel still has history.
+1. Merge + Vercel deploy.
+2. Visit `https://www.viralrefer.app/` → Events Manager should show **PageVisit** (may take minutes).
+3. Get a link on the site → should show **Lead**.
+
+Historical id (do not ship): `a2_jr6jdbg2r4`.
 
 ## Audiences to create in Reddit Ads
 
@@ -70,5 +65,5 @@ npm test -- tests/unit/reddit-pixel.test.ts
 
 ## Safety
 
-- No deploy required for code review alone; **pixel only becomes live after env + redeploy**.
-- Empty env = identical to pre-pixel product behavior (plus slightly broader CSP allowlist for Reddit domains).
+- Pixel ships with the site; no extra Vercel env is required.
+- Set `VITE_REDDIT_PIXEL_ENABLED=0` only if you need to mute JS conversion events.
