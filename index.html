@@ -113,6 +113,19 @@
 
     <!-- Cloudflare Turnstile (explicit render for referral debug + future claim flow) -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+
+    <!-- Reddit Ads Pixel (PageVisit). Skipped on /embed traffic-exchange iframes. -->
+    <script>
+    (function () {
+      var p = location.pathname || '';
+      var q = location.search || '';
+      if (/^\/embed\/?$/i.test(p)) return;
+      if (/(?:^|[?&])(?:embed|iframe)=1(?:&|$)/.test(q)) return;
+      !function(w,d){if(!w.rdt){var p=w.rdt=function(){p.sendEvent?p.sendEvent.apply(p,arguments):p.callQueue.push(arguments)};p.callQueue=[];var t=d.createElement("script");t.src="https://www.redditstatic.com/ads/pixel.js",t.async=!0;var s=d.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}}(window,document);
+      rdt('init','a2_ir6sjdbsj2n4');
+      rdt('track','PageVisit');
+    })();
+    </script>
 </head>
 <body class="tail-container bg-zinc-950 text-zinc-100 min-h-screen">
     <!-- NAVBAR -->

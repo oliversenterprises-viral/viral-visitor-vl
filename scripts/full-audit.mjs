@@ -22,7 +22,7 @@ report.checks.homepageStatus = home.status;
 const csp = home.headers['content-security-policy'] || '';
 report.checks.security = {
   csp: !!csp,
-  noRedditInCsp: !csp.includes('redditstatic.com'),
+  redditInCsp: csp.includes('redditstatic.com'),
   supabaseInCsp: csp.includes('supabase.co'),
   hsts: !!(home.headers['strict-transport-security']),
   xFrameOptions: home.headers['x-frame-options'] === 'DENY',
@@ -44,11 +44,13 @@ report.checks.publicUi = {
   prizeBannerVisual: html.includes('id="prize-banner-visual"'),
 };
 
-// 4. Reddit paid ads removed (Phase 2)
-report.checks.noRedditAds = {
-  noPixelScript: !html.includes('redditstatic.com/ads/pixel.js'),
-  noPixelId: !html.includes('a2_jr6jdbg2r4') && !html.includes('VITE_REDDIT_PIXEL_ID'),
-  noRdtInit: !html.includes("rdt('init'") && !html.includes('rdt("init"'),
+// 4. Reddit Ads pixel (PageVisit) on public homepage
+report.checks.redditAds = {
+  pixelScript: html.includes('redditstatic.com/ads/pixel.js'),
+  officialPixelId: html.includes('a2_ir6sjdbsj2n4'),
+  noStalePixelId: !html.includes('a2_jr6jdbg2r4'),
+  rdtInit: html.includes("rdt('init','a2_ir6sjdbsj2n4')") || html.includes('rdt("init","a2_ir6sjdbsj2n4")'),
+  pageVisit: html.includes("rdt('track','PageVisit')") || html.includes('rdt("track","PageVisit")'),
 };
 
 // 5. SEO / PWA
