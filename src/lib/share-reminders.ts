@@ -144,7 +144,7 @@ export function shareReminderMessage(): string {
   if (hasLinkBeenCopied()) {
     return 'You copied your link — now share it! WhatsApp is one tap below.';
   }
-  return 'Your link is ready — tap COPY, then share to climb the leaderboard!';
+  return "You're racing — tap Copy link, then Send it now.";
 }
 
 export function copyNudgeMessage(): string {

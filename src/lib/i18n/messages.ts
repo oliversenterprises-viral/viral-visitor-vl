@@ -189,11 +189,11 @@ export const en = {
   'send_mode.primary_cta': 'Send it now',
   'send_mode.sticky_cta': 'Send it now',
   'send_mode.sticky_hint': 'A friend must tap Get my link. Copying is not enough.',
-  'send_mode.status': 'Your link is ready. Send it to a friend.',
+  'send_mode.status': "You're racing. Send it now.",
   'send_mode.sub':
-    'Send this to a friend. They open it and tap Get my link. That counts. Copying does not count.',
+    'Send this. A friend must tap Get my link. That counts. Copying does not count.',
   'send_mode.next_step':
-    'Tap Send to a friend. They must tap Get my link.',
+    'Tap Send it now. They must tap Get my link.',
   'send_mode.reminder':
     'Send your link. Copying does not count.',
   'send_mode.more': 'More ways to send',

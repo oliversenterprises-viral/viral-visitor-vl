@@ -23,7 +23,7 @@ function mount() {
         </div>
       </div>
       <div id="post-link-share">
-        <h2 id="post-link-heading">Your link is ready</h2>
+        <h2 id="post-link-heading">You're racing</h2>
         <button type="button" id="post-link-primary">Share with a friend</button>
         <button type="button" id="post-link-copy">Copy link</button>
       </div>
@@ -104,6 +104,6 @@ describe('post-link status', () => {
     expect(status?.hidden).toBe(true);
     expect(status?.classList.contains('hidden')).toBe(true);
     expect(document.documentElement.hasAttribute(POST_LINK_STATUS_ATTR)).toBe(false);
-    expect(document.getElementById('post-link-heading')?.textContent).toBe("Your link is ready");
+    expect(document.getElementById('post-link-heading')?.textContent).toBe("You're racing");
   });
 });
