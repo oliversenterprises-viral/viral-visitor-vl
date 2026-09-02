@@ -164,10 +164,11 @@ h1, h2, h3, .logo-font {
   letter-spacing: -0.025em;
 }
 
-/* Always-dark chrome: wordmark + Message from ViralRefer inherit --text-h (#08060d) when OS is light. */
+/* Always-dark chrome: wordmark must stay #f4f4f5 even when OS is light (--text-h is #08060d). */
 #vr-nav .vr-wordmark,
-#vr-nav .logo-font {
-  color: #f4f4f5;
+#vr-nav .logo-font,
+#vr-nav .vr-wordmark.logo-font {
+  color: #f4f4f5 !important;
 }
 .racer-talk__title,
 h2.racer-talk__title,
@@ -401,8 +402,6 @@ html[data-vr-send-mode] #distance-glory-meter,
 html[data-vr-send-mode] #growth-command-center,
 html[data-vr-send-mode] #my-stats,
 html[data-vr-send-mode] #funnel-journey,
-html[data-vr-send-mode] #how,
-html[data-vr-send-mode] #prize,
 html[data-vr-send-mode] #copy-message-btn,
 html[data-vr-send-mode] #new-code-button,
 html[data-vr-send-mode] #share-more-options-btn,
@@ -474,8 +473,7 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #weekly
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #daily-crown-section,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-campaign-badge,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #referral-section,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #prize {
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey {
   display: none !important;
 }
 
@@ -2461,7 +2459,19 @@ html[data-vr-has-link] .funnel-step-active {
   }
 }
 
-/* Share abandon rescue — hard to ignore after get-link */
+/* Share abandon rescue — exit-intent only. Copy / Send win the first tap. */
+html[data-vr-share-abandon] #post-link-copy,
+html[data-vr-share-abandon] #post-link-primary {
+  position: relative;
+  z-index: 980;
+  pointer-events: auto !important;
+}
+
+html[data-vr-share-abandon][data-vr-post-link-one] #post-link-share {
+  position: relative;
+  z-index: 980;
+}
+
 .vr-share-abandon {
   position: fixed;
   inset: 0;
@@ -2474,9 +2484,31 @@ html[data-vr-has-link] .funnel-step-active {
   animation: vr-share-abandon-in 0.28s ease-out;
 }
 
+/* Send screen: overlay must not cover or intercept Copy / Send. */
+html[data-vr-post-link-one] .vr-share-abandon,
+.vr-share-abandon--send-safe {
+  pointer-events: none;
+  align-items: flex-start;
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+html[data-vr-post-link-one] .vr-share-abandon-backdrop,
+.vr-share-abandon--send-safe .vr-share-abandon-backdrop {
+  pointer-events: none;
+}
+
+html[data-vr-post-link-one] .vr-share-abandon-card,
+.vr-share-abandon--send-safe .vr-share-abandon-card {
+  pointer-events: auto;
+}
+
 @media (min-width: 640px) {
   .vr-share-abandon {
     align-items: center;
+  }
+  html[data-vr-post-link-one] .vr-share-abandon,
+  .vr-share-abandon--send-safe {
+    align-items: flex-start;
   }
 }
 
@@ -2788,10 +2820,7 @@ html:not([data-vr-has-link]) #my-stats {
   display: none !important;
 }
 
-/* Claim block is not the first job — hide even before kid-simple JS runs */
-html:not([data-vr-has-link]) #prize {
-  display: none !important;
-}
+/* Claim block stays visible on the homepage so Feature nav works. */
 
 /* NEW CODE only after they have a code */
 html:not([data-vr-has-link]) #new-code-button {
@@ -4342,6 +4371,15 @@ html[data-vr-post-link-one] #referral-next-step,
 html[data-vr-post-link-one] #post-share-return-hub,
 html[data-vr-has-link] [data-vr-declutter-post-link] {
   display: none !important;
+}
+
+/* Homepage public chrome: How / Feature / Board / legal footer stay on screen.
+   Live 8a24705 hid them (below-fold + footer{display:none}) so nav did nothing. */
+html:not([data-vr-embed]):not([data-vr-referred-micro]) #how,
+html:not([data-vr-embed]):not([data-vr-referred-micro]) #prize,
+html:not([data-vr-embed]):not([data-vr-referred-micro]) #leaderboard,
+html:not([data-vr-embed]) footer {
+  display: block !important;
 }
 html[data-vr-post-link-one] #post-link-share:not(.hidden) {
   display: block;

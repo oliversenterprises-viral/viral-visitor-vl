@@ -11,4 +11,5 @@ export {
 } from './state';
 
 export { renderOwnerFunnelDesk, renderOwnerFunnelDeskView } from './owner-funnel-desk';
+export { renderRaceDesk, renderRaceDeskView } from './race-desk';
 export { switchAdminTab, showOwnerFunnelDesk } from './switcher';

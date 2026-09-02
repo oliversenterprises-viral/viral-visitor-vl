@@ -11,10 +11,20 @@ function read(rel: string): string {
 }
 
 describe('five-layer first screen (Helix order)', () => {
-  it('first-tap: cold land is one screen — below-fold stays hidden until expand', () => {
+  it('first-tap: cold land is one screen — How / Feature / Board / footer stay visible', () => {
     const css = read('src/style.css');
     const html = read('index.html');
     expect(css).toMatch(/html:not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]/);
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) #how/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) #prize/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) #leaderboard/,
+    );
+    expect(css).toMatch(/html:not\(\[data-vr-embed\]\) footer/);
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-micro\]\) #funnel-expand-wrap/);
     expect(html).toContain('id="funnel-expand-btn"');
     expect(html).toContain('id="hero-get-link-btn"');
@@ -54,7 +64,7 @@ describe('five-layer first screen (Helix order)', () => {
     expect(html).toContain('id="hero-slot-thumb"');
     expect(html).toContain('id="hero-ad-inventory"');
     expect(html).toContain('id="hero-ad-race"');
-    expect(html).toContain('id="hero-week-clock"');
+    expect(html).toContain('id="hero-race-countdown"');
     expect(html).toContain('id="hero-slot-preview"');
     expect(html).not.toContain('https://www.viralrefer.app/tools/');
     expect(html).not.toContain('Free growth tools');

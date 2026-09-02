@@ -2,6 +2,16 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    teardownTimeout: 15000,
+    // Worker teardown raced Vitest's console RPC (EnvironmentTeardownError /
+    // onUserConsoleLog pending) after get-link-reveal logs. Skip intercept.
+    disableConsoleIntercept: true,
+    onConsoleLog(log) {
+      // Expected when unit tests call register without a live Edge Function.
+      // Returning false keeps the log off Vitest's RPC so worker teardown
+      // does not fail with EnvironmentTeardownError / onUserConsoleLog.
+      if (log.includes('register-referrer-link failed')) return false;
+    },
     projects: [
       {
         test: {

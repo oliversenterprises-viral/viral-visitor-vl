@@ -286,14 +286,6 @@ function populateReferralLinkUI(code: string, link: string): void {
   initShareRemindersOnLinkReady();
   onReferralLinkReady();
   refreshPublicClarityState();
-  // Start / refresh 48h first-friend lock clock (server-backed when available)
-  void registerReferrerLinkDeadline(code).then((state) => {
-    if (state?.status === 'expired') {
-      enforceLocalShareDeadlineExpiry(code);
-      return;
-    }
-    renderShareDeadlineBanner();
-  });
 }
 
 /** Current value in #ref-link (empty until generated). */
@@ -372,6 +364,13 @@ export async function getMyReferralLinkInstant(): Promise<void> {
 
     const link = buildReferralLink(code);
     populateReferralLinkUI(code, link);
+    void registerReferrerLinkDeadline(code).then((state) => {
+      if (state?.status === 'expired') {
+        enforceLocalShareDeadlineExpiry(code);
+        return;
+      }
+      renderShareDeadlineBanner();
+    });
 
     let via: string | null = null;
     try {

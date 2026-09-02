@@ -88,6 +88,11 @@ export async function switchAdminTab(tab: number) {
       const { renderAffiliatesTab } = await import("./affiliates-tab");
       if (isStale(requestId)) return;
       await renderAffiliatesTab(content);
+    } else if (tab === 7) {
+      if (isStale(requestId)) return;
+      const { renderRaceDesk } = await import('./race-desk');
+      if (isStale(requestId)) return;
+      await renderRaceDesk(content);
     }
   } catch (err) {
     if (isStale(requestId)) return;

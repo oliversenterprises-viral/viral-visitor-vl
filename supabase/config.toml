@@ -1,0 +1,7 @@
+# Production project. Vercel frontend deploys do not ship Edge Functions.
+# Live HQ Website needs this admin-action on project wqbefjzpgsezzwdrvvua.
+project_id = "wqbefjzpgsezzwdrvvua"
+
+[functions.admin-action]
+# Owner session / ADMIN_ACTION_SECRET — not a user JWT.
+verify_jwt = false

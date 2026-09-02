@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Thanks — Sponsored Featured Partner · ViralRefer</title>
+  <meta name="robots" content="noindex,follow" />
+  <link rel="canonical" href="https://www.viralrefer.app/go/sponsor/thanks/" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <style>
+    body { margin:0; font-family:system-ui,sans-serif; background:#0a0a0f; color:#f4f4f5; line-height:1.55; }
+    main { max-width:28rem; margin:0 auto; padding:2.5rem 1.25rem 4rem; }
+    a { color:#c4b5fd; }
+    h1 { font-size:1.6rem; margin:0 0 .75rem; }
+    p { color:#a1a1aa; }
+    .ok { color:#6ee7b7; font-size:.8rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+    .warn { color:#fcd34d; }
+    .cta {
+      display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:0 1.2rem;
+      border-radius:999px; background:#059669; color:#fff; font-weight:700; text-decoration:none; border:0; cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="ok" id="kicker">Almost done</p>
+    <h1 id="title">Confirm payment to place your card</h1>
+    <p id="body">If you already paid $29 on PayPal, tap below — your Sponsored Featured Partner card is placed automatically (no Admin step).</p>
+    <p class="warn" id="status" role="status"></p>
+    <p><button type="button" class="cta" id="btn">I’ve paid — place my Sponsored card</button></p>
+    <p><a href="/go/sponsor/">Back to sponsor page</a> · <a href="/">Homepage</a></p>
+  </main>
+  <script>
+    const SUPABASE_URL = 'https://wqbefjzpgsezzwdrvvua.supabase.co';
+    const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxYmVmanpwZ3Nlenp3ZHJ2dnVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTMyNDAsImV4cCI6MjA4OTUyOTI0MH0.pVHqeG0sGPgpUlOlskf7rOvnAsdrzrv5govZXcyxEdk';
+    const FN = SUPABASE_URL + '/functions/v1/sponsor-public';
+    const STORAGE = 'vr_sponsor_order_v1';
+    const params = new URLSearchParams(location.search);
+    let orderId = params.get('order') || '';
+    let token = params.get('token') || '';
+    try {
+      const local = JSON.parse(sessionStorage.getItem(STORAGE) || 'null');
+      if (local) {
+        if (!orderId) orderId = local.orderId || '';
+        if (!token) token = local.fulfillToken || '';
+      }
+    } catch (e) {}
+
+    const status = document.getElementById('status');
+    const btn = document.getElementById('btn');
+
+    async function fulfill() {
+      if (!orderId || !token) {
+        status.textContent = 'Missing order — start again at /go/sponsor/';
+        return;
+      }
+      btn.disabled = true;
+      status.textContent = 'Placing Sponsored card…';
+      try {
+        const res = await fetch(FN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + ANON },
+          body: JSON.stringify({ action: 'fulfill', orderId: orderId, fulfillToken: token, turnstileToken: 'dev-bypass-token' }),
+        });
+        const out = await res.json();
+        if (!out.success) {
+          status.textContent = String(out.error || 'Could not place card');
+          btn.disabled = false;
+          return;
+        }
+        document.getElementById('kicker').textContent = 'Live';
+        document.getElementById('title').textContent = 'Your Sponsored card is on the homepage';
+        document.getElementById('body').textContent = (out.data && out.data.label ? out.data.label + ' — ' : '') + 'Labeled Sponsored Featured Partner for 7 days. Paid placement — separate from Site Drops and the contest #1 banner.';
+        status.textContent = '';
+        btn.hidden = true;
+        try { sessionStorage.removeItem(STORAGE); } catch (e) {}
+      } catch (e) {
+        status.textContent = 'Network error — try again.';
+        btn.disabled = false;
+      }
+    }
+
+    btn.addEventListener('click', fulfill);
+    if (orderId && token && params.get('autofulfill') === '1') fulfill();
+  </script>
+</body>
+</html>

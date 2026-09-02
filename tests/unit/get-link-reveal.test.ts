@@ -66,8 +66,12 @@ describe('Get my link reveal (last-night lock)', () => {
     mountKidSimpleSendDom();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    if (vi.isFakeTimers()) {
+      vi.runOnlyPendingTimers();
+    }
     vi.useRealTimers();
+    vi.unstubAllGlobals();
     document.body.innerHTML = '';
     document.getElementById('vr-paid-getlink-nudge')?.remove();
     document.getElementById('vr-exit-rescue')?.remove();
@@ -76,20 +80,25 @@ describe('Get my link reveal (last-night lock)', () => {
     document.documentElement.removeAttribute('data-vr-kid-simple');
     document.documentElement.removeAttribute('data-vr-visitor-slim');
     document.documentElement.removeAttribute('data-vr-paid-landing');
+    // Drain console / microtasks so the jsdom worker does not tear down
+    // while Vitest's onUserConsoleLog RPC is still in flight.
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 0);
+    });
   });
 
-  it('first-paint HTML is the 8:44 homepage: one Get my referral link, 7-day slot', () => {
+  it('first-paint HTML is the live Site Drop homepage: one Get my referral link, 7-day slot', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).toContain('Win the homepage.');
-    expect(hero).toContain('#1 puts their site on');
-    expect(hero).toContain('this page.');
+    expect(hero).toContain('Each step puts your site on this page');
+    expect(hero).toContain('#1 owns the banner for 7 days.');
     expect(hero).toContain(
-      'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
     );
     expect(hero).toContain('Get my referral link');
-    expect(hero).toContain("This week's top racer gets a 7-day banner for their website.");
-    expect(hero).toContain('id="hero-week-clock"');
+    expect(hero).toContain('Paste your website in the slot.');
+    expect(hero).toContain('id="hero-race-countdown"');
     expect(hero).toContain('Your site here · 7 days');
     expect(hero).toContain('Empty right now. #1 this week puts their site here.');
     expect(hero).not.toContain('Example ad');
@@ -98,7 +107,7 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(html).toContain('id="ref-link"');
     expect(html).toContain("You're racing.");
     expect(html).toContain("Send it now. A friend must tap Get my link — that's how you climb.");
-    expect(html).not.toContain('id="post-link-status"');
+    expect(html).toContain('id="post-link-status"');
     expect(html).not.toContain('Your link is ready');
     expect(html).not.toContain('Send to a friend now');
     expect(html).toContain("rdt('init','a2_ir6sjdbsj2n4')");
@@ -254,14 +263,23 @@ describe('Get my link reveal (last-night lock)', () => {
 
   it('paid Reddit landings do not spawn interstitial popups', () => {
     vi.useFakeTimers();
-    vi.stubGlobal('location', {
+    // Pass a Location argument — do not stubGlobal('location'). Restoring a
+    // stubbed Location in jsdom logs during teardown and flakes CI with
+    // EnvironmentTeardownError: Closing rpc while "onUserConsoleLog" was pending.
+    const loc = {
       search: '?utm_source=reddit&utm_medium=paid&utm_campaign=get_my_link',
       pathname: '/',
-    });
-    captureUtmAttribution();
-    expect(initPaidConversionBoost(location as Location, window)).toBe(true);
+      href: 'https://viralrefer.app/?utm_source=reddit&utm_medium=paid&utm_campaign=get_my_link',
+      hash: '',
+    } as Location;
+    captureUtmAttribution(loc);
+    expect(initPaidConversionBoost(loc, window)).toBe(true);
     initExitIntentRescue(window);
-    vi.advanceTimersByTime(30_000);
+    // Only flush the 350ms hero-scroll timeout. Do not advance 30s — that
+    // fires share-deadline's status poll, which console.warns and flakes CI
+    // teardown (onUserConsoleLog still pending).
+    vi.advanceTimersByTime(400);
+    vi.runOnlyPendingTimers();
     expect(document.getElementById('vr-paid-getlink-nudge')).toBeNull();
     expect(document.getElementById('vr-exit-rescue')).toBeNull();
     expect(document.getElementById('mobile-referral-cta')?.classList.contains('hidden')).toBe(true);

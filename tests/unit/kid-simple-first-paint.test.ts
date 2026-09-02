@@ -18,24 +18,37 @@ describe('kid-simple first paint', () => {
     expect(head).toContain("setAttribute('data-vr-referred-landing'");
   });
 
-  it('hides #prize before a link without waiting for kid-simple JS', () => {
+  it('keeps #how / #prize / #leaderboard / footer visible on the homepage', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
-    expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #prize/);
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) #how/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) #prize/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) #leaderboard/,
+    );
+    expect(css).toMatch(/html:not\(\[data-vr-embed\]\) footer \{\s*display: block !important;/);
+    expect(css).not.toMatch(/html:not\(\[data-vr-has-link\]\) #prize \{/);
+    expect(css).not.toMatch(
+      /html:not\(\[data-vr-funnel-expanded\]\):not\(\[data-vr-share-locked\]\) footer/,
+    );
   });
 
   it('first screen is one race with Get my referral link', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).toMatch(/Win the homepage/);
-    expect(hero).toMatch(/#1 puts their site on/);
-    expect(hero).toContain('this page.');
+    expect(hero).toMatch(/Each step puts your site on this page/);
+    expect(hero).toContain('#1 owns the banner for 7 days.');
     expect(hero).toMatch(
-      /Tap Get my link\. Send it\. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days/,
+      /Get a link\. Send it\. When a friend taps Get my link, your site can go live here/,
     );
     expect(hero).toContain('id="hero-get-link-btn"');
     expect(hero).toContain('Get my referral link');
     expect(hero).not.toContain('Get my free link');
-    expect(hero).toContain("This week's top racer gets a 7-day banner for their website.");
+    expect(hero).toContain('Paste your website in the slot.');
     expect(hero).toContain('id="hero-banner-mock"');
     expect(hero).toContain('Your site here');
     expect(hero).toContain('Your site here · 7 days');
@@ -45,7 +58,7 @@ describe('kid-simple first paint', () => {
     expect(hero).not.toContain('Free growth tools');
     expect(hero).not.toMatch(/CURRENT #1/);
     expect(hero).not.toContain('yourwebsite.com');
-    expect(hero).toContain('Early ranks are open. #1 puts their website on this page.');
+    expect(hero).toContain('The board is this week only. Take #1 and claim it before the week ends.');
     expect(hero).not.toContain('See leaderboard');
     expect(hero).not.toContain('id="hero-leaderboard-btn"');
     expect(hero).not.toContain('Telegram');

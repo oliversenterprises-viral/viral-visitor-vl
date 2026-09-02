@@ -1,15 +1,14 @@
 /**
- * Share abandon rescue — make post–get-link sharing hard to ignore or skip.
+ * Share abandon rescue — only when they actually leave.
  *
- * When a visitor has a link but has not locked it (friend Get my link),
- * intercept leave/idle paths with a high-attention panel that funnels
- * them back to the primary send action.
+ * After Get my link the send screen is the job: Copy / Send it now.
+ * Never auto-open this overlay on that screen (no dwell timer, no poll,
+ * no return-from-tab). Exit-intent only. Even then the overlay must not
+ * cover #post-link-copy / #post-link-primary — first tap copies/sends
+ * with no dismiss step.
  *
  * White-hat: no dark patterns that trap forever; limited soft dismisses
  * per session; never blocks accessibility or breaks locked/embed flows.
- * Residual-risk mitigations: longer dwell, fewer shows, poll only when
- * send strip is off-screen, beforeunload only after a prior prompt, Escape
- * + (after first show) backdrop soft-dismiss.
  */
 
 import { isEmbedMode } from './embed-mode';
@@ -63,7 +62,23 @@ export function resolveShareAbandonDwellMs(opts: {
   return opts.isCoarsePointer ? MOBILE_DWELL_MS : MIN_DWELL_MS;
 }
 
+/** Dwell / poll / tab-return — never auto-open these on the send screen. */
+export function isAutoOpenShareAbandonReason(reason?: string): boolean {
+  return reason !== 'exit';
+}
+
+/** Send screen is up — Copy link / Send it now must stay the first tap. */
+export function isPostLinkSendScreenActive(doc: Document = document): boolean {
+  if (doc.documentElement.hasAttribute('data-vr-post-link-one')) return true;
+  const share = doc.getElementById('post-link-share');
+  if (share && !share.hidden && share.getAttribute('data-state') === 'ready') return true;
+  return false;
+}
+
 export function shouldShowShareAbandon(opts: ShareAbandonEligibility): boolean {
+  // Auto-open (dwell / poll / return / unspecified) never fires on the send screen.
+  // Exit-intent may fire if they actually leave — layout must not cover Copy / Send.
+  if (isPostLinkSendScreenActive() && isAutoOpenShareAbandonReason(opts.reason)) return false;
   if (opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
   if (opts.alreadyMaxShows || opts.snoozed || opts.confirmFlowActive) return false;
   // Poll is the softest path — never interrupt if they can already see Send
@@ -191,6 +206,61 @@ function removePanel(): void {
   document.documentElement.removeAttribute('data-vr-share-abandon');
 }
 
+/** Copy / Send must win — drop the overlay immediately. */
+export function dismissShareAbandon(): void {
+  removePanel();
+}
+
+const SEND_CONTROL_IDS = ['post-link-copy', 'post-link-primary'] as const;
+
+/** True when the pointer is over Copy link or Send it now. */
+export function sendControlUnderPoint(
+  clientX: number,
+  clientY: number,
+  doc: Document = document,
+): HTMLElement | null {
+  for (const id of SEND_CONTROL_IDS) {
+    const el = doc.getElementById(id);
+    if (!el || el.hidden || el.classList.contains('hidden')) continue;
+    const r = el.getBoundingClientRect();
+    if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) {
+      return el;
+    }
+  }
+  return null;
+}
+
+/**
+ * Capture-phase: if the Don't-leave overlay is sitting on Copy / Send,
+ * drop it and replay the tap onto the real control. Copy must win first tap.
+ */
+export function stealShareAbandonIfSendTap(ev: Event): boolean {
+  const panel = document.getElementById(PANEL_ID);
+  if (!panel) return false;
+
+  const target = ev.target;
+  if (target instanceof Element && target.closest('#post-link-copy, #post-link-primary')) {
+    removePanel();
+    return true;
+  }
+
+  let hit: HTMLElement | null = null;
+  if (ev instanceof PointerEvent || ev instanceof MouseEvent) {
+    hit = sendControlUnderPoint(ev.clientX, ev.clientY);
+  }
+
+  if (!hit && !isPostLinkSendScreenActive()) return false;
+
+  removePanel();
+
+  if (hit && (target === panel || (target instanceof Node && panel.contains(target)))) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    hit.click();
+  }
+  return true;
+}
+
 function invokeSend(): void {
   try {
     sessionStorage.setItem('vr_get_link_via', 'share_abandon_rescue');
@@ -215,6 +285,7 @@ function invokeSend(): void {
 
 function showAbandonPanel(reason: string): void {
   if (document.getElementById(PANEL_ID)) return;
+  if (isPostLinkSendScreenActive() && isAutoOpenShareAbandonReason(reason)) return;
   if (
     !shouldShowShareAbandon({
       hasLink: hasLink(),
@@ -241,7 +312,9 @@ function showAbandonPanel(reason: string): void {
 
   const panel = document.createElement('div');
   panel.id = PANEL_ID;
-  panel.className = 'vr-share-abandon';
+  panel.className = isPostLinkSendScreenActive()
+    ? 'vr-share-abandon vr-share-abandon--send-safe'
+    : 'vr-share-abandon';
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'true');
   panel.setAttribute('aria-labelledby', 'vr-share-abandon-title');
@@ -310,6 +383,7 @@ function showAbandonPanel(reason: string): void {
 
 function tryShow(reason: string, startedAt: number, coarse: boolean): void {
   if (document.getElementById(PANEL_ID)) return;
+  if (isPostLinkSendScreenActive() && isAutoOpenShareAbandonReason(reason)) return;
   if (
     !shouldShowShareAbandon({
       hasLink: hasLink(),
@@ -365,55 +439,32 @@ export function initShareAbandonRescue(win: Window = window): void {
 
   const started = Date.now();
   const coarse = win.matchMedia('(pointer: coarse)').matches;
-  const isPaid =
-    win.document.documentElement.getAttribute('data-vr-paid-landing') === '1';
-  const dwellNeed = resolveShareAbandonDwellMs({
-    isCoarsePointer: coarse,
-    isPaidTraffic: isPaid,
-  });
-  let leftHiddenAt: number | null = null;
 
+  // Exit-intent only. No dwell timer, no poll, no return-from-tab auto-open.
   if (!coarse) {
     win.document.addEventListener('mouseout', (e: MouseEvent) => {
       if (e.clientY > 12 || e.relatedTarget != null) return;
       tryShow('exit', started, coarse);
     });
-    if (isPaid) {
-      win.setTimeout(() => tryShow('dwell', started, coarse), dwellNeed);
-    }
-  } else {
-    win.setTimeout(() => tryShow('dwell', started, coarse), dwellNeed);
   }
-
-  win.document.addEventListener('visibilitychange', () => {
-    if (win.document.visibilityState === 'hidden') {
-      leftHiddenAt = Date.now();
-      return;
-    }
-    if (leftHiddenAt != null && Date.now() - leftHiddenAt >= MIN_AWAY_RETURN_MS) {
-      tryShow('return', started, coarse);
-    }
-    leftHiddenAt = null;
-  });
 
   win.addEventListener('beforeunload', makeBeforeUnloadHandler(started));
 
-  // Periodic re-surface only if they scrolled away from send UI
-  win.setInterval(() => {
-    if (!hasLink() || isLocked() || !isSharePendingLocal()) {
-      removePanel();
-      return;
-    }
-    tryShow('poll', started, coarse);
-  }, POLL_MS);
+  win.document.addEventListener('pointerdown', stealShareAbandonIfSendTap, true);
 
-  // Clear panel when locked
+  // Drop the panel once they lock or are no longer pending. Do not tear down
+  // an exit-intent panel just because the send screen is up.
   const obs = new MutationObserver(() => {
     if (isLocked() || !isSharePendingLocal()) removePanel();
   });
   obs.observe(win.document.documentElement, {
     attributes: true,
-    attributeFilter: ['data-vr-share-locked', 'data-vr-share-pending', 'data-vr-has-link'],
+    attributeFilter: [
+      'data-vr-share-locked',
+      'data-vr-share-pending',
+      'data-vr-has-link',
+      'data-vr-post-link-one',
+    ],
   });
 }
 

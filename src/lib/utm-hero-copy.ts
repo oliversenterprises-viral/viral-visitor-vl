@@ -22,58 +22,24 @@ const TRAFFIC_EXCHANGE_SOURCES = new Set([
   'etrafficboss',
 ]);
 
+/** Live homepage only. Do not paint a second product. */
+const LIVE_HERO: HeroCtaCopy = {
+  badge: 'THIS WEEK • FREE • NO SIGNUP',
+  titleLine1: 'Win the homepage.',
+  titleAccent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
+  subtitle:
+    'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+  trustLine: 'Open worldwide · recognition only · Site Drop ladder.',
+  buttonLabel: 'Get my referral link',
+};
+
 const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
-  traffic_exchange: {
-    badge: 'WORLDWIDE • FREE',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Open worldwide. No signup. Share anywhere for homepage feature.',
-    trustLine: 'Homepage feature for #1 · Link in ~5 seconds',
-    buttonLabel: 'Get my link',
-  },
-  linkedin: {
-    badge: 'WORLDWIDE • FREE',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Built for builders — one tap, share, climb the worldwide board.',
-    trustLine: 'No email · Free forever · Worldwide 18+',
-    buttonLabel: 'Get my link',
-  },
-  reddit: {
-    badge: 'FREE • NO SIGNUP',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle:
-      'No account. No app install. Get a unique referral link in seconds, share it, and watch your rank update live.',
-    trustLine: 'Step 1: Get link · Step 2: Share · Homepage feature for verified #1',
-    buttonLabel: 'Get my link',
-  },
-  /** Paid ads (Reddit CPC etc.) — same intent, even more conversion-focused. */
-  paid: {
-    badge: 'FREE • 30 SECONDS',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle:
-      'You are one tap from your unique link. Share it with friends — real referrals move the live leaderboard.',
-    trustLine: 'No signup · Free forever · Share once to start',
-    buttonLabel: 'Get my link',
-  },
-  telegram: {
-    badge: 'WORLDWIDE • FREE',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Share in chats or channels. Every referral counts live.',
-    trustLine: 'Open worldwide · No signup · Instant link',
-    buttonLabel: 'Get my link',
-  },
-  social: {
-    badge: 'WORLDWIDE • FREE',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Open worldwide. Free forever. One tap, then share.',
-    trustLine: 'Worldwide 18+ · Homepage feature for #1',
-    buttonLabel: 'Get my link',
-  },
+  traffic_exchange: LIVE_HERO,
+  linkedin: LIVE_HERO,
+  reddit: LIVE_HERO,
+  paid: LIVE_HERO,
+  telegram: LIVE_HERO,
+  social: LIVE_HERO,
 };
 
 /** Resolve UTM source + medium to a hero copy segment. */

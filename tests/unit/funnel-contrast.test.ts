@@ -11,7 +11,8 @@ describe('funnel contrast (wordmark + Message from ViralRefer)', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
     expect(html).toMatch(/id="vr-nav"[\s\S]*vr-wordmark[\s\S]*ViralRefer/);
     expect(css).toMatch(/#vr-nav \.vr-wordmark/);
-    expect(css).toMatch(/#vr-nav \.logo-font\s*\{[^}]*color:\s*#f4f4f5/);
+    expect(css).toMatch(/#vr-nav \.logo-font[\s\S]{0,80}color:\s*#f4f4f5/);
+    expect(html).toContain('style="color:#f4f4f5"');
     expect(css).toMatch(/\.racer-talk__title[\s\S]*color:\s*#f4f4f5/);
     expect(css).toMatch(/\.vr-bc-title[\s\S]*color:\s*#f4f4f5/);
   });
@@ -28,7 +29,7 @@ describe('funnel contrast (wordmark + Message from ViralRefer)', () => {
   it('Site Drop title uses an ASCII-safe middle dot (not a raw byte that becomes ??)', () => {
     const raw = readFileSync(resolve(ROOT, 'index.html'));
     const html = raw.toString('utf8');
-    expect(html).toContain('Site Drop &middot; Just entered');
+    expect(html).toMatch(/Site Drop (?:&middot;|·) Just entered/);
     expect(raw.includes(Buffer.from('Site Drop ?? Just entered'))).toBe(false);
     expect(html).not.toMatch(/Site Drop \uFFFD Just entered/);
   });

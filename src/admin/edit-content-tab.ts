@@ -114,17 +114,13 @@ async function renderEditContentTab(content: HTMLElement) {
     loadInFlight = true;
     const gen = ++loadGeneration;
     try {
-      const { data, error } = await supabase.from('site_content').select('*');
-      if (error) throw error;
+      const { fetchAdminSiteContentRows, normalizeSiteContentList } = await import(
+        '../lib/admin-site-content'
+      );
+      const data = await fetchAdminSiteContentRows();
       if (gen !== loadGeneration) return;
 
-      const rows = (data || [])
-        .map((row: { key?: string; id?: string; value?: unknown }) => ({
-          id: String(row.key ?? row.id ?? ''),
-          value: row.value,
-        }))
-        .filter((row) => row.id)
-        .sort((a, b) => a.id.localeCompare(b.id));
+      const rows = normalizeSiteContentList(data);
 
       const html = buildContentListHTML(rows);
       content.innerHTML = html;
@@ -171,7 +167,7 @@ async function renderEditContentTab(content: HTMLElement) {
   }
 
     } catch (err) {
-      content.innerHTML = `<div class="p-6 text-red-400">Error loading content: ${formatError(err)}. Please try refreshing the page.</div>`;
+      content.innerHTML = `<div class="p-6 text-red-400">Could not load Website. ${formatError(err)}. Tap Refresh to try again.</div>`;
     } finally {
       loadInFlight = false;
     }

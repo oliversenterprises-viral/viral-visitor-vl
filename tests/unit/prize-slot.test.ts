@@ -7,6 +7,7 @@ import {
   EMPTY_AD_NOTE,
   EMPTY_SLOT_META,
   EMPTY_SLOT_NAME,
+  EMPTY_SLOT_THUMB_SRC,
   LOCKED_OG_DESCRIPTION,
   LOCKED_SHARE_TEXT,
   ONE_PRIZE_SENTENCE,
@@ -63,7 +64,7 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(formatPrizeThresholdLine(10)).toBe(
       'Verified #1 with at least 10 friends who tapped Get my link can claim the banner.',
     );
-    expect(formatFaqPrizeAnswer(10)).toContain('at least 10 friends');
+    expect(formatFaqPrizeAnswer(10)).toContain('10 friends');
     expect(formatFaqPrizeAnswer(10)).not.toMatch(/see threshold/i);
   });
 
@@ -120,6 +121,9 @@ describe('prize-slot (Helix Bet 2)', () => {
     );
     expect(document.getElementById('hero-slot-preview')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('hero-slot-thumb')?.classList.contains('hidden')).toBe(true);
+    expect((document.getElementById('hero-slot-thumb') as HTMLImageElement).src).toBe(
+      EMPTY_SLOT_THUMB_SRC,
+    );
     expect(document.getElementById('hero-ad-visit')?.classList.contains('hidden')).toBe(true);
 
     paintPrizeSlot(
@@ -191,7 +195,7 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).toContain('Your site here · 7 days');
     expect(html).not.toContain('yourwebsite.com');
     expect(html).toContain('id="prize-threshold"');
-    expect(html).toContain('id="min-referrals-value">10<');
+    expect(html).toContain('id="min-referrals-value">3<');
     expect(html).toContain(PRIZE_FOMO_LINE);
     expect(html).toContain(ONE_PRIZE_SENTENCE);
     expect(html).toContain(EMPTY_AD_NOTE);
@@ -200,7 +204,7 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).not.toContain('viralrefer.app/tools');
     expect(html).not.toContain('Free growth tools');
     expect(html).not.toContain('Share generator');
-    expect(html).toContain('id="hero-week-clock"');
+    expect(html).toContain('id="hero-race-countdown"');
     expect(html).not.toMatch(/CURRENT #1 CAN CLAIM THIS/);
     expect(html).toContain(LOCKED_OG_DESCRIPTION);
     expect(html).not.toContain('Together: 0 / 100');
@@ -213,7 +217,7 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).not.toContain('Hall of Crowns');
     expect(html).not.toMatch(/see threshold on site/i);
     expect(html).not.toMatch(/minimum referrals as shown/i);
-    expect(HOMEPAGE_FAQ[2]?.answer).toContain('at least 10 friends');
+    expect(HOMEPAGE_FAQ[2]?.answer).toContain('3 friends');
   });
 
   it('formats inventory and unlock lines without naming a fake winner', () => {

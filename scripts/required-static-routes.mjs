@@ -22,9 +22,13 @@ export const REQUIRED_STATIC_ROUTES = [
   { url: '/privacy/', file: 'privacy/index.html' },
   { url: '/terms/', file: 'terms/index.html' },
   { url: '/rules/', file: 'rules/index.html' },
+  { url: '/guides/', file: 'guides/index.html', note: 'SEO guide hub' },
+  { url: '/guides/site-drops/', file: 'guides/site-drops/index.html' },
 
   // Tools hub
   { url: '/tools/', file: 'tools/index.html' },
+  { url: '/tools/credit-checker.html', file: 'tools/credit-checker.html' },
+  { url: '/tools/what-to-paste.html', file: 'tools/what-to-paste.html' },
   { url: '/tools/share-generator.html', file: 'tools/share-generator.html' },
   { url: '/tools/viral-calculator.html', file: 'tools/viral-calculator.html' },
   { url: '/tools/7-day-launch.html', file: 'tools/7-day-launch.html' },
@@ -43,6 +47,8 @@ export const REQUIRED_STATIC_ROUTES = [
   { url: '/go/herculist/', file: 'go/herculist/index.html' },
   { url: '/go/adsboard/', file: 'go/adsboard/index.html' },
   { url: '/go/affiliates/', file: 'go/affiliates/index.html' },
+  { url: '/go/sponsor/', file: 'go/sponsor/index.html' },
+  { url: '/go/sponsor/thanks/', file: 'go/sponsor/thanks/index.html' },
 
   // Iframe-safe embed variants (traffic exchanges)
   { url: '/embed/makers/', file: 'embed/makers/index.html' },

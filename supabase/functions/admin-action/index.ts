@@ -266,11 +266,32 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    if (action === 'get_site_content') {
+      // Live HQ Website / Promoters / Race. Must be deployed to production
+      // admin-action or the live function returns HTTP 400 Unknown action.
+      // Optional payload.key returns that row only; no key returns the full list.
+      const key = String(payload?.key ?? '').trim();
+      let query = supabaseAdmin
+        .from('site_content')
+        .select('key, id, value, updated_at');
+      if (key) query = query.eq('key', key);
+      const { data, error } = await query;
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'update_site_content') {
-      const { key, value } = payload;
+      const key = String(payload?.key ?? '').trim();
+      if (!key) {
+        return new Response(JSON.stringify({ success: false, error: 'key required' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       const { error } = await supabaseAdmin
         .from('site_content')
-        .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+        .upsert({ key, value: payload?.value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
 
       if (error) throw error;
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

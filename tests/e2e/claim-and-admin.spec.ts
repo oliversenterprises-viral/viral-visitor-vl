@@ -7,7 +7,7 @@ test.describe('ViralRefer - Prize Claim Flow & Admin', () => {
     await waitForAppReady(page);
 
     const prizeSection = page.locator('#prize');
-    await expect(prizeSection).toBeHidden();
+    await expect(prizeSection).toBeVisible();
 
     const claimBtn = page.locator('#prize button[onclick="claimBanner()"]');
     await expect(claimBtn).toBeAttached({ timeout: 8000 });
