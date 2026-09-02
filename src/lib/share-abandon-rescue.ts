@@ -66,6 +66,8 @@ export function resolveShareAbandonDwellMs(opts: {
 export function shouldShowShareAbandon(opts: ShareAbandonEligibility): boolean {
   if (opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
   if (opts.alreadyMaxShows || opts.snoozed || opts.confirmFlowActive) return false;
+  // Overlay is exit-intent only — never auto-fire on dwell / poll / return
+  if (opts.reason === 'dwell' || opts.reason === 'poll' || opts.reason === 'return') return false;
   // Poll is the softest path — never interrupt if they can already see Send
   if (opts.reason === 'poll' && opts.shareStripInView) return false;
   const need = resolveShareAbandonDwellMs({
@@ -365,47 +367,15 @@ export function initShareAbandonRescue(win: Window = window): void {
 
   const started = Date.now();
   const coarse = win.matchMedia('(pointer: coarse)').matches;
-  const isPaid =
-    win.document.documentElement.getAttribute('data-vr-paid-landing') === '1';
-  const dwellNeed = resolveShareAbandonDwellMs({
-    isCoarsePointer: coarse,
-    isPaidTraffic: isPaid,
-  });
-  let leftHiddenAt: number | null = null;
 
   if (!coarse) {
     win.document.addEventListener('mouseout', (e: MouseEvent) => {
       if (e.clientY > 12 || e.relatedTarget != null) return;
       tryShow('exit', started, coarse);
     });
-    if (isPaid) {
-      win.setTimeout(() => tryShow('dwell', started, coarse), dwellNeed);
-    }
-  } else {
-    win.setTimeout(() => tryShow('dwell', started, coarse), dwellNeed);
   }
 
-  win.document.addEventListener('visibilitychange', () => {
-    if (win.document.visibilityState === 'hidden') {
-      leftHiddenAt = Date.now();
-      return;
-    }
-    if (leftHiddenAt != null && Date.now() - leftHiddenAt >= MIN_AWAY_RETURN_MS) {
-      tryShow('return', started, coarse);
-    }
-    leftHiddenAt = null;
-  });
-
   win.addEventListener('beforeunload', makeBeforeUnloadHandler(started));
-
-  // Periodic re-surface only if they scrolled away from send UI
-  win.setInterval(() => {
-    if (!hasLink() || isLocked() || !isSharePendingLocal()) {
-      removePanel();
-      return;
-    }
-    tryShow('poll', started, coarse);
-  }, POLL_MS);
 
   // Clear panel when locked
   const obs = new MutationObserver(() => {

@@ -15,7 +15,6 @@ import { getStoredUtmAttribution } from './utm-attribution';
 import { hasReferralLinkInUI } from './visitor-slim';
 
 const PAID_ATTR = 'data-vr-paid-landing';
-const NUDGE_SESSION_KEY = 'vr_paid_nudge_shown';
 
 /** Mobile dwell before soft get-link panel on paid traffic (default exit rescue is 22s). */
 export const PAID_MOBILE_DWELL_MS = 6_000;
@@ -84,37 +83,6 @@ export function resolvePaidTrafficSignals(
   };
 }
 
-function alreadyNudged(): boolean {
-  try {
-    return sessionStorage.getItem(NUDGE_SESSION_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function markNudged(): void {
-  try {
-    sessionStorage.setItem(NUDGE_SESSION_KEY, '1');
-  } catch {
-    /* non-fatal */
-  }
-}
-
-function triggerGetLink(via: string): void {
-  try {
-    sessionStorage.setItem('vr_get_link_via', via);
-  } catch {
-    /* non-fatal */
-  }
-  const fn = (window as Window & { getMyReferralLinkInstant?: () => void | Promise<void> })
-    .getMyReferralLinkInstant;
-  if (typeof fn === 'function') {
-    void fn();
-    return;
-  }
-  document.getElementById('hero-get-link-btn')?.click();
-}
-
 /** Force sticky mobile Step-1 bar visible for paid landers without a link. */
 export function forceMobileGetLinkBar(): void {
   const bar = document.getElementById('mobile-referral-cta');
@@ -133,41 +101,6 @@ function scrollHeroCtaIntoView(): void {
     /* ignore */
   }
   highlightHeroGetLink();
-}
-
-function showPaidGetLinkNudge(): void {
-  if (alreadyNudged() || hasReferralLinkInUI() || isReferredLanding()) return;
-  if (document.getElementById('vr-paid-getlink-nudge')) return;
-
-  markNudged();
-  const panel = document.createElement('div');
-  panel.id = 'vr-paid-getlink-nudge';
-  panel.className = 'vr-paid-getlink-nudge';
-  panel.setAttribute('role', 'dialog');
-  panel.setAttribute('aria-modal', 'true');
-  panel.setAttribute('aria-labelledby', 'vr-paid-nudge-title');
-  panel.innerHTML = `
-    <div class="vr-paid-getlink-nudge-card">
-      <button type="button" class="vr-paid-getlink-nudge-close" aria-label="Dismiss">&times;</button>
-      <p id="vr-paid-nudge-title" class="vr-paid-getlink-nudge-title">One tap to get your link</p>
-      <p class="vr-paid-getlink-nudge-body">Free · no signup. Get your unique link, share it once, climb the live board.</p>
-      <button type="button" class="vr-paid-getlink-nudge-cta">Get my referral link now</button>
-      <button type="button" class="vr-paid-getlink-nudge-dismiss">Not now</button>
-    </div>
-  `;
-  document.body.appendChild(panel);
-  document.documentElement.setAttribute('data-vr-paid-nudge', '1');
-
-  const dismiss = () => {
-    panel.remove();
-    document.documentElement.removeAttribute('data-vr-paid-nudge');
-  };
-  panel.querySelector('.vr-paid-getlink-nudge-close')?.addEventListener('click', dismiss);
-  panel.querySelector('.vr-paid-getlink-nudge-dismiss')?.addEventListener('click', dismiss);
-  panel.querySelector('.vr-paid-getlink-nudge-cta')?.addEventListener('click', () => {
-    triggerGetLink('paid_nudge');
-    dismiss();
-  });
 }
 
 /**
@@ -196,21 +129,6 @@ export function initPaidConversionBoost(
   forceMobileGetLinkBar();
   highlightHeroGetLink();
   win.setTimeout(() => scrollHeroCtaIntoView(), 350);
-
-  const coarse = (() => {
-    try {
-      return win.matchMedia('(pointer: coarse)').matches;
-    } catch {
-      return false;
-    }
-  })();
-  const dwell = coarse ? PAID_MOBILE_DWELL_MS : PAID_DESKTOP_DWELL_MS;
-
-  win.setTimeout(() => {
-    if (hasReferralLinkInUI()) return;
-    forceMobileGetLinkBar();
-    showPaidGetLinkNudge();
-  }, dwell);
 
   // Re-assert sticky bar on resize (orientation) while no link
   win.addEventListener(

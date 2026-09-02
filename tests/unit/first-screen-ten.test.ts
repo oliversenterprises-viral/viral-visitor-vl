@@ -11,10 +11,22 @@ function read(rel: string): string {
 }
 
 describe('five-layer first screen (Helix order)', () => {
-  it('first-tap: cold land is one screen — below-fold stays hidden until expand', () => {
+  it('first-tap: public homepage shows How / Feature / Board; referred and embed still hide below-fold', () => {
     const css = read('src/style.css');
     const html = read('index.html');
-    expect(css).toMatch(/html:not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]/);
+    expect(css).toMatch(
+      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\):not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\):not\(\[data-vr-has-link\]\) #how/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\):not\(\[data-vr-has-link\]\) #prize/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\):not\(\[data-vr-has-link\]\) #leaderboard/,
+    );
+    expect(css).toMatch(/html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) footer/);
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-micro\]\) #funnel-expand-wrap/);
     expect(html).toContain('id="funnel-expand-btn"');
     expect(html).toContain('id="hero-get-link-btn"');

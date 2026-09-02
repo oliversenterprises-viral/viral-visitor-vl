@@ -122,6 +122,7 @@ function wireSmoothAnchors(): void {
     const target = document.querySelector(href);
     if (!target) return;
     e.preventDefault();
+    document.documentElement.setAttribute('data-vr-funnel-expanded', '1');
     target.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
     history.replaceState(null, '', href);
   });

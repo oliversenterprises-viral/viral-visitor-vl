@@ -87,7 +87,7 @@ describe('paid-conversion-boost', () => {
     expect(bar?.textContent).toMatch(/share/i);
   });
 
-  it('initPaidConversionBoost marks paid landing and schedules nudge', () => {
+  it('initPaidConversionBoost marks paid landing without auto-firing an overlay', () => {
     vi.useFakeTimers();
     vi.stubGlobal('location', {
       search: '?utm_source=reddit&utm_medium=paid',
@@ -103,9 +103,8 @@ describe('paid-conversion-boost', () => {
     );
 
     vi.advanceTimersByTime(PAID_MOBILE_DWELL_MS + 50);
-    // coarse pointer may not match in jsdom — desktop path uses 8s
     vi.advanceTimersByTime(10_000);
-    expect(document.getElementById('vr-paid-getlink-nudge')).toBeTruthy();
+    expect(document.getElementById('vr-paid-getlink-nudge')).toBeFalsy();
   });
 
   it('initPaidConversionBoost skips non-paid traffic', () => {

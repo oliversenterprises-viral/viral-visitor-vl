@@ -458,8 +458,7 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #weekly
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #daily-crown-section,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-campaign-badge,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #referral-section,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #prize {
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey {
   display: none !important;
 }
 
@@ -622,7 +621,8 @@ html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-link {
   font-size: 0.75rem;
   opacity: 0.8;
 }
-html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-nav-link {
+html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link,
+html[data-vr-embed] .vr-nav-link {
   display: none !important;
 }
 html[data-vr-direct-landing]:not([data-vr-has-link]) #admin-btn {
@@ -2275,19 +2275,24 @@ html[data-vr-funnel-guide-step='3'] .funnel-guide-target-ring {
 }
 
 html:not([data-vr-has-link]):not([data-vr-referred-micro]) #funnel-expand-wrap {
-  display: block;
+  display: none;
 }
 
 html[data-vr-referred-landing][data-vr-has-link] #funnel-expand-wrap {
   display: none;
 }
 
-html:not([data-vr-funnel-expanded]) [data-vr-below-fold] {
+html[data-vr-referred-micro]:not([data-vr-has-link]):not([data-vr-funnel-expanded]) [data-vr-below-fold],
+html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) [data-vr-below-fold] {
   display: none !important;
 }
 
-html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) [data-vr-below-fold] {
-  display: none !important;
+/* Public homepage first paint: How / Feature / Board / footer stay visible */
+html:not([data-vr-embed]):not([data-vr-referred-micro]):not([data-vr-has-link]) #how,
+html:not([data-vr-embed]):not([data-vr-referred-micro]):not([data-vr-has-link]) #prize,
+html:not([data-vr-embed]):not([data-vr-referred-micro]):not([data-vr-has-link]) #leaderboard,
+html:not([data-vr-embed]):not([data-vr-referred-micro]) footer {
+  display: block !important;
 }
 
 html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) #hero-leaderboard-btn {
@@ -2754,10 +2759,7 @@ html:not([data-vr-has-link]) #my-stats {
   display: none !important;
 }
 
-/* Claim block is not the first job — hide even before kid-simple JS runs */
-html:not([data-vr-has-link]) #prize {
-  display: none !important;
-}
+/* Claim block stays on the public homepage; embed / referred-micro still hide it */
 
 /* NEW CODE only after they have a code */
 html:not([data-vr-has-link]) #new-code-button {
@@ -3573,6 +3575,9 @@ svg {
 
 #vr-nav {
   padding-top: env(safe-area-inset-top, 0px);
+}
+#vr-nav span.logo-font {
+  color: #f4f4f5;
 }
 
 .vr-hero-title,

@@ -114,11 +114,14 @@ async function renderEditContentTab(content: HTMLElement) {
     loadInFlight = true;
     const gen = ++loadGeneration;
     try {
-      const { data, error } = await supabase.from('site_content').select('*');
-      if (error) throw error;
+      const { invokeAdminAction } = await import('../lib/admin-action-client');
+      const result = await invokeAdminAction<Array<{ key?: string; id?: string; value?: unknown }>>(
+        'get_site_content',
+      );
+      if (!result.success) throw new Error(result.error);
       if (gen !== loadGeneration) return;
 
-      const rows = (data || [])
+      const rows = (result.data || [])
         .map((row: { key?: string; id?: string; value?: unknown }) => ({
           id: String(row.key ?? row.id ?? ''),
           value: row.value,

@@ -238,7 +238,7 @@ export function resetReferralRecordingStateForTests(): void {
  * Generates or retrieves the user's referral code and populates the UI
  */
 /** Populate #ref-link, QR, stats — synchronous so the visitor sees value immediately. */
-function populateReferralLinkUI(code: string, link: string): void {
+function populateReferralLinkUI(code: string, link: string, opts?: { register?: boolean }): void {
   const refInput = document.getElementById('ref-link') as HTMLInputElement | null;
   if (refInput) refInput.value = link;
 
@@ -258,6 +258,7 @@ function populateReferralLinkUI(code: string, link: string): void {
   initShareRemindersOnLinkReady();
   onReferralLinkReady();
   refreshPublicClarityState();
+  if (opts?.register === false) return;
   // Start / refresh 48h first-friend lock clock (server-backed when available)
   void registerReferrerLinkDeadline(code).then((state) => {
     if (state?.status === 'expired') {
@@ -282,7 +283,8 @@ export async function ensureReferralLinkReady(): Promise<string> {
   const code = getMyReferralCode();
   if (code) {
     const link = buildReferralLink(code);
-    populateReferralLinkUI(code, link);
+    // Copy / share helpers must not fire a second register-referrer-link
+    populateReferralLinkUI(code, link, { register: false });
     return link;
   }
 
