@@ -17,6 +17,7 @@
     "test:admin-audit": "node scripts/audit-admin-flow.mjs",
     "test:preview-load": "node tests/preview-load.mjs",
     "deploy:prod": "node scripts/deploy-prod.mjs",
+    "deploy:viralrefer-premium": "node scripts/deploy-viralrefer-premium-prod.mjs",
     "optimizer:autopilot": "node scripts/run-optimizer-autopilot.mjs",
     "optimizer:autopilot:dry": "node scripts/run-optimizer-autopilot.mjs --dry-run",
     "growth:queue": "node scripts/generate-growth-post-queue.mjs",
