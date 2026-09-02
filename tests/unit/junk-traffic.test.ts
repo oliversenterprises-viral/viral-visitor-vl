@@ -82,7 +82,8 @@ describe('junk-traffic (Disk IO guard)', () => {
     expect(shouldIncrementQualityLandingVisit('GetReferralLink', 'rotate4all')).toBe(false);
     expect(shouldIncrementQualityLandingVisit('SiteLanding', null)).toBe(false);
     expect(shouldIncrementQualityLandingVisit('SiteLanding', '')).toBe(false);
-    expect(shouldIncrementJunkLandingVisit('SiteLanding', null)).toBe(false);
+    expect(shouldIncrementJunkLandingVisit('SiteLanding', null)).toBe(true);
+    expect(shouldIncrementJunkLandingVisit('SiteLanding', '')).toBe(true);
     expect(isJunkUtmEvent({ utm_source: 'pagerankcafe' })).toBe(true);
     expect(isJunkUtmEvent({ utmSource: 'twitter' })).toBe(false);
   });
@@ -149,5 +150,12 @@ describe('junk-traffic (Disk IO guard)', () => {
         metadata: { user_agent: 'Mozilla/5.0 Chrome' },
       }),
     ).toBe(false);
+    const azureGetLink = {
+      event_name: 'GetReferralLink',
+      utm_source: 'pagerankcafe',
+      ref_code: 'VIRAL-97UWEGZ',
+      metadata: { client_ip: '20.12.34.56', user_agent: 'Mozilla/5.0 Chrome' },
+    };
+    expect(shouldClearJunkVisitorEvent(azureGetLink, [azureGetLink])).toBe(false);
   });
 });

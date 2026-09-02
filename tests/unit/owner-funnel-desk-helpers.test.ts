@@ -515,6 +515,12 @@ describe('owner funnel desk metrics', () => {
     expect(action).not.toContain('google163d31ba24216edd');
     expect(desk).not.toContain('google163d31ba24216edd');
     expect(desk).not.toMatch(/showToast\([^)]*'error'/);
+    const html = readFileSync(resolve(import.meta.dirname, '../../index.html'), 'utf8');
+    expect(html).toContain('data-owner-desk-junk-note');
+    expect(html).toContain('data-owner-desk-clear-junk');
+    expect(html).toContain('junk/test excluded');
+    expect(html).not.toMatch(/cheap counter/i);
+    expect(html).toContain('data-owner-desk-gsc-note="missing_credentials"');
   });
 
   it('0056 junk harden never touches GSC or the verify file', () => {

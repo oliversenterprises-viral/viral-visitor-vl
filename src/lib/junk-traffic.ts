@@ -93,7 +93,10 @@ export function shouldIncrementQualityLandingVisit(
   return !isJunkTrafficSource(utm);
 }
 
-/** Homepage rotator / exchange hits — never the quality Visits tile. */
+/**
+ * Homepage rotator / exchange / bare (empty UTM) hits — never the quality Visits tile.
+ * Scout and cheap homepage polls arrive with no UTM.
+ */
 export function shouldIncrementJunkLandingVisit(
   eventName: string,
   utmSource?: string | null,
@@ -101,7 +104,9 @@ export function shouldIncrementJunkLandingVisit(
 ): boolean {
   if (eventName !== 'SiteLanding') return false;
   if (isAttributedLanding(attribution)) return false;
-  return isJunkTrafficSource(utmSource);
+  const utm = String(utmSource || '').trim();
+  if (!utm) return true;
+  return isJunkTrafficSource(utm);
 }
 
 export function isJunkUtmEvent(event: {
