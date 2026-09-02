@@ -16,9 +16,11 @@ describe('all-devices layout locks', () => {
     expect(css).toMatch(/@media \(max-width: 639px\)/);
     expect(css).toMatch(/@media \(max-height: 820px\)/);
     expect(css).toMatch(/@media \(max-height: 500px\) and \(min-width: 560px\)/);
+    expect(css).toMatch(/@media \(max-height: 680px\) and \(min-width: 1024px\)/);
     expect(css).toContain('grid-template-areas');
     expect(css).toContain('#hero-ad-visit');
     expect(css).toMatch(/#hero-ad-visit[\s\S]{0,180}min-height: 44px/);
+    expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #hero-subtitle \{\s*display: block !important;/);
   });
 
   it('hero keeps title, tools preview, prize, and CTA wrappers', () => {

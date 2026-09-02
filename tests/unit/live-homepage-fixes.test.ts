@@ -21,6 +21,7 @@ vi.mock('../../src/lib/supabase', () => ({
 }));
 
 import {
+  applyExistingReferralLink,
   copyLink,
   ensureReferralLinkReady,
   getMyReferralLinkInstant,
@@ -29,6 +30,7 @@ import {
 import { shouldShowShareAbandon } from '../../src/lib/share-abandon-rescue';
 import { MIN_DWELL_MS } from '../../src/lib/share-abandon-rescue';
 import { markSharePending, clearShareFirstFlags } from '../../src/lib/share-first-ui';
+import { resetRegisterReferrerLinkForTests } from '../../src/lib/share-deadline';
 
 describe('live homepage five fixes', () => {
   it('1. wordmark span is #f4f4f5 on the dark header', () => {
@@ -101,9 +103,38 @@ describe('live homepage five fixes', () => {
     expect(hero).not.toContain('#1 gets a banner for their site.');
     expect(hero).not.toMatch(/30-day/);
     expect(hero).not.toContain('Example ad');
+    expect(hero).not.toContain('times this week on this page');
+    expect(hero).not.toContain('Slot still empty. Verified #1');
+    expect(hero).not.toContain('Verified #1 with 10 friends can claim it');
     expect(html).not.toMatch(/30-day/);
     expect(html).not.toContain('30 days');
     expect(html).not.toContain('#1 gets a banner for their site');
+  });
+
+  it('tucks desktop first screen without display:none on How / Feature / Board / footer', () => {
+    const css = read('src/style.css');
+    expect(css).toMatch(/Desktop 1280x800 tuck/);
+    expect(css).toMatch(/Desktop 1280x656 tuck/);
+    expect(css).toMatch(/@media \(max-height: 680px\) and \(min-width: 1024px\)/);
+    expect(css).toMatch(
+      /html:not\(\[data-vr-has-link\]\) #hero-subtitle \{\s*display: block !important;/,
+    );
+    expect(css).not.toMatch(
+      /html:not\(\[data-vr-has-link\]\) #hero-subtitle \{\s*display: none/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\):not\(\[data-vr-has-link\]\) #how/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\):not\(\[data-vr-has-link\]\) #prize/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\):not\(\[data-vr-has-link\]\) #leaderboard/,
+    );
+    expect(css).toMatch(/html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) footer/);
+    expect(css).not.toMatch(/html:not\(\[data-vr-has-link\]\) #how \{\s*display: none/);
+    expect(css).not.toMatch(/html:not\(\[data-vr-has-link\]\) #prize \{\s*display: none/);
+    expect(css).not.toMatch(/html:not\(\[data-vr-has-link\]\) #leaderboard \{\s*display: none/);
   });
 });
 
@@ -112,6 +143,7 @@ describe('copy must not register-referrer-link again', () => {
     invokeMock.mockReset();
     invokeMock.mockResolvedValue({ data: { success: true, data: { status: 'pending_share' } }, error: null });
     resetReferralRecordingStateForTests();
+    resetRegisterReferrerLinkForTests();
     localStorage.clear();
     sessionStorage.clear();
     clearShareFirstFlags();
@@ -139,6 +171,22 @@ describe('copy must not register-referrer-link again', () => {
 
     markSharePending();
     await ensureReferralLinkReady();
+    copyLink();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(registerCalls().length).toBe(1);
+  });
+
+  it('one Get my link tap is one POST even if applyExisting also runs', async () => {
+    const registerCalls = () =>
+      invokeMock.mock.calls.filter((c) => c[0] === 'register-referrer-link');
+
+    await Promise.all([getMyReferralLinkInstant(), getMyReferralLinkInstant()]);
+    expect(registerCalls().length).toBe(1);
+
+    const code = String(localStorage.getItem('vr_my_ref_code') || '');
+    applyExistingReferralLink(code);
     copyLink();
     await Promise.resolve();
     await Promise.resolve();

@@ -170,6 +170,15 @@ export function unlockIfReferralCountUnlocked(count: number): boolean {
   return true;
 }
 
+const registerInFlight = new Map<string, Promise<ShareDeadlineState | null>>();
+const registerCoolingUntil = new Map<string, number>();
+const REGISTER_COALESCE_MS = 3_000;
+
+export function resetRegisterReferrerLinkForTests(): void {
+  registerInFlight.clear();
+  registerCoolingUntil.clear();
+}
+
 /** Register code on the server (starts the first-referral deadline clock). */
 export async function registerReferrerLinkDeadline(
   code: string,
@@ -177,6 +186,25 @@ export async function registerReferrerLinkDeadline(
   const referrer_code = String(code || '').trim().toUpperCase();
   if (!referrer_code) return null;
 
+  const existing = registerInFlight.get(referrer_code);
+  if (existing) return existing;
+
+  const coolUntil = registerCoolingUntil.get(referrer_code) || 0;
+  if (Date.now() < coolUntil) {
+    return readShareDeadlineState();
+  }
+
+  registerCoolingUntil.set(referrer_code, Date.now() + REGISTER_COALESCE_MS);
+  const pending = registerReferrerLinkDeadlineOnce(referrer_code).finally(() => {
+    registerInFlight.delete(referrer_code);
+  });
+  registerInFlight.set(referrer_code, pending);
+  return pending;
+}
+
+async function registerReferrerLinkDeadlineOnce(
+  referrer_code: string,
+): Promise<ShareDeadlineState | null> {
   const fallback: ShareDeadlineState = {
     code: referrer_code,
     status: 'pending_share',

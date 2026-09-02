@@ -436,7 +436,10 @@ html:not([data-vr-has-link]) #vr-verified-total,
 html:not([data-vr-has-link]) #hero-badge,
 html:not([data-vr-has-link]) #hero-global-proof,
 html:not([data-vr-has-link]) #hero-trust-line,
-html:not([data-vr-has-link]) #hero-lock-rule {
+html:not([data-vr-has-link]) #hero-lock-rule,
+html:not([data-vr-has-link]) #hero-race-countdown,
+html:not([data-vr-has-link]) #hero-ad-inventory,
+html:not([data-vr-has-link]) #hero-ad-race {
   display: none !important;
 }
 
@@ -4475,11 +4478,8 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
   }
 }
 
+/* Compact first screen without hiding locked SUB / slot / rule / CTA */
 @media (max-height: 820px) {
-  html:not([data-vr-has-link]) #hero-subtitle {
-    display: none;
-  }
-
   .vr-hero-panel {
     padding-top: 1.15rem !important;
     padding-bottom: 1.15rem !important;
@@ -4491,13 +4491,127 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
   }
 }
 
+/* Desktop 1280x800 tuck: CTA stays in the first viewport. Sections stay visible below. */
 @media (max-height: 820px) and (min-width: 1024px) {
-  #hero-title {
-    font-size: 3.1rem !important;
+  html:not([data-vr-has-link]) #vr-nav .max-w-6xl {
+    padding-top: 0.55rem !important;
+    padding-bottom: 0.55rem !important;
   }
 
-  .vr-hero-panel {
-    padding: 1.5rem 2rem !important;
+  html:not([data-vr-has-link]) .vr-page-shell {
+    padding-top: 3.65rem !important;
+    padding-bottom: 1.1rem !important;
+  }
+
+  html:not([data-vr-has-link]) .vr-hero-panel {
+    padding: 0.85rem 1.5rem 0.95rem !important;
+  }
+
+  html:not([data-vr-has-link]) #hero-title {
+    font-size: 1.85rem !important;
+    line-height: 1.12 !important;
+    margin-bottom: 0.4rem !important;
+  }
+
+  html:not([data-vr-has-link]) #hero-subtitle {
+    display: block !important;
+    font-size: 0.95rem !important;
+    line-height: 1.35 !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  html:not([data-vr-has-link]) #hero-banner-mock {
+    margin-top: 0.1rem !important;
+    margin-bottom: 0.45rem !important;
+    max-width: 22rem;
+  }
+
+  html:not([data-vr-has-link]) #hero-prize-one {
+    font-size: 0.88rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  html:not([data-vr-has-link]) .hero-ad-visit-row {
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  html:not([data-vr-has-link]) #hero-ad-note {
+    padding-bottom: 0.4rem;
+  }
+
+  html:not([data-vr-has-link]) .hero-ad-mark--empty,
+  html:not([data-vr-has-link]) #hero-ad-mark {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  html:not([data-vr-has-link]) .hero-primary-cta {
+    min-height: 48px;
+    padding: 0.7rem 1.15rem !important;
+    font-size: 1.05rem !important;
+  }
+}
+
+/* Desktop 1280x656 tuck: two-column so locked copy + CTA stay in view */
+@media (max-height: 680px) and (min-width: 1024px) {
+  html:not([data-vr-has-link]) .vr-page-shell {
+    padding-top: 3.35rem !important;
+    padding-bottom: 0.65rem !important;
+  }
+
+  html:not([data-vr-has-link]) .vr-hero-panel {
+    padding: 0.55rem 1.15rem 0.65rem !important;
+  }
+
+  html:not([data-vr-has-link]) .vr-hero-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(15.5rem, 19rem);
+    grid-template-areas:
+      "copy ad"
+      "action ad";
+    column-gap: 1.15rem;
+    row-gap: 0.35rem;
+    max-width: none;
+    text-align: left;
+  }
+
+  html:not([data-vr-has-link]) .vr-hero-copy { grid-area: copy; }
+  html:not([data-vr-has-link]) .vr-hero-ad {
+    grid-area: ad;
+    margin: 0 !important;
+    max-width: none;
+  }
+  html:not([data-vr-has-link]) .vr-hero-action { grid-area: action; }
+
+  html:not([data-vr-has-link]) #hero-title {
+    font-size: 1.4rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+
+  html:not([data-vr-has-link]) #hero-subtitle {
+    font-size: 0.88rem !important;
+    margin-bottom: 0.35rem !important;
+  }
+
+  html:not([data-vr-has-link]) #hero-prize-one {
+    font-size: 0.8rem !important;
+    text-align: left;
+    margin-bottom: 0.4rem !important;
+  }
+
+  html:not([data-vr-has-link]) .hero-cta-stack {
+    max-width: none;
+  }
+
+  html:not([data-vr-has-link]) .hero-primary-cta {
+    min-height: 46px;
+    padding: 0.6rem 1rem !important;
+    font-size: 1rem !important;
+  }
+
+  html:not([data-vr-has-link]) .hero-ad-site {
+    min-height: 4.1rem;
+    padding: 0.45rem 0.55rem;
   }
 }
 
@@ -4602,7 +4716,10 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
   }
 }
 
-html[data-vr-tiny] #hero-subtitle,
-html[data-vr-short]:not([data-vr-has-link]) #hero-subtitle {
-  display: none;
+/* Locked SUB stays visible on desktop first screens (1280x800 / 1280x656). */
+@media (max-width: 1023px) {
+  html[data-vr-tiny] #hero-subtitle,
+  html[data-vr-short]:not([data-vr-has-link]) #hero-subtitle {
+    display: none;
+  }
 }

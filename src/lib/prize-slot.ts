@@ -132,23 +132,17 @@ export function examplePrizeSlot(): PrizeSlot {
   };
 }
 
-export function formatVisitInventoryLine(visits: number): string {
-  const n = Math.max(0, Math.floor(Number(visits) || 0));
-  if (n <= 0) return '';
-  return `Seen ${n.toLocaleString('en-US')} times this week on this page.`;
+/** First-screen slot keeps LOCKED_SLOT only — no weekly-count or 10-friend claim lines. */
+export function formatVisitInventoryLine(_visits: number): string {
+  return '';
 }
 
 export function formatUnlockRaceLine(
-  leaderReferrals: number,
-  minForClaim = DEFAULT_MIN_REFERRALS_FOR_CLAIM,
-  kind: PrizeSlotKind = 'example',
+  _leaderReferrals: number,
+  _minForClaim = DEFAULT_MIN_REFERRALS_FOR_CLAIM,
+  _kind: PrizeSlotKind = 'example',
 ): string {
-  if (kind === 'winner') return '';
-  const have = Math.max(0, Math.floor(Number(leaderReferrals) || 0));
-  const need = parseMinReferralsForClaim(minForClaim);
-  if (have <= 0) return `Slot still empty. Verified #1 with ${need} friends can claim it.`;
-  if (have < need) return `Board leader has ${have} of ${need} friends. Slot still empty.`;
-  return `Board leader has ${have} friends. Slot still empty until they claim.`;
+  return '';
 }
 
 /** Promo / placeholder CMS rows are not a claimed #1 site. */
@@ -291,7 +285,7 @@ export function paintPrizeSlot(slot: PrizeSlot): void {
   }
 }
 
-export function paintPrizePullProof(input: {
+export function paintPrizePullProof(_input: {
   visits7d?: number;
   leaderReferrals?: number;
   minForClaim?: number;
@@ -299,21 +293,15 @@ export function paintPrizePullProof(input: {
 }): void {
   const inventory = document.getElementById('hero-ad-inventory');
   if (inventory) {
-    const line = formatVisitInventoryLine(input.visits7d ?? 0);
-    inventory.textContent = line;
-    inventory.hidden = !line;
-    inventory.classList.toggle('hidden', !line);
+    inventory.textContent = '';
+    inventory.hidden = true;
+    inventory.classList.add('hidden');
   }
   const race = document.getElementById('hero-ad-race');
   if (race) {
-    const line = formatUnlockRaceLine(
-      input.leaderReferrals ?? 0,
-      input.minForClaim,
-      input.kind || 'example',
-    );
-    race.textContent = line;
-    race.hidden = !line;
-    race.classList.toggle('hidden', !line);
+    race.textContent = '';
+    race.hidden = true;
+    race.classList.add('hidden');
   }
 }
 

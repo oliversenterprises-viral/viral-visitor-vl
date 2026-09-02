@@ -207,19 +207,21 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(HOMEPAGE_FAQ[2]?.answer).toContain('7-day homepage banner');
   });
 
-  it('formats inventory and unlock lines without naming a fake winner', () => {
+  it('does not paint weekly-count or 10-friend claim lines on the first-screen slot', () => {
     expect(formatVisitInventoryLine(0)).toBe('');
-    expect(formatVisitInventoryLine(2041)).toBe('Seen 2,041 times this week on this page.');
-    expect(formatUnlockRaceLine(7, 10, 'example')).toBe(
-      'Board leader has 7 of 10 friends. Slot still empty.',
-    );
-    expect(formatUnlockRaceLine(10, 10, 'example')).toContain('until they claim');
+    expect(formatVisitInventoryLine(2041)).toBe('');
+    expect(formatUnlockRaceLine(0, 10, 'example')).toBe('');
+    expect(formatUnlockRaceLine(7, 10, 'example')).toBe('');
+    expect(formatUnlockRaceLine(10, 10, 'example')).toBe('');
     expect(formatUnlockRaceLine(7, 10, 'winner')).toBe('');
     paintPrizePullProof({ visits7d: 2041, leaderReferrals: 7, minForClaim: 10, kind: 'example' });
-    expect(document.getElementById('hero-ad-inventory')?.textContent).toContain('2,041');
-    expect(document.getElementById('hero-ad-race')?.textContent).toContain('7 of 10');
-    expect(document.getElementById('hero-ad-race')?.textContent?.toLowerCase()).not.toContain(
-      'current #1',
-    );
+    expect(document.getElementById('hero-ad-inventory')?.textContent).toBe('');
+    expect(document.getElementById('hero-ad-inventory')?.hidden).toBe(true);
+    expect(document.getElementById('hero-ad-race')?.textContent).toBe('');
+    expect(document.getElementById('hero-ad-race')?.hidden).toBe(true);
+    const src = readFileSync(resolve(ROOT, 'src/lib/prize-slot.ts'), 'utf8');
+    expect(src).not.toContain('times this week on this page');
+    expect(src).not.toContain('Verified #1 with');
+    expect(src).not.toContain('Slot still empty. Verified #1');
   });
 });
