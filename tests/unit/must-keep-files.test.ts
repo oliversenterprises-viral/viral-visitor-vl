@@ -106,7 +106,7 @@ describe('must-keep files', () => {
     expect(html).toContain(LOCKED_LIVE_FAQ_Q3);
     expect(html).toContain(LOCKED_LIVE_FAQ_Q4);
     expect(html).toContain(LOCKED_LIVE_FAQ_A4);
-    expect(html).toContain(LOCKED_LIVE_SCHEMA_FAQ_A1);
+    expect(html).toContain(LOCKED_LIVE_SCHEMA_FAQ_A1.replaceAll('"', '\\"'));
     expect(html).toContain(LOCKED_LIVE_PRIZE_WINNER_BADGE);
     expect(html).not.toContain('id="how-step2-deadline"');
     expect(html).not.toContain('How do I get a ViralRefer referral link?</h3>');
