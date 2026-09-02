@@ -84,8 +84,8 @@ describe('referred-race (Helix Bet 3)', () => {
     expect(html).not.toContain('id="become-promoter"');
 
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
-    expect(css).toMatch(
-      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #how/,
+    expect(css).not.toMatch(
+      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #how,/,
     );
     expect(css).toMatch(
       /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #faq/,

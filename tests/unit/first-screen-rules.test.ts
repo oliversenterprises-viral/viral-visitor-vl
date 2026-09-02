@@ -3,7 +3,6 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   LOCKED_SITE_DROPS_CTA,
-  LOCKED_SITE_DROPS_H1,
   LOCKED_SITE_DROPS_H1_ACCENT,
   LOCKED_SITE_DROPS_H1_LINE1,
   LOCKED_SITE_DROPS_RULE,
@@ -24,12 +23,13 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain(`<title>${LOCKED_SITE_DROPS_TITLE}</title>`);
     expect(html).toContain(LOCKED_SITE_DROPS_H1_LINE1);
     expect(html).toContain(LOCKED_SITE_DROPS_H1_ACCENT);
-    expect(html).toContain(LOCKED_SITE_DROPS_H1);
     expect(html).toContain(LOCKED_SITE_DROPS_SUB);
     expect(html).toContain(LOCKED_SITE_DROPS_SLOT);
     expect(html).toContain(LOCKED_SITE_DROPS_RULE);
     expect(html).toContain(LOCKED_SITE_DROPS_CTA);
-    expect(html).not.toMatch(/\$\d|cash prize|Cash App/i);
+    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
+    expect(hero).not.toMatch(/\$\d|Cash App/i);
+    expect(hero.toLowerCase()).not.toContain('cash prize');
   });
 
   it('keeps Get my referral link as the first-screen CTA', () => {

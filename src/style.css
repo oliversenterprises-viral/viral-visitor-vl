@@ -166,8 +166,10 @@ h1, h2, h3, .logo-font {
 
 /* Always-dark chrome: wordmark + Message from ViralRefer inherit --text-h (#08060d) when OS is light. */
 #vr-nav .vr-wordmark,
-#vr-nav .logo-font,
 #vr-nav a[aria-label="ViralRefer home"] span {
+  color: #f4f4f5;
+}
+#vr-nav .logo-font {
   color: #f4f4f5;
 }
 .racer-talk__title,
