@@ -88,6 +88,7 @@ describe('get_site_content (HQ Website tab)', () => {
     expect(load.via).toBe('none');
     expect(load.actionMissing).toBe(true);
     const html = buildContentListHTML(load.rows, load);
+    expect(html).toContain('data-hq-website="1"');
     expect(html).toContain('data-hq-talk="1"');
     expect(html).toContain('> Talk');
     expect(html).toContain('id="owner-broadcast-panel"');
@@ -110,6 +111,7 @@ describe('get_site_content (HQ Website tab)', () => {
     expect(load.via).toBe('get_site_content');
     expect(load.actionMissing).toBe(false);
     const html = buildContentListHTML(load.rows, load);
+    expect(html).toContain('data-hq-website="1"');
     expect(html).toContain('data-hq-talk="1"');
     expect(html).not.toContain('data-hq-website-action-missing="1"');
     expect(websiteTabLooksLikeEmptyCms(html)).toBe(false);

@@ -308,8 +308,8 @@ function buildContentListHTML(rows: ContentRow[], load?: WebsiteTabLoad): string
   let html = `
     <div class="flex items-center justify-between mb-4">
       <div>
-        <div class="text-2xl font-bold">Edit Site Content</div>
-        <div class="text-sm text-zinc-400">Change the words on the public site. Saves go live right away.</div>
+        <div class="text-2xl font-bold" data-hq-website="1">Website</div>
+        <div class="text-sm text-zinc-400">Public words and Talk (message all joiners). Prize is under More. Saves go live right away.</div>
       </div>
       <div class="flex items-center gap-3">
         <span id="content-live-indicator" class="hidden text-[10px] text-emerald-400/80"><i class="fa-solid fa-circle text-[6px] mr-1"></i>live</span>

@@ -106,5 +106,5 @@ export function websiteTabLooksLikeEmptyCms(html: string): boolean {
   if (hasTalk) return false;
   if (/Error loading content/i.test(text)) return true;
   if (/No content entries yet/i.test(text)) return true;
-  return !/Edit Site Content/.test(text);
+  return !/data-hq-website="1"/.test(text);
 }
