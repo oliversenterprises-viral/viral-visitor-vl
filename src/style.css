@@ -2496,6 +2496,12 @@ html[data-vr-has-link] .funnel-step-active {
 }
 
 /* Share abandon rescue — hard to ignore after get-link */
+/* HQ Command (?owner=1 / Desk / owner gate) must never sit under this overlay */
+html:has(#admin-modal:not(.hidden)) .vr-share-abandon,
+html:has(#admin-owner-gate-modal:not(.hidden)) .vr-share-abandon {
+  display: none !important;
+  pointer-events: none !important;
+}
 .vr-share-abandon {
   position: fixed;
   inset: 0;

@@ -32,6 +32,9 @@ registerGlobal('openAdminPanel', async () => {
   const modal = document.getElementById('admin-modal');
   if (modal) {
     modal.classList.remove('hidden');
+    void import('../lib/share-abandon-rescue')
+      .then((m) => m.dismissShareAbandonForOwnerHq())
+      .catch(() => {});
     initAdminSimple();
     await showOwnerFunnelDesk();
   }
@@ -183,7 +186,14 @@ function wireAdminButton(): void {
   if (!adminBtn || adminBtn.dataset.vrWired) return;
   adminBtn.dataset.vrWired = '1';
   adminBtn.addEventListener('click', openAdminPasswordModal);
-  if (shouldRevealOwnerTools()) revealOwnerTools();
+  if (shouldRevealOwnerTools()) {
+    revealOwnerTools();
+    void import('../lib/share-abandon-rescue')
+      .then((m) => {
+        if (m.isOwnerHqContext()) m.dismissShareAbandonForOwnerHq();
+      })
+      .catch(() => {});
+  }
   document.addEventListener('keydown', (ev) => {
     if (ev.ctrlKey && ev.shiftKey && ev.key.toLowerCase() === 'o') {
       ev.preventDefault();

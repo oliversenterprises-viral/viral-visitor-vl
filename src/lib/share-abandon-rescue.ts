@@ -12,6 +12,7 @@
  * + (after first show) backdrop soft-dismiss.
  */
 
+import { hasAdminSession } from './admin-session';
 import { isEmbedMode } from './embed-mode';
 import { isSharePendingLocal } from './share-first-ui';
 import { t } from './i18n';
@@ -50,6 +51,8 @@ export interface ShareAbandonEligibility {
   reason?: string;
   /** Paid / Reddit — prompt share sooner after get-link. */
   isPaidTraffic?: boolean;
+  /** Owner HQ (?owner=1 / Desk / session) — never cover Command. */
+  ownerHq?: boolean;
 }
 
 /** Dwell before share-abandon panel (paid traffic is faster). */
@@ -63,8 +66,37 @@ export function resolveShareAbandonDwellMs(opts: {
   return opts.isCoarsePointer ? MOBILE_DWELL_MS : MIN_DWELL_MS;
 }
 
+/**
+ * HQ Command is not a visitor send path.
+ * ?owner=1, open Desk, owner gate, or an owner session must never get
+ * "Don't leave without sending".
+ */
+export function isOwnerHqContext(
+  win: Pick<Window, 'location' | 'document'> = window,
+): boolean {
+  try {
+    const q = new URLSearchParams(win.location.search);
+    if (q.get('owner') === '1') return true;
+  } catch {
+    /* ignore */
+  }
+  try {
+    if (win.location.hash === '#owner') return true;
+  } catch {
+    /* ignore */
+  }
+  if (hasAdminSession()) return true;
+  const desk = win.document.getElementById('admin-modal');
+  if (desk && !desk.classList.contains('hidden')) return true;
+  const gate = win.document.getElementById('admin-owner-gate-modal');
+  if (gate && !gate.classList.contains('hidden')) return true;
+  return false;
+}
+
 export function shouldShowShareAbandon(opts: ShareAbandonEligibility): boolean {
-  if (opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
+  if (opts.ownerHq || opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) {
+    return false;
+  }
   if (opts.alreadyMaxShows || opts.snoozed || opts.confirmFlowActive) return false;
   // Poll is the softest path — never interrupt if they can already see Send
   if (opts.reason === 'poll' && opts.shareStripInView) return false;
@@ -85,8 +117,11 @@ export function shouldArmBeforeUnload(opts: {
   snoozed: boolean;
   sessionShows: number;
   dwellMs: number;
+  ownerHq?: boolean;
 }): boolean {
-  if (opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
+  if (opts.ownerHq || opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) {
+    return false;
+  }
   if (opts.confirmFlowActive || opts.snoozed) return false;
   if (opts.sessionShows >= 1) return true;
   return opts.dwellMs >= BEFOREUNLOAD_MIN_DWELL_MS;
@@ -191,6 +226,11 @@ function removePanel(): void {
   document.documentElement.removeAttribute('data-vr-share-abandon');
 }
 
+/** Strip leftover visitor send modal so it cannot cover Desk / owner gate. */
+export function dismissShareAbandonForOwnerHq(): void {
+  removePanel();
+}
+
 function invokeSend(): void {
   try {
     sessionStorage.setItem('vr_get_link_via', 'share_abandon_rescue');
@@ -215,6 +255,10 @@ function invokeSend(): void {
 
 function showAbandonPanel(reason: string): void {
   if (document.getElementById(PANEL_ID)) return;
+  if (isOwnerHqContext()) {
+    removePanel();
+    return;
+  }
   if (
     !shouldShowShareAbandon({
       hasLink: hasLink(),
@@ -229,6 +273,7 @@ function showAbandonPanel(reason: string): void {
       shareStripInView: reason === 'poll' ? isShareStripInView() : false,
       reason,
       isPaidTraffic: document.documentElement.getAttribute('data-vr-paid-landing') === '1',
+      ownerHq: isOwnerHqContext(),
     })
   ) {
     return;
@@ -309,6 +354,10 @@ function showAbandonPanel(reason: string): void {
 }
 
 function tryShow(reason: string, startedAt: number, coarse: boolean): void {
+  if (isOwnerHqContext()) {
+    removePanel();
+    return;
+  }
   if (document.getElementById(PANEL_ID)) return;
   if (
     !shouldShowShareAbandon({
@@ -324,6 +373,7 @@ function tryShow(reason: string, startedAt: number, coarse: boolean): void {
       shareStripInView: reason === 'poll' ? isShareStripInView() : false,
       reason,
       isPaidTraffic: document.documentElement.getAttribute('data-vr-paid-landing') === '1',
+      ownerHq: isOwnerHqContext(),
     })
   ) {
     return;
@@ -344,6 +394,7 @@ function makeBeforeUnloadHandler(startedAt: number) {
         snoozed: isSnoozed(),
         sessionShows: sessionShows(),
         dwellMs: Date.now() - startedAt,
+        ownerHq: isOwnerHqContext(),
       })
     ) {
       return;
@@ -358,6 +409,9 @@ function makeBeforeUnloadHandler(startedAt: number) {
  * Call after get-link / send-mode, and on return visits with pending share.
  */
 export function initShareAbandonRescue(win: Window = window): void {
+  if (isOwnerHqContext(win)) {
+    dismissShareAbandonForOwnerHq();
+  }
   if (isEmbedMode(win.location) || win.document.documentElement.dataset.vrShareAbandonBound === '1') {
     return;
   }
@@ -400,21 +454,29 @@ export function initShareAbandonRescue(win: Window = window): void {
 
   // Periodic re-surface only if they scrolled away from send UI
   win.setInterval(() => {
-    if (!hasLink() || isLocked() || !isSharePendingLocal()) {
+    if (isOwnerHqContext(win) || !hasLink() || isLocked() || !isSharePendingLocal()) {
       removePanel();
       return;
     }
     tryShow('poll', started, coarse);
   }, POLL_MS);
 
-  // Clear panel when locked
+  // Clear panel when locked — or when Desk / owner gate opens
   const obs = new MutationObserver(() => {
-    if (isLocked() || !isSharePendingLocal()) removePanel();
+    if (isOwnerHqContext(win) || isLocked() || !isSharePendingLocal()) removePanel();
   });
   obs.observe(win.document.documentElement, {
     attributes: true,
     attributeFilter: ['data-vr-share-locked', 'data-vr-share-pending', 'data-vr-has-link'],
   });
+  const desk = win.document.getElementById('admin-modal');
+  if (desk) {
+    obs.observe(desk, { attributes: true, attributeFilter: ['class'] });
+  }
+  const gate = win.document.getElementById('admin-owner-gate-modal');
+  if (gate) {
+    obs.observe(gate, { attributes: true, attributeFilter: ['class'] });
+  }
 }
 
 /** Force show (tests / debug). Respects eligibility. */

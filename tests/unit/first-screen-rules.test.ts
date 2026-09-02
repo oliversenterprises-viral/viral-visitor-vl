@@ -91,6 +91,8 @@ describe('first-screen Site Drops rules', () => {
     expect(css).toMatch(/#post-link-copy/);
     expect(css).toMatch(/pointer-events:\s*auto\s*!important/);
     expect(css).toMatch(/#vr-exit-rescue[\s\S]{0,120}pointer-events:\s*none/);
+    expect(css).toMatch(/html:has\(#admin-modal:not\(\.hidden\)\) \.vr-share-abandon/);
+    expect(css).toMatch(/html:has\(#admin-owner-gate-modal:not\(\.hidden\)\) \.vr-share-abandon/);
   });
 
   it('registers one register-referrer-link per Get my link', () => {
