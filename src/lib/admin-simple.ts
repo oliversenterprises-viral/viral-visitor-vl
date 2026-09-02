@@ -1,5 +1,5 @@
 /**
- * First screen is the six-number desk. Prize, Website, and Promoters stay behind a visible More.
+ * First screen is the six-number desk. Prize, Website, Promoters, and Talk stay behind a visible More.
  * Chrome is relocated into #admin-more-tools-hold — not CSS-hidden in the first view.
  */
 
@@ -10,8 +10,8 @@ const MORE_HOLD_ID = 'admin-more-tools-hold';
 const MORE_HOST_ID = 'admin-more-tools-host';
 
 export const ADMIN_PRIMARY_TABS = [] as const;
-/** Website (2), Prize (3), Promoters (6) — the only extra screens. */
-export const ADMIN_EXTRA_TABS = [2, 3, 6] as const;
+/** Website (2), Prize (3), Promoters (6), Talk (8) — the only extra screens. */
+export const ADMIN_EXTRA_TABS = [2, 3, 6, 8] as const;
 
 export function isAdminExtraTab(tab: number): boolean {
   return (ADMIN_EXTRA_TABS as readonly number[]).includes(tab);

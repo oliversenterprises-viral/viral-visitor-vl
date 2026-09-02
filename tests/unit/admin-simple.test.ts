@@ -28,6 +28,7 @@ const MODAL_FIXTURE = `
       <button class="admin-tab" data-admin-tab="3" data-vr-admin-extra="1">Prize</button>
       <button class="admin-tab" data-admin-tab="2" data-vr-admin-extra="1">Website</button>
       <button class="admin-tab" data-admin-tab="6" data-vr-admin-extra="1">Promoters</button>
+      <button class="admin-tab" data-admin-tab="8" data-vr-admin-extra="1">Talk</button>
     </div>
   </div>
 `;
@@ -52,14 +53,16 @@ describe('admin one-loop desk', () => {
     document.documentElement.removeAttribute('data-vr-admin-more');
   });
 
-  it('treats only Prize, Website, and Promoters as extra so first screen is desk-only', () => {
+  it('treats only Prize, Website, Promoters, and Talk as extra so first screen is desk-only', () => {
     expect(ADMIN_PRIMARY_TABS).toEqual([]);
-    expect(ADMIN_EXTRA_TABS).toEqual([2, 3, 6]);
+    expect(ADMIN_EXTRA_TABS).toEqual([2, 3, 6, 8]);
     expect(isAdminExtraTab(2)).toBe(true);
     expect(isAdminExtraTab(3)).toBe(true);
     expect(isAdminExtraTab(0)).toBe(false);
     expect(isAdminExtraTab(1)).toBe(false);
     expect(isAdminExtraTab(6)).toBe(true);
+    expect(isAdminExtraTab(8)).toBe(true);
+    expect(isAdminExtraTab(7)).toBe(false);
   });
 
   it('keeps first screen to six tiles, one feed, and visible More', () => {
@@ -89,6 +92,7 @@ describe('admin one-loop desk', () => {
     expect(first).not.toMatch(/Prize/);
     expect(first).not.toMatch(/Website/);
     expect(first).not.toMatch(/Promoters/);
+    expect(first).not.toMatch(/Talk/);
     expect(first).not.toMatch(/What.?s happening now/i);
     expect(first).not.toMatch(/Referrals/);
     expect(first).not.toMatch(/Funnel/);
@@ -105,7 +109,7 @@ describe('admin one-loop desk', () => {
     expect(document.getElementById('admin-live-hub')).toBeNull();
   });
 
-  it('opens only Prize, Website, and Promoters from the visible More control', () => {
+  it('opens only Prize, Website, Promoters, and Talk from the visible More control', () => {
     initAdminSimple();
     expect(isAdminMoreOpen()).toBe(false);
     setAdminMore(true);
@@ -114,12 +118,13 @@ describe('admin one-loop desk', () => {
     expect(host?.textContent).toMatch(/Prize/);
     expect(host?.textContent).toMatch(/Website/);
     expect(host?.textContent).toMatch(/Promoters/);
+    expect(host?.textContent).toMatch(/Talk/);
     expect(host?.textContent).not.toMatch(/Friends/);
     expect(host?.textContent).not.toMatch(/Shares/);
     expect(host?.textContent).not.toMatch(/Colors/);
     expect(host?.textContent).not.toMatch(/Auto-pilot/);
     expect(host?.textContent).not.toMatch(/What.?s happening now/i);
-    expect(host?.querySelectorAll('.admin-tab').length).toBe(3);
+    expect(host?.querySelectorAll('.admin-tab').length).toBe(4);
     expect(document.getElementById('admin-more-tools-btn')?.textContent).toMatch(/Back to desk/i);
 
     setAdminMore(false);
@@ -135,7 +140,7 @@ describe('admin one-loop desk', () => {
     expect(isAdminMoreOpen()).toBe(false);
   });
 
-  it('keeps first-screen HTML desk-only with More holding Prize, Website, and Promoters', () => {
+  it('keeps first-screen HTML desk-only with More holding Prize, Website, Promoters, and Talk', () => {
     const html = readFileSync(resolve(__dirname, '../../index.html'), 'utf8');
     const modalStart = html.indexOf('id="admin-modal"');
     const holdStart = html.indexOf('id="admin-more-tools-hold"');
@@ -153,6 +158,7 @@ describe('admin one-loop desk', () => {
     expect(modal).not.toMatch(/Prize/);
     expect(modal).not.toMatch(/Website/);
     expect(modal).not.toMatch(/Promoters/);
+    expect(modal).not.toMatch(/Talk/);
     expect(modal).not.toMatch(/What.?s happening now/);
     expect(modal).not.toMatch(/More numbers/);
 
@@ -161,6 +167,8 @@ describe('admin one-loop desk', () => {
     expect(hold).toMatch(/>Prize</);
     expect(hold).toMatch(/>Website</);
     expect(hold).toMatch(/>Promoters</);
+    expect(hold).toMatch(/>Talk</);
+    expect(hold).toMatch(/You do not approve/);
     expect(hold).not.toMatch(/Friends/);
     expect(hold).not.toMatch(/Shares/);
     expect(hold).not.toMatch(/What.?s happening now/);
@@ -172,6 +180,7 @@ describe('admin one-loop desk', () => {
     expect(html).toMatch(/id="tab-6"[^>]*data-vr-admin-extra="1"/);
     expect(html).toMatch(/id="tab-2"[^>]*data-vr-admin-extra="1"/);
     expect(html).toMatch(/id="tab-3"[^>]*data-vr-admin-extra="1"/);
+    expect(html).toMatch(/id="tab-8"[^>]*data-vr-admin-extra="1"/);
   });
 
   it('does not start a live hub on admin open', () => {
@@ -184,5 +193,7 @@ describe('admin one-loop desk', () => {
     expect(simple).not.toMatch(/startAdminLiveHub/);
     expect(switcher).toMatch(/affiliates-tab/);
     expect(switcher).toMatch(/tab === 6/);
+    expect(switcher).toMatch(/racer-talk-tab/);
+    expect(switcher).toMatch(/tab === 8/);
   });
 });

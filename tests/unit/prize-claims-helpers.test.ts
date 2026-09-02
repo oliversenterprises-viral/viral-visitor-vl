@@ -1,8 +1,14 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   sortClaimsByPriority,
   filterClaimsByStatus,
   countPendingClaims,
+  displayClaimStatus,
+  PRIZE_AUDIT_LEAD,
+  PRIZE_AUDIT_TITLE,
+  buildClaimsTableHTML,
 } from '../../src/admin/prize-claims-tab';
 import type { AdminClaimRow } from '../../src/admin/state';
 
@@ -42,5 +48,31 @@ describe('prize claims helpers (pure)', () => {
       makeClaim({ status: undefined }),
     ];
     expect(countPendingClaims(claims)).toBe(2);
+  });
+
+  it('shows leftover paid rows as Legacy and never Mark Paid / cashtag / Owner Test Tools', () => {
+    expect(displayClaimStatus('paid')).toBe('Legacy');
+    expect(displayClaimStatus('pending')).toBe('pending');
+    expect(PRIZE_AUDIT_TITLE).toBe('Prize audit');
+    expect(PRIZE_AUDIT_LEAD).toMatch(/You do not approve/);
+    const html = buildClaimsTableHTML(
+      [makeClaim({ id: 'c1', website: 'https://example.com', message: 'site drop' })],
+      1,
+      'all',
+    );
+    expect(html).toContain('Prize audit');
+    expect(html).toContain('You do not approve');
+    expect(html).toContain('View details');
+    expect(html).not.toContain('Mark Paid');
+    expect(html).not.toContain('>Approve<');
+    expect(html).not.toContain('Cashtag');
+    expect(html).not.toContain('Owner Test Tools');
+
+    const src = readFileSync(resolve(__dirname, '../../src/admin/prize-claims-tab.ts'), 'utf8');
+    expect(src).not.toContain('Mark Paid');
+    expect(src).not.toContain('Owner Test Tools');
+    expect(src).not.toContain("data-status=\"paid\"");
+    expect(src).not.toContain('cashtag');
+    expect(src).not.toContain('reset_landing_visit_counters');
   });
 });

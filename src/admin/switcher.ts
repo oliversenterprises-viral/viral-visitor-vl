@@ -58,7 +58,7 @@ export async function showOwnerFunnelDesk() {
 }
 
 /**
- * Extra owner tools: Prize, Website, and Promoters.
+ * Extra owner tools: Prize, Website, Promoters, and Talk.
  */
 export async function switchAdminTab(tab: number) {
   const requestId = ++tabRequestId;
@@ -88,6 +88,11 @@ export async function switchAdminTab(tab: number) {
       const { renderAffiliatesTab } = await import("./affiliates-tab");
       if (isStale(requestId)) return;
       await renderAffiliatesTab(content);
+    } else if (tab === 8) {
+      if (isStale(requestId)) return;
+      const { renderRacerTalkTab } = await import('./racer-talk-tab');
+      if (isStale(requestId)) return;
+      await renderRacerTalkTab(content);
     }
   } catch (err) {
     if (isStale(requestId)) return;
