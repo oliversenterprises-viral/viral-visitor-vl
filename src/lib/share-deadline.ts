@@ -171,13 +171,51 @@ export function unlockIfReferralCountUnlocked(count: number): boolean {
   return true;
 }
 
-/** Register code on the server (starts the first-referral deadline clock). */
+const registerInFlight = new Map<string, Promise<ShareDeadlineState | null>>();
+const registerSucceeded = new Set<string>();
+
+export function resetRegisterReferrerDedupeForTests(): void {
+  registerInFlight.clear();
+  registerSucceeded.clear();
+}
+
+/**
+ * Register code on the server (starts the first-referral deadline clock).
+ * One network register per Get my link / restore. Poll may pass { refresh: true }.
+ */
 export async function registerReferrerLinkDeadline(
   code: string,
+  opts?: { refresh?: boolean },
 ): Promise<ShareDeadlineState | null> {
   const referrer_code = String(code || '').trim().toUpperCase();
   if (!referrer_code) return null;
 
+  const inflight = registerInFlight.get(referrer_code);
+  if (inflight) return inflight;
+
+  if (!opts?.refresh && registerSucceeded.has(referrer_code)) {
+    const cur = readShareDeadlineState();
+    if (cur?.code === referrer_code) return cur;
+    return {
+      code: referrer_code,
+      status: 'pending_share',
+      createdAt: new Date().toISOString(),
+      deadlineAt: new Date(Date.now() + SHARE_DEADLINE_MS).toISOString(),
+    };
+  }
+
+  const run = registerReferrerLinkDeadlineUncached(referrer_code);
+  registerInFlight.set(referrer_code, run);
+  try {
+    return await run;
+  } finally {
+    registerInFlight.delete(referrer_code);
+  }
+}
+
+async function registerReferrerLinkDeadlineUncached(
+  referrer_code: string,
+): Promise<ShareDeadlineState | null> {
   const fallback: ShareDeadlineState = {
     code: referrer_code,
     status: 'pending_share',
@@ -266,6 +304,7 @@ export async function registerReferrerLinkDeadline(
           .then((m) => m.syncPromoKitUI())
           .catch(() => {});
       }
+      registerSucceeded.add(referrer_code);
       return {
         code: referrer_code,
         status: 'active',
@@ -299,6 +338,7 @@ export async function registerReferrerLinkDeadline(
     };
     writeShareDeadlineState(state);
     renderShareDeadlineBanner();
+    registerSucceeded.add(referrer_code);
     return state;
   } catch (err) {
     console.warn('[ViralRefer] register-referrer-link exception:', err);
@@ -564,7 +604,7 @@ export function initShareDeadlineUi(): void {
   statusPollTimer = setInterval(() => {
     const state = readShareDeadlineState();
     if (!state || state.status !== 'pending_share') return;
-    void registerReferrerLinkDeadline(state.code);
+    void registerReferrerLinkDeadline(state.code, { refresh: true });
   }, 20_000);
 
   if (!localeListenerBound && typeof window !== 'undefined') {

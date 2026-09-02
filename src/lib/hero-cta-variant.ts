@@ -18,21 +18,21 @@ export interface HeroCtaCopy {
 /** Tight conversion copy — one action, worldwide, no cash spam. */
 export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
   control: {
-    badge: 'WORLDWIDE • FREE • NO SIGNUP',
+    badge: 'THIS WEEK • FREE • NO SIGNUP',
     titleLine1: 'Win the homepage.',
-    titleAccent: 'this page.',
+    titleAccent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
     subtitle:
-      'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
-    trustLine: 'Free. No email. No cash. Recognition only.',
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+    trustLine: 'Open worldwide · recognition only · Site Drop ladder.',
     buttonLabel: 'Get my referral link',
   },
   prize: {
-    badge: 'WORLDWIDE • FREE • NO SIGNUP',
+    badge: 'THIS WEEK • FREE • NO SIGNUP',
     titleLine1: 'Win the homepage.',
-    titleAccent: 'this page.',
+    titleAccent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
     subtitle:
-      'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
-    trustLine: 'Free. No email. No cash. Recognition only.',
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+    trustLine: 'Open worldwide · recognition only · Site Drop ladder.',
     buttonLabel: 'Get my referral link',
   },
 };
@@ -50,7 +50,7 @@ function setButtonLabel(buttonId: string, label: string): void {
   else btn.textContent = label;
 }
 
-/** Paint only the locked 8:44 homepage lines. No extra first-paint copy. */
+/** Paint only the locked live Site Drop homepage lines. */
 export function applyHeroCopyToDom(copy: HeroCtaCopy): void {
   setText('hero-title-line1', copy.titleLine1);
   setText('hero-title-accent', copy.titleAccent);
@@ -58,11 +58,14 @@ export function applyHeroCopyToDom(copy: HeroCtaCopy): void {
   setButtonLabel('hero-get-link-btn', copy.buttonLabel);
 }
 
-/** Re-assert the 8:44 homepage after CMS / i18n / A/B. Do not invent new lines. */
+/** Re-assert live Site Drop copy after CMS / i18n / A/B. Do not invent new lines. */
 export function lock844HomepageCopy(): void {
   if (isReferredLanding()) return;
   applyHeroCopyToDom(HERO_CTA_COPY.control);
-  setText('hero-prize-one', "This week's top racer gets a 7-day banner for their website.");
+  setText(
+    'hero-prize-one',
+    'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
+  );
 }
 
 /** Apply feature-variant hero copy on direct landings (control leaves CMS/static defaults). */

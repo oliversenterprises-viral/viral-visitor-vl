@@ -12,6 +12,9 @@ import {
   POLL_MS,
   resetShareAbandonSessionForTest,
   forceShareAbandonForTest,
+  isPostLinkSendScreenActive,
+  stealShareAbandonIfSendTap,
+  dismissShareAbandon,
 } from '../../src/lib/share-abandon-rescue';
 import { markSharePending, clearShareFirstFlags } from '../../src/lib/share-first-ui';
 
@@ -26,11 +29,13 @@ describe('share-abandon-rescue', () => {
     document.documentElement.removeAttribute('data-vr-share-locked');
     document.documentElement.removeAttribute('data-vr-share-pending');
     document.documentElement.removeAttribute('data-vr-share-abandon');
+    document.documentElement.removeAttribute('data-vr-post-link-one');
   });
 
   afterEach(() => {
     resetShareAbandonSessionForTest();
     clearShareFirstFlags();
+    document.documentElement.removeAttribute('data-vr-post-link-one');
     vi.restoreAllMocks();
   });
 
@@ -135,6 +140,42 @@ describe('share-abandon-rescue', () => {
     expect(panel).toBeTruthy();
     expect(panel?.querySelector('[data-abandon-cta]')).toBeTruthy();
     expect(document.documentElement.getAttribute('data-vr-share-abandon')).toBe('unit');
+  });
+
+  it('never shows the dont-leave overlay when the send screen is up', () => {
+    document.documentElement.setAttribute('data-vr-post-link-one', '1');
+    const base = {
+      hasLink: true,
+      sharePending: true,
+      locked: false,
+      alreadyMaxShows: false,
+      snoozed: false,
+      dwellMs: MIN_DWELL_MS + 100,
+      isCoarsePointer: false,
+      embed: false,
+      confirmFlowActive: false,
+    };
+    expect(isPostLinkSendScreenActive()).toBe(true);
+    expect(shouldShowShareAbandon(base)).toBe(false);
+  });
+
+  it('stealShareAbandonIfSendTap drops the overlay so Copy wins first tap', () => {
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    markSharePending();
+    document.body.innerHTML = `
+      <input id="ref-link" value="https://www.viralrefer.app/r/VIRAL-TEST1" />
+      <button type="button" id="post-link-copy">Copy link</button>
+    `;
+    forceShareAbandonForTest('unit');
+    expect(document.getElementById('vr-share-abandon')).toBeTruthy();
+    const copy = document.getElementById('post-link-copy') as HTMLButtonElement;
+    copy.getBoundingClientRect = () =>
+      ({ left: 10, right: 110, top: 10, bottom: 50, width: 100, height: 40 }) as DOMRect;
+    const ev = new MouseEvent('pointerdown', { clientX: 40, clientY: 20, bubbles: true });
+    Object.defineProperty(ev, 'target', { value: document.getElementById('vr-share-abandon') });
+    stealShareAbandonIfSendTap(ev);
+    expect(document.getElementById('vr-share-abandon')).toBeNull();
+    dismissShareAbandon();
   });
 
   it('caps are conservative to limit residual annoyance', () => {

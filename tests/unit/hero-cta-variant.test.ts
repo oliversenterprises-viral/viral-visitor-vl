@@ -55,7 +55,9 @@ describe('hero-cta-variant', () => {
     );
     lock844HomepageCopy();
     expect(document.getElementById('hero-title-line1')?.textContent).toBe('Win the homepage.');
-    expect(document.getElementById('hero-title-accent')?.textContent).toBe('this page.');
+    expect(document.getElementById('hero-title-accent')?.textContent).toBe(
+      'Each step puts your site on this page. #1 owns the banner for 7 days.',
+    );
     expect(document.getElementById('hero-subtitle')?.textContent).toBe(
       HERO_CTA_COPY.control.subtitle,
     );
@@ -63,7 +65,7 @@ describe('hero-cta-variant', () => {
       'Get my referral link',
     );
     expect(document.getElementById('hero-prize-one')?.textContent).toBe(
-      "This week's top racer gets a 7-day banner for their website.",
+      'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
     );
   });
 

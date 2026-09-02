@@ -164,10 +164,11 @@ h1, h2, h3, .logo-font {
   letter-spacing: -0.025em;
 }
 
-/* Always-dark chrome: wordmark + Message from ViralRefer inherit --text-h (#08060d) when OS is light. */
+/* Always-dark chrome: wordmark must stay #f4f4f5 even when OS is light (--text-h is #08060d). */
 #vr-nav .vr-wordmark,
-#vr-nav .logo-font {
-  color: #f4f4f5;
+#vr-nav .logo-font,
+#vr-nav .vr-wordmark.logo-font {
+  color: #f4f4f5 !important;
 }
 .racer-talk__title,
 h2.racer-talk__title,
@@ -2462,6 +2463,13 @@ html[data-vr-has-link] .funnel-step-active {
 }
 
 /* Share abandon rescue — hard to ignore after get-link */
+/* Copy / Send stay tappable if the Don't-leave overlay is already up. */
+html[data-vr-share-abandon] #post-link-copy,
+html[data-vr-share-abandon] #post-link-primary {
+  position: relative;
+  z-index: 970;
+}
+
 .vr-share-abandon {
   position: fixed;
   inset: 0;

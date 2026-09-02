@@ -11,12 +11,16 @@ vi.mock('../../src/lib/supabase', () => ({
   isSupabaseConfigured: true,
 }));
 
-import { registerReferrerLinkDeadline } from '../../src/lib/share-deadline';
+import {
+  registerReferrerLinkDeadline,
+  resetRegisterReferrerDedupeForTests,
+} from '../../src/lib/share-deadline';
 
 describe('register-referrer-link client', () => {
   beforeEach(() => {
     invokeMock.mockReset();
     localStorage.clear();
+    resetRegisterReferrerDedupeForTests();
     document.body.innerHTML = '<div id="toast-container"></div>';
   });
 
@@ -56,6 +60,19 @@ describe('register-referrer-link client', () => {
     await registerReferrerLinkDeadline('VIRAL-REGFAIL3');
     expect(invokeMock).toHaveBeenCalledTimes(2);
     expect(document.getElementById('toast-container')?.textContent).toMatch(/Couldn't register your link/);
+  });
+
+  it('dedupes a second register for the same code', async () => {
+    invokeMock.mockResolvedValue({
+      data: {
+        success: true,
+        data: { status: 'pending_share', created_at: '2026-09-02T00:00:00Z' },
+      },
+      error: null,
+    });
+    await registerReferrerLinkDeadline('VIRAL-REGDEDUP');
+    await registerReferrerLinkDeadline('VIRAL-REGDEDUP');
+    expect(invokeMock).toHaveBeenCalledTimes(1);
   });
 
   it('does not toast on a successful register', async () => {

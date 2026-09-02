@@ -26,7 +26,7 @@ export const HOMEPAGE_FAQ: readonly FaqEntry[] = [
   {
     question: 'How do I get a ViralRefer referral link?',
     answer:
-      'Click "Get my link" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required.',
+      'Click "Get my referral link" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required.',
   },
   {
     question: 'Is ViralRefer free to use?',
@@ -35,7 +35,7 @@ export const HOMEPAGE_FAQ: readonly FaqEntry[] = [
   },
   {
     question: 'What does the #1 referrer get?',
-    answer: formatFaqPrizeAnswer(),
+    answer: formatFaqPrizeAnswer(3),
   },
   {
     question: 'How does the ViralRefer leaderboard work?',
@@ -91,6 +91,7 @@ export function buildSitemapXml(origin = SEO_SITE_ORIGIN, lastmod?: string): str
   const date = lastmod || new Date().toISOString().slice(0, 10);
   const urls = [
     { loc: `${base}/`, changefreq: 'daily', priority: '1.0' },
+    { loc: `${base}/guides/`, changefreq: 'weekly', priority: '0.9' },
     { loc: `${base}/tools/`, changefreq: 'weekly', priority: '0.9' },
     { loc: `${base}/rules/`, changefreq: 'monthly', priority: '0.7' },
     { loc: `${base}/privacy/`, changefreq: 'monthly', priority: '0.5' },

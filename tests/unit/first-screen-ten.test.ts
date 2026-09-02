@@ -54,7 +54,7 @@ describe('five-layer first screen (Helix order)', () => {
     expect(html).toContain('id="hero-slot-thumb"');
     expect(html).toContain('id="hero-ad-inventory"');
     expect(html).toContain('id="hero-ad-race"');
-    expect(html).toContain('id="hero-week-clock"');
+    expect(html).toContain('id="hero-race-countdown"');
     expect(html).toContain('id="hero-slot-preview"');
     expect(html).not.toContain('https://www.viralrefer.app/tools/');
     expect(html).not.toContain('Free growth tools');

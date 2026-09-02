@@ -290,6 +290,9 @@ function fireShareEvent(platform: string, link: string): void {
 
 export function onPostLinkPrimaryTap(event?: Event): void {
   event?.preventDefault();
+  void import('./share-abandon-rescue')
+    .then((m) => m.dismissShareAbandon())
+    .catch(() => {});
   const btn = el<HTMLButtonElement>(IDS.primary);
   const mode = btn?.dataset.mode;
   if (mode === 'retry') {
@@ -327,6 +330,9 @@ export function onPostLinkPrimaryTap(event?: Event): void {
 }
 
 export async function onPostLinkCopyTap(): Promise<void> {
+  void import('./share-abandon-rescue')
+    .then((m) => m.dismissShareAbandon())
+    .catch(() => {});
   const link = readReadyLink();
   if (!link) return;
   const copy = el<HTMLButtonElement>(IDS.copy);

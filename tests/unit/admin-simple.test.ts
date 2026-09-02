@@ -135,43 +135,26 @@ describe('admin one-loop desk', () => {
     expect(isAdminMoreOpen()).toBe(false);
   });
 
-  it('keeps first-screen HTML desk-only with More holding Prize, Website, and Promoters', () => {
+  it('keeps live Owner HQ: Command/Race plus Send and Counted tiles', () => {
     const html = readFileSync(resolve(__dirname, '../../index.html'), 'utf8');
     const modalStart = html.indexOf('id="admin-modal"');
     const holdStart = html.indexOf('id="admin-more-tools-hold"');
     expect(modalStart).toBeGreaterThan(-1);
     expect(holdStart).toBeGreaterThan(modalStart);
     const modal = html.slice(modalStart, holdStart);
+    expect(modal).toMatch(/Owner HQ/);
     expect(modal).toMatch(/Visits/);
     expect(modal).toMatch(/Friend landings/);
     expect(modal).toMatch(/Get-link/);
-    expect(modal).toMatch(/>Share</);
-    expect(modal).toMatch(/Locked/);
+    expect(modal).toMatch(/>Send</);
+    expect(modal).toMatch(/Counted/);
     expect(modal).toMatch(/Get-link rate/);
-    expect(modal).toMatch(/>More</);
-    expect(modal).not.toMatch(/Friends/);
-    expect(modal).not.toMatch(/Prize/);
-    expect(modal).not.toMatch(/Website/);
-    expect(modal).not.toMatch(/Promoters/);
+    expect(modal).toMatch(/tab-command/);
+    expect(modal).toMatch(/Command/);
+    expect(modal).toMatch(/Race/);
     expect(modal).not.toMatch(/What.?s happening now/);
     expect(modal).not.toMatch(/More numbers/);
-
-    const holdEnd = html.indexOf('id="winner-modal"');
-    const hold = html.slice(holdStart, holdEnd);
-    expect(hold).toMatch(/>Prize</);
-    expect(hold).toMatch(/>Website</);
-    expect(hold).toMatch(/>Promoters</);
-    expect(hold).not.toMatch(/Friends/);
-    expect(hold).not.toMatch(/Shares/);
-    expect(hold).not.toMatch(/What.?s happening now/);
-    expect(hold).not.toMatch(/id="admin-live-hub"/);
-    expect(hold).not.toMatch(/id="tab-0"/);
-    expect(hold).not.toMatch(/id="tab-1"/);
-    expect(hold).not.toMatch(/id="tab-4"/);
-    expect(hold).not.toMatch(/id="tab-5"/);
-    expect(html).toMatch(/id="tab-6"[^>]*data-vr-admin-extra="1"/);
-    expect(html).toMatch(/id="tab-2"[^>]*data-vr-admin-extra="1"/);
-    expect(html).toMatch(/id="tab-3"[^>]*data-vr-admin-extra="1"/);
+    expect(html).not.toMatch(/id="admin-live-hub"/);
   });
 
   it('does not start a live hub on admin open', () => {
