@@ -1,0 +1,33 @@
+# Ships ONLY admin-action to the live Supabase project (get_site_content).
+# Does not merge main, does not vercel --prod, does not hit www.viralrefer.app.
+# --use-api: no Docker required on the runner.
+name: Deploy live admin-action
+
+on:
+  push:
+    paths:
+      - 'supabase/functions/admin-action/**'
+      - 'supabase/functions/_shared/admin-session.ts'
+      - 'supabase/config.toml'
+      - '.github/workflows/deploy-admin-action.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Deploy admin-action to wqbefjzpgsezzwdrvvua
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::notice::SUPABASE_ACCESS_TOKEN is not set — skipping live admin-action deploy (check stays green)."
+            echo "Vercel frontend promote does not deploy Edge Functions."
+            echo "Live ship command: supabase functions deploy admin-action --project-ref wqbefjzpgsezzwdrvvua --use-api --yes"
+            exit 0
+          fi
+          supabase functions deploy admin-action --project-ref wqbefjzpgsezzwdrvvua --use-api --yes
