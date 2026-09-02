@@ -75,6 +75,25 @@ export const en = {
   'prize.cta': "Claim this week's banner",
   'prize.winner_badge': 'Verified #1 can claim this',
 
+  'drop.badge': 'Site Drop ladder',
+  'drop.title': 'Your site goes live as you climb',
+  'drop.lead':
+    'Paste your website in the slot after Get my link. No URL = no chip. 1 verified friend → 1-hour Rising. 2 friends → week text line. #2/#3 → Challenger. #1 → 7-day banner. Visits and copies do not count.',
+  'drop.entered_label': 'Just entered · 15 min',
+  'drop.entered_empty': 'No one just entered. Get a link, add your site, and take a chip.',
+  'drop.rising_label': 'Rising Site Drops · 1 hour · not the week text line',
+  'drop.rising_empty':
+    'Rising slots are open. One verified friend who taps Get my link unlocks a 1-hour drop here.',
+  'drop.challenger_label': 'Challenger strip · #2 / #3 · not #1',
+  'drop.challenger_empty': 'No challengers yet. Hit board #2 or #3 with your site on file.',
+  'drop.hint': 'Get your referral link first, then add your website for a Site Drop.',
+  'drop.website': 'Your website',
+  'drop.name_optional': 'Short name (optional)',
+  'drop.form_entered': 'Just entered (15 min)',
+  'drop.form_rising': 'Rising drop (1 hour)',
+  'drop.form_challenger': 'Claim Challenger',
+  'drop.jump': 'See live Site Drops',
+
   'leaderboard.title': 'Live Leaderboard',
   'leaderboard.subtitle': 'Rankings update from verified referrals.',
 

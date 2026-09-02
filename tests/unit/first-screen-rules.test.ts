@@ -65,6 +65,8 @@ describe('first-screen Site Drops rules', () => {
     expect(css).not.toMatch(/footer\s*\{[^}]*display:\s*none/);
     expect(css).toContain(':not(#how):not(#leaderboard)');
     const html = read('index.html');
+    expect(html).toContain('id="site-drops"');
+    expect(html).toMatch(/id="site-drops"[^>]*data-vr-below-fold/);
     expect(html).toMatch(/href="#how"[^>]*data-i18n="nav.how"/);
     expect(html).toMatch(/href="#leaderboard"[^>]*data-i18n="nav.board"/);
     expect(html).not.toMatch(/href="#how"[^>]*hidden sm:inline/);

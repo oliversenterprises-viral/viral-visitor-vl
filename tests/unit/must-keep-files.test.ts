@@ -106,6 +106,14 @@ describe('must-keep files', () => {
     expect(en['prize.title']).toBe(LOCKED_LIVE_PRIZE_TITLE);
     expect(en['prize.cta']).toBe(LOCKED_LIVE_PRIZE_CTA);
     expect(en['hero.trust']).not.toMatch(/30-day/i);
+    expect(html).toContain('id="site-drops"');
+    expect(html).toContain('id="site-drops-entered-list"');
+    expect(html).toContain('id="site-drops-rising-list"');
+    expect(html).toContain('id="site-drops-challenger-list"');
+    expect(html).toContain('id="site-drop-form"');
+    expect(html).toContain('id="post-link-site-drop-jump"');
+    expect(en['drop.lead']).toMatch(/7-day banner/);
+    expect(en['drop.lead']).not.toMatch(/30-day/i);
   });
 
   it('does not add reset_landing_visit_counters, cash-prize claims, or a VITE_ owner password', () => {
