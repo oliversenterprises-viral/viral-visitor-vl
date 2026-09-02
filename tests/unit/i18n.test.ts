@@ -70,6 +70,9 @@ describe('i18n phase 1', () => {
     const facts = [
       'how.badge',
       'how.subtitle',
+      'how.step1_desc',
+      'how.step2_title',
+      'how.step2_desc',
       'how.step3_title',
       'how.step3_desc',
       'hero.prize_one',

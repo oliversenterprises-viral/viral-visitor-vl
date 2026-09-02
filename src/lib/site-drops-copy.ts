@@ -46,6 +46,14 @@ export const LOCKED_LIVE_HOW_BADGE = 'SITE DROP LADDER';
 export const LOCKED_LIVE_HOW_SUBTITLE =
   'Get a link. Send it. A friend tapping Get my link puts your site on this page.';
 
+export const LOCKED_LIVE_HOW_STEP1_DESC =
+  'Tap Get my referral link (no email). Paste your website in the Site Drop slot for a 15-minute Just entered chip. Getting a link alone does not put you on this page.';
+
+export const LOCKED_LIVE_HOW_STEP2_TITLE = '2. Send your link';
+
+export const LOCKED_LIVE_HOW_STEP2_DESC =
+  'Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.';
+
 export const LOCKED_LIVE_HOW_STEP3_TITLE = '3. Watch your site climb';
 
 export const LOCKED_LIVE_PRIZE_TITLE = 'The #1 banner';

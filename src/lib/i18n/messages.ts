@@ -53,7 +53,8 @@ export const en = {
   'how.title': 'How ViralRefer Works',
   'how.subtitle': 'Get a link. Send it. A friend tapping Get my link puts your site on this page.',
   'how.step1_title': '1. Get your link',
-  'how.step1_desc': 'Tap the big button. You get your own free link in a few seconds. No email needed.',
+  'how.step1_desc':
+    'Tap Get my referral link (no email). Paste your website in the Site Drop slot for a 15-minute Just entered chip. Getting a link alone does not put you on this page.',
   'how.step2_title': '2. Send your link',
   'how.step2_desc':
     'Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.',
@@ -595,6 +596,9 @@ const hi = dict({
 const PRIZE_FACT_KEYS = [
   'how.badge',
   'how.subtitle',
+  'how.step1_desc',
+  'how.step2_title',
+  'how.step2_desc',
   'how.step3_title',
   'how.step3_desc',
   'hero.prize_one',
