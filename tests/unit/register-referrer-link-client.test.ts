@@ -42,6 +42,22 @@ describe('register-referrer-link client', () => {
     expect(document.getElementById('toast-container')?.textContent).toMatch(/Couldn't register your link/);
   });
 
+  it('toasts when invoke error carries a success:false JSON body', async () => {
+    invokeMock.mockResolvedValue({
+      data: null,
+      error: {
+        message: '500',
+        context: new Response(JSON.stringify({ success: false, error: 'Could not register your link' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      },
+    });
+    await registerReferrerLinkDeadline('VIRAL-REGFAIL3');
+    expect(invokeMock).toHaveBeenCalledTimes(2);
+    expect(document.getElementById('toast-container')?.textContent).toMatch(/Couldn't register your link/);
+  });
+
   it('does not toast on a successful register', async () => {
     invokeMock.mockResolvedValue({
       data: {

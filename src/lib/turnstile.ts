@@ -185,22 +185,30 @@ export function getTurnstileToken(
 }
 
 /**
- * Best-effort Turnstile token for referral hardening. Never blocks recording — returns null on failure/timeout.
- */
-/**
  * Token for record-referral. Server requires Turnstile — do not POST without one
  * when a site key is configured. Empty site key (local/unit) uses the same
  * dev-bypass token as claims; production always has a site key.
+ *
+ * Cloudflare rejects widgets hidden with display:none / opacity:0 / 1×1 boxes.
+ * Host in #referral-turnstile-container (or a real-sized fallback) so a person
+ * can actually complete the check.
  */
 export async function getCreditTurnstileToken(timeoutMs = 10_000): Promise<string | null> {
   const siteKey = readTurnstileSiteKey();
   if (!siteKey) return 'dev-bypass-token';
 
-  const container = document.createElement('div');
-  container.setAttribute('aria-hidden', 'true');
-  container.style.cssText =
-    'position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;';
-  document.body.appendChild(container);
+  const existing = document.getElementById('referral-turnstile-container');
+  const container = existing ?? document.createElement('div');
+  const created = !existing;
+  if (created) {
+    container.id = 'referral-turnstile-container';
+    container.className = 'referral-credit-turnstile';
+    const host =
+      document.getElementById('referral-section') ||
+      document.getElementById('post-link-share') ||
+      document.body;
+    host.appendChild(container);
+  }
 
   try {
     await ensureTurnstileReady();
@@ -213,7 +221,7 @@ export async function getCreditTurnstileToken(timeoutMs = 10_000): Promise<strin
   } catch {
     return null;
   } finally {
-    container.remove();
+    if (created) container.remove();
   }
 }
 

@@ -13,6 +13,7 @@ describe('funnel contrast (wordmark + Message from ViralRefer)', () => {
     expect(css).toMatch(/#vr-nav \.vr-wordmark/);
     expect(css).toMatch(/#vr-nav \.logo-font\s*\{[^}]*color:\s*#f4f4f5/);
     expect(css).toMatch(/\.racer-talk__title[\s\S]*color:\s*#f4f4f5/);
+    expect(css).toMatch(/\.vr-bc-title[\s\S]*color:\s*#f4f4f5/);
   });
 
   it('does not rewrite the locked send labels', () => {
@@ -21,5 +22,6 @@ describe('funnel contrast (wordmark + Message from ViralRefer)', () => {
     expect(html).toContain('Send it now');
     expect(html).toContain('Copy link');
     expect(html).toContain('Get my referral link');
+    expect(html).toContain('id="referral-turnstile-container"');
   });
 });

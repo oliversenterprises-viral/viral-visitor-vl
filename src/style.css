@@ -164,13 +164,14 @@ h1, h2, h3, .logo-font {
   letter-spacing: -0.025em;
 }
 
-/* Always-dark chrome: wordmark + racer-talk title inherit --text-h (#08060d) when OS is light. */
+/* Always-dark chrome: wordmark + Message from ViralRefer inherit --text-h (#08060d) when OS is light. */
 #vr-nav .vr-wordmark,
 #vr-nav .logo-font {
   color: #f4f4f5;
 }
 .racer-talk__title,
-h2.racer-talk__title {
+h2.racer-talk__title,
+.vr-bc-title {
   color: #f4f4f5;
 }
 
@@ -3411,7 +3412,7 @@ body {
 .vr-bc-title {
   font-size: 0.9rem;
   font-weight: 650;
-  color: #fff;
+  color: #f4f4f5;
   line-height: 1.35;
   margin: 0;
   overflow-wrap: anywhere;
@@ -4159,6 +4160,14 @@ html[data-vr-has-link] #referral-section .glass {
   color: #ede9fe;
   font-weight: 600;
   font-size: 0.875rem;
+}
+.referral-credit-turnstile {
+  min-height: 0;
+  margin-top: 0.5rem;
+}
+html[data-vr-credit-status='pending'] .referral-credit-turnstile,
+html[data-vr-credit-status='failed'] .referral-credit-turnstile {
+  min-height: 65px;
 }
 .post-link-site-drop__status {
   margin: 0.4rem 0 0;

@@ -120,13 +120,14 @@ Deno.serve(async (req: Request) => {
     );
   } catch (err) {
     console.error('[register-referrer-link]', err);
-    // Fail open for client UX — never block get-link on registration glitches
+    // Client still mints/sends locally. success:false so this is never silent.
     return new Response(
       JSON.stringify({
-        success: true,
+        success: false,
+        error: 'Could not register your link',
         data: { status: 'unknown', share_required: true },
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });

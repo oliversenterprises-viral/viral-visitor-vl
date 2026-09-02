@@ -5,6 +5,7 @@
  */
 
 import { supabase } from './supabase';
+import { parseEdgeFunctionBody } from './edge-response';
 import { showToast } from '../ui';
 import { t } from './i18n';
 
@@ -184,56 +185,61 @@ export async function registerReferrerLinkDeadline(
     deadlineAt: new Date(Date.now() + SHARE_DEADLINE_MS).toISOString(),
   };
 
+  const toastRegisterFailed = (): ShareDeadlineState => {
+    showToast(
+      "Couldn't register your link — send it anyway, then refresh if a friend can't credit you.",
+      'info',
+    );
+    writeShareDeadlineState(fallback);
+    renderShareDeadlineBanner();
+    return fallback;
+  };
+
   try {
     let data: unknown = null;
     let error: { message?: string } | null = null;
+    let envelope: Awaited<ReturnType<typeof parseEdgeFunctionBody>> = null;
     for (let attempt = 0; attempt < 2; attempt++) {
       const result = await supabase.functions.invoke('register-referrer-link', {
         body: { referrer_code },
       });
       data = result.data;
       error = result.error;
-      if (!error) break;
+      envelope = await parseEdgeFunctionBody(data, error);
+      if (!error && envelope?.success !== false) break;
+      if (!error && envelope?.success === false) break;
     }
-    if (error) {
+    if (error && envelope?.success !== true) {
       console.warn('[ViralRefer] register-referrer-link failed:', error.message);
-      showToast("Couldn't register your link — send it anyway, then refresh if a friend can't credit you.", 'info');
-      writeShareDeadlineState(fallback);
-      renderShareDeadlineBanner();
-      return fallback;
+      return toastRegisterFailed();
     }
-    const envelope = data as {
-      success?: boolean;
-      data?: {
-        status?: string;
-        created_at?: string | null;
-        deadline_at?: string | null;
-        share_required?: boolean;
-        exempt?: boolean;
-        share_grace_count?: number;
-        ownership_token?: string | null;
-      };
-      error?: string;
+
+    if (!envelope || envelope.success === false) {
+      console.warn('[ViralRefer] register-referrer-link rejected:', envelope?.error);
+      return toastRegisterFailed();
+    }
+
+    const payload = (envelope.data && typeof envelope.data === 'object'
+      ? envelope.data
+      : {}) as {
+      status?: string;
+      created_at?: string | null;
+      deadline_at?: string | null;
+      share_required?: boolean;
+      exempt?: boolean;
+      share_grace_count?: number;
+      ownership_token?: string | null;
     };
 
-    if (envelope && envelope.success === false) {
-      console.warn('[ViralRefer] register-referrer-link rejected:', envelope.error);
-      showToast("Couldn't register your link — send it anyway, then refresh if a friend can't credit you.", 'info');
-      writeShareDeadlineState(fallback);
-      renderShareDeadlineBanner();
-      return fallback;
-    }
-
-    const ownership = String(envelope?.data?.ownership_token || '').trim();
+    const ownership = String(payload.ownership_token || '').trim();
     if (ownership) {
       void import('./claim-ownership')
         .then((m) => m.setClaimOwnershipToken(ownership))
         .catch(() => {});
     }
 
-    const status = (envelope?.data?.status || 'pending_share') as ShareDeadlineStatus;
-    const exempt =
-      envelope?.data?.exempt === true || envelope?.data?.share_required === false;
+    const status = (payload.status || 'pending_share') as ShareDeadlineStatus;
+    const exempt = payload.exempt === true || payload.share_required === false;
 
     // Owner IP exempt OR first friend joined (active): unlock link + promo kit UI.
     // BUG FIX: previously we only called markLocalVerifiedShare when
@@ -249,9 +255,8 @@ export async function registerReferrerLinkDeadline(
       writeShareDeadlineState({
         code: referrer_code,
         status: 'active',
-        createdAt: envelope?.data?.created_at || fallback.createdAt,
-        deadlineAt:
-          envelope?.data?.deadline_at || fallback.deadlineAt || new Date().toISOString(),
+        createdAt: payload.created_at || fallback.createdAt,
+        deadlineAt: payload.deadline_at || fallback.deadlineAt || new Date().toISOString(),
       });
       if (!document.documentElement.hasAttribute('data-vr-share-locked')) {
         markLocalVerifiedShare('first_referral');
@@ -264,8 +269,8 @@ export async function registerReferrerLinkDeadline(
       return {
         code: referrer_code,
         status: 'active',
-        createdAt: envelope?.data?.created_at || fallback.createdAt,
-        deadlineAt: envelope?.data?.deadline_at || fallback.deadlineAt,
+        createdAt: payload.created_at || fallback.createdAt,
+        deadlineAt: payload.deadline_at || fallback.deadlineAt,
       };
     }
 
@@ -275,8 +280,8 @@ export async function registerReferrerLinkDeadline(
       return {
         code: referrer_code,
         status: 'expired',
-        createdAt: envelope?.data?.created_at || fallback.createdAt,
-        deadlineAt: envelope?.data?.deadline_at || fallback.deadlineAt,
+        createdAt: payload.created_at || fallback.createdAt,
+        deadlineAt: payload.deadline_at || fallback.deadlineAt,
       };
     }
 
@@ -289,8 +294,8 @@ export async function registerReferrerLinkDeadline(
     const state: ShareDeadlineState = {
       code: referrer_code,
       status: status === 'unknown' ? 'pending_share' : status,
-      createdAt: envelope?.data?.created_at || fallback.createdAt,
-      deadlineAt: envelope?.data?.deadline_at || fallback.deadlineAt,
+      createdAt: payload.created_at || fallback.createdAt,
+      deadlineAt: payload.deadline_at || fallback.deadlineAt,
     };
     writeShareDeadlineState(state);
     renderShareDeadlineBanner();

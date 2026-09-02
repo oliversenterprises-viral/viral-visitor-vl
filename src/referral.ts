@@ -97,7 +97,7 @@ function notifyReferralOutcome(outcome: ReferralRecordOutcome, allowFailureRetry
 
 /**
  * Records the referral for the current attribution (if any) via the Edge Function.
- * Server-side rate limit + dedupe protect the path (Turnstile optional when configured).
+ * Server requires Turnstile — never POST without a token when a site key is set.
  */
 async function recordReferralIfAttributed(options: {
   notify?: boolean;
