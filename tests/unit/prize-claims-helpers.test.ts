@@ -74,5 +74,6 @@ describe('prize claims helpers (pure)', () => {
     expect(src).not.toContain("data-status=\"paid\"");
     expect(src).not.toContain('cashtag');
     expect(src).not.toContain('reset_landing_visit_counters');
+    expect(src).toContain('data-prize-retry');
   });
 });

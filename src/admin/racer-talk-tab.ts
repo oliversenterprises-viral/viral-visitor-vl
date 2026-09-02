@@ -4,6 +4,7 @@ import {
   invokeRacerTalk,
   loadTalkPeople,
   loadTalkThread,
+  parseOwnerSendResult,
   type TalkMessage,
   type TalkPerson,
 } from '../lib/racer-talk-admin';
@@ -123,8 +124,15 @@ export async function renderRacerTalkTab(content: HTMLElement): Promise<void> {
       const body = content.querySelector<HTMLTextAreaElement>('#hq-talk-body')?.value || '';
       if (!code || !body.trim()) return;
       void invokeRacerTalk('owner_send', { code, body }).then((result) => {
-        status = result.success ? 'Sent.' : String(result.error || 'Could not send.');
-        void openCode(code);
+        try {
+          parseOwnerSendResult(result);
+          status = 'Sent.';
+          void openCode(code);
+        } catch (err) {
+          status = err instanceof Error ? err.message : String(err);
+          paint();
+          bind();
+        }
       });
     });
   };
@@ -146,6 +154,7 @@ export async function renderRacerTalkTab(content: HTMLElement): Promise<void> {
       <div class="p-6 text-amber-400 border border-amber-500/30 rounded-2xl" data-owner-talk="1">
         <div class="font-semibold mb-1">Unable to load Talk</div>
         <div class="text-sm text-zinc-400">${escapeHtml(message)}</div>
+        <button type="button" onclick="window.switchAdminTab(8)" class="mt-3 px-4 py-2 text-sm bg-white/10 rounded-2xl" data-talk-retry="1">Retry</button>
       </div>
     `;
   }

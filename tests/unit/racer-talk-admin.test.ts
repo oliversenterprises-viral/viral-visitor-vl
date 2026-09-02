@@ -5,6 +5,7 @@ import {
   TalkAdminError,
   isTalkUnavailable,
   parseOwnerListResult,
+  parseOwnerSendResult,
   parseOwnerThreadResult,
 } from '../../src/lib/racer-talk-admin';
 import { TALK_LEAD, TALK_TITLE, renderTalkView } from '../../src/admin/racer-talk-tab';
@@ -22,6 +23,10 @@ describe('HQ Talk fail-closed', () => {
     expect(() =>
       parseOwnerThreadResult({ success: false, error: 'Unknown action' }),
     ).toThrow(/Unknown action/);
+    expect(() =>
+      parseOwnerSendResult({ success: false, error: 'Unknown action' }),
+    ).toThrow(/racer-talk function is missing/);
+    expect(() => parseOwnerSendResult({ success: true })).not.toThrow();
     expect(
       parseOwnerListResult({
         success: true,
@@ -43,5 +48,8 @@ describe('HQ Talk fail-closed', () => {
     expect(switcher).toContain("tab === 8");
     expect(switcher).toContain('renderRacerTalkTab');
     expect(switcher).not.toContain('reset_landing_visit_counters');
+    const tab = readFileSync(resolve(__dirname, '../../src/admin/racer-talk-tab.ts'), 'utf8');
+    expect(tab).toContain('data-talk-retry');
+    expect(tab).toContain('parseOwnerSendResult');
   });
 });

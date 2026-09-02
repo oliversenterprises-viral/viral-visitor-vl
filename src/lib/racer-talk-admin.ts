@@ -152,3 +152,18 @@ export async function loadTalkThread(
 ): Promise<TalkMessage[]> {
   return parseOwnerThreadResult(await invoke('owner_thread', { code }));
 }
+
+export function parseOwnerSendResult(result: {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+}): void {
+  if (result.success) return;
+  if (isTalkUnavailable(result.error)) {
+    throw new TalkAdminError(
+      'Talk is not connected on this site yet. The racer-talk function is missing or returned Unknown action.',
+      'unknown_action',
+    );
+  }
+  throw new TalkAdminError(result.error || 'Could not send.', 'failed');
+}

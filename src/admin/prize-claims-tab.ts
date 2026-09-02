@@ -96,7 +96,11 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
 
     renderClaimsList(mainArea, currentClaimStatusFilter);
   } catch (e) {
-    mainArea.innerHTML = `<div class="p-6 text-amber-400">Unable to load prize claims. ${formatError(e)}</div>`;
+    mainArea.innerHTML = `<div class="p-6 text-amber-400 border border-amber-500/30 rounded-2xl">
+        <div class="font-semibold mb-1">Unable to load prize claims</div>
+        <div class="text-sm text-zinc-400">${formatError(e)}</div>
+        <button type="button" onclick="window.switchAdminTab(3)" class="mt-3 px-4 py-2 text-sm bg-white/10 rounded-2xl" data-prize-retry="1">Retry</button>
+      </div>`;
     showToast(`Unable to load prize claims: ${formatError(e)}`, 'info');
   }
 }
