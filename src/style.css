@@ -2352,6 +2352,9 @@ html[data-vr-referred-landing][data-vr-has-link] #funnel-expand-wrap {
 }
 
 /* How / Board / footer stay in the document — never display:none. Extra CMS blocks can stay quiet. */
+#site-footer {
+  display: block;
+}
 html:not([data-vr-funnel-expanded]) [data-vr-below-fold]:not(#how):not(#leaderboard) {
   display: none !important;
 }

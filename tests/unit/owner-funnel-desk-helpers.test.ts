@@ -462,6 +462,7 @@ describe('owner funnel desk metrics', () => {
   it('reads visits from a new RPC and defaults visits to 0 on an old payload', () => {
     expect(parseOwnerFunnelDeskCounts({ landings: 12, get_link: 3, share: 1, locked: 1 })).toEqual({
       visits: 0,
+      junkVisits: 0,
       friendLandings: 12,
       landings: 12,
       getLink: 3,
@@ -469,6 +470,48 @@ describe('owner funnel desk metrics', () => {
       locked: 1,
       windowDays: 7,
     });
+  });
+
+  it('reads junk_visits from the RPC without putting them on the Visits tile', () => {
+    const assembled = assembleOwnerFunnelDeskFromServer({
+      counts: {
+        visits: 12,
+        junk_visits: 900,
+        friend_landings: 4,
+        landings: 4,
+        get_link: 2,
+        share: 1,
+        locked: 1,
+        window_days: 7,
+      },
+    });
+    expect(assembled!.visits).toBe(12);
+    expect(assembled!.junkVisits).toBe(900);
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, assembled!);
+    const visitsTile = el.querySelector('[data-hq-tile="visits"]')?.textContent || '';
+    expect(visitsTile).toMatch(/12/);
+    expect(visitsTile).not.toMatch(/900/);
+    expect(el.textContent).toMatch(/900 junk\/test page views kept off these tiles/);
+    expect(el.textContent).toMatch(/Search Console is separate/);
+    expect(el.querySelector('[data-owner-desk-clear-junk]')).toBeTruthy();
+    expect(el.querySelector('[data-owner-desk-gsc]')).toBeTruthy();
+  });
+
+  it('junk-only clear never mentions GSC delete or the verify file', () => {
+    const desk = readFileSync(resolve(import.meta.dirname, '../../src/admin/owner-funnel-desk.ts'), 'utf8');
+    const action = readFileSync(
+      resolve(import.meta.dirname, '../../supabase/functions/admin-action/index.ts'),
+      'utf8',
+    );
+    expect(desk).toContain('clear_junk_visits');
+    expect(desk).toContain('Google Search Console and the verify file stay');
+    expect(action).toContain("action === 'clear_junk_visits'");
+    expect(action).toContain("gsc: 'untouched'");
+    expect(action).toContain('clear_junk_landing_counts');
+    expect(action).not.toMatch(/clear_junk_visits[\s\S]{0,1200}resolveOwnerFunnelGsc/);
+    expect(action).not.toContain('google163d31ba24216edd');
+    expect(desk).not.toContain('google163d31ba24216edd');
   });
 });
 

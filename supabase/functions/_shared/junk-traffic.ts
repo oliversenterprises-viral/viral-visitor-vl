@@ -2,6 +2,9 @@
 export {
   isAttributedLanding,
   isJunkTrafficSource,
+  isJunkUtmEvent,
+  shouldIncrementJunkLandingVisit,
+  shouldIncrementQualityLandingVisit,
   shouldSkipServerLandingWrite,
   type LandingAttribution,
 } from '../../../src/lib/junk-traffic.ts';

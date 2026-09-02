@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   isAttributedLanding,
   isJunkTrafficSource,
+  isJunkUtmEvent,
+  shouldIncrementJunkLandingVisit,
+  shouldIncrementQualityLandingVisit,
   shouldSkipServerLandingWrite,
 } from '../../src/lib/junk-traffic';
 
@@ -53,5 +56,27 @@ describe('junk-traffic (Disk IO guard)', () => {
     expect(shouldSkipServerLandingWrite('ShareReferral', null)).toBe(false);
     expect(shouldSkipServerLandingWrite('OpenPrizeClaim', null)).toBe(false);
     expect(shouldSkipServerLandingWrite('SubmitPrizeClaim', null)).toBe(false);
+  });
+
+  it('keeps junk/test homepage hits off the quality visit counter', () => {
+    expect(shouldIncrementQualityLandingVisit('SiteLanding', 'rotate4all')).toBe(false);
+    expect(shouldIncrementJunkLandingVisit('SiteLanding', 'rotate4all')).toBe(true);
+    expect(shouldIncrementQualityLandingVisit('SiteLanding', 'reddit')).toBe(true);
+    expect(shouldIncrementJunkLandingVisit('SiteLanding', 'reddit')).toBe(false);
+    expect(
+      shouldIncrementQualityLandingVisit('SiteLanding', 'traffup', {
+        path: '/r/VIRAL-A',
+        refCode: 'VIRAL-A',
+      }),
+    ).toBe(true);
+    expect(
+      shouldIncrementJunkLandingVisit('SiteLanding', 'traffup', {
+        path: '/r/VIRAL-A',
+        refCode: 'VIRAL-A',
+      }),
+    ).toBe(false);
+    expect(shouldIncrementQualityLandingVisit('GetReferralLink', 'rotate4all')).toBe(false);
+    expect(isJunkUtmEvent({ utm_source: 'pagerankcafe' })).toBe(true);
+    expect(isJunkUtmEvent({ utmSource: 'twitter' })).toBe(false);
   });
 });

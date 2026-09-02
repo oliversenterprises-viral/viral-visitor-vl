@@ -74,3 +74,32 @@ export function shouldSkipServerLandingWrite(
   if (eventName !== 'SiteLanding') return false;
   return !isAttributedLanding(attribution);
 }
+
+/** Desk / cheap counter: friend or promoter arrivals still count even with a junk UTM. */
+export function shouldIncrementQualityLandingVisit(
+  eventName: string,
+  utmSource?: string | null,
+  attribution?: LandingAttribution | null,
+): boolean {
+  if (eventName !== 'SiteLanding') return false;
+  if (isAttributedLanding(attribution)) return true;
+  return !isJunkTrafficSource(utmSource);
+}
+
+/** Homepage rotator / exchange hits — never the quality Visits tile. */
+export function shouldIncrementJunkLandingVisit(
+  eventName: string,
+  utmSource?: string | null,
+  attribution?: LandingAttribution | null,
+): boolean {
+  if (eventName !== 'SiteLanding') return false;
+  if (isAttributedLanding(attribution)) return false;
+  return isJunkTrafficSource(utmSource);
+}
+
+export function isJunkUtmEvent(event: {
+  utm_source?: unknown;
+  utmSource?: unknown;
+}): boolean {
+  return isJunkTrafficSource(String(event.utm_source || event.utmSource || ''));
+}

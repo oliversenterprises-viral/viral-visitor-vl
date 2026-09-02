@@ -32,6 +32,7 @@ export type OwnerFunnelFeedRow = {
 export type OwnerFunnelDeskMetrics = {
   windowDays: number;
   visits: number;
+  junkVisits?: number;
   friendLandings: number;
   landings: number;
   getLink: number;
@@ -291,6 +292,7 @@ export function computeOwnerFunnelDeskMetrics(input: {
   now?: number;
   windowDays?: number;
   visits?: number;
+  junkVisits?: number;
 }): OwnerFunnelDeskMetrics {
   const now = input.now ?? Date.now();
   const windowDays = input.windowDays ?? OWNER_FUNNEL_WINDOW_DAYS;
@@ -311,6 +313,8 @@ export function computeOwnerFunnelDeskMetrics(input: {
   });
 
   const visits = Number.isFinite(input.visits) && (input.visits as number) >= 0 ? (input.visits as number) : 0;
+  const junkVisits =
+    Number.isFinite(input.junkVisits) && (input.junkVisits as number) >= 0 ? (input.junkVisits as number) : 0;
   const landings = uniqueAttributedLandingVisitors(events);
   const getLink = uniqueVisitorsForEvent(events, 'GetReferralLink');
   const shareCodes = new Set<string>();
@@ -394,6 +398,7 @@ export function computeOwnerFunnelDeskMetrics(input: {
   return {
     windowDays,
     visits,
+    junkVisits,
     friendLandings: landings,
     landings,
     getLink,
@@ -406,6 +411,7 @@ export function computeOwnerFunnelDeskMetrics(input: {
 
 export function parseOwnerFunnelDeskCounts(raw: unknown): {
   visits: number;
+  junkVisits: number;
   friendLandings: number;
   landings: number;
   getLink: number;
@@ -431,12 +437,13 @@ export function parseOwnerFunnelDeskCounts(raw: unknown): {
   const friendLandings = num('friend_landings', 'friendLandings') ?? num('landings');
   const landings = friendLandings;
   const visits = num('visits') ?? 0;
+  const junkVisits = num('junk_visits', 'junkVisits') ?? 0;
   const getLink = num('get_link', 'getLink');
   const share = num('share');
   const locked = num('locked');
   const windowDays = num('window_days', 'windowDays') ?? OWNER_FUNNEL_WINDOW_DAYS;
   if (landings == null || getLink == null || share == null || locked == null) return null;
-  return { visits, friendLandings: landings, landings, getLink, share, locked, windowDays };
+  return { visits, junkVisits, friendLandings: landings, landings, getLink, share, locked, windowDays };
 }
 
 /** Tile counts come from the RPC when present. A paged dump is feed-only. */
@@ -461,6 +468,7 @@ export function assembleOwnerFunnelDeskFromServer(input: {
   return {
     windowDays: counts.windowDays,
     visits: counts.visits,
+    junkVisits: counts.junkVisits,
     friendLandings: counts.friendLandings,
     landings: counts.landings,
     getLink: counts.getLink,
@@ -549,6 +557,7 @@ export async function resolveOwnerFunnelDeskMetrics(input: {
       return {
         windowDays: counts.windowDays,
         visits: counts.visits,
+        junkVisits: counts.junkVisits,
         friendLandings: counts.friendLandings,
         landings: counts.landings,
         getLink: counts.getLink,

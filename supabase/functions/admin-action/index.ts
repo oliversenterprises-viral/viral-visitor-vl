@@ -21,6 +21,7 @@ import {
 import { mintAdminSessionToken, verifyAdminSessionToken } from '../_shared/admin-session.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 import { isTestReferrerCode } from '../_shared/test-referral.ts';
+import { isJunkUtmEvent } from '../_shared/junk-traffic.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -599,6 +600,61 @@ Deno.serve(async (req: Request) => {
         JSON.stringify({
           success: true,
           data: { deleted: idsToDelete.length },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (action === 'clear_junk_visits') {
+      // Junk/test visitor rows + junk_hits only. Never GSC. Never quality_hits. Never verify files.
+      const pageSize = 1000;
+      const allRows: Record<string, unknown>[] = [];
+      let start = 0;
+
+      while (true) {
+        const { data, error } = await supabaseAdmin
+          .from('visitor_events')
+          .select('id, event_name, ref_code, ip_hash, metadata, utm_source, created_at')
+          .order('created_at', { ascending: true })
+          .range(start, start + pageSize - 1);
+        if (error) throw error;
+        const batch = data || [];
+        allRows.push(...batch);
+        if (batch.length < pageSize) break;
+        start += pageSize;
+      }
+
+      const byIp = groupVisitorEventsByIp(allRows);
+      const idsToDelete: string[] = [];
+      for (const row of allRows) {
+        const id = row.id;
+        if (!id) continue;
+        const ipKey = getVisitorEventIp(row) || String(row.ip_hash || 'unknown');
+        if (isTestVisitorFunnelEvent(row, byIp.get(ipKey)) || isJunkUtmEvent(row)) {
+          idsToDelete.push(String(id));
+        }
+      }
+
+      const chunk = 200;
+      for (let i = 0; i < idsToDelete.length; i += chunk) {
+        const slice = idsToDelete.slice(i, i + chunk);
+        const { error: delErr } = await supabaseAdmin.from('visitor_events').delete().in('id', slice);
+        if (delErr) throw delErr;
+      }
+
+      let junkHitsCleared = false;
+      const { error: junkRpcErr } = await supabaseAdmin.rpc('clear_junk_landing_counts');
+      if (!junkRpcErr) junkHitsCleared = true;
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            deleted: idsToDelete.length,
+            junk_hits_cleared: junkHitsCleared,
+            quality_hits_untouched: true,
+            gsc: 'untouched',
+          },
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );

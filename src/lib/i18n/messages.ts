@@ -121,6 +121,13 @@ export const en = {
   'footer.rules_link': 'Official Rules & Full Disclaimers',
   'footer.privacy': 'Privacy Policy',
   'footer.terms': 'Terms',
+  'footer.tools': 'Tools',
+  'footer.credit_checker': 'Does this count?',
+  'footer.what_to_paste': 'What to paste?',
+  'footer.utm': 'UTM links',
+  'footer.guides': 'Guides',
+  'footer.llms': 'llms.txt',
+  'footer.promoters': 'Promoters',
 
   'lang.hint': 'Page language',
 
@@ -324,6 +331,13 @@ const es = dict({
   'footer.rules_link': 'Reglas oficiales y avisos',
   'footer.privacy': 'Privacidad',
   'footer.terms': 'Términos',
+  'footer.tools': 'Herramientas',
+  'footer.credit_checker': '¿Esto cuenta?',
+  'footer.what_to_paste': '¿Qué pego?',
+  'footer.utm': 'Enlaces UTM',
+  'footer.guides': 'Guías',
+  'footer.llms': 'llms.txt',
+  'footer.promoters': 'Promotores',
   'lang.hint': 'Idioma de la página',
   'proof.fomo_empty': 'El ranking está abierto en todo el mundo — los primeros pueden llegar al #1',
   'proof.fomo_thin': 'El #1 solo tiene {n} referido(s) — ranking muy abierto',
@@ -423,6 +437,13 @@ const fr = dict({
   'footer.rules_link': 'Règles officielles et mentions',
   'footer.privacy': 'Confidentialité',
   'footer.terms': 'Conditions',
+  'footer.tools': 'Outils',
+  'footer.credit_checker': 'Est-ce que ça compte ?',
+  'footer.what_to_paste': 'Quoi coller ?',
+  'footer.utm': 'Liens UTM',
+  'footer.guides': 'Guides',
+  'footer.llms': 'llms.txt',
+  'footer.promoters': 'Promoteurs',
   'lang.hint': 'Langue de la page',
 });
 
@@ -482,6 +503,13 @@ const pt = dict({
   'footer.rules_link': 'Regras oficiais e avisos',
   'footer.privacy': 'Privacidade',
   'footer.terms': 'Termos',
+  'footer.tools': 'Ferramentas',
+  'footer.credit_checker': 'Isso conta?',
+  'footer.what_to_paste': 'O que colar?',
+  'footer.utm': 'Links UTM',
+  'footer.guides': 'Guias',
+  'footer.llms': 'llms.txt',
+  'footer.promoters': 'Promotores',
   'lang.hint': 'Idioma da página',
 });
 
@@ -541,6 +569,13 @@ const de = dict({
   'footer.rules_link': 'Offizielle Regeln & Hinweise',
   'footer.privacy': 'Datenschutz',
   'footer.terms': 'Bedingungen',
+  'footer.tools': 'Tools',
+  'footer.credit_checker': 'Zählt das?',
+  'footer.what_to_paste': 'Was einfügen?',
+  'footer.utm': 'UTM-Links',
+  'footer.guides': 'Guides',
+  'footer.llms': 'llms.txt',
+  'footer.promoters': 'Promoter',
   'lang.hint': 'Seitensprache',
 });
 // fix German coach (avoid bad paste)
@@ -602,6 +637,13 @@ const hi = dict({
   'footer.rules_link': 'आधिकारिक नियम और अस्वीकरण',
   'footer.privacy': 'गोपनीयता',
   'footer.terms': 'शर्तें',
+  'footer.tools': 'टूल्स',
+  'footer.credit_checker': 'क्या यह गिना जाता है?',
+  'footer.what_to_paste': 'क्या पेस्ट करें?',
+  'footer.utm': 'UTM लिंक',
+  'footer.guides': 'गाइड',
+  'footer.llms': 'llms.txt',
+  'footer.promoters': 'प्रमोटर',
   'lang.hint': 'पेज की भाषा',
 });
 
