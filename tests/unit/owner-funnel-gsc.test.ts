@@ -7,9 +7,11 @@ import {
   formatGscCount,
   formatGscPosition,
   GSC_CONSOLE_URL,
+  GSC_EDGE_SECRET_NAMES,
   GSC_MISSING_NOTE,
   GSC_PROPERTY,
   parseOwnerFunnelGsc,
+  readGscServerSecret,
   resolveOwnerFunnelGsc,
 } from '../../src/admin/owner-funnel-desk-helpers';
 
@@ -119,6 +121,31 @@ describe('owner funnel GSC tracker', () => {
     expect(gsc.property).toBe('https://www.viralrefer.app/');
     expect(gsc.consoleUrl).toContain('search-console/performance');
     expect(gsc.consoleUrl).toContain(encodeURIComponent(GSC_PROPERTY));
+  });
+
+  it('reads Edge names GSC_API_KEY and GSC_SERVICE_ACCOUNT_JSON, never VITE_', () => {
+    expect(GSC_EDGE_SECRET_NAMES).toEqual(['GSC_API_KEY', 'GSC_SERVICE_ACCOUNT_JSON']);
+    const gscSrc = readFileSync(resolve(root, 'supabase/functions/_shared/owner-funnel-gsc.ts'), 'utf8');
+    expect(gscSrc).toContain("readEnv('GSC_API_KEY')");
+    expect(gscSrc).toContain("readEnv('GSC_SERVICE_ACCOUNT_JSON')");
+    expect(gscSrc).not.toMatch(/VITE_GSC|VITE_GOOGLE|import\.meta\.env/);
+    expect(gscSrc).not.toMatch(/AIza[0-9A-Za-z_-]{20,}/);
+
+    const saved = globalThis.Deno;
+    const env: Record<string, string> = {};
+    (globalThis as { Deno?: { env: { get: (k: string) => string | undefined } } }).Deno = {
+      env: { get: (k) => env[k] },
+    };
+    expect(readGscServerSecret()).toBe('');
+    env.VITE_GSC_API_KEY = 'must-never-be-read';
+    expect(readGscServerSecret()).toBe('');
+    env.GSC_API_KEY = 'edge-api-key';
+    expect(readGscServerSecret()).toBe('edge-api-key');
+    delete env.GSC_API_KEY;
+    env.GSC_SERVICE_ACCOUNT_JSON = '{"client_email":"x","private_key":"y"}';
+    expect(readGscServerSecret()).toBe('{"client_email":"x","private_key":"y"}');
+    if (saved === undefined) delete (globalThis as { Deno?: unknown }).Deno;
+    else (globalThis as { Deno?: unknown }).Deno = saved;
   });
 
   it('maps Search Console rows when a query succeeds', async () => {

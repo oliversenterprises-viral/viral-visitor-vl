@@ -46,7 +46,7 @@ function ensureAdminOwnerGateModal(): HTMLElement | null {
   if (modal) return modal;
   modal = document.createElement('div');
   modal.id = 'admin-owner-gate-modal';
-  modal.className = 'hidden fixed inset-0 bg-black/90 z-[300] flex items-center justify-center';
+  modal.className = 'hidden fixed inset-0 bg-black/90 z-[990] flex items-center justify-center';
   modal.dataset.vrAdminGate = '1';
   modal.setAttribute('role', 'dialog');
   modal.setAttribute('aria-modal', 'true');
@@ -136,6 +136,8 @@ const closeAdminPasswordModal = () => {
 registerGlobal('closeAdminPasswordModal', closeAdminPasswordModal);
 
 const openAdminPasswordModal = () => {
+  markOwnerHqSurface();
+  dismissShareAbandonOverlay();
   const pw = ensureAdminOwnerGateModal();
   if (!pw) return;
   pw.classList.remove('hidden');

@@ -98,7 +98,9 @@ describe('first-screen Site Drops rules', () => {
     const html = read('index.html');
     expect(css).toMatch(/html\[data-vr-owner-hq\] \.vr-share-abandon/);
     expect(css).toMatch(/html:has\(#admin-modal:not\(\.hidden\)\) \.vr-share-abandon/);
+    expect(css).toMatch(/html:has\(#admin-owner-gate-modal:not\(\.hidden\)\) \.vr-share-abandon/);
     expect(css).toMatch(/pointer-events:\s*none\s*!important/);
+    expect(css).toMatch(/visibility:\s*hidden\s*!important/);
     expect(css).toMatch(/#admin-modal[\s\S]{0,80}z-index:\s*980/);
     expect(html).toContain('z-[980]');
     expect(html).toContain('hq-command');
@@ -130,5 +132,14 @@ describe('first-screen Site Drops rules', () => {
     expect(read('src/admin/owner-funnel-desk.ts')).toMatch(/data-owner-desk-gsc/);
     expect(read('index.html')).toMatch(/data-owner-desk-gsc/);
     expect(read('supabase/functions/admin-action/index.ts')).toMatch(/resolveOwnerFunnelGsc/);
+    expect(read('supabase/functions/_shared/owner-funnel-gsc.ts')).toContain("readEnv('GSC_API_KEY')");
+    expect(read('supabase/functions/_shared/owner-funnel-gsc.ts')).toContain(
+      "readEnv('GSC_SERVICE_ACCOUNT_JSON')",
+    );
+    expect(read('supabase/functions/_shared/owner-funnel-gsc.ts')).not.toMatch(/VITE_GSC/);
+    expect(read('src/lib/turnstile.ts')).toContain("size: 'compact'");
+    expect(read('src/lib/turnstile.ts')).not.toMatch(/size:\s*['"]invisible['"]/);
+    expect(read('src/public/modals.ts')).toMatch(/z-\[990\]/);
+    expect(read('src/public/modals.ts')).toMatch(/dismissShareAbandonOverlay\(\)/);
   });
 });

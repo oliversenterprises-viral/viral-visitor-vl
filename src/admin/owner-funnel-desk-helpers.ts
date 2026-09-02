@@ -35,9 +35,11 @@ export {
   formatGscCount,
   formatGscPosition,
   GSC_CONSOLE_URL,
+  GSC_EDGE_SECRET_NAMES,
   GSC_MISSING_NOTE,
   GSC_PROPERTY,
   parseOwnerFunnelGsc,
+  readGscServerSecret,
   resolveOwnerFunnelGsc,
   type OwnerFunnelGscMetrics,
 } from '../../supabase/functions/_shared/owner-funnel-gsc';

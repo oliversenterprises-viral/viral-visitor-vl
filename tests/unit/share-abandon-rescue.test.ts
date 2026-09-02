@@ -3,6 +3,7 @@ import {
   shouldShowShareAbandon,
   shouldArmBeforeUnload,
   buildShareAbandonMessage,
+  dismissShareAbandonOverlay,
   softSnoozeShareAbandon,
   SOFT_SNOOZE_MS,
   MIN_DWELL_MS,
@@ -135,6 +136,17 @@ describe('share-abandon-rescue', () => {
     forceShareAbandonForTest('owner');
     expect(document.getElementById('vr-share-abandon')).toBeNull();
     vi.unstubAllGlobals();
+  });
+
+  it('dismissShareAbandonOverlay removes Don\'t leave without sending', () => {
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    markSharePending();
+    document.body.innerHTML = `<input id="ref-link" value="https://www.viralrefer.app/r/VIRAL-TEST1" />`;
+    forceShareAbandonForTest('unit');
+    expect(document.getElementById('vr-share-abandon')).toBeTruthy();
+    dismissShareAbandonOverlay();
+    expect(document.getElementById('vr-share-abandon')).toBeNull();
+    expect(document.documentElement.hasAttribute('data-vr-share-abandon')).toBe(false);
   });
 
   it('forceShareAbandonForTest mounts panel when pending', () => {

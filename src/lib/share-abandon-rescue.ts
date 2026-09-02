@@ -435,13 +435,28 @@ export function initShareAbandonRescue(win: Window = window): void {
     tryShow('poll', started, coarse);
   }, POLL_MS);
 
-  // Clear panel when locked
+  // Clear panel when locked, or when Owner Desk / HQ is marked
   const obs = new MutationObserver(() => {
+    if (isOwnerHqContext(win.location)) {
+      markOwnerHqSurface(win.document);
+      dismissShareAbandonOverlay(win.document);
+      return;
+    }
     if (isLocked() || !isSharePendingLocal()) removePanel();
+    const desk = win.document.getElementById('admin-modal');
+    const gate = win.document.getElementById('admin-owner-gate-modal');
+    if ((desk && !desk.classList.contains('hidden')) || (gate && !gate.classList.contains('hidden'))) {
+      dismissShareAbandonOverlay(win.document);
+    }
   });
   obs.observe(win.document.documentElement, {
     attributes: true,
-    attributeFilter: ['data-vr-share-locked', 'data-vr-share-pending', 'data-vr-has-link'],
+    attributeFilter: [
+      'data-vr-share-locked',
+      'data-vr-share-pending',
+      'data-vr-has-link',
+      'data-vr-owner-hq',
+    ],
   });
 }
 

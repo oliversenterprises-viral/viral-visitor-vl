@@ -2514,7 +2514,9 @@ html[data-vr-owner-hq] .vr-share-abandon,
 html:has(#admin-modal:not(.hidden)) .vr-share-abandon,
 html:has(#admin-owner-gate-modal:not(.hidden)) .vr-share-abandon {
   display: none !important;
+  visibility: hidden !important;
   pointer-events: none !important;
+  z-index: 0 !important;
 }
 
 @media (min-width: 640px) {

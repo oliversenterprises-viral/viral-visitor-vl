@@ -81,8 +81,7 @@ describe('turnstile (shared by referral.ts + handlers.ts)', () => {
 
     const token = await getTurnstileToken(container, 'test-site-key', 'Turnstile for recording', {
       size: 'compact',
-      appearance: 'execute',
-      execute: true,
+      appearance: 'always',
     });
     expect(token).toBe('compact-token');
   });
@@ -104,13 +103,25 @@ describe('turnstile (shared by referral.ts + handlers.ts)', () => {
     expect(document.getElementById('referral-turnstile-container')).toBe(host);
   });
 
-  it('getCreditTurnstileToken returns a token when the compact execute widget succeeds', async () => {
+  it('getCreditTurnstileToken returns a token when the compact widget succeeds', async () => {
     vi.stubEnv('VITE_TURNSTILE_SITEKEY', 'test-site-key');
-    const render = vi.fn((_el, opts: { callback: (t: string) => void; size?: string }) => {
-      expect(opts.size).toBe('compact');
-      expect(opts.size).not.toBe('invisible');
-      opts.callback('credit-token-ok');
-    });
+    const render = vi.fn(
+      (
+        _el,
+        opts: {
+          callback: (t: string) => void;
+          size?: string;
+          appearance?: string;
+          execute?: boolean;
+        },
+      ) => {
+        expect(opts.size).toBe('compact');
+        expect(opts.size).not.toBe('invisible');
+        expect(opts.appearance).toBe('always');
+        expect(opts.execute).toBeFalsy();
+        opts.callback('credit-token-ok');
+      },
+    );
     (window as { turnstile?: { render: typeof render; execute?: () => void } }).turnstile = {
       render,
       execute: () => {},
@@ -124,6 +135,8 @@ describe('turnstile (shared by referral.ts + handlers.ts)', () => {
     expect(src).not.toMatch(/size:\s*['"]invisible['"]/);
     expect(src).not.toMatch(/renderOpts\.size\s*=\s*['"]invisible['"]/);
     expect(src).toContain("size: 'compact'");
+    expect(src).toContain("appearance: 'always'");
+    expect(src).not.toMatch(/appearance:\s*['"]execute['"]/);
   });
 
   it('getCreditTurnstileToken returns null when the widget fails (no silent empty POST)', async () => {

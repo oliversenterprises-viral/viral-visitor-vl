@@ -193,10 +193,24 @@ function isToolPage(url: string): boolean {
   return /\/tools(\/|$)/i.test(url);
 }
 
+/** Supabase Edge secret names. Never VITE_ — the browser must not see these. */
+export const GSC_EDGE_SECRET_NAMES = ['GSC_API_KEY', 'GSC_SERVICE_ACCOUNT_JSON'] as const;
+
 function readEnv(name: string): string {
+  if (!name || name.startsWith('VITE_')) return '';
   try {
     const deno = (globalThis as { Deno?: { env?: { get?: (k: string) => string | undefined } } }).Deno;
-    return String(deno?.env?.get?.(name) || '').trim();
+    const env = deno?.env;
+    if (env && typeof env.get === 'function') {
+      const fromDeno = String(env.get(name) || '').trim();
+      if (fromDeno) return fromDeno;
+    }
+  } catch {
+    /* Deno missing in unit tests */
+  }
+  try {
+    const proc = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
+    return String(proc?.env?.[name] || '').trim();
   } catch {
     return '';
   }
@@ -205,10 +219,10 @@ function readEnv(name: string): string {
 export function readGscServerSecret(): string {
   return (
     readEnv('GSC_API_KEY') ||
+    readEnv('GSC_SERVICE_ACCOUNT_JSON') ||
     readEnv('GOOGLE_SEARCH_CONSOLE_API_KEY') ||
     readEnv('GSC_ACCESS_TOKEN') ||
     readEnv('GOOGLE_API_KEY') ||
-    readEnv('GSC_SERVICE_ACCOUNT_JSON') ||
     readEnv('GOOGLE_SERVICE_ACCOUNT_JSON')
   );
 }
