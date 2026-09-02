@@ -273,7 +273,11 @@ Deno.serve(async (req: Request) => {
         .select('key, value, updated_at')
         .order('key', { ascending: true });
       if (error) throw error;
-      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+      const rows = (data || []).map((row: { key?: string; value?: unknown; updated_at?: string }) => {
+        const key = String(row.key || '');
+        return { key, id: key, value: row.value, updated_at: row.updated_at ?? null };
+      });
+      return new Response(JSON.stringify({ success: true, data: rows }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

@@ -36,6 +36,9 @@ export function resolveExitDwellMs(opts: {
 
 export function shouldShowExitRescue(opts: ExitRescueEligibility): boolean {
   if (opts.isReferred || opts.hasLink || opts.alreadyShown) return false;
+  if (typeof document !== 'undefined' && document.documentElement.hasAttribute('data-vr-post-link-one')) {
+    return false;
+  }
   const need = resolveExitDwellMs({
     isCoarsePointer: opts.isCoarsePointer,
     isPaidTraffic: opts.isPaidTraffic,

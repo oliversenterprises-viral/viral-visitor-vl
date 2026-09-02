@@ -12,6 +12,9 @@ import {
   POLL_MS,
   resetShareAbandonSessionForTest,
   forceShareAbandonForTest,
+  dismissShareAbandon,
+  stealShareAbandonIfSendTap,
+  isPostLinkSendScreenActive,
 } from '../../src/lib/share-abandon-rescue';
 import { markSharePending, clearShareFirstFlags } from '../../src/lib/share-first-ui';
 
@@ -135,6 +138,38 @@ describe('share-abandon-rescue', () => {
     expect(panel).toBeTruthy();
     expect(panel?.querySelector('[data-abandon-cta]')).toBeTruthy();
     expect(document.documentElement.getAttribute('data-vr-share-abandon')).toBe('unit');
+  });
+
+  it('does not cover the send screen and Copy steals the overlay', () => {
+    document.documentElement.setAttribute('data-vr-post-link-one', '1');
+    expect(isPostLinkSendScreenActive()).toBe(true);
+    expect(
+      shouldShowShareAbandon({
+        hasLink: true,
+        sharePending: true,
+        locked: false,
+        alreadyMaxShows: false,
+        snoozed: false,
+        dwellMs: MIN_DWELL_MS + 100,
+        isCoarsePointer: false,
+        embed: false,
+        confirmFlowActive: false,
+      }),
+    ).toBe(false);
+
+    document.documentElement.removeAttribute('data-vr-post-link-one');
+    document.body.innerHTML = `
+      <div id="vr-share-abandon" class="vr-share-abandon"></div>
+      <button type="button" id="post-link-copy">Copy link</button>
+      <button type="button" id="post-link-primary">Send to a friend now</button>
+    `;
+    const copy = document.getElementById('post-link-copy')!;
+    expect(stealShareAbandonIfSendTap({ target: copy } as unknown as Event)).toBe(true);
+    expect(document.getElementById('vr-share-abandon')).toBeNull();
+
+    document.body.innerHTML = `<div id="vr-share-abandon" class="vr-share-abandon"></div>`;
+    dismissShareAbandon();
+    expect(document.getElementById('vr-share-abandon')).toBeNull();
   });
 
   it('caps are conservative to limit residual annoyance', () => {

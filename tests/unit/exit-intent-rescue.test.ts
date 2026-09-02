@@ -21,6 +21,9 @@ describe('exit-intent-rescue', () => {
     expect(shouldShowExitRescue({ ...base, hasLink: true })).toBe(false);
     expect(shouldShowExitRescue({ ...base, alreadyShown: true })).toBe(false);
     expect(shouldShowExitRescue({ ...base, dwellMs: 2000 })).toBe(false);
+    document.documentElement.setAttribute('data-vr-post-link-one', '1');
+    expect(shouldShowExitRescue(base)).toBe(false);
+    document.documentElement.removeAttribute('data-vr-post-link-one');
   });
 
   it('shouldShowExitRescue requires longer dwell on mobile', () => {

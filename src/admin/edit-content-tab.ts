@@ -52,32 +52,29 @@ const BANNER_PRESETS = [
   },
 ] as const;
 
-function normalizeSiteContentRows(rows: Array<{ key?: string; id?: string; value?: unknown }>): ContentRow[] {
-  return rows
-    .map((row) => ({
-      id: String(row.key ?? row.id ?? ''),
-      value: row.value,
-    }))
-    .filter((row) => row.id)
-    .sort((a, b) => a.id.localeCompare(b.id));
-}
-
-/** Owner HQ Website tab: prefer admin-action get_site_content (RLS-safe). */
+/** Owner HQ Website tab: get_site_content first. Unknown action must fail closed. */
 async function fetchSiteContentRows(): Promise<ContentRow[]> {
-  try {
-    const { invokeAdminAction } = await import('../lib/admin-action-client');
-    const result = await invokeAdminAction<Array<{ key?: string; id?: string; value?: unknown }>>(
-      'get_site_content',
-    );
-    if (result.success && Array.isArray(result.data)) {
-      return normalizeSiteContentRows(result.data);
-    }
-  } catch {
-    // fall through to direct select
+  const { invokeAdminAction } = await import('../lib/admin-action-client');
+  const {
+    isUnknownAdminAction,
+    normalizeSiteContentAdminRows,
+    parseGetSiteContentResult,
+  } = await import('../lib/site-content-admin');
+  const result = await invokeAdminAction<Array<{ key?: string; id?: string; value?: unknown }>>(
+    'get_site_content',
+  );
+  if (result.success) {
+    return normalizeSiteContentAdminRows(parseGetSiteContentResult(result));
+  }
+  if (isUnknownAdminAction(result.error)) {
+    // Live 8a24705 admin-action bug — do not mask as an empty CMS.
+    parseGetSiteContentResult(result);
   }
   const { data, error } = await supabase.from('site_content').select('*');
   if (error) throw error;
-  return normalizeSiteContentRows((data || []) as Array<{ key?: string; id?: string; value?: unknown }>);
+  return normalizeSiteContentAdminRows(
+    (data || []) as Array<{ key?: string; id?: string; value?: unknown }>,
+  );
 }
 
 async function saveSiteContentEntry(key: string, value: unknown): Promise<boolean> {

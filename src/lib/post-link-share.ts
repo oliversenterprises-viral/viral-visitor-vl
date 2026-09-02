@@ -11,6 +11,7 @@ import { recordShareEvent } from './record-share';
 import { trackVisitorFunnel } from './visitor-tracking';
 import { isSharePendingLocal } from './share-first-ui';
 import { showToast } from '../ui';
+import { dismissShareAbandon } from './share-abandon-rescue';
 
 export const POST_LINK_ATTR = 'data-vr-post-link-one';
 
@@ -98,6 +99,7 @@ function focusHeading(): void {
 
 export function showPostLinkLoading(): void {
   wireOnce();
+  dismissShareAbandon();
   document.documentElement.setAttribute(POST_LINK_ATTR, '1');
   const root = el(IDS.root);
   if (!root) return;
@@ -124,6 +126,7 @@ export function showPostLinkLoading(): void {
 
 export function showPostLinkError(): void {
   wireOnce();
+  dismissShareAbandon();
   document.documentElement.setAttribute(POST_LINK_ATTR, '1');
   const root = el(IDS.root);
   if (!root) return;
@@ -160,6 +163,7 @@ export function showPostLinkReady(link: string): void {
     return;
   }
 
+  dismissShareAbandon();
   document.documentElement.setAttribute(POST_LINK_ATTR, '1');
   document.documentElement.setAttribute('data-vr-has-link', '1');
   const root = el(IDS.root);
@@ -249,6 +253,7 @@ function fireShareEvent(platform: string, link: string): void {
 
 export function onPostLinkPrimaryTap(event?: Event): void {
   event?.preventDefault();
+  dismissShareAbandon();
   const btn = el<HTMLButtonElement>(IDS.primary);
   const mode = btn?.dataset.mode;
   if (mode === 'retry') {
@@ -286,6 +291,7 @@ export function onPostLinkPrimaryTap(event?: Event): void {
 }
 
 export async function onPostLinkCopyTap(): Promise<void> {
+  dismissShareAbandon();
   const link = readReadyLink();
   if (!link) return;
   const copy = el<HTMLButtonElement>(IDS.copy);
