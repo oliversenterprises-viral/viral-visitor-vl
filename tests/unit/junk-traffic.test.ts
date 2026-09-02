@@ -3,10 +3,12 @@ import {
   isAttributedLanding,
   isJunkTrafficSource,
   isJunkUtmEvent,
+  shouldDeleteJunkUtmVisitorEvent,
   shouldIncrementJunkLandingVisit,
   shouldIncrementQualityLandingVisit,
   shouldSkipServerLandingWrite,
 } from '../../src/lib/junk-traffic';
+import { shouldClearJunkVisitorEvent } from '../../supabase/functions/_shared/visitor-funnel-test';
 
 describe('junk-traffic (Disk IO guard)', () => {
   it('flags rotator / exchange sources', () => {
@@ -78,7 +80,74 @@ describe('junk-traffic (Disk IO guard)', () => {
       }),
     ).toBe(false);
     expect(shouldIncrementQualityLandingVisit('GetReferralLink', 'rotate4all')).toBe(false);
+    expect(shouldIncrementQualityLandingVisit('SiteLanding', null)).toBe(false);
+    expect(shouldIncrementQualityLandingVisit('SiteLanding', '')).toBe(false);
+    expect(shouldIncrementJunkLandingVisit('SiteLanding', null)).toBe(false);
     expect(isJunkUtmEvent({ utm_source: 'pagerankcafe' })).toBe(true);
     expect(isJunkUtmEvent({ utmSource: 'twitter' })).toBe(false);
+  });
+
+  it('Clear junk UTM never deletes GetReferralLink or share/claim rows', () => {
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'SiteLanding', utm_source: 'pagerankcafe' }),
+    ).toBe(true);
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'SiteLanding', utm_source: 'scout' }),
+    ).toBe(true);
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'GetReferralLink', utm_source: 'pagerankcafe' }),
+    ).toBe(false);
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'ShareReferral', utm_source: 'pagerankcafe' }),
+    ).toBe(false);
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'SubmitPrizeClaim', utm_source: 'rotate4all' }),
+    ).toBe(false);
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'GetReferralLink', utm_source: 'twitter' }),
+    ).toBe(false);
+    expect(shouldDeleteJunkUtmVisitorEvent({ event_name: 'SiteLanding', utm_source: 'reddit' })).toBe(
+      false,
+    );
+  });
+
+  it('HQ Clear keeps pagerankcafe GetReferralLink credits and drops test/scout landings', () => {
+    expect(
+      shouldClearJunkVisitorEvent({
+        event_name: 'GetReferralLink',
+        utm_source: 'pagerankcafe',
+        ref_code: 'VIRAL-97UWEGZ',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(false);
+    expect(
+      shouldClearJunkVisitorEvent({
+        event_name: 'SiteLanding',
+        utm_source: 'pagerankcafe',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(true);
+    expect(
+      shouldClearJunkVisitorEvent({
+        event_name: 'GetReferralLink',
+        utm_source: 'pagerankcafe',
+        ref_code: 'VIRAL-SCOUT',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(true);
+    expect(
+      shouldClearJunkVisitorEvent({
+        event_name: 'SiteLanding',
+        utm_source: null,
+        metadata: { user_agent: 'Mozilla/5.0 scout Chrome/131' },
+      }),
+    ).toBe(true);
+    expect(
+      shouldClearJunkVisitorEvent({
+        event_name: 'GetReferralLink',
+        utm_source: null,
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(false);
   });
 });

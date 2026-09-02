@@ -12,6 +12,7 @@ import {
   groupVisitorEventsByIp,
   isTestBannerEvent,
   isTestVisitorFunnelEvent,
+  shouldClearJunkVisitorEvent,
 } from '../_shared/admin-stats-test.ts';
 import {
   getFunnelNotifyChannel,
@@ -21,7 +22,6 @@ import {
 import { mintAdminSessionToken, verifyAdminSessionToken } from '../_shared/admin-session.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 import { isTestReferrerCode } from '../_shared/test-referral.ts';
-import { isJunkUtmEvent } from '../_shared/junk-traffic.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -630,7 +630,7 @@ Deno.serve(async (req: Request) => {
         const id = row.id;
         if (!id) continue;
         const ipKey = getVisitorEventIp(row) || String(row.ip_hash || 'unknown');
-        if (isTestVisitorFunnelEvent(row, byIp.get(ipKey)) || isJunkUtmEvent(row)) {
+        if (shouldClearJunkVisitorEvent(row, byIp.get(ipKey))) {
           idsToDelete.push(String(id));
         }
       }

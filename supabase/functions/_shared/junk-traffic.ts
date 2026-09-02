@@ -3,6 +3,7 @@ export {
   isAttributedLanding,
   isJunkTrafficSource,
   isJunkUtmEvent,
+  shouldDeleteJunkUtmVisitorEvent,
   shouldIncrementJunkLandingVisit,
   shouldIncrementQualityLandingVisit,
   shouldSkipServerLandingWrite,

@@ -507,11 +507,29 @@ describe('owner funnel desk metrics', () => {
     expect(desk).toContain('clear_junk_visits');
     expect(desk).toContain('Google Search Console and the verify file stay');
     expect(action).toContain("action === 'clear_junk_visits'");
+    expect(action).toContain('shouldClearJunkVisitorEvent');
     expect(action).toContain("gsc: 'untouched'");
     expect(action).toContain('clear_junk_landing_counts');
+    expect(action).not.toMatch(/clear_junk_visits[\s\S]{0,800}isJunkUtmEvent\(row\)/);
     expect(action).not.toMatch(/clear_junk_visits[\s\S]{0,1200}resolveOwnerFunnelGsc/);
     expect(action).not.toContain('google163d31ba24216edd');
     expect(desk).not.toContain('google163d31ba24216edd');
+    expect(desk).not.toMatch(/showToast\([^)]*'error'/);
+  });
+
+  it('0056 junk harden never touches GSC or the verify file', () => {
+    const sql = readFileSync(
+      resolve(import.meta.dirname, '../../supabase/migrations/0056_junk_visit_hq_harden.sql'),
+      'utf8',
+    );
+    expect(sql).toContain('GREATEST(junk_hits, hits)');
+    expect(sql).toContain('quality_hits = 0');
+    expect(sql).toContain('%scout%');
+    expect(sql).toContain('SCOUT');
+    expect(sql).not.toContain('google163d31ba24216edd');
+    expect(sql).not.toMatch(/SET\s+quality_hits\s*=/);
+    expect(sql).not.toMatch(/quality_hits\s*=\s*0\s*,/);
+    expect(sql).not.toMatch(/DELETE\s+FROM\s+public\.(referrals|visitor_events|shares)/i);
   });
 });
 

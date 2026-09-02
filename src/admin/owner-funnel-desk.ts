@@ -259,14 +259,14 @@ async function clearJunkDeskVisits(
       gsc?: string;
     }>('clear_junk_visits');
     if (!result.success) {
-      showToast(result.error || 'Junk clear failed', 'error');
+      showToast(result.error || 'Junk clear failed', 'info');
       return;
     }
     const deleted = result.data?.deleted ?? 0;
     showToast(`Cleared ${deleted} junk/test visits. Search Console unchanged.`, 'success');
     await renderOwnerFunnelDesk(container);
   } catch {
-    showToast('Junk clear failed. Search Console was not touched.', 'error');
+    showToast('Junk clear failed. Search Console was not touched.', 'info');
   } finally {
     if (btn) {
       btn.disabled = false;

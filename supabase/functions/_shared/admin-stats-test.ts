@@ -13,6 +13,7 @@ export {
   getVisitorEventIp,
   groupVisitorEventsByIp,
   isTestVisitorFunnelEvent,
+  shouldClearJunkVisitorEvent,
   filterTestVisitorFunnelEvents,
   countTestVisitorFunnelEvents,
 } from './visitor-funnel-test.ts';

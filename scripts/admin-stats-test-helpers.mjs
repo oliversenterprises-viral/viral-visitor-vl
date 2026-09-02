@@ -41,6 +41,8 @@ export function isAutomationUserAgent(ua) {
   if (s === 'node') return true;
   if (/HeadlessChrome/i.test(s)) return true;
   if (/\b(vitest|playwright|smoke|headless|automation)\b/i.test(s)) return true;
+  if (/\b(cursor-scout|cursorbot|cursor\/scout)\b/i.test(s)) return true;
+  if (/\bscout\b/i.test(s)) return true;
   return false;
 }
 

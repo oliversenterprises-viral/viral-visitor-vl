@@ -47,6 +47,8 @@ export function isAutomationUserAgent(ua: string | null | undefined): boolean {
     return true;
   }
   if (/GitHub-Actions|github-actions|actions-runner/i.test(s)) return true;
+  if (/\b(cursor-scout|cursorbot|cursor\/scout)\b/i.test(s)) return true;
+  if (/\bscout\b/i.test(s)) return true;
   return false;
 }
 

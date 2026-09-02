@@ -1,5 +1,6 @@
 /** Shared test/owner/smoke detection for visitor_events — client + admin-action edge. */
 
+import { shouldDeleteJunkUtmVisitorEvent } from './junk-traffic.ts';
 import {
   ADMIN_FUNNEL_EXCLUDED_IPS as OWNER_FUNNEL_IPS,
   isAgentAutomationMetadata,
@@ -90,6 +91,22 @@ export function isTestVisitorFunnelEvent(
   }
 
   return false;
+}
+
+/**
+ * HQ Clear junk: test/owner/scout/webdriver rows, plus junk-UTM SiteLanding only.
+ * Never wipe GetReferralLink / Share / Claim just because UTM is pagerankcafe.
+ */
+export function shouldClearJunkVisitorEvent(
+  event: Record<string, unknown>,
+  eventsFromSameIp?: readonly Record<string, unknown>[],
+  excludedIps: readonly string[] = ADMIN_FUNNEL_EXCLUDED_IPS,
+  excludedHashes: readonly string[] = ADMIN_FUNNEL_EXCLUDED_IP_HASHES,
+): boolean {
+  if (isTestVisitorFunnelEvent(event, eventsFromSameIp, excludedIps, excludedHashes)) {
+    return true;
+  }
+  return shouldDeleteJunkUtmVisitorEvent(event);
 }
 
 export function groupVisitorEventsByIp(
