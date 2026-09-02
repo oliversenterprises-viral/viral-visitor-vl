@@ -41,28 +41,29 @@ export const en = {
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 
-  'funnel.badge': '3 EASY STEPS',
+  'funnel.badge': 'SITE DROP LADDER',
   'funnel.step1': '1. Get link',
   'funnel.step2': '2. Send it',
   'funnel.step3': '3. Climb',
   'funnel.coach': 'Step 1: tap Get my link.',
 
-  'how.badge': '3 EASY STEPS',
+  'how.badge': 'SITE DROP LADDER',
   'how.title': 'How ViralRefer Works',
-  'how.subtitle': 'Three easy steps. Free. No sign-up.',
+  'how.subtitle': 'Get a link. Send it. A friend tapping Get my link puts your site on this page.',
   'how.step1_title': '1. Get your link',
-  'how.step1_desc': 'Tap the big button. You get your own free link in a few seconds. No email needed.',
+  'how.step1_desc':
+    'Tap Get my referral link (no email). Paste your website in the Site Drop slot for a 15-minute Just entered chip. Getting a link alone does not put you on this page.',
   'how.step2_title': '2. Send your link',
   'how.step2_desc':
     'Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.',
-  'how.step3_title': '3. Climb the board',
+  'how.step3_title': '3. Watch your site climb',
   'how.step3_desc':
-    'When friends get their own free link through you, you move up. #1 puts their website on this homepage for 30 days.',
+    "1 verified friend → 1-hour Rising Site Drop on this page. 2 friends → week text line. Board #2/#3 → Challenger strip. This week's #1 (not the owner) with 3 friends claims the 7-day banner.",
 
   'prize.badge': 'HOMEPAGE FEATURE',
-  'prize.title': 'Homepage Banner Feature',
+  'prize.title': 'The #1 banner',
   'prize.subtitle':
-    'Verified #1 gets a 30-day banner for their website on this homepage.',
+    "Site Drops put your site on this page as you climb. This week's #1 (not the owner) with 3 friends still gets the 7-day banner.",
   'prize.card1_title': 'Homepage Banner',
   'prize.card1_desc': 'Your website + custom banner featured on our homepage.',
   'prize.card2_title': 'Free recognition',
@@ -70,8 +71,10 @@ export const en = {
   'prize.card3_title': 'Minimum referrals',
   'prize.card3_desc':
     'Verified #1 with at least 10 friends who tapped Get my link can claim the banner.',
-  'prize.cta': "I'm #1 — Claim Homepage Feature",
-  'prize.winner_badge': 'Verified #1 can claim this',
+  'prize.cta': "Claim this week's banner",
+  'prize.winner_badge': 'Top racer can claim this — owner excluded',
+  'hero.prize_one':
+    'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
 
   'leaderboard.title': 'Live Leaderboard',
   'leaderboard.subtitle': 'Rankings update from verified referrals.',

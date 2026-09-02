@@ -8,8 +8,20 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 describe('live Site Drop funnel lock', () => {
   it('keeps live Site Drops copy, long UTM footer, and /guides/', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    expect(html).toContain('Win the ViralRefer homepage — Site Drops + #1 banner');
+    const i18n = readFileSync(resolve(ROOT, 'src/lib/i18n/messages.ts'), 'utf8');
+    expect(html).toContain('<title>Win the ViralRefer homepage — Site Drops + #1 banner</title>');
     expect(html).toContain('Each step puts your site on this page. #1 owns the banner for 7 days.');
+    expect(html).toContain(
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+    );
+    expect(html).toContain('Empty right now. #1 this week puts their site here.');
+    expect(html).toContain(
+      'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
+    );
+    expect(html).not.toContain('Win the ViralRefer homepage — #1 gets a banner');
+    expect(html).not.toContain('#1 gets a banner for their site.');
+    expect(i18n).toContain("'hero.title_accent': 'Each step puts your site on this page. #1 owns the banner for 7 days.'");
+    expect(i18n).not.toContain('#1 gets a banner for their site.');
     expect(html).toContain('id="site-drops"');
     expect(html).toContain('Site Drop ladder');
     expect(html).toContain('Get my referral link');

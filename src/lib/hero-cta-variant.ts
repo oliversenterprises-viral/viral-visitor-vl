@@ -66,6 +66,11 @@ export function lock844HomepageCopy(): void {
     'hero-prize-one',
     'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
   );
+  try {
+    document.title = 'Win the ViralRefer homepage — Site Drops + #1 banner';
+  } catch {
+    /* non-fatal */
+  }
 }
 
 /** Apply feature-variant hero copy on direct landings (control leaves CMS/static defaults). */
