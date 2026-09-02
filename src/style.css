@@ -164,6 +164,17 @@ h1, h2, h3, .logo-font {
   letter-spacing: -0.025em;
 }
 
+/* Contrast only: always-dark chrome inherits light-scheme --text-h (#08060d). */
+#vr-nav .vr-wordmark,
+#vr-nav .logo-font {
+  color: #f4f4f5;
+}
+.racer-talk__title,
+h2.racer-talk__title,
+.vr-bc-title {
+  color: #f4f4f5;
+}
+
 h1 { font-size: 3.25rem; line-height: 1.05; }
 h2 { font-size: 1.85rem; line-height: 1.1; }
 h3 { font-size: 1.35rem; }
@@ -4151,6 +4162,74 @@ html[data-vr-has-link] #referral-section .glass {
   cursor: pointer;
 }
 .post-link-share__copy:hover { color: #e4e4e7; }
+.post-link-site-drop {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+}
+.post-link-site-drop__title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #e9d5ff;
+}
+.post-link-site-drop__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #a1a1aa;
+}
+.post-link-site-drop__url {
+  margin-top: 0.5rem;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  padding: 0 0.75rem;
+  font-size: 1rem;
+}
+.post-link-site-drop__submit {
+  margin-top: 0.5rem;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  background: transparent;
+  color: #ede9fe;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.post-link-site-drop__status {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: #a1a1aa;
+}
+.referral-credit-turnstile {
+  min-height: 0;
+  margin-top: 0.5rem;
+}
+html[data-vr-credit-status='pending'] .referral-credit-turnstile,
+html[data-vr-credit-status='failed'] .referral-credit-turnstile {
+  min-height: 65px;
+}
+.site-drop-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 9rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: rgba(24, 24, 27, 0.85);
+  color: #f4f4f5;
+  text-decoration: none;
+}
+.site-drop-chip__label { font-weight: 650; font-size: 0.85rem; }
+.site-drop-chip__meta { font-size: 0.7rem; color: #c4b5fd; }
+.site-drop-chip__host { font-size: 0.7rem; color: #a1a1aa; }
 .post-link-share__helper {
   margin: 0.35rem 0 0;
   font-size: 0.82rem;

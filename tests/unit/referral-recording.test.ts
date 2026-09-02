@@ -151,6 +151,7 @@ describe('referral recording (funnel-gated Step 1)', () => {
 
     const call = recordReferralCalls()[0];
     expect((call[1] as { body: Record<string, string> }).body.referrerCode).toBe('VIRAL-FUNNEL');
+    expect((call[1] as { body: Record<string, string> }).body.turnstileToken).toBeTruthy();
     expect(isReferralCreditedThisSession()).toBe(true);
   });
 

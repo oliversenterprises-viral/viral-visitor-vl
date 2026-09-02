@@ -67,7 +67,7 @@ describe('referred-race (Helix Bet 3)', () => {
 
   it('post-link share stays on the Bet 2 sentence; same-gesture no-ops without Web Share', () => {
     expect(POST_LINK_SHARE_TEXT).toBe(LOCKED_SHARE_TEXT);
-    expect(SEND_NOW_LABEL).toBe('Send to a friend now');
+    expect(SEND_NOW_LABEL).toBe('Send it now');
     expect(maybeOfferSameGestureShare('https://www.viralrefer.app/r/VIRAL-TEST01')).toBe(false);
   });
 

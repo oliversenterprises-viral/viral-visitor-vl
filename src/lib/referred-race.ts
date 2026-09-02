@@ -7,7 +7,7 @@ export const SAME_RACE_SUB =
 
 export const SAME_RACE_CTA = 'Get my link';
 
-export const SEND_NOW_LABEL = 'Send to a friend now';
+export const SEND_NOW_LABEL = 'Send it now';
 
 export function formatSameRaceTitle(code: string): string {
   const clean = String(code || '')

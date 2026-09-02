@@ -63,7 +63,18 @@ export function resolveShareAbandonDwellMs(opts: {
   return opts.isCoarsePointer ? MOBILE_DWELL_MS : MIN_DWELL_MS;
 }
 
+/** Send screen is up — never cover Copy link / Send it now. */
+export function isPostLinkSendScreenActive(doc: Document = document): boolean {
+  if (doc.documentElement.hasAttribute('data-vr-post-link-one')) return true;
+  const share = doc.getElementById('post-link-share');
+  if (share && !share.hidden && share.getAttribute('data-state') === 'ready') return true;
+  const copy = doc.getElementById('post-link-copy');
+  if (copy && !copy.hidden && !copy.classList.contains('hidden')) return true;
+  return false;
+}
+
 export function shouldShowShareAbandon(opts: ShareAbandonEligibility): boolean {
+  if (isPostLinkSendScreenActive()) return false;
   if (opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
   if (opts.alreadyMaxShows || opts.snoozed || opts.confirmFlowActive) return false;
   // Poll is the softest path — never interrupt if they can already see Send
@@ -160,6 +171,8 @@ function confirmFlowActive(): boolean {
 /** True when share-first / sticky send is largely in the viewport. */
 export function isShareStripInView(win: Window = window): boolean {
   const el =
+    win.document.getElementById('post-link-share') ||
+    win.document.getElementById('post-link-copy') ||
     win.document.getElementById('share-first-strip') ||
     win.document.getElementById('mobile-send-cta') ||
     win.document.getElementById('native-share-btn');

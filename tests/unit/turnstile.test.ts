@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
   ensureTurnstileReady,
+  getCreditTurnstileToken,
   getTurnstileSiteKey,
   getTurnstileToken,
 } from '../../src/lib/turnstile';
@@ -74,5 +75,9 @@ describe('turnstile (shared by referral.ts + handlers.ts)', () => {
     await expect(getTurnstileToken(container, 'test-site-key', 'claim')).rejects.toThrow(
       'Turnstile API not available',
     );
+  });
+
+  it('getCreditTurnstileToken is the required-token helper for record-referral', () => {
+    expect(typeof getCreditTurnstileToken).toBe('function');
   });
 });

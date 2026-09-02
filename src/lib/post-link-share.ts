@@ -168,7 +168,7 @@ export function showPostLinkReady(link: string): void {
   wireOnce();
   setState('ready');
   const heading = el(IDS.heading);
-  if (heading) heading.textContent = 'Your link is ready';
+  if (heading) heading.textContent = "You're racing.";
   const url = el(IDS.url);
   if (url) {
     url.textContent = trimmed;
@@ -204,6 +204,7 @@ export function showPostLinkReady(link: string): void {
 export function activatePostLinkShare(link: string): void {
   showPostLinkReady(link);
   void import('./post-link-status').then((m) => m.renderPostLinkStatus()).catch(() => {});
+  void import('./site-drops-ui').then((m) => m.initSiteDropForm()).catch(() => {});
 }
 
 /** Same user-gesture share sheet (mobile). No-op when Web Share is missing. */

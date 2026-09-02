@@ -66,6 +66,13 @@ Deno.serve(async (req: Request) => {
     }
     const result = await registerReferrerLink(supabaseAdmin, code, { clientIp });
 
+    try {
+      const { pruneAndSaveSiteDrops } = await import('../_shared/site-drops-store.ts');
+      await pruneAndSaveSiteDrops(supabaseAdmin);
+    } catch (dropErr) {
+      console.warn('[register-referrer-link] site-drop prune skipped:', dropErr);
+    }
+
     let ownership_token: string | undefined;
     const secret = resolveClaimOwnershipSecret({ get: (k) => Deno.env.get(k) });
     if (secret && result.created) {
@@ -113,13 +120,13 @@ Deno.serve(async (req: Request) => {
     );
   } catch (err) {
     console.error('[register-referrer-link]', err);
-    // Fail open for client UX — never block get-link on registration glitches
     return new Response(
       JSON.stringify({
-        success: true,
+        success: false,
+        error: 'Could not register your link',
         data: { status: 'unknown', share_required: true },
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });

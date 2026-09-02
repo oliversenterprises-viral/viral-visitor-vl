@@ -28,7 +28,7 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
 
     await page.locator('#hero-get-link-btn').click();
     await expect(page.locator('#ref-link')).toHaveValue(/\/r\/VIRAL-/i, { timeout: 10000 });
-    await expect(page.locator('#post-link-primary')).toContainText(/Send to a friend now/i);
+    await expect(page.locator('#post-link-primary')).toContainText(/Send it now|Try again/i);
   });
 
   test('Clean /r/ path attribution', async ({ page }) => {

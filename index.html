@@ -120,7 +120,7 @@
         <div class="max-w-6xl mx-auto px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between gap-2">
             <a href="#" class="flex items-center gap-2 sm:gap-3 min-w-0 shrink" aria-label="ViralRefer home">
                 <div class="w-8 h-8 sm:w-9 sm:h-9 bg-violet-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl logo-font shrink-0">V</div>
-                <span class="text-xl sm:text-3xl font-semibold tracking-tighter logo-font truncate">ViralRefer</span>
+                <span class="vr-wordmark text-xl sm:text-3xl font-semibold tracking-tighter logo-font truncate">ViralRefer</span>
             </a>
             <div class="vr-nav-links flex items-center gap-2 sm:gap-6 text-sm font-medium shrink-0">
                 <a href="#how" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.how">How</a>
@@ -155,7 +155,7 @@
                 </h1>
                
                 <p id="hero-subtitle" data-i18n="hero.subtitle" class="text-base sm:text-lg md:text-xl text-zinc-200 max-w-xl mx-auto mb-5 sm:mb-6 leading-relaxed px-1">
-                    Tap Get my link. Send it. When a friend taps Get my link, you climb.
+                    Get my link. Send it. A friend taps Get my link. Then paste your site for a 15-min drop.
                 </p>
                 </div>
 
@@ -363,13 +363,23 @@
 <p id="share-deadline-banner" class="post-link-status__clock hidden" hidden role="status" aria-live="polite"><span id="share-deadline-countdown"></span></p>
             </div>
             <div id="post-link-share" class="hidden post-link-share" hidden data-state="hidden" role="region" aria-label="Your referral link">
-                <h2 id="post-link-heading" class="post-link-share__heading" tabindex="-1">You're in.</h2>
-                <p id="post-link-sub" class="post-link-share__sub">Send this. A friend must tap Get my link.</p>
+                <h2 id="post-link-heading" class="post-link-share__heading" tabindex="-1">You're racing.</h2>
+                <p id="post-link-sub" class="post-link-share__sub">Send it now. A friend must tap Get my link — that's how you climb.</p>
                 <p id="post-link-clock" class="post-link-share__clock" hidden></p>
                 <p id="post-link-url" class="post-link-share__url" hidden></p>
-                <button type="button" id="post-link-primary" class="post-link-share__primary" hidden></button>
+                <button type="button" id="post-link-primary" class="post-link-share__primary" hidden>Send it now</button>
                 <button type="button" id="post-link-copy" class="post-link-share__copy">Copy link</button>
                 <p id="post-link-tool" class="post-link-share__tool">This is your public link. Paste it in any bio, story, or text.</p>
+                <div id="referral-turnstile-container" class="referral-credit-turnstile" hidden></div>
+                <div id="post-link-site-drop" class="post-link-site-drop hidden" hidden>
+                    <p class="post-link-site-drop__title">Site Drop &middot; Just entered</p>
+                    <p class="post-link-site-drop__hint">Each step puts your site on this page. Paste your website + the human check for 15 minutes here.</p>
+                    <label class="sr-only" for="post-link-site-drop-url">Your website</label>
+                    <input id="post-link-site-drop-url" type="url" required maxlength="400" inputmode="url" autocomplete="url" placeholder="https://yoursite.com" class="post-link-site-drop__url" />
+                    <div id="post-link-site-drop-turnstile" class="mt-2"></div>
+                    <button type="button" id="post-link-site-drop-submit" class="post-link-site-drop__submit">Put my site on the homepage (15 min)</button>
+                    <p id="site-drop-status" class="post-link-site-drop__status"></p>
+                </div>
             </div>
                     </div>
 
@@ -386,6 +396,21 @@
                 <!-- Skeleton seeded by public-polish.ts until stats load -->
             </div>
         </div>
+
+        <section id="site-drops" data-vr-below-fold class="mt-8 glass border border-white/10 rounded-3xl p-8">
+            <p class="text-[10px] uppercase tracking-wider font-semibold text-violet-300">Site Drop ladder</p>
+            <h2 id="site-drops-title" class="text-2xl font-semibold mt-2" style="color: var(--text-heading, #ffffff)">Your site goes live as you climb</h2>
+            <p id="site-drops-lead" class="text-zinc-300 mt-2 max-w-2xl">Paste your website after Get my link. No URL = no chip. Stuck pending older than 15 minutes is cleared and never shown here.</p>
+            <div id="site-entered-ticker" class="site-entered-ticker mt-4 hidden" hidden aria-label="Live site drops">
+                <div id="site-entered-chips" class="flex flex-wrap gap-2"></div>
+            </div>
+            <p class="text-[10px] uppercase tracking-wider font-semibold text-emerald-400/90 mt-5">Just entered · 15 min</p>
+            <ul id="site-drops-entered-list" class="mt-3 flex flex-wrap gap-2"></ul>
+            <p id="site-drops-entered-empty" class="mt-2 text-sm text-zinc-500">No one just entered. Get a link, add your site, and take a chip.</p>
+            <p class="text-[10px] uppercase tracking-wider font-semibold text-violet-300 mt-5">Rising Site Drops · 1 hour</p>
+            <ul id="site-drops-rising-list" class="mt-3 grid gap-3"></ul>
+            <p id="site-drops-rising-empty" class="mt-2 text-sm text-zinc-500">Rising slots are open. One verified friend who taps Get my link unlocks a 1-hour drop here.</p>
+        </section>
 
         <!-- RECENT ACTIVITY FEED -->
         <div data-vr-below-fold class="mt-8 glass border border-white/10 rounded-3xl p-8">

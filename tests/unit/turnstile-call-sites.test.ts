@@ -84,9 +84,6 @@ describe('turnstile shared module (static handlers + referral imports, stub supa
 
     const body = (referralCall!.options as { body?: Record<string, string> })?.body;
     expect(body?.referrerCode).toBe('VIRAL-ATTRIB-REAL');
-    // Optional token when Turnstile mock succeeds; recording never depends on it.
-    if (body?.turnstileToken) {
-      expect(body.turnstileToken).toBe('shared-module-turnstile-token');
-    }
+    expect(body?.turnstileToken).toBeTruthy();
   });
 });

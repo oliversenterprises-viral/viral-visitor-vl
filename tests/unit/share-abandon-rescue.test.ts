@@ -64,6 +64,23 @@ describe('share-abandon-rescue', () => {
     expect(shouldShowShareAbandon({ ...base, dwellMs: 1000 })).toBe(false);
   });
 
+  it('never covers the send screen Copy link', () => {
+    document.documentElement.setAttribute('data-vr-post-link-one', '1');
+    const base = {
+      hasLink: true,
+      sharePending: true,
+      locked: false,
+      alreadyMaxShows: false,
+      snoozed: false,
+      dwellMs: MIN_DWELL_MS + 100,
+      isCoarsePointer: false,
+      embed: false,
+      confirmFlowActive: false,
+    };
+    expect(shouldShowShareAbandon(base)).toBe(false);
+    document.documentElement.removeAttribute('data-vr-post-link-one');
+  });
+
   it('poll skips when share strip already in view (fatigue mitigation)', () => {
     const base = {
       hasLink: true,

@@ -23,7 +23,7 @@ import {
   parseRefFromLocation,
 } from './lib/referral-url';
 import { parseEdgeFunctionBody } from './lib/edge-response';
-import { tryOptionalTurnstileToken } from './lib/turnstile';
+import { getCreditTurnstileToken } from './lib/turnstile';
 import { escapeHtml } from './content';
 import { showToast } from './ui';
 import { ViralRefer } from './lib/global';
@@ -121,12 +121,18 @@ async function recordReferralIfAttributed(options: {
     }
     const referredCode = visitorCode;
 
-    const turnstileToken = await tryOptionalTurnstileToken(8000);
+    const turnstileToken = await getCreditTurnstileToken(8000);
+    if (!turnstileToken) {
+      if (notify) {
+        notifyReferralOutcome('failed', options.allowFailureRetryToast);
+      }
+      return 'failed';
+    }
 
     const { data, error } = await supabase.functions.invoke('record-referral', {
       body: {
         referrerCode: pendingReferrerCode,
-        ...(turnstileToken ? { turnstileToken } : {}),
+        turnstileToken,
         ...(referredCode ? { referredCode } : {}),
       },
     });
@@ -258,14 +264,10 @@ function populateReferralLinkUI(code: string, link: string): void {
   initShareRemindersOnLinkReady();
   onReferralLinkReady();
   refreshPublicClarityState();
-  // Start / refresh 48h first-friend lock clock (server-backed when available)
-  void registerReferrerLinkDeadline(code).then((state) => {
-    if (state?.status === 'expired') {
-      enforceLocalShareDeadlineExpiry(code);
-      return;
-    }
-    renderShareDeadlineBanner();
-  });
+  void import('./lib/site-drops-ui')
+    .then((m) => m.initSiteDropForm())
+    .catch(() => {});
+  renderShareDeadlineBanner();
 }
 
 /** Current value in #ref-link (empty until generated). */
@@ -343,7 +345,14 @@ export async function getMyReferralLinkInstant(): Promise<void> {
     }
 
     const link = buildReferralLink(code);
-    populateReferralLinkUI(code, link);
+    const registered = await registerReferrerLinkDeadline(code);
+    if (registered?.status === 'expired') {
+      enforceLocalShareDeadlineExpiry(code);
+    }
+    const onServer = registered?.registered === true && registered.status !== 'expired';
+
+    const refInput = document.getElementById('ref-link') as HTMLInputElement | null;
+    if (refInput) refInput.value = link;
 
     let via: string | null = null;
     try {
@@ -357,8 +366,16 @@ export async function getMyReferralLinkInstant(): Promise<void> {
       ...(via ? { via } : {}),
     });
 
-    // Same user gesture → auto-copy (helps paste into apps).
-    // Clipboard alone never locks. First session is Lumina's one-action screen.
+    if (pendingReferrerCode && !referralRecordedThisSession) {
+      void runFunnelReferralRecording();
+    }
+
+    if (!onServer) {
+      showPostLinkError();
+      return;
+    }
+
+    populateReferralLinkUI(code, link);
 
     // FOMO ticker unlocks once this visitor has a referral link
     void import('./app')
@@ -372,15 +389,10 @@ export async function getMyReferralLinkInstant(): Promise<void> {
       .catch(() => {});
 
     syncMobileReferralCta();
-    // Ensure sticky get-link bar is gone before send UI mounts (no double bottom bars)
     document.getElementById('mobile-referral-cta')?.classList.add('hidden');
     activatePostLinkShare(link);
     if (pendingReferrerCode) {
       maybeOfferSameGestureShare(link);
-    }
-
-    if (pendingReferrerCode && !referralRecordedThisSession) {
-      void runFunnelReferralRecording();
     }
   } catch {
     showPostLinkError();

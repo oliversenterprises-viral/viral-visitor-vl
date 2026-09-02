@@ -28,7 +28,7 @@ export const en = {
   'hero.title_line1': 'Win the homepage.',
   'hero.title_accent': '#1 gets a banner for their site.',
   'hero.subtitle':
-    'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+    'Get my link. Send it. A friend taps Get my link. Then paste your site for a 15-min drop.',
   'hero.lock_rule': 'Your link counts when a friend taps Get my link.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',
@@ -186,8 +186,8 @@ export const en = {
     'Early ranks are open. #1 puts their website on this page.',
 
   // Send mode — one primary action after get-link (main funnel fix)
-  'send_mode.primary_cta': 'Send to a friend now',
-  'send_mode.sticky_cta': 'Send to a friend now',
+  'send_mode.primary_cta': 'Send it now',
+  'send_mode.sticky_cta': 'Send it now',
   'send_mode.sticky_hint': 'A friend must tap Get my link. Copying is not enough.',
   'send_mode.status': 'Your link is ready. Send it to a friend.',
   'send_mode.sub':
