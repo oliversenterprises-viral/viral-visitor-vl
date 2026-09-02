@@ -402,8 +402,6 @@ html[data-vr-send-mode] #distance-glory-meter,
 html[data-vr-send-mode] #growth-command-center,
 html[data-vr-send-mode] #my-stats,
 html[data-vr-send-mode] #funnel-journey,
-html[data-vr-send-mode] #how,
-html[data-vr-send-mode] #prize,
 html[data-vr-send-mode] #copy-message-btn,
 html[data-vr-send-mode] #new-code-button,
 html[data-vr-send-mode] #share-more-options-btn,
@@ -475,8 +473,7 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #weekly
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #daily-crown-section,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-campaign-badge,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #referral-section,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #prize {
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey {
   display: none !important;
 }
 
@@ -2796,10 +2793,7 @@ html:not([data-vr-has-link]) #my-stats {
   display: none !important;
 }
 
-/* Claim block is not the first job — hide even before kid-simple JS runs */
-html:not([data-vr-has-link]) #prize {
-  display: none !important;
-}
+/* Claim block stays visible on the homepage so Feature nav works. */
 
 /* NEW CODE only after they have a code */
 html:not([data-vr-has-link]) #new-code-button {
@@ -4350,6 +4344,15 @@ html[data-vr-post-link-one] #referral-next-step,
 html[data-vr-post-link-one] #post-share-return-hub,
 html[data-vr-has-link] [data-vr-declutter-post-link] {
   display: none !important;
+}
+
+/* Homepage public chrome: How / Feature / Board / legal footer stay on screen.
+   Live 8a24705 hid them (below-fold + footer{display:none}) so nav did nothing. */
+html:not([data-vr-embed]):not([data-vr-referred-micro]) #how,
+html:not([data-vr-embed]):not([data-vr-referred-micro]) #prize,
+html:not([data-vr-embed]):not([data-vr-referred-micro]) #leaderboard,
+html:not([data-vr-embed]) footer {
+  display: block !important;
 }
 html[data-vr-post-link-one] #post-link-share:not(.hidden) {
   display: block;

@@ -31,6 +31,10 @@ export const EMPTY_AD_KICKER_KIND = 'This homepage';
 export const EMPTY_AD_MARK = '#';
 export const WEEK_RACE_CLOCK_SUFFIX = 'Send now.';
 
+/** Valid 1×1 gif so #hero-slot-thumb / #prize-slot-thumb never have an empty src. */
+export const EMPTY_SLOT_THUMB_SRC =
+  'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 export const EXAMPLE_SLOT_HREF = 'https://www.viralrefer.app/tools/';
 export const EXAMPLE_SLOT_NAME = 'ViralRefer Tools';
 export const EXAMPLE_SLOT_META = 'Example — this is what #1 gets';
@@ -266,7 +270,7 @@ export function paintPrizeSlot(slot: PrizeSlot): void {
       thumb.alt = `${slot.siteName} homepage banner`;
       thumb.classList.remove('hidden');
     } else {
-      thumb.removeAttribute('src');
+      thumb.src = EMPTY_SLOT_THUMB_SRC;
       thumb.alt = '';
       thumb.classList.add('hidden');
     }

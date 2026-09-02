@@ -7,6 +7,7 @@ import {
   EMPTY_AD_NOTE,
   EMPTY_SLOT_META,
   EMPTY_SLOT_NAME,
+  EMPTY_SLOT_THUMB_SRC,
   LOCKED_OG_DESCRIPTION,
   LOCKED_SHARE_TEXT,
   ONE_PRIZE_SENTENCE,
@@ -120,6 +121,9 @@ describe('prize-slot (Helix Bet 2)', () => {
     );
     expect(document.getElementById('hero-slot-preview')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('hero-slot-thumb')?.classList.contains('hidden')).toBe(true);
+    expect((document.getElementById('hero-slot-thumb') as HTMLImageElement).src).toBe(
+      EMPTY_SLOT_THUMB_SRC,
+    );
     expect(document.getElementById('hero-ad-visit')?.classList.contains('hidden')).toBe(true);
 
     paintPrizeSlot(

@@ -18,9 +18,22 @@ describe('kid-simple first paint', () => {
     expect(head).toContain("setAttribute('data-vr-referred-landing'");
   });
 
-  it('hides #prize before a link without waiting for kid-simple JS', () => {
+  it('keeps #how / #prize / #leaderboard / footer visible on the homepage', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
-    expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #prize/);
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) #how/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) #prize/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) #leaderboard/,
+    );
+    expect(css).toMatch(/html:not\(\[data-vr-embed\]\) footer \{\s*display: block !important;/);
+    expect(css).not.toMatch(/html:not\(\[data-vr-has-link\]\) #prize \{/);
+    expect(css).not.toMatch(
+      /html:not\(\[data-vr-funnel-expanded\]\):not\(\[data-vr-share-locked\]\) footer/,
+    );
   });
 
   it('first screen is one race with Get my referral link', () => {

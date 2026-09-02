@@ -68,6 +68,7 @@ describe('Get my link reveal (last-night lock)', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
     document.body.innerHTML = '';
     document.getElementById('vr-paid-getlink-nudge')?.remove();
     document.getElementById('vr-exit-rescue')?.remove();
