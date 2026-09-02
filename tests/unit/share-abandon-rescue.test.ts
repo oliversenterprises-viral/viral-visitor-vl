@@ -12,8 +12,11 @@ import {
   POLL_MS,
   resetShareAbandonSessionForTest,
   forceShareAbandonForTest,
+  isOwnerHqContext,
+  dismissShareAbandonForOwnerHq,
 } from '../../src/lib/share-abandon-rescue';
 import { markSharePending, clearShareFirstFlags } from '../../src/lib/share-first-ui';
+import { setAdminSessionToken, clearAdminSessionToken } from '../../src/lib/admin-session';
 
 describe('share-abandon-rescue', () => {
   beforeEach(() => {
@@ -26,11 +29,13 @@ describe('share-abandon-rescue', () => {
     document.documentElement.removeAttribute('data-vr-share-locked');
     document.documentElement.removeAttribute('data-vr-share-pending');
     document.documentElement.removeAttribute('data-vr-share-abandon');
+    clearAdminSessionToken();
   });
 
   afterEach(() => {
     resetShareAbandonSessionForTest();
     clearShareFirstFlags();
+    clearAdminSessionToken();
     vi.restoreAllMocks();
   });
 
@@ -61,7 +66,72 @@ describe('share-abandon-rescue', () => {
     expect(shouldShowShareAbandon({ ...base, snoozed: true })).toBe(false);
     expect(shouldShowShareAbandon({ ...base, embed: true })).toBe(false);
     expect(shouldShowShareAbandon({ ...base, confirmFlowActive: true })).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, ownerHq: true })).toBe(false);
     expect(shouldShowShareAbandon({ ...base, dwellMs: 1000 })).toBe(false);
+  });
+
+  it('owner HQ (?owner=1 / Desk / session) never gets Don\'t leave without sending', () => {
+    const base = {
+      hasLink: true,
+      sharePending: true,
+      locked: false,
+      alreadyMaxShows: false,
+      snoozed: false,
+      dwellMs: MIN_DWELL_MS + 100,
+      isCoarsePointer: false,
+      embed: false,
+      confirmFlowActive: false,
+    };
+    expect(shouldShowShareAbandon({ ...base, ownerHq: true })).toBe(false);
+    expect(
+      shouldArmBeforeUnload({
+        hasLink: true,
+        sharePending: true,
+        locked: false,
+        embed: false,
+        confirmFlowActive: false,
+        snoozed: false,
+        sessionShows: 2,
+        dwellMs: BEFOREUNLOAD_MIN_DWELL_MS + 1,
+        ownerHq: true,
+      }),
+    ).toBe(false);
+
+    document.body.innerHTML = `
+      <div id="admin-modal" class="hidden"></div>
+      <input id="ref-link" value="https://www.viralrefer.app/r/VIRAL-TEST1" />
+    `;
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    markSharePending();
+    forceShareAbandonForTest('unit');
+    expect(document.getElementById('vr-share-abandon')).toBeTruthy();
+
+    document.getElementById('admin-modal')?.classList.remove('hidden');
+    expect(isOwnerHqContext()).toBe(true);
+    dismissShareAbandonForOwnerHq();
+    expect(document.getElementById('vr-share-abandon')).toBeNull();
+    expect(document.documentElement.getAttribute('data-vr-share-abandon')).toBeNull();
+
+    forceShareAbandonForTest('desk');
+    expect(document.getElementById('vr-share-abandon')).toBeNull();
+  });
+
+  it('isOwnerHqContext is true for owner=1, #owner, and owner session', () => {
+    document.body.innerHTML = `<div id="admin-modal" class="hidden"></div>`;
+    const fakeWin = (search: string, hash = '') =>
+      ({
+        location: { search, hash },
+        document,
+      }) as unknown as Window;
+
+    expect(isOwnerHqContext(fakeWin('?owner=1'))).toBe(true);
+    expect(isOwnerHqContext(fakeWin('', '#owner'))).toBe(true);
+    expect(isOwnerHqContext(fakeWin(''))).toBe(false);
+
+    setAdminSessionToken('owner-session-token');
+    expect(isOwnerHqContext(fakeWin(''))).toBe(true);
+    clearAdminSessionToken();
+    expect(isOwnerHqContext(fakeWin(''))).toBe(false);
   });
 
   it('poll skips when share strip already in view (fatigue mitigation)', () => {
