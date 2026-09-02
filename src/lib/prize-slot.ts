@@ -3,7 +3,7 @@
  * Single source for threshold copy, empty-slot mock, locked share/OG, weekly gates.
  */
 
-export const DEFAULT_MIN_REFERRALS_FOR_CLAIM = 10;
+export const DEFAULT_MIN_REFERRALS_FOR_CLAIM = 3;
 export const WEEKLY_SIDE_WIDGET_MIN = 10;
 
 export const EMPTY_SLOT_NAME = 'Your site here';
@@ -78,12 +78,12 @@ function clampMinReferrals(n: number): number {
 
 export function formatPrizeThresholdLine(min: number): string {
   const n = parseMinReferralsForClaim(min);
-  return `Verified #1 with at least ${n} friends who tapped Get my link can claim the banner.`;
+  return `This week's top racer (not the site owner) with ${n} friends who tapped Get my link can claim the banner.`;
 }
 
 export function formatFaqPrizeAnswer(min = DEFAULT_MIN_REFERRALS_FOR_CLAIM): string {
   const n = parseMinReferralsForClaim(min);
-  return `Open worldwide. Verified #1 with at least ${n} friends who tapped Get my link can claim a homepage banner for their website. There is no cash prize.`;
+  return `Open worldwide. This week's top racer (not the site owner) with ${n} friends who tapped Get my link can claim a 7-day homepage banner for their website. There is no cash prize.`;
 }
 
 export function hostnameFromUrl(url: string): string | null {

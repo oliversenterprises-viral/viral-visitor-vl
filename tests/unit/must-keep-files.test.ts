@@ -3,6 +3,13 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { en } from '../../src/lib/i18n/messages';
 import {
+  LOCKED_LIVE_FAQ_A3,
+  LOCKED_LIVE_FAQ_PRIZE,
+  LOCKED_LIVE_HOW_STEP3,
+  LOCKED_LIVE_HOW_STEP3_TITLE,
+  LOCKED_LIVE_PRIZE_CTA,
+  LOCKED_LIVE_PRIZE_SUB,
+  LOCKED_LIVE_PRIZE_TITLE,
   LOCKED_SITE_DROPS_CTA,
   LOCKED_SITE_DROPS_H1_ACCENT,
   LOCKED_SITE_DROPS_H1_LINE1,
@@ -70,6 +77,28 @@ describe('must-keep files', () => {
     expect(en['hero.subtitle']).toBe(LOCKED_SITE_DROPS_SUB);
     expect(en['hero.prize_one']).toBe(LOCKED_SITE_DROPS_RULE);
     expect(en['hero.cta']).toBe(LOCKED_SITE_DROPS_CTA);
+  });
+
+  it('does not drift from live 7-day / 3-friend Site Drops copy', () => {
+    const html = readFileSync(resolve(root, 'index.html'), 'utf8');
+    expect(html.toLowerCase()).not.toContain('30-day');
+    expect(html).not.toContain('at least 10 friends');
+    expect(html).toContain(LOCKED_LIVE_FAQ_PRIZE);
+    expect(html).toContain(LOCKED_LIVE_FAQ_A3);
+    expect(html).toContain(LOCKED_LIVE_HOW_STEP3);
+    expect(html).toContain(LOCKED_LIVE_HOW_STEP3_TITLE);
+    expect(html).toContain(LOCKED_LIVE_PRIZE_SUB);
+    expect(html).toContain(LOCKED_LIVE_PRIZE_TITLE);
+    expect(html).toContain(LOCKED_LIVE_PRIZE_CTA);
+    expect(html).toContain('7-day homepage slot');
+    expect(html).toContain('id="min-referrals-value">3<');
+
+    expect(en['how.step3_title']).toBe(LOCKED_LIVE_HOW_STEP3_TITLE);
+    expect(en['how.step3_desc']).toBe(LOCKED_LIVE_HOW_STEP3);
+    expect(en['prize.subtitle']).toBe(LOCKED_LIVE_PRIZE_SUB);
+    expect(en['prize.title']).toBe(LOCKED_LIVE_PRIZE_TITLE);
+    expect(en['prize.cta']).toBe(LOCKED_LIVE_PRIZE_CTA);
+    expect(en['hero.trust']).not.toMatch(/30-day/i);
   });
 
   it('does not add reset_landing_visit_counters, cash-prize claims, or a VITE_ owner password', () => {

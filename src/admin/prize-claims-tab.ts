@@ -40,6 +40,27 @@ export function countPendingClaims(claims: readonly AdminClaimRow[]): number {
   return claims.filter((c) => (c.status || 'pending') === 'pending').length;
 }
 
+/** Prize list empty — tab still loaded. Homepage banner only. */
+export function prizeTabEmptyListHtml(): string {
+  return `
+        <div data-hq-prize-empty="1" class="flex flex-col items-center justify-center py-10 text-center">
+          <i class="fa-solid fa-trophy text-5xl text-zinc-700 mb-3 opacity-60"></i>
+          <div class="text-xl font-semibold text-zinc-300">Prize tab is loaded</div>
+          <p class="text-sm text-zinc-500 mt-2 max-w-sm">No claims yet. Homepage 7-day banner only — no cash. Talk stays on Website.</p>
+          <button type="button" data-hq-prize-retry="1" class="mt-4 px-5 py-2 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">Retry</button>
+        </div>`;
+}
+
+/** Prize list error — chrome already painted; do not look like a missing tab. */
+export function prizeTabListErrorHtml(error: string): string {
+  const safe = escapeHtml(error || 'Claims list could not fetch');
+  return `<div data-hq-prize-list="1" class="p-6 text-amber-400">
+      <div class="font-semibold">Prize tab is loaded</div>
+      <p class="text-sm text-amber-200/90 mt-1">Claims list could not fetch. ${safe}</p>
+      <button type="button" data-hq-prize-retry="1" class="mt-3 px-4 py-2 text-sm bg-white/10 rounded-2xl">Retry</button>
+    </div>`;
+}
+
 /**
  * Renders the Prize Claims admin tab.
  *
@@ -121,20 +142,20 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
     updatePendingClaimsBadge(countPendingClaims(adminClaimsCache));
 
     if (!adminClaimsCache.length) {
-      mainArea.innerHTML = `
-        <div class="flex flex-col items-center justify-center py-10 text-center">
-          <i class="fa-solid fa-trophy text-5xl text-zinc-700 mb-3 opacity-60"></i>
-          <div class="text-xl font-semibold text-zinc-300">No prize claims yet</div>
-          <p class="text-sm text-zinc-500 mt-2 max-w-sm">Use Owner Test Tools above to submit test claims, or wait for the real #1 referrer to claim.</p>
-          <button onclick="window.switchAdminTab(3)" class="mt-4 px-5 py-2 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">Refresh</button>
-        </div>`;
+      mainArea.innerHTML = prizeTabEmptyListHtml();
+      mainArea.querySelector<HTMLButtonElement>('[data-hq-prize-retry]')?.addEventListener('click', () => {
+        void renderPrizeClaimsTab(getClaimsTabRoot(content));
+      });
       return;
     }
 
     renderClaimsList(mainArea, currentClaimStatusFilter);
 
   } catch (e) {
-    mainArea.innerHTML = `<div data-hq-prize-list="1" class="p-6 text-amber-400">Prize tab is loaded. Claims list could not fetch. ${formatError(e)}</div>`;
+    mainArea.innerHTML = prizeTabListErrorHtml(formatError(e));
+    mainArea.querySelector<HTMLButtonElement>('[data-hq-prize-retry]')?.addEventListener('click', () => {
+      void renderPrizeClaimsTab(getClaimsTabRoot(content));
+    });
     showToast(`Unable to load prize claims: ${formatError(e)}`, 'info');
   }
 }

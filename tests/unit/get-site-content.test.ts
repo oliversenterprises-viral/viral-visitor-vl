@@ -90,6 +90,7 @@ describe('get_site_content (HQ Website tab)', () => {
     const html = buildContentListHTML(load.rows, load);
     expect(html).toContain('data-hq-website="1"');
     expect(html).toContain('data-hq-talk="1"');
+    expect(html).toContain('data-hq-talk-idle="1"');
     expect(html).toContain('> Talk');
     expect(html).toContain('id="owner-broadcast-panel"');
     expect(html).toContain('data-hq-website-action-missing="1"');

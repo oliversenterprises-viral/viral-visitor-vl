@@ -339,12 +339,17 @@ function buildContentListHTML(rows: ContentRow[], load?: WebsiteTabLoad): string
           <p class="text-xs text-zinc-400 mt-1 max-w-xl">
             Banner for everyone on the site. <strong class="text-violet-200">Only you can remove it</strong> (Turn OFF). Links: paste full <code class="text-violet-300">https://…</code> URLs or use <code class="text-violet-300">[label](https://…)</code>. Optional sponsor ad below.
           </p>
+          ${
+            bcEnabled
+              ? ''
+              : '<p data-hq-talk-idle="1" class="text-xs text-zinc-500 mt-2">Talk is off. This tab still loaded. Prize is under More. Not an empty CMS.</p>'
+          }
         </div>
         <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border ${
           bcEnabled
             ? 'border-emerald-400/50 text-emerald-300 bg-emerald-500/10'
             : 'border-zinc-500/40 text-zinc-400 bg-zinc-800/50'
-        }">${bcEnabled ? 'LIVE on site' : 'Off'}</span>
+        }" data-hq-talk-state="${bcEnabled ? 'live' : 'off'}">${bcEnabled ? 'LIVE on site' : 'Off'}</span>
       </div>
       <div class="grid gap-3 md:grid-cols-2">
         <label class="block text-xs text-zinc-400">

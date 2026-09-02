@@ -39,7 +39,7 @@ export const en = {
   'hero.cta': 'Get my referral link',
   'hero.cta_secondary': 'See leaderboard',
   'hero.trust':
-    'Verified #1 gets a 30-day banner for their website.',
+    "This week's #1 (not the owner) with 3 friends gets the 7-day banner.",
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 
@@ -57,22 +57,22 @@ export const en = {
   'how.step2_title': '2. Send your link',
   'how.step2_desc':
     'Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.',
-  'how.step3_title': '3. Climb the board',
+  'how.step3_title': '3. Watch your site climb',
   'how.step3_desc':
-    'When friends get their own free link through you, you move up. #1 puts their website on this homepage for 30 days.',
+    '1 verified friend \u2192 1-hour Rising Site Drop on this page. 2 friends \u2192 week text line. Board #2/#3 \u2192 Challenger strip. This week\u2019s #1 (not the owner) with 3 friends claims the 7-day banner.',
 
   'prize.badge': 'HOMEPAGE FEATURE',
-  'prize.title': 'Homepage Banner Feature',
+  'prize.title': 'The #1 banner',
   'prize.subtitle':
-    'Verified #1 gets a 30-day banner for their website on this homepage.',
+    'Site Drops put your site on this page as you climb. This week\u2019s #1 (not the owner) with 3 friends still gets the 7-day banner.',
   'prize.card1_title': 'Homepage Banner',
   'prize.card1_desc': 'Your website + custom banner featured on our homepage.',
   'prize.card2_title': 'Free recognition',
   'prize.card2_desc': 'No cash payout — pure visibility & social proof.',
   'prize.card3_title': 'Minimum referrals',
   'prize.card3_desc':
-    'Verified #1 with at least 10 friends who tapped Get my link can claim the banner.',
-  'prize.cta': "I'm #1 — Claim Homepage Feature",
+    "This week's top racer (not the site owner) with 3 friends who tapped Get my link can claim the banner.",
+  'prize.cta': "Claim this week's banner",
   'prize.winner_badge': 'Verified #1 can claim this',
 
   'leaderboard.title': 'Live Leaderboard',
