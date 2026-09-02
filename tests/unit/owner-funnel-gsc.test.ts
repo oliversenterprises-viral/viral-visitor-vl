@@ -62,7 +62,7 @@ describe('owner funnel GSC tracker', () => {
 
   it('uses the verified missing_credentials note and dashes until the server has a key', () => {
     expect(GSC_MISSING_NOTE).toBe(
-      'Search Console is verified. Add the API key on the server to show numbers here.',
+      'Search Console is verified. Numbers load from the server GSC_SERVICE_ACCOUNT_JSON secret.',
     );
     const empty = emptyOwnerFunnelGsc();
     expect(empty.status).toBe('missing_credentials');

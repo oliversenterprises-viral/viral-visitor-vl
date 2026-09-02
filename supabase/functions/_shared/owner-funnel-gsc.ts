@@ -13,7 +13,7 @@ export function gscConsoleUrlFor(property: string): string {
 export const GSC_CONSOLE_URL = gscConsoleUrlFor(GSC_PROPERTY);
 export const GSC_WINDOW_DAYS = 28;
 export const GSC_MISSING_NOTE =
-  'Search Console is verified. Add the API key on the server to show numbers here.';
+  'Search Console is verified. Numbers load from the server GSC_SERVICE_ACCOUNT_JSON secret.';
 
 export type OwnerFunnelGscStatus = 'ok' | 'missing_credentials' | 'error';
 
