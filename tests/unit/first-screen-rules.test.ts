@@ -90,7 +90,9 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('id="footer-link-guides"');
     expect(html).toContain('/guides/site-drops/');
     expect(html).toContain('/tools/share-generator.html');
+    expect(html).toContain('/tools/utm-builder.html');
     expect(html).toContain('/tools/credit-checker.html');
+    expect(html).toContain('id="footer-tools-row"');
     expect(html).toContain('id="footer-link-telegram-helper"');
     expect(html).not.toMatch(/href="\/tools\/"[^>]*hidden sm:inline/);
     expect(css).not.toMatch(/#site-footer\s*\{[^}]*display:\s*none/);
