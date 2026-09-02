@@ -6,6 +6,7 @@ import {
   isUnknownAdminAction,
   normalizeSiteContentAdminRows,
   parseGetSiteContentResult,
+  resolveWebsiteTabRows,
   SiteContentAdminError,
 } from '../../src/lib/site-content-admin';
 
@@ -51,9 +52,22 @@ describe('HQ Website get_site_content path', () => {
     ).toThrow(/missing get_site_content/);
   });
 
+  it('Unknown action cannot look like an empty Website CMS', () => {
+    const emptyFallback = [{ key: 'hero_cta', value: 'Get my referral link' }];
+    expect(() =>
+      resolveWebsiteTabRows({ success: false, error: 'Unknown action' }, emptyFallback),
+    ).toThrow(SiteContentAdminError);
+    expect(() =>
+      resolveWebsiteTabRows({ success: false, error: 'Unknown action' }, []),
+    ).toThrow(/missing get_site_content/);
+    expect(
+      resolveWebsiteTabRows({ success: true, data: [{ key: 'hero_cta', value: 'Get my referral link' }] }),
+    ).toEqual([{ id: 'hero_cta', value: 'Get my referral link' }]);
+  });
+
   it('Website tab loads get_site_content first and does not swallow Unknown action', () => {
     expect(tab).toContain("'get_site_content'");
-    expect(tab).toContain('parseGetSiteContentResult');
+    expect(tab).toContain('resolveWebsiteTabRows');
     expect(tab).toContain('isUnknownAdminAction');
     expect(tab.indexOf('get_site_content')).toBeLessThan(tab.indexOf("from('site_content')"));
   });

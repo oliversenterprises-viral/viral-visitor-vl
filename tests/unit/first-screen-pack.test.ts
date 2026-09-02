@@ -67,6 +67,25 @@ describe('first-screen pack (locked Site Drops page)', () => {
     );
   });
 
+  it('390x844 first screen keeps Site Drops pack locks', () => {
+    expect(hero).toContain('Get my referral link');
+    expect(hero).toContain('Empty right now. #1 this week puts their site here.');
+    expect(html).toMatch(/id="hero-ad-inventory"[^>]*\bhidden\b/);
+    expect(html).toMatch(/id="hero-ad-race"[^>]*\bhidden\b/);
+    expect(html).toContain('style="color:#f4f4f5;-webkit-text-fill-color:#f4f4f5"');
+    expect(css).toMatch(/html:not\(\[data-vr-embed\]\) #how/);
+    expect(css).toMatch(/html:not\(\[data-vr-embed\]\) #leaderboard/);
+    expect(css).toMatch(/html:not\(\[data-vr-embed\]\) footer/);
+    expect(css).toContain('display: block !important');
+    expect(css).not.toMatch(/#how\s*\{[^}]*display:\s*none/);
+    const steal = read('src/lib/share-abandon-rescue.ts');
+    expect(steal).toContain('stealShareAbandonIfSendTap');
+    expect(steal).toContain('post-link-copy');
+    const register = read('src/lib/share-deadline.ts');
+    expect(register).toContain('registerSucceeded');
+    expect(register).toContain('registerInFlight');
+  });
+
   it('does not hydrate extra slot lines before Get my link', () => {
     const pull = read('src/lib/prize-pull.ts');
     expect(pull).toContain("hasAttribute('data-vr-has-link')");

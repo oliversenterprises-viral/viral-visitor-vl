@@ -55,26 +55,16 @@ const BANNER_PRESETS = [
 /** Owner HQ Website tab: get_site_content first. Unknown action must fail closed. */
 async function fetchSiteContentRows(): Promise<ContentRow[]> {
   const { invokeAdminAction } = await import('../lib/admin-action-client');
-  const {
-    isUnknownAdminAction,
-    normalizeSiteContentAdminRows,
-    parseGetSiteContentResult,
-  } = await import('../lib/site-content-admin');
+  const { isUnknownAdminAction, resolveWebsiteTabRows } = await import('../lib/site-content-admin');
   const result = await invokeAdminAction<Array<{ key?: string; id?: string; value?: unknown }>>(
     'get_site_content',
   );
-  if (result.success) {
-    return normalizeSiteContentAdminRows(parseGetSiteContentResult(result));
-  }
-  if (isUnknownAdminAction(result.error)) {
-    // Live 8a24705 admin-action bug — do not mask as an empty CMS.
-    parseGetSiteContentResult(result);
+  if (result.success || isUnknownAdminAction(result.error)) {
+    return resolveWebsiteTabRows(result);
   }
   const { data, error } = await supabase.from('site_content').select('*');
   if (error) throw error;
-  return normalizeSiteContentAdminRows(
-    (data || []) as Array<{ key?: string; id?: string; value?: unknown }>,
-  );
+  return resolveWebsiteTabRows(result, (data || []) as Array<{ key?: string; id?: string; value?: unknown }>);
 }
 
 async function saveSiteContentEntry(key: string, value: unknown): Promise<boolean> {

@@ -58,3 +58,27 @@ export function parseGetSiteContentResult(result: {
   }
   return result.data as SiteContentAdminRow[];
 }
+
+/**
+ * Website tab row load. Unknown action must throw — never return [] / empty CMS.
+ * Other admin-action failures may use a direct-select fallback.
+ */
+export function resolveWebsiteTabRows(
+  result: { success: boolean; data?: unknown; error?: string },
+  fallbackRows?: SiteContentAdminRow[] | null,
+): Array<{ id: string; value?: unknown }> {
+  if (result.success) {
+    return normalizeSiteContentAdminRows(parseGetSiteContentResult(result));
+  }
+  if (isUnknownAdminAction(result.error)) {
+    parseGetSiteContentResult(result);
+    throw new SiteContentAdminError(
+      'Unknown action — admin-action is missing get_site_content',
+      'unknown_action',
+    );
+  }
+  if (fallbackRows) {
+    return normalizeSiteContentAdminRows(fallbackRows);
+  }
+  throw new SiteContentAdminError(result.error || 'get_site_content failed', 'failed');
+}

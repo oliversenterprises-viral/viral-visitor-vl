@@ -59,8 +59,15 @@ describe('locked live Site Drops homepage copy', () => {
     expect(html).toContain('Site Drop ladder:');
     expect(html).toContain('utm_source=homepage_footer');
     expect(html).toContain('href="/guides/"');
+    expect(html).toContain(
+      'href="/tools/credit-checker.html?utm_source=homepage_footer&amp;utm_medium=internal&amp;utm_campaign=organic_tools"',
+    );
+    expect(html).toContain(
+      'href="/tools/what-to-paste.html?utm_source=homepage_footer&amp;utm_medium=internal&amp;utm_campaign=organic_tools"',
+    );
     expect(existsSync(resolve(ROOT, 'public/guides/index.html'))).toBe(true);
     expect(existsSync(resolve(ROOT, 'public/guides/site-drops/index.html'))).toBe(true);
+    expect(existsSync(resolve(ROOT, 'public/guides/claim-7-day-banner/index.html'))).toBe(true);
   });
 
   it('does not keep the old 30-day banner / example-ad strings', () => {
