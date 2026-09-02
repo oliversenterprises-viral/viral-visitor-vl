@@ -999,7 +999,15 @@ Deno.serve(async (req: Request) => {
           loadFeedWindow: () => pageWindow(false),
           loadCompleteWindow: () => pageWindow(true),
         });
-        return new Response(JSON.stringify({ success: true, data: metrics }), {
+        let gsc;
+        try {
+          const { resolveOwnerFunnelGsc } = await import('../_shared/owner-funnel-gsc.ts');
+          gsc = await resolveOwnerFunnelGsc();
+        } catch {
+          const { emptyOwnerFunnelGsc } = await import('../_shared/owner-funnel-gsc.ts');
+          gsc = emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.');
+        }
+        return new Response(JSON.stringify({ success: true, data: { ...metrics, gsc } }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (deskErr) {

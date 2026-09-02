@@ -50,6 +50,7 @@ export async function showOwnerFunnelDesk() {
   content.innerHTML = ADMIN_LOADING_SKELETON;
 
   try {
+    // Desk tiles + Google Search · tools & pages card (metrics.gsc).
     await renderOwnerFunnelDesk(content);
   } catch {
     /* renderOwnerFunnelDesk paints zeros — never "can't load" after login */

@@ -3917,6 +3917,50 @@ html[data-vr-touch] .share-btn {
   color: #f4f4f5;
 }
 
+.hq-gsc-card {
+  border-color: rgba(167, 139, 250, 0.22) !important;
+  background:
+    radial-gradient(700px 180px at 0% 0%, rgba(124, 58, 237, 0.14), transparent 55%),
+    rgba(0, 0, 0, 0.28) !important;
+}
+
+.hq-gsc-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.hq-gsc-list {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.85rem;
+  padding: 0.65rem 0.75rem;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.hq-gsc-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.72rem;
+}
+
+.hq-gsc-row:last-child {
+  border-bottom: 0;
+}
+
+.hq-gsc-row-label {
+  color: #d4d4d8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hq-gsc-row-num {
+  color: #c4b5fd;
+  font-weight: 700;
+}
+
 @media (max-width: 639px) {
   .funnel-steps-row {
     gap: 0.35rem 0.4rem;

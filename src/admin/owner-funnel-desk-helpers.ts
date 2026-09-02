@@ -29,3 +29,15 @@ export {
   type OwnerFunnelFeedRow,
   type OwnerFunnelVia,
 } from '../../supabase/functions/_shared/owner-funnel-desk';
+
+export {
+  emptyOwnerFunnelGsc,
+  formatGscCount,
+  formatGscPosition,
+  GSC_CONSOLE_URL,
+  GSC_MISSING_NOTE,
+  GSC_PROPERTY,
+  parseOwnerFunnelGsc,
+  resolveOwnerFunnelGsc,
+  type OwnerFunnelGscMetrics,
+} from '../../supabase/functions/_shared/owner-funnel-gsc';

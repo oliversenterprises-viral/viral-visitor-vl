@@ -125,6 +125,10 @@ describe('first-screen Site Drops rules', () => {
     expect(existsSync(resolve(root, 'public/llms-full.txt'))).toBe(true);
     expect(existsSync(resolve(root, 'src/lib/site-drops.ts'))).toBe(true);
     expect(existsSync(resolve(root, 'src/admin/owner-funnel-desk.ts'))).toBe(true);
+    expect(existsSync(resolve(root, 'supabase/functions/_shared/owner-funnel-gsc.ts'))).toBe(true);
     expect(existsSync(resolve(root, 'public/tools'))).toBe(true);
+    expect(read('src/admin/owner-funnel-desk.ts')).toMatch(/data-owner-desk-gsc/);
+    expect(read('index.html')).toMatch(/data-owner-desk-gsc/);
+    expect(read('supabase/functions/admin-action/index.ts')).toMatch(/resolveOwnerFunnelGsc/);
   });
 });
