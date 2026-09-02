@@ -66,7 +66,10 @@ describe('Get my link reveal (last-night lock)', () => {
     mountKidSimpleSendDom();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    if (vi.isFakeTimers()) {
+      vi.runOnlyPendingTimers();
+    }
     vi.useRealTimers();
     vi.unstubAllGlobals();
     document.body.innerHTML = '';
@@ -77,6 +80,11 @@ describe('Get my link reveal (last-night lock)', () => {
     document.documentElement.removeAttribute('data-vr-kid-simple');
     document.documentElement.removeAttribute('data-vr-visitor-slim');
     document.documentElement.removeAttribute('data-vr-paid-landing');
+    // Drain console / microtasks so the jsdom worker does not tear down
+    // while Vitest's onUserConsoleLog RPC is still in flight.
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 0);
+    });
   });
 
   it('first-paint HTML is the live Site Drop homepage: one Get my referral link, 7-day slot', () => {
@@ -255,14 +263,23 @@ describe('Get my link reveal (last-night lock)', () => {
 
   it('paid Reddit landings do not spawn interstitial popups', () => {
     vi.useFakeTimers();
-    vi.stubGlobal('location', {
+    // Pass a Location argument — do not stubGlobal('location'). Restoring a
+    // stubbed Location in jsdom logs during teardown and flakes CI with
+    // EnvironmentTeardownError: Closing rpc while "onUserConsoleLog" was pending.
+    const loc = {
       search: '?utm_source=reddit&utm_medium=paid&utm_campaign=get_my_link',
       pathname: '/',
-    });
-    captureUtmAttribution();
-    expect(initPaidConversionBoost(location as Location, window)).toBe(true);
+      href: 'https://viralrefer.app/?utm_source=reddit&utm_medium=paid&utm_campaign=get_my_link',
+      hash: '',
+    } as Location;
+    captureUtmAttribution(loc);
+    expect(initPaidConversionBoost(loc, window)).toBe(true);
     initExitIntentRescue(window);
-    vi.advanceTimersByTime(30_000);
+    // Only flush the 350ms hero-scroll timeout. Do not advance 30s — that
+    // fires share-deadline's status poll, which console.warns and flakes CI
+    // teardown (onUserConsoleLog still pending).
+    vi.advanceTimersByTime(400);
+    vi.runOnlyPendingTimers();
     expect(document.getElementById('vr-paid-getlink-nudge')).toBeNull();
     expect(document.getElementById('vr-exit-rescue')).toBeNull();
     expect(document.getElementById('mobile-referral-cta')?.classList.contains('hidden')).toBe(true);
