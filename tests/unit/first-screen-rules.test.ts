@@ -62,6 +62,12 @@ describe('first-screen Site Drops rules', () => {
     expect(css).toMatch(/#vr-nav \.vr-wordmark[\s\S]{0,80}color:\s*#f4f4f5/);
   });
 
+  it('keeps the locked H1 accent readable, not transparent', () => {
+    const css = read('src/style.css');
+    expect(css).toMatch(/\.hero-gradient #hero-title-accent[\s\S]{0,80}color:\s*#f4f4f5/);
+    expect(css).not.toMatch(/\.hero-gradient #hero-title-accent[\s\S]{0,80}color:\s*transparent/);
+  });
+
   it('does not CSS-hide How, Board, or footer', () => {
     const css = read('src/style.css');
     expect(css).not.toMatch(/#how\s*\{[^}]*display:\s*none/);
