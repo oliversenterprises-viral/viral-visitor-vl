@@ -362,6 +362,14 @@ export async function updatePublicContent(content: Record<string, unknown>) {
     /* non-fatal */
   }
 
+  try {
+    const { applySiteDropsFromContent, initSiteDropForm } = await import('./lib/site-drops-ui');
+    applySiteDropsFromContent(content as Record<string, unknown>);
+    initSiteDropForm();
+  } catch {
+    /* non-fatal — 8:44 homepage may omit drop nodes */
+  }
+
   // Apply any dynamic text colors from site_content (color_* keys) — wired via the colors module
   applyTextColors(content);
 }

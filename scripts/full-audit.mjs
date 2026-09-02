@@ -94,6 +94,8 @@ report.checks.edgeFunctions = {
   submitClaim: await edgePing('submit-claim'),
   recordReferral: await edgePing('record-referral'),
   recordBannerEvent: await edgePing('record-banner-event'),
+  registerReferrerLink: await edgePing('register-referrer-link'),
+  submitSiteDrop: await edgePing('submit-site-drop'),
 };
 
 // 8. Supabase REST public read

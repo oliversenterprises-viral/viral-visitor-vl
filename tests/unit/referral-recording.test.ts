@@ -150,9 +150,53 @@ describe('referral recording (funnel-gated Step 1)', () => {
     await waitForRecordReferralCount(1);
 
     const call = recordReferralCalls()[0];
-    expect((call[1] as { body: Record<string, string> }).body.referrerCode).toBe('VIRAL-FUNNEL');
+    const body = (call[1] as { body: Record<string, string> }).body;
+    expect(body.referrerCode).toBe('VIRAL-FUNNEL');
+    expect(body.turnstileToken).toBeTruthy();
     expect(isReferralCreditedThisSession()).toBe(true);
   });
+
+  it('sends Turnstile token on credit when the widget succeeds', async () => {
+    vi.stubEnv('VITE_TURNSTILE_SITEKEY', 'funnel-site-key');
+    invokeMock.mockResolvedValue({ data: { success: true }, error: null });
+    vi.stubGlobal('location', {
+      pathname: '/r/VIRAL-TOKOK',
+      search: '',
+      href: 'http://localhost/r/VIRAL-TOKOK',
+    } as Location);
+    detectAndStoreAttribution();
+    await getMyReferralLinkInstant();
+    await waitForRecordReferralCount(1);
+    const body = (recordReferralCalls()[0][1] as { body: Record<string, string> }).body;
+    expect(body.turnstileToken).toBe('test-turnstile-token');
+    expect(isReferralCreditedThisSession()).toBe(true);
+  });
+
+  it('does not POST a credit without a token when Turnstile fails', async () => {
+    vi.stubEnv('VITE_TURNSTILE_SITEKEY', 'funnel-site-key');
+    (window as { turnstile?: { render: (el: HTMLElement, opts: Record<string, unknown>) => void } }).turnstile = {
+      render: (_el, opts) => {
+        const fail = opts['error-callback'] as ((code?: string) => void) | undefined;
+        fail?.('110200');
+      },
+    };
+    invokeMock.mockResolvedValue({ data: { success: true }, error: null });
+    vi.stubGlobal('location', {
+      pathname: '/r/VIRAL-TOKFAIL',
+      search: '',
+      href: 'http://localhost/r/VIRAL-TOKFAIL',
+    } as Location);
+    detectAndStoreAttribution();
+    await getMyReferralLinkInstant();
+    await new Promise((r) => setTimeout(r, 200));
+    expect(recordReferralCalls()).toHaveLength(0);
+    await vi.waitFor(
+      () => {
+        expect(toastText()).toMatch(/Couldn't credit referral/);
+      },
+      { timeout: 12_000 },
+    );
+  }, 15_000);
 
   it('retries funnel credit after transient edge failure', async () => {
     let referralCalls = 0;

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
   ensureTurnstileReady,
+  getCreditTurnstileToken,
   getTurnstileSiteKey,
   getTurnstileToken,
 } from '../../src/lib/turnstile';
@@ -66,6 +67,30 @@ describe('turnstile (shared by referral.ts + handlers.ts)', () => {
       invisible: true,
     });
     expect(token).toBe('invisible-token');
+  });
+
+  it('getCreditTurnstileToken returns a token when the invisible widget succeeds', async () => {
+    vi.stubEnv('VITE_TURNSTILE_SITEKEY', 'test-site-key');
+    const render = vi.fn((_el, opts: { callback: (t: string) => void; size?: string }) => {
+      expect(opts.size).toBe('invisible');
+      opts.callback('credit-token-ok');
+    });
+    (window as { turnstile?: { render: typeof render; execute?: () => void } }).turnstile = {
+      render,
+      execute: () => {},
+    };
+    const token = await getCreditTurnstileToken(2000);
+    expect(token).toBe('credit-token-ok');
+  });
+
+  it('getCreditTurnstileToken returns null when the widget fails (no silent empty POST)', async () => {
+    vi.stubEnv('VITE_TURNSTILE_SITEKEY', 'test-site-key');
+    const render = vi.fn((_el, opts: { 'error-callback'?: (code?: string) => void }) => {
+      opts['error-callback']?.('110200');
+    });
+    (window as { turnstile?: { render: typeof render } }).turnstile = { render };
+    const token = await getCreditTurnstileToken(2000);
+    expect(token).toBeNull();
   });
 
   it('getTurnstileToken rejects when API is missing', async () => {

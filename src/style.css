@@ -164,6 +164,16 @@ h1, h2, h3, .logo-font {
   letter-spacing: -0.025em;
 }
 
+/* Always-dark chrome: wordmark + racer-talk title inherit --text-h (#08060d) when OS is light. */
+#vr-nav .vr-wordmark,
+#vr-nav .logo-font {
+  color: #f4f4f5;
+}
+.racer-talk__title,
+h2.racer-talk__title {
+  color: #f4f4f5;
+}
+
 h1 { font-size: 3.25rem; line-height: 1.05; }
 h2 { font-size: 1.85rem; line-height: 1.1; }
 h3 { font-size: 1.35rem; }
@@ -4117,6 +4127,90 @@ html[data-vr-has-link] #referral-section .glass {
   margin: 0 0 0.55rem;
   outline: none;
 }
+.post-link-site-drop {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.post-link-site-drop__title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #e9d5ff;
+}
+.post-link-site-drop__url {
+  margin-top: 0.5rem;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  padding: 0 0.75rem;
+  font-size: 1rem;
+}
+.post-link-site-drop__submit {
+  margin-top: 0.5rem;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  background: transparent;
+  color: #ede9fe;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.post-link-site-drop__status {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: #a1a1aa;
+}
+.site-entered-ticker {
+  margin: 1rem auto 0;
+  max-width: 28rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  background: rgba(76, 29, 149, 0.18);
+}
+.site-entered-ticker__heading {
+  margin: 0 0 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+}
+.site-entered-ticker__chips,
+.site-drop-chip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.site-drop-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(52, 211, 153, 0.28);
+  background: rgba(16, 185, 129, 0.12);
+  color: #d1fae5;
+  text-decoration: none;
+  font-size: 0.78rem;
+}
+.site-drop-chip__label {
+  font-weight: 650;
+  color: #ecfdf5;
+}
+.site-drop-chip__meta,
+.site-drop-chip__host {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6ee7b7;
+}
 .post-link-share__sub {
   margin: 0 0 1.15rem;
   font-size: 0.98rem;
@@ -4241,6 +4335,13 @@ html[data-vr-has-link] [data-vr-declutter-post-link] {
   display: none !important;
 }
 html[data-vr-post-link-one] #post-link-share:not(.hidden) {
+  display: block;
+}
+html:not([data-vr-has-link]) #post-link-site-drop {
+  display: none !important;
+}
+html[data-vr-post-link-one] #post-link-site-drop:not(.hidden),
+html[data-vr-has-link] #post-link-site-drop:not(.hidden) {
   display: block;
 }
 

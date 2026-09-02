@@ -23,7 +23,7 @@ import {
   parseRefFromLocation,
 } from './lib/referral-url';
 import { parseEdgeFunctionBody } from './lib/edge-response';
-import { tryOptionalTurnstileToken } from './lib/turnstile';
+import { getCreditTurnstileToken } from './lib/turnstile';
 import { escapeHtml } from './content';
 import { showToast } from './ui';
 import { ViralRefer } from './lib/global';
@@ -121,12 +121,18 @@ async function recordReferralIfAttributed(options: {
     }
     const referredCode = visitorCode;
 
-    const turnstileToken = await tryOptionalTurnstileToken(8000);
+    const turnstileToken = await getCreditTurnstileToken(8000);
+    if (!turnstileToken) {
+      if (notify) {
+        notifyReferralOutcome('failed', options.allowFailureRetryToast);
+      }
+      return 'failed';
+    }
 
     const { data, error } = await supabase.functions.invoke('record-referral', {
       body: {
         referrerCode: pendingReferrerCode,
-        ...(turnstileToken ? { turnstileToken } : {}),
+        turnstileToken,
         ...(referredCode ? { referredCode } : {}),
       },
     });

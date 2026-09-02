@@ -66,6 +66,13 @@ Deno.serve(async (req: Request) => {
     }
     const result = await registerReferrerLink(supabaseAdmin, code, { clientIp });
 
+    try {
+      const { enqueuePendingAndSave } = await import('../_shared/site-drops-store.ts');
+      await enqueuePendingAndSave(supabaseAdmin, code);
+    } catch (dropErr) {
+      console.warn('[register-referrer-link] site-drop pending enqueue skipped:', dropErr);
+    }
+
     let ownership_token: string | undefined;
     const secret = resolveClaimOwnershipSecret({ get: (k) => Deno.env.get(k) });
     if (secret && result.created) {

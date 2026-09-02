@@ -185,10 +185,19 @@ export async function registerReferrerLinkDeadline(
   };
 
   try {
-    const { data, error } = await supabase.functions.invoke('register-referrer-link', {
-      body: { referrer_code },
-    });
+    let data: unknown = null;
+    let error: { message?: string } | null = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const result = await supabase.functions.invoke('register-referrer-link', {
+        body: { referrer_code },
+      });
+      data = result.data;
+      error = result.error;
+      if (!error) break;
+    }
     if (error) {
+      console.warn('[ViralRefer] register-referrer-link failed:', error.message);
+      showToast("Couldn't register your link — send it anyway, then refresh if a friend can't credit you.", 'info');
       writeShareDeadlineState(fallback);
       renderShareDeadlineBanner();
       return fallback;
@@ -206,6 +215,14 @@ export async function registerReferrerLinkDeadline(
       };
       error?: string;
     };
+
+    if (envelope && envelope.success === false) {
+      console.warn('[ViralRefer] register-referrer-link rejected:', envelope.error);
+      showToast("Couldn't register your link — send it anyway, then refresh if a friend can't credit you.", 'info');
+      writeShareDeadlineState(fallback);
+      renderShareDeadlineBanner();
+      return fallback;
+    }
 
     const ownership = String(envelope?.data?.ownership_token || '').trim();
     if (ownership) {
@@ -278,7 +295,9 @@ export async function registerReferrerLinkDeadline(
     writeShareDeadlineState(state);
     renderShareDeadlineBanner();
     return state;
-  } catch {
+  } catch (err) {
+    console.warn('[ViralRefer] register-referrer-link exception:', err);
+    showToast("Couldn't register your link — send it anyway, then refresh if a friend can't credit you.", 'info');
     writeShareDeadlineState(fallback);
     renderShareDeadlineBanner();
     return fallback;
