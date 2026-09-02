@@ -301,11 +301,6 @@ export function applyExistingReferralLink(code: string): void {
   syncMobileReferralCta();
   initShareDeadlineUi();
   activatePostLinkShare(link);
-  void registerReferrerLinkDeadline(code).then((state) => {
-    if (state?.status === 'expired') {
-      enforceLocalShareDeadlineExpiry(code);
-    }
-  });
   if (pendingReferrerCode && !referralRecordedThisSession) {
     void runFunnelReferralRecording();
   }
@@ -343,6 +338,10 @@ export async function getMyReferralLinkInstant(): Promise<void> {
     }
 
     const link = buildReferralLink(code);
+    const registered = await registerReferrerLinkDeadline(code);
+    if (registered?.status === 'expired') {
+      enforceLocalShareDeadlineExpiry(code);
+    }
     populateReferralLinkUI(code, link);
 
     let via: string | null = null;

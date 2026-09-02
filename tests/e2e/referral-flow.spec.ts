@@ -22,7 +22,9 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await expect(page.locator('#hero-subtitle')).toContainText(/Get my link/);
     await expect(page.locator('#hero-get-link-btn')).toBeVisible();
     await expect(page.locator('#hero-get-link-btn')).toContainText(/Get my link/i);
-    await expect(page.locator('#how')).toBeHidden();
+    await expect(page.locator('#how')).toBeAttached();
+    await expect(page.locator('#leaderboard')).toBeAttached();
+    await expect(page.locator('footer')).toBeAttached();
     await expect(page.locator('#faq')).toBeHidden();
     await expect(page.locator('#prize')).toBeHidden();
 
@@ -38,7 +40,9 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     });
     await expect(page.locator('#hero-subtitle')).toContainText(/beat them/i);
     await expect(page.locator('#hero-get-link-btn')).toBeVisible();
-    await expect(page.locator('#how')).toBeHidden();
+    await expect(page.locator('#how')).toBeAttached();
+    await expect(page.locator('#leaderboard')).toBeAttached();
+    await expect(page.locator('footer')).toBeAttached();
     await expect(page.locator('#faq')).toBeHidden();
     await expect(page.locator('#funnel-expand-wrap')).toBeHidden();
     await expect(page.locator('#hero-security-trust')).toBeHidden();

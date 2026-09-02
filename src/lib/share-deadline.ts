@@ -170,6 +170,14 @@ export function unlockIfReferralCountUnlocked(count: number): boolean {
   return true;
 }
 
+const registerInFlight = new Map<string, Promise<ShareDeadlineState | null>>();
+const registerSucceeded = new Set<string>();
+
+export function resetRegisterReferrerLinkCacheForTests(): void {
+  registerInFlight.clear();
+  registerSucceeded.clear();
+}
+
 /** Register code on the server (starts the first-referral deadline clock). */
 export async function registerReferrerLinkDeadline(
   code: string,
@@ -177,6 +185,32 @@ export async function registerReferrerLinkDeadline(
   const referrer_code = String(code || '').trim().toUpperCase();
   if (!referrer_code) return null;
 
+  const inflight = registerInFlight.get(referrer_code);
+  if (inflight) return inflight;
+
+  if (registerSucceeded.has(referrer_code)) {
+    const cur = readShareDeadlineState();
+    if (cur?.code === referrer_code) return cur;
+    return {
+      code: referrer_code,
+      status: 'pending_share',
+      createdAt: new Date().toISOString(),
+      deadlineAt: new Date(Date.now() + SHARE_DEADLINE_MS).toISOString(),
+    };
+  }
+
+  const run = registerReferrerLinkDeadlineUncached(referrer_code);
+  registerInFlight.set(referrer_code, run);
+  try {
+    return await run;
+  } finally {
+    registerInFlight.delete(referrer_code);
+  }
+}
+
+async function registerReferrerLinkDeadlineUncached(
+  referrer_code: string,
+): Promise<ShareDeadlineState | null> {
   const fallback: ShareDeadlineState = {
     code: referrer_code,
     status: 'pending_share',
@@ -244,6 +278,7 @@ export async function registerReferrerLinkDeadline(
           .then((m) => m.syncPromoKitUI())
           .catch(() => {});
       }
+      registerSucceeded.add(referrer_code);
       return {
         code: referrer_code,
         status: 'active',
@@ -255,6 +290,7 @@ export async function registerReferrerLinkDeadline(
     if (status === 'expired') {
       clearShareDeadlineState();
       renderShareDeadlineBanner();
+      registerSucceeded.add(referrer_code);
       return {
         code: referrer_code,
         status: 'expired',
@@ -277,6 +313,7 @@ export async function registerReferrerLinkDeadline(
     };
     writeShareDeadlineState(state);
     renderShareDeadlineBanner();
+    registerSucceeded.add(referrer_code);
     return state;
   } catch {
     writeShareDeadlineState(fallback);
@@ -531,6 +568,7 @@ export function initShareDeadlineUi(): void {
   statusPollTimer = setInterval(() => {
     const state = readShareDeadlineState();
     if (!state || state.status !== 'pending_share') return;
+    if (registerSucceeded.has(state.code)) return;
     void registerReferrerLinkDeadline(state.code);
   }, 20_000);
 

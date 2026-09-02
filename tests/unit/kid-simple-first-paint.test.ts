@@ -70,12 +70,14 @@ describe('kid-simple first paint', () => {
     expect(css).toMatch(/#vr-verified-total:not\(\.vr-verified-total--ready\)/);
   });
 
-  it('hides How / FAQ / board on a cold land until expand', () => {
+  it('hides FAQ and extras on a cold land until expand; How and Board stay in the page', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    expect(css).toMatch(/html:not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]/);
+    expect(css).toMatch(/html:not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]:not\(#how\):not\(#leaderboard\)/);
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-micro\]\) #funnel-expand-wrap/);
     expect(css).toMatch(/html:not\(\[data-vr-share-locked\]\) #daily-crown-section/);
+    expect(css).toMatch(/html:not\(\[data-vr-embed\]\) #how/);
+    expect(css).toMatch(/html:not\(\[data-vr-embed\]\) #leaderboard/);
     expect(html).not.toContain('id="daily-crown-section"');
     expect(html).not.toContain('id="weekly-sprint-board"');
     expect(html).not.toContain('id="community-unlock-meter"');

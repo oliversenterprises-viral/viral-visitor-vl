@@ -11,6 +11,7 @@ vi.mock('../../src/lib/supabase', () => ({
   isSupabaseConfigured: true,
 }));
 
+import { resetRegisterReferrerLinkCacheForTests } from '../../src/lib/share-deadline';
 import {
   applyExistingReferralLink,
   detectAndStoreAttribution,
@@ -70,6 +71,7 @@ describe('referral recording (funnel-gated Step 1)', () => {
     installTurnstileWidget();
     installReferralDom();
     invokeMock.mockReset();
+    resetRegisterReferrerLinkCacheForTests();
     resetReferralRecordingStateForTests();
     sessionStorage.clear();
     localStorage.clear();

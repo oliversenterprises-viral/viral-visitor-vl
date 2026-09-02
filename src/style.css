@@ -158,6 +158,13 @@ body {
   color: var(--text-h);
 }
 
+/* Contrast: unlayered body { color } beats Tailwind utilities; pin the wordmark. */
+#vr-nav .vr-wordmark,
+#vr-nav a .vr-wordmark,
+#vr-nav .logo-font {
+  color: #f4f4f5 !important;
+}
+
 h1, h2, h3, .logo-font {
   font-family: var(--font-display);
   font-weight: 600;
@@ -390,7 +397,6 @@ html[data-vr-send-mode] #distance-glory-meter,
 html[data-vr-send-mode] #growth-command-center,
 html[data-vr-send-mode] #my-stats,
 html[data-vr-send-mode] #funnel-journey,
-html[data-vr-send-mode] #how,
 html[data-vr-send-mode] #prize,
 html[data-vr-send-mode] #copy-message-btn,
 html[data-vr-send-mode] #new-code-button,
@@ -622,7 +628,7 @@ html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-link {
   font-size: 0.75rem;
   opacity: 0.8;
 }
-html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-nav-link {
+html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-nav-link:not([href="#how"]):not([href="#leaderboard"]) {
   display: none !important;
 }
 html[data-vr-direct-landing]:not([data-vr-has-link]) #admin-btn {
@@ -701,10 +707,8 @@ html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-prize-fomo,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #vr-verified-total,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #daily-champion-strip,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-journey,
-html[data-vr-referred-micro]:not([data-vr-has-link]) #how,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #prize,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #faq,
-html[data-vr-referred-micro]:not([data-vr-has-link]) #leaderboard,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-banner-mock,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-title-accent,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-badge,
@@ -713,7 +717,7 @@ html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-lock-rule,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #referral-attribution,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-expand-wrap,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-credit-gate,
-html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link {
+html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link:not([href="#how"]):not([href="#leaderboard"]) {
   display: none !important;
 }
 html[data-vr-referred-micro]:not([data-vr-has-link]) #referral-attribution {
@@ -2282,11 +2286,11 @@ html[data-vr-referred-landing][data-vr-has-link] #funnel-expand-wrap {
   display: none;
 }
 
-html:not([data-vr-funnel-expanded]) [data-vr-below-fold] {
+html:not([data-vr-funnel-expanded]) [data-vr-below-fold]:not(#how):not(#leaderboard) {
   display: none !important;
 }
 
-html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) [data-vr-below-fold] {
+html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) [data-vr-below-fold]:not(#how):not(#leaderboard) {
   display: none !important;
 }
 
@@ -4227,7 +4231,7 @@ html[data-vr-has-link] #hero-trust-line,
 html[data-vr-has-link] #hero-lock-rule,
 html[data-vr-has-link] #hero-global-proof,
 html[data-vr-has-link] #funnel-expand-wrap,
-html[data-vr-has-link] [data-vr-below-fold] {
+html[data-vr-has-link] [data-vr-below-fold]:not(#how):not(#leaderboard) {
   display: none !important;
 }
 
@@ -4600,4 +4604,24 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
 html[data-vr-tiny] #hero-subtitle,
 html[data-vr-short]:not([data-vr-has-link]) #hero-subtitle {
   display: none;
+}
+
+/* First-screen pack: extra slot lines stay off first paint (Seen N / 10 friends). */
+html:not([data-vr-has-link]) #hero-ad-inventory,
+html:not([data-vr-has-link]) #hero-ad-race {
+  display: none !important;
+}
+
+/* How / Board / footer stay in the document — never display:none on the public page. */
+html:not([data-vr-embed]) #how,
+html:not([data-vr-embed]) #leaderboard,
+html:not([data-vr-embed]) footer {
+  display: block !important;
+}
+
+@media (min-width: 640px) {
+  html:not([data-vr-embed]) .vr-nav-link[href="#how"],
+  html:not([data-vr-embed]) .vr-nav-link[href="#leaderboard"] {
+    display: inline !important;
+  }
 }
