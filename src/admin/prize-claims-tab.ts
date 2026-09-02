@@ -51,7 +51,7 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
   // Then the main live claims list below it. This merges the useful owner tooling with the full functional list.
   content.innerHTML = `
     <!-- Owner Test Tools (always visible - magic link + bypass test claim) -->
-    <div class="mb-6 rounded-3xl border border-amber-500/30 bg-amber-500/10 p-5">
+    <div data-hq-prize="1" class="mb-6 rounded-3xl border border-amber-500/30 bg-amber-500/10 p-5">
       <div class="flex items-center gap-2 mb-2">
         <i class="fa-solid fa-user-shield text-amber-400"></i>
         <span class="font-semibold text-amber-300">Owner Test Tools</span>
@@ -134,7 +134,7 @@ export async function renderPrizeClaimsTab(content: HTMLElement) {
     renderClaimsList(mainArea, currentClaimStatusFilter);
 
   } catch (e) {
-    mainArea.innerHTML = `<div class="p-6 text-amber-400">Unable to load prize claims. ${formatError(e)}</div>`;
+    mainArea.innerHTML = `<div data-hq-prize-list="1" class="p-6 text-amber-400">Prize tab is loaded. Claims list could not fetch. ${formatError(e)}</div>`;
     showToast(`Unable to load prize claims: ${formatError(e)}`, 'info');
   }
 }
