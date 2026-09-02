@@ -188,9 +188,10 @@ describe('share-abandon-rescue', () => {
   it('initShareAbandonRescue never schedules dwell or poll auto-open on the send screen', () => {
     const src = readFileSync(resolve(ROOT, 'src/lib/share-abandon-rescue.ts'), 'utf8');
     expect(src).not.toMatch(/tryShow\('dwell'/);
+    expect(src).not.toMatch(/tryShow\('poll'/);
+    expect(src).not.toMatch(/tryShow\('return'/);
     expect(src).not.toMatch(/setTimeout\(\(\) => tryShow/);
     expect(src).toMatch(/tryShow\('exit'/);
-    expect(src).toMatch(/if \(isPostLinkSendScreenActive\(\)\) return;/);
 
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
     expect(css).toContain('vr-share-abandon--send-safe');

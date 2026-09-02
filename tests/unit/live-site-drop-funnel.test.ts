@@ -47,6 +47,8 @@ describe('live Site Drop funnel lock', () => {
     const rescue = readFileSync(resolve(ROOT, 'src/lib/share-abandon-rescue.ts'), 'utf8');
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
     expect(rescue).not.toMatch(/tryShow\('dwell'/);
+    expect(rescue).not.toMatch(/tryShow\('poll'/);
+    expect(rescue).not.toMatch(/tryShow\('return'/);
     expect(rescue).not.toMatch(/setTimeout\(\(\) => tryShow/);
     expect(rescue).toContain("tryShow('exit'");
     expect(rescue).toContain('isAutoOpenShareAbandonReason');

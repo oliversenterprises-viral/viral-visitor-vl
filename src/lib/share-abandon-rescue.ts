@@ -439,9 +439,8 @@ export function initShareAbandonRescue(win: Window = window): void {
 
   const started = Date.now();
   const coarse = win.matchMedia('(pointer: coarse)').matches;
-  let leftHiddenAt: number | null = null;
 
-  // Exit-intent only — never schedule dwell/poll auto-open on the send screen.
+  // Exit-intent only. No dwell timer, no poll, no return-from-tab auto-open.
   if (!coarse) {
     win.document.addEventListener('mouseout', (e: MouseEvent) => {
       if (e.clientY > 12 || e.relatedTarget != null) return;
@@ -449,34 +448,7 @@ export function initShareAbandonRescue(win: Window = window): void {
     });
   }
 
-  win.document.addEventListener('visibilitychange', () => {
-    if (win.document.visibilityState === 'hidden') {
-      leftHiddenAt = Date.now();
-      return;
-    }
-    // Coming back to the tab is not exit-intent. Never auto-open on the send screen.
-    if (isPostLinkSendScreenActive()) {
-      leftHiddenAt = null;
-      return;
-    }
-    if (leftHiddenAt != null && Date.now() - leftHiddenAt >= MIN_AWAY_RETURN_MS) {
-      tryShow('return', started, coarse);
-    }
-    leftHiddenAt = null;
-  });
-
   win.addEventListener('beforeunload', makeBeforeUnloadHandler(started));
-
-  // Poll never auto-opens the send-screen overlay. Only clean up stale panels
-  // off that screen (locked / no longer pending).
-  win.setInterval(() => {
-    if (isPostLinkSendScreenActive()) return;
-    if (!hasLink() || isLocked() || !isSharePendingLocal()) {
-      removePanel();
-      return;
-    }
-    tryShow('poll', started, coarse);
-  }, POLL_MS);
 
   win.document.addEventListener('pointerdown', stealShareAbandonIfSendTap, true);
 
