@@ -4,11 +4,8 @@ import { fileURLToPath } from 'url';
 import { describe, expect, it, beforeEach } from 'vitest';
 import {
   DEFAULT_MIN_REFERRALS_FOR_CLAIM,
+  EMPTY_AD_NOTE,
   EMPTY_SLOT_META,
-  EXAMPLE_AD_NOTE,
-  EXAMPLE_SLOT_HREF,
-  EXAMPLE_SLOT_META,
-  EXAMPLE_SLOT_NAME,
   LOCKED_OG_DESCRIPTION,
   LOCKED_SHARE_TEXT,
   ONE_PRIZE_SENTENCE,
@@ -56,24 +53,26 @@ describe('prize-slot (Helix Bet 2)', () => {
     `;
   });
 
-  it('defaults claim threshold to 10 and formats the named line', () => {
+  it('defaults claim threshold to 3 and formats the named line', () => {
     expect(parseMinReferralsForClaim(undefined)).toBe(DEFAULT_MIN_REFERRALS_FOR_CLAIM);
+    expect(DEFAULT_MIN_REFERRALS_FOR_CLAIM).toBe(3);
     expect(parseMinReferralsForClaim('10')).toBe(10);
     expect(parseMinReferralsForClaim({ minReferrals: 12 })).toBe(12);
     expect(formatPrizeThresholdLine(10)).toBe(
       'Verified #1 with at least 10 friends who tapped Get my link can claim the banner.',
     );
-    expect(formatFaqPrizeAnswer(10)).toContain('at least 10 friends');
-    expect(formatFaqPrizeAnswer(10)).not.toMatch(/see threshold/i);
+    expect(formatFaqPrizeAnswer(3)).toContain('with 3 friends');
+    expect(formatFaqPrizeAnswer(3)).toContain('7-day homepage banner');
+    expect(formatFaqPrizeAnswer(3)).not.toMatch(/see threshold/i);
   });
 
-  it('resolves tools example when no claimed banner, winner when there is one', () => {
-    const example = resolvePrizeSlot({});
-    expect(example.kind).toBe('example');
-    expect(example.siteName).toBe(EXAMPLE_SLOT_NAME);
-    expect(example.meta).toBe(EXAMPLE_SLOT_META);
-    expect(example.href).toBe(EXAMPLE_SLOT_HREF);
-    expect(example.meta.toLowerCase()).not.toContain('current #1');
+  it('resolves empty slot when no claimed banner, winner when there is one', () => {
+    const empty = resolvePrizeSlot({});
+    expect(empty.kind).toBe('empty');
+    expect(empty.siteName).toBe('Your site here');
+    expect(empty.meta).toBe(EMPTY_SLOT_META);
+    expect(empty.href).toBeNull();
+    expect(empty.meta.toLowerCase()).not.toContain('current #1');
 
     const promo = resolvePrizeSlot({
       banners: [
@@ -90,8 +89,8 @@ describe('prize-slot (Helix Bet 2)', () => {
         },
       ],
     });
-    expect(promo.kind).toBe('example');
-    expect(promo.href).toBe(EXAMPLE_SLOT_HREF);
+    expect(promo.kind).toBe('empty');
+    expect(promo.href).toBeNull();
 
     const winner = resolvePrizeSlot({
       selected: {
@@ -102,23 +101,23 @@ describe('prize-slot (Helix Bet 2)', () => {
     });
     expect(winner.kind).toBe('winner');
     expect(winner.siteName).toBe('Acme Tools');
-    expect(winner.meta).toBe('acme.example · 30 days');
+    expect(winner.meta).toBe('acme.example · 7 days');
     expect(winner.href).toContain('https://www.acme.example/go');
   });
 
-  it('paints tools example, or a claimed winner site', () => {
+  it('paints empty slot, or a claimed winner site', () => {
     paintPrizeSlot(resolvePrizeSlot({}));
-    expect(document.getElementById('hero-slot-meta')?.textContent).toBe(EXAMPLE_SLOT_META);
+    expect(document.getElementById('hero-slot-meta')?.textContent).toBe(EMPTY_SLOT_META);
     expect(document.getElementById('hero-banner-mock')?.getAttribute('data-vr-prize-slot')).toBe(
-      'example',
+      'empty',
     );
-    expect(document.getElementById('hero-ad-mark')?.textContent).toBe('Ex');
-    expect(document.getElementById('hero-ad-kicker-kind')?.textContent).toBe('Example ad');
-    expect(document.getElementById('hero-ad-note')?.textContent).toBe(EXAMPLE_AD_NOTE);
-    expect((document.getElementById('hero-slot-site') as HTMLAnchorElement).href).toContain('/tools/');
-    expect(document.getElementById('hero-slot-preview')?.classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('hero-ad-mark')?.textContent).toBe('#');
+    expect(document.getElementById('hero-ad-kicker-kind')?.textContent).toBe('This homepage');
+    expect(document.getElementById('hero-ad-note')?.textContent).toBe(EMPTY_AD_NOTE);
+    expect(document.getElementById('hero-slot-site')?.textContent).toBe('Your site here');
+    expect(document.getElementById('hero-slot-preview')?.classList.contains('hidden')).toBe(true);
     expect(document.getElementById('hero-slot-thumb')?.classList.contains('hidden')).toBe(true);
-    expect(document.getElementById('hero-ad-visit')?.classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('hero-ad-visit')?.classList.contains('hidden')).toBe(true);
 
     paintPrizeSlot(
       resolvePrizeSlot({
@@ -130,7 +129,7 @@ describe('prize-slot (Helix Bet 2)', () => {
       }),
     );
     expect(document.getElementById('hero-slot-site')?.textContent).toBe('Northwind');
-    expect(document.getElementById('hero-slot-meta')?.textContent).toBe('northwind.test · 30 days');
+    expect(document.getElementById('hero-slot-meta')?.textContent).toBe('northwind.test · 7 days');
     expect((document.getElementById('hero-slot-site') as HTMLAnchorElement).href).toContain(
       'https://northwind.test',
     );
@@ -167,7 +166,7 @@ describe('prize-slot (Helix Bet 2)', () => {
       template: stale,
       trackUtm: false,
     });
-    expect(copy).toContain('racing for the ViralRefer homepage');
+    expect(copy).toContain('Site Drops put my site on the homepage');
     expect(copy).toMatch(/beat me/i);
   });
 
@@ -184,21 +183,21 @@ describe('prize-slot (Helix Bet 2)', () => {
     }
   });
 
-  it('first-paint HTML has named threshold, 30-day slot, no junk empty meters', () => {
+  it('first-paint HTML has named threshold, empty 7-day slot, no junk empty meters', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    expect(html).toContain('Your site here · 30 days');
+    expect(html).toContain('Your site here · 7 days');
+    expect(html).not.toContain('Your site here · 30 days');
     expect(html).not.toContain('yourwebsite.com');
     expect(html).toContain('id="prize-threshold"');
-    expect(html).toContain('id="min-referrals-value">10<');
+    expect(html).toContain('id="min-referrals-value">3<');
     expect(html).toContain(PRIZE_FOMO_LINE);
     expect(html).toContain(ONE_PRIZE_SENTENCE);
-    expect(html).toContain(EXAMPLE_AD_NOTE);
-    expect(html).toContain('Example ad');
-    expect(html).toContain('/tools/');
+    expect(html).toContain(EMPTY_AD_NOTE);
+    expect(html).toContain('This homepage');
     expect(html).toContain('id="hero-slot-preview"');
-    expect(html).toContain('viralrefer.app/tools');
-    expect(html).toContain('Free growth tools');
-    expect(html).toContain('Share generator');
+    expect(html).not.toContain('Example ad');
+    expect(html).not.toContain('Free growth tools');
+    expect(html).not.toContain('Share generator');
     expect(html).not.toMatch(/CURRENT #1 CAN CLAIM THIS/);
     expect(html).toContain(LOCKED_OG_DESCRIPTION);
     expect(html).not.toContain('Together: 0 / 100');
@@ -211,7 +210,8 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).not.toContain('Hall of Crowns');
     expect(html).not.toMatch(/see threshold on site/i);
     expect(html).not.toMatch(/minimum referrals as shown/i);
-    expect(HOMEPAGE_FAQ[2]?.answer).toContain('at least 10 friends');
+    expect(HOMEPAGE_FAQ[2]?.answer).toContain('with 3 friends');
+    expect(HOMEPAGE_FAQ[2]?.answer).toContain('7-day homepage banner');
   });
 
   it('formats inventory and unlock lines without naming a fake winner', () => {

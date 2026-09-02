@@ -24,11 +24,11 @@ export const en = {
   'nav.get_link': 'Get link',
   'nav.lang': 'Language',
 
-  'hero.badge': 'WORLDWIDE • FREE • NO SIGNUP',
+  'hero.badge': 'THIS WEEK • FREE • NO SIGNUP',
   'hero.title_line1': 'Win the homepage.',
-  'hero.title_accent': '#1 gets a banner for their site.',
+  'hero.title_accent': 'Each step puts your site on this page. #1 owns the banner for 7 days.',
   'hero.subtitle':
-    'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+    'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
   'hero.lock_rule': 'Your link counts when a friend taps Get my link.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',
@@ -36,8 +36,10 @@ export const en = {
   'hero.proof_live': 'Live free leaderboard',
   'hero.cta': 'Get my referral link',
   'hero.cta_secondary': 'See leaderboard',
+  'hero.prize_one':
+    'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
   'hero.trust':
-    'Verified #1 gets a 30-day banner for their website.',
+    'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 
@@ -57,19 +59,19 @@ export const en = {
     'Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.',
   'how.step3_title': '3. Climb the board',
   'how.step3_desc':
-    'When friends get their own free link through you, you move up. #1 puts their website on this homepage for 30 days.',
+    'When friends get their own free link through you, you move up. Site Drops put your site on this page as you climb. #1 (not the owner) owns the banner for 7 days.',
 
   'prize.badge': 'HOMEPAGE FEATURE',
   'prize.title': 'Homepage Banner Feature',
   'prize.subtitle':
-    'Verified #1 gets a 30-day banner for their website on this homepage.',
+    '#1 (not the owner) with 3+ friends owns the homepage banner for 7 days.',
   'prize.card1_title': 'Homepage Banner',
   'prize.card1_desc': 'Your website + custom banner featured on our homepage.',
   'prize.card2_title': 'Free recognition',
   'prize.card2_desc': 'No cash payout — pure visibility & social proof.',
   'prize.card3_title': 'Minimum referrals',
   'prize.card3_desc':
-    'Verified #1 with at least 10 friends who tapped Get my link can claim the banner.',
+    '#1 (not the owner) with at least 3 friends who tapped Get my link can claim the 7-day banner.',
   'prize.cta': "I'm #1 — Claim Homepage Feature",
   'prize.winner_badge': 'Verified #1 can claim this',
 
@@ -86,6 +88,12 @@ export const en = {
   'footer.rules_link': 'Official Rules & Full Disclaimers',
   'footer.privacy': 'Privacy Policy',
   'footer.terms': 'Terms',
+  'footer.tools': 'Tools',
+  'footer.credit_checker': 'Does this count?',
+  'footer.what_to_paste': 'What to paste?',
+  'footer.guides': 'Guides',
+  'footer.llms': 'llms.txt',
+  'footer.promoters': 'Promoters',
 
   'lang.hint': 'Page language',
 
@@ -136,7 +144,7 @@ export const en = {
 
   // Share (default template)
   'share.default':
-    "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me. {link}",
+    "I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner. Get a free link and try to beat me. {link}",
 
   // One clear public rule (everywhere):
   // Friend must Get my link to lock · ~48h base · sharing can add time · copy never locks.

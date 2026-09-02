@@ -18,19 +18,23 @@ export interface HeroCtaCopy {
 /** Tight conversion copy — one action, worldwide, no cash spam. */
 export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
   control: {
-    badge: 'WORLDWIDE • FREE • NO SIGNUP',
+    badge: 'THIS WEEK • FREE • NO SIGNUP',
     titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
-    trustLine: 'Free. No email. No cash. Recognition only.',
+    titleAccent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
+    subtitle:
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+    trustLine:
+      'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
     buttonLabel: 'Get my referral link',
   },
   prize: {
-    badge: 'WORLDWIDE • FREE • NO SIGNUP',
+    badge: 'THIS WEEK • FREE • NO SIGNUP',
     titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
-    trustLine: 'Free. No email. No cash. Recognition only.',
+    titleAccent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
+    subtitle:
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+    trustLine:
+      'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
     buttonLabel: 'Get my referral link',
   },
 };

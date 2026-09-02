@@ -63,8 +63,8 @@ describe('organic-seo', () => {
   });
 
   it('homepage SEO + static OG match the prize-first hero', () => {
-    expect(HOMEPAGE_SEO.title).toBe('Win the ViralRefer homepage — #1 gets a banner');
-    expect(HOMEPAGE_SEO.description).toMatch(/racing for the ViralRefer homepage/);
+    expect(HOMEPAGE_SEO.title).toBe('Win the ViralRefer homepage — Site Drops + #1 banner');
+    expect(HOMEPAGE_SEO.description).toMatch(/Site Drops put my site on the homepage/);
     expect(HOMEPAGE_SEO.description).toMatch(/banner/);
     expect(HOMEPAGE_SEO.description).toMatch(/beat me/);
     expect(HOMEPAGE_SEO.ogImage).toBe(`${SEO_SITE_ORIGIN}/assets/og-homepage-banner-v2.png`);

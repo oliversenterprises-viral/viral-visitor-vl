@@ -1,23 +1,33 @@
-import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { describe, expect, it } from 'vitest';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
-/** Locked 8a24705 morning Site Drops homepage copy. Do not change. */
-export const LOCKED_8A24705 = {
-  title: 'Win the ViralRefer homepage — #1 gets a banner',
+/**
+ * Locked live Site Drops homepage copy (https://www.viralrefer.app).
+ * Live HTML is the source of truth — not git 8a24705, which still has the old 30-day banner strings.
+ */
+export const LOCKED_LIVE_SITE_DROPS = {
+  title: 'Win the ViralRefer homepage — Site Drops + #1 banner',
   h1: 'Win the homepage.',
-  accent: '#1 gets a banner for their site.',
-  sub: 'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
-  slot: 'Example — this is what #1 gets',
-  slotNote: 'Example — this is what #1 gets. Slot still empty.',
-  rule: 'Verified #1 gets a 30-day banner for their website.',
+  accent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
+  sub: 'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+  slot: 'Empty right now. #1 this week puts their site here.',
+  slotMeta: 'Your site here · 7 days',
+  rule: 'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
   cta: 'Get my referral link',
-  lockRule: 'Your link counts when a friend taps Get my link.',
+  og: "I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner. Get a free link and try to beat me.",
 } as const;
+
+const OLD_BANNER_COPY = [
+  'Win the ViralRefer homepage — #1 gets a banner',
+  '#1 gets a banner for their site.',
+  'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+  'Example — this is what #1 gets',
+  'Verified #1 gets a 30-day banner for their website.',
+] as const;
 
 function sliceHero(html: string): string {
   const start = html.indexOf('id="hero-title"');
@@ -25,44 +35,59 @@ function sliceHero(html: string): string {
   return html.slice(start, end);
 }
 
-describe('locked 8a24705 homepage copy', () => {
+describe('locked live Site Drops homepage copy', () => {
   const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
   const hero = sliceHero(html);
   const messages = readFileSync(resolve(ROOT, 'src/lib/i18n/messages.ts'), 'utf8');
+  const prizeSlot = readFileSync(resolve(ROOT, 'src/lib/prize-slot.ts'), 'utf8');
 
-  it('keeps title, H1, SUB, SLOT, RULE, CTA exactly', () => {
-    expect(html).toContain(`<title>${LOCKED_8A24705.title}</title>`);
-    expect(hero).toContain(LOCKED_8A24705.h1);
-    expect(hero).toContain(LOCKED_8A24705.accent);
-    expect(hero).toContain(LOCKED_8A24705.sub);
-    expect(hero).toContain(LOCKED_8A24705.slot);
-    expect(hero).toContain(LOCKED_8A24705.slotNote);
-    expect(hero).toContain(LOCKED_8A24705.rule);
-    expect(hero).toContain(LOCKED_8A24705.cta);
-    expect(html).toContain(LOCKED_8A24705.lockRule);
+  it('keeps TITLE, H1, SUB, SLOT, RULE, CTA exactly', () => {
+    expect(html).toContain(`<title>${LOCKED_LIVE_SITE_DROPS.title}</title>`);
+    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.h1);
+    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.accent);
+    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.sub);
+    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.slot);
+    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.slotMeta);
+    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.rule);
+    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.cta);
   });
 
-  it('keeps i18n hero keys on the locked strings', () => {
-    expect(messages).toContain(`'${LOCKED_8A24705.h1}'`);
-    expect(messages).toContain(`'${LOCKED_8A24705.accent}'`);
-    expect(messages).toContain(LOCKED_8A24705.sub);
-    expect(messages).toContain(`'${LOCKED_8A24705.cta}'`);
-    expect(messages).toContain(LOCKED_8A24705.lockRule);
-  });
-
-  it('matches git 8a24705 hero strings when the commit is available', () => {
-    let lockedHtml = '';
-    try {
-      lockedHtml = execSync('git show 8a24705:index.html', { cwd: ROOT, encoding: 'utf8' });
-    } catch {
-      return;
+  it('does not keep the old 30-day banner / example-ad strings', () => {
+    for (const stale of OLD_BANNER_COPY) {
+      expect(hero).not.toContain(stale);
+      expect(html).not.toContain(`<title>${stale}</title>`);
     }
-    const lockedHero = sliceHero(lockedHtml);
-    expect(hero).toContain(LOCKED_8A24705.h1);
-    expect(lockedHero).toContain(LOCKED_8A24705.h1);
-    expect(lockedHero).toContain(LOCKED_8A24705.sub);
-    expect(lockedHero).toContain(LOCKED_8A24705.cta);
-    expect(lockedHero).toContain(LOCKED_8A24705.slotNote);
-    expect(lockedHero).toContain(LOCKED_8A24705.rule);
+    expect(hero).not.toContain('Example ad');
+    expect(hero).not.toContain('ViralRefer Tools');
+    expect(hero).not.toContain('30-day banner');
+  });
+
+  it('keeps i18n + prize-slot defaults on the live strings', () => {
+    expect(messages).toContain(`'${LOCKED_LIVE_SITE_DROPS.h1}'`);
+    expect(messages).toContain(`'${LOCKED_LIVE_SITE_DROPS.accent}'`);
+    expect(messages).toContain(LOCKED_LIVE_SITE_DROPS.sub);
+    expect(messages).toContain(`'${LOCKED_LIVE_SITE_DROPS.cta}'`);
+    expect(messages).toContain(LOCKED_LIVE_SITE_DROPS.rule);
+    expect(prizeSlot).toContain(LOCKED_LIVE_SITE_DROPS.slot);
+    expect(prizeSlot).toContain(LOCKED_LIVE_SITE_DROPS.slotMeta);
+    expect(prizeSlot).toContain(LOCKED_LIVE_SITE_DROPS.rule);
+    expect(prizeSlot).toContain(LOCKED_LIVE_SITE_DROPS.og);
+  });
+
+  it('keeps the live UTM footer and /guides/ hub', () => {
+    expect(html).toContain('Site Drop ladder:');
+    expect(html).toContain('href="/guides/"');
+    expect(html).toContain('utm_source=homepage_footer');
+    expect(html).toContain('href="/llms.txt"');
+    expect(html).toContain('href="/go/affiliates/"');
+    expect(existsSync(resolve(ROOT, 'public/guides/index.html'))).toBe(true);
+    expect(existsSync(resolve(ROOT, 'public/guides/site-drops/index.html'))).toBe(true);
+    expect(existsSync(resolve(ROOT, 'public/tools/credit-checker.html'))).toBe(true);
+    expect(existsSync(resolve(ROOT, 'public/tools/what-to-paste.html'))).toBe(true);
+  });
+
+  it('does not treat git 8a24705 HTML as the live copy source', () => {
+    expect(LOCKED_LIVE_SITE_DROPS.title).toContain('Site Drops');
+    expect(LOCKED_LIVE_SITE_DROPS.title).not.toBe('Win the ViralRefer homepage — #1 gets a banner');
   });
 });

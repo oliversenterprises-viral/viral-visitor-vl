@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>What URL do I paste? Website vs /r/ vs UTM · ViralRefer</title>
+  <meta name="description" content="Paste your website on ViralRefer after Get my link (Just entered chip). Send your /r/ code to friends. Use homepage+UTM on directories. Three different URLs. No cash prize." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/what-to-paste.html" />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="What URL do I paste?" />
+  <meta property="og:description" content="Website, /r/, and listing UTM are three jobs." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/what-to-paste.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"What do I paste on ViralRefer to show my site?","acceptedAnswer":{"@type":"Answer","text":"Your website URL, after you have a referral link. That is the Just entered chip. It is not the race."}},
+    {"@type":"Question","name":"What do I send to a friend?","acceptedAnswer":{"@type":"Answer","text":"Your personal /r/VIRAL-… link. They must tap Get my link."}}
+  ]}
+  </script>
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12);--ok:#86efac;--bad:#fca5a5}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.25),transparent),var(--bg);color:var(--text);line-height:1.6;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:40rem;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.45rem,4.5vw,1.95rem)}
+    label{display:block;margin:.8rem 0 .35rem;font-weight:600;color:var(--muted)}
+    input{width:100%;min-height:48px;border-radius:.8rem;border:1px solid var(--border);background:rgba(0,0,0,.35);color:#fff;padding:.7rem .9rem;font:16px inherit}
+    .out{margin-top:.7rem;padding:.85rem;border-radius:.8rem;border:1px solid var(--border)}
+    .ok{color:var(--ok)}.no{color:var(--bad)}
+    .cta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Tools</a><a href="./listing-url.html">Listing URL builder</a></div>
+    <h1>What do I paste?</h1>
+    <p>Three different strings. Mixing them is how people stall.</p>
+    <ol>
+      <li><strong>Your website</strong> (example.com) — after Get my link, for the 15-minute Just entered chip. Not a climb by itself.</li>
+      <li><strong>Your <code>/r/</code> link</strong> — what you send to a friend.</li>
+      <li><strong>Homepage + UTM</strong> — what you put on directories and bios. Never a personal /r/.</li>
+    </ol>
+    <label for="u">Paste any URL — we’ll say which job it is</label>
+    <input id="u" type="url" inputmode="url" placeholder="https://…" autocomplete="url" />
+    <div class="out" id="out" aria-live="polite"><p class="muted">Waiting for a URL.</p></div>
+    <a class="cta" href="https://www.viralrefer.app/?utm_source=what_to_paste&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted"><a href="./r-code.html">/r/ anatomy</a> · <a href="/guides/paste-website-not-the-race/">Paste is not the race</a></p>
+  </div>
+  <script>
+    const out = document.getElementById("out");
+    function classify(raw) {
+      const s = (raw || "").trim();
+      if (!s) return { cls: "muted", t: "Waiting for a URL." };
+      if (/viralrefer\.app\/r\//i.test(s)) return { cls: "ok", t: "That is a race /r/ link. Send it to a friend. Do not put it on a directory." };
+      if (/viralrefer\.app\/a\//i.test(s)) return { cls: "ok", t: "That is a promoter /a/ link. Listing beside the race — not Site Drops, not the banner." };
+      if (/viralrefer\.app/i.test(s) && /utm_source=/i.test(s)) return { cls: "ok", t: "Homepage + UTM. Correct for directories and bios." };
+      if (/viralrefer\.app\/?(\?|#|$)/i.test(s)) return { cls: "ok", t: "Homepage. Fine as a listing URL. Add UTM if you want to see the source later." };
+      if (/^https?:\/\/[^\s]+/i.test(s) && !/viralrefer\.app/i.test(s)) return { cls: "ok", t: "That looks like your website. Paste it on ViralRefer after you have a link (Just entered). Send the /r/ to friends, not this." };
+      return { cls: "no", t: "Not a URL we can classify. Need https://…" };
+    }
+    document.getElementById("u").addEventListener("input", () => {
+      const r = classify(document.getElementById("u").value);
+      out.innerHTML = '<p class="' + r.cls + '">' + r.t + "</p>";
+    });
+  </script>
+  <script src="./pass-utm.js"></script>
+</body>
+</html>

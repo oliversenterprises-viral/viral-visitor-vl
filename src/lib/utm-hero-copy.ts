@@ -26,7 +26,7 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
   traffic_exchange: {
     badge: 'WORLDWIDE • FREE',
     titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
+    titleAccent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
     subtitle: 'Open worldwide. No signup. Share anywhere for homepage feature.',
     trustLine: 'Homepage feature for #1 · Link in ~5 seconds',
     buttonLabel: 'Get my referral link',
@@ -34,7 +34,7 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
   linkedin: {
     badge: 'WORLDWIDE • FREE',
     titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
+    titleAccent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
     subtitle: 'Built for builders — one tap, share, climb the worldwide board.',
     trustLine: 'No email · Free forever · Worldwide 18+',
     buttonLabel: 'Get my referral link',
@@ -42,7 +42,7 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
   reddit: {
     badge: 'FREE • NO SIGNUP',
     titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
+    titleAccent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
     subtitle:
       'No account. No app install. Get a unique referral link in seconds, share it, and watch your rank update live.',
     trustLine: 'Step 1: Get link · Step 2: Share · Homepage feature for verified #1',
@@ -52,7 +52,7 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
   paid: {
     badge: 'FREE • 30 SECONDS',
     titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
+    titleAccent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
     subtitle:
       'You are one tap from your unique link. Share it with friends — real referrals move the live leaderboard.',
     trustLine: 'No signup · Free forever · Share once to start',
@@ -61,7 +61,7 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
   telegram: {
     badge: 'WORLDWIDE • FREE',
     titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
+    titleAccent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
     subtitle: 'Share in chats or channels. Every referral counts live.',
     trustLine: 'Open worldwide · No signup · Instant link',
     buttonLabel: 'Get my referral link',
@@ -69,7 +69,7 @@ const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
   social: {
     badge: 'WORLDWIDE • FREE',
     titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
+    titleAccent: 'Each step puts your site on this page. #1 owns the banner for 7 days.',
     subtitle: 'Open worldwide. Free forever. One tap, then share.',
     trustLine: 'Worldwide 18+ · Homepage feature for #1',
     buttonLabel: 'Get my referral link',

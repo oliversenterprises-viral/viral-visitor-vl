@@ -14,13 +14,20 @@ describe('first-screen pack (locked Site Drops page)', () => {
   const css = read('src/style.css');
   const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
 
-  it('keeps locked homepage copy strings', () => {
+  it('keeps locked live Site Drops homepage copy', () => {
     expect(hero).toContain('Win the homepage.');
-    expect(hero).toContain('#1 gets a banner for their site.');
-    expect(hero).toContain('Tap Get my link. Send it. When a friend taps Get my link, you climb.');
+    expect(hero).toContain('Each step puts your site on this page. #1 owns the banner for 7 days.');
+    expect(hero).toContain(
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+    );
     expect(hero).toContain('Get my referral link');
-    expect(hero).toContain('Verified #1 gets a 30-day banner for their website.');
-    expect(hero).toContain('Example — this is what #1 gets');
+    expect(hero).toContain(
+      'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
+    );
+    expect(hero).toContain('Empty right now. #1 this week puts their site here.');
+    expect(hero).not.toContain('#1 gets a banner for their site.');
+    expect(hero).not.toContain('Verified #1 gets a 30-day banner for their website.');
+    expect(hero).not.toContain('Example — this is what #1 gets');
   });
 
   it('puts Get my link in the first view and hides extra slot lines on first paint', () => {

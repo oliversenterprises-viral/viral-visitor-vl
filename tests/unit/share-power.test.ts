@@ -26,7 +26,7 @@ describe('share-power', () => {
 
   it('first-screen WhatsApp/native/SMS copy is Helix Bet 2 banner-race text', () => {
     const wa = buildShareMessage(LINK, { platform: 'whatsapp', trackUtm: false });
-    expect(wa).toContain('racing for the ViralRefer homepage');
+    expect(wa).toContain('Site Drops put my site on the homepage');
     expect(wa).toContain('banner');
     expect(wa).toMatch(/beat me/i);
     expect(wa).toContain(LINK);

@@ -9,7 +9,7 @@ import { parseRefFromLocation } from './referral-url';
 export const SEO_SITE_ORIGIN = 'https://www.viralrefer.app';
 
 export const HOMEPAGE_SEO = {
-  title: 'Win the ViralRefer homepage — #1 gets a banner',
+  title: 'Win the ViralRefer homepage — Site Drops + #1 banner',
   description: LOCKED_OG_DESCRIPTION,
   keywords:
     'referral program, viral marketing, free referral link, live leaderboard, homepage feature, worldwide, no signup',
@@ -92,6 +92,7 @@ export function buildSitemapXml(origin = SEO_SITE_ORIGIN, lastmod?: string): str
   const urls = [
     { loc: `${base}/`, changefreq: 'daily', priority: '1.0' },
     { loc: `${base}/tools/`, changefreq: 'weekly', priority: '0.9' },
+    { loc: `${base}/guides/`, changefreq: 'weekly', priority: '0.8' },
     { loc: `${base}/rules/`, changefreq: 'monthly', priority: '0.7' },
     { loc: `${base}/privacy/`, changefreq: 'monthly', priority: '0.5' },
     { loc: `${base}/terms/`, changefreq: 'monthly', priority: '0.5' },
