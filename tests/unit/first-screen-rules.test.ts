@@ -145,6 +145,9 @@ describe('first-screen Site Drops rules', () => {
     expect(read('supabase/functions/_shared/owner-funnel-gsc.ts')).not.toMatch(/VITE_GSC/);
     expect(read('src/lib/turnstile.ts')).toContain("size: 'compact'");
     expect(read('src/lib/turnstile.ts')).not.toMatch(/size:\s*['"]invisible['"]/);
+    expect(read('src/lib/turnstile.ts')).toContain('prefetchCreditTurnstileToken');
+    expect(read('index.html')).toContain('id="friend-credit-turnstile"');
+    expect(read('vercel.json')).toContain('https://*.challenges.cloudflare.com');
     expect(read('src/public/modals.ts')).toMatch(/z-\[990\]/);
     expect(read('src/public/modals.ts')).toMatch(/dismissShareAbandonOverlay\(\)/);
   });

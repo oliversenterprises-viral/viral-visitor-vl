@@ -5,6 +5,8 @@ import {
   getTurnstileSiteKey,
   getTurnstileToken,
   normalizeTurnstileSize,
+  prefetchCreditTurnstileToken,
+  resetCreditTurnstileStateForTests,
   TURNSTILE_SIZES,
 } from '../../src/lib/turnstile';
 import { readFileSync } from 'node:fs';
@@ -14,6 +16,7 @@ describe('turnstile (shared by referral.ts + handlers.ts)', () => {
   beforeEach(() => {
     document.head.innerHTML = '';
     delete (window as { turnstile?: unknown }).turnstile;
+    resetCreditTurnstileStateForTests();
   });
 
   afterEach(() => {
@@ -86,6 +89,20 @@ describe('turnstile (shared by referral.ts + handlers.ts)', () => {
     expect(token).toBe('compact-token');
   });
 
+  it('getCreditTurnstileToken prefers the visible #friend-credit-turnstile host', async () => {
+    vi.stubEnv('VITE_TURNSTILE_SITEKEY', 'test-site-key');
+    document.body.innerHTML =
+      '<div id="friend-credit-turnstile"></div><div id="referral-section"><div id="referral-turnstile-container"></div></div>';
+    const friend = document.getElementById('friend-credit-turnstile');
+    const render = vi.fn((el: HTMLElement, opts: { callback: (t: string) => void }) => {
+      expect(friend?.contains(el)).toBe(true);
+      opts.callback('friend-host-token');
+    });
+    (window as { turnstile?: { render: typeof render } }).turnstile = { render };
+    const token = await getCreditTurnstileToken(2000);
+    expect(token).toBe('friend-host-token');
+  });
+
   it('getCreditTurnstileToken hosts the widget in #referral-turnstile-container', async () => {
     vi.stubEnv('VITE_TURNSTILE_SITEKEY', 'test-site-key');
     document.body.innerHTML = '<div id="referral-section"><div id="referral-turnstile-container"></div></div>';
@@ -137,6 +154,21 @@ describe('turnstile (shared by referral.ts + handlers.ts)', () => {
     expect(src).toContain("size: 'compact'");
     expect(src).toContain("appearance: 'always'");
     expect(src).not.toMatch(/appearance:\s*['"]execute['"]/);
+  });
+
+  it('prefetch caches a compact token so Get my link does not render twice', async () => {
+    vi.stubEnv('VITE_TURNSTILE_SITEKEY', 'test-site-key');
+    const render = vi.fn((_el, opts: { callback: (t: string) => void; size?: string }) => {
+      expect(opts.size).toBe('compact');
+      opts.callback('prefetched-token');
+    });
+    (window as { turnstile?: { render: typeof render } }).turnstile = { render };
+    prefetchCreditTurnstileToken();
+    const first = await getCreditTurnstileToken(2000);
+    const second = await getCreditTurnstileToken(2000);
+    expect(first).toBe('prefetched-token');
+    expect(second).toBe('prefetched-token');
+    expect(render).toHaveBeenCalledOnce();
   });
 
   it('getCreditTurnstileToken returns null when the widget fails (no silent empty POST)', async () => {

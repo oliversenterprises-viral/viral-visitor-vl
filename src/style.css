@@ -4404,6 +4404,22 @@ html[data-vr-has-link] #referral-section .glass {
   min-width: 150px;
   margin-top: 0.5rem;
 }
+/* Visible compact widget on /r/ so challenge-platform can finish before Get my link. */
+.friend-credit-turnstile {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  min-height: 70px;
+  min-width: 160px;
+  margin: 0.65rem auto 0;
+}
+html[data-vr-referred-landing] .friend-credit-turnstile,
+html[data-vr-referred-micro] .friend-credit-turnstile,
+html[data-vr-has-link] .friend-credit-turnstile,
+html[data-vr-credit-status='pending'] .friend-credit-turnstile,
+html[data-vr-credit-status='failed'] .friend-credit-turnstile {
+  display: flex !important;
+}
 html[data-vr-credit-status='pending'] .referral-credit-turnstile,
 html[data-vr-credit-status='failed'] .referral-credit-turnstile {
   min-height: 65px;

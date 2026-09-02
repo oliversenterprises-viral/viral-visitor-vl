@@ -23,7 +23,7 @@ import {
   parseRefFromLocation,
 } from './lib/referral-url';
 import { parseEdgeFunctionBody } from './lib/edge-response';
-import { getCreditTurnstileToken } from './lib/turnstile';
+import { getCreditTurnstileToken, prefetchCreditTurnstileToken, resetCreditTurnstileStateForTests } from './lib/turnstile';
 import { escapeHtml } from './content';
 import { showToast } from './ui';
 import { ViralRefer } from './lib/global';
@@ -121,7 +121,7 @@ async function recordReferralIfAttributed(options: {
     }
     const referredCode = visitorCode;
 
-    const turnstileToken = await getCreditTurnstileToken(20_000);
+    const turnstileToken = await getCreditTurnstileToken(45_000);
     if (!turnstileToken) {
       if (notify) {
         notifyReferralOutcome('failed', options.allowFailureRetryToast);
@@ -218,6 +218,7 @@ async function runFunnelReferralRecording(): Promise<ReferralRecordOutcome> {
  */
 export function initAttributedReferralRecording(): void {
   detectAndStoreAttribution();
+  if (pendingReferrerCode) prefetchCreditTurnstileToken();
 }
 
 /** True when visitor arrived via someone else's link and is not yet credited. */
@@ -238,6 +239,7 @@ export function resetReferralRecordingStateForTests(): void {
   referralSuccessToastShown = false;
   referralFailureToastShown = false;
   getLinkInFlight = false;
+  resetCreditTurnstileStateForTests();
 }
 
 /**
