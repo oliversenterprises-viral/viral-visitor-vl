@@ -19,6 +19,8 @@ describe('junk-traffic (Disk IO guard)', () => {
     expect(isJunkTrafficSource('herculist')).toBe(true);
     expect(isJunkTrafficSource('pagerankcafe')).toBe(true);
     expect(isJunkTrafficSource('leadsleap')).toBe(true);
+    expect(isJunkTrafficSource('scout')).toBe(true);
+    expect(isJunkTrafficSource('SCOUT')).toBe(true);
   });
 
   it('allows real sources', () => {

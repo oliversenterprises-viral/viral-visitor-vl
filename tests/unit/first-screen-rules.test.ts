@@ -85,9 +85,14 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('id="footer-link-tools"');
     expect(html).toContain('href="/tools/"');
     expect(html).toContain('/tools/utm-builder.html');
-    expect(html).toContain('utm_source=homepage_footer');
-    expect(html).toContain('href="/guides/"');
+    expect(html).toContain('utm_source=leadmagnet');
+    expect(html).toContain('href="/guides/');
     expect(html).toContain('id="footer-link-guides"');
+    expect(html).toContain('/guides/site-drops/');
+    expect(html).toContain('/tools/share-generator.html');
+    expect(html).toContain('/tools/credit-checker.html');
+    expect(html).toContain('id="footer-link-telegram-helper"');
+    expect(html).not.toMatch(/href="\/tools\/"[^>]*hidden sm:inline/);
     expect(css).not.toMatch(/#site-footer\s*\{[^}]*display:\s*none/);
     expect(css).toMatch(
       /html\[data-vr-direct-landing\]:not\(\[data-vr-has-link\]\) \.vr-nav-link:not\(\[href="#how"\]\):not\(\[href="#leaderboard"\]\)/,

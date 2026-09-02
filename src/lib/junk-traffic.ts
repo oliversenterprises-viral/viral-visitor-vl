@@ -18,6 +18,7 @@ const JUNK_SOURCES = new Set([
   'herculist',
   'pagerankcafe',
   'leadsleap',
+  'scout',
 ]);
 
 const JUNK_NEEDLES = [
@@ -30,6 +31,7 @@ const JUNK_NEEDLES = [
   'herculist',
   'pagerankcafe',
   'leadsleap',
+  'scout',
 ];
 
 function normalizeSource(raw: string | null | undefined): string {
