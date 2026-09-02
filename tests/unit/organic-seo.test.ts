@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { describe, it, expect, beforeEach } from 'vitest';
+import { LOCKED_LIVE_SCHEMA_FAQ_A1 } from '../../src/lib/site-drops-copy';
 import {
   SEO_SITE_ORIGIN,
   HOMEPAGE_SEO,
@@ -74,5 +75,7 @@ describe('organic-seo', () => {
     expect(html).toContain(HOMEPAGE_SEO.description);
     expect(html).toContain('https://www.viralrefer.app/assets/og-homepage-banner-v2.png');
     expect(html).not.toContain('og:title" content="ViralRefer • Free Worldwide Referral Leaderboard');
+    expect(HOMEPAGE_FAQ[0]?.answer).toBe(LOCKED_LIVE_SCHEMA_FAQ_A1);
+    expect(html).toContain(LOCKED_LIVE_SCHEMA_FAQ_A1.replaceAll('"', '\\"'));
   });
 });
