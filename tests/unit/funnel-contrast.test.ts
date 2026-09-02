@@ -24,4 +24,12 @@ describe('funnel contrast (wordmark + Message from ViralRefer)', () => {
     expect(html).toContain('Get my referral link');
     expect(html).toContain('id="referral-turnstile-container"');
   });
+
+  it('Site Drop title uses an ASCII-safe middle dot (not a raw byte that becomes ??)', () => {
+    const raw = readFileSync(resolve(ROOT, 'index.html'));
+    const html = raw.toString('utf8');
+    expect(html).toContain('Site Drop &middot; Just entered');
+    expect(raw.includes(Buffer.from('Site Drop ?? Just entered'))).toBe(false);
+    expect(html).not.toMatch(/Site Drop \uFFFD Just entered/);
+  });
 });
