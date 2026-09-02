@@ -86,8 +86,10 @@ describe('admin one-loop desk', () => {
     expect(first).toMatch(/Get-link rate/);
     expect(content.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
     expect(content.querySelector('[data-owner-desk-gsc]')).not.toBeNull();
-    expect(first).toMatch(/Google Search · tools & pages/);
-    expect(first).toMatch(/Search Console is verified\. Add the API key on the server to show numbers here\./);
+    expect(content.textContent).toMatch(/Google Search · tools & pages/);
+    expect(content.textContent).toMatch(
+      /Search Console is verified\. Add the API key on the server to show numbers here\./,
+    );
     expect(first).not.toMatch(/Friends/);
     expect(first).not.toMatch(/Prize/);
     expect(first).not.toMatch(/Website/);

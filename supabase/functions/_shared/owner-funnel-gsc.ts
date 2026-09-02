@@ -78,7 +78,8 @@ function parseRows(raw: unknown): OwnerFunnelGscRow[] {
   for (const item of raw) {
     if (!item || typeof item !== 'object') continue;
     const o = item as Record<string, unknown>;
-    const label = String(o.label || o.keys?.[0] || o.query || o.page || o.country || '').trim();
+    const keys = Array.isArray(o.keys) ? o.keys : [];
+    const label = String(o.label || keys[0] || o.query || o.page || o.country || '').trim();
     if (!label) continue;
     out.push({
       label,
