@@ -267,7 +267,8 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get_site_content') {
-      // Owner HQ Website / Promoters / Race — live JS calls this after a verified session.
+      // Live HQ Website / Promoters / Race. Must be deployed to production
+      // admin-action or the live function returns HTTP 400 Unknown action.
       // Optional payload.key returns that row only; no key returns the full list.
       const key = String(payload?.key ?? '').trim();
       let query = supabaseAdmin

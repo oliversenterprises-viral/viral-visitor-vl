@@ -79,6 +79,9 @@ describe('live Site Drop funnel lock', () => {
     const race = readFileSync(resolve(ROOT, 'src/admin/race-desk.ts'), 'utf8');
     expect(edge).toContain("action === 'get_site_content'");
     expect(edge).toContain("action === 'update_site_content'");
+    const cfg = readFileSync(resolve(ROOT, 'supabase/config.toml'), 'utf8');
+    expect(cfg).toContain('project_id = "wqbefjzpgsezzwdrvvua"');
+    expect(cfg).toContain('[functions.admin-action]');
     expect(edge).not.toMatch(/action === ['"]reset_landing_visit_counters['"]/);
     expect(client).toContain("'get_site_content'");
     expect(website).toContain('fetchAdminSiteContentRows');
