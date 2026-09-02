@@ -49,7 +49,7 @@ describe('prize-slot (Helix Bet 2)', () => {
         <img id="prize-slot-thumb" class="hidden" alt="" />
         <a id="prize-slot-site" aria-disabled="true">Your site here</a>
         <div id="prize-slot-meta">${EMPTY_SLOT_META}</div>
-        <p id="prize-threshold">Verified #1 with at least <span id="min-referrals-value">10</span> friends who tapped Get my link can claim the banner.</p>
+        <p id="prize-threshold">This week's top racer (not the site owner) with <span id="min-referrals-value">10</span> friends who tapped Get my link can claim the banner.</p>
       </div>
     `;
   });
@@ -59,9 +59,10 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(parseMinReferralsForClaim('10')).toBe(10);
     expect(parseMinReferralsForClaim({ minReferrals: 12 })).toBe(12);
     expect(formatPrizeThresholdLine(10)).toBe(
-      'Verified #1 with at least 10 friends who tapped Get my link can claim the banner.',
+      "This week's top racer (not the site owner) with 10 friends who tapped Get my link can claim the banner.",
     );
-    expect(formatFaqPrizeAnswer(10)).toContain('at least 10 friends');
+    expect(formatFaqPrizeAnswer(10)).toContain('7-day homepage banner');
+    expect(formatFaqPrizeAnswer(10)).toContain('10 friends');
     expect(formatFaqPrizeAnswer(10)).not.toMatch(/see threshold/i);
   });
 
@@ -139,7 +140,7 @@ describe('prize-slot (Helix Bet 2)', () => {
 
   it('paints the numeric threshold into the prize card', () => {
     paintPrizeThreshold(10);
-    expect(document.getElementById('prize-threshold')?.textContent).toContain('at least 10 friends');
+    expect(document.getElementById('prize-threshold')?.textContent).toContain('10 friends');
     expect(document.getElementById('min-referrals-value')?.textContent).toBe('10');
   });
 
@@ -186,7 +187,7 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).toContain('Your site here · 7 days');
     expect(html).not.toContain('yourwebsite.com');
     expect(html).toContain('id="prize-threshold"');
-    expect(html).toContain('id="min-referrals-value">10<');
+    expect(html).toContain('id="min-referrals-value">3<');
     expect(html).toContain(PRIZE_FOMO_LINE);
     expect(html).toContain(ONE_PRIZE_SENTENCE);
     expect(html).toContain(EMPTY_AD_NOTE);
@@ -203,7 +204,7 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).not.toContain('Hall of Crowns');
     expect(html).not.toMatch(/see threshold on site/i);
     expect(html).not.toMatch(/minimum referrals as shown/i);
-    expect(HOMEPAGE_FAQ[2]?.answer).toContain('at least 10 friends');
+    expect(HOMEPAGE_FAQ[2]?.answer).toContain('7-day homepage banner');
   });
 
   it('formats inventory and unlock lines without naming a fake winner', () => {

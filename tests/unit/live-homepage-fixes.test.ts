@@ -101,6 +101,9 @@ describe('live homepage five fixes', () => {
     expect(hero).not.toContain('#1 gets a banner for their site.');
     expect(hero).not.toMatch(/30-day/);
     expect(hero).not.toContain('Example ad');
+    expect(html).not.toMatch(/30-day/);
+    expect(html).not.toContain('30 days');
+    expect(html).not.toContain('#1 gets a banner for their site');
   });
 });
 

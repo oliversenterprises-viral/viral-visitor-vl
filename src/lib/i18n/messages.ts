@@ -58,14 +58,14 @@ export const en = {
   'how.step2_title': '2. Send your link',
   'how.step2_desc':
     'Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.',
-  'how.step3_title': '3. Climb the board',
+  'how.step3_title': '3. Watch your site climb',
   'how.step3_desc':
-    'When friends get their own free link through you, you move up. #1 puts their website on this homepage for 30 days.',
+    '1 verified friend → 1-hour Rising Site Drop on this page. 2 friends → week text line. Board #2/#3 → Challenger strip. This week’s #1 (not the owner) with 3 friends claims the 7-day banner.',
 
   'prize.badge': 'HOMEPAGE FEATURE',
-  'prize.title': 'Homepage Banner Feature',
+  'prize.title': 'The #1 banner',
   'prize.subtitle':
-    'Verified #1 gets a 30-day banner for their website on this homepage.',
+    'Site Drops put your site on this page as you climb. This week’s #1 (not the owner) with 3 friends still gets the 7-day banner.',
   'prize.card1_title': 'Homepage Banner',
   'prize.card1_desc': 'Your website + custom banner featured on our homepage.',
   'prize.card2_title': 'Free recognition',
