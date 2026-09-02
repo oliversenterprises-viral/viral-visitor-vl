@@ -13,6 +13,8 @@ import {
   resetShareAbandonSessionForTest,
   forceShareAbandonForTest,
   dismissShareAbandon,
+  stealShareAbandonIfSendTap,
+  sendControlUnderPoint,
 } from '../../src/lib/share-abandon-rescue';
 import { markSharePending, clearShareFirstFlags } from '../../src/lib/share-first-ui';
 
@@ -72,6 +74,39 @@ describe('share-abandon-rescue', () => {
     expect(document.getElementById('vr-share-abandon')).toBeTruthy();
     dismissShareAbandon();
     expect(document.getElementById('vr-share-abandon')).toBeNull();
+  });
+
+  it('stealShareAbandonIfSendTap drops the overlay and clicks Copy', () => {
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    markSharePending();
+    forceShareAbandonForTest('exit');
+    expect(document.getElementById('vr-share-abandon')).toBeTruthy();
+
+    const copy = document.createElement('button');
+    copy.id = 'post-link-copy';
+    copy.type = 'button';
+    copy.textContent = 'Copy link';
+    document.body.appendChild(copy);
+    Object.defineProperty(copy, 'getBoundingClientRect', {
+      value: () => ({ left: 10, right: 110, top: 10, bottom: 50, width: 100, height: 40 }),
+    });
+    let clicked = 0;
+    copy.addEventListener('click', () => {
+      clicked += 1;
+    });
+
+    const overlay = document.getElementById('vr-share-abandon') as HTMLElement;
+    const ev = new MouseEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 40,
+      clientY: 20,
+    });
+    Object.defineProperty(ev, 'target', { value: overlay });
+    stealShareAbandonIfSendTap(ev);
+    expect(document.getElementById('vr-share-abandon')).toBeNull();
+    expect(clicked).toBe(1);
+    expect(sendControlUnderPoint(40, 20)?.id).toBe('post-link-copy');
   });
 
   it('never covers the send screen Copy link', () => {

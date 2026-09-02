@@ -209,6 +209,56 @@ export function dismissShareAbandon(): void {
   removePanel();
 }
 
+const SEND_CONTROL_IDS = ['post-link-copy', 'post-link-primary'] as const;
+
+/** True when the pointer is over Copy link or Send it now. */
+export function sendControlUnderPoint(
+  clientX: number,
+  clientY: number,
+  doc: Document = document,
+): HTMLElement | null {
+  for (const id of SEND_CONTROL_IDS) {
+    const el = doc.getElementById(id);
+    if (!el || el.hidden || el.classList.contains('hidden')) continue;
+    const r = el.getBoundingClientRect();
+    if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) {
+      return el;
+    }
+  }
+  return null;
+}
+
+/**
+ * Capture-phase: if the abandon overlay is sitting on Copy / Send,
+ * drop it and replay the tap onto the real control. Copy must win.
+ */
+export function stealShareAbandonIfSendTap(ev: Event): boolean {
+  const panel = document.getElementById(PANEL_ID);
+  if (!panel) return false;
+
+  const target = ev.target;
+  if (target instanceof Element && target.closest('#post-link-copy, #post-link-primary')) {
+    removePanel();
+    return true;
+  }
+
+  let hit: HTMLElement | null = null;
+  if (ev instanceof PointerEvent || ev instanceof MouseEvent) {
+    hit = sendControlUnderPoint(ev.clientX, ev.clientY);
+  }
+
+  if (!hit && !isPostLinkSendScreenActive()) return false;
+
+  removePanel();
+
+  if (hit && (target === panel || (target instanceof Node && panel.contains(target)))) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    hit.click();
+  }
+  return true;
+}
+
 function invokeSend(): void {
   try {
     sessionStorage.setItem('vr_get_link_via', 'share_abandon_rescue');
@@ -425,13 +475,20 @@ export function initShareAbandonRescue(win: Window = window): void {
     tryShow('poll', started, coarse);
   }, POLL_MS);
 
-  // Clear panel when locked
+  win.document.addEventListener('pointerdown', stealShareAbandonIfSendTap, true);
+
+  // Clear panel when locked, or when the send screen is up (Copy must win)
   const obs = new MutationObserver(() => {
-    if (isLocked() || !isSharePendingLocal()) removePanel();
+    if (isLocked() || !isSharePendingLocal() || isPostLinkSendScreenActive()) removePanel();
   });
   obs.observe(win.document.documentElement, {
     attributes: true,
-    attributeFilter: ['data-vr-share-locked', 'data-vr-share-pending', 'data-vr-has-link'],
+    attributeFilter: [
+      'data-vr-share-locked',
+      'data-vr-share-pending',
+      'data-vr-has-link',
+      'data-vr-post-link-one',
+    ],
   });
 }
 

@@ -28,7 +28,7 @@ export const en = {
   'hero.title_line1': 'Win the homepage.',
   'hero.title_accent': '#1 gets a banner for their site.',
   'hero.subtitle':
-    'Get my link. Send it. A friend taps Get my link. Then paste your site for a 15-min drop.',
+    'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
   'hero.lock_rule': 'Your link counts when a friend taps Get my link.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',

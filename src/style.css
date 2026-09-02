@@ -164,10 +164,12 @@ h1, h2, h3, .logo-font {
   letter-spacing: -0.025em;
 }
 
-/* Contrast only: always-dark chrome inherits light-scheme --text-h (#08060d). */
+/* Contrast only: always-dark chrome inherits light-scheme --text-h (#08060d).
+   Unlayered body { color } beats Tailwind utilities; pin the wordmark. */
 #vr-nav .vr-wordmark,
+#vr-nav a .vr-wordmark,
 #vr-nav .logo-font {
-  color: #f4f4f5;
+  color: #f4f4f5 !important;
 }
 .racer-talk__title,
 h2.racer-talk__title,
