@@ -65,6 +65,19 @@ describe('register-referrer-link client', () => {
     );
   });
 
+  it('dedupes a second register for the same code', async () => {
+    invokeMock.mockResolvedValue({
+      data: {
+        success: true,
+        data: { status: 'pending_share', created_at: '2026-09-02T00:00:00Z' },
+      },
+      error: null,
+    });
+    await registerReferrerLinkDeadline('VIRAL-REGDEDUP');
+    await registerReferrerLinkDeadline('VIRAL-REGDEDUP');
+    expect(invokeMock).toHaveBeenCalledTimes(1);
+  });
+
   it('does not toast on a successful register', async () => {
     invokeMock.mockResolvedValue({
       data: {

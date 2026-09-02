@@ -204,6 +204,11 @@ function removePanel(): void {
   document.documentElement.removeAttribute('data-vr-share-abandon');
 }
 
+/** Copy / Send must win — drop the overlay immediately. */
+export function dismissShareAbandon(): void {
+  removePanel();
+}
+
 function invokeSend(): void {
   try {
     sessionStorage.setItem('vr_get_link_via', 'share_abandon_rescue');

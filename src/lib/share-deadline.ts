@@ -174,12 +174,45 @@ export function unlockIfReferralCountUnlocked(count: number): boolean {
   return true;
 }
 
+const registerInFlight = new Map<string, Promise<RegisterReferrerResult | null>>();
+const registerSucceeded = new Set<string>();
+
 /** Register code on the server (starts the first-referral deadline clock). */
 export async function registerReferrerLinkDeadline(
   code: string,
 ): Promise<RegisterReferrerResult | null> {
   const referrer_code = String(code || '').trim().toUpperCase();
   if (!referrer_code) return null;
+
+  const inflight = registerInFlight.get(referrer_code);
+  if (inflight) return inflight;
+
+  if (registerSucceeded.has(referrer_code)) {
+    const cur = readShareDeadlineState();
+    if (cur?.code === referrer_code) {
+      return { ...cur, registered: true };
+    }
+    return {
+      code: referrer_code,
+      status: 'pending_share',
+      createdAt: new Date().toISOString(),
+      deadlineAt: new Date(Date.now() + SHARE_DEADLINE_MS).toISOString(),
+      registered: true,
+    };
+  }
+
+  const run = registerReferrerLinkDeadlineUncached(referrer_code);
+  registerInFlight.set(referrer_code, run);
+  try {
+    return await run;
+  } finally {
+    registerInFlight.delete(referrer_code);
+  }
+}
+
+async function registerReferrerLinkDeadlineUncached(
+  referrer_code: string,
+): Promise<RegisterReferrerResult | null> {
 
   const fallback: RegisterReferrerResult = {
     code: referrer_code,
@@ -265,6 +298,7 @@ export async function registerReferrerLinkDeadline(
           .then((m) => m.syncPromoKitUI())
           .catch(() => {});
       }
+      registerSucceeded.add(referrer_code);
       return {
         code: referrer_code,
         status: 'active',
@@ -301,6 +335,7 @@ export async function registerReferrerLinkDeadline(
     };
     writeShareDeadlineState(state);
     renderShareDeadlineBanner();
+    registerSucceeded.add(referrer_code);
     return state;
   } catch {
     return toastRegisterFailed();

@@ -12,6 +12,7 @@ import {
   POLL_MS,
   resetShareAbandonSessionForTest,
   forceShareAbandonForTest,
+  dismissShareAbandon,
 } from '../../src/lib/share-abandon-rescue';
 import { markSharePending, clearShareFirstFlags } from '../../src/lib/share-first-ui';
 
@@ -62,6 +63,15 @@ describe('share-abandon-rescue', () => {
     expect(shouldShowShareAbandon({ ...base, embed: true })).toBe(false);
     expect(shouldShowShareAbandon({ ...base, confirmFlowActive: true })).toBe(false);
     expect(shouldShowShareAbandon({ ...base, dwellMs: 1000 })).toBe(false);
+  });
+
+  it('dismissShareAbandon removes a live overlay so Copy can proceed', () => {
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    markSharePending();
+    forceShareAbandonForTest('exit');
+    expect(document.getElementById('vr-share-abandon')).toBeTruthy();
+    dismissShareAbandon();
+    expect(document.getElementById('vr-share-abandon')).toBeNull();
   });
 
   it('never covers the send screen Copy link', () => {
