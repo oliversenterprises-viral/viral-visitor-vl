@@ -48,7 +48,7 @@ describe('loadSiteContent (fetchSiteContent → updatePublicContent → referral
 
     expect(document.getElementById('hero-title-line1')?.textContent).toBe('Win the homepage.');
     expect(document.getElementById('hero-subtitle')?.textContent).toBe(
-      'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
     );
     expect(document.querySelector('#hero-get-link-btn span')?.textContent).toBe(
       'Get my referral link',

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Embed “visits don’t count” on your site · ViralRefer</title>
+  <meta name="description" content="Free iframe snippet: visits don’t count on ViralRefer. Unique friend must tap Get my link. Copy the embed for blogs and resource pages. No cash prize." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/visits-widget.html" />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="Embed: visits don’t count" />
+  <meta property="og:description" content="Iframe snippet for blogs. Points to Get my link." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/visits-widget.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.25),transparent),var(--bg);color:var(--text);line-height:1.6;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:40rem;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.45rem,4.5vw,1.95rem)}
+    textarea{width:100%;min-height:110px;border-radius:.8rem;border:1px solid var(--border);background:rgba(0,0,0,.35);color:#fff;padding:.8rem;font:14px/1.4 ui-monospace,Consolas,monospace}
+    iframe{width:100%;height:140px;border:1px solid var(--border);border-radius:.8rem;background:#09090b}
+    .btn{min-height:48px;padding:.7rem 1rem;border-radius:.8rem;border:0;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff;font:inherit;font-weight:700;cursor:pointer;margin-top:.5rem}
+    .cta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Tools</a><a href="https://www.viralrefer.app/?utm_source=visits_widget&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>Embed “visits don’t count”</h1>
+    <p>Paste this iframe on a blog or resource page. It is framed on purpose (<code>/embed/</code> allows other sites to iframe it). Preview:</p>
+    <iframe title="ViralRefer visits don’t count" src="/embed/visits-dont-count/" loading="lazy"></iframe>
+    <label class="muted" for="snip">Copy this</label>
+    <textarea id="snip" readonly>&lt;iframe title="ViralRefer visits don’t count" src="https://www.viralrefer.app/embed/visits-dont-count/" width="100%" height="140" style="border:0;border-radius:12px" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"&gt;&lt;/iframe&gt;</textarea>
+    <button type="button" class="btn" id="copy">Copy snippet</button>
+    <p class="muted" id="msg"></p>
+    <p>The widget does not count hits for you. It explains the rule and sends people to Get my link. No cash prize.</p>
+    <a class="cta" href="https://www.viralrefer.app/?utm_source=visits_widget&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+  </div>
+  <script>
+    document.getElementById("copy").onclick = async () => {
+      try { await navigator.clipboard.writeText(document.getElementById("snip").value); document.getElementById("msg").textContent = "Copied."; }
+      catch { document.getElementById("msg").textContent = "Select the snippet and copy it."; }
+    };
+  </script>
+</body>
+</html>

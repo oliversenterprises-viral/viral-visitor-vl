@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Hit counter vs skill action — why visits don’t count · ViralRefer</title>
+  <meta name="description" content="Hit boards count page views. ViralRefer counts a skill action: a unique friend taps Get my link. That starves click farms. No cash prize." />
+  <meta name="robots" content="noindex,follow" />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/credit-checker.html" />
+  <meta property="og:title" content="Hit vs skill action" />
+  <meta property="og:description" content="Visits are farmable. Get my link is not a hit." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/credit-checker.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why don’t visits count as referrals?","acceptedAnswer":{"@type":"Answer","text":"Visit counters are easy to fake. ViralRefer requires a unique friend to tap Get my link — a skill action, not a hit."}}]}</script>
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem)}
+    .row{display:grid;gap:.75rem}@media(min-width:560px){.row{grid-template-columns:1fr 1fr}}
+    .card{border:1px solid var(--border);border-radius:1rem;padding:1rem}
+    .btn,.chip{min-height:48px;padding:.7rem 1rem;border-radius:.8rem;border:1px solid var(--border);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-weight:700;cursor:pointer;width:100%}
+    .cta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}#hits,#skill{font-size:2rem;font-variant-numeric:tabular-nums}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=hit_vs_skill&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>Hit vs skill</h1>
+    <p class="muted">Spam the hit button. ViralRefer still sits at zero until a friend Get-link. No cash prize.</p>
+    <div class="row">
+      <div class="card"><p class="muted">Hit board</p><div id="hits">0</div><button type="button" class="chip" id="hit">Fake 50 visits</button></div>
+      <div class="card"><p class="muted">ViralRefer credit</p><div id="skill">0</div><button type="button" class="chip" id="friend">Simulate 1 friend Get-link</button></div>
+    </div>
+    <p class="muted" id="note"></p>
+    <a class="cta" href="https://www.viralrefer.app/?utm_source=hit_vs_skill&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted" style="margin-top:1.2rem"><a href="/guides/skill-action-not-hit/">Skill action guide</a></p>
+  </div>
+  <script>
+    let hits = 0, skill = 0;
+    document.getElementById("hit").onclick = () => {
+      hits += 50;
+      document.getElementById("hits").textContent = String(hits);
+      document.getElementById("note").textContent = hits + " visits still equal 0 ViralRefer credits.";
+    };
+    document.getElementById("friend").onclick = () => {
+      skill += 1;
+      document.getElementById("skill").textContent = String(skill);
+      document.getElementById("note").textContent = skill + " unique friend Get-link" + (skill === 1 ? "" : "s") + ". That is the climb.";
+    };
+  </script>
+</body>
+</html>

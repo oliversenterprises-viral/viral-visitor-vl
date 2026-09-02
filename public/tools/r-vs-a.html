@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>/r/ vs /a/ — contest link or promoter link? · ViralRefer</title>
+  <meta name="description" content="Pick /r/ to race for Site Drops and the homepage banner, or /a/ to promote ViralRefer beside the race. Same Get-link gate. Not cash. Not the same URL." />
+  <meta name="robots" content="noindex,follow" />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/promoter-credit.html" />
+  <meta property="og:title" content="ViralRefer /r/ vs /a/" />
+  <meta property="og:description" content="Contest path vs promoter path. Not cash. Not the same link." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/promoter-credit.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"What is a ViralRefer /r/ link?","acceptedAnswer":{"@type":"Answer","text":"The contest path. You climb when a unique friend taps Get my link. Site Drops and the 7-day banner. Not cash."}},
+    {"@type":"Question","name":"What is a ViralRefer /a/ link?","acceptedAnswer":{"@type":"Answer","text":"The promoter path via /go/affiliates/. Tracked credit and a listing beside the race. Not Site Drops. Not the banner. Not cash."}}
+  ]}
+  </script>
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem)}
+    .row{display:grid;gap:.75rem}@media(min-width:560px){.row{grid-template-columns:1fr 1fr}}
+    .card{border:1px solid var(--border);border-radius:1rem;padding:1rem;background:rgba(255,255,255,.04)}
+    .card.on{border-color:#a78bfa}
+    .chip{min-height:48px;width:100%;border-radius:.8rem;border:1px solid var(--border);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=r_vs_a&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>/r/ or /a/?</h1>
+    <p class="muted">Same gate: a unique friend taps Get my link. Different prize. Not cash.</p>
+    <div class="row">
+      <button type="button" class="chip" id="r" aria-pressed="true">I want to race</button>
+      <button type="button" class="chip" id="a" aria-pressed="false">I want to promote</button>
+    </div>
+    <div class="row" style="margin-top:1rem">
+      <div class="card" id="rc"><h2>/r/ contest</h2><p class="muted">Site Drop ladder. Week text line at 2 friends. 7-day banner for #1 (not the operator) with 3 friends. Get this from Get my referral link.</p></div>
+      <div class="card" id="ac"><h2>/a/ promoter</h2><p class="muted">Tracked credit + listing beside the race. Not a Site Drop. Not the banner. Start at <a href="/go/affiliates/?utm_source=r_vs_a&amp;utm_medium=organic">/go/affiliates/</a>.</p></div>
+    </div>
+    <p id="pick" class="muted"></p>
+    <a class="btn" href="https://www.viralrefer.app/?utm_source=r_vs_a&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted" style="margin-top:1.2rem"><a href="/guides/promoter-vs-racer/">Full guide</a></p>
+  </div>
+  <script>
+    const r = document.getElementById("r"), a = document.getElementById("a");
+    function set(which) {
+      r.setAttribute("aria-pressed", which === "r" ? "true" : "false");
+      a.setAttribute("aria-pressed", which === "a" ? "true" : "false");
+      document.getElementById("rc").classList.toggle("on", which === "r");
+      document.getElementById("ac").classList.toggle("on", which === "a");
+      document.getElementById("pick").textContent = which === "r"
+        ? "Use /r/. Do not paste a personal /r/ code as a public listing URL — use the homepage UTM link for directories."
+        : "Use /a/ from the promoter desk. Do not expect the weekly banner.";
+    }
+    r.addEventListener("click", () => set("r"));
+    a.addEventListener("click", () => set("a"));
+    set("r");
+  </script>
+</body>
+</html>

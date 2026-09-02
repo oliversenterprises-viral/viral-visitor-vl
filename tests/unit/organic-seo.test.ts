@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { describe, it, expect, beforeEach } from 'vitest';
+import { LOCKED_LIVE_SCHEMA_FAQ_A1 } from '../../src/lib/site-drops-copy';
 import {
   SEO_SITE_ORIGIN,
   HOMEPAGE_SEO,
@@ -63,10 +64,10 @@ describe('organic-seo', () => {
   });
 
   it('homepage SEO + static OG match the locked tap-Get-my-link copy', () => {
-    expect(HOMEPAGE_SEO.title).toBe('Win the homepage. #1 gets a banner — tap Get my link');
-    expect(HOMEPAGE_SEO.description).toMatch(/racing for the homepage this week/);
-    expect(HOMEPAGE_SEO.description).toContain('Tap Get my link');
-    expect(HOMEPAGE_SEO.description).toContain('Visiting does not count');
+    expect(HOMEPAGE_SEO.title).toBe('Win the ViralRefer homepage — Site Drops + #1 banner');
+    expect(HOMEPAGE_SEO.description).toMatch(/Site Drops put my site on the homepage/);
+    expect(HOMEPAGE_SEO.description).toContain('#1 gets the banner');
+    expect(HOMEPAGE_SEO.description).toContain('Get a free link');
     expect(HOMEPAGE_SEO.ogImage).toBe(`${SEO_SITE_ORIGIN}/assets/og-homepage-banner-v2.png`);
 
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
@@ -74,5 +75,7 @@ describe('organic-seo', () => {
     expect(html).toContain(HOMEPAGE_SEO.description);
     expect(html).toContain('https://www.viralrefer.app/assets/og-homepage-banner-v2.png');
     expect(html).not.toContain('og:title" content="ViralRefer • Free Worldwide Referral Leaderboard');
+    expect(HOMEPAGE_FAQ[0]?.answer).toBe(LOCKED_LIVE_SCHEMA_FAQ_A1);
+    expect(html).toContain(LOCKED_LIVE_SCHEMA_FAQ_A1.replaceAll('"', '\\"'));
   });
 });

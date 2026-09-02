@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Can I claim the 7-day homepage banner? · ViralRefer</title>
+  <meta name="description" content="Free eligibility checker for ViralRefer’s 7-day homepage banner. You must be this week’s #1, not the operator, with 3 friends who tapped Get my link. No cash." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/banner-eligibility.html" />
+  <meta property="og:title" content="Banner eligibility checker" />
+  <meta property="og:description" content="#1 this week, not the operator, 3 verified friends. Not cash." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/banner-eligibility.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"Who can claim the ViralRefer homepage banner?","acceptedAnswer":{"@type":"Answer","text":"This week’s #1 who is not the site operator, with at least 3 unique friends who tapped Get my link. There is no cash prize."}}
+  ]}
+  </script>
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12);--ok:#86efac;--bad:#fca5a5}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem)}
+    .chip{display:block;width:100%;text-align:left;min-height:52px;margin:.45rem 0;padding:.8rem 1rem;border-radius:.9rem;border:1px solid var(--border);background:rgba(0,0,0,.28);color:inherit;font:inherit;cursor:pointer}
+    .chip[aria-pressed=true]{border-color:#a78bfa;background:rgba(134,76,255,.18)}
+    .verdict{margin-top:1rem;padding:1rem;border:1px solid var(--border);border-radius:1rem}
+    .yes{color:var(--ok)}.no{color:var(--bad)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=banner_eligibility&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>Can I claim the banner?</h1>
+    <p class="muted">Answer honestly. The prize is a 7-day homepage banner, not cash.</p>
+    <button type="button" class="chip" data-k="first" aria-pressed="false"><strong>I am #1 on this week’s board</strong></button>
+    <button type="button" class="chip" data-k="three" aria-pressed="false"><strong>I have 3 unique friends who tapped Get my link</strong></button>
+    <button type="button" class="chip" data-k="notop" aria-pressed="false"><strong>I am not the site operator</strong></button>
+    <button type="button" class="chip" data-k="week" aria-pressed="false"><strong>Those friends are from this week (after Monday 00:00 UTC)</strong></button>
+    <div class="verdict" id="v" aria-live="polite"></div>
+    <a class="btn" href="https://www.viralrefer.app/?utm_source=banner_eligibility&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted" style="margin-top:1.2rem"><a href="/guides/claim-7-day-banner/">How to claim</a> · <a href="/guides/operator-cannot-win/">Operator cannot win</a></p>
+  </div>
+  <script>
+    const chips = [...document.querySelectorAll(".chip")];
+    const v = document.getElementById("v");
+    function draw() {
+      const on = Object.fromEntries(chips.map((c) => [c.dataset.k, c.getAttribute("aria-pressed") === "true"]));
+      if (!Object.values(on).some(Boolean) && chips.every((c) => c.getAttribute("aria-pressed") === "false")) {
+        v.innerHTML = '<p class="muted">Toggle every line that is true.</p>';
+        return;
+      }
+      const ok = on.first && on.three && on.notop && on.week;
+      v.innerHTML = ok
+        ? '<h2 class="yes">Eligible to claim</h2><p>You match the public rules: #1 this week, not the operator, 3 verified friends. Claim on the site. Not cash.</p>'
+        : '<h2 class="no">Not eligible yet</h2><p>Missing: ' + ["first","three","notop","week"].filter((k) => !on[k]).map((k) => ({first:"#1 this week",three:"3 friends",notop:"not the operator",week:"this week’s friends"}[k])).join(", ") + ".</p>";
+    }
+    chips.forEach((c) => c.addEventListener("click", () => {
+      c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") === "true" ? "false" : "true");
+      draw();
+    }));
+    draw();
+  </script>
+</body>
+</html>

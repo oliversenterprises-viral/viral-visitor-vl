@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>One-sentence ViralRefer share · ViralRefer</title>
+  <meta name="description" content="Ready one-liners for ViralRefer: get a link, send it, a friend’s Get-link puts your site on the homepage. No cash. Copy and paste." />
+  <meta name="robots" content="noindex,follow" />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/share-generator.html" />
+  <meta property="og:title" content="One-sentence share" />
+  <meta property="og:description" content="Honest captions. No cash. No upvote ask." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/share-generator.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem)}
+    .line{border:1px solid var(--border);border-radius:1rem;padding:.9rem;margin:.5rem 0}
+    .btn{min-height:44px;margin-top:.4rem;padding:.5rem .9rem;border-radius:.7rem;border:1px solid var(--border);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+    .cta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=one_sentence&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>One sentence</h1>
+    <p class="muted">Copy a line. Then get your own link. No cash prize.</p>
+    <div class="line" data-t="Get a link. Send it. A friend’s Get-link puts your site on the homepage."><p>Get a link. Send it. A friend’s Get-link puts your site on the homepage.</p><button type="button" class="btn">Copy</button></div>
+    <div class="line" data-t="I’m on ViralRefer — visits don’t count. You climb when a friend taps Get my link. No cash."><p>I’m on ViralRefer — visits don’t count. You climb when a friend taps Get my link. No cash.</p><button type="button" class="btn">Copy</button></div>
+    <div class="line" data-t="Free worldwide race, no email. Site Drops as you climb. #1 (not the owner) with 3 friends can claim a 7-day banner."><p>Free worldwide race, no email. Site Drops as you climb. #1 (not the owner) with 3 friends can claim a 7-day banner.</p><button type="button" class="btn">Copy</button></div>
+    <p class="muted" id="msg"></p>
+    <a class="cta" href="https://www.viralrefer.app/?utm_source=one_sentence&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted" style="margin-top:1.2rem"><a href="./share-generator.html">Full generator</a></p>
+  </div>
+  <script>
+    document.querySelectorAll(".line").forEach((el) => {
+      el.querySelector("button").addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(el.dataset.t); document.getElementById("msg").textContent = "Copied."; }
+        catch { document.getElementById("msg").textContent = "Select the sentence and copy it."; }
+      });
+    });
+  </script>
+</body>
+</html>

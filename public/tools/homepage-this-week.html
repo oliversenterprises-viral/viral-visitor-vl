@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Get my website on a homepage this week — checklist · ViralRefer</title>
+  <meta name="description" content="Free checklist to get your website on ViralRefer’s homepage this week: get a link, paste your site, send it, a friend taps Get my link. No ads. No cash prize." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/homepage-this-week.html" />
+  <meta property="og:title" content="Get your website on the homepage this week" />
+  <meta property="og:description" content="No ads. Get a link, paste your site, send it. Friend Get-link puts you on the ladder." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/homepage-this-week.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"HowTo","name":"Get your website on the ViralRefer homepage this week","step":[
+    {"@type":"HowToStep","name":"Get a link","text":"Tap Get my referral link. No email."},
+    {"@type":"HowToStep","name":"Paste your website","text":"Just entered is a 15-minute chip. Paste is not the race."},
+    {"@type":"HowToStep","name":"Send it","text":"A unique friend must tap Get my link."}
+  ]}
+  </script>
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem)}
+    .item{display:flex;gap:.7rem;align-items:flex-start;border:1px solid var(--border);border-radius:.9rem;padding:.85rem;margin:.45rem 0;background:rgba(255,255,255,.04)}
+    .item input{width:22px;height:22px;margin-top:.15rem}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=homepage_this_week&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>Homepage this week</h1>
+    <p class="muted">No ads required. Paste is advertised. Climbing starts when a friend taps Get my link. No cash prize. Saves in this browser.</p>
+    <div id="items"></div>
+    <p class="muted" id="n"></p>
+    <a class="btn" href="https://www.viralrefer.app/?utm_source=homepage_this_week&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted" style="margin-top:1.2rem"><a href="/guides/get-website-on-homepage/">Guide</a> · <a href="/guides/paste-website-not-the-race/">Paste is not the race</a></p>
+  </div>
+  <script>
+    const KEY = "vr-homepage-week-v1";
+    const STEPS = [
+      "Tap Get my referral link (no email).",
+      "Paste your website for the 15-minute Just entered chip.",
+      "Send the link to one real person — not a group blast.",
+      "They tap Get my link (not just visit).",
+      "1 friend → Rising drop. 2 → week text line. 3 + #1 (not operator) → banner claim."
+    ];
+    let done = [];
+    try { done = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { done = []; }
+    const box = document.getElementById("items");
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch(_){} }
+    function draw() {
+      box.innerHTML = "";
+      STEPS.forEach((t, i) => {
+        const row = document.createElement("label");
+        row.className = "item";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = done.includes(i);
+        cb.addEventListener("change", () => {
+          done = cb.checked ? Array.from(new Set(done.concat(i))) : done.filter((x) => x !== i);
+          save();
+          document.getElementById("n").textContent = done.length + " / " + STEPS.length + " done this week.";
+        });
+        const span = document.createElement("span");
+        span.textContent = t;
+        row.append(cb, span);
+        box.append(row);
+      });
+      document.getElementById("n").textContent = done.length + " / " + STEPS.length + " done this week.";
+    }
+    draw();
+  </script>
+</body>
+</html>

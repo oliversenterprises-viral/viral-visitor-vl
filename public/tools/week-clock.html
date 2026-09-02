@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>When does the ViralRefer week reset? UTC clock · ViralRefer</title>
+  <meta name="description" content="Live countdown to ViralRefer’s weekly reset: Monday 00:00 UTC. Last week’s friends do not carry over. Same /r/ link. No cash prize." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/week-clock.html" />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="ViralRefer week reset clock" />
+  <meta property="og:description" content="Monday 00:00 UTC. Friends do not carry over. No cash prize." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/week-clock.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@graph":[
+    {"@type":"WebApplication","name":"ViralRefer week reset clock","url":"https://www.viralrefer.app/tools/week-clock.html","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},
+    {"@type":"FAQPage","mainEntity":[
+      {"@type":"Question","name":"When does the ViralRefer week reset?","acceptedAnswer":{"@type":"Answer","text":"Monday 00:00 UTC. Last week’s verified friends do not carry over. Your /r/ link stays the same."}},
+      {"@type":"Question","name":"Is there a cash prize?","acceptedAnswer":{"@type":"Answer","text":"No. Homepage visibility only."}}
+    ]}
+  ]}
+  </script>
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem);letter-spacing:-.03em}
+    .clock{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin:1.2rem 0}
+    .cell{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:1rem;padding:1rem .4rem;text-align:center}
+    .cell b{display:block;font-size:clamp(1.4rem,5vw,2.1rem);font-variant-numeric:tabular-nums}
+    .cell span{color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=week_clock&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>Week reset clock</h1>
+    <p class="muted">ViralRefer weeks start <strong>Monday 00:00 UTC</strong>. Last week’s friends do not carry over. Same /r/ link. No cash prize.</p>
+    <p id="next" class="muted"></p>
+    <div class="clock" aria-live="polite">
+      <div class="cell"><b id="d">0</b><span>Days</span></div>
+      <div class="cell"><b id="h">0</b><span>Hours</span></div>
+      <div class="cell"><b id="m">0</b><span>Minutes</span></div>
+      <div class="cell"><b id="s">0</b><span>Seconds</span></div>
+    </div>
+    <p class="muted">Your local time: <span id="local"></span></p>
+    <a class="btn" href="https://www.viralrefer.app/?utm_source=week_clock&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted" style="margin-top:1.2rem">Guide: <a href="/guides/weekly-reset/">When the week resets</a></p>
+  </div>
+  <script>
+    function nextMondayUtc(from) {
+      const t = new Date(from);
+      const day = t.getUTCDay();
+      const add = day === 1 && (t.getUTCHours() + t.getUTCMinutes() + t.getUTCSeconds() + t.getUTCMilliseconds() === 0) ? 0 : (day === 0 ? 1 : (8 - day) % 7 || 7);
+      const n = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate() + add, 0, 0, 0, 0));
+      if (n <= t) n.setUTCDate(n.getUTCDate() + 7);
+      return n;
+    }
+    function tick() {
+      const now = new Date();
+      const n = nextMondayUtc(now);
+      const ms = Math.max(0, n - now);
+      const d = Math.floor(ms / 86400000);
+      const h = Math.floor(ms / 3600000) % 24;
+      const m = Math.floor(ms / 60000) % 60;
+      const s = Math.floor(ms / 1000) % 60;
+      document.getElementById("d").textContent = String(d);
+      document.getElementById("h").textContent = String(h).padStart(2, "0");
+      document.getElementById("m").textContent = String(m).padStart(2, "0");
+      document.getElementById("s").textContent = String(s).padStart(2, "0");
+      document.getElementById("next").textContent = "Next reset: " + n.toISOString().replace(".000Z", " UTC");
+      document.getElementById("local").textContent = n.toLocaleString(undefined, { weekday: "long", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+    }
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>

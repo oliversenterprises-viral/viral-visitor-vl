@@ -14,7 +14,9 @@ describe('five-layer first screen (Helix order)', () => {
   it('first-tap: cold land is one screen — below-fold stays hidden until expand', () => {
     const css = read('src/style.css');
     const html = read('index.html');
-    expect(css).toMatch(/html:not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]/);
+    expect(css).toMatch(
+      /html:not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]:not\(#how\):not\(#leaderboard\)/,
+    );
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-micro\]\) #funnel-expand-wrap/);
     expect(html).toContain('id="funnel-expand-btn"');
     expect(html).toContain('id="hero-get-link-btn"');

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Does a visit count? 6-question referral quiz · ViralRefer</title>
+  <meta name="description" content="Free quiz: which actions count as a ViralRefer referral? Visits, copies, self-taps, and traffic exchanges fail. Only a unique friend tapping Get my link passes. No cash prize." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/credit-quiz.html" />
+  <meta property="og:title" content="Referral credit quiz" />
+  <meta property="og:description" content="Six questions. Visits don’t count. Get my link does." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/credit-quiz.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12);--ok:#86efac;--bad:#fca5a5}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem)}
+    .opt{display:block;width:100%;text-align:left;min-height:48px;margin:.4rem 0;padding:.75rem 1rem;border-radius:.85rem;border:1px solid var(--border);background:rgba(0,0,0,.28);color:inherit;font:inherit;cursor:pointer}
+    .opt:focus-visible{outline:2px solid #c4b5fd}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;border:none;cursor:pointer;font:inherit;margin-top:.8rem}
+    .muted{color:var(--muted)}.ok{color:var(--ok)}.no{color:var(--bad)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=credit_quiz&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>Referral credit quiz</h1>
+    <p class="muted" id="p">Question 1 of 6</p>
+    <h2 id="q"></h2>
+    <div id="opts"></div>
+    <p id="fb" class="muted" aria-live="polite"></p>
+    <div id="end" hidden>
+      <h2 id="score"></h2>
+      <p class="muted">Share the quiz. Then get a link and send it — a friend must tap Get my link. No cash prize.</p>
+      <button type="button" class="btn" id="again" style="background:rgba(255,255,255,.08);border:1px solid var(--border)">Try again</button>
+      <a class="btn" href="https://www.viralrefer.app/?utm_source=credit_quiz&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    </div>
+  </div>
+  <script>
+    const Q = [
+      { t: "A stranger opens your /r/ link and leaves. Credit?", y: false, why: "A visit is not a credit." },
+      { t: "They copy the link to their notes. Credit?", y: false, why: "Copying is not a send." },
+      { t: "You open your own link in another browser. Credit?", y: false, why: "Self-taps do not count." },
+      { t: "A surf bar sends 200 hits. Credit?", y: false, why: "Traffic exchanges sell visits." },
+      { t: "A unique friend taps Get my link. Credit?", y: true, why: "That is the only ViralRefer credit." },
+      { t: "Does ViralRefer pay cash to #1?", y: false, why: "No cash prize. Homepage banner only." }
+    ];
+    let i = 0, s = 0;
+    const q = document.getElementById("q"), opts = document.getElementById("opts"), fb = document.getElementById("fb"), p = document.getElementById("p");
+    function show() {
+      document.getElementById("end").hidden = true;
+      if (i >= Q.length) {
+        q.textContent = "";
+        opts.innerHTML = "";
+        p.textContent = "";
+        fb.textContent = "";
+        document.getElementById("end").hidden = false;
+        document.getElementById("score").textContent = s + " / " + Q.length + " correct";
+        return;
+      }
+      p.textContent = "Question " + (i + 1) + " of " + Q.length;
+      q.textContent = Q[i].t;
+      fb.textContent = "";
+      opts.innerHTML = "";
+      ["Yes — it counts", "No — it does not"].forEach((label, idx) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "opt";
+        b.textContent = label;
+        b.addEventListener("click", () => {
+          const ans = idx === 0;
+          const good = ans === Q[i].y;
+          if (good) s++;
+          fb.className = good ? "ok" : "no";
+          fb.textContent = (good ? "Correct. " : "Not quite. ") + Q[i].why;
+          i++;
+          setTimeout(show, 700);
+        });
+        opts.append(b);
+      });
+    }
+    document.getElementById("again").addEventListener("click", () => { i = 0; s = 0; show(); });
+    show();
+  </script>
+</body>
+</html>

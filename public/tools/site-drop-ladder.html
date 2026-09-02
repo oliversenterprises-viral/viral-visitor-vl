@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Site Drop ladder simulator — homepage visibility · ViralRefer</title>
+  <meta name="description" content="Interactive Site Drop ladder: Just entered, Rising, week text line, Challenger, 7-day banner. Move the friend count. No cash prize." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/site-drop-ladder.html" />
+  <meta property="og:title" content="Site Drop ladder simulator" />
+  <meta property="og:description" content="See what homepage slot you get at 0, 1, 2, and 3 friends. Not cash." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/site-drop-ladder.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"Site Drop ladder simulator","url":"https://www.viralrefer.app/tools/site-drop-ladder.html","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+  </script>
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem)}
+    .rung{border:1px solid var(--border);border-radius:1rem;padding:.9rem 1rem;margin:.55rem 0;background:rgba(255,255,255,.04)}
+    .rung.on{border-color:#a78bfa;background:rgba(134,76,255,.18)}
+    label{display:block;margin:1rem 0 .4rem;color:var(--muted);font-weight:600}
+    input[type=range]{width:100%;min-height:44px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=site_drop_ladder&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>Site Drop ladder</h1>
+    <p class="muted">Drag verified friends. A friend is someone who opened your link and tapped Get my link. Visits do not move this ladder. No cash prize. The operator cannot take the banner.</p>
+    <label for="n">Verified friends this week: <strong id="nv">0</strong></label>
+    <input id="n" type="range" min="0" max="4" value="0" aria-valuemin="0" aria-valuemax="4" />
+    <div id="rungs"></div>
+    <p class="muted" id="note"></p>
+    <a class="btn" href="https://www.viralrefer.app/?utm_source=site_drop_ladder&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted" style="margin-top:1.2rem"><a href="/guides/site-drops/">Site Drop guide</a></p>
+  </div>
+  <script>
+    const RUNGS = [
+      { need: 0, title: "Just entered", body: "Paste your website after Get my link → ~15-minute chip. Getting a link alone does not put you on the page." },
+      { need: 1, title: "Rising Site Drop", body: "1 verified friend → ~1-hour homepage drop of your site." },
+      { need: 2, title: "Week text line", body: "2 verified friends → homepage text line for the rest of the week." },
+      { need: 2, title: "Challenger", body: "Board #2 / #3 → Challenger strip. Not the #1 banner." },
+      { need: 3, title: "7-day banner", body: "This week’s #1 who is not the operator, with 3 verified friends, may claim a 7-day homepage banner." }
+    ];
+    const n = document.getElementById("n");
+    const nv = document.getElementById("nv");
+    const box = document.getElementById("rungs");
+    function draw() {
+      const v = Number(n.value);
+      nv.textContent = String(v);
+      n.setAttribute("aria-valuenow", String(v));
+      box.innerHTML = RUNGS.map((r, i) => {
+        const on = i === 3 ? v >= 2 : v >= r.need;
+        return '<div class="rung' + (on ? " on" : "") + '"><strong>' + r.title + "</strong><p class=\"muted\" style=\"margin:.3rem 0 0\">" + r.body + "</p></div>";
+      }).join("");
+      document.getElementById("note").textContent = v === 0
+        ? "0 friends: advertised chip only if you pasted a site. Climbing has not started."
+        : "Credits this week reset Monday 00:00 UTC.";
+    }
+    n.addEventListener("input", draw);
+    draw();
+  </script>
+</body>
+</html>

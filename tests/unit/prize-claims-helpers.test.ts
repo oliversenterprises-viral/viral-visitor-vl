@@ -3,6 +3,8 @@ import {
   sortClaimsByPriority,
   filterClaimsByStatus,
   countPendingClaims,
+  prizeTabEmptyListHtml,
+  prizeTabListErrorHtml,
 } from '../../src/admin/prize-claims-tab';
 import type { AdminClaimRow } from '../../src/admin/state';
 
@@ -42,5 +44,18 @@ describe('prize claims helpers (pure)', () => {
       makeClaim({ status: undefined }),
     ];
     expect(countPendingClaims(claims)).toBe(2);
+  });
+
+  it('empty and error Prize lists still say the tab loaded — no cash', () => {
+    const empty = prizeTabEmptyListHtml();
+    expect(empty).toContain('data-hq-prize-empty="1"');
+    expect(empty).toContain('Prize tab is loaded');
+    expect(empty).toContain('no cash');
+    expect(empty).toContain('data-hq-prize-retry="1"');
+    const err = prizeTabListErrorHtml('Unknown action');
+    expect(err).toContain('data-hq-prize-list="1"');
+    expect(err).toContain('Prize tab is loaded');
+    expect(err).toContain('Unknown action');
+    expect(err).toContain('data-hq-prize-retry="1"');
   });
 });

@@ -27,15 +27,17 @@ describe('kid-simple first paint', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).toMatch(/Win the homepage/);
-    expect(hero).toMatch(/#1 puts their site on/);
-    expect(hero).toContain('this page.');
-    expect(hero).toMatch(
-      /Tap Get my link\. Send it\. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days/,
+    expect(hero).toContain('Each step puts your site on this page.');
+    expect(hero).toContain('#1 owns the banner for 7 days.');
+    expect(hero).toContain(
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
     );
     expect(hero).toContain('id="hero-get-link-btn"');
     expect(hero).toContain('Get my referral link');
     expect(hero).not.toContain('Get my free link');
-    expect(hero).toContain("This week's top racer gets a 7-day banner for their website.");
+    expect(hero).toContain(
+      'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
+    );
     expect(hero).toContain('id="hero-banner-mock"');
     expect(hero).toContain('Your site here');
     expect(hero).toContain('Your site here · 7 days');
@@ -76,7 +78,9 @@ describe('kid-simple first paint', () => {
   it('hides How / FAQ / board on a cold land until expand', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    expect(css).toMatch(/html:not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]/);
+    expect(css).toMatch(
+      /html:not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]:not\(#how\):not\(#leaderboard\)/,
+    );
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-micro\]\) #funnel-expand-wrap/);
     expect(css).toMatch(/html:not\(\[data-vr-share-locked\]\) #daily-crown-section/);
     expect(html).not.toContain('id="daily-crown-section"');

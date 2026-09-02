@@ -3,7 +3,7 @@
  * Single source for threshold copy, empty-slot mock, locked share/OG, weekly gates.
  */
 
-export const DEFAULT_MIN_REFERRALS_FOR_CLAIM = 10;
+export const DEFAULT_MIN_REFERRALS_FOR_CLAIM = 3;
 export const WEEKLY_SIDE_WIDGET_MIN = 10;
 
 export const EMPTY_SLOT_NAME = 'Your site here';
@@ -14,15 +14,16 @@ export const DAILY_CROWN_NOT_BANNER = 'Not the homepage banner.';
 export const LOCKED_SHARE_TEXT =
   "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count. {link}";
 
-export const LOCKED_OG_TITLE = 'Win the homepage. #1 gets a banner — tap Get my link';
+export const LOCKED_OG_TITLE = 'Win the ViralRefer homepage — Site Drops + #1 banner';
 
 export const LOCKED_OG_DESCRIPTION =
-  "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count.";
+  "I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner. Get a free link and try to beat me.";
 
 export const PRIZE_FOMO_LINE = 'Early ranks are open. #1 puts their website on this page.';
 
-/** One trust sentence — say the prize once. Do not repeat “no cash” on the first screen. */
-export const ONE_PRIZE_SENTENCE = "This week's top racer gets a 7-day banner for their website.";
+/** One trust sentence — Site Drops ladder. Do not repeat “no cash” on the first screen. */
+export const ONE_PRIZE_SENTENCE =
+  'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.';
 
 export const AD_SLOT_KICKER = 'This homepage · viralrefer.app · 7 days';
 export const EMPTY_AD_NOTE = 'Empty right now. #1 this week puts their site here.';
@@ -77,12 +78,12 @@ function clampMinReferrals(n: number): number {
 
 export function formatPrizeThresholdLine(min: number): string {
   const n = parseMinReferralsForClaim(min);
-  return `Verified #1 with at least ${n} friends who tapped Get my link can claim the banner.`;
+  return `This week's top racer (not the site owner) with ${n} friends who tapped Get my link can claim the banner.`;
 }
 
 export function formatFaqPrizeAnswer(min = DEFAULT_MIN_REFERRALS_FOR_CLAIM): string {
   const n = parseMinReferralsForClaim(min);
-  return `Open worldwide. Verified #1 with at least ${n} friends who tapped Get my link can claim a homepage banner for their website. There is no cash prize.`;
+  return `Open worldwide. This week's top racer (not the site owner) with ${n} friends who tapped Get my link can claim a 7-day homepage banner for their website. There is no cash prize.`;
 }
 
 export function hostnameFromUrl(url: string): string | null {

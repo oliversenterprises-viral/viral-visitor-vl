@@ -166,6 +166,9 @@ h1, h2, h3, .logo-font {
 
 /* Always-dark chrome: wordmark + Message from ViralRefer inherit --text-h (#08060d) when OS is light. */
 #vr-nav .vr-wordmark,
+#vr-nav a[aria-label="ViralRefer home"] span {
+  color: #f4f4f5;
+}
 #vr-nav .logo-font {
   color: #f4f4f5;
 }
@@ -401,7 +404,6 @@ html[data-vr-send-mode] #distance-glory-meter,
 html[data-vr-send-mode] #growth-command-center,
 html[data-vr-send-mode] #my-stats,
 html[data-vr-send-mode] #funnel-journey,
-html[data-vr-send-mode] #how,
 html[data-vr-send-mode] #prize,
 html[data-vr-send-mode] #copy-message-btn,
 html[data-vr-send-mode] #new-code-button,
@@ -441,6 +443,39 @@ html:not([data-vr-has-link]) #nav-get-link-btn {
   display: none !important;
 }
 
+
+/* Extra slot lines stay off the first view so Get my referral link fits */
+html:not([data-vr-has-link]) #hero-ad-inventory,
+html:not([data-vr-has-link]) #hero-ad-race,
+html:not([data-vr-has-link]) #hero-slot-preview,
+html:not([data-vr-has-link]) #hero-ad-visit,
+html:not([data-vr-has-link]) #hero-week-clock,
+html:not([data-vr-has-link]) #hero-slot-thumb,
+html:not([data-vr-has-link]) #site-challenger-strip,
+html:not([data-vr-has-link]) #site-entered-ticker {
+  display: none !important;
+}
+
+/* Copy must stay tappable — overlays cannot swallow it */
+#post-link-copy,
+#copy-link-btn,
+.post-link-share__copy {
+  position: relative;
+  z-index: 40;
+  pointer-events: auto !important;
+}
+#vr-exit-rescue,
+#vr-paid-getlink-nudge,
+.vr-exit-rescue,
+.vr-paid-getlink-nudge,
+#vr-timer-overlay {
+  pointer-events: none;
+}
+#vr-timer-overlay > *,
+.vr-exit-rescue > *,
+.vr-paid-getlink-nudge > * {
+  pointer-events: auto;
+}
 
 /* Lumina first screen: title, ad slot, one prize sentence, one button */
 html:not([data-vr-has-link]) #hero-global-regions,
@@ -648,7 +683,7 @@ html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-link {
   font-size: 0.75rem;
   opacity: 0.8;
 }
-html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-nav-link {
+html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-nav-link:not([href="#how"]):not([href="#leaderboard"]) {
   display: none !important;
 }
 html[data-vr-direct-landing]:not([data-vr-has-link]) #admin-btn {
@@ -727,10 +762,8 @@ html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-prize-fomo,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #vr-verified-total,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #daily-champion-strip,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-journey,
-html[data-vr-referred-micro]:not([data-vr-has-link]) #how,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #prize,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #faq,
-html[data-vr-referred-micro]:not([data-vr-has-link]) #leaderboard,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-banner-mock,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-title-accent,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-badge,
@@ -739,7 +772,7 @@ html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-lock-rule,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #referral-attribution,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-expand-wrap,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-credit-gate,
-html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link {
+html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link[href="#prize"] {
   display: none !important;
 }
 html[data-vr-referred-micro]:not([data-vr-has-link]) #referral-attribution {
@@ -2316,11 +2349,12 @@ html[data-vr-referred-landing][data-vr-has-link] #funnel-expand-wrap {
   display: none;
 }
 
-html:not([data-vr-funnel-expanded]) [data-vr-below-fold] {
+/* How / Board / footer stay in the document — never display:none. Extra CMS blocks can stay quiet. */
+html:not([data-vr-funnel-expanded]) [data-vr-below-fold]:not(#how):not(#leaderboard) {
   display: none !important;
 }
 
-html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) [data-vr-below-fold] {
+html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) [data-vr-below-fold]:not(#how):not(#leaderboard) {
   display: none !important;
 }
 
@@ -2893,7 +2927,7 @@ html:not([data-vr-share-locked]) #daily-champion-strip {
 }
 
 .hero-gradient #hero-title-accent {
-  color: transparent !important;
+  color: #f4f4f5 !important;
 }
 
 .hero-gradient::before {
@@ -4366,7 +4400,7 @@ html[data-vr-has-link] #hero-trust-line,
 html[data-vr-has-link] #hero-lock-rule,
 html[data-vr-has-link] #hero-global-proof,
 html[data-vr-has-link] #funnel-expand-wrap,
-html[data-vr-has-link] [data-vr-below-fold] {
+html[data-vr-has-link] [data-vr-below-fold]:not(#how):not(#leaderboard) {
   display: none !important;
 }
 
@@ -4654,11 +4688,29 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
 
 @media (max-height: 820px) and (min-width: 1024px) {
   #hero-title {
-    font-size: 3.1rem !important;
+    font-size: 2.15rem !important;
   }
 
   .vr-hero-panel {
-    padding: 1.5rem 2rem !important;
+    padding: 1.15rem 1.5rem !important;
+  }
+
+  #hero-subtitle {
+    font-size: 1rem !important;
+    margin-bottom: 0.65rem !important;
+  }
+
+  #hero-banner-mock {
+    margin-bottom: 0.55rem !important;
+  }
+
+  #hero-prize-one {
+    margin-bottom: 0.65rem !important;
+    font-size: 0.92rem !important;
+  }
+
+  .hero-primary-cta {
+    min-height: 52px;
   }
 }
 

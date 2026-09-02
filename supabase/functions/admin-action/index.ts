@@ -266,6 +266,28 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    if (action === 'get_site_content') {
+      const { data, error } = await supabaseAdmin
+        .from('site_content')
+        .select('*');
+      if (error) throw error;
+      const rows = (data || [])
+        .map((row: Record<string, unknown>) => {
+          const key = String(row.key ?? row.id ?? '').trim();
+          return {
+            key,
+            id: key,
+            value: row.value,
+            description: row.description ?? null,
+            updated_at: row.updated_at ?? null,
+          };
+        })
+        .filter((row: { key: string }) => row.key);
+      return new Response(JSON.stringify({ success: true, data: rows }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'update_site_content') {
       const { key, value } = payload;
       const { error } = await supabaseAdmin

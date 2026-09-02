@@ -1,6 +1,11 @@
 import { supabase } from '../lib/supabase';
 import { uploadBannerImage, BANNER_UPLOAD_ACCEPT } from '../lib/banner-upload';
 import { formatError } from '../lib';
+import {
+  resolveWebsiteTabLoad,
+  websiteTabUnknownActionBanner,
+  type WebsiteTabLoad,
+} from '../lib/site-content-admin';
 import { showToast } from '../ui';
 
 /** Lightweight row shape used by the Edit Content admin tab */
@@ -51,6 +56,32 @@ const BANNER_PRESETS = [
     hint: 'Partner spotlight — change redirect URL to their site',
   },
 ] as const;
+
+async function loadWebsiteTabState(): Promise<WebsiteTabLoad> {
+  let adminResult: { success: boolean; data?: unknown; error?: string } | undefined;
+  try {
+    const { invokeAdminAction } = await import('../lib/admin-action-client');
+    adminResult = await invokeAdminAction<unknown>('get_site_content');
+  } catch (err) {
+    adminResult = {
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+  try {
+    const { data, error } = await supabase.from('site_content').select('*');
+    return resolveWebsiteTabLoad({
+      adminResult,
+      publicRows: data || [],
+      publicError: error?.message,
+    });
+  } catch (err) {
+    return resolveWebsiteTabLoad({
+      adminResult,
+      publicError: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
 
 async function saveSiteContentEntry(key: string, value: unknown): Promise<boolean> {
   try {
@@ -114,21 +145,12 @@ async function renderEditContentTab(content: HTMLElement) {
     loadInFlight = true;
     const gen = ++loadGeneration;
     try {
-      const { data, error } = await supabase.from('site_content').select('*');
-      if (error) throw error;
+      const loaded = await loadWebsiteTabState();
       if (gen !== loadGeneration) return;
 
-      const rows = (data || [])
-        .map((row: { key?: string; id?: string; value?: unknown }) => ({
-          id: String(row.key ?? row.id ?? ''),
-          value: row.value,
-        }))
-        .filter((row) => row.id)
-        .sort((a, b) => a.id.localeCompare(b.id));
-
-      const html = buildContentListHTML(rows);
+      const html = buildContentListHTML(loaded.rows, loaded);
       content.innerHTML = html;
-      attachContentListeners(content, loadAndRenderList, rows);
+      attachContentListeners(content, loadAndRenderList, loaded.rows);
       if (gen !== loadGeneration) return;
 
   // Wire up the prominent "Create Multi-Banner Rotation (v2)" button if it exists
@@ -171,7 +193,14 @@ async function renderEditContentTab(content: HTMLElement) {
   }
 
     } catch (err) {
-      content.innerHTML = `<div class="p-6 text-red-400">Error loading content: ${formatError(err)}. Please try refreshing the page.</div>`;
+      const loaded = resolveWebsiteTabLoad({
+        adminResult: {
+          success: false,
+          error: err instanceof Error ? err.message : formatError(err),
+        },
+      });
+      content.innerHTML = buildContentListHTML([], loaded);
+      attachContentListeners(content, loadAndRenderList, []);
     } finally {
       loadInFlight = false;
     }
@@ -264,7 +293,7 @@ function isBroadcastEnabledValue(raw: string): boolean {
   return s === '1' || s === 'true' || s === 'yes' || s === 'on';
 }
 
-function buildContentListHTML(rows: ContentRow[]): string {
+function buildContentListHTML(rows: ContentRow[], load?: WebsiteTabLoad): string {
   const bcEnabled = isBroadcastEnabledValue(contentKeyValue(rows, 'owner_broadcast_enabled'));
   const bcTitle = escapeHtml(contentKeyValue(rows, 'owner_broadcast_title'));
   const bcBody = escapeHtml(contentKeyValue(rows, 'owner_broadcast_body'));
@@ -278,8 +307,8 @@ function buildContentListHTML(rows: ContentRow[]): string {
   let html = `
     <div class="flex items-center justify-between mb-4">
       <div>
-        <div class="text-2xl font-bold">Edit Site Content</div>
-        <div class="text-sm text-zinc-400">Change the words on the public site. Saves go live right away.</div>
+        <div class="text-2xl font-bold" data-hq-website="1">Website</div>
+        <div class="text-sm text-zinc-400">Public words and Talk (message all joiners). Prize is under More. Saves go live right away.</div>
       </div>
       <div class="flex items-center gap-3">
         <span id="content-live-indicator" class="hidden text-[10px] text-emerald-400/80"><i class="fa-solid fa-circle text-[6px] mr-1"></i>live</span>
@@ -291,23 +320,36 @@ function buildContentListHTML(rows: ContentRow[]): string {
         </button>
       </div>
     </div>
+    ${websiteTabUnknownActionBanner(load || { rows: [], via: 'get_site_content', actionMissing: false })
+      ? `<div data-hq-website-action-missing="1" class="mb-4 p-4 rounded-2xl border border-amber-400/40 bg-amber-950/40 text-amber-100 text-sm">
+        <div class="font-semibold">Website is not an empty CMS</div>
+        <p class="mt-1 text-amber-100/85">${escapeHtml(websiteTabUnknownActionBanner(load!) || '')}</p>
+        <button type="button" data-hq-website-retry="1" class="mt-3 px-4 py-2 text-sm bg-white/10 rounded-2xl">Retry</button>
+      </div>`
+      : ''}
 
-    <!-- Owner broadcast: message everyone who visits (no email — product is no-signup) -->
-    <div id="owner-broadcast-panel" class="mb-4 p-5 rounded-2xl border-2 border-violet-500/50 bg-violet-950/30">
+    <!-- Owner Talk: message everyone who visits (no email — product is no-signup) -->
+    <div id="owner-broadcast-panel" data-hq-talk="1" class="mb-4 p-5 rounded-2xl border-2 border-violet-500/50 bg-violet-950/30">
       <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
         <div>
           <div class="text-lg font-bold text-violet-200 flex items-center gap-2">
-            <i class="fa-solid fa-bullhorn"></i> Message all joiners
+            <i class="fa-solid fa-bullhorn"></i> Talk
+            <span class="text-sm font-semibold text-violet-200/80">Message all joiners</span>
           </div>
           <p class="text-xs text-zinc-400 mt-1 max-w-xl">
             Banner for everyone on the site. <strong class="text-violet-200">Only you can remove it</strong> (Turn OFF). Links: paste full <code class="text-violet-300">https://…</code> URLs or use <code class="text-violet-300">[label](https://…)</code>. Optional sponsor ad below.
           </p>
+          ${
+            bcEnabled
+              ? ''
+              : '<p data-hq-talk-idle="1" class="text-xs text-zinc-500 mt-2">Talk is off. This tab still loaded. Prize is under More. Not an empty CMS.</p>'
+          }
         </div>
         <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border ${
           bcEnabled
             ? 'border-emerald-400/50 text-emerald-300 bg-emerald-500/10'
             : 'border-zinc-500/40 text-zinc-400 bg-zinc-800/50'
-        }">${bcEnabled ? 'LIVE on site' : 'Off'}</span>
+        }" data-hq-talk-state="${bcEnabled ? 'live' : 'off'}">${bcEnabled ? 'LIVE on site' : 'Off'}</span>
       </div>
       <div class="grid gap-3 md:grid-cols-2">
         <label class="block text-xs text-zinc-400">
@@ -420,7 +462,11 @@ function buildContentListHTML(rows: ContentRow[]): string {
   const hasBannersKey = rows.some(r => r.id === 'banners');
 
   if (rows.length === 0) {
-    html += `<div class="py-8 text-center text-zinc-400 border border-white/10 rounded-2xl">No content entries yet.<br><span class="text-xs">Click "Add New Key" above to start managing your public site content.</span></div>`;
+    if (load?.actionMissing) {
+      html += `<div data-hq-website-not-empty="1" class="py-8 text-center text-amber-100/90 border border-amber-400/30 rounded-2xl">Keys did not load. This is not an empty CMS. Talk (message all joiners) stays on this tab. Prize is under More.</div>`;
+    } else {
+      html += `<div class="py-8 text-center text-zinc-400 border border-white/10 rounded-2xl">No content entries yet.<br><span class="text-xs">Click "Add New Key" above to start managing your public site content.</span></div>`;
+    }
   } else {
     rows.forEach((row: ContentRow) => {
       const valStr = String(row.value ?? '');
@@ -606,6 +652,12 @@ function showContentForm(
  * Handles: search filtering, Add New Key, Edit, and Delete actions.
  */
 function attachContentListeners(content: HTMLElement, reloadList: () => Promise<void>, rows: ContentRow[]) {
+  content.querySelectorAll<HTMLButtonElement>('[data-hq-website-retry]').forEach((btn) => {
+    btn.onclick = () => {
+      void reloadList();
+    };
+  });
+
   // Update last refreshed timestamp
   const contentTs = content.querySelector('#content-last-updated');
   if (contentTs) {
@@ -849,7 +901,7 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
   });
 }
 
-export { renderEditContentTab };
+export { renderEditContentTab, buildContentListHTML };
 
 /**
  * Phase 2: Improved user-friendly editor for the "banners" key.

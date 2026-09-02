@@ -51,20 +51,23 @@ describe('prize-slot (Helix Bet 2)', () => {
         <img id="prize-slot-thumb" class="hidden" alt="" />
         <a id="prize-slot-site" aria-disabled="true">Your site here</a>
         <div id="prize-slot-meta">${EMPTY_SLOT_META}</div>
-        <p id="prize-threshold">Verified #1 with at least <span id="min-referrals-value">10</span> friends who tapped Get my link can claim the banner.</p>
+        <p id="prize-threshold">This week's top racer (not the site owner) with <span id="min-referrals-value">3</span> friends who tapped Get my link can claim the banner.</p>
       </div>
     `;
   });
 
-  it('defaults claim threshold to 10 and formats the named line', () => {
+  it('defaults claim threshold to 3 and formats the live 7-day line', () => {
     expect(parseMinReferralsForClaim(undefined)).toBe(DEFAULT_MIN_REFERRALS_FOR_CLAIM);
+    expect(DEFAULT_MIN_REFERRALS_FOR_CLAIM).toBe(3);
     expect(parseMinReferralsForClaim('10')).toBe(10);
     expect(parseMinReferralsForClaim({ minReferrals: 12 })).toBe(12);
-    expect(formatPrizeThresholdLine(10)).toBe(
-      'Verified #1 with at least 10 friends who tapped Get my link can claim the banner.',
+    expect(formatPrizeThresholdLine(3)).toBe(
+      "This week's top racer (not the site owner) with 3 friends who tapped Get my link can claim the banner.",
     );
-    expect(formatFaqPrizeAnswer(10)).toContain('at least 10 friends');
-    expect(formatFaqPrizeAnswer(10)).not.toMatch(/see threshold/i);
+    expect(formatFaqPrizeAnswer(3)).toContain('7-day homepage banner');
+    expect(formatFaqPrizeAnswer(3)).toContain('3 friends');
+    expect(formatFaqPrizeAnswer(3)).not.toMatch(/see threshold/i);
+    expect(formatFaqPrizeAnswer(3)).not.toMatch(/30-day/i);
   });
 
   it('resolves empty 7-day slot when no claimed banner, winner when there is one', () => {
@@ -144,7 +147,7 @@ describe('prize-slot (Helix Bet 2)', () => {
 
   it('paints the numeric threshold into the prize card', () => {
     paintPrizeThreshold(10);
-    expect(document.getElementById('prize-threshold')?.textContent).toContain('at least 10 friends');
+    expect(document.getElementById('prize-threshold')?.textContent).toContain('with 10 friends');
     expect(document.getElementById('min-referrals-value')?.textContent).toBe('10');
   });
 
@@ -191,7 +194,7 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).toContain('Your site here · 7 days');
     expect(html).not.toContain('yourwebsite.com');
     expect(html).toContain('id="prize-threshold"');
-    expect(html).toContain('id="min-referrals-value">10<');
+    expect(html).toContain('id="min-referrals-value">3<');
     expect(html).toContain(PRIZE_FOMO_LINE);
     expect(html).toContain(ONE_PRIZE_SENTENCE);
     expect(html).toContain(EMPTY_AD_NOTE);
@@ -213,7 +216,9 @@ describe('prize-slot (Helix Bet 2)', () => {
     expect(html).not.toContain('Hall of Crowns');
     expect(html).not.toMatch(/see threshold on site/i);
     expect(html).not.toMatch(/minimum referrals as shown/i);
-    expect(HOMEPAGE_FAQ[2]?.answer).toContain('at least 10 friends');
+    expect(HOMEPAGE_FAQ[2]?.answer).toContain('7-day homepage banner');
+    expect(HOMEPAGE_FAQ[2]?.answer).toContain('3 friends');
+    expect(HOMEPAGE_FAQ[2]?.answer).not.toMatch(/30-day/i);
   });
 
   it('formats inventory and unlock lines without naming a fake winner', () => {

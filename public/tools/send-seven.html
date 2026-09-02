@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Send to 7 real people — not a group blast · ViralRefer</title>
+  <meta name="description" content="White-hat send list: seven people who already talk to you. Not Facebook groups, not traffic exchanges. ViralRefer credits a friend’s Get my link. No cash prize." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/send-seven.html" />
+  <meta property="og:title" content="Send to 7 real people" />
+  <meta property="og:description" content="A private list in your browser. No spam. No cash prize." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/send-seven.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem)}
+    input{width:100%;min-height:48px;border-radius:.8rem;border:1px solid var(--border);background:rgba(0,0,0,.35);color:#fff;padding:.7rem .9rem;font:16px inherit;margin:.35rem 0}
+    .row{display:flex;gap:.5rem;align-items:center}
+    .row input[type=checkbox]{width:22px;height:22px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;border:none;cursor:pointer;font:inherit;margin-top:.8rem}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=send_seven&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>Seven real people</h1>
+    <p class="muted">Names stay in this browser only. Do not blast groups. Do not use traffic exchanges. A credit is a unique friend tapping Get my link. No cash prize.</p>
+    <div id="list"></div>
+    <p class="muted" id="done"></p>
+    <button type="button" class="btn" id="clear" style="background:rgba(255,255,255,.08);border:1px solid var(--border)">Clear list</button>
+    <a class="btn" href="https://www.viralrefer.app/?utm_source=send_seven&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted" style="margin-top:1.2rem"><a href="/guides/share-without-spam/">Share without spam</a></p>
+  </div>
+  <script>
+    const KEY = "vr-send-seven-v1";
+    const list = document.getElementById("list");
+    function load() {
+      try { return JSON.parse(localStorage.getItem(KEY) || "null") || Array.from({ length: 7 }, () => ({ n: "", d: false })); }
+      catch { return Array.from({ length: 7 }, () => ({ n: "", d: false })); }
+    }
+    let rows = load();
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(rows)); } catch(_){} }
+    function draw() {
+      list.innerHTML = "";
+      rows.forEach((row, i) => {
+        const wrap = document.createElement("div");
+        wrap.className = "row";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = !!row.d;
+        cb.setAttribute("aria-label", "Sent to person " + (i + 1));
+        cb.addEventListener("change", () => { rows[i].d = cb.checked; save(); done(); });
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.maxLength = 40;
+        inp.placeholder = "Person " + (i + 1) + " — someone who already talks to you";
+        inp.value = row.n;
+        inp.addEventListener("input", () => { rows[i].n = inp.value.slice(0, 40); save(); });
+        wrap.append(cb, inp);
+        list.append(wrap);
+      });
+      done();
+    }
+    function done() {
+      const n = rows.filter((r) => r.d).length;
+      document.getElementById("done").textContent = n + " / 7 marked sent. 3 verified Get-links this week can unlock the banner for #1 (not the operator).";
+    }
+    document.getElementById("clear").addEventListener("click", () => {
+      rows = Array.from({ length: 7 }, () => ({ n: "", d: false }));
+      save();
+      draw();
+    });
+    draw();
+  </script>
+</body>
+</html>

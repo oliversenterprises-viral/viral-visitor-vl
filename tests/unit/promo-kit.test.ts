@@ -56,7 +56,8 @@ describe('promo-kit', () => {
     expect(isXAlgorithmSafeCaption(caps.xSafe)).toBe(true);
     expect(caps.xSafe).not.toMatch(/https?:\/\//i);
     expect(caps.xSafe).not.toMatch(/viralrefer\.app/i);
-    expect(caps.xSafe).toContain('Tap Get my link');
+    expect(caps.xSafe).toContain('Site Drops');
+    expect(caps.xSafe).toContain('#1 gets the banner');
     expect(caps.xSafe).toContain('VIRAL-TEST1');
   });
 
