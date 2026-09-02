@@ -205,9 +205,8 @@ function readEnv(name: string): string {
   if (!name || name.startsWith('VITE_')) return '';
   try {
     const deno = (globalThis as { Deno?: { env?: { get?: (k: string) => string | undefined } } }).Deno;
-    const env = deno?.env;
-    if (env && typeof env.get === 'function') {
-      const fromDeno = String(env.get(name) || '').trim();
+    if (deno?.env && typeof deno.env.get === 'function') {
+      const fromDeno = String(deno.env.get(name) || '').trim();
       if (fromDeno) return fromDeno;
     }
   } catch {
@@ -294,10 +293,15 @@ async function importPkcs8(pem: string): Promise<CryptoKey> {
 
 export async function resolveOwnerFunnelGsc(opts?: {
   secret?: string;
+  site?: string;
   query?: typeof gscQuery;
 }): Promise<OwnerFunnelGscMetrics> {
   const secret = (opts?.secret ?? readGscServerSecret()).trim();
-  if (!secret) return emptyOwnerFunnelGsc('missing_credentials');
+  const site = (opts?.site ?? readGscSiteUrl()).trim() || GSC_PROPERTY;
+  if (!secret) {
+    const empty = emptyOwnerFunnelGsc('missing_credentials');
+    return { ...empty, property: site, consoleUrl: gscConsoleUrlFor(site) };
+  }
 
   const query = opts?.query ?? gscQuery;
   try {
@@ -310,7 +314,6 @@ export async function resolveOwnerFunnelGsc(opts?: {
     } else {
       bearer = secret;
     }
-    const site = readGscSiteUrl();
     const token = { bearer: bearer || undefined, apiKey: apiKey || undefined, site };
     const [totals, pages, queries, countries] = await Promise.all([
       query(token, [], 1),

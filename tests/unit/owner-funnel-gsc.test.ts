@@ -227,8 +227,13 @@ describe('owner funnel GSC tracker', () => {
     const src = readFileSync(resolve(root, 'supabase/functions/admin-action/index.ts'), 'utf8');
     expect(src).toMatch(/action === 'get_owner_funnel_desk'/);
     expect(src).toMatch(/resolveOwnerFunnelGsc/);
+    expect(src).toContain("Deno.env.get('GSC_SERVICE_ACCOUNT_JSON')");
+    expect(src).toContain("Deno.env.get('GSC_SITE_URL')");
+    expect(src).toMatch(/resolveOwnerFunnelGsc\(\{ secret, site \}\)/);
+    expect(src).not.toMatch(/console\.(log|info|debug|error|warn)\([^)]*secret/i);
     expect(src).toMatch(/data: \{ \.\.\.metrics, gsc \}/);
     expect(src).not.toMatch(/vercel --prod/);
+    expect(src).not.toMatch(/GSC_API_KEY/);
   });
 
   it('does not edit the GSC verification file', () => {

@@ -132,6 +132,11 @@ describe('first-screen Site Drops rules', () => {
     expect(read('src/admin/owner-funnel-desk.ts')).toMatch(/data-owner-desk-gsc/);
     expect(read('index.html')).toMatch(/data-owner-desk-gsc/);
     expect(read('supabase/functions/admin-action/index.ts')).toMatch(/resolveOwnerFunnelGsc/);
+    expect(read('supabase/functions/admin-action/index.ts')).toContain(
+      "Deno.env.get('GSC_SERVICE_ACCOUNT_JSON')",
+    );
+    expect(read('supabase/functions/admin-action/index.ts')).toContain("Deno.env.get('GSC_SITE_URL')");
+    expect(read('supabase/functions/admin-action/index.ts')).not.toMatch(/GSC_API_KEY/);
     expect(read('supabase/functions/_shared/owner-funnel-gsc.ts')).toContain(
       "readEnv('GSC_SERVICE_ACCOUNT_JSON')",
     );
