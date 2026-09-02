@@ -41,6 +41,11 @@ export const LOCKED_LIVE_HOW_STEP3 =
 export const LOCKED_LIVE_PRIZE_SUB =
   'Site Drops put your site on this page as you climb. This week\u2019s #1 (not the owner) with 3 friends still gets the 7-day banner.';
 
+export const LOCKED_LIVE_HOW_BADGE = 'SITE DROP LADDER';
+
+export const LOCKED_LIVE_HOW_SUBTITLE =
+  'Get a link. Send it. A friend tapping Get my link puts your site on this page.';
+
 export const LOCKED_LIVE_HOW_STEP3_TITLE = '3. Watch your site climb';
 
 export const LOCKED_LIVE_PRIZE_TITLE = 'The #1 banner';

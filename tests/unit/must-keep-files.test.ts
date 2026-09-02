@@ -5,8 +5,10 @@ import { en } from '../../src/lib/i18n/messages';
 import {
   LOCKED_LIVE_FAQ_A3,
   LOCKED_LIVE_FAQ_PRIZE,
+  LOCKED_LIVE_HOW_BADGE,
   LOCKED_LIVE_HOW_STEP3,
   LOCKED_LIVE_HOW_STEP3_TITLE,
+  LOCKED_LIVE_HOW_SUBTITLE,
   LOCKED_LIVE_PRIZE_CTA,
   LOCKED_LIVE_PRIZE_SUB,
   LOCKED_LIVE_PRIZE_TITLE,
@@ -85,6 +87,9 @@ describe('must-keep files', () => {
     expect(html).not.toContain('at least 10 friends');
     expect(html).toContain(LOCKED_LIVE_FAQ_PRIZE);
     expect(html).toContain(LOCKED_LIVE_FAQ_A3);
+    expect(html).toContain(LOCKED_LIVE_HOW_BADGE);
+    expect(html).not.toMatch(/id="how-it-works-badge"[^>]*>3 EASY STEPS/);
+    expect(html).toContain(LOCKED_LIVE_HOW_SUBTITLE);
     expect(html).toContain(LOCKED_LIVE_HOW_STEP3);
     expect(html).toContain(LOCKED_LIVE_HOW_STEP3_TITLE);
     expect(html).toContain(LOCKED_LIVE_PRIZE_SUB);
@@ -93,6 +98,8 @@ describe('must-keep files', () => {
     expect(html).toContain('7-day homepage slot');
     expect(html).toContain('id="min-referrals-value">3<');
 
+    expect(en['how.badge']).toBe(LOCKED_LIVE_HOW_BADGE);
+    expect(en['how.subtitle']).toBe(LOCKED_LIVE_HOW_SUBTITLE);
     expect(en['how.step3_title']).toBe(LOCKED_LIVE_HOW_STEP3_TITLE);
     expect(en['how.step3_desc']).toBe(LOCKED_LIVE_HOW_STEP3);
     expect(en['prize.subtitle']).toBe(LOCKED_LIVE_PRIZE_SUB);

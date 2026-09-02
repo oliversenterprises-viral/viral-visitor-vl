@@ -49,9 +49,9 @@ export const en = {
   'funnel.step3': '3. Climb',
   'funnel.coach': 'Step 1: tap Get my link.',
 
-  'how.badge': '3 EASY STEPS',
+  'how.badge': 'SITE DROP LADDER',
   'how.title': 'How ViralRefer Works',
-  'how.subtitle': 'Three easy steps. Free. No sign-up.',
+  'how.subtitle': 'Get a link. Send it. A friend tapping Get my link puts your site on this page.',
   'how.step1_title': '1. Get your link',
   'how.step1_desc': 'Tap the big button. You get your own free link in a few seconds. No email needed.',
   'how.step2_title': '2. Send your link',
@@ -571,6 +571,33 @@ const hi = dict({
   'footer.terms': 'शर्तें',
   'lang.hint': 'पेज की भाषा',
 });
+
+/** Prize / How ladder facts stay the English live lines — do not invent locale copy. */
+const PRIZE_FACT_KEYS = [
+  'how.badge',
+  'how.subtitle',
+  'how.step3_title',
+  'how.step3_desc',
+  'hero.prize_one',
+  'hero.trust',
+  'prize.title',
+  'prize.subtitle',
+  'prize.card2_desc',
+  'prize.card3_desc',
+  'prize.cta',
+] as const;
+
+function applyEnglishPrizeFacts(d: Dict): void {
+  for (const key of PRIZE_FACT_KEYS) {
+    d[key] = en[key];
+  }
+}
+
+applyEnglishPrizeFacts(es);
+applyEnglishPrizeFacts(fr);
+applyEnglishPrizeFacts(pt);
+applyEnglishPrizeFacts(de);
+applyEnglishPrizeFacts(hi);
 
 // Correct German coach string (must not contain CJK)
 

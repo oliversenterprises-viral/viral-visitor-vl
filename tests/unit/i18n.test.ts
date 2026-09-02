@@ -8,6 +8,7 @@ import {
   getLocale,
   isLocale,
 } from '../../src/lib/i18n';
+import { MESSAGES, SUPPORTED_LOCALES } from '../../src/lib/i18n/messages';
 
 describe('i18n phase 1', () => {
   beforeEach(() => {
@@ -63,5 +64,30 @@ describe('i18n phase 1', () => {
     expect(getLocale()).toBe('pt');
     expect(localStorage.getItem('vr_locale')).toBe('pt');
     expect(document.querySelector('[data-i18n="hero.cta"]')?.textContent).toMatch(/indicação|link/i);
+  });
+
+  it('every locale uses the English 7-day / 3 friends / no-cash prize facts', () => {
+    const facts = [
+      'how.badge',
+      'how.subtitle',
+      'how.step3_title',
+      'how.step3_desc',
+      'hero.prize_one',
+      'hero.trust',
+      'prize.title',
+      'prize.subtitle',
+      'prize.card2_desc',
+      'prize.card3_desc',
+      'prize.cta',
+    ] as const;
+    for (const locale of SUPPORTED_LOCALES) {
+      for (const key of facts) {
+        expect(MESSAGES[locale][key]).toBe(MESSAGES.en[key]);
+      }
+      expect(MESSAGES[locale]['prize.subtitle']).toMatch(/7-day banner/);
+      expect(MESSAGES[locale]['how.step3_desc']).toMatch(/3 friends/);
+      expect(MESSAGES[locale]['prize.card2_desc'].toLowerCase()).toMatch(/no cash/);
+      expect(MESSAGES[locale]['how.badge']).toBe('SITE DROP LADDER');
+    }
   });
 });
