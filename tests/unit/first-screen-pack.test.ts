@@ -43,6 +43,12 @@ describe('first-screen pack (locked Site Drops page)', () => {
     expect(css).toContain('color: #f4f4f5 !important');
   });
 
+  it('does not hydrate extra slot lines before Get my link', () => {
+    const pull = read('src/lib/prize-pull.ts');
+    expect(pull).toContain("hasAttribute('data-vr-has-link')");
+    expect(pull).toMatch(/if \(typeof document !== 'undefined' && !document\.documentElement\.hasAttribute\('data-vr-has-link'\)\)/);
+  });
+
   it('does not CSS-hide How, Board, or footer on the public page', () => {
     expect(html).toContain('id="how"');
     expect(html).toContain('id="leaderboard"');

@@ -13,6 +13,10 @@ function slotKindFromDom(): PrizeSlotKind {
 }
 
 export async function initPrizePullProof(): Promise<void> {
+  // First-screen pack: keep Seen N / 10-friends lines off cold first paint.
+  if (typeof document !== 'undefined' && !document.documentElement.hasAttribute('data-vr-has-link')) {
+    return;
+  }
   const pull = await fetchPublicPrizePull();
   let leader = pull.leaderReferrals;
   if (leader <= 0) {
