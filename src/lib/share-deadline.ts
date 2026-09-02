@@ -170,13 +170,55 @@ export function unlockIfReferralCountUnlocked(count: number): boolean {
   return true;
 }
 
+/** Collapse burst callers (populate + applyExisting + tap) into one POST. */
+const REGISTER_TAP_DEDUPE_MS = 2500;
+let registerInFlight: Promise<ShareDeadlineState | null> | null = null;
+let registerInFlightCode = '';
+let lastRegisterAt = 0;
+let lastRegisterCode = '';
+
+export function resetRegisterReferrerLinkDeadlineForTest(): void {
+  registerInFlight = null;
+  registerInFlightCode = '';
+  lastRegisterAt = 0;
+  lastRegisterCode = '';
+}
+
 /** Register code on the server (starts the first-referral deadline clock). */
 export async function registerReferrerLinkDeadline(
   code: string,
+  opts?: { force?: boolean },
 ): Promise<ShareDeadlineState | null> {
   const referrer_code = String(code || '').trim().toUpperCase();
   if (!referrer_code) return null;
 
+  if (!opts?.force) {
+    if (registerInFlight && registerInFlightCode === referrer_code) {
+      return registerInFlight;
+    }
+    if (
+      lastRegisterCode === referrer_code &&
+      Date.now() - lastRegisterAt < REGISTER_TAP_DEDUPE_MS
+    ) {
+      return readShareDeadlineState();
+    }
+  }
+
+  lastRegisterCode = referrer_code;
+  lastRegisterAt = Date.now();
+  registerInFlightCode = referrer_code;
+  registerInFlight = invokeRegisterReferrerLink(referrer_code).finally(() => {
+    if (registerInFlightCode === referrer_code) {
+      registerInFlight = null;
+      registerInFlightCode = '';
+    }
+  });
+  return registerInFlight;
+}
+
+async function invokeRegisterReferrerLink(
+  referrer_code: string,
+): Promise<ShareDeadlineState | null> {
   const fallback: ShareDeadlineState = {
     code: referrer_code,
     status: 'pending_share',
@@ -531,7 +573,7 @@ export function initShareDeadlineUi(): void {
   statusPollTimer = setInterval(() => {
     const state = readShareDeadlineState();
     if (!state || state.status !== 'pending_share') return;
-    void registerReferrerLinkDeadline(state.code);
+    void registerReferrerLinkDeadline(state.code, { force: true });
   }, 20_000);
 
   if (!localeListenerBound && typeof window !== 'undefined') {

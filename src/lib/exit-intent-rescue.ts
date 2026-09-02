@@ -123,7 +123,6 @@ export function initExitIntentRescue(win: Window = window): void {
   const started = Date.now();
   const coarse = win.matchMedia('(pointer: coarse)').matches;
   const isPaidTraffic = win.document.documentElement.getAttribute('data-vr-paid-landing') === '1';
-  const dwellNeed = resolveExitDwellMs({ isCoarsePointer: coarse, isPaidTraffic });
 
   const tryShow = (mode: 'exit' | 'dwell') => {
     if (
@@ -142,15 +141,11 @@ export function initExitIntentRescue(win: Window = window): void {
     showRescuePanel(mode);
   };
 
+  // Exit-intent only (mouse leave at top). Never auto-fire on dwell / first load.
   if (!coarse) {
     win.document.addEventListener('mouseout', (e: MouseEvent) => {
       if (e.clientY > 12 || e.relatedTarget != null) return;
       tryShow('exit');
     });
-    if (isPaidTraffic) {
-      win.setTimeout(() => tryShow('dwell'), dwellNeed);
-    }
-  } else {
-    win.setTimeout(() => tryShow('dwell'), dwellNeed);
   }
 }

@@ -390,8 +390,6 @@ html[data-vr-send-mode] #distance-glory-meter,
 html[data-vr-send-mode] #growth-command-center,
 html[data-vr-send-mode] #my-stats,
 html[data-vr-send-mode] #funnel-journey,
-html[data-vr-send-mode] #how,
-html[data-vr-send-mode] #prize,
 html[data-vr-send-mode] #copy-message-btn,
 html[data-vr-send-mode] #new-code-button,
 html[data-vr-send-mode] #share-more-options-btn,
@@ -458,8 +456,7 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #weekly
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #daily-crown-section,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-campaign-badge,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #referral-section,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #prize {
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey {
   display: none !important;
 }
 
@@ -2282,12 +2279,23 @@ html[data-vr-referred-landing][data-vr-has-link] #funnel-expand-wrap {
   display: none;
 }
 
-html:not([data-vr-funnel-expanded]) [data-vr-below-fold] {
+/* Public homepage: How / Feature / Board stay in the document (nav + footer).
+   Embed + referred-micro still collapse below-fold until they have a link. */
+html[data-vr-embed] [data-vr-below-fold],
+html[data-vr-referred-micro]:not([data-vr-has-link]) [data-vr-below-fold] {
   display: none !important;
 }
 
 html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) [data-vr-below-fold] {
   display: none !important;
+}
+
+/* Public homepage (not embed / not referred-micro): sections + footer stay painted. */
+html:not([data-vr-embed]):not([data-vr-referred-micro]) #how,
+html:not([data-vr-embed]):not([data-vr-referred-micro]) #prize,
+html:not([data-vr-embed]):not([data-vr-referred-micro]) #leaderboard,
+html:not([data-vr-embed]):not([data-vr-referred-micro]) footer {
+  display: block !important;
 }
 
 html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) #hero-leaderboard-btn {
@@ -2754,10 +2762,7 @@ html:not([data-vr-has-link]) #my-stats {
   display: none !important;
 }
 
-/* Claim block is not the first job — hide even before kid-simple JS runs */
-html:not([data-vr-has-link]) #prize {
-  display: none !important;
-}
+/* #prize stays visible on the public homepage so Feature nav works. */
 
 /* NEW CODE only after they have a code */
 html:not([data-vr-has-link]) #new-code-button {
@@ -3575,6 +3580,12 @@ svg {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+/* Always-dark header: wordmark must stay light even if prefers-color-scheme is light
+   (--text-h is #08060d / rgb(8,6,13) in the light :root). */
+#vr-nav .logo-font {
+  color: #f4f4f5;
+}
+
 .vr-hero-title,
 #hero-title {
   overflow-wrap: break-word;
@@ -4226,8 +4237,7 @@ html[data-vr-has-link] #hero-badge,
 html[data-vr-has-link] #hero-trust-line,
 html[data-vr-has-link] #hero-lock-rule,
 html[data-vr-has-link] #hero-global-proof,
-html[data-vr-has-link] #funnel-expand-wrap,
-html[data-vr-has-link] [data-vr-below-fold] {
+html[data-vr-has-link] #funnel-expand-wrap {
   display: none !important;
 }
 

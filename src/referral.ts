@@ -301,11 +301,6 @@ export function applyExistingReferralLink(code: string): void {
   syncMobileReferralCta();
   initShareDeadlineUi();
   activatePostLinkShare(link);
-  void registerReferrerLinkDeadline(code).then((state) => {
-    if (state?.status === 'expired') {
-      enforceLocalShareDeadlineExpiry(code);
-    }
-  });
   if (pendingReferrerCode && !referralRecordedThisSession) {
     void runFunnelReferralRecording();
   }

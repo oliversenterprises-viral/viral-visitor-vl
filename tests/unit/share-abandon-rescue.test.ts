@@ -64,7 +64,7 @@ describe('share-abandon-rescue', () => {
     expect(shouldShowShareAbandon({ ...base, dwellMs: 1000 })).toBe(false);
   });
 
-  it('poll skips when share strip already in view (fatigue mitigation)', () => {
+  it('never auto-opens on dwell, poll, or return — exit-intent only', () => {
     const base = {
       hasLink: true,
       sharePending: true,
@@ -75,11 +75,12 @@ describe('share-abandon-rescue', () => {
       isCoarsePointer: false,
       embed: false,
       confirmFlowActive: false,
-      reason: 'poll',
-      shareStripInView: true,
+      shareStripInView: false,
     };
-    expect(shouldShowShareAbandon(base)).toBe(false);
-    expect(shouldShowShareAbandon({ ...base, shareStripInView: false })).toBe(true);
+    expect(shouldShowShareAbandon({ ...base, reason: 'dwell' })).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, reason: 'poll' })).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, reason: 'return' })).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, reason: 'exit' })).toBe(true);
   });
 
   it('mobile needs longer dwell', () => {

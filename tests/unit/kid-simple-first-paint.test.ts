@@ -18,9 +18,12 @@ describe('kid-simple first paint', () => {
     expect(head).toContain("setAttribute('data-vr-referred-landing'");
   });
 
-  it('hides #prize before a link without waiting for kid-simple JS', () => {
+  it('keeps #prize visible on the public homepage so Feature nav works', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
-    expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #prize/);
+    expect(css).toMatch(
+      /html:not\(\[data-vr-embed\]\):not\(\[data-vr-referred-micro\]\) #prize/,
+    );
+    expect(css).not.toMatch(/html:not\(\[data-vr-has-link\]\) #prize \{\s*display: none/);
   });
 
   it('first screen is one race with Get my referral link', () => {
@@ -70,10 +73,14 @@ describe('kid-simple first paint', () => {
     expect(css).toMatch(/#vr-verified-total:not\(\.vr-verified-total--ready\)/);
   });
 
-  it('hides How / FAQ / board on a cold land until expand', () => {
+  it('hides How / FAQ / board only in embed and referred-micro', () => {
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
-    expect(css).toMatch(/html:not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]/);
+    expect(css).toMatch(/html\[data-vr-embed\] \[data-vr-below-fold\]/);
+    expect(css).toMatch(
+      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) \[data-vr-below-fold\]/,
+    );
+    expect(css).not.toMatch(/html:not\(\[data-vr-funnel-expanded\]\) \[data-vr-below-fold\]/);
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-micro\]\) #funnel-expand-wrap/);
     expect(css).toMatch(/html:not\(\[data-vr-share-locked\]\) #daily-crown-section/);
     expect(html).not.toContain('id="daily-crown-section"');
