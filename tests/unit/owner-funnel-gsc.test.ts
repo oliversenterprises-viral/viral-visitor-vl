@@ -12,6 +12,7 @@ import {
   GSC_PROPERTY,
   parseOwnerFunnelGsc,
   readGscServerSecret,
+  readGscSiteUrl,
   resolveOwnerFunnelGsc,
 } from '../../src/admin/owner-funnel-desk-helpers';
 
@@ -123,13 +124,15 @@ describe('owner funnel GSC tracker', () => {
     expect(gsc.consoleUrl).toContain(encodeURIComponent(GSC_PROPERTY));
   });
 
-  it('reads Edge names GSC_API_KEY and GSC_SERVICE_ACCOUNT_JSON, never VITE_', () => {
-    expect(GSC_EDGE_SECRET_NAMES).toEqual(['GSC_API_KEY', 'GSC_SERVICE_ACCOUNT_JSON']);
+  it('reads Edge names GSC_SERVICE_ACCOUNT_JSON then GSC_SITE_URL, never VITE_', () => {
+    expect(GSC_EDGE_SECRET_NAMES).toEqual(['GSC_SERVICE_ACCOUNT_JSON', 'GSC_SITE_URL']);
     const gscSrc = readFileSync(resolve(root, 'supabase/functions/_shared/owner-funnel-gsc.ts'), 'utf8');
-    expect(gscSrc).toContain("readEnv('GSC_API_KEY')");
     expect(gscSrc).toContain("readEnv('GSC_SERVICE_ACCOUNT_JSON')");
+    expect(gscSrc).toContain("readEnv('GSC_SITE_URL')");
+    expect(gscSrc).not.toMatch(/GSC_API_KEY/);
     expect(gscSrc).not.toMatch(/VITE_GSC|VITE_GOOGLE|import\.meta\.env/);
     expect(gscSrc).not.toMatch(/AIza[0-9A-Za-z_-]{20,}/);
+    expect(gscSrc).not.toMatch(/console\.(log|info|debug|error|warn)\([^)]*(secret|json|GSC_SERVICE)/i);
 
     const saved = globalThis.Deno;
     const env: Record<string, string> = {};
@@ -137,13 +140,43 @@ describe('owner funnel GSC tracker', () => {
       env: { get: (k) => env[k] },
     };
     expect(readGscServerSecret()).toBe('');
+    expect(readGscSiteUrl()).toBe(GSC_PROPERTY);
     env.VITE_GSC_API_KEY = 'must-never-be-read';
     expect(readGscServerSecret()).toBe('');
-    env.GSC_API_KEY = 'edge-api-key';
-    expect(readGscServerSecret()).toBe('edge-api-key');
-    delete env.GSC_API_KEY;
     env.GSC_SERVICE_ACCOUNT_JSON = '{"client_email":"x","private_key":"y"}';
     expect(readGscServerSecret()).toBe('{"client_email":"x","private_key":"y"}');
+    env.GSC_SITE_URL = 'https://www.viralrefer.app/';
+    expect(readGscSiteUrl()).toBe('https://www.viralrefer.app/');
+    if (saved === undefined) delete (globalThis as { Deno?: unknown }).Deno;
+    else (globalThis as { Deno?: unknown }).Deno = saved;
+  });
+
+  it('uses GSC_SITE_URL as the Search Console property and still requires the JSON secret', async () => {
+    const saved = globalThis.Deno;
+    const env: Record<string, string> = {
+      GSC_SITE_URL: 'https://www.viralrefer.app/',
+    };
+    (globalThis as { Deno?: { env: { get: (k: string) => string | undefined } } }).Deno = {
+      env: { get: (k) => env[k] },
+    };
+    expect(readGscSiteUrl()).toBe('https://www.viralrefer.app/');
+    const missing = await resolveOwnerFunnelGsc();
+    expect(missing.status).toBe('missing_credentials');
+    expect(missing.property).toBe('https://www.viralrefer.app/');
+
+    env.GSC_SERVICE_ACCOUNT_JSON = '{"client_email":"x","private_key":"y"}';
+    let queriedSite = '';
+    const gsc = await resolveOwnerFunnelGsc({
+      secret: 'ya29.test-token',
+      query: async (token) => {
+        queriedSite = String(token.site || '');
+        return [{ clicks: 1, impressions: 10, position: 2 }];
+      },
+    });
+    expect(queriedSite).toBe('https://www.viralrefer.app/');
+    expect(gsc.status).toBe('ok');
+    expect(gsc.property).toBe('https://www.viralrefer.app/');
+    expect(gsc.consoleUrl).toContain(encodeURIComponent('https://www.viralrefer.app/'));
     if (saved === undefined) delete (globalThis as { Deno?: unknown }).Deno;
     else (globalThis as { Deno?: unknown }).Deno = saved;
   });

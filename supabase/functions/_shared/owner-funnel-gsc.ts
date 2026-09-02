@@ -4,9 +4,13 @@
  */
 
 export const GSC_PROPERTY = 'https://www.viralrefer.app/';
-export const GSC_CONSOLE_URL =
-  'https://search.google.com/search-console/performance/search-analytics?resource_id=' +
-  encodeURIComponent(GSC_PROPERTY);
+export function gscConsoleUrlFor(property: string): string {
+  return (
+    'https://search.google.com/search-console/performance/search-analytics?resource_id=' +
+    encodeURIComponent(property)
+  );
+}
+export const GSC_CONSOLE_URL = gscConsoleUrlFor(GSC_PROPERTY);
 export const GSC_WINDOW_DAYS = 28;
 export const GSC_MISSING_NOTE =
   'Search Console is verified. Add the API key on the server to show numbers here.';
@@ -42,6 +46,7 @@ export function emptyOwnerFunnelGsc(
   status: OwnerFunnelGscStatus = 'missing_credentials',
   note?: string,
 ): OwnerFunnelGscMetrics {
+  const property = readGscSiteUrl();
   return {
     status,
     windowDays: GSC_WINDOW_DAYS,
@@ -54,8 +59,8 @@ export function emptyOwnerFunnelGsc(
     otherPages: EMPTY_ROWS,
     countries: EMPTY_ROWS,
     note: note ?? (status === 'missing_credentials' ? GSC_MISSING_NOTE : undefined),
-    property: GSC_PROPERTY,
-    consoleUrl: GSC_CONSOLE_URL,
+    property,
+    consoleUrl: gscConsoleUrlFor(property),
   };
 }
 
@@ -151,14 +156,14 @@ type GscQueryRow = {
 };
 
 async function gscQuery(
-  token: { bearer?: string; apiKey?: string },
+  token: { bearer?: string; apiKey?: string; site?: string },
   dimensions: string[],
   rowLimit = 15,
 ): Promise<GscQueryRow[]> {
   const end = new Date();
   const start = new Date(end.getTime() - GSC_WINDOW_DAYS * 24 * 60 * 60 * 1000);
   const iso = (d: Date) => d.toISOString().slice(0, 10);
-  const site = encodeURIComponent(GSC_PROPERTY);
+  const site = encodeURIComponent(token.site || GSC_PROPERTY);
   const qs = token.apiKey && !token.bearer ? `?key=${encodeURIComponent(token.apiKey)}` : '';
   const url = `https://searchconsole.googleapis.com/webmasters/v3/sites/${site}/searchAnalytics/query${qs}`;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -194,7 +199,7 @@ function isToolPage(url: string): boolean {
 }
 
 /** Supabase Edge secret names. Never VITE_ — the browser must not see these. */
-export const GSC_EDGE_SECRET_NAMES = ['GSC_API_KEY', 'GSC_SERVICE_ACCOUNT_JSON'] as const;
+export const GSC_EDGE_SECRET_NAMES = ['GSC_SERVICE_ACCOUNT_JSON', 'GSC_SITE_URL'] as const;
 
 function readEnv(name: string): string {
   if (!name || name.startsWith('VITE_')) return '';
@@ -217,14 +222,11 @@ function readEnv(name: string): string {
 }
 
 export function readGscServerSecret(): string {
-  return (
-    readEnv('GSC_API_KEY') ||
-    readEnv('GSC_SERVICE_ACCOUNT_JSON') ||
-    readEnv('GOOGLE_SEARCH_CONSOLE_API_KEY') ||
-    readEnv('GSC_ACCESS_TOKEN') ||
-    readEnv('GOOGLE_API_KEY') ||
-    readEnv('GOOGLE_SERVICE_ACCOUNT_JSON')
-  );
+  return readEnv('GSC_SERVICE_ACCOUNT_JSON');
+}
+
+export function readGscSiteUrl(): string {
+  return readEnv('GSC_SITE_URL') || GSC_PROPERTY;
 }
 
 function isServiceAccountJson(raw: string): boolean {
@@ -308,7 +310,8 @@ export async function resolveOwnerFunnelGsc(opts?: {
     } else {
       bearer = secret;
     }
-    const token = { bearer: bearer || undefined, apiKey: apiKey || undefined };
+    const site = readGscSiteUrl();
+    const token = { bearer: bearer || undefined, apiKey: apiKey || undefined, site };
     const [totals, pages, queries, countries] = await Promise.all([
       query(token, [], 1),
       query(token, ['page'], 20),
@@ -332,8 +335,8 @@ export async function resolveOwnerFunnelGsc(opts?: {
       topSearches: rowsFromQuery(queries),
       otherPages,
       countries: rowsFromQuery(countries),
-      property: GSC_PROPERTY,
-      consoleUrl: GSC_CONSOLE_URL,
+      property: site,
+      consoleUrl: gscConsoleUrlFor(site),
     };
   } catch {
     return emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.');

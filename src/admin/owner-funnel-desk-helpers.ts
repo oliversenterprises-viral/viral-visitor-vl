@@ -40,6 +40,7 @@ export {
   GSC_PROPERTY,
   parseOwnerFunnelGsc,
   readGscServerSecret,
+  readGscSiteUrl,
   resolveOwnerFunnelGsc,
   type OwnerFunnelGscMetrics,
 } from '../../supabase/functions/_shared/owner-funnel-gsc';
