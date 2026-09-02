@@ -69,6 +69,9 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toMatch(/href="#leaderboard"[^>]*data-i18n="nav.board"/);
     expect(html).not.toMatch(/href="#how"[^>]*hidden sm:inline/);
     expect(html).toContain('<footer');
+    expect(css).toMatch(
+      /html\[data-vr-direct-landing\]:not\(\[data-vr-has-link\]\) \.vr-nav-link:not\(\[href="#how"\]\):not\(\[href="#leaderboard"\]\)/,
+    );
   });
 
   it('keeps Copy above overlays', () => {

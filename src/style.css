@@ -683,7 +683,7 @@ html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-link {
   font-size: 0.75rem;
   opacity: 0.8;
 }
-html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-nav-link {
+html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-nav-link:not([href="#how"]):not([href="#leaderboard"]) {
   display: none !important;
 }
 html[data-vr-direct-landing]:not([data-vr-has-link]) #admin-btn {
