@@ -45,8 +45,8 @@ describe('i18n phase 1', () => {
   });
 
   it('t falls back to English for missing keys/locale', () => {
-    expect(t('hero.cta', 'en')).toMatch(/get my referral link/i);
-    expect(t('hero.cta', 'es')).toMatch(/enlace/i);
+    expect(t('hero.cta', 'en')).toBe('Get my referral link');
+    expect(t('hero.cta', 'es')).toBe('Get my referral link');
     expect(isLocale('es')).toBe(true);
     expect(isLocale('xx')).toBe(false);
   });
@@ -56,18 +56,26 @@ describe('i18n phase 1', () => {
     expect(document.documentElement.lang).toBe('es');
     expect(document.documentElement.getAttribute('data-vr-locale')).toBe('es');
     expect(document.querySelector('[data-i18n="nav.how"]')?.textContent).toBe('Cómo');
-    expect(document.querySelector('[data-i18n="hero.cta"]')?.textContent).toMatch(/enlace/i);
+    expect(document.querySelector('[data-i18n="hero.cta"]')?.textContent).toBe('Get my referral link');
   });
 
   it('setLocale persists and re-applies', () => {
     setLocale('pt');
     expect(getLocale()).toBe('pt');
     expect(localStorage.getItem('vr_locale')).toBe('pt');
-    expect(document.querySelector('[data-i18n="hero.cta"]')?.textContent).toMatch(/indicação|link/i);
+    expect(document.querySelector('[data-i18n="hero.cta"]')?.textContent).toBe('Get my referral link');
   });
 
   it('every locale uses the English 7-day / 3 friends / no-cash prize facts', () => {
     const facts = [
+      'hero.title_line1',
+      'hero.title_accent',
+      'hero.subtitle',
+      'hero.cta',
+      'funnel.badge',
+      'funnel.step1',
+      'funnel.step2',
+      'funnel.step3',
       'how.badge',
       'how.subtitle',
       'how.step1_desc',
@@ -101,6 +109,10 @@ describe('i18n phase 1', () => {
       expect(MESSAGES[locale]['prize.card2_desc'].toLowerCase()).toMatch(/no cash/);
       expect(MESSAGES[locale]['faq.a2'].toLowerCase()).toMatch(/no cash prize/);
       expect(MESSAGES[locale]['how.badge']).toBe('SITE DROP LADDER');
+      expect(MESSAGES[locale]['funnel.badge']).toBe('SITE DROP LADDER');
+      expect(MESSAGES[locale]['funnel.step3']).toBe('3. Site goes live');
+      expect(MESSAGES[locale]['hero.title_line1']).toBe('Win the homepage.');
+      expect(MESSAGES[locale]['funnel.step2']).toBe('2. Send it');
     }
   });
 });

@@ -14,6 +14,10 @@ import {
   LOCKED_LIVE_FAQ_Q4,
   LOCKED_LIVE_PRIZE_WINNER_BADGE,
   LOCKED_LIVE_SCHEMA_FAQ_A1,
+  LOCKED_LIVE_FUNNEL_BADGE,
+  LOCKED_LIVE_FUNNEL_STEP1,
+  LOCKED_LIVE_FUNNEL_STEP2,
+  LOCKED_LIVE_FUNNEL_STEP3,
   LOCKED_LIVE_HOW_BADGE,
   LOCKED_LIVE_HOW_STEP1_DESC,
   LOCKED_LIVE_HOW_STEP2_DESC,
@@ -91,6 +95,10 @@ describe('must-keep files', () => {
     expect(en['hero.subtitle']).toBe(LOCKED_SITE_DROPS_SUB);
     expect(en['hero.prize_one']).toBe(LOCKED_SITE_DROPS_RULE);
     expect(en['hero.cta']).toBe(LOCKED_SITE_DROPS_CTA);
+    expect(en['funnel.badge']).toBe(LOCKED_LIVE_FUNNEL_BADGE);
+    expect(en['funnel.step1']).toBe(LOCKED_LIVE_FUNNEL_STEP1);
+    expect(en['funnel.step2']).toBe(LOCKED_LIVE_FUNNEL_STEP2);
+    expect(en['funnel.step3']).toBe(LOCKED_LIVE_FUNNEL_STEP3);
   });
 
   it('does not drift from live 7-day / 3-friend Site Drops copy', () => {
@@ -112,7 +120,14 @@ describe('must-keep files', () => {
     expect(html).not.toContain('How do I get a ViralRefer referral link?</h3>');
     expect(html).not.toContain('Is ViralRefer free?</h3>');
     expect(html).toContain(LOCKED_LIVE_HOW_BADGE);
+    expect(html).toContain(`id="funnel-journey-badge" data-i18n="funnel.badge">${LOCKED_LIVE_FUNNEL_BADGE}</span>`);
+    expect(html).toContain(LOCKED_LIVE_FUNNEL_STEP1);
+    expect(html).toContain(LOCKED_LIVE_FUNNEL_STEP2);
+    expect(html).toContain(LOCKED_LIVE_FUNNEL_STEP3);
     expect(html).not.toMatch(/id="how-it-works-badge"[^>]*>3 EASY STEPS/);
+    expect(html).not.toMatch(/id="funnel-journey-badge"[^>]*>3 STEPS TO #1/);
+    expect(html).not.toMatch(/id="funnel-journey-badge"[^>]*>3 EASY STEPS/);
+    expect(html).not.toMatch(/id="funnel-step3-label"[^>]*>3\. Climb</);
     expect(html).toContain(LOCKED_LIVE_HOW_SUBTITLE);
     expect(html).toContain(LOCKED_LIVE_HOW_STEP1_DESC);
     expect(html).toContain(LOCKED_LIVE_HOW_STEP2_TITLE);

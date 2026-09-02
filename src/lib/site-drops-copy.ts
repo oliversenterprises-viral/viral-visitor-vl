@@ -62,6 +62,16 @@ export const LOCKED_LIVE_PRIZE_SUB =
 
 export const LOCKED_LIVE_HOW_BADGE = 'SITE DROP LADDER';
 
+export const LOCKED_LIVE_FUNNEL_BADGE = 'SITE DROP LADDER';
+
+export const LOCKED_LIVE_FUNNEL_STEP1 = '1. Get link';
+
+export const LOCKED_LIVE_FUNNEL_STEP2 = '2. Send it';
+
+export const LOCKED_LIVE_FUNNEL_STEP3 = '3. Site goes live';
+
+export const LOCKED_LIVE_FUNNEL_REQUIRED = 'required';
+
 export const LOCKED_LIVE_HOW_SUBTITLE =
   'Get a link. Send it. A friend tapping Get my link puts your site on this page.';
 

@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  LOCKED_LIVE_FUNNEL_BADGE,
+  LOCKED_LIVE_FUNNEL_STEP3,
   LOCKED_SITE_DROPS_CTA,
   LOCKED_SITE_DROPS_H1_ACCENT,
   LOCKED_SITE_DROPS_H1_LINE1,
@@ -27,6 +29,8 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain(LOCKED_SITE_DROPS_SLOT);
     expect(html).toContain(LOCKED_SITE_DROPS_RULE);
     expect(html).toContain(LOCKED_SITE_DROPS_CTA);
+    expect(html).toContain(`data-i18n="funnel.badge">${LOCKED_LIVE_FUNNEL_BADGE}</span>`);
+    expect(html).toContain(`data-i18n="funnel.step3">${LOCKED_LIVE_FUNNEL_STEP3}</span>`);
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).not.toMatch(/\$\d|Cash App/i);
     expect(hero.toLowerCase()).not.toContain('cash prize');

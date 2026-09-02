@@ -43,10 +43,11 @@ export const en = {
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 
-  'funnel.badge': '3 EASY STEPS',
+  'funnel.badge': 'SITE DROP LADDER',
   'funnel.step1': '1. Get link',
   'funnel.step2': '2. Send it',
-  'funnel.step3': '3. Climb',
+  'funnel.step3': '3. Site goes live',
+  'funnel.required': 'required',
   'funnel.coach': 'Step 1: tap Get my link.',
 
   'how.badge': 'SITE DROP LADDER',
@@ -606,6 +607,15 @@ const hi = dict({
 
 /** Prize / How ladder facts stay the English live lines — do not invent locale copy. */
 const PRIZE_FACT_KEYS = [
+  'hero.title_line1',
+  'hero.title_accent',
+  'hero.subtitle',
+  'hero.cta',
+  'funnel.badge',
+  'funnel.step1',
+  'funnel.step2',
+  'funnel.step3',
+  'funnel.required',
   'how.badge',
   'how.subtitle',
   'how.step1_desc',
