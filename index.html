@@ -88,7 +88,7 @@
           {
             "@type": "Question",
             "name": "How do I get a ViralRefer referral link?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Click \"Get my link\" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required." }
+            "acceptedAnswer": { "@type": "Answer", "text": "Click \"Get my referral link\" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required." }
           },
           {
             "@type": "Question",
@@ -465,7 +465,6 @@
                     </div>
                     <div id="how-step2-title" data-i18n="how.step2_title" class="text-2xl font-semibold mb-2" style="color: var(--text-how-step-title, #ffffff)">2. Send your link</div>
                     <p id="how-step2-desc" data-i18n="how.step2_desc" class="text-zinc-400 leading-relaxed">Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.</p>
-                    <p id="how-step2-deadline" data-i18n="hero.lock_rule" class="text-xs font-semibold text-zinc-300/90 mt-3 leading-snug">Your link counts when a friend taps Get my link.</p>
                 </div>
                 <div class="glass border border-white/10 rounded-3xl p-8 text-center group hover:border-amber-400/50 transition-all">
                     <div class="mx-auto w-14 h-14 bg-amber-400/20 text-amber-400 rounded-2xl flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
@@ -478,23 +477,23 @@
         </div>
 
         <div id="faq" data-vr-below-fold class="mt-12 glass border border-white/10 rounded-3xl p-8 md:p-10">
-            <h2 class="text-3xl font-bold tracking-tight mb-6">FAQ</h2>
+            <h2 class="text-3xl font-bold tracking-tight mb-6" data-i18n="faq.title">FAQ</h2>
             <div class="space-y-5 text-left text-zinc-300">
                 <div>
-                    <h3 class="font-semibold text-white">How do I get a ViralRefer referral link?</h3>
-                    <p class="text-zinc-400 mt-1">Tap Get my link. You receive a unique trackable link in about 30 seconds — free, no signup or email.</p>
+                    <h3 class="font-semibold text-white" data-i18n="faq.q1">How do I get a link?</h3>
+                    <p class="text-zinc-400 mt-1" data-i18n="faq.a1">Tap Get my referral link. About 30 seconds. No signup.</p>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-white">Is ViralRefer free?</h3>
-                    <p class="text-zinc-400 mt-1">Yes. Free, no email, no payment. #1 may claim a homepage banner after verification.</p>
+                    <h3 class="font-semibold text-white" data-i18n="faq.q2">Is it free?</h3>
+                    <p class="text-zinc-400 mt-1" data-i18n="faq.a2">Yes. No payment. No email. No cash prize.</p>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-white">What does #1 get?</h3>
-                    <p class="text-zinc-400 mt-1">This week's top racer (not the site owner) with 3 friends who tapped Get my link can claim a 7-day homepage banner. Recognition only.</p>
+                    <h3 class="font-semibold text-white" data-i18n="faq.q3">What does #1 get?</h3>
+                    <p class="text-zinc-400 mt-1" data-i18n="faq.a3">This week's top racer (not the site owner) with 3 friends who tapped Get my link can claim a 7-day homepage banner. Recognition only.</p>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-white">How does the board work?</h3>
-                    <p class="text-zinc-400 mt-1">A friend opens your link and taps Get my link. Visiting or copying alone does not count.</p>
+                    <h3 class="font-semibold text-white" data-i18n="faq.q4">How does the board work?</h3>
+                    <p class="text-zinc-400 mt-1" data-i18n="faq.a4">A friend opens your link and taps Get my link. Visiting or copying alone does not count.</p>
                 </div>
             </div>
         </div>
@@ -558,7 +557,7 @@
                     <span data-i18n="prize.cta">Claim this week's banner</span>
                 </button>
                 <div id="current-winner-badge" data-i18n="prize.winner_badge" class="inline-flex items-center gap-2 bg-white/10 text-white px-4 py-1.5 rounded-3xl text-xs font-semibold mb-6">
-                    Verified #1 can claim this
+                    Top racer can claim this — owner excluded
                 </div>
 
                 <!-- Visual prize mock (dynamic banner rotation targets #prize-banner-visual) -->
@@ -568,7 +567,7 @@
                         <div class="flex items-center gap-4">
                             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-2xl ring-1 ring-white/20">#1</div>
                             <div>
-                                <a id="prize-slot-site" class="font-semibold text-white" aria-disabled="true">Your site here</a>
+                                <a id="prize-slot-site" class="font-semibold text-white" data-vr-zone="prize-banner" aria-disabled="true">Your site here</a>
                                 <div class="text-xs text-zinc-400">7-day homepage slot</div>
                                 <div id="prize-slot-meta" class="text-sm text-emerald-400 font-mono">Your site here · 7 days</div>
                             </div>

@@ -75,6 +75,14 @@ describe('i18n phase 1', () => {
       'how.step2_desc',
       'how.step3_title',
       'how.step3_desc',
+      'faq.q1',
+      'faq.a1',
+      'faq.q2',
+      'faq.a2',
+      'faq.q3',
+      'faq.a3',
+      'faq.q4',
+      'faq.a4',
       'hero.prize_one',
       'hero.trust',
       'prize.title',
@@ -82,6 +90,7 @@ describe('i18n phase 1', () => {
       'prize.card2_desc',
       'prize.card3_desc',
       'prize.cta',
+      'prize.winner_badge',
     ] as const;
     for (const locale of SUPPORTED_LOCALES) {
       for (const key of facts) {
@@ -90,6 +99,7 @@ describe('i18n phase 1', () => {
       expect(MESSAGES[locale]['prize.subtitle']).toMatch(/7-day banner/);
       expect(MESSAGES[locale]['how.step3_desc']).toMatch(/3 friends/);
       expect(MESSAGES[locale]['prize.card2_desc'].toLowerCase()).toMatch(/no cash/);
+      expect(MESSAGES[locale]['faq.a2'].toLowerCase()).toMatch(/no cash prize/);
       expect(MESSAGES[locale]['how.badge']).toBe('SITE DROP LADDER');
     }
   });

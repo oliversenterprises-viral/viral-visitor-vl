@@ -3,8 +3,17 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { en } from '../../src/lib/i18n/messages';
 import {
+  LOCKED_LIVE_FAQ_A1,
+  LOCKED_LIVE_FAQ_A2,
   LOCKED_LIVE_FAQ_A3,
+  LOCKED_LIVE_FAQ_A4,
   LOCKED_LIVE_FAQ_PRIZE,
+  LOCKED_LIVE_FAQ_Q1,
+  LOCKED_LIVE_FAQ_Q2,
+  LOCKED_LIVE_FAQ_Q3,
+  LOCKED_LIVE_FAQ_Q4,
+  LOCKED_LIVE_PRIZE_WINNER_BADGE,
+  LOCKED_LIVE_SCHEMA_FAQ_A1,
   LOCKED_LIVE_HOW_BADGE,
   LOCKED_LIVE_HOW_STEP1_DESC,
   LOCKED_LIVE_HOW_STEP2_DESC,
@@ -89,7 +98,19 @@ describe('must-keep files', () => {
     expect(html.toLowerCase()).not.toContain('30-day');
     expect(html).not.toContain('at least 10 friends');
     expect(html).toContain(LOCKED_LIVE_FAQ_PRIZE);
+    expect(html).toContain(LOCKED_LIVE_FAQ_Q1);
+    expect(html).toContain(LOCKED_LIVE_FAQ_A1);
+    expect(html).toContain(LOCKED_LIVE_FAQ_Q2);
+    expect(html).toContain(LOCKED_LIVE_FAQ_A2);
     expect(html).toContain(LOCKED_LIVE_FAQ_A3);
+    expect(html).toContain(LOCKED_LIVE_FAQ_Q3);
+    expect(html).toContain(LOCKED_LIVE_FAQ_Q4);
+    expect(html).toContain(LOCKED_LIVE_FAQ_A4);
+    expect(html).toContain(LOCKED_LIVE_SCHEMA_FAQ_A1);
+    expect(html).toContain(LOCKED_LIVE_PRIZE_WINNER_BADGE);
+    expect(html).not.toContain('id="how-step2-deadline"');
+    expect(html).not.toContain('How do I get a ViralRefer referral link?</h3>');
+    expect(html).not.toContain('Is ViralRefer free?</h3>');
     expect(html).toContain(LOCKED_LIVE_HOW_BADGE);
     expect(html).not.toMatch(/id="how-it-works-badge"[^>]*>3 EASY STEPS/);
     expect(html).toContain(LOCKED_LIVE_HOW_SUBTITLE);
@@ -114,6 +135,15 @@ describe('must-keep files', () => {
     expect(en['prize.subtitle']).toBe(LOCKED_LIVE_PRIZE_SUB);
     expect(en['prize.title']).toBe(LOCKED_LIVE_PRIZE_TITLE);
     expect(en['prize.cta']).toBe(LOCKED_LIVE_PRIZE_CTA);
+    expect(en['prize.winner_badge']).toBe(LOCKED_LIVE_PRIZE_WINNER_BADGE);
+    expect(en['faq.q1']).toBe(LOCKED_LIVE_FAQ_Q1);
+    expect(en['faq.a1']).toBe(LOCKED_LIVE_FAQ_A1);
+    expect(en['faq.q2']).toBe(LOCKED_LIVE_FAQ_Q2);
+    expect(en['faq.a2']).toBe(LOCKED_LIVE_FAQ_A2);
+    expect(en['faq.q3']).toBe(LOCKED_LIVE_FAQ_Q3);
+    expect(en['faq.a3']).toBe(LOCKED_LIVE_FAQ_A3);
+    expect(en['faq.q4']).toBe(LOCKED_LIVE_FAQ_Q4);
+    expect(en['faq.a4']).toBe(LOCKED_LIVE_FAQ_A4);
     expect(en['hero.trust']).not.toMatch(/30-day/i);
     expect(html).toContain('id="site-drops"');
     expect(html).toContain('id="site-drops-entered-list"');

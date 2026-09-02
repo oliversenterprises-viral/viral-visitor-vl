@@ -32,8 +32,27 @@ export const LOCKED_SITE_DROPS_CTA = 'Get my referral link';
 export const LOCKED_LIVE_FAQ_PRIZE =
   "Open worldwide. This week's top racer (not the site owner) with 3 friends who tapped Get my link can claim a 7-day homepage banner for their website. There is no cash prize.";
 
+export const LOCKED_LIVE_FAQ_Q1 = 'How do I get a link?';
+
+export const LOCKED_LIVE_FAQ_A1 =
+  'Tap Get my referral link. About 30 seconds. No signup.';
+
+export const LOCKED_LIVE_FAQ_Q2 = 'Is it free?';
+
+export const LOCKED_LIVE_FAQ_A2 = 'Yes. No payment. No email. No cash prize.';
+
+export const LOCKED_LIVE_FAQ_Q3 = 'What does #1 get?';
+
 export const LOCKED_LIVE_FAQ_A3 =
   "This week's top racer (not the site owner) with 3 friends who tapped Get my link can claim a 7-day homepage banner. Recognition only.";
+
+export const LOCKED_LIVE_FAQ_Q4 = 'How does the board work?';
+
+export const LOCKED_LIVE_FAQ_A4 =
+  'A friend opens your link and taps Get my link. Visiting or copying alone does not count.';
+
+export const LOCKED_LIVE_SCHEMA_FAQ_A1 =
+  'Click "Get my referral link" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required.';
 
 export const LOCKED_LIVE_HOW_STEP3 =
   '1 verified friend \u2192 1-hour Rising Site Drop on this page. 2 friends \u2192 week text line. Board #2/#3 \u2192 Challenger strip. This week\u2019s #1 (not the owner) with 3 friends claims the 7-day banner.';
@@ -59,6 +78,9 @@ export const LOCKED_LIVE_HOW_STEP3_TITLE = '3. Watch your site climb';
 export const LOCKED_LIVE_PRIZE_TITLE = 'The #1 banner';
 
 export const LOCKED_LIVE_PRIZE_CTA = "Claim this week's banner";
+
+export const LOCKED_LIVE_PRIZE_WINNER_BADGE =
+  'Top racer can claim this — owner excluded';
 
 export const LOCKED_LIVE_HERO_TRUST =
   "This week's #1 (not the owner) with 3 friends gets the 7-day banner.";

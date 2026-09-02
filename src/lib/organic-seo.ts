@@ -3,6 +3,7 @@
  * Static copies live in index.html + public/ for non-JS crawlers; this module keeps DRY + runtime fixes.
  */
 
+import { LOCKED_LIVE_SCHEMA_FAQ_A1 } from './site-drops-copy';
 import { formatFaqPrizeAnswer, LOCKED_OG_DESCRIPTION, LOCKED_OG_TITLE } from './prize-slot';
 import { parseRefFromLocation } from './referral-url';
 
@@ -25,8 +26,7 @@ export interface FaqEntry {
 export const HOMEPAGE_FAQ: readonly FaqEntry[] = [
   {
     question: 'How do I get a ViralRefer referral link?',
-    answer:
-      'Click "Get my link" on the homepage. You receive a unique trackable link in about 30 seconds — free, with no signup or email required.',
+    answer: LOCKED_LIVE_SCHEMA_FAQ_A1,
   },
   {
     question: 'Is ViralRefer free to use?',

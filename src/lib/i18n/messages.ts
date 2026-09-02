@@ -62,6 +62,18 @@ export const en = {
   'how.step3_desc':
     '1 verified friend \u2192 1-hour Rising Site Drop on this page. 2 friends \u2192 week text line. Board #2/#3 \u2192 Challenger strip. This week\u2019s #1 (not the owner) with 3 friends claims the 7-day banner.',
 
+  'faq.title': 'FAQ',
+  'faq.q1': 'How do I get a link?',
+  'faq.a1': 'Tap Get my referral link. About 30 seconds. No signup.',
+  'faq.q2': 'Is it free?',
+  'faq.a2': 'Yes. No payment. No email. No cash prize.',
+  'faq.q3': 'What does #1 get?',
+  'faq.a3':
+    "This week's top racer (not the site owner) with 3 friends who tapped Get my link can claim a 7-day homepage banner. Recognition only.",
+  'faq.q4': 'How does the board work?',
+  'faq.a4':
+    'A friend opens your link and taps Get my link. Visiting or copying alone does not count.',
+
   'prize.badge': 'HOMEPAGE FEATURE',
   'prize.title': 'The #1 banner',
   'prize.subtitle':
@@ -74,7 +86,7 @@ export const en = {
   'prize.card3_desc':
     "This week's top racer (not the site owner) with 3 friends who tapped Get my link can claim the banner.",
   'prize.cta': "Claim this week's banner",
-  'prize.winner_badge': 'Verified #1 can claim this',
+  'prize.winner_badge': 'Top racer can claim this — owner excluded',
 
   'drop.badge': 'Site Drop ladder',
   'drop.title': 'Your site goes live as you climb',
@@ -601,6 +613,15 @@ const PRIZE_FACT_KEYS = [
   'how.step2_desc',
   'how.step3_title',
   'how.step3_desc',
+  'faq.title',
+  'faq.q1',
+  'faq.a1',
+  'faq.q2',
+  'faq.a2',
+  'faq.q3',
+  'faq.a3',
+  'faq.q4',
+  'faq.a4',
   'hero.prize_one',
   'hero.trust',
   'prize.title',
@@ -608,6 +629,7 @@ const PRIZE_FACT_KEYS = [
   'prize.card2_desc',
   'prize.card3_desc',
   'prize.cta',
+  'prize.winner_badge',
 ] as const;
 
 function applyEnglishPrizeFacts(d: Dict): void {
