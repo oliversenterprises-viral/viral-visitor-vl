@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { uploadBannerImage, BANNER_UPLOAD_ACCEPT } from '../lib/banner-upload';
 import { formatError } from '../lib';
+import { mapSiteContentAdminRows } from '../lib/site-content-admin';
 import { showToast } from '../ui';
 
 /** Lightweight row shape used by the Edit Content admin tab */
@@ -51,6 +52,21 @@ const BANNER_PRESETS = [
     hint: 'Partner spotlight — change redirect URL to their site',
   },
 ] as const;
+
+async function loadWebsiteTabRows(): Promise<ContentRow[]> {
+  try {
+    const { invokeAdminAction } = await import('../lib/admin-action-client');
+    const result = await invokeAdminAction<unknown>('get_site_content');
+    if (result.success) {
+      return mapSiteContentAdminRows(result.data);
+    }
+  } catch {
+    // fall through to public SELECT
+  }
+  const { data, error } = await supabase.from('site_content').select('*');
+  if (error) throw error;
+  return mapSiteContentAdminRows(data || []);
+}
 
 async function saveSiteContentEntry(key: string, value: unknown): Promise<boolean> {
   try {
@@ -114,17 +130,8 @@ async function renderEditContentTab(content: HTMLElement) {
     loadInFlight = true;
     const gen = ++loadGeneration;
     try {
-      const { data, error } = await supabase.from('site_content').select('*');
-      if (error) throw error;
+      const rows = await loadWebsiteTabRows();
       if (gen !== loadGeneration) return;
-
-      const rows = (data || [])
-        .map((row: { key?: string; id?: string; value?: unknown }) => ({
-          id: String(row.key ?? row.id ?? ''),
-          value: row.value,
-        }))
-        .filter((row) => row.id)
-        .sort((a, b) => a.id.localeCompare(b.id));
 
       const html = buildContentListHTML(rows);
       content.innerHTML = html;
