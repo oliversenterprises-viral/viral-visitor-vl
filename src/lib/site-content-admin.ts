@@ -13,22 +13,21 @@ export type SiteContentAdminRow = {
 
 export function mapSiteContentAdminRows(raw: unknown): SiteContentAdminRow[] {
   if (!Array.isArray(raw)) return [];
-  return raw
-    .map((row) => {
-      if (!row || typeof row !== 'object') return null;
-      const rec = row as Record<string, unknown>;
-      const key = String(rec.key ?? rec.id ?? '').trim();
-      if (!key) return null;
-      return {
-        key,
-        id: key,
-        value: rec.value,
-        description: rec.description ?? null,
-        updated_at: rec.updated_at ?? null,
-      };
-    })
-    .filter((row): row is SiteContentAdminRow => row !== null)
-    .sort((a, b) => a.key.localeCompare(b.key));
+  const rows: SiteContentAdminRow[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== 'object') continue;
+    const rec = row as Record<string, unknown>;
+    const key = String(rec.key ?? rec.id ?? '').trim();
+    if (!key) continue;
+    rows.push({
+      key,
+      id: key,
+      value: rec.value,
+      description: rec.description ?? null,
+      updated_at: rec.updated_at ?? null,
+    });
+  }
+  return rows.sort((a, b) => a.key.localeCompare(b.key));
 }
 
 export function siteContentAdminEnvelope(raw: unknown): {

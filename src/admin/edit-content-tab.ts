@@ -2,7 +2,6 @@ import { supabase } from '../lib/supabase';
 import { uploadBannerImage, BANNER_UPLOAD_ACCEPT } from '../lib/banner-upload';
 import { formatError } from '../lib';
 import {
-  mapSiteContentAdminRows,
   resolveWebsiteTabLoad,
   websiteTabUnknownActionBanner,
   type WebsiteTabLoad,

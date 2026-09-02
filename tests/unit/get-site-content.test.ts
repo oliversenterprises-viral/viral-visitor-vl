@@ -29,7 +29,7 @@ describe('get_site_content (HQ Website tab)', () => {
   it('Website tab loads via get_site_content first', () => {
     const src = readFileSync(resolve(root, 'src/admin/edit-content-tab.ts'), 'utf8');
     expect(src).toContain("invokeAdminAction<unknown>('get_site_content')");
-    expect(src).toContain('mapSiteContentAdminRows');
+    expect(src).toContain('resolveWebsiteTabLoad');
     expect(src).toContain("invokeAdminAction('update_site_content'");
     expect(src).toContain("invokeAdminAction('delete_site_content'");
     expect(src).not.toContain('reset_landing_visit_counters');
