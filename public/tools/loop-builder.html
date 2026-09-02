@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>No-email referral loop builder · ViralRefer</title>
+  <meta name="description" content="Build a referral loop with no email wall. Instant link → send to a real person → credit only when they tap Get my link. Free tool. No cash prize." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/loop-builder.html" />
+  <meta property="og:title" content="No-email referral loop builder" />
+  <meta property="og:description" content="Email walls create throwaways. Skill action: Get my link." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/loop-builder.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"HowTo","name":"Design a no-email referral loop","step":[
+    {"@type":"HowToStep","name":"Get a link","text":"Tap Get my referral link. No email. About 30 seconds."},
+    {"@type":"HowToStep","name":"Send it","text":"Paste it in a real conversation. Copying is not a send."},
+    {"@type":"HowToStep","name":"Friend Get-link","text":"Credit only when a unique friend taps Get my link."}
+  ]}
+  </script>
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem)}
+    .step{border:1px solid var(--border);border-radius:1rem;padding:1rem;margin:.6rem 0;background:rgba(255,255,255,.04)}
+    .bad{opacity:.55;text-decoration:line-through}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}
+    button.toggle{min-height:48px;border-radius:.8rem;border:1px solid var(--border);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-weight:700;padding:.6rem 1rem;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=loop_builder&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>No-email referral loop</h1>
+    <p class="muted">Toggle the email wall off. ViralRefer’s loop is the one on the right. No cash prize.</p>
+    <p><button type="button" class="toggle" id="wall" aria-pressed="true">Email wall: ON (broken loop)</button></p>
+    <div id="steps"></div>
+    <a class="btn" href="https://www.viralrefer.app/?utm_source=loop_builder&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted" style="margin-top:1.2rem"><a href="/guides/no-email-referral-loop/">Guide: no-email loop</a></p>
+  </div>
+  <script>
+    const wall = document.getElementById("wall");
+    const steps = document.getElementById("steps");
+    function draw() {
+      const on = wall.getAttribute("aria-pressed") === "true";
+      wall.textContent = on ? "Email wall: ON (broken loop)" : "Email wall: OFF (ViralRefer loop)";
+      const rows = on
+        ? [["Ask for email first","Throwaway inboxes. Drop-off."],["They never finish signup","No share happens."],["You count a visit anyway","Farmable. Not a friend."]]
+        : [["Get my referral link","~30 seconds. No email."],["Send it in a real chat","Copying is not a send."],["Friend taps Get my link","The only credit. Unique friends only."]];
+      steps.innerHTML = rows.map((r,i) => '<div class="step' + (on ? " bad" : "") + '"><strong>' + (i+1) + ". " + r[0] + "</strong><p class=\"muted\" style=\"margin:.3rem 0 0\">" + r[1] + "</p></div>").join("");
+    }
+    wall.addEventListener("click", () => {
+      wall.setAttribute("aria-pressed", wall.getAttribute("aria-pressed") === "true" ? "false" : "true");
+      draw();
+    });
+    draw();
+  </script>
+</body>
+</html>

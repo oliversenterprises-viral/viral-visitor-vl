@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Do self-referrals count? · ViralRefer</title>
+  <meta name="description" content="Opening your own ViralRefer link does not count. Unique friends only. Incognito, second phone, and extra browsers still fail. No cash prize." />
+  <meta name="robots" content="noindex,follow" />
+  <link rel="canonical" href="https://www.viralrefer.app/guides/self-taps-dont-count/" />
+  <meta property="og:title" content="Self-taps do not count" />
+  <meta property="og:description" content="Your own click is not a unique friend." />
+  <meta property="og:url" content="https://www.viralrefer.app/guides/self-taps-dont-count/" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do self-referrals count on ViralRefer?","acceptedAnswer":{"@type":"Answer","text":"No. Opening your own /r/ link is not a credit. Unique friends only."}}]}</script>
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12);--bad:#fca5a5}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem)}
+    .chip{display:block;width:100%;text-align:left;min-height:48px;margin:.4rem 0;padding:.8rem 1rem;border-radius:.85rem;border:1px solid var(--border);background:rgba(0,0,0,.28);color:inherit;font:inherit;cursor:pointer}
+    .chip[aria-pressed=true]{border-color:#fca5a5}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}.no{color:var(--bad)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=self_tap&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>Self-taps do not count</h1>
+    <p class="muted">Toggle every trick people try. All of them fail. Send it to someone else.</p>
+    <button type="button" class="chip" aria-pressed="false">Incognito / private window</button>
+    <button type="button" class="chip" aria-pressed="false">Second phone on the same person</button>
+    <button type="button" class="chip" aria-pressed="false">VPN + same human</button>
+    <button type="button" class="chip" aria-pressed="false">Clicking Get my link on my own /r/</button>
+    <p class="no" id="v" aria-live="polite">Pick any. Verdict stays the same.</p>
+    <a class="btn" href="https://www.viralrefer.app/?utm_source=self_tap&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted" style="margin-top:1.2rem"><a href="/guides/self-taps-dont-count/">Guide</a></p>
+  </div>
+  <script>
+    document.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
+      b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true");
+      document.getElementById("v").textContent = "Still not a unique friend. Not a credit.";
+    }));
+  </script>
+</body>
+</html>

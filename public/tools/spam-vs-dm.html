@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Is this spam? Group blast vs one DM · ViralRefer</title>
+  <meta name="description" content="White-hat share test: blasting a Facebook group is spam. One honest DM to someone who already talks to you is a send. ViralRefer wants unique friends, not noise. No cash prize." />
+  <meta name="robots" content="noindex,follow" />
+  <link rel="canonical" href="https://www.viralrefer.app/guides/share-without-spam/" />
+  <meta property="og:title" content="Spam vs one DM" />
+  <meta property="og:description" content="Group blast fails. One real person is the send." />
+  <meta property="og:url" content="https://www.viralrefer.app/guides/share-without-spam/" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root{--bg:#09090b;--text:#f4f4f5;--muted:#a1a1aa;--border:rgba(255,255,255,.12);--ok:#86efac;--bad:#fca5a5}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:radial-gradient(800px 400px at 0 0,rgba(134,76,255,.28),transparent),var(--bg);color:var(--text);line-height:1.5;padding:0 1rem 3rem}
+    a{color:#c4b5fd}.w{max-width:720px;margin:0 auto}.nav{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:1rem 0}
+    .brand{font-weight:800;color:#fff;text-decoration:none}h1{font-size:clamp(1.4rem,4.5vw,1.9rem)}
+    .chip{display:block;width:100%;text-align:left;min-height:48px;margin:.4rem 0;padding:.8rem 1rem;border-radius:.85rem;border:1px solid var(--border);background:rgba(0,0,0,.28);color:inherit;font:inherit;cursor:pointer}
+    .cta{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.75rem 1.1rem;border-radius:.85rem;background:linear-gradient(135deg,#864cff,#6b3acc);color:#fff!important;font-weight:700;text-decoration:none;margin-top:.8rem}
+    .muted{color:var(--muted)}.ok{color:var(--ok)}.no{color:var(--bad)}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav"><a class="brand" href="./">← Free tools</a><a href="https://www.viralrefer.app/?utm_source=spam_vs_dm&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link">Get free link →</a></div>
+    <h1>Spam vs one DM</h1>
+    <p class="muted">Pick how you would share. No cash prize.</p>
+    <button type="button" class="chip" data-ok="0">Post in a random Facebook group</button>
+    <button type="button" class="chip" data-ok="0">Mass-DM everyone in a Discord</button>
+    <button type="button" class="chip" data-ok="0">“Please upvote my referral”</button>
+    <button type="button" class="chip" data-ok="1">Text one person who already talks to me</button>
+    <p id="v" class="muted" aria-live="polite"></p>
+    <a class="cta" href="https://www.viralrefer.app/?utm_source=spam_vs_dm&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+    <p class="muted" style="margin-top:1.2rem"><a href="/guides/share-without-spam/">Share without spam</a> · <a href="./send-seven.html">Seven people</a></p>
+  </div>
+  <script>
+    document.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => {
+      const ok = b.dataset.ok === "1";
+      const v = document.getElementById("v");
+      v.className = ok ? "ok" : "no";
+      v.textContent = ok ? "That’s a send. Ask them to tap Get my link." : "That’s spam or vanity. Unique friends, not blasts.";
+    }));
+  </script>
+</body>
+</html>

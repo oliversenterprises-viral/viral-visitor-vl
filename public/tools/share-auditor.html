@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Referral share auditor — visit vs Get-link · ViralRefer</title>
+  <meta name="description" content="Paste a referral DM or post. This free auditor flags visit-farm language, cash hype, and upvote asks — then rewrites a send-first caption. ViralRefer counts a friend’s Get my link, not a hit." />
+  <link rel="canonical" href="https://www.viralrefer.app/tools/share-auditor.html" />
+  <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large" />
+  <meta name="author" content="Karanga Oliver" />
+  <meta name="theme-color" content="#6b3acc" />
+  <meta property="og:title" content="Referral share auditor" />
+  <meta property="og:description" content="Paste your message. See if it asks for a visit or a friend’s Get-link. No cash prize." />
+  <meta property="og:url" content="https://www.viralrefer.app/tools/share-auditor.html" />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "ViralRefer", "item": "https://www.viralrefer.app/" },
+          { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://www.viralrefer.app/tools/" },
+          { "@type": "ListItem", "position": 3, "name": "Share auditor", "item": "https://www.viralrefer.app/tools/share-auditor.html" }
+        ]
+      },
+      {
+        "@type": "WebApplication",
+        "name": "ViralRefer share auditor",
+        "url": "https://www.viralrefer.app/tools/share-auditor.html",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "description": "Paste a referral caption. Flags visit, cash, and upvote language. Rewrites a send-first line."
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What should a ViralRefer share ask a friend to do?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Open the link and tap Get my link. Do not ask only for a visit, a like, or an upvote." }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I promise cash in a share?",
+            "acceptedAnswer": { "@type": "Answer", "text": "No. ViralRefer has no cash prize. The contest prize is homepage visibility." }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    :root { --bg:#09090b; --card:rgba(255,255,255,.06); --border:rgba(255,255,255,.12); --text:#f4f4f5; --muted:#a1a1aa; --ok:#86efac; --warn:#fde68a; --bad:#fca5a5; }
+    * { box-sizing:border-box; }
+    html, body { overflow-x:clip; }
+    body { margin:0; font-family:Inter,system-ui,sans-serif; background:radial-gradient(800px 400px at 8% -10%,rgba(134,76,255,.28),transparent),var(--bg); color:var(--text); line-height:1.5; padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
+    a { color:#c4b5fd; }
+    .skip { position:absolute; left:-999px; } .skip:focus { left:.5rem; top:.5rem; background:#fff; color:#000; padding:.5rem; z-index:9; }
+    .w { max-width:720px; margin:0 auto; padding:1rem max(1rem,env(safe-area-inset-right)) max(3rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left)); }
+    .nav { display:flex; flex-wrap:wrap; gap:.75rem; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+    .brand { font-weight:800; color:#fff; text-decoration:none; }
+    h1 { font-size:clamp(1.4rem,4.5vw,1.9rem); letter-spacing:-.03em; margin:.4rem 0; }
+    .sub { color:var(--muted); }
+    .pill { display:inline-block; font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:.2rem .5rem; border-radius:999px; background:rgba(134,76,255,.2); color:#ddd6fe; }
+    label { display:block; font-size:.8rem; font-weight:600; color:var(--muted); margin:.85rem 0 .35rem; }
+    textarea { width:100%; min-height:140px; border-radius:.9rem; border:1px solid var(--border); background:rgba(0,0,0,.35); color:#fff; padding:.85rem; font:16px/1.45 inherit; resize:vertical; }
+    textarea:focus-visible { outline:2px solid #c4b5fd; outline-offset:2px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:.75rem 1.05rem; border-radius:.85rem; font-weight:700; border:none; cursor:pointer; font:inherit; text-decoration:none; }
+    .btn-p { background:linear-gradient(135deg,#864cff,#6b3acc); color:#fff !important; width:100%; }
+    .btn-s { background:rgba(255,255,255,.08); color:#fff; border:1px solid var(--border); }
+    .row { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.65rem; }
+    .card { margin-top:1rem; padding:1rem; border-radius:1rem; border:1px solid var(--border); background:var(--card); }
+    .flag { margin:.4rem 0; padding:.55rem .7rem; border-radius:.7rem; font-size:.92rem; }
+    .flag.bad { background:rgba(248,113,113,.12); color:var(--bad); }
+    .flag.warn { background:rgba(251,191,36,.1); color:var(--warn); }
+    .flag.ok { background:rgba(74,222,128,.1); color:var(--ok); }
+    .out { white-space:pre-wrap; overflow-wrap:anywhere; background:rgba(0,0,0,.35); border:1px solid var(--border); border-radius:.8rem; padding:.85rem; min-height:4.5rem; }
+    .err { color:var(--bad); font-size:.9rem; min-height:1.2rem; }
+    footer { margin-top:2rem; color:#71717a; font-size:.82rem; }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#draft">Skip to auditor</a>
+  <div class="w">
+    <div class="nav">
+      <a class="brand" href="./">← Free tools</a>
+      <a href="https://www.viralrefer.app/?utm_source=share_auditor&amp;utm_medium=organic&amp;utm_campaign=tools_2026#get-link" style="font-weight:700;text-decoration:none">Get free link →</a>
+    </div>
+    <span class="pill">Free tool · stays in your browser</span>
+    <h1>Share auditor</h1>
+    <p class="sub">Paste a DM, tweet, or Reddit line. We flag visit-farm, cash, and upvote language, then offer a send-first rewrite. ViralRefer credits a unique friend tapping Get my link — not a hit. No cash prize.</p>
+
+    <label for="draft">Your draft</label>
+    <textarea id="draft" maxlength="2000" placeholder="e.g. Please visit my link and upvote — easy cash if you click"></textarea>
+    <p class="err" id="err" role="alert"></p>
+    <div class="row">
+      <button type="button" class="btn btn-p" id="run" style="flex:1">Audit message</button>
+      <button type="button" class="btn btn-s" id="clear">Clear</button>
+    </div>
+
+    <div class="card" id="result" hidden>
+      <h2 id="score-h" style="margin:0 0 .5rem;font-size:1.1rem"></h2>
+      <div id="flags"></div>
+      <label>Send-first rewrite</label>
+      <div class="out" id="rewrite"></div>
+      <div class="row">
+        <button type="button" class="btn btn-s" id="copy">Copy rewrite</button>
+        <a class="btn btn-p" style="width:auto;padding-inline:1rem" href="https://www.viralrefer.app/?utm_source=share_auditor&amp;utm_medium=organic&amp;utm_campaign=cta#get-link">Get my referral link</a>
+      </div>
+      <p class="sub" id="copied" style="min-height:1.2rem;margin:.4rem 0 0"></p>
+    </div>
+    <p class="sub" style="margin-top:1.25rem">Also: <a href="./share-generator.html">Share message generator</a> · <a href="/guides/share-without-spam/">Share without spam</a></p>
+    <footer>© ViralRefer · Lawton, Oklahoma · <a href="https://www.viralrefer.app/">viralrefer.app</a></footer>
+  </div>
+  <script>
+    const KEY = "vr-share-auditor-v1";
+    const $ = (id) => document.getElementById(id);
+    const RULES = [
+      { re: /\b(cash|cash\s*app|paypal|venmo|prize money|get paid|earn money|make money fast)\b/i, level: "bad", msg: "Cash language. ViralRefer has no cash prize — homepage visibility only." },
+      { re: /\b(upvote|like for like|follow for follow|engagement pod)\b/i, level: "bad", msg: "Asks for upvotes or fake engagement. That is not a friend Get-link." },
+      { re: /\b(just visit|just click|page view|hit my link|open it really quick)\b/i, level: "warn", msg: "Asks for a visit. Visits do not count." },
+      { re: /\b(sign up|email me|create an account|register first)\b/i, level: "warn", msg: "Signup wall. ViralRefer needs no email — Get my link is the action." },
+      { re: /\b(traffic exchange|surf bar|hit exchange)\b/i, level: "bad", msg: "Traffic exchanges send hits. Hits are not credits." },
+      { re: /\b(get my link|get your (own )?link|tap get my link)\b/i, level: "ok", msg: "Asks for Get my link. That is the credit." }
+    ];
+
+    function audit(text) {
+      const t = (text || "").trim();
+      const flags = RULES.filter((r) => r.re.test(t)).map((r) => ({ level: r.level, msg: r.msg }));
+      if (!t) return { ok: false, flags: [], rewrite: "" };
+      if (!flags.length) {
+        flags.push({ level: "warn", msg: "No Get-link ask found. Spell out: a friend must tap Get my link." });
+      }
+      const rewrite = "Get a free ViralRefer link (~30s, no email). Send it. You only climb when a unique friend taps Get my link — visits and copies do not count. No cash prize. https://www.viralrefer.app/?utm_source=share_auditor&utm_medium=organic&utm_campaign=rewrite#get-link";
+      const bad = flags.some((f) => f.level === "bad");
+      const good = flags.some((f) => f.level === "ok") && !bad;
+      return { ok: good, flags, rewrite };
+    }
+
+    function render() {
+      const text = $("draft").value;
+      $("err").textContent = "";
+      if (!text.trim()) {
+        $("result").hidden = true;
+        $("err").textContent = "Paste a draft first.";
+        $("draft").focus();
+        return;
+      }
+      const out = audit(text);
+      try { localStorage.setItem(KEY, text.slice(0, 2000)); } catch (_) {}
+      $("result").hidden = false;
+      $("score-h").textContent = out.ok ? "Send-first — this can work" : "Needs a rewrite before you send it";
+      $("flags").innerHTML = out.flags.map((f) => '<p class="flag ' + f.level + '">' + f.msg + "</p>").join("");
+      $("rewrite").textContent = out.rewrite;
+      $("copied").textContent = "";
+    }
+
+    $("run").addEventListener("click", render);
+    $("clear").addEventListener("click", () => {
+      $("draft").value = "";
+      $("result").hidden = true;
+      $("err").textContent = "";
+      try { localStorage.removeItem(KEY); } catch (_) {}
+    });
+    $("copy").addEventListener("click", async () => {
+      const t = $("rewrite").textContent || "";
+      try {
+        await navigator.clipboard.writeText(t);
+        $("copied").textContent = "Copied.";
+      } catch (_) {
+        $("copied").textContent = "Copy failed — select the rewrite and copy it.";
+      }
+    });
+    $("draft").addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") render();
+    });
+    try {
+      const saved = localStorage.getItem(KEY);
+      if (saved) $("draft").value = saved;
+    } catch (_) {}
+  </script>
+</body>
+</html>
