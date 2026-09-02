@@ -26,7 +26,8 @@ describe('share-power', () => {
 
   it('first-screen WhatsApp/native/SMS copy is Helix Bet 2 banner-race text', () => {
     const wa = buildShareMessage(LINK, { platform: 'whatsapp', trackUtm: false });
-    expect(wa).toContain('racing for the ViralRefer homepage');
+    expect(wa).toContain('Site Drops');
+    expect(wa).toContain('racing on ViralRefer');
     expect(wa).toContain('banner');
     expect(wa).toMatch(/beat me/i);
     expect(wa).toContain(LINK);
@@ -184,7 +185,7 @@ describe('share-power', () => {
 
   it('buildNativeShareData never includes a url field', () => {
     const data = buildNativeShareData(
-      "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me. " +
+      "I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner. Get a free link and try to beat me. " +
         LINK,
       LINK,
     );

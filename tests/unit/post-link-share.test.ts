@@ -46,7 +46,7 @@ describe('post-link-share', () => {
   it('builds Lumina payload with the raw /r/ link', () => {
     const text = buildPostLinkShareText(LINK);
     expect(text).toBe(
-      `I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me. ${LINK}`,
+      `I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner. Get a free link and try to beat me. ${LINK}`,
     );
     expect(buildWhatsAppShareHref(LINK)).toContain('wa.me');
     expect(decodeURIComponent(buildWhatsAppShareHref(LINK))).toContain(LINK);

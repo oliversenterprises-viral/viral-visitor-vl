@@ -30,22 +30,23 @@ describe('kid-simple first paint', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).toMatch(/Win the homepage/);
-    expect(hero).toMatch(/#1 gets a banner for their site/);
-    expect(hero).toMatch(/Tap Get my link\. Send it\. When a friend taps Get my link, you climb/);
+    expect(hero).toContain('Each step puts your site on this page. #1 owns the banner for 7 days.');
+    expect(hero).toContain(
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+    );
     expect(hero).toContain('id="hero-get-link-btn"');
     expect(hero).toContain('Get my referral link');
     expect(hero).not.toContain('Get my free link');
-    expect(hero).toContain('Verified #1 gets a 30-day banner for their website.');
+    expect(hero).toContain(
+      'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
+    );
     expect(hero).toContain('id="hero-banner-mock"');
-    expect(hero).toContain('ViralRefer Tools');
-    expect(hero).toContain('Example — this is what #1 gets');
-    expect(hero).toContain('/tools/');
-    expect(hero).toContain('Example ad');
-    expect(hero).toContain('Free growth tools');
-    expect(hero).toContain('Share generator');
+    expect(hero).toContain('Empty right now. #1 this week puts their site here.');
+    expect(hero).not.toContain('#1 gets a banner for their site.');
+    expect(hero).not.toMatch(/30-day/);
     expect(hero).not.toMatch(/CURRENT #1/);
     expect(hero).not.toContain('yourwebsite.com');
-    expect(hero).toContain('Early ranks are open. #1 puts their website on this page.');
+    expect(hero).toContain('The board is this week only. Take #1 and claim it before the week ends.');
     expect(hero).not.toContain('See leaderboard');
     expect(hero).not.toContain('id="hero-leaderboard-btn"');
     expect(hero).not.toContain('Telegram');

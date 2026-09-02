@@ -4,6 +4,7 @@
 
 import { isReferredLanding } from './funnel-conversion';
 import { applyHeroCopyToDom, type HeroCtaCopy } from './hero-cta-variant';
+import { LOCKED_CTA, LOCKED_H1_ACCENT, LOCKED_H1_LINE1, LOCKED_SUB } from './prize-slot';
 import { getStoredUtmAttribution } from './utm-attribution';
 
 export type UtmHeroSegment =
@@ -25,54 +26,52 @@ const TRAFFIC_EXCHANGE_SOURCES = new Set([
 const UTM_HERO_COPY: Record<UtmHeroSegment, HeroCtaCopy> = {
   traffic_exchange: {
     badge: 'WORLDWIDE • FREE',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Open worldwide. No signup. Share anywhere for homepage feature.',
-    trustLine: 'Homepage feature for #1 · Link in ~5 seconds',
-    buttonLabel: 'Get my referral link',
+    titleLine1: LOCKED_H1_LINE1,
+    titleAccent: LOCKED_H1_ACCENT,
+    subtitle: LOCKED_SUB,
+    trustLine: '',
+    buttonLabel: LOCKED_CTA,
   },
   linkedin: {
     badge: 'WORLDWIDE • FREE',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Built for builders — one tap, share, climb the worldwide board.',
-    trustLine: 'No email · Free forever · Worldwide 18+',
-    buttonLabel: 'Get my referral link',
+    titleLine1: LOCKED_H1_LINE1,
+    titleAccent: LOCKED_H1_ACCENT,
+    subtitle: LOCKED_SUB,
+    trustLine: '',
+    buttonLabel: LOCKED_CTA,
   },
   reddit: {
     badge: 'FREE • NO SIGNUP',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle:
-      'No account. No app install. Get a unique referral link in seconds, share it, and watch your rank update live.',
-    trustLine: 'Step 1: Get link · Step 2: Share · Homepage feature for verified #1',
-    buttonLabel: 'Get my referral link',
+    titleLine1: LOCKED_H1_LINE1,
+    titleAccent: LOCKED_H1_ACCENT,
+    subtitle: LOCKED_SUB,
+    trustLine: '',
+    buttonLabel: LOCKED_CTA,
   },
   /** Paid ads (Reddit CPC etc.) — same intent, even more conversion-focused. */
   paid: {
     badge: 'FREE • 30 SECONDS',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle:
-      'You are one tap from your unique link. Share it with friends — real referrals move the live leaderboard.',
-    trustLine: 'No signup · Free forever · Share once to start',
-    buttonLabel: 'Get my referral link',
+    titleLine1: LOCKED_H1_LINE1,
+    titleAccent: LOCKED_H1_ACCENT,
+    subtitle: LOCKED_SUB,
+    trustLine: '',
+    buttonLabel: LOCKED_CTA,
   },
   telegram: {
     badge: 'WORLDWIDE • FREE',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Share in chats or channels. Every referral counts live.',
-    trustLine: 'Open worldwide · No signup · Instant link',
-    buttonLabel: 'Get my referral link',
+    titleLine1: LOCKED_H1_LINE1,
+    titleAccent: LOCKED_H1_ACCENT,
+    subtitle: LOCKED_SUB,
+    trustLine: '',
+    buttonLabel: LOCKED_CTA,
   },
   social: {
     badge: 'WORLDWIDE • FREE',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Open worldwide. Free forever. One tap, then share.',
-    trustLine: 'Worldwide 18+ · Homepage feature for #1',
-    buttonLabel: 'Get my referral link',
+    titleLine1: LOCKED_H1_LINE1,
+    titleAccent: LOCKED_H1_ACCENT,
+    subtitle: LOCKED_SUB,
+    trustLine: '',
+    buttonLabel: LOCKED_CTA,
   },
 };
 

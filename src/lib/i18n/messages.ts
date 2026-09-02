@@ -26,9 +26,12 @@ export const en = {
 
   'hero.badge': 'WORLDWIDE • FREE • NO SIGNUP',
   'hero.title_line1': 'Win the homepage.',
-  'hero.title_accent': '#1 gets a banner for their site.',
+  'hero.title_accent':
+    'Each step puts your site on this page. #1 owns the banner for 7 days.',
   'hero.subtitle':
-    'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
+    'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+  'hero.prize_one':
+    'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
   'hero.lock_rule': 'Your link counts when a friend taps Get my link.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',
@@ -36,8 +39,8 @@ export const en = {
   'hero.proof_live': 'Live free leaderboard',
   'hero.cta': 'Get my referral link',
   'hero.cta_secondary': 'See leaderboard',
-  'hero.trust':
-    'Verified #1 gets a 30-day banner for their website.',
+  'hero.trust': '',
+  'hero.security': 'Open worldwide · recognition only · Site Drop ladder.',
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 
@@ -136,7 +139,7 @@ export const en = {
 
   // Share (default template)
   'share.default':
-    "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me. {link}",
+    "I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner. Get a free link and try to beat me. {link}",
 
   // One clear public rule (everywhere):
   // Friend must Get my link to lock · ~48h base · sharing can add time · copy never locks.
@@ -183,7 +186,7 @@ export const en = {
     'Simple rule: a friend must open your link and tap Get my link. That locks it. Copying alone never locks. Sharing can add extra time.',
   'share_first.copy_only': 'Copy only (does not lock)',
   'share_first.fomo':
-    'Early ranks are open. #1 puts their website on this page.',
+    'The board is this week only. Take #1 and claim it before the week ends.',
 
   // Send mode — one primary action after get-link (main funnel fix)
   'send_mode.primary_cta': 'Send to a friend now',

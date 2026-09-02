@@ -7,23 +7,34 @@ export const DEFAULT_MIN_REFERRALS_FOR_CLAIM = 10;
 export const WEEKLY_SIDE_WIDGET_MIN = 10;
 
 export const EMPTY_SLOT_NAME = 'Your site here';
-export const EMPTY_SLOT_META = 'Your site here · 30 days';
+export const EMPTY_SLOT_META = 'Your site here · 7 days';
 export const EMPTY_BOARD_LINE = 'Board is open. #1 is winnable this week.';
 export const DAILY_CROWN_NOT_BANNER = 'Not the homepage banner.';
 
+export const LOCKED_TITLE = 'Win the ViralRefer homepage — Site Drops + #1 banner';
+export const LOCKED_H1_LINE1 = 'Win the homepage.';
+export const LOCKED_H1_ACCENT =
+  'Each step puts your site on this page. #1 owns the banner for 7 days.';
+export const LOCKED_SUB =
+  'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.';
+export const LOCKED_SLOT = 'Empty right now. #1 this week puts their site here.';
+export const LOCKED_RULE =
+  'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.';
+export const LOCKED_CTA = 'Get my referral link';
+
 export const LOCKED_SHARE_TEXT =
-  "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me. {link}";
+  "I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner. Get a free link and try to beat me. {link}";
 
 export const LOCKED_OG_DESCRIPTION =
-  "I'm racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me.";
+  "I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner. Get a free link and try to beat me.";
 
-export const PRIZE_FOMO_LINE = 'Early ranks are open. #1 puts their website on this page.';
+export const PRIZE_FOMO_LINE = 'The board is this week only. Take #1 and claim it before the week ends.';
 
-/** One trust sentence — say the prize once. Do not repeat “no cash” on the first screen. */
-export const ONE_PRIZE_SENTENCE = 'Verified #1 gets a 30-day banner for their website.';
+/** One prize sentence on the first screen (Site Drop ladder). */
+export const ONE_PRIZE_SENTENCE = LOCKED_RULE;
 
-export const AD_SLOT_KICKER = 'Live ad · this homepage · 30 days';
-export const EMPTY_AD_NOTE = 'This slot is empty. #1 puts their site here.';
+export const AD_SLOT_KICKER = 'This homepage · 7 days';
+export const EMPTY_AD_NOTE = LOCKED_SLOT;
 
 export const EXAMPLE_SLOT_HREF = 'https://www.viralrefer.app/tools/';
 export const EXAMPLE_SLOT_NAME = 'ViralRefer Tools';
@@ -165,7 +176,7 @@ export function resolvePrizeSlot(input: {
     (input.selected && isClaimedPrizeBanner(input.selected) ? input.selected : null) ||
     enabled[0] ||
     null;
-  if (!candidate) return examplePrizeSlot();
+  if (!candidate) return emptyPrizeSlot();
 
   const href = safeHttpUrl(candidate.redirectUrl || '');
   const host = href ? hostnameFromUrl(href) : null;
@@ -176,7 +187,7 @@ export function resolvePrizeSlot(input: {
   return {
     kind: 'winner',
     siteName: display,
-    meta: `${host || display} · 30 days`,
+    meta: `${host || display} · 7 days`,
     href,
     imageUrl: String(candidate.imageUrl || '').trim() || undefined,
   };
@@ -229,8 +240,11 @@ export function paintPrizeSlot(slot: PrizeSlot): void {
   const prize = document.getElementById('prize-banner-visual');
   if (prize) prize.setAttribute('data-vr-prize-slot', slot.kind);
 
-  setText('hero-ad-kicker-kind', slot.kind === 'example' ? 'Example ad' : 'Live ad');
-  setText('hero-ad-mark', slot.kind === 'example' ? 'Ex' : '#1');
+  setText(
+    'hero-ad-kicker-kind',
+    slot.kind === 'example' ? 'Example ad' : slot.kind === 'empty' ? 'This homepage' : 'Live ad',
+  );
+  setText('hero-ad-mark', slot.kind === 'example' ? 'Ex' : slot.kind === 'empty' ? '#' : '#1');
 
   const preview = document.getElementById('hero-slot-preview');
   if (preview) {

@@ -5,6 +5,12 @@
 
 import { isReferredLanding } from './funnel-conversion';
 import { getHeroCtaVariant, type HeroCtaVariant } from './optimizer-flags';
+import {
+  LOCKED_CTA,
+  LOCKED_H1_ACCENT,
+  LOCKED_H1_LINE1,
+  LOCKED_SUB,
+} from './prize-slot';
 
 export interface HeroCtaCopy {
   badge?: string;
@@ -19,19 +25,19 @@ export interface HeroCtaCopy {
 export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
   control: {
     badge: 'WORLDWIDE • FREE • NO SIGNUP',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
-    trustLine: 'Free. No email. No cash. Recognition only.',
-    buttonLabel: 'Get my referral link',
+    titleLine1: LOCKED_H1_LINE1,
+    titleAccent: LOCKED_H1_ACCENT,
+    subtitle: LOCKED_SUB,
+    trustLine: '',
+    buttonLabel: LOCKED_CTA,
   },
   prize: {
     badge: 'WORLDWIDE • FREE • NO SIGNUP',
-    titleLine1: 'Win the homepage.',
-    titleAccent: '#1 gets a banner for their site.',
-    subtitle: 'Tap Get my link. Send it. When a friend taps Get my link, you climb.',
-    trustLine: 'Free. No email. No cash. Recognition only.',
-    buttonLabel: 'Get my referral link',
+    titleLine1: LOCKED_H1_LINE1,
+    titleAccent: LOCKED_H1_ACCENT,
+    subtitle: LOCKED_SUB,
+    trustLine: '',
+    buttonLabel: LOCKED_CTA,
   },
 };
 

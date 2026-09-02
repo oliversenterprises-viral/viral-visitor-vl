@@ -84,14 +84,23 @@ describe('live homepage five fixes', () => {
     expect(read('src/admin/edit-content-tab.ts')).toContain("'get_site_content'");
   });
 
-  it('does not drift locked first-screen copy', () => {
+  it('locks the six live first-screen strings and rejects the old 8a24705 hero', () => {
     const html = read('index.html');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
-    expect(html).toContain('<title>Win the ViralRefer homepage — #1 gets a banner</title>');
+    expect(html).toContain('<title>Win the ViralRefer homepage — Site Drops + #1 banner</title>');
     expect(hero).toContain('Win the homepage.');
-    expect(hero).toContain('#1 gets a banner for their site.');
-    expect(hero).toContain('Tap Get my link. Send it. When a friend taps Get my link, you climb.');
+    expect(hero).toContain('Each step puts your site on this page. #1 owns the banner for 7 days.');
+    expect(hero).toContain(
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+    );
+    expect(hero).toContain('Empty right now. #1 this week puts their site here.');
+    expect(hero).toContain(
+      'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
+    );
     expect(hero).toContain('Get my referral link');
+    expect(hero).not.toContain('#1 gets a banner for their site.');
+    expect(hero).not.toMatch(/30-day/);
+    expect(hero).not.toContain('Example ad');
   });
 });
 

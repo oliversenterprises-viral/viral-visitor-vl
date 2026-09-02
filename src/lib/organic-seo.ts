@@ -9,7 +9,7 @@ import { parseRefFromLocation } from './referral-url';
 export const SEO_SITE_ORIGIN = 'https://www.viralrefer.app';
 
 export const HOMEPAGE_SEO = {
-  title: 'Win the ViralRefer homepage — #1 gets a banner',
+  title: 'Win the ViralRefer homepage — Site Drops + #1 banner',
   description: LOCKED_OG_DESCRIPTION,
   keywords:
     'referral program, viral marketing, free referral link, live leaderboard, homepage feature, worldwide, no signup',
