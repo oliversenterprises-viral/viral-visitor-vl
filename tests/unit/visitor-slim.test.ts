@@ -70,6 +70,17 @@ describe('visitor-slim', () => {
     expect(hasReferralLinkInUI()).toBe(true);
   });
 
+  it('treats the post-link URL as having a link when #ref-link is empty', () => {
+    document.body.innerHTML = `
+      <p id="post-link-url">https://www.viralrefer.app/r/VIRAL-TEST01</p>
+      <button id="share-more-options-btn" class="hidden"></button>
+    `;
+    expect(hasReferralLinkInUI()).toBe(true);
+    document.documentElement.setAttribute('data-vr-visitor-slim', '1');
+    refreshVisitorSlimState();
+    expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
+  });
+
   it('more-share toggle expands and collapses extras', () => {
     initVisitorSlim();
     const btn = document.getElementById('share-more-options-btn') as HTMLButtonElement;
