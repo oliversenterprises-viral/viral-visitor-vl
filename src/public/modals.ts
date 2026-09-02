@@ -7,7 +7,8 @@ import { ViralRefer, registerGlobal } from '../lib/global';
 import { switchAdminTab, showOwnerFunnelDesk } from '../admin';
 import { initAdminSimple, setAdminMore } from '../lib/admin-simple';
 import { supabase } from '../lib/supabase';
-import { setAdminSessionToken, clearAdminSessionToken } from '../lib/admin-session';
+import { setAdminSessionToken, clearAdminSessionToken, markOwnerHqSurface } from '../lib/admin-session';
+import { dismissShareAbandonOverlay } from '../lib/share-abandon-rescue';
 
 registerGlobal('closeAdminPanel', () => {
   clearAdminSessionToken();
@@ -29,6 +30,8 @@ const triggerRefreshSpin = (el?: HTMLElement) => {
 registerGlobal('triggerRefreshSpin', triggerRefreshSpin);
 
 registerGlobal('openAdminPanel', async () => {
+  markOwnerHqSurface();
+  dismissShareAbandonOverlay();
   const modal = document.getElementById('admin-modal');
   if (modal) {
     modal.classList.remove('hidden');
@@ -145,6 +148,8 @@ const openAdminPasswordModal = () => {
 const OWNER_REVEAL_KEY = 'vr_show_owner';
 
 function revealOwnerTools(): void {
+  markOwnerHqSurface();
+  dismissShareAbandonOverlay();
   const adminBtn = document.getElementById('admin-btn');
   if (adminBtn) {
     adminBtn.classList.remove('hidden');

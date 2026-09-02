@@ -62,6 +62,7 @@ describe('share-abandon-rescue', () => {
     expect(shouldShowShareAbandon({ ...base, embed: true })).toBe(false);
     expect(shouldShowShareAbandon({ ...base, confirmFlowActive: true })).toBe(false);
     expect(shouldShowShareAbandon({ ...base, dwellMs: 1000 })).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, owner: true })).toBe(false);
   });
 
   it('poll skips when share strip already in view (fatigue mitigation)', () => {
@@ -123,6 +124,17 @@ describe('share-abandon-rescue', () => {
     ).toBe(true);
     expect(shouldArmBeforeUnload({ ...base, sessionShows: 1, snoozed: true })).toBe(false);
     expect(shouldArmBeforeUnload({ ...base, sessionShows: 1, locked: true })).toBe(false);
+    expect(shouldArmBeforeUnload({ ...base, sessionShows: 1, owner: true })).toBe(false);
+  });
+
+  it('forceShareAbandonForTest does not mount when owner=1', () => {
+    vi.stubGlobal('location', { search: '?owner=1', hash: '', pathname: '/' } as Location);
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    markSharePending();
+    document.body.innerHTML = `<input id="ref-link" value="https://www.viralrefer.app/r/VIRAL-TEST1" />`;
+    forceShareAbandonForTest('owner');
+    expect(document.getElementById('vr-share-abandon')).toBeNull();
+    vi.unstubAllGlobals();
   });
 
   it('forceShareAbandonForTest mounts panel when pending', () => {

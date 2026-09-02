@@ -121,7 +121,7 @@ async function recordReferralIfAttributed(options: {
     }
     const referredCode = visitorCode;
 
-    const turnstileToken = await getCreditTurnstileToken(8000);
+    const turnstileToken = await getCreditTurnstileToken(20_000);
     if (!turnstileToken) {
       if (notify) {
         notifyReferralOutcome('failed', options.allowFailureRetryToast);

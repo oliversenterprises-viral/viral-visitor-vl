@@ -50,6 +50,8 @@ describe('referred-race (Helix Bet 3)', () => {
     );
     expect(document.getElementById('hero-subtitle')?.textContent).toBe(SAME_RACE_SUB);
     expect(document.querySelector('#hero-get-link-btn span')?.textContent).toBe(SAME_RACE_CTA);
+    expect(document.getElementById('nav-get-link-btn')?.textContent).not.toBe(SAME_RACE_CTA);
+    expect(document.getElementById('nav-get-link-btn')?.hidden).toBe(true);
     expect(document.getElementById('hero-title-accent')?.textContent).toBe('');
     expect(document.getElementById('hero-trust-line')?.textContent).toBe('');
     expect(SAME_RACE_SUB).toMatch(/Get my link/);
@@ -99,5 +101,6 @@ describe('referred-race (Helix Bet 3)', () => {
     expect(css).toMatch(
       /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #hero-security-trust/,
     );
+    expect(css).toMatch(/html\[data-vr-referred-micro\] #nav-get-link-btn/);
   });
 });

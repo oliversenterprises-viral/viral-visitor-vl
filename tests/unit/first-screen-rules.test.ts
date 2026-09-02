@@ -93,6 +93,13 @@ describe('first-screen Site Drops rules', () => {
     expect(css).toMatch(/#vr-exit-rescue[\s\S]{0,120}pointer-events:\s*none/);
   });
 
+  it('does not let share-abandon cover owner HQ Command', () => {
+    const css = read('src/style.css');
+    expect(css).toMatch(/html\[data-vr-owner-hq\] \.vr-share-abandon/);
+    expect(css).toMatch(/html:has\(#admin-modal:not\(\.hidden\)\) \.vr-share-abandon/);
+    expect(css).toMatch(/pointer-events:\s*none\s*!important/);
+  });
+
   it('registers one register-referrer-link per Get my link', () => {
     const referral = read('src/referral.ts');
     const deadline = read('src/lib/share-deadline.ts');

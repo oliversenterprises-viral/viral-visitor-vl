@@ -42,8 +42,13 @@ export function paintReferredRaceHero(code: string): void {
   const ctaSpan = document.querySelector('#hero-get-link-btn span');
   if (ctaSpan) ctaSpan.textContent = SAME_RACE_CTA;
 
-  const navCta = document.querySelector('#nav-get-link-btn');
-  if (navCta) navCta.textContent = SAME_RACE_CTA;
+  const navCta = document.getElementById('nav-get-link-btn');
+  if (navCta) {
+    // Hidden nav must not be the first DOM match for "Get my link".
+    navCta.hidden = true;
+    navCta.setAttribute('aria-hidden', 'true');
+    navCta.setAttribute('inert', '');
+  }
 
   const badge = document.getElementById('hero-badge');
   if (badge) badge.textContent = 'SAME RACE';

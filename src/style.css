@@ -772,7 +772,9 @@ html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-lock-rule,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #referral-attribution,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-expand-wrap,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-credit-gate,
-html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link[href="#prize"] {
+html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link[href="#prize"],
+html[data-vr-referred-landing] #nav-get-link-btn,
+html[data-vr-referred-micro] #nav-get-link-btn {
   display: none !important;
 }
 html[data-vr-referred-micro]:not([data-vr-has-link]) #referral-attribution {
@@ -2508,6 +2510,13 @@ html[data-vr-has-link] .funnel-step-active {
   animation: vr-share-abandon-in 0.28s ease-out;
 }
 
+html[data-vr-owner-hq] .vr-share-abandon,
+html:has(#admin-modal:not(.hidden)) .vr-share-abandon,
+html:has(#admin-owner-gate-modal:not(.hidden)) .vr-share-abandon {
+  display: none !important;
+  pointer-events: none !important;
+}
+
 @media (min-width: 640px) {
   .vr-share-abandon {
     align-items: center;
@@ -4196,7 +4205,8 @@ html[data-vr-has-link] #referral-section .glass {
   font-size: 0.875rem;
 }
 .referral-credit-turnstile {
-  min-height: 0;
+  min-height: 65px;
+  min-width: 150px;
   margin-top: 0.5rem;
 }
 html[data-vr-credit-status='pending'] .referral-credit-turnstile,
