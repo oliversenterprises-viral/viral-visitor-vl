@@ -95,9 +95,17 @@ describe('first-screen Site Drops rules', () => {
 
   it('does not let share-abandon cover owner HQ Command', () => {
     const css = read('src/style.css');
+    const html = read('index.html');
     expect(css).toMatch(/html\[data-vr-owner-hq\] \.vr-share-abandon/);
     expect(css).toMatch(/html:has\(#admin-modal:not\(\.hidden\)\) \.vr-share-abandon/);
     expect(css).toMatch(/pointer-events:\s*none\s*!important/);
+    expect(css).toMatch(/#admin-modal[\s\S]{0,80}z-index:\s*980/);
+    expect(html).toContain('z-[980]');
+    expect(html).toContain('hq-command');
+    expect(html).toContain('HQ Command');
+    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
+    expect(hero).not.toContain('HQ Command');
+    expect(hero).toContain(LOCKED_SITE_DROPS_CTA);
   });
 
   it('registers one register-referrer-link per Get my link', () => {

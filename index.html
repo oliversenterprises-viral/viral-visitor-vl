@@ -637,49 +637,50 @@
     <!-- Owner password gate is created in JS only after an owner gesture. Not in first-paint HTML. -->
 
     <!-- Admin Dashboard Modal -->
-    <div id="admin-modal" onclick="closeAdminPanel()" class="hidden fixed inset-0 bg-black/90 z-[400] flex items-center justify-center vr-modal-overlay">
-        <div onclick="event.stopImmediatePropagation()" class="vr-modal-panel border border-white/10 rounded-3xl w-full max-w-6xl mx-4 max-h-[90vh] overflow-hidden flex flex-col bg-zinc-950">
-            <div class="px-8 py-6 border-b border-white/10 flex items-center justify-between">
+    <div id="admin-modal" onclick="closeAdminPanel()" class="hidden fixed inset-0 bg-black/90 z-[980] flex items-center justify-center vr-modal-overlay">
+        <div onclick="event.stopImmediatePropagation()" class="hq-command vr-modal-panel border border-white/10 rounded-3xl w-full max-w-6xl mx-4 max-h-[90vh] overflow-hidden flex flex-col bg-zinc-950">
+            <div class="hq-command-head px-8 py-6 border-b border-white/10 flex items-center justify-between">
                 <div>
+                    <div class="hq-command-kicker">HQ Command</div>
                     <div class="font-bold text-2xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-rose-400"></i> Run the funnel</div>
                     <p class="text-sm text-zinc-400 mt-1">One loop desk. Server numbers only.</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button type="button" id="admin-more-tools-btn" class="px-3 py-2 text-xs font-semibold rounded-2xl border border-white/15 text-zinc-300 hover:text-white whitespace-nowrap" aria-expanded="false">More</button>
-                    <button onclick="closeAdminPanel()" class="text-3xl text-zinc-400 hover:text-white">✕</button>
+                    <button type="button" id="admin-more-tools-btn" class="hq-command-more px-3 py-2 text-xs font-semibold rounded-2xl border border-white/15 text-zinc-300 hover:text-white whitespace-nowrap" aria-expanded="false">More</button>
+                    <button onclick="closeAdminPanel()" class="hq-command-close text-3xl text-zinc-400 hover:text-white">✕</button>
                 </div>
             </div>
 
             <div id="admin-more-tools-host"></div>
             <div class="p-8 overflow-auto flex-1" id="admin-content">
-                <div data-owner-funnel-desk="1" class="space-y-4">
+                <div data-owner-funnel-desk="1" class="hq-desk space-y-4">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3" data-owner-desk-tiles>
-                        <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+                        <article class="hq-desk-tile hq-desk-tile--visits rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3" data-hq-tile="visits">
                             <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Visits</div>
                             <div class="text-2xl font-bold text-white tabular-nums mt-1">0</div>
                         </article>
-                        <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+                        <article class="hq-desk-tile hq-desk-tile--landings rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3" data-hq-tile="landings">
                             <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Friend landings</div>
                             <div class="text-2xl font-bold text-white tabular-nums mt-1">0</div>
                         </article>
-                        <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+                        <article class="hq-desk-tile hq-desk-tile--getlink rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3" data-hq-tile="getlink">
                             <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Get-link</div>
                             <div class="text-2xl font-bold text-white tabular-nums mt-1">0</div>
                         </article>
-                        <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+                        <article class="hq-desk-tile hq-desk-tile--share rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3" data-hq-tile="share">
                             <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Share</div>
                             <div class="text-2xl font-bold text-white tabular-nums mt-1">0</div>
                         </article>
-                        <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+                        <article class="hq-desk-tile hq-desk-tile--locked rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3" data-hq-tile="locked">
                             <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Locked</div>
                             <div class="text-2xl font-bold text-white tabular-nums mt-1">0</div>
                         </article>
-                        <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+                        <article class="hq-desk-tile hq-desk-tile--rate rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3" data-hq-tile="rate">
                             <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Get-link rate</div>
                             <div class="text-2xl font-bold text-white tabular-nums mt-1">0%</div>
                         </article>
                     </div>
-                    <section class="rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3">
+                    <section class="hq-desk-feed rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3">
                         <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-2">Landed · Got a link · Shared · Locked</div>
                     </section>
                 </div>
@@ -688,7 +689,7 @@
     </div>
 
     <div id="admin-more-tools-hold" hidden>
-            <div class="flex border-b border-white/10 px-8 admin-tab-bar overflow-x-auto items-center">
+            <div class="hq-command-tabs flex border-b border-white/10 px-8 admin-tab-bar overflow-x-auto items-center">
                 <button type="button" onclick="switchAdminTab(3)" id="tab-3" data-admin-tab="3" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Prize — approve homepage-banner claims">Prize<span id="tab-3-badge" class="admin-tab-badge hidden">0</span></button>
                 <button type="button" onclick="switchAdminTab(2)" id="tab-2" data-admin-tab="2" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Website — edit public words and pictures">Website</button>
                 <button type="button" onclick="switchAdminTab(6)" id="tab-6" data-admin-tab="6" data-vr-admin-extra="1" class="admin-tab relative px-4 py-4 font-semibold text-zinc-400 hover:text-white whitespace-nowrap" aria-label="Promoters — /a/ codes and credited Get-links">Promoters</button>

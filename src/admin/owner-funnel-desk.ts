@@ -63,9 +63,14 @@ export function ownerFunnelDeskFromInvokeResult(result: {
   return { metrics: EMPTY_METRICS };
 }
 
-function tile(label: string, value: string | number, note: string): string {
+function tile(
+  label: string,
+  value: string | number,
+  note: string,
+  kind: 'visits' | 'landings' | 'getlink' | 'share' | 'locked' | 'rate',
+): string {
   return `
-    <article class="rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3">
+    <article class="hq-desk-tile hq-desk-tile--${kind} rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3" data-hq-tile="${kind}">
       <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">${escapeHtml(label)}</div>
       <div class="text-2xl font-bold text-white tabular-nums mt-1">${escapeHtml(String(value))}</div>
       <div class="text-[11px] text-zinc-400 mt-1">${escapeHtml(note)}</div>
@@ -83,7 +88,7 @@ function feedLine(row: OwnerFunnelFeedRow): string {
         : `<span class="text-violet-200 font-semibold">${escapeHtml(row.code)}</span>`
       : '';
   return `
-    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 py-1.5 border-b border-white/5 last:border-0">
+    <div class="hq-desk-feed-row hq-desk-feed-row--${row.kind} flex flex-wrap items-baseline gap-x-2 gap-y-0.5 py-1.5 border-b border-white/5 last:border-0">
       <span class="text-[10px] text-zinc-500 tabular-nums">${escapeHtml(when)}</span>
       <span class="text-sm text-white font-semibold">${escapeHtml(row.label)}</span>
       ${codes}
@@ -103,28 +108,29 @@ export function renderOwnerFunnelDeskView(
     : `<div class="text-sm text-zinc-500 py-2">No loop events in the last ${metrics.windowDays} days.</div>`;
 
   container.innerHTML = `
-    <div data-owner-funnel-desk="1" class="space-y-4">
+    <div data-owner-funnel-desk="1" class="hq-desk space-y-4">
       <p class="text-sm text-zinc-400">Last ${metrics.windowDays} days · owner IP, test codes, and webdriver excluded.</p>
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3" data-owner-desk-tiles>
-        ${tile('Visits', metrics.visits, 'All page views — cheap counter')}
-        ${tile('Friend landings', metrics.friendLandings, 'Unique people on /r/ or /a/')}
-        ${tile('Get-link', metrics.getLink, 'Unique people who tapped Get my link')}
-        ${tile('Share', metrics.share, 'Verified send — not copy')}
-        ${tile('Locked', metrics.locked, 'Codes with a real friend credit')}
+        ${tile('Visits', metrics.visits, 'All page views — cheap counter', 'visits')}
+        ${tile('Friend landings', metrics.friendLandings, 'Unique people on /r/ or /a/', 'landings')}
+        ${tile('Get-link', metrics.getLink, 'Unique people who tapped Get my link', 'getlink')}
+        ${tile('Share', metrics.share, 'Verified send — not copy', 'share')}
+        ${tile('Locked', metrics.locked, 'Codes with a real friend credit', 'locked')}
         ${tile(
           'Get-link rate',
           metrics.getLinkRate,
           metrics.friendLandings > 0 ? 'Get-link / Friend landings' : 'Get-link / Visits',
+          'rate',
         )}
       </div>
-      <section class="rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3">
+      <section class="hq-desk-feed rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3">
         <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-2">
           Landed · Got a link · Shared · Locked
         </div>
         <div data-owner-desk-feed class="max-h-80 overflow-y-auto">${feedHtml}</div>
       </section>
       <div class="flex items-center gap-2">
-        <button type="button" data-owner-desk-refresh class="text-xs px-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100">↻ Refresh</button>
+        <button type="button" data-owner-desk-refresh class="hq-desk-refresh text-xs px-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100">↻ Refresh</button>
         <span class="text-[10px] text-zinc-500">Server only</span>
       </div>
 

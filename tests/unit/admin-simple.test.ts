@@ -148,6 +148,8 @@ describe('admin one-loop desk', () => {
     expect(modal).toMatch(/>Share</);
     expect(modal).toMatch(/Locked/);
     expect(modal).toMatch(/Get-link rate/);
+    expect(modal).toMatch(/HQ Command/);
+    expect(modal).toMatch(/hq-desk-tile/);
     expect(modal).toMatch(/>More</);
     expect(modal).not.toMatch(/Friends/);
     expect(modal).not.toMatch(/Prize/);
