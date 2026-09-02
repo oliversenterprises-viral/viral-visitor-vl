@@ -153,6 +153,9 @@ describe('share-abandon-rescue', () => {
 
   it('never auto-opens the dont-leave overlay when the send screen is up', () => {
     document.documentElement.setAttribute('data-vr-post-link-one', '1');
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    markSharePending();
+    document.body.innerHTML = `<input id="ref-link" value="https://www.viralrefer.app/r/VIRAL-TEST1" />`;
     const base = {
       hasLink: true,
       sharePending: true,
