@@ -2927,7 +2927,7 @@ html:not([data-vr-share-locked]) #daily-champion-strip {
 }
 
 .hero-gradient #hero-title-accent {
-  color: transparent !important;
+  color: #f4f4f5 !important;
 }
 
 .hero-gradient::before {
