@@ -41,15 +41,26 @@ describe('locked live Site Drops homepage copy', () => {
   const messages = readFileSync(resolve(ROOT, 'src/lib/i18n/messages.ts'), 'utf8');
   const prizeSlot = readFileSync(resolve(ROOT, 'src/lib/prize-slot.ts'), 'utf8');
 
-  it('keeps TITLE, H1, SUB, SLOT, RULE, CTA exactly', () => {
+  it('fails closed if any locked live string, UTM footer, or /guides/ is missing', () => {
+    const required = [
+      LOCKED_LIVE_SITE_DROPS.title,
+      LOCKED_LIVE_SITE_DROPS.h1,
+      LOCKED_LIVE_SITE_DROPS.accent,
+      LOCKED_LIVE_SITE_DROPS.sub,
+      LOCKED_LIVE_SITE_DROPS.slot,
+      LOCKED_LIVE_SITE_DROPS.rule,
+      LOCKED_LIVE_SITE_DROPS.cta,
+    ];
+    for (const locked of required) {
+      expect(html, `missing locked live string: ${locked}`).toContain(locked);
+    }
     expect(html).toContain(`<title>${LOCKED_LIVE_SITE_DROPS.title}</title>`);
-    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.h1);
-    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.accent);
-    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.sub);
-    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.slot);
     expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.slotMeta);
-    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.rule);
-    expect(hero).toContain(LOCKED_LIVE_SITE_DROPS.cta);
+    expect(html).toContain('Site Drop ladder:');
+    expect(html).toContain('utm_source=homepage_footer');
+    expect(html).toContain('href="/guides/"');
+    expect(existsSync(resolve(ROOT, 'public/guides/index.html'))).toBe(true);
+    expect(existsSync(resolve(ROOT, 'public/guides/site-drops/index.html'))).toBe(true);
   });
 
   it('does not keep the old 30-day banner / example-ad strings', () => {

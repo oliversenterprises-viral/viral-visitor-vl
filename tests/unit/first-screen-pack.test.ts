@@ -45,9 +45,26 @@ describe('first-screen pack (locked Site Drops page)', () => {
 
   it('pins a readable wordmark', () => {
     expect(html).toContain('class="vr-wordmark');
-    expect(html).toContain('style="color:#f4f4f5"');
+    expect(html).toContain('style="color:#f4f4f5;-webkit-text-fill-color:#f4f4f5"');
     expect(css).toContain('#vr-nav .vr-wordmark');
     expect(css).toContain('color: #f4f4f5 !important');
+    expect(css).toContain('-webkit-text-fill-color: #f4f4f5 !important');
+  });
+
+  it('keeps first-screen a11y: skip link, main, typed CTA', () => {
+    expect(html).toContain('class="vr-skip"');
+    expect(html).toContain('href="#hero-get-link-btn"');
+    expect(html).toContain('id="main"');
+    expect(html).toMatch(/<button type="button" id="hero-get-link-btn"/);
+    expect(html).toContain('aria-label="Get my referral link"');
+    expect(css).toContain('.vr-skip');
+  });
+
+  it('tucks chrome on a short phone so Get my link stays in the first view', () => {
+    expect(css).toMatch(/@media \(max-width: 430px\) and \(max-height: 780px\)/);
+    expect(css).toMatch(
+      /html:not\(\[data-vr-has-link\]\) #hero-badge,[\s\S]*#hero-global-proof/,
+    );
   });
 
   it('does not hydrate extra slot lines before Get my link', () => {

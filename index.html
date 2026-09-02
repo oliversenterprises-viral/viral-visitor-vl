@@ -115,12 +115,13 @@
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body class="tail-container bg-zinc-950 text-zinc-100 min-h-screen">
+    <a class="vr-skip" href="#hero-get-link-btn">Skip to Get my referral link</a>
     <!-- NAVBAR -->
     <nav id="vr-nav" class="border-b border-white/10 bg-zinc-950/80 backdrop-blur-lg fixed w-full z-50">
         <div class="max-w-6xl mx-auto px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between gap-2">
             <a href="#" class="flex items-center gap-2 sm:gap-3 min-w-0 shrink" aria-label="ViralRefer home">
                 <div class="w-8 h-8 sm:w-9 sm:h-9 bg-violet-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl logo-font shrink-0">V</div>
-                <span class="vr-wordmark text-xl sm:text-3xl font-semibold tracking-tighter logo-font" style="color:#f4f4f5">ViralRefer</span>
+                <span class="vr-wordmark text-xl sm:text-3xl font-semibold tracking-tighter logo-font" style="color:#f4f4f5;-webkit-text-fill-color:#f4f4f5">ViralRefer</span>
             </a>
             <div class="vr-nav-links flex items-center gap-2 sm:gap-6 text-sm font-medium shrink-0">
                 <a href="#how" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.how">How</a>
@@ -137,7 +138,7 @@
         </div>
     </nav>
 
-    <div class="vr-page-shell pt-20 sm:pt-24 pb-12 sm:pb-16 max-w-6xl mx-auto px-4 sm:px-6">
+    <main id="main" class="vr-page-shell pt-20 sm:pt-24 pb-12 sm:pb-16 max-w-6xl mx-auto px-4 sm:px-6">
         <!-- HERO — conversion polish: one primary action, global proof, quiet first paint -->
         <div class="vr-hero-panel rounded-2xl sm:rounded-3xl p-6 sm:p-12 md:p-16 text-center hero-gradient shadow-2xl">
             <div class="vr-hero-inner max-w-[400px] sm:max-w-3xl mx-auto">
@@ -212,7 +213,8 @@
                 <div id="hero-referred-trust-pack" class="hidden mb-4 mx-auto max-w-xl" role="status" aria-live="polite" data-vr-zone="trust-pack"></div>
 
                 <div class="hero-cta-stack flex flex-col items-stretch justify-center gap-2 w-full max-w-[400px] mx-auto">
-                    <button id="hero-get-link-btn" data-vr-zone="hero-get-link" onclick="getMyReferralLinkInstant()" 
+                    <button type="button" id="hero-get-link-btn" data-vr-zone="hero-get-link" onclick="getMyReferralLinkInstant()"
+                            aria-label="Get my referral link"
                             class="btn-primary hero-primary-cta w-full px-8 py-4 sm:px-12 sm:py-5 text-lg sm:text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/40 min-h-[52px]">
                         <i class="fa-solid fa-link" aria-hidden="true"></i>
                         <span data-i18n="hero.cta">Get my referral link</span>
@@ -527,7 +529,7 @@
                 <!-- Skeleton seeded by public-polish.ts until leaderboard loads -->
             </div>
         </div>
-    </div>
+    </main>
 
     <footer class="bg-black py-12 border-t border-white/10 text-center text-xs text-zinc-500">
         <div class="max-w-5xl mx-auto px-4 space-y-2">

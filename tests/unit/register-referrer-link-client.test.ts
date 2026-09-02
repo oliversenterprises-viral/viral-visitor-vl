@@ -15,7 +15,11 @@ import {
   registerReferrerLinkDeadline,
   resetRegisterReferrerLinkCacheForTests,
 } from '../../src/lib/share-deadline';
-import { getMyReferralLinkInstant, resetReferralRecordingStateForTests } from '../../src/referral';
+import {
+  applyExistingReferralLink,
+  getMyReferralLinkInstant,
+  resetReferralRecordingStateForTests,
+} from '../../src/referral';
 
 describe('one register-referrer-link per Get my link', () => {
   beforeEach(() => {
@@ -73,5 +77,22 @@ describe('one register-referrer-link per Get my link', () => {
     expect((registerCalls[0][1] as { body: { referrer_code: string } }).body.referrer_code).toMatch(
       /^VIRAL-/,
     );
+  });
+
+  it('does not register again when restoring an already-registered code', async () => {
+    invokeMock.mockResolvedValue({
+      data: { success: true, data: { status: 'pending_share' } },
+      error: null,
+    });
+
+    await getMyReferralLinkInstant();
+    const first = invokeMock.mock.calls.find((call) => call[0] === 'register-referrer-link');
+    const code = String((first?.[1] as { body?: { referrer_code?: string } } | undefined)?.body?.referrer_code || '');
+    expect(code).toMatch(/^VIRAL-/);
+    applyExistingReferralLink(code);
+    await Promise.resolve();
+
+    const registerCalls = invokeMock.mock.calls.filter((call) => call[0] === 'register-referrer-link');
+    expect(registerCalls).toHaveLength(1);
   });
 });

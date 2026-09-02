@@ -37,7 +37,6 @@ import {
   enforceLocalShareDeadlineExpiry,
   initShareDeadlineUi,
   registerReferrerLinkDeadline,
-  renderShareDeadlineBanner,
 } from './lib/share-deadline';
 import {
   activatePostLinkShare,
@@ -258,14 +257,6 @@ function populateReferralLinkUI(code: string, link: string): void {
   initShareRemindersOnLinkReady();
   onReferralLinkReady();
   refreshPublicClarityState();
-  // Start / refresh 48h first-friend lock clock (server-backed when available)
-  void registerReferrerLinkDeadline(code).then((state) => {
-    if (state?.status === 'expired') {
-      enforceLocalShareDeadlineExpiry(code);
-      return;
-    }
-    renderShareDeadlineBanner();
-  });
 }
 
 /** Current value in #ref-link (empty until generated). */
@@ -283,6 +274,7 @@ export async function ensureReferralLinkReady(): Promise<string> {
   if (code) {
     const link = buildReferralLink(code);
     populateReferralLinkUI(code, link);
+    void registerReferrerLinkDeadline(code);
     return link;
   }
 
@@ -298,6 +290,7 @@ export function applyExistingReferralLink(code: string): void {
   }
   const link = buildReferralLink(code);
   populateReferralLinkUI(code, link);
+  void registerReferrerLinkDeadline(code);
   syncMobileReferralCta();
   initShareDeadlineUi();
   activatePostLinkShare(link);
