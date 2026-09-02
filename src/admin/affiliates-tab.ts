@@ -6,7 +6,7 @@
 import { invokeAdminAction } from '../lib/admin-action-client';
 import { escapeHtml } from '../lib/escape-html';
 import { showToast } from '../ui';
-import { fetchSiteContent } from '../lib/supabase';
+import { fetchAdminSiteContent } from '../lib/admin-site-content';
 import { fetchVisitorFunnelEvents } from '../lib/visitor-funnel-fetch';
 import { isTestVisitorFunnelEvent } from '../../supabase/functions/_shared/visitor-funnel-test';
 import {
@@ -38,7 +38,10 @@ export async function renderAffiliatesTab(content: HTMLElement): Promise<void> {
       <div class="h-24 skeleton rounded-2xl"></div>
     </div>`;
 
-  const [siteContent, funnel] = await Promise.all([fetchSiteContent(), fetchVisitorFunnelEvents()]);
+  const [siteContent, funnel] = await Promise.all([
+    fetchAdminSiteContent(AFFILIATES_SITE_CONTENT_KEY),
+    fetchVisitorFunnelEvents(),
+  ]);
   let program = parseAffiliatesProgram(siteContent[AFFILIATES_SITE_CONTENT_KEY]);
   const events = (funnel.events || []).filter((row) => !isTestVisitorFunnelEvent(row));
 

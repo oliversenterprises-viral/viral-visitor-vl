@@ -167,5 +167,7 @@ describe('admin one-loop desk', () => {
     expect(simple).not.toMatch(/startAdminLiveHub/);
     expect(switcher).toMatch(/affiliates-tab/);
     expect(switcher).toMatch(/tab === 6/);
+    expect(switcher).toMatch(/tab === 7/);
+    expect(switcher).toMatch(/race-desk/);
   });
 });

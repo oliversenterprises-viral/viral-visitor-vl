@@ -24,6 +24,24 @@ describe('live Site Drop funnel lock', () => {
     expect(html).toContain('Owner HQ');
     expect(html).toContain('style="color:#f4f4f5"');
     expect(html).toContain('vr-wordmark');
+    expect(html).toContain('switchAdminTab(7)');
+    expect(html).toContain('aria-label="Race — this week\'s banner and text spots"');
+  });
+
+  it('keeps owner HQ site_content actions that live JS still calls', () => {
+    const edge = readFileSync(resolve(ROOT, 'supabase/functions/admin-action/index.ts'), 'utf8');
+    const client = readFileSync(resolve(ROOT, 'src/lib/admin-site-content.ts'), 'utf8');
+    const website = readFileSync(resolve(ROOT, 'src/admin/edit-content-tab.ts'), 'utf8');
+    const promoters = readFileSync(resolve(ROOT, 'src/admin/affiliates-tab.ts'), 'utf8');
+    const race = readFileSync(resolve(ROOT, 'src/admin/race-desk.ts'), 'utf8');
+    expect(edge).toContain("action === 'get_site_content'");
+    expect(edge).toContain("action === 'update_site_content'");
+    expect(edge).not.toMatch(/action === ['"]reset_landing_visit_counters['"]/);
+    expect(client).toContain("'get_site_content'");
+    expect(website).toContain('fetchAdminSiteContentRows');
+    expect(promoters).toContain('fetchAdminSiteContent');
+    expect(race).toContain('fetchAdminSiteContent');
+    expect(race).toContain('update_site_content');
   });
 
   it('ships the live /guides/ hub', () => {
