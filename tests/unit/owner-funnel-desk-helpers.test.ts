@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { computeFunnelTotals } from '../../src/admin/visitor-funnel-stats-helpers';
 import {
@@ -449,6 +451,12 @@ describe('owner funnel desk metrics', () => {
     expect(metrics.friendLandings).toBe(0);
     expect(metrics.getLink).toBe(1);
     expect(metrics.getLinkRate).toBe('0.5%');
+  });
+
+  it('refresh keeps the desk instead of toasting can’t load', () => {
+    const src = readFileSync(resolve(import.meta.dirname, '../../src/admin/owner-funnel-desk.ts'), 'utf8');
+    expect(src).toContain('renderOwnerFunnelDeskView(container, EMPTY_METRICS)');
+    expect(src).not.toMatch(/showToast\('can.t load/);
   });
 
   it('reads visits from a new RPC and defaults visits to 0 on an old payload', () => {

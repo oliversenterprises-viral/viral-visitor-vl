@@ -89,6 +89,7 @@ describe('get_site_content (HQ Website tab)', () => {
     expect(load.actionMissing).toBe(true);
     const html = buildContentListHTML(load.rows, load);
     expect(html).toContain('data-hq-talk="1"');
+    expect(html).toContain('> Talk');
     expect(html).toContain('id="owner-broadcast-panel"');
     expect(html).toContain('data-hq-website-action-missing="1"');
     expect(html).toContain('Website is not an empty CMS');
@@ -127,5 +128,9 @@ describe('get_site_content (HQ Website tab)', () => {
     expect(prize).toContain('data-hq-prize="1"');
     expect(prize).toContain('export async function renderPrizeClaimsTab');
     expect(prize).toContain("invokeAdminAction<AdminClaimRow[]>('get_claims')");
+    const promoters = readFileSync(resolve(root, 'src/admin/affiliates-tab.ts'), 'utf8');
+    expect(promoters).toContain('data-hq-promoters="1"');
+    expect(promoters).toContain('Still paint Promoters chrome');
+    expect(switcher).toContain('renderAffiliatesTab');
   });
 });

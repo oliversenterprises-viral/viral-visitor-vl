@@ -38,9 +38,17 @@ export async function renderAffiliatesTab(content: HTMLElement): Promise<void> {
       <div class="h-24 skeleton rounded-2xl"></div>
     </div>`;
 
-  const [siteContent, funnel] = await Promise.all([fetchSiteContent(), fetchVisitorFunnelEvents()]);
+  let siteContent: Record<string, unknown> = {};
+  let funnelEvents: Awaited<ReturnType<typeof fetchVisitorFunnelEvents>>['events'] = [];
+  try {
+    const [loadedContent, funnel] = await Promise.all([fetchSiteContent(), fetchVisitorFunnelEvents()]);
+    siteContent = loadedContent || {};
+    funnelEvents = funnel.events || [];
+  } catch {
+    /* Still paint Promoters chrome — do not look like a blank tab */
+  }
   let program = parseAffiliatesProgram(siteContent[AFFILIATES_SITE_CONTENT_KEY]);
-  const events = (funnel.events || []).filter((row) => !isTestVisitorFunnelEvent(row));
+  const events = (funnelEvents || []).filter((row) => !isTestVisitorFunnelEvent(row));
 
   const paint = () => {
     const rows = program.affiliates
@@ -77,7 +85,7 @@ export async function renderAffiliatesTab(content: HTMLElement): Promise<void> {
       .join('');
 
     content.innerHTML = `
-      <div class="mb-5">
+      <div class="mb-5" data-hq-promoters="1">
         <div class="text-2xl font-bold">Promoters</div>
         <p class="text-sm text-zinc-400 mt-1">/a/ codes and credited Get-links. Recognition only.</p>
       </div>

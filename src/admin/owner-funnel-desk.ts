@@ -157,7 +157,8 @@ async function refreshOwnerFunnelDesk(
     await renderOwnerFunnelDesk(container);
     showToast('Funnel desk refreshed', 'success');
   } catch {
-    showToast('can’t load.', 'info');
+    renderOwnerFunnelDeskView(container, EMPTY_METRICS);
+    showToast('Desk still here. Counts stay at zero until the server answers.', 'info');
   } finally {
     if (btn) {
       btn.disabled = false;

@@ -334,7 +334,8 @@ function buildContentListHTML(rows: ContentRow[], load?: WebsiteTabLoad): string
       <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
         <div>
           <div class="text-lg font-bold text-violet-200 flex items-center gap-2">
-            <i class="fa-solid fa-bullhorn"></i> Message all joiners
+            <i class="fa-solid fa-bullhorn"></i> Talk
+            <span class="text-sm font-semibold text-violet-200/80">Message all joiners</span>
           </div>
           <p class="text-xs text-zinc-400 mt-1 max-w-xl">
             Banner for everyone on the site. <strong class="text-violet-200">Only you can remove it</strong> (Turn OFF). Links: paste full <code class="text-violet-300">https://…</code> URLs or use <code class="text-violet-300">[label](https://…)</code>. Optional sponsor ad below.
