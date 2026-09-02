@@ -63,11 +63,31 @@ Deno.serve(async (req: Request) => {
     }
 
     const expiredLinks = dryRun ? 0 : await expireStalePendingLinks(supabase);
+    let expiredSiteDrops = 0;
+    if (!dryRun) {
+      try {
+        const { loadSiteDropsState, pruneAndSaveSiteDrops } = await import(
+          '../_shared/site-drops-store.ts'
+        );
+        const before = await loadSiteDropsState(supabase);
+        const after = await pruneAndSaveSiteDrops(supabase);
+        expiredSiteDrops =
+          before.pending_entered.length -
+          after.pending_entered.length +
+          (before.drops.length - after.drops.length);
+      } catch (dropErr) {
+        console.warn('[optimizer-cron] site-drop prune skipped:', dropErr);
+      }
+    }
     const result = await runOptimizerAutopilotCycle(supabase, { dryRun });
     return new Response(
       JSON.stringify({
         success: true,
-        data: { ...result, expired_pending_links: expiredLinks },
+        data: {
+          ...result,
+          expired_pending_links: expiredLinks,
+          expired_site_drops: expiredSiteDrops,
+        },
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

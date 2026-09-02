@@ -3,7 +3,9 @@
  */
 
 const TURNSTILE_SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY || '';
+function readTurnstileSiteKey(): string {
+  return String(import.meta.env.VITE_TURNSTILE_SITEKEY || '').trim();
+}
 const DEFAULT_TOKEN_TIMEOUT_MS = 30_000;
 
 type TurnstileApi = {
@@ -25,7 +27,7 @@ export type TurnstileRenderOptions = {
 };
 
 export function getTurnstileSiteKey(): string {
-  return TURNSTILE_SITEKEY;
+  return readTurnstileSiteKey();
 }
 
 function getTurnstileApi(): TurnstileApi | null {
@@ -91,7 +93,7 @@ export function removeTurnstileWidget(widgetId: string | null | undefined): void
 /** Render widget in container and resolve with token (dev bypass when no sitekey). */
 export function getTurnstileToken(
   container: HTMLElement,
-  siteKey: string = TURNSTILE_SITEKEY,
+  siteKey: string = readTurnstileSiteKey(),
   devBypassLabel = 'Turnstile',
   options: TurnstileRenderOptions = {},
 ): Promise<string> {
@@ -183,10 +185,48 @@ export function getTurnstileToken(
 }
 
 /**
- * Best-effort Turnstile token for referral hardening. Never blocks recording — returns null on failure/timeout.
+ * Token for record-referral. Server requires Turnstile — do not POST without one
+ * when a site key is configured. Empty site key (local/unit) uses the same
+ * dev-bypass token as claims; production always has a site key.
+ *
+ * Cloudflare rejects widgets hidden with display:none / opacity:0 / 1×1 boxes.
+ * Host in #referral-turnstile-container (or a real-sized fallback) so a person
+ * can actually complete the check.
  */
+export async function getCreditTurnstileToken(timeoutMs = 10_000): Promise<string | null> {
+  const siteKey = readTurnstileSiteKey();
+  if (!siteKey) return 'dev-bypass-token';
+
+  const existing = document.getElementById('referral-turnstile-container');
+  const container = existing ?? document.createElement('div');
+  const created = !existing;
+  if (created) {
+    container.id = 'referral-turnstile-container';
+    container.className = 'referral-credit-turnstile';
+    const host =
+      document.getElementById('referral-section') ||
+      document.getElementById('post-link-share') ||
+      document.body;
+    host.appendChild(container);
+  }
+
+  try {
+    await ensureTurnstileReady();
+    const token = await getTurnstileToken(container, siteKey, 'referral credit', {
+      invisible: true,
+      timeoutMs,
+      action: 'record-referral',
+    });
+    return typeof token === 'string' && token ? token : null;
+  } catch {
+    return null;
+  } finally {
+    if (created) container.remove();
+  }
+}
+
 export async function tryOptionalTurnstileToken(timeoutMs = 2500): Promise<string | null> {
-  if (!TURNSTILE_SITEKEY) return null;
+  if (!readTurnstileSiteKey()) return null;
 
   const container = document.createElement('div');
   container.setAttribute('aria-hidden', 'true');
@@ -197,7 +237,7 @@ export async function tryOptionalTurnstileToken(timeoutMs = 2500): Promise<strin
   try {
     await ensureTurnstileReady();
     const token = await Promise.race([
-      getTurnstileToken(container, TURNSTILE_SITEKEY, 'optional referral', {
+      getTurnstileToken(container, readTurnstileSiteKey(), 'optional referral', {
         invisible: true,
         timeoutMs,
       }),

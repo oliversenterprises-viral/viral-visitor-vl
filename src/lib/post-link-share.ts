@@ -239,6 +239,12 @@ export function showPostLinkReady(link: string): void {
 
 export function activatePostLinkShare(link: string): void {
   showPostLinkReady(link);
+  void import('./site-drops-ui')
+    .then((m) => {
+      m.revealSiteDropForm();
+      m.initSiteDropForm();
+    })
+    .catch(() => {});
 }
 
 /** Same user-gesture share sheet (mobile). No-op when Web Share is missing. */

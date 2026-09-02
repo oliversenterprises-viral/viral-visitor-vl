@@ -6,6 +6,7 @@ export type EdgeJsonBody = {
   error?: string;
   details?: string;
   message?: string;
+  data?: unknown;
 };
 
 export async function parseEdgeFunctionBody(

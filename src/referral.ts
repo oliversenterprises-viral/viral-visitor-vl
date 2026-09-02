@@ -23,7 +23,7 @@ import {
   parseRefFromLocation,
 } from './lib/referral-url';
 import { parseEdgeFunctionBody } from './lib/edge-response';
-import { tryOptionalTurnstileToken } from './lib/turnstile';
+import { getCreditTurnstileToken } from './lib/turnstile';
 import { escapeHtml } from './content';
 import { showToast } from './ui';
 import { ViralRefer } from './lib/global';
@@ -97,7 +97,7 @@ function notifyReferralOutcome(outcome: ReferralRecordOutcome, allowFailureRetry
 
 /**
  * Records the referral for the current attribution (if any) via the Edge Function.
- * Server-side rate limit + dedupe protect the path (Turnstile optional when configured).
+ * Server requires Turnstile — never POST without a token when a site key is set.
  */
 async function recordReferralIfAttributed(options: {
   notify?: boolean;
@@ -121,12 +121,18 @@ async function recordReferralIfAttributed(options: {
     }
     const referredCode = visitorCode;
 
-    const turnstileToken = await tryOptionalTurnstileToken(8000);
+    const turnstileToken = await getCreditTurnstileToken(8000);
+    if (!turnstileToken) {
+      if (notify) {
+        notifyReferralOutcome('failed', options.allowFailureRetryToast);
+      }
+      return 'failed';
+    }
 
     const { data, error } = await supabase.functions.invoke('record-referral', {
       body: {
         referrerCode: pendingReferrerCode,
-        ...(turnstileToken ? { turnstileToken } : {}),
+        turnstileToken,
         ...(referredCode ? { referredCode } : {}),
       },
     });
