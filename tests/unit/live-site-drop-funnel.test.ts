@@ -43,6 +43,20 @@ describe('live Site Drop funnel lock', () => {
     expect(html).toContain('aria-label="Race — this week\'s banner and text spots"');
   });
 
+  it('never auto-opens Don\'t-leave on the post-get-link send screen', () => {
+    const rescue = readFileSync(resolve(ROOT, 'src/lib/share-abandon-rescue.ts'), 'utf8');
+    const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
+    expect(rescue).not.toMatch(/tryShow\('dwell'/);
+    expect(rescue).not.toMatch(/setTimeout\(\(\) => tryShow/);
+    expect(rescue).toContain("tryShow('exit'");
+    expect(rescue).toContain('isAutoOpenShareAbandonReason');
+    expect(rescue).toContain('vr-share-abandon--send-safe');
+    expect(css).toContain('vr-share-abandon--send-safe');
+    expect(css).toMatch(/html\[data-vr-post-link-one\] \.vr-share-abandon/);
+    expect(css).toMatch(/html\[data-vr-share-abandon\] #post-link-copy/);
+    expect(css).toMatch(/html\[data-vr-share-abandon\] #post-link-primary/);
+  });
+
   it('keeps owner HQ site_content actions that live JS still calls', () => {
     const edge = readFileSync(resolve(ROOT, 'supabase/functions/admin-action/index.ts'), 'utf8');
     const client = readFileSync(resolve(ROOT, 'src/lib/admin-site-content.ts'), 'utf8');

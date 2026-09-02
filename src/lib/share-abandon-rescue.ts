@@ -1,15 +1,14 @@
 /**
- * Share abandon rescue — make post–get-link sharing hard to ignore or skip.
+ * Share abandon rescue — only when they actually leave.
  *
- * When a visitor has a link but has not locked it (friend Get my link),
- * intercept leave/idle paths with a high-attention panel that funnels
- * them back to the primary send action.
+ * After Get my link the send screen is the job: Copy / Send it now.
+ * Never auto-open this overlay on that screen (no dwell timer, no poll,
+ * no return-from-tab). Exit-intent only. Even then the overlay must not
+ * cover #post-link-copy / #post-link-primary — first tap copies/sends
+ * with no dismiss step.
  *
  * White-hat: no dark patterns that trap forever; limited soft dismisses
  * per session; never blocks accessibility or breaks locked/embed flows.
- * Residual-risk mitigations: longer dwell, fewer shows, poll only when
- * send strip is off-screen, beforeunload only after a prior prompt, Escape
- * + (after first show) backdrop soft-dismiss.
  */
 
 import { isEmbedMode } from './embed-mode';
@@ -63,7 +62,12 @@ export function resolveShareAbandonDwellMs(opts: {
   return opts.isCoarsePointer ? MOBILE_DWELL_MS : MIN_DWELL_MS;
 }
 
-/** Send screen is up — never cover Copy link / Send it now. */
+/** Dwell / poll / tab-return — never auto-open these on the send screen. */
+export function isAutoOpenShareAbandonReason(reason?: string): boolean {
+  return reason !== 'exit';
+}
+
+/** Send screen is up — Copy link / Send it now must stay the first tap. */
 export function isPostLinkSendScreenActive(doc: Document = document): boolean {
   if (doc.documentElement.hasAttribute('data-vr-post-link-one')) return true;
   const share = doc.getElementById('post-link-share');
@@ -72,7 +76,9 @@ export function isPostLinkSendScreenActive(doc: Document = document): boolean {
 }
 
 export function shouldShowShareAbandon(opts: ShareAbandonEligibility): boolean {
-  if (isPostLinkSendScreenActive()) return false;
+  // Auto-open (dwell / poll / return / unspecified) never fires on the send screen.
+  // Exit-intent may fire if they actually leave — layout must not cover Copy / Send.
+  if (isPostLinkSendScreenActive() && isAutoOpenShareAbandonReason(opts.reason)) return false;
   if (opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
   if (opts.alreadyMaxShows || opts.snoozed || opts.confirmFlowActive) return false;
   // Poll is the softest path — never interrupt if they can already see Send
@@ -279,6 +285,7 @@ function invokeSend(): void {
 
 function showAbandonPanel(reason: string): void {
   if (document.getElementById(PANEL_ID)) return;
+  if (isPostLinkSendScreenActive() && isAutoOpenShareAbandonReason(reason)) return;
   if (
     !shouldShowShareAbandon({
       hasLink: hasLink(),
@@ -305,7 +312,9 @@ function showAbandonPanel(reason: string): void {
 
   const panel = document.createElement('div');
   panel.id = PANEL_ID;
-  panel.className = 'vr-share-abandon';
+  panel.className = isPostLinkSendScreenActive()
+    ? 'vr-share-abandon vr-share-abandon--send-safe'
+    : 'vr-share-abandon';
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'true');
   panel.setAttribute('aria-labelledby', 'vr-share-abandon-title');
@@ -374,6 +383,7 @@ function showAbandonPanel(reason: string): void {
 
 function tryShow(reason: string, startedAt: number, coarse: boolean): void {
   if (document.getElementById(PANEL_ID)) return;
+  if (isPostLinkSendScreenActive() && isAutoOpenShareAbandonReason(reason)) return;
   if (
     !shouldShowShareAbandon({
       hasLink: hasLink(),
@@ -429,29 +439,24 @@ export function initShareAbandonRescue(win: Window = window): void {
 
   const started = Date.now();
   const coarse = win.matchMedia('(pointer: coarse)').matches;
-  const isPaid =
-    win.document.documentElement.getAttribute('data-vr-paid-landing') === '1';
-  const dwellNeed = resolveShareAbandonDwellMs({
-    isCoarsePointer: coarse,
-    isPaidTraffic: isPaid,
-  });
   let leftHiddenAt: number | null = null;
 
+  // Exit-intent only — never schedule dwell/poll auto-open on the send screen.
   if (!coarse) {
     win.document.addEventListener('mouseout', (e: MouseEvent) => {
       if (e.clientY > 12 || e.relatedTarget != null) return;
       tryShow('exit', started, coarse);
     });
-    if (isPaid) {
-      win.setTimeout(() => tryShow('dwell', started, coarse), dwellNeed);
-    }
-  } else {
-    win.setTimeout(() => tryShow('dwell', started, coarse), dwellNeed);
   }
 
   win.document.addEventListener('visibilitychange', () => {
     if (win.document.visibilityState === 'hidden') {
       leftHiddenAt = Date.now();
+      return;
+    }
+    // Coming back to the tab is not exit-intent. Never auto-open on the send screen.
+    if (isPostLinkSendScreenActive()) {
+      leftHiddenAt = null;
       return;
     }
     if (leftHiddenAt != null && Date.now() - leftHiddenAt >= MIN_AWAY_RETURN_MS) {
@@ -462,9 +467,11 @@ export function initShareAbandonRescue(win: Window = window): void {
 
   win.addEventListener('beforeunload', makeBeforeUnloadHandler(started));
 
-  // Periodic re-surface only if they scrolled away from send UI
+  // Poll never auto-opens the send-screen overlay. Only clean up stale panels
+  // off that screen (locked / no longer pending).
   win.setInterval(() => {
-    if (!hasLink() || isLocked() || !isSharePendingLocal() || isPostLinkSendScreenActive()) {
+    if (isPostLinkSendScreenActive()) return;
+    if (!hasLink() || isLocked() || !isSharePendingLocal()) {
       removePanel();
       return;
     }
@@ -473,9 +480,10 @@ export function initShareAbandonRescue(win: Window = window): void {
 
   win.document.addEventListener('pointerdown', stealShareAbandonIfSendTap, true);
 
-  // Clear panel when locked, or when the send screen is up (Copy must win)
+  // Drop the panel once they lock or are no longer pending. Do not tear down
+  // an exit-intent panel just because the send screen is up.
   const obs = new MutationObserver(() => {
-    if (isLocked() || !isSharePendingLocal() || isPostLinkSendScreenActive()) removePanel();
+    if (isLocked() || !isSharePendingLocal()) removePanel();
   });
   obs.observe(win.document.documentElement, {
     attributes: true,

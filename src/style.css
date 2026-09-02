@@ -2459,12 +2459,17 @@ html[data-vr-has-link] .funnel-step-active {
   }
 }
 
-/* Share abandon rescue — hard to ignore after get-link */
-/* Copy / Send stay tappable if the Don't-leave overlay is already up. */
+/* Share abandon rescue — exit-intent only. Copy / Send win the first tap. */
 html[data-vr-share-abandon] #post-link-copy,
 html[data-vr-share-abandon] #post-link-primary {
   position: relative;
-  z-index: 970;
+  z-index: 980;
+  pointer-events: auto !important;
+}
+
+html[data-vr-share-abandon][data-vr-post-link-one] #post-link-share {
+  position: relative;
+  z-index: 980;
 }
 
 .vr-share-abandon {
@@ -2479,9 +2484,31 @@ html[data-vr-share-abandon] #post-link-primary {
   animation: vr-share-abandon-in 0.28s ease-out;
 }
 
+/* Send screen: overlay must not cover or intercept Copy / Send. */
+html[data-vr-post-link-one] .vr-share-abandon,
+.vr-share-abandon--send-safe {
+  pointer-events: none;
+  align-items: flex-start;
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+
+html[data-vr-post-link-one] .vr-share-abandon-backdrop,
+.vr-share-abandon--send-safe .vr-share-abandon-backdrop {
+  pointer-events: none;
+}
+
+html[data-vr-post-link-one] .vr-share-abandon-card,
+.vr-share-abandon--send-safe .vr-share-abandon-card {
+  pointer-events: auto;
+}
+
 @media (min-width: 640px) {
   .vr-share-abandon {
     align-items: center;
+  }
+  html[data-vr-post-link-one] .vr-share-abandon,
+  .vr-share-abandon--send-safe {
+    align-items: flex-start;
   }
 }
 

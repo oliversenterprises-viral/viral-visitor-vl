@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   shouldShowShareAbandon,
@@ -13,10 +16,14 @@ import {
   resetShareAbandonSessionForTest,
   forceShareAbandonForTest,
   isPostLinkSendScreenActive,
+  isAutoOpenShareAbandonReason,
   stealShareAbandonIfSendTap,
   dismissShareAbandon,
+  initShareAbandonRescue,
 } from '../../src/lib/share-abandon-rescue';
 import { markSharePending, clearShareFirstFlags } from '../../src/lib/share-first-ui';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 describe('share-abandon-rescue', () => {
   beforeEach(() => {
@@ -30,12 +37,14 @@ describe('share-abandon-rescue', () => {
     document.documentElement.removeAttribute('data-vr-share-pending');
     document.documentElement.removeAttribute('data-vr-share-abandon');
     document.documentElement.removeAttribute('data-vr-post-link-one');
+    document.documentElement.removeAttribute('data-vr-paid-landing');
   });
 
   afterEach(() => {
     resetShareAbandonSessionForTest();
     clearShareFirstFlags();
     document.documentElement.removeAttribute('data-vr-post-link-one');
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -142,7 +151,7 @@ describe('share-abandon-rescue', () => {
     expect(document.documentElement.getAttribute('data-vr-share-abandon')).toBe('unit');
   });
 
-  it('never shows the dont-leave overlay when the send screen is up', () => {
+  it('never auto-opens the dont-leave overlay when the send screen is up', () => {
     document.documentElement.setAttribute('data-vr-post-link-one', '1');
     const base = {
       hasLink: true,
@@ -156,7 +165,62 @@ describe('share-abandon-rescue', () => {
       confirmFlowActive: false,
     };
     expect(isPostLinkSendScreenActive()).toBe(true);
+    expect(isAutoOpenShareAbandonReason('dwell')).toBe(true);
+    expect(isAutoOpenShareAbandonReason('poll')).toBe(true);
+    expect(isAutoOpenShareAbandonReason('return')).toBe(true);
+    expect(isAutoOpenShareAbandonReason('exit')).toBe(false);
     expect(shouldShowShareAbandon(base)).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, reason: 'dwell' })).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, reason: 'poll' })).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, reason: 'return' })).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, reason: 'exit' })).toBe(true);
+    forceShareAbandonForTest('dwell');
+    expect(document.getElementById('vr-share-abandon')).toBeNull();
+    forceShareAbandonForTest('exit');
+    const panel = document.getElementById('vr-share-abandon');
+    expect(panel).toBeTruthy();
+    expect(panel?.classList.contains('vr-share-abandon--send-safe')).toBe(true);
+  });
+
+  it('initShareAbandonRescue never schedules dwell or poll auto-open on the send screen', () => {
+    const src = readFileSync(resolve(ROOT, 'src/lib/share-abandon-rescue.ts'), 'utf8');
+    expect(src).not.toMatch(/tryShow\('dwell'/);
+    expect(src).not.toMatch(/setTimeout\(\(\) => tryShow/);
+    expect(src).toMatch(/tryShow\('exit'/);
+    expect(src).toMatch(/if \(isPostLinkSendScreenActive\(\)\) return;/);
+
+    const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
+    expect(css).toContain('vr-share-abandon--send-safe');
+    expect(css).toMatch(/pointer-events:\s*none/);
+    expect(css).toMatch(/html\[data-vr-share-abandon\] #post-link-copy/);
+    expect(css).toMatch(/html\[data-vr-share-abandon\] #post-link-primary/);
+
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      writable: true,
+      value: () => ({
+        matches: true,
+        addEventListener() {},
+        removeEventListener() {},
+        addListener() {},
+        removeListener() {},
+      }),
+    });
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    document.documentElement.setAttribute('data-vr-post-link-one', '1');
+    document.documentElement.setAttribute('data-vr-paid-landing', '1');
+    markSharePending();
+    document.body.innerHTML = `
+      <div id="post-link-share" data-state="ready">
+        <button type="button" id="post-link-copy">Copy link</button>
+        <button type="button" id="post-link-primary">Send it now</button>
+      </div>
+    `;
+    vi.useFakeTimers();
+    initShareAbandonRescue();
+    vi.advanceTimersByTime(POLL_MS + MOBILE_DWELL_MS + 5_000);
+    expect(document.getElementById('vr-share-abandon')).toBeNull();
+    document.documentElement.removeAttribute('data-vr-paid-landing');
   });
 
   it('stealShareAbandonIfSendTap drops the overlay so Copy wins first tap', () => {
