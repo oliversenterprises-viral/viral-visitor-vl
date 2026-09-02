@@ -12,6 +12,7 @@
  * + (after first show) backdrop soft-dismiss.
  */
 
+import { isOwnerHqContext, markOwnerHqSurface } from './admin-session';
 import { isEmbedMode } from './embed-mode';
 import { isSharePendingLocal } from './share-first-ui';
 import { t } from './i18n';
@@ -50,6 +51,8 @@ export interface ShareAbandonEligibility {
   reason?: string;
   /** Paid / Reddit — prompt share sooner after get-link. */
   isPaidTraffic?: boolean;
+  /** Owner desk / ?owner=1 — never cover HQ Command. */
+  owner?: boolean;
 }
 
 /** Dwell before share-abandon panel (paid traffic is faster). */
@@ -64,7 +67,7 @@ export function resolveShareAbandonDwellMs(opts: {
 }
 
 export function shouldShowShareAbandon(opts: ShareAbandonEligibility): boolean {
-  if (opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
+  if (opts.owner || opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
   if (opts.alreadyMaxShows || opts.snoozed || opts.confirmFlowActive) return false;
   // Poll is the softest path — never interrupt if they can already see Send
   if (opts.reason === 'poll' && opts.shareStripInView) return false;
@@ -85,8 +88,9 @@ export function shouldArmBeforeUnload(opts: {
   snoozed: boolean;
   sessionShows: number;
   dwellMs: number;
+  owner?: boolean;
 }): boolean {
-  if (opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
+  if (opts.owner || opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
   if (opts.confirmFlowActive || opts.snoozed) return false;
   if (opts.sessionShows >= 1) return true;
   return opts.dwellMs >= BEFOREUNLOAD_MIN_DWELL_MS;
@@ -191,6 +195,12 @@ function removePanel(): void {
   document.documentElement.removeAttribute('data-vr-share-abandon');
 }
 
+/** Strip leftover "Don't leave without sending" so owner Desk is never covered. */
+export function dismissShareAbandonOverlay(doc: Document = document): void {
+  doc.getElementById(PANEL_ID)?.remove();
+  doc.documentElement.removeAttribute('data-vr-share-abandon');
+}
+
 function invokeSend(): void {
   try {
     sessionStorage.setItem('vr_get_link_via', 'share_abandon_rescue');
@@ -215,6 +225,11 @@ function invokeSend(): void {
 
 function showAbandonPanel(reason: string): void {
   if (document.getElementById(PANEL_ID)) return;
+  if (isOwnerHqContext()) {
+    markOwnerHqSurface();
+    removePanel();
+    return;
+  }
   if (
     !shouldShowShareAbandon({
       hasLink: hasLink(),
@@ -229,6 +244,7 @@ function showAbandonPanel(reason: string): void {
       shareStripInView: reason === 'poll' ? isShareStripInView() : false,
       reason,
       isPaidTraffic: document.documentElement.getAttribute('data-vr-paid-landing') === '1',
+      owner: isOwnerHqContext(),
     })
   ) {
     return;
@@ -309,6 +325,11 @@ function showAbandonPanel(reason: string): void {
 }
 
 function tryShow(reason: string, startedAt: number, coarse: boolean): void {
+  if (isOwnerHqContext()) {
+    markOwnerHqSurface();
+    removePanel();
+    return;
+  }
   if (document.getElementById(PANEL_ID)) return;
   if (
     !shouldShowShareAbandon({
@@ -324,6 +345,7 @@ function tryShow(reason: string, startedAt: number, coarse: boolean): void {
       shareStripInView: reason === 'poll' ? isShareStripInView() : false,
       reason,
       isPaidTraffic: document.documentElement.getAttribute('data-vr-paid-landing') === '1',
+      owner: isOwnerHqContext(),
     })
   ) {
     return;
@@ -344,6 +366,7 @@ function makeBeforeUnloadHandler(startedAt: number) {
         snoozed: isSnoozed(),
         sessionShows: sessionShows(),
         dwellMs: Date.now() - startedAt,
+        owner: isOwnerHqContext(),
       })
     ) {
       return;
@@ -358,6 +381,11 @@ function makeBeforeUnloadHandler(startedAt: number) {
  * Call after get-link / send-mode, and on return visits with pending share.
  */
 export function initShareAbandonRescue(win: Window = window): void {
+  if (isOwnerHqContext(win.location)) {
+    markOwnerHqSurface(win.document);
+    dismissShareAbandonOverlay(win.document);
+    return;
+  }
   if (isEmbedMode(win.location) || win.document.documentElement.dataset.vrShareAbandonBound === '1') {
     return;
   }
@@ -407,13 +435,28 @@ export function initShareAbandonRescue(win: Window = window): void {
     tryShow('poll', started, coarse);
   }, POLL_MS);
 
-  // Clear panel when locked
+  // Clear panel when locked, or when Owner Desk / HQ is marked
   const obs = new MutationObserver(() => {
+    if (isOwnerHqContext(win.location)) {
+      markOwnerHqSurface(win.document);
+      dismissShareAbandonOverlay(win.document);
+      return;
+    }
     if (isLocked() || !isSharePendingLocal()) removePanel();
+    const desk = win.document.getElementById('admin-modal');
+    const gate = win.document.getElementById('admin-owner-gate-modal');
+    if ((desk && !desk.classList.contains('hidden')) || (gate && !gate.classList.contains('hidden'))) {
+      dismissShareAbandonOverlay(win.document);
+    }
   });
   obs.observe(win.document.documentElement, {
     attributes: true,
-    attributeFilter: ['data-vr-share-locked', 'data-vr-share-pending', 'data-vr-has-link'],
+    attributeFilter: [
+      'data-vr-share-locked',
+      'data-vr-share-pending',
+      'data-vr-has-link',
+      'data-vr-owner-hq',
+    ],
   });
 }
 

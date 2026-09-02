@@ -93,6 +93,23 @@ describe('first-screen Site Drops rules', () => {
     expect(css).toMatch(/#vr-exit-rescue[\s\S]{0,120}pointer-events:\s*none/);
   });
 
+  it('does not let share-abandon cover owner HQ Command', () => {
+    const css = read('src/style.css');
+    const html = read('index.html');
+    expect(css).toMatch(/html\[data-vr-owner-hq\] \.vr-share-abandon/);
+    expect(css).toMatch(/html:has\(#admin-modal:not\(\.hidden\)\) \.vr-share-abandon/);
+    expect(css).toMatch(/html:has\(#admin-owner-gate-modal:not\(\.hidden\)\) \.vr-share-abandon/);
+    expect(css).toMatch(/pointer-events:\s*none\s*!important/);
+    expect(css).toMatch(/visibility:\s*hidden\s*!important/);
+    expect(css).toMatch(/#admin-modal[\s\S]{0,80}z-index:\s*980/);
+    expect(html).toContain('z-[980]');
+    expect(html).toContain('hq-command');
+    expect(html).toContain('HQ Command');
+    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
+    expect(hero).not.toContain('HQ Command');
+    expect(hero).toContain(LOCKED_SITE_DROPS_CTA);
+  });
+
   it('registers one register-referrer-link per Get my link', () => {
     const referral = read('src/referral.ts');
     const deadline = read('src/lib/share-deadline.ts');
@@ -110,6 +127,28 @@ describe('first-screen Site Drops rules', () => {
     expect(existsSync(resolve(root, 'public/llms-full.txt'))).toBe(true);
     expect(existsSync(resolve(root, 'src/lib/site-drops.ts'))).toBe(true);
     expect(existsSync(resolve(root, 'src/admin/owner-funnel-desk.ts'))).toBe(true);
+    expect(existsSync(resolve(root, 'supabase/functions/_shared/owner-funnel-gsc.ts'))).toBe(true);
     expect(existsSync(resolve(root, 'public/tools'))).toBe(true);
+    expect(read('src/admin/owner-funnel-desk.ts')).toMatch(/data-owner-desk-gsc/);
+    expect(read('index.html')).toMatch(/data-owner-desk-gsc/);
+    expect(read('supabase/functions/admin-action/index.ts')).toMatch(/resolveOwnerFunnelGsc/);
+    expect(read('supabase/functions/admin-action/index.ts')).toContain(
+      "Deno.env.get('GSC_SERVICE_ACCOUNT_JSON')",
+    );
+    expect(read('supabase/functions/admin-action/index.ts')).toContain("Deno.env.get('GSC_SITE_URL')");
+    expect(read('supabase/functions/admin-action/index.ts')).not.toMatch(/GSC_API_KEY/);
+    expect(read('supabase/functions/_shared/owner-funnel-gsc.ts')).toContain(
+      "readEnv('GSC_SERVICE_ACCOUNT_JSON')",
+    );
+    expect(read('supabase/functions/_shared/owner-funnel-gsc.ts')).toContain("readEnv('GSC_SITE_URL')");
+    expect(read('supabase/functions/_shared/owner-funnel-gsc.ts')).not.toMatch(/GSC_API_KEY/);
+    expect(read('supabase/functions/_shared/owner-funnel-gsc.ts')).not.toMatch(/VITE_GSC/);
+    expect(read('src/lib/turnstile.ts')).toContain("size: 'compact'");
+    expect(read('src/lib/turnstile.ts')).not.toMatch(/size:\s*['"]invisible['"]/);
+    expect(read('src/lib/turnstile.ts')).toContain('prefetchCreditTurnstileToken');
+    expect(read('index.html')).toContain('id="friend-credit-turnstile"');
+    expect(read('vercel.json')).toContain('https://*.challenges.cloudflare.com');
+    expect(read('src/public/modals.ts')).toMatch(/z-\[990\]/);
+    expect(read('src/public/modals.ts')).toMatch(/dismissShareAbandonOverlay\(\)/);
   });
 });

@@ -85,6 +85,11 @@ describe('admin one-loop desk', () => {
     expect(first).toMatch(/Locked/);
     expect(first).toMatch(/Get-link rate/);
     expect(content.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
+    expect(content.querySelector('[data-owner-desk-gsc]')).not.toBeNull();
+    expect(content.textContent).toMatch(/Google Search · tools & pages/);
+    expect(content.textContent).toMatch(
+      /Search Console is verified\. Add the API key on the server to show numbers here\./,
+    );
     expect(first).not.toMatch(/Friends/);
     expect(first).not.toMatch(/Prize/);
     expect(first).not.toMatch(/Website/);
@@ -148,6 +153,16 @@ describe('admin one-loop desk', () => {
     expect(modal).toMatch(/>Share</);
     expect(modal).toMatch(/Locked/);
     expect(modal).toMatch(/Get-link rate/);
+    expect(modal).toMatch(/data-owner-desk-gsc/);
+    expect(modal).toMatch(/Google Search · tools &amp; pages/);
+    expect(modal).toMatch(/Shown in Google/);
+    expect(modal).toMatch(/Tool pages/);
+    expect(modal).toMatch(/Top searches/);
+    expect(modal).toMatch(/Other pages/);
+    expect(modal).toMatch(/Search countries/);
+    expect(modal).toMatch(/Search Console is verified\. Add the API key on the server to show numbers here\./);
+    expect(modal).toMatch(/HQ Command/);
+    expect(modal).toMatch(/hq-desk-tile/);
     expect(modal).toMatch(/>More</);
     expect(modal).not.toMatch(/Friends/);
     expect(modal).not.toMatch(/Prize/);

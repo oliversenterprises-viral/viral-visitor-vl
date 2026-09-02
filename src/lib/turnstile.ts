@@ -15,16 +15,26 @@ type TurnstileApi = {
   reset: (widgetId: string) => void;
 };
 
+/** Cloudflare Turnstile sizes — "invisible" was removed and now errors. */
+export const TURNSTILE_SIZES = ['compact', 'flexible', 'normal'] as const;
+export type TurnstileSize = (typeof TURNSTILE_SIZES)[number];
+
 export type TurnstileRenderOptions = {
-  /** Use invisible widget (requires visible container + execute on some browsers). */
-  invisible?: boolean;
   /** Reject if no token within this window (avoids hung recording). */
   timeoutMs?: number;
-  size?: 'normal' | 'compact' | 'flexible';
+  size?: TurnstileSize;
   theme?: 'light' | 'dark' | 'auto';
   appearance?: 'always' | 'execute' | 'interaction-only';
   action?: string;
+  /** Call turnstile.execute after render (managed execute appearance). */
+  execute?: boolean;
 };
+
+export function normalizeTurnstileSize(raw: unknown): TurnstileSize {
+  const size = String(raw || '').trim().toLowerCase();
+  if (size === 'flexible' || size === 'normal') return size;
+  return 'compact';
+}
 
 export function getTurnstileSiteKey(): string {
   return readTurnstileSiteKey();
@@ -157,15 +167,15 @@ export function getTurnstileToken(
 
     if (options.action) renderOpts.action = options.action;
 
-    if (options.invisible) {
-      renderOpts.size = 'invisible';
-    } else {
-      renderOpts.size = options.size ?? 'compact';
-    }
+    const size = normalizeTurnstileSize(options.size);
+    renderOpts.size = size;
+
+    const shouldExecute =
+      options.execute === true || options.appearance === 'execute';
 
     try {
       widgetId = api.render(widgetDiv, renderOpts);
-      if (options.invisible && api.execute) {
+      if (shouldExecute && api.execute) {
         window.setTimeout(() => {
           try {
             api.execute(widgetId!);
@@ -173,7 +183,7 @@ export function getTurnstileToken(
             try {
               api.execute(widgetDiv);
             } catch {
-              // render-mode invisible may still auto-run
+              // appearance:execute may still auto-run
             }
           }
         }, 0);
@@ -184,36 +194,87 @@ export function getTurnstileToken(
   });
 }
 
-/**
- * Token for record-referral. Server requires Turnstile — do not POST without one
- * when a site key is configured. Empty site key (local/unit) uses the same
- * dev-bypass token as claims; production always has a site key.
- *
- * Cloudflare rejects widgets hidden with display:none / opacity:0 / 1×1 boxes.
- * Host in #referral-turnstile-container (or a real-sized fallback) so a person
- * can actually complete the check.
- */
-export async function getCreditTurnstileToken(timeoutMs = 10_000): Promise<string | null> {
+function hostIsUsable(el: HTMLElement | null): el is HTMLElement {
+  if (!el) return false;
+  if (el.hidden || el.classList.contains('hidden')) return false;
+  if (el.style.display === 'none' || el.style.visibility === 'hidden') return false;
+  return true;
+}
+
+function hostIsPainted(el: HTMLElement | null): el is HTMLElement {
+  if (!hostIsUsable(el)) return false;
+  try {
+    const style = window.getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+      return false;
+    }
+    const r = el.getBoundingClientRect();
+    if (r.width < 130 || r.height < 50) return false;
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+function prepareVisibleTurnstileHost(container: HTMLElement): void {
+  container.hidden = false;
+  container.removeAttribute('hidden');
+  container.classList.remove('hidden');
+  if (container.style.display === 'none') container.style.removeProperty('display');
+  if (container.style.visibility === 'hidden') container.style.removeProperty('visibility');
+  if (container.style.opacity === '0') container.style.removeProperty('opacity');
+  container.classList.add('referral-credit-turnstile');
+}
+
+let creditTokenCache: string | null = null;
+let creditTokenInFlight: Promise<string | null> | null = null;
+
+/** Test-only: clear prefetch/cache between cases. */
+export function resetCreditTurnstileStateForTests(): void {
+  creditTokenCache = null;
+  creditTokenInFlight = null;
+}
+
+function resolveCreditTurnstileContainer(): { container: HTMLElement; created: boolean } {
+  const friend = document.getElementById('friend-credit-turnstile');
+  if (friend) {
+    prepareVisibleTurnstileHost(friend);
+    return { container: friend, created: false };
+  }
+
+  const existing = document.getElementById('referral-turnstile-container');
+  if (existing) {
+    const section = document.getElementById('referral-section');
+    if (hostIsPainted(section) && existing.parentElement !== section) {
+      section.appendChild(existing);
+    } else if (
+      !hostIsPainted(existing.parentElement as HTMLElement | null) &&
+      hostIsPainted(document.body)
+    ) {
+      document.body.appendChild(existing);
+    }
+    prepareVisibleTurnstileHost(existing);
+    return { container: existing, created: false };
+  }
+
+  const created = document.createElement('div');
+  created.id = 'referral-turnstile-container';
+  created.className = 'referral-credit-turnstile';
+  document.body.appendChild(created);
+  prepareVisibleTurnstileHost(created);
+  return { container: created, created: true };
+}
+
+async function renderCreditTurnstileToken(timeoutMs: number): Promise<string | null> {
   const siteKey = readTurnstileSiteKey();
   if (!siteKey) return 'dev-bypass-token';
 
-  const existing = document.getElementById('referral-turnstile-container');
-  const container = existing ?? document.createElement('div');
-  const created = !existing;
-  if (created) {
-    container.id = 'referral-turnstile-container';
-    container.className = 'referral-credit-turnstile';
-    const host =
-      document.getElementById('referral-section') ||
-      document.getElementById('post-link-share') ||
-      document.body;
-    host.appendChild(container);
-  }
-
+  const { container, created } = resolveCreditTurnstileContainer();
   try {
     await ensureTurnstileReady();
     const token = await getTurnstileToken(container, siteKey, 'referral credit', {
-      invisible: true,
+      size: 'compact',
+      appearance: 'always',
       timeoutMs,
       action: 'record-referral',
     });
@@ -225,20 +286,52 @@ export async function getCreditTurnstileToken(timeoutMs = 10_000): Promise<strin
   }
 }
 
+/**
+ * Token for record-referral. Server requires Turnstile — do not POST without one
+ * when a site key is configured. Empty site key (local/unit) uses the same
+ * dev-bypass token as claims; production always has a site key.
+ *
+ * Cloudflare rejects size "invisible" and widgets hidden with display:none /
+ * opacity:0 / 1×1 boxes. Friend /r/ credit uses a visible compact widget
+ * (appearance always — not execute/invisible). Prefetch on /r/ so the
+ * challenge-platform request can finish before Get my link.
+ */
+export async function getCreditTurnstileToken(timeoutMs = 45_000): Promise<string | null> {
+  if (creditTokenCache) return creditTokenCache;
+  if (creditTokenInFlight) return creditTokenInFlight;
+
+  creditTokenInFlight = (async () => {
+    let token = await renderCreditTurnstileToken(timeoutMs);
+    if (!token) token = await renderCreditTurnstileToken(Math.min(timeoutMs, 20_000));
+    if (token) creditTokenCache = token;
+    return token;
+  })().finally(() => {
+    creditTokenInFlight = null;
+  });
+
+  return creditTokenInFlight;
+}
+
+/** Start compact Turnstile on a referred landing without POSTing record-referral. */
+export function prefetchCreditTurnstileToken(): void {
+  if (creditTokenCache || creditTokenInFlight) return;
+  void getCreditTurnstileToken(45_000);
+}
+
 export async function tryOptionalTurnstileToken(timeoutMs = 2500): Promise<string | null> {
   if (!readTurnstileSiteKey()) return null;
 
   const container = document.createElement('div');
-  container.setAttribute('aria-hidden', 'true');
-  container.style.cssText =
-    'position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;';
+  container.className = 'referral-credit-turnstile';
   document.body.appendChild(container);
+  prepareVisibleTurnstileHost(container);
 
   try {
     await ensureTurnstileReady();
     const token = await Promise.race([
       getTurnstileToken(container, readTurnstileSiteKey(), 'optional referral', {
-        invisible: true,
+        size: 'compact',
+        appearance: 'always',
         timeoutMs,
       }),
       new Promise<null>((resolve) => window.setTimeout(() => resolve(null), timeoutMs)),

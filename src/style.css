@@ -772,7 +772,9 @@ html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-lock-rule,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #referral-attribution,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-expand-wrap,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-credit-gate,
-html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link[href="#prize"] {
+html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link[href="#prize"],
+html[data-vr-referred-landing] #nav-get-link-btn,
+html[data-vr-referred-micro] #nav-get-link-btn {
   display: none !important;
 }
 html[data-vr-referred-micro]:not([data-vr-has-link]) #referral-attribution {
@@ -2508,6 +2510,15 @@ html[data-vr-has-link] .funnel-step-active {
   animation: vr-share-abandon-in 0.28s ease-out;
 }
 
+html[data-vr-owner-hq] .vr-share-abandon,
+html:has(#admin-modal:not(.hidden)) .vr-share-abandon,
+html:has(#admin-owner-gate-modal:not(.hidden)) .vr-share-abandon {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
 @media (min-width: 640px) {
   .vr-share-abandon {
     align-items: center;
@@ -3751,12 +3762,205 @@ html[data-vr-touch] .share-btn {
 }
 
 #admin-modal {
-  background: rgba(0, 0, 0, 0.92);
+  z-index: 980;
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(124, 58, 237, 0.16), transparent 55%),
+    rgba(4, 4, 8, 0.82);
+  backdrop-filter: blur(12px);
 }
 
-#admin-modal .vr-modal-panel {
-  background: #09090b;
-  backdrop-filter: none;
+#admin-modal .vr-modal-panel,
+#admin-modal .hq-command {
+  background:
+    radial-gradient(900px 280px at 8% -8%, rgba(139, 92, 246, 0.2), transparent 52%),
+    radial-gradient(700px 240px at 100% 0%, rgba(244, 63, 94, 0.08), transparent 46%),
+    #07070b;
+  border-color: rgba(167, 139, 250, 0.24);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: #f4f4f5;
+}
+
+.hq-command-kicker {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.35rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: rgba(124, 58, 237, 0.14);
+  color: #ddd6fe;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hq-command-head {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+}
+
+#admin-more-tools-btn,
+.hq-command-more {
+  border-color: rgba(167, 139, 250, 0.35) !important;
+  background: rgba(124, 58, 237, 0.16);
+  color: #ede9fe !important;
+}
+
+#admin-more-tools-btn:hover,
+.hq-command-more:hover {
+  background: rgba(139, 92, 246, 0.28);
+  color: #fff !important;
+}
+
+.hq-command-close {
+  line-height: 1;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+}
+
+.hq-command-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.hq-command-tabs,
+#admin-modal .admin-tab-bar {
+  background: rgba(0, 0, 0, 0.28);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+#admin-modal .admin-tab {
+  color: #a1a1aa;
+  letter-spacing: 0.01em;
+}
+
+#admin-modal .admin-tab:hover {
+  color: #f4f4f5;
+}
+
+#admin-modal .admin-tab[aria-selected='true'],
+#admin-modal .admin-tab.border-violet-500 {
+  color: #ddd6fe;
+  text-shadow: 0 0 18px rgba(167, 139, 250, 0.35);
+}
+
+.hq-desk-tile {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(9, 9, 11, 0.7)) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.hq-desk-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: #71717a;
+}
+
+.hq-desk-tile--visits::before { background: #a1a1aa; }
+.hq-desk-tile--landings::before { background: #38bdf8; }
+.hq-desk-tile--getlink::before { background: #a78bfa; }
+.hq-desk-tile--share::before { background: #fbbf24; }
+.hq-desk-tile--locked::before { background: #34d399; }
+.hq-desk-tile--rate::before { background: #fb7185; }
+
+.hq-desk-tile .text-2xl {
+  color: #fafafa;
+  letter-spacing: -0.03em;
+}
+
+.hq-desk-feed {
+  background: rgba(0, 0, 0, 0.28) !important;
+  border-color: rgba(167, 139, 250, 0.16) !important;
+}
+
+.hq-desk-feed-row--locked .text-sm {
+  color: #6ee7b7;
+}
+
+.hq-desk-refresh {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#admin-modal [data-hq-prize],
+#admin-modal [data-hq-website],
+#admin-modal [data-hq-talk],
+#admin-modal [data-hq-promoters] {
+  letter-spacing: -0.01em;
+}
+
+#admin-modal [data-hq-talk],
+#admin-modal #owner-broadcast-panel {
+  border-color: rgba(167, 139, 250, 0.4);
+  background: linear-gradient(180deg, rgba(76, 29, 149, 0.28), rgba(9, 9, 11, 0.55));
+}
+
+#admin-modal input,
+#admin-modal textarea,
+#admin-modal select {
+  color: #f4f4f5;
+  background: #0a0a0f;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+#admin-modal .admin-tab-content table td,
+#admin-modal .admin-tab-content table th {
+  color: #e4e4e7;
+}
+
+#admin-content.admin-tab-content {
+  color: #f4f4f5;
+}
+
+.hq-gsc-card {
+  border-color: rgba(167, 139, 250, 0.22) !important;
+  background:
+    radial-gradient(700px 180px at 0% 0%, rgba(124, 58, 237, 0.14), transparent 55%),
+    rgba(0, 0, 0, 0.28) !important;
+}
+
+.hq-gsc-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.hq-gsc-list {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.85rem;
+  padding: 0.65rem 0.75rem;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.hq-gsc-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.72rem;
+}
+
+.hq-gsc-row:last-child {
+  border-bottom: 0;
+}
+
+.hq-gsc-row-label {
+  color: #d4d4d8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hq-gsc-row-num {
+  color: #c4b5fd;
+  font-weight: 700;
 }
 
 @media (max-width: 639px) {
@@ -4196,8 +4400,25 @@ html[data-vr-has-link] #referral-section .glass {
   font-size: 0.875rem;
 }
 .referral-credit-turnstile {
-  min-height: 0;
+  min-height: 65px;
+  min-width: 150px;
   margin-top: 0.5rem;
+}
+/* Visible compact widget on /r/ so challenge-platform can finish before Get my link. */
+.friend-credit-turnstile {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  min-height: 70px;
+  min-width: 160px;
+  margin: 0.65rem auto 0;
+}
+html[data-vr-referred-landing] .friend-credit-turnstile,
+html[data-vr-referred-micro] .friend-credit-turnstile,
+html[data-vr-has-link] .friend-credit-turnstile,
+html[data-vr-credit-status='pending'] .friend-credit-turnstile,
+html[data-vr-credit-status='failed'] .friend-credit-turnstile {
+  display: flex !important;
 }
 html[data-vr-credit-status='pending'] .referral-credit-turnstile,
 html[data-vr-credit-status='failed'] .referral-credit-turnstile {

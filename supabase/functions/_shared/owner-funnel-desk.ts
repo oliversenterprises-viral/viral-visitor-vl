@@ -5,6 +5,7 @@
  */
 
 import { isTestReferralRecord, isTestReferrerCode } from './test-referral.ts';
+import type { OwnerFunnelGscMetrics } from './owner-funnel-gsc.ts';
 import { filterTestVisitorFunnelEvents } from './visitor-funnel-test.ts';
 import {
   isVerifiedSharePlatform,
@@ -38,6 +39,7 @@ export type OwnerFunnelDeskMetrics = {
   locked: number;
   getLinkRate: string;
   feed: OwnerFunnelFeedRow[];
+  gsc?: OwnerFunnelGscMetrics;
 };
 
 export type OwnerFunnelEvent = Record<string, unknown>;

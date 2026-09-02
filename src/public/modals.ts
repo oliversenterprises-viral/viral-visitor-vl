@@ -7,7 +7,8 @@ import { ViralRefer, registerGlobal } from '../lib/global';
 import { switchAdminTab, showOwnerFunnelDesk } from '../admin';
 import { initAdminSimple, setAdminMore } from '../lib/admin-simple';
 import { supabase } from '../lib/supabase';
-import { setAdminSessionToken, clearAdminSessionToken } from '../lib/admin-session';
+import { setAdminSessionToken, clearAdminSessionToken, markOwnerHqSurface } from '../lib/admin-session';
+import { dismissShareAbandonOverlay } from '../lib/share-abandon-rescue';
 
 registerGlobal('closeAdminPanel', () => {
   clearAdminSessionToken();
@@ -29,6 +30,8 @@ const triggerRefreshSpin = (el?: HTMLElement) => {
 registerGlobal('triggerRefreshSpin', triggerRefreshSpin);
 
 registerGlobal('openAdminPanel', async () => {
+  markOwnerHqSurface();
+  dismissShareAbandonOverlay();
   const modal = document.getElementById('admin-modal');
   if (modal) {
     modal.classList.remove('hidden');
@@ -43,7 +46,7 @@ function ensureAdminOwnerGateModal(): HTMLElement | null {
   if (modal) return modal;
   modal = document.createElement('div');
   modal.id = 'admin-owner-gate-modal';
-  modal.className = 'hidden fixed inset-0 bg-black/90 z-[300] flex items-center justify-center';
+  modal.className = 'hidden fixed inset-0 bg-black/90 z-[990] flex items-center justify-center';
   modal.dataset.vrAdminGate = '1';
   modal.setAttribute('role', 'dialog');
   modal.setAttribute('aria-modal', 'true');
@@ -133,6 +136,8 @@ const closeAdminPasswordModal = () => {
 registerGlobal('closeAdminPasswordModal', closeAdminPasswordModal);
 
 const openAdminPasswordModal = () => {
+  markOwnerHqSurface();
+  dismissShareAbandonOverlay();
   const pw = ensureAdminOwnerGateModal();
   if (!pw) return;
   pw.classList.remove('hidden');
@@ -145,6 +150,8 @@ const openAdminPasswordModal = () => {
 const OWNER_REVEAL_KEY = 'vr_show_owner';
 
 function revealOwnerTools(): void {
+  markOwnerHqSurface();
+  dismissShareAbandonOverlay();
   const adminBtn = document.getElementById('admin-btn');
   if (adminBtn) {
     adminBtn.classList.remove('hidden');

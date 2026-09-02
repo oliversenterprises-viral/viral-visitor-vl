@@ -999,7 +999,18 @@ Deno.serve(async (req: Request) => {
           loadFeedWindow: () => pageWindow(false),
           loadCompleteWindow: () => pageWindow(true),
         });
-        return new Response(JSON.stringify({ success: true, data: metrics }), {
+        let gsc;
+        try {
+          const { resolveOwnerFunnelGsc } = await import('../_shared/owner-funnel-gsc.ts');
+          // Same Deno.env.get path as ADMIN_ACTION_SECRET — do not log the JSON.
+          const secret = String(Deno.env.get('GSC_SERVICE_ACCOUNT_JSON') || '').trim();
+          const site = String(Deno.env.get('GSC_SITE_URL') || '').trim();
+          gsc = await resolveOwnerFunnelGsc({ secret, site });
+        } catch {
+          const { emptyOwnerFunnelGsc } = await import('../_shared/owner-funnel-gsc.ts');
+          gsc = emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.');
+        }
+        return new Response(JSON.stringify({ success: true, data: { ...metrics, gsc } }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (deskErr) {
