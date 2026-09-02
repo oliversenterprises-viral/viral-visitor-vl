@@ -19,10 +19,10 @@ describe('post-link first paint', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const hero = sliceById(html, 'hero-title', 'funnel-journey');
     expect(hero).toMatch(/Win the homepage/);
-    expect(hero).toMatch(/#1 puts their site on/);
-    expect(hero).toContain('this page.');
-    expect(hero).toMatch(
-      /Tap Get my link\. Send it\. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days/,
+    expect(hero).toContain('Each step puts your site on this page.');
+    expect(hero).toContain('#1 owns the banner for 7 days.');
+    expect(hero).toContain(
+      'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
     );
     expect(hero).toContain('id="hero-get-link-btn"');
     expect(hero).toContain('Get my referral link');

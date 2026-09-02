@@ -5,6 +5,13 @@
 
 import { isReferredLanding } from './funnel-conversion';
 import { getHeroCtaVariant, type HeroCtaVariant } from './optimizer-flags';
+import {
+  LOCKED_SITE_DROPS_CTA,
+  LOCKED_SITE_DROPS_H1_ACCENT,
+  LOCKED_SITE_DROPS_H1_LINE1,
+  LOCKED_SITE_DROPS_RULE,
+  LOCKED_SITE_DROPS_SUB,
+} from './site-drops-copy';
 
 export interface HeroCtaCopy {
   badge?: string;
@@ -19,21 +26,19 @@ export interface HeroCtaCopy {
 export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
   control: {
     badge: 'WORLDWIDE • FREE • NO SIGNUP',
-    titleLine1: 'Win the homepage.',
-    titleAccent: 'this page.',
-    subtitle:
-      'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
-    trustLine: 'Free. No email. No cash. Recognition only.',
-    buttonLabel: 'Get my referral link',
+    titleLine1: LOCKED_SITE_DROPS_H1_LINE1,
+    titleAccent: LOCKED_SITE_DROPS_H1_ACCENT,
+    subtitle: LOCKED_SITE_DROPS_SUB,
+    trustLine: 'Open worldwide · recognition only · Site Drop ladder.',
+    buttonLabel: LOCKED_SITE_DROPS_CTA,
   },
   prize: {
     badge: 'WORLDWIDE • FREE • NO SIGNUP',
-    titleLine1: 'Win the homepage.',
-    titleAccent: 'this page.',
-    subtitle:
-      'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
-    trustLine: 'Free. No email. No cash. Recognition only.',
-    buttonLabel: 'Get my referral link',
+    titleLine1: LOCKED_SITE_DROPS_H1_LINE1,
+    titleAccent: LOCKED_SITE_DROPS_H1_ACCENT,
+    subtitle: LOCKED_SITE_DROPS_SUB,
+    trustLine: 'Open worldwide · recognition only · Site Drop ladder.',
+    buttonLabel: LOCKED_SITE_DROPS_CTA,
   },
 };
 
@@ -62,7 +67,7 @@ export function applyHeroCopyToDom(copy: HeroCtaCopy): void {
 export function lock844HomepageCopy(): void {
   if (isReferredLanding()) return;
   applyHeroCopyToDom(HERO_CTA_COPY.control);
-  setText('hero-prize-one', "This week's top racer gets a 7-day banner for their website.");
+  setText('hero-prize-one', LOCKED_SITE_DROPS_RULE);
 }
 
 /** Apply feature-variant hero copy on direct landings (control leaves CMS/static defaults). */

@@ -14,15 +14,16 @@ export const DAILY_CROWN_NOT_BANNER = 'Not the homepage banner.';
 export const LOCKED_SHARE_TEXT =
   "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count. {link}";
 
-export const LOCKED_OG_TITLE = 'Win the homepage. #1 gets a banner — tap Get my link';
+export const LOCKED_OG_TITLE = 'Win the ViralRefer homepage — Site Drops + #1 banner';
 
 export const LOCKED_OG_DESCRIPTION =
-  "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count.";
+  "I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner. Get a free link and try to beat me.";
 
 export const PRIZE_FOMO_LINE = 'Early ranks are open. #1 puts their website on this page.';
 
-/** One trust sentence — say the prize once. Do not repeat “no cash” on the first screen. */
-export const ONE_PRIZE_SENTENCE = "This week's top racer gets a 7-day banner for their website.";
+/** One trust sentence — Site Drops ladder. Do not repeat “no cash” on the first screen. */
+export const ONE_PRIZE_SENTENCE =
+  'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.';
 
 export const AD_SLOT_KICKER = 'This homepage · viralrefer.app · 7 days';
 export const EMPTY_AD_NOTE = 'Empty right now. #1 this week puts their site here.';

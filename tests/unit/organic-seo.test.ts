@@ -63,10 +63,10 @@ describe('organic-seo', () => {
   });
 
   it('homepage SEO + static OG match the locked tap-Get-my-link copy', () => {
-    expect(HOMEPAGE_SEO.title).toBe('Win the homepage. #1 gets a banner — tap Get my link');
-    expect(HOMEPAGE_SEO.description).toMatch(/racing for the homepage this week/);
-    expect(HOMEPAGE_SEO.description).toContain('Tap Get my link');
-    expect(HOMEPAGE_SEO.description).toContain('Visiting does not count');
+    expect(HOMEPAGE_SEO.title).toBe('Win the ViralRefer homepage — Site Drops + #1 banner');
+    expect(HOMEPAGE_SEO.description).toMatch(/Site Drops put my site on the homepage/);
+    expect(HOMEPAGE_SEO.description).toContain('#1 gets the banner');
+    expect(HOMEPAGE_SEO.description).toContain('Get a free link');
     expect(HOMEPAGE_SEO.ogImage).toBe(`${SEO_SITE_ORIGIN}/assets/og-homepage-banner-v2.png`);
 
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');

@@ -26,9 +26,11 @@ export const en = {
 
   'hero.badge': 'WORLDWIDE • FREE • NO SIGNUP',
   'hero.title_line1': 'Win the homepage.',
-  'hero.title_accent': 'this page.',
+  'hero.title_accent': 'Each step puts your site on this page. #1 owns the banner for 7 days.',
   'hero.subtitle':
-    'Tap Get my link. Send it. When a friend taps Get my link, you climb — and #1 owns this slot for 7 days.',
+    'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
+  'hero.prize_one':
+    'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
   'hero.lock_rule': 'Your link counts when a friend taps Get my link.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',

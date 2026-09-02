@@ -171,12 +171,27 @@ export function unlockIfReferralCountUnlocked(count: number): boolean {
   return true;
 }
 
+/** One in-flight register-referrer-link per code so Get my link cannot double-fire. */
+const registerReferrerLinkInFlight = new Map<string, Promise<ShareDeadlineState | null>>();
+
 /** Register code on the server (starts the first-referral deadline clock). */
 export async function registerReferrerLinkDeadline(
   code: string,
 ): Promise<ShareDeadlineState | null> {
   const referrer_code = String(code || '').trim().toUpperCase();
   if (!referrer_code) return null;
+  const existing = registerReferrerLinkInFlight.get(referrer_code);
+  if (existing) return existing;
+  const started = registerReferrerLinkDeadlineUniq(referrer_code).finally(() => {
+    registerReferrerLinkInFlight.delete(referrer_code);
+  });
+  registerReferrerLinkInFlight.set(referrer_code, started);
+  return started;
+}
+
+async function registerReferrerLinkDeadlineUniq(
+  referrer_code: string,
+): Promise<ShareDeadlineState | null> {
 
   const fallback: ShareDeadlineState = {
     code: referrer_code,
