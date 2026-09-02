@@ -52,6 +52,34 @@ const BANNER_PRESETS = [
   },
 ] as const;
 
+function normalizeSiteContentRows(rows: Array<{ key?: string; id?: string; value?: unknown }>): ContentRow[] {
+  return rows
+    .map((row) => ({
+      id: String(row.key ?? row.id ?? ''),
+      value: row.value,
+    }))
+    .filter((row) => row.id)
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/** Owner HQ Website tab: prefer admin-action get_site_content (RLS-safe). */
+async function fetchSiteContentRows(): Promise<ContentRow[]> {
+  try {
+    const { invokeAdminAction } = await import('../lib/admin-action-client');
+    const result = await invokeAdminAction<Array<{ key?: string; id?: string; value?: unknown }>>(
+      'get_site_content',
+    );
+    if (result.success && Array.isArray(result.data)) {
+      return normalizeSiteContentRows(result.data);
+    }
+  } catch {
+    // fall through to direct select
+  }
+  const { data, error } = await supabase.from('site_content').select('*');
+  if (error) throw error;
+  return normalizeSiteContentRows((data || []) as Array<{ key?: string; id?: string; value?: unknown }>);
+}
+
 async function saveSiteContentEntry(key: string, value: unknown): Promise<boolean> {
   try {
     const { invokeAdminAction } = await import('../lib/admin-action-client');
@@ -114,17 +142,8 @@ async function renderEditContentTab(content: HTMLElement) {
     loadInFlight = true;
     const gen = ++loadGeneration;
     try {
-      const { data, error } = await supabase.from('site_content').select('*');
-      if (error) throw error;
+      const rows = await fetchSiteContentRows();
       if (gen !== loadGeneration) return;
-
-      const rows = (data || [])
-        .map((row: { key?: string; id?: string; value?: unknown }) => ({
-          id: String(row.key ?? row.id ?? ''),
-          value: row.value,
-        }))
-        .filter((row) => row.id)
-        .sort((a, b) => a.id.localeCompare(b.id));
 
       const html = buildContentListHTML(rows);
       content.innerHTML = html;

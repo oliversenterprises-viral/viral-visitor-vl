@@ -266,6 +266,18 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    if (action === 'get_site_content') {
+      // Owner HQ Website tab — service-role read. Live admin-action at 8a24705 never registered this.
+      const { data, error } = await supabaseAdmin
+        .from('site_content')
+        .select('key, value, updated_at')
+        .order('key', { ascending: true });
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, data: data || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'update_site_content') {
       const { key, value } = payload;
       const { error } = await supabaseAdmin
