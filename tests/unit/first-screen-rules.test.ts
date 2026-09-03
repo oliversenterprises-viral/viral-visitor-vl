@@ -203,7 +203,14 @@ describe('first-screen Site Drops rules', () => {
     expect(app.indexOf('lock844HomepageCopy()')).toBeLessThan(app.indexOf('await fetchSiteContent()'));
 
     expect(main).toContain('lock844HomepageCopy()');
+    expect(main).toContain("setAttribute('data-vr-first-screen', '1')");
     expect(main.indexOf('lock844HomepageCopy()')).toBeLessThan(main.indexOf('initApp()'));
+    expect(main.indexOf("setAttribute('data-vr-ready', '1')")).toBeLessThan(main.indexOf('initApp()'));
+
+    expect(app).toContain('Promise.all([');
+    expect(app).toContain('withInitTimeout(loadLeaderboard()');
+    expect(app).toContain('withInitTimeout(renderRecentActivity()');
+    expect(app).toContain('withInitTimeout(renderMyStats(myReferralCode)');
 
     expect(supabase).toContain('SITE_CONTENT_FETCH_TIMEOUT_MS = 8_000');
     expect(supabase).toContain('site_content timeout');

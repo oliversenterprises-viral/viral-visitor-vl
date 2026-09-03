@@ -81,6 +81,14 @@ try {
 } catch (err) {
   console.warn('[ViralRefer] promoter UI skipped:', err);
 }
+// First screen is interactive now. Do not wait on hung CMS/board APIs.
+try {
+  lock844HomepageCopy();
+  document.documentElement.setAttribute('data-vr-first-screen', '1');
+  document.documentElement.setAttribute('data-vr-ready', '1');
+} catch {
+  document.documentElement.setAttribute('data-vr-ready', '1');
+}
 initApp().catch((err) => {
   console.warn('[ViralRefer] initApp failed (degraded mode):', err);
 }).finally(() => {
