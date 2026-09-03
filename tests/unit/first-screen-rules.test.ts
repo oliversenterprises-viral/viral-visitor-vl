@@ -143,6 +143,8 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('data-i18n="drop.badge">Site Drop ladder</p>');
     expect(html).toContain('Your site here');
     expect(html).toContain('id="footer-link-tools"');
+    expect(html).toContain('Site Drop');
+    expect(read('src/lib/i18n/extra-locales.ts')).toContain('EXTRA_LOCALES');
   });
 
   it('keeps Copy above overlays', () => {
