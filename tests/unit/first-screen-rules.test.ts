@@ -121,6 +121,10 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('data-i18n="drop.badge">Site Drop ladder</p>');
     expect(html).toContain('Your site here');
     expect(html).toContain('id="footer-link-tools"');
+    expect(html).toContain('THIS WEEK');
+    expect(html).toContain('data-i18n="hero.badge"');
+    expect(i18n).toContain("'hero.badge': 'THIS WEEK • FREE • NO SIGNUP'");
+    expect(i18n).not.toContain("'hero.badge': 'WORLDWIDE • FREE • NO SIGNUP'");
   });
 
   it('keeps Copy above overlays', () => {
