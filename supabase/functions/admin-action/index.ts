@@ -976,10 +976,11 @@ Deno.serve(async (req: Request) => {
         deskStatusForPaint,
         filterDeskReferrals,
         OWNER_FUNNEL_DESK_LAST_N,
+        pickOwnerFunnelDeskMetrics,
         resolveOwnerFunnelDeskMetrics,
         stripOwnerFunnelPii,
       } = await import('../_shared/owner-funnel-desk.ts');
-      const { emptyOwnerFunnelGsc, resolveOwnerFunnelGscTimed, withTimeout } = await import(
+      const { emptyOwnerFunnelGsc, gscOnTimeout, resolveOwnerFunnelGscTimed, withTimeout } = await import(
         '../_shared/owner-funnel-gsc.ts'
       );
 
@@ -1023,7 +1024,25 @@ Deno.serve(async (req: Request) => {
         const site = String(Deno.env.get('GSC_SITE_URL') || '').trim();
         const eventCols = 'event_name, visitor_id, ref_code, metadata, created_at';
         const lastN = OWNER_FUNNEL_DESK_LAST_N;
-        const built = await withTimeout(
+        const deskStarted = Date.now();
+        // GSC must not block last-N tiles. Same secrets path — do not log the JSON.
+        const gscPending = resolveOwnerFunnelGscTimed({ secret, site }).catch(() =>
+          emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.'),
+        );
+        const emptyTimeoutMetrics = {
+          windowDays: 7,
+          visits: 0,
+          junkVisits: 0,
+          friendLandings: 0,
+          landings: 0,
+          getLink: 0,
+          share: 0,
+          locked: 0,
+          getLinkRate: '0%',
+          feed: [] as [],
+          deskStatus: 'timeout' as const,
+        };
+        const tilePack = await withTimeout(
           (async () => {
             const [
               landings,
@@ -1035,7 +1054,6 @@ Deno.serve(async (req: Request) => {
               ticker,
               linkStats,
               activity,
-              gsc,
             ] = await Promise.all([
               timedLast('visitor_events', eventCols, lastN, 2_000, (q) =>
                 q.eq('event_name', 'SiteLanding'),
@@ -1075,9 +1093,6 @@ Deno.serve(async (req: Request) => {
               timedRpc('get_public_funnel_ticker', { p_limit: 40 }, 2_500),
               timedRpc('get_public_get_link_stats', { p_hours: 168 }, 2_500),
               timedRpc('get_public_recent_activity', { p_limit: 24 }, 2_500),
-              resolveOwnerFunnelGscTimed({ secret, site }).catch(() =>
-                emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.'),
-              ),
             ]);
 
             let visits = 0;
@@ -1108,7 +1123,7 @@ Deno.serve(async (req: Request) => {
               visits,
               junkVisits,
             });
-            const metrics = deskHasVisitorSignal(tableMetrics) ? tableMetrics : publicMetrics;
+            const metrics = pickOwnerFunnelDeskMetrics(tableMetrics, publicMetrics);
             const timedOut =
               landings.timedOut ||
               getLinks.timedOut ||
@@ -1123,27 +1138,14 @@ Deno.serve(async (req: Request) => {
               hasSignal: deskHasVisitorSignal(metrics),
               timedOut,
             });
-            return { metrics: { ...metrics, deskStatus }, gsc };
+            return { metrics: { ...metrics, deskStatus } };
           })(),
-          4_500,
-          () => ({
-            metrics: {
-              windowDays: 7,
-              visits: 0,
-              junkVisits: 0,
-              friendLandings: 0,
-              landings: 0,
-              getLink: 0,
-              share: 0,
-              locked: 0,
-              getLinkRate: '0%',
-              feed: [],
-              deskStatus: 'timeout' as const,
-            },
-            gsc: emptyOwnerFunnelGsc('timeout', 'Search Console timed out. Desk tiles still loaded.'),
-          }),
+          2_500,
+          () => ({ metrics: emptyTimeoutMetrics }),
         );
-        return new Response(JSON.stringify({ success: true, data: { ...built.metrics, gsc: built.gsc } }), {
+        const remainMs = Math.max(150, 3_200 - (Date.now() - deskStarted));
+        const gsc = await withTimeout(gscPending, remainMs, gscOnTimeout);
+        return new Response(JSON.stringify({ success: true, data: { ...tilePack.metrics, gsc } }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (deskErr) {

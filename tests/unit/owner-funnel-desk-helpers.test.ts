@@ -22,7 +22,7 @@ import {
   ownerFunnelDeskFromInvokeResult,
   renderOwnerFunnelDeskView,
 } from '../../src/admin/owner-funnel-desk';
-import { deskStatusForPaint } from '../../src/admin/owner-funnel-desk-helpers';
+import { deskStatusForPaint, pickOwnerFunnelDeskMetrics } from '../../src/admin/owner-funnel-desk-helpers';
 
 const now = Date.parse('2026-08-16T18:00:00Z');
 
@@ -714,6 +714,43 @@ describe('owner funnel desk metrics', () => {
     expect(el.querySelector('[data-hq-tile="visits"]')?.textContent).toMatch(/\b0\b/);
   });
 
+  it('picks the stronger honest counts from last-N tables and homepage LIMIT RPCs', () => {
+    const table = computeOwnerFunnelDeskMetrics({
+      visits: 4,
+      events: [landing('a', { metadata: { path: '/' } }), getLink('a')],
+      now,
+    });
+    const pub = {
+      windowDays: 7,
+      visits: 4,
+      junkVisits: 549,
+      friendLandings: 22,
+      landings: 22,
+      getLink: 18,
+      share: 4,
+      locked: 17,
+      getLinkRate: '81.8%',
+      feed: [
+        {
+          kind: 'locked' as const,
+          label: 'Locked' as const,
+          at: '2026-08-16T12:30:00Z',
+          via: 'friend' as const,
+          viaLabel: "friend's /r/",
+          code: 'VIRAL-REAL1',
+        },
+      ],
+    };
+    const picked = pickOwnerFunnelDeskMetrics(table, pub);
+    expect(picked.visits).toBe(4);
+    expect(picked.friendLandings).toBe(22);
+    expect(picked.getLink).toBe(18);
+    expect(picked.share).toBe(4);
+    expect(picked.locked).toBe(17);
+    expect(picked.junkVisits).toBe(549);
+    expect(picked.feed.length).toBeGreaterThan(0);
+  });
+
   it('does not paint hung zeros when a live payload is all-zero without deskStatus', () => {
     const loaded = ownerFunnelDeskFromInvokeResult({
       success: true,
@@ -774,6 +811,8 @@ describe('owner funnel desk metrics', () => {
     expect(src).not.toMatch(/VITE_ADMIN|VITE_OWNER/);
     expect(action).toMatch(/OWNER_FUNNEL_DESK_LAST_N/);
     expect(action).toMatch(/deskStatusForPaint/);
+    expect(action).toMatch(/pickOwnerFunnelDeskMetrics/);
+    expect(action).toMatch(/gscPending/);
     expect(action).toMatch(/timedOut/);
     expect(action).not.toMatch(/get_owner_funnel_desk_counts/);
     expect(action).not.toMatch(/VITE_ADMIN|VITE_OWNER/);

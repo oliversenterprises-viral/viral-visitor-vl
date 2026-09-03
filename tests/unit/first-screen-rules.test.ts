@@ -22,6 +22,16 @@ function read(rel: string): string {
 }
 
 describe('first-screen Site Drops rules', () => {
+  it('first screen does not wait on HQ get_owner_funnel_desk', () => {
+    const supabase = read('src/lib/supabase.ts');
+    const app = read('src/app.ts');
+    const siteDrops = read('src/lib/site-drops-ui.ts');
+    expect(supabase).not.toMatch(/get_owner_funnel_desk/);
+    expect(app).not.toMatch(/get_owner_funnel_desk/);
+    expect(siteDrops).not.toMatch(/get_owner_funnel_desk/);
+    expect(read('index.html')).toContain('Site Drop');
+  });
+
   it('pins the Site Drops tree: title, hero, and funnel still say Site Drop', () => {
     const html = read('index.html');
     const title = html.match(/<title>([^<]+)<\/title>/)?.[1] ?? '';

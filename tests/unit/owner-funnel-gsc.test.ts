@@ -248,7 +248,9 @@ describe('owner funnel GSC tracker', () => {
     expect(src).not.toMatch(/loadCompleteWindow: async \(\) => emptyFeed/);
     expect(src).not.toMatch(/get_owner_funnel_desk_counts/);
     expect(src).not.toMatch(/console\.(log|info|debug|error|warn)\([^)]*secret/i);
-    expect(src).toMatch(/data: \{ \.\.\.built\.metrics, gsc: built\.gsc \}/);
+    expect(src).toMatch(/data: \{ \.\.\.tilePack\.metrics, gsc \}/);
+    expect(src).toMatch(/gscPending/);
+    expect(src).toMatch(/pickOwnerFunnelDeskMetrics/);
     expect(src).toMatch(/deskStatusForPaint/);
     expect(src).toMatch(/OWNER_FUNNEL_DESK_LAST_N/);
     expect(src).not.toMatch(/vercel --prod/);

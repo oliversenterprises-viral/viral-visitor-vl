@@ -363,6 +363,35 @@ export function deskStatusForPaint(input: {
   return input.timedOut ? 'timeout' : 'empty';
 }
 
+/** Last-N tables + homepage LIMIT RPCs. Take the stronger honest count, not hung zeros. */
+export function pickOwnerFunnelDeskMetrics(
+  table: OwnerFunnelDeskMetrics,
+  pub: OwnerFunnelDeskMetrics,
+): OwnerFunnelDeskMetrics {
+  const tableOk = deskHasVisitorSignal(table);
+  const pubOk = deskHasVisitorSignal(pub);
+  if (!tableOk) return pub;
+  if (!pubOk) return table;
+  const visits = Math.max(table.visits, pub.visits);
+  const friendLandings = Math.max(table.friendLandings, pub.friendLandings);
+  const getLink = Math.max(table.getLink, pub.getLink);
+  const share = Math.max(table.share, pub.share);
+  const locked = Math.max(table.locked, pub.locked);
+  const junkVisits = Math.max(table.junkVisits || 0, pub.junkVisits || 0);
+  return {
+    windowDays: table.windowDays || pub.windowDays,
+    visits,
+    junkVisits,
+    friendLandings,
+    landings: friendLandings,
+    getLink,
+    share,
+    locked,
+    getLinkRate: deskGetLinkRate(getLink, friendLandings, visits),
+    feed: table.feed.length >= pub.feed.length ? table.feed : pub.feed,
+  };
+}
+
 function feedRow(
   kind: OwnerFunnelFeedKind,
   at: string,
