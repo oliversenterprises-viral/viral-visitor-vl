@@ -8,13 +8,22 @@ const root = resolve(import.meta.dirname, '../..');
 
 /** Zip-owned /go/ doors on the Site Drops tree. /go/sponsor/ is owned elsewhere. */
 const ZIP_GO_PAGES = [
-  { url: '/go/', file: 'go/index.html', marker: 'Site Drops' },
+  { url: '/go/', file: 'go/index.html', marker: '/go/affiliates/' },
   { url: '/go/affiliates/', file: 'go/affiliates/index.html', marker: 'Get my promoter link' },
   { url: '/go/challenge/', file: 'go/challenge/index.html', marker: '/go/challenge/' },
   { url: '/go/feature/', file: 'go/feature/index.html', marker: '/go/feature/' },
   { url: '/go/herculist/', file: 'go/herculist/index.html', marker: '/go/herculist/' },
   { url: '/go/makers/', file: 'go/makers/index.html', marker: '/go/makers/' },
   { url: '/go/race/', file: 'go/race/index.html', marker: '/go/race/' },
+] as const;
+
+const STATIC_FIRST_PAINT = [
+  'go/index.html',
+  'go/challenge/index.html',
+  'go/feature/index.html',
+  'go/herculist/index.html',
+  'go/makers/index.html',
+  'go/race/index.html',
 ] as const;
 
 function read(rel: string): string {
@@ -49,8 +58,21 @@ describe('zip-owned /go/ splash pages', () => {
     const homepage = read('index.html');
     expect(homepage).toContain(`<title>${LOCKED_SITE_DROPS_TITLE}</title>`);
     expect(homepage).toContain('Site Drop');
+    expect(homepage).toContain('SITE DROP LADDER');
     expect(read('public/google163d31ba24216edd.html')).toContain(
       'google-site-verification: google163d31ba24216edd.html',
     );
+  });
+
+  it('paints owned /go/ first screens without waiting on APIs', () => {
+    for (const file of STATIC_FIRST_PAINT) {
+      const body = read(`public/${file}`);
+      expect(body).not.toMatch(/\bfetch\s*\(/);
+    }
+    const affiliates = read('public/go/affiliates/index.html');
+    expect(affiliates).toContain('AbortController');
+    expect(affiliates).toMatch(/abort\(\).*2000|2000.*abort/s);
+    expect(affiliates).toContain('signal: ctrl.signal');
+    expect(affiliates.indexOf('Get my promoter link')).toBeLessThan(affiliates.indexOf('fetch('));
   });
 });

@@ -51,7 +51,7 @@ const MUST_KEEP: Array<{ path: string; minBytes: number; contains?: string }> = 
   { path: 'public/tools/credit-checker.html', minBytes: 500, contains: 'Get my referral link' },
   { path: 'src/lib/site-drops.ts', minBytes: 100, contains: 'SITE_DROPS_KEY' },
   { path: 'src/admin/owner-funnel-desk.ts', minBytes: 500, contains: 'renderOwnerFunnelDesk' },
-  { path: 'public/go/index.html', minBytes: 500, contains: 'Site Drops' },
+  { path: 'public/go/index.html', minBytes: 500, contains: '/go/affiliates/' },
   { path: 'public/go/affiliates/index.html', minBytes: 500, contains: '/go/affiliates/' },
   { path: 'public/go/challenge/index.html', minBytes: 500, contains: '/go/challenge/' },
   { path: 'public/go/feature/index.html', minBytes: 500, contains: '/go/feature/' },
