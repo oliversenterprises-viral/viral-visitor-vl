@@ -22,6 +22,7 @@ describe('visitor-slim', () => {
     document.documentElement.removeAttribute('data-vr-visitor-slim');
     document.documentElement.removeAttribute('data-vr-slim-segment');
     document.documentElement.removeAttribute('data-vr-has-link');
+    document.documentElement.removeAttribute('data-vr-post-link-one');
     document.documentElement.removeAttribute('data-vr-slim-share-expanded');
     vi.stubGlobal('location', { pathname: '/', search: '' });
   });
@@ -31,6 +32,7 @@ describe('visitor-slim', () => {
     document.documentElement.removeAttribute('data-vr-visitor-slim');
     document.documentElement.removeAttribute('data-vr-slim-segment');
     document.documentElement.removeAttribute('data-vr-has-link');
+    document.documentElement.removeAttribute('data-vr-post-link-one');
     document.documentElement.removeAttribute('data-vr-slim-share-expanded');
     vi.unstubAllGlobals();
   });
@@ -68,6 +70,18 @@ describe('visitor-slim', () => {
     refreshVisitorSlimState();
     expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
     expect(hasReferralLinkInUI()).toBe(true);
+  });
+
+  it('does not wipe has-link when the post-link screen is up and #ref-link is empty', () => {
+    initVisitorSlim();
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<p id="post-link-url">https://www.viralrefer.app/r/VIRAL-PAINT</p>',
+    );
+    document.documentElement.setAttribute('data-vr-post-link-one', '1');
+    refreshVisitorSlimState();
+    expect(hasReferralLinkInUI()).toBe(true);
+    expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
   });
 
   it('more-share toggle expands and collapses extras', () => {

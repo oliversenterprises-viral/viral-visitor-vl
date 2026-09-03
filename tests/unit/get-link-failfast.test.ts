@@ -47,6 +47,7 @@ describe('Get my link fail-fast (human-check must not spin forever)', () => {
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).toContain('id="hero-get-link-btn"');
     expect(hero).toContain('Get my referral link');
+    expect(html).toContain('id="ref-link"');
     expect(html).toContain('id="prize-slot-site"');
     expect(html).toContain('Your site here');
   });
