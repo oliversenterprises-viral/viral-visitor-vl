@@ -45,6 +45,8 @@ describe('organic-seo', () => {
     const xml = buildSitemapXml(SEO_SITE_ORIGIN, '2026-07-04');
     expect(xml).toContain('<loc>https://www.viralrefer.app/</loc>');
     expect(xml).toContain('<lastmod>2026-07-04</lastmod>');
+    expect(xml).toContain('/tools/');
+    expect(xml).toContain('/guides/');
     expect(xml).toContain('/rules/');
     expect(xml).not.toContain('#leaderboard');
   });

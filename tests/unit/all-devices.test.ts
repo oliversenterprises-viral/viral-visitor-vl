@@ -46,7 +46,12 @@ describe('all-devices layout locks', () => {
   });
 
   it('legal pages use viewport-fit and wrap long words', () => {
-    for (const rel of ['public/privacy/index.html', 'public/terms/index.html', 'public/rules/index.html']) {
+    for (const rel of [
+      'public/privacy/index.html',
+      'public/terms/index.html',
+      'public/rules/index.html',
+      'public/guides/index.html',
+    ]) {
       const html = read(rel);
       expect(html).toContain('viewport-fit=cover');
       expect(html).toContain('overflow-wrap: anywhere');

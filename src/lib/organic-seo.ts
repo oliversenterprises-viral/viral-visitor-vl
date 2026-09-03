@@ -92,6 +92,7 @@ export function buildSitemapXml(origin = SEO_SITE_ORIGIN, lastmod?: string): str
   const urls = [
     { loc: `${base}/`, changefreq: 'daily', priority: '1.0' },
     { loc: `${base}/tools/`, changefreq: 'weekly', priority: '0.9' },
+    { loc: `${base}/guides/`, changefreq: 'weekly', priority: '0.85' },
     { loc: `${base}/rules/`, changefreq: 'monthly', priority: '0.7' },
     { loc: `${base}/privacy/`, changefreq: 'monthly', priority: '0.5' },
     { loc: `${base}/terms/`, changefreq: 'monthly', priority: '0.5' },
