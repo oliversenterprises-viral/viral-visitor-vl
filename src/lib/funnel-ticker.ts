@@ -199,6 +199,50 @@ export function mergeFunnelTickerRows(
   return out;
 }
 
+/** Hung RPC / activity must not stall Get-my-link or first paint. */
+export const FUNNEL_TICKER_FAIL_FAST_MS = 2000;
+
+export function withFunnelTickerFailFast<T>(
+  promise: Promise<T>,
+  fallback: T,
+  ms: number = FUNNEL_TICKER_FAIL_FAST_MS,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<T>((resolve) => {
+    timer = setTimeout(() => resolve(fallback), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer !== undefined) clearTimeout(timer);
+  });
+}
+
+const FUNNEL_TICKER_INNER_HTML = `
+    <div class="vr-funnel-ticker-bar">
+      <span class="vr-funnel-ticker-live" aria-hidden="true"><i class="fa-solid fa-bolt"></i> LIVE WORLDWIDE</span>
+      <div class="vr-funnel-ticker-viewport">
+        <div class="vr-funnel-ticker-track" id="vr-funnel-ticker-track"></div>
+      </div>
+    </div>`;
+
+/**
+ * Bind the LIVE WORLDWIDE ticker already in index.html.
+ * Repairs a missing track; does not create a second root.
+ */
+export function bindFunnelTicker(root: ParentNode = document): HTMLElement | null {
+  if (typeof document === 'undefined') return null;
+  const el =
+    'getElementById' in root && typeof (root as Document).getElementById === 'function'
+      ? (root as Document).getElementById('vr-funnel-ticker')
+      : (root.querySelector('#vr-funnel-ticker') as HTMLElement | null);
+  if (!el) return null;
+  if (!el.querySelector('#vr-funnel-ticker-track')) {
+    el.innerHTML = FUNNEL_TICKER_INNER_HTML;
+  }
+  el.setAttribute('role', 'region');
+  el.setAttribute('aria-label', 'Live worldwide activity');
+  return el;
+}
+
 /** Build marquee HTML (duplicated track for seamless loop). */
 export function buildFunnelTickerHtml(rows: readonly FunnelTickerRow[]): string {
   if (!rows.length) {
@@ -225,22 +269,16 @@ export function buildFunnelTickerHtml(rows: readonly FunnelTickerRow[]): string 
 
 export function ensureFunnelTickerDom(): HTMLElement | null {
   if (typeof document === 'undefined') return null;
-  let el = document.getElementById('vr-funnel-ticker');
-  if (el) return el;
+  const bound = bindFunnelTicker();
+  if (bound) return bound;
 
-  el = document.createElement('div');
+  const el = document.createElement('div');
   el.id = 'vr-funnel-ticker';
   el.className = 'vr-funnel-ticker hidden';
   el.setAttribute('role', 'region');
   el.setAttribute('aria-label', 'Live worldwide activity');
   el.setAttribute('hidden', '');
-  el.innerHTML = `
-    <div class="vr-funnel-ticker-bar">
-      <span class="vr-funnel-ticker-live" aria-hidden="true"><i class="fa-solid fa-bolt"></i> LIVE WORLDWIDE</span>
-      <div class="vr-funnel-ticker-viewport">
-        <div class="vr-funnel-ticker-track" id="vr-funnel-ticker-track"></div>
-      </div>
-    </div>`;
+  el.innerHTML = FUNNEL_TICKER_INNER_HTML;
 
   const nav = document.getElementById('vr-nav');
   if (nav?.parentElement) {
@@ -248,7 +286,7 @@ export function ensureFunnelTickerDom(): HTMLElement | null {
   } else {
     document.body.prepend(el);
   }
-  return el;
+  return bindFunnelTicker() ?? el;
 }
 
 export function setFunnelTickerVisible(visible: boolean): void {

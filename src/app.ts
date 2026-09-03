@@ -14,12 +14,15 @@ import {
 import { applyExistingReferralLink, syncMobileReferralCta } from './referral';
 import { buildActivityVelocityHtml, type PublicActivityRow } from './lib/public-activity';
 import {
+  bindFunnelTicker,
   ensureFunnelTickerDom,
   mergeFunnelTickerRows,
   publicActivityToTickerRows,
   renderFunnelTickerRows,
   setFunnelTickerVisible,
   shouldShowFunnelTicker,
+  withFunnelTickerFailFast,
+  type FunnelTickerRow,
 } from './lib/funnel-ticker';
 import { applyWorldwideReferralTotal } from './lib/worldwide-referral-total';
 import { renderHeroSocialProof } from './lib/referred-landing-social-proof';
@@ -134,25 +137,29 @@ function updateActivityVelocity(count: number): void {
   }
 }
 
+async function loadFunnelTickerRows(activityRows?: PublicActivityRow[]): Promise<FunnelTickerRow[]> {
+  const tickerPromise = fetchPublicFunnelTicker(24);
+  const activityPromise = activityRows?.length
+    ? Promise.resolve(activityRows)
+    : fetchPublicRecentActivity(12).then((activity) => activity.rows);
+  const [tickerRows, fallbackSource] = await Promise.all([tickerPromise, activityPromise]);
+  const rankRows = publicActivityToTickerRows(
+    mergePublicActivityWithRankMoves(fallbackSource || [], getEphemeralRankMoves(), 8),
+  );
+  return mergeFunnelTickerRows(tickerRows, rankRows, 24);
+}
+
 async function refreshFunnelTicker(activityRows?: PublicActivityRow[]): Promise<void> {
   const myCode = getMyReferralCode();
   if (!shouldShowFunnelTicker(myCode)) {
     setFunnelTickerVisible(false);
     return;
   }
-  ensureFunnelTickerDom();
+  bindFunnelTicker() ?? ensureFunnelTickerDom();
   setFunnelTickerVisible(true);
+  renderFunnelTickerRows([]);
   try {
-    const tickerRows = await fetchPublicFunnelTicker(24);
-    let fallbackSource = activityRows;
-    if (!fallbackSource?.length) {
-      const activity = await fetchPublicRecentActivity(12);
-      fallbackSource = activity.rows;
-    }
-    const rankRows = publicActivityToTickerRows(
-      mergePublicActivityWithRankMoves(fallbackSource || [], getEphemeralRankMoves(), 8),
-    );
-    const merged = mergeFunnelTickerRows(tickerRows, rankRows, 24);
+    const merged = await withFunnelTickerFailFast(loadFunnelTickerRows(activityRows), []);
     renderFunnelTickerRows(merged);
   } catch {
     /* non-fatal FOMO chrome */
@@ -378,6 +385,7 @@ registerGlobal('loadSiteContent', loadSiteContent);
  */
 export async function initApp() {
   const myReferralCode = getMyReferralCode();
+  bindFunnelTicker();
 
   try {
     await withInitTimeout(loadSiteContent(), undefined);
