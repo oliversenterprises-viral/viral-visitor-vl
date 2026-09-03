@@ -55,8 +55,6 @@ import { buildLeaderboardHtml, buildRankGapSummary, pulseLeaderboardActivity } f
 import { dailyCrownFlairCodes, getCachedDailyCrownStatus } from './lib/daily-crown';
 import { buildRecentActivityHtml, pulseRecentActivity } from './lib/activity-ui';
 import {
-  activitySkeletonHtml,
-  leaderboardSkeletonHtml,
   statsSkeletonHtml,
   staggerReveal,
 } from './lib/public-polish';
@@ -87,7 +85,8 @@ let siteContentChannel: ReturnType<typeof supabase.channel> | null = null;
 let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
-const INIT_FETCH_TIMEOUT_MS = 12_000;
+/** Homepage first paint: never wait longer than public REST abort (≤2s). */
+export const INIT_FETCH_TIMEOUT_MS = 2_000;
 /** Disk IO: slower poll + pause when tab hidden (was 45s always-on). */
 const PUBLIC_ACTIVITY_POLL_MS = 90_000;
 
@@ -141,9 +140,6 @@ export function onReferralLinkReadyForTicker(): void {
 async function renderRecentActivity(options: { pulse?: boolean } = {}) {
   const actEl = document.getElementById('recent-activity');
   if (!actEl) return;
-  if (!actEl.querySelector('.activity-row')) {
-    actEl.innerHTML = activitySkeletonHtml();
-  }
   try {
     const { rows, velocityLastHour } = await fetchPublicRecentActivity(10);
     const merged = mergePublicActivityWithRankMoves(rows, getEphemeralRankMoves(), 8);
@@ -154,10 +150,11 @@ async function renderRecentActivity(options: { pulse?: boolean } = {}) {
     const leaderCount = cachedLeaderboard[0]?.referral_count ?? 0;
     renderHeroSocialProof(merged, velocityLastHour, cachedUniqueReferrers, leaderCount);
     if (options.pulse) pulseRecentActivity();
-    // Reuse activity rows so ticker refresh does not double-hit the public activity RPC
+    // Ticker is never on the first-paint path
     void refreshFunnelTicker(rows);
   } catch {
-    actEl.innerHTML = `<div class="text-center py-4 text-zinc-400 text-sm">Unable to load activity.</div>`;
+    actEl.innerHTML = buildRecentActivityHtml([]);
+    actEl.setAttribute('aria-busy', 'false');
   }
 }
 
@@ -259,10 +256,6 @@ export async function loadLeaderboard(options: { pulseCode?: string } = {}) {
   const container = document.getElementById('leaderboard-container');
   if (!container) return;
 
-  if (!container.querySelector('.leaderboard-row')) {
-    container.innerHTML = leaderboardSkeletonHtml();
-  }
-
   try {
     const entries = await fetchLeaderboard(0);
     cachedLeaderboard = entries || [];
@@ -276,14 +269,16 @@ export async function loadLeaderboard(options: { pulseCode?: string } = {}) {
     if (options.pulseCode) pulseLeaderboardActivity(options.pulseCode);
     renderHeroTrustPack(cachedLeaderboard);
     paintWorldwideReferralTotal();
-    // Keep legacy helper in sync for any i18n listeners still using board-size FOMO
     applyHeroStatsSubtext(
       cachedUniqueReferrers,
       cachedLeaderboard[0]?.referral_count ?? 0,
     );
     void import('./lib/prize-pull').then((m) => m.initPrizePullProof()).catch(() => {});
   } catch {
-    container.innerHTML = `<div class="text-zinc-400">Leaderboard temporarily unavailable.</div>`;
+    if (!container.querySelector('.leaderboard-row, .public-empty-state')) {
+      container.innerHTML = buildLeaderboardHtml([]);
+    }
+    container.setAttribute('aria-busy', 'false');
   }
 }
 
@@ -344,39 +339,64 @@ export async function loadSiteContent() {
 registerGlobal('loadSiteContent', loadSiteContent);
 
 /**
+ * Static Site Drops first screen — Your site here, Get my referral link,
+ * Recent Activity heading. Used immediately and on hung REST/RPC timeout.
+ * Does not wait on the funnel ticker.
+ */
+export function paintStaticFirstScreen(): void {
+  setFunnelTickerVisible(false);
+  try {
+    lock844HomepageCopy();
+  } catch {
+    /* hero is already in index.html */
+  }
+  const lb = document.getElementById('leaderboard-container');
+  if (lb && !lb.querySelector('.leaderboard-row')) {
+    lb.innerHTML = buildLeaderboardHtml([]);
+    lb.setAttribute('aria-busy', 'false');
+  }
+  const act = document.getElementById('recent-activity');
+  if (act && !act.querySelector('.activity-row')) {
+    act.innerHTML = buildRecentActivityHtml([]);
+    act.setAttribute('aria-busy', 'false');
+  }
+}
+
+/**
  * Main public site initializer.
- * Runs on page load and orchestrates:
- *   - Admin button wiring
- *   - Loading dynamic site content
- *   - Populating stats, leaderboard, and recent activity
- *   - Prefilling the user's referral link (if they have a code)
- *   - Handling ?ref= attribution banners
+ * First paint is the static Site Drops screen. Public REST/RPC hydrate in
+ * parallel and abort in ≤2s — hung RPCs never block the hero or ticker.
  */
 export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
+  paintStaticFirstScreen();
+
+  if (myReferralCode) {
+    applyExistingReferralLink(myReferralCode);
+  } else {
+    syncMobileReferralCta();
+  }
+
   try {
-    await withInitTimeout(loadSiteContent(), undefined);
+    await Promise.all([
+      withInitTimeout(loadSiteContent(), undefined),
+      withInitTimeout(refreshWorldwideReferralTotals(), undefined),
+      withInitTimeout(loadPublicViralLoops(myReferralCode), undefined),
+      withInitTimeout(loadLeaderboard(), undefined),
+      withInitTimeout(renderRecentActivity(), undefined),
+      withInitTimeout(renderMyStats(myReferralCode), undefined),
+    ]);
 
-    // Verified worldwide total first so the number is never a mystery on first paint
-    await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
-
-    // Daily Crown first so main-board flair has cached champion/leader codes
-    await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
-    await withInitTimeout(loadLeaderboard(), undefined);
-    // Re-paint total with leader #1 context after board loads
     paintWorldwideReferralTotal();
-    await withInitTimeout(renderRecentActivity(), undefined);
 
+    // Ticker is optional FOMO — never on the first-paint critical path
     if (myReferralCode) {
-      applyExistingReferralLink(myReferralCode);
-      void withInitTimeout(refreshFunnelTicker(), undefined);
-    } else {
-      syncMobileReferralCta();
-      setFunnelTickerVisible(false);
+      void refreshFunnelTicker().catch(() => {
+        /* ticker optional */
+      });
     }
 
-    await withInitTimeout(renderMyStats(myReferralCode), undefined);
     initViralLoopUI();
     initGrowthCommandCenter();
     initPostLinkShare();
@@ -394,6 +414,7 @@ export async function initApp() {
     }
   } catch (err) {
     console.warn('[ViralRefer] initApp partial failure:', err);
+    paintStaticFirstScreen();
   }
 }
 

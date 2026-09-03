@@ -3,6 +3,9 @@
  * Analytics-neutral; does not touch referral recording or funnel logic.
  */
 
+import { buildRecentActivityHtml } from './activity-ui';
+import { buildLeaderboardHtml } from './leaderboard-ui';
+
 export const COMMUNITY_NEAR_UNLOCK_PCT = 75;
 export const COMMUNITY_HALF_UNLOCK_PCT = 50;
 
@@ -133,16 +136,18 @@ function detectReducedMotion(): void {
   }
 }
 
-/** Seed skeletons for empty public sections before async data arrives. */
+/** Seed first-screen empty states — no hanging shimmer while REST/RPC abort. */
 export function seedPublicLoadingSkeletons(): void {
   const lb = document.getElementById('leaderboard-container');
-  if (lb && (lb.querySelector('[data-vr-loading]') || !lb.querySelector('.leaderboard-row, .public-skeleton-stack'))) {
-    lb.innerHTML = leaderboardSkeletonHtml();
+  if (lb && !lb.querySelector('.leaderboard-row, .public-empty-state')) {
+    lb.innerHTML = buildLeaderboardHtml([]);
+    lb.setAttribute('aria-busy', 'false');
   }
 
   const act = document.getElementById('recent-activity');
-  if (act && !act.querySelector('.activity-row, .public-skeleton-stack')) {
-    act.innerHTML = activitySkeletonHtml();
+  if (act && !act.querySelector('.activity-row, .public-empty-state')) {
+    act.innerHTML = buildRecentActivityHtml([]);
+    act.setAttribute('aria-busy', 'false');
   }
 
   const stats = document.getElementById('stats-content');
