@@ -10,6 +10,35 @@
 
 /** @typedef {{ url: string, file: string, note?: string }} StaticRoute */
 
+/**
+ * Owner Site Drops HTML zip — 21 public guide pages (hub + 20 articles).
+ * Must stay as real files under public/guides so /guides/ never SPA-falls to the homepage.
+ */
+/** @type {StaticRoute[]} */
+export const REQUIRED_GUIDE_PAGES = [
+  { url: '/guides/', file: 'guides/index.html', note: 'guides hub' },
+  { url: '/guides/site-drops/', file: 'guides/site-drops/index.html', note: 'Site Drop ladder' },
+  { url: '/guides/no-signup-referral/', file: 'guides/no-signup-referral/index.html' },
+  { url: '/guides/how-referrals-count/', file: 'guides/how-referrals-count/index.html' },
+  { url: '/guides/homepage-banner/', file: 'guides/homepage-banner/index.html' },
+  { url: '/guides/why-visits-dont-count/', file: 'guides/why-visits-dont-count/index.html' },
+  { url: '/guides/operator-cannot-win/', file: 'guides/operator-cannot-win/index.html' },
+  { url: '/guides/share-without-spam/', file: 'guides/share-without-spam/index.html' },
+  { url: '/guides/no-email-referral-loop/', file: 'guides/no-email-referral-loop/index.html' },
+  { url: '/guides/promoter-vs-racer/', file: 'guides/promoter-vs-racer/index.html' },
+  { url: '/guides/skill-action-not-hit/', file: 'guides/skill-action-not-hit/index.html' },
+  { url: '/guides/get-website-on-homepage/', file: 'guides/get-website-on-homepage/index.html' },
+  { url: '/guides/copying-is-not-a-send/', file: 'guides/copying-is-not-a-send/index.html' },
+  { url: '/guides/weekly-reset/', file: 'guides/weekly-reset/index.html' },
+  { url: '/guides/claim-7-day-banner/', file: 'guides/claim-7-day-banner/index.html' },
+  { url: '/guides/featured-partner-vs-race/', file: 'guides/featured-partner-vs-race/index.html' },
+  { url: '/guides/traffic-exchanges-dont-count/', file: 'guides/traffic-exchanges-dont-count/index.html' },
+  { url: '/guides/english-default/', file: 'guides/english-default/index.html' },
+  { url: '/guides/paste-website-not-the-race/', file: 'guides/paste-website-not-the-race/index.html' },
+  { url: '/guides/self-taps-dont-count/', file: 'guides/self-taps-dont-count/index.html' },
+  { url: '/guides/referral-software-compared/', file: 'guides/referral-software-compared/index.html' },
+];
+
 /** @type {StaticRoute[]} */
 export const REQUIRED_STATIC_ROUTES = [
   // Core
@@ -19,9 +48,17 @@ export const REQUIRED_STATIC_ROUTES = [
   { url: '/manifest.json', file: 'manifest.json' },
   { url: '/security.txt', file: 'security.txt' },
   { url: '/llms.txt', file: 'llms.txt', note: 'AEO / AI crawlers' },
+  {
+    url: '/google163d31ba24216edd.html',
+    file: 'google163d31ba24216edd.html',
+    note: 'Google Search Console',
+  },
   { url: '/privacy/', file: 'privacy/index.html' },
   { url: '/terms/', file: 'terms/index.html' },
   { url: '/rules/', file: 'rules/index.html' },
+
+  // Guides hub + 20 Site Drops articles (owner HTML zip)
+  ...REQUIRED_GUIDE_PAGES,
 
   // Tools hub
   { url: '/tools/', file: 'tools/index.html' },
