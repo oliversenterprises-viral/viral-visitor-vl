@@ -596,7 +596,9 @@ describe('owner funnel desk metrics', () => {
     expect(tiles).toMatch(/\b4\b/);
     expect(tiles).toMatch(/77\.3%/);
     expect(el.querySelector('[data-owner-desk-empty]')).toBeNull();
-    expect(tiles).not.toMatch(/junk/i);
+    const visitsTile = el.querySelector('[data-hq-tile="visits"]')?.textContent || '';
+    expect(visitsTile).toMatch(/\b3\b/);
+    expect(visitsTile).not.toMatch(/530/);
   });
 
   it('paints snake_case get_owner_funnel_desk tiles instead of zeros', () => {
