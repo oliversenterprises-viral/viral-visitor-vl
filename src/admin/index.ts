@@ -2,6 +2,7 @@
 
 export { renderEditContentTab } from './edit-content-tab';
 export { renderPrizeClaimsTab } from './prize-claims-tab';
+export { buildRacerTalkPanelHTML } from './racer-talk-tab';
 
 export {
   adminClaimsCache,

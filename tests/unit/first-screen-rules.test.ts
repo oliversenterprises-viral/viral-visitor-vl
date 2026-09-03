@@ -143,6 +143,10 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('data-i18n="drop.badge">Site Drop ladder</p>');
     expect(html).toContain('Your site here');
     expect(html).toContain('id="footer-link-tools"');
+    expect(html).toContain('id="racer-talk"');
+    expect(html).toContain('id="racer-talk-form"');
+    expect(html).toContain('id="racer-ping"');
+    expect(html).toContain('Site Drop &middot; Just entered');
   });
 
   it('keeps Copy above overlays', () => {
