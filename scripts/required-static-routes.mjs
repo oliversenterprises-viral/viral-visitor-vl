@@ -11,7 +11,8 @@
 /** @typedef {{ url: string, file: string, note?: string }} StaticRoute */
 
 /**
- * Owner Site Drops HTML zip — 21 public guide pages (hub + 20 articles).
+ * Live www.viralrefer.app guide pages (hub + 20 articles).
+ * Zip is the original Site Drops code to match — not the product.
  * Must stay as real files under public/guides so /guides/ never SPA-falls to the homepage.
  */
 /** @type {StaticRoute[]} */
@@ -57,8 +58,11 @@ export const REQUIRED_STATIC_ROUTES = [
   { url: '/terms/', file: 'terms/index.html' },
   { url: '/rules/', file: 'rules/index.html' },
 
-  // Guides hub + 20 Site Drops articles (owner HTML zip)
+  // Guides hub + 20 Site Drops articles (live destination; zip is match reference)
   ...REQUIRED_GUIDE_PAGES,
+  { url: '/guides/promoter-vs-racer.md', file: 'guides/promoter-vs-racer.md' },
+  { url: '/guides/no-email-referral-loop.md', file: 'guides/no-email-referral-loop.md' },
+  { url: '/guides/skill-action-not-hit.md', file: 'guides/skill-action-not-hit.md' },
 
   // Tools hub
   { url: '/tools/', file: 'tools/index.html' },
