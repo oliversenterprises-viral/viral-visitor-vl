@@ -4,12 +4,16 @@ const BASE = (process.argv[2] || 'https://www.viralrefer.app').replace(/\/$/, ''
 const PATHS = [
   '/tools/',
   '/tools/index.html',
+  '/tools/credit-checker.html',
+  '/tools/site-drop-ladder.html',
   '/tools/share-generator.html',
   '/tools/viral-calculator.html',
   '/tools/7-day-launch.html',
   '/tools/utm-builder.html',
   '/tools/traffic-refer-kit.html',
   '/tools/hook-bank.html',
+  '/tools/share-auditor.html',
+  '/tools/week-clock.html',
 ];
 
 let fail = 0;
@@ -42,8 +46,8 @@ for (const p of PATHS) {
 try {
   const res = await fetch(BASE + '/');
   const t = await res.text();
-  const ok = res.ok && t.includes('Get my') || t.includes('referral') || t.includes('leaderboard');
-  console.log(`[${ok ? 'PASS' : 'FAIL'}] / homepage`);
+  const ok = res.ok && t.includes('Site Drop') && (t.includes('Get my') || t.includes('referral'));
+  console.log(`[${ok ? 'PASS' : 'FAIL'}] / homepage Site Drop`);
   if (!ok) fail++;
 } catch (e) {
   console.log(`[FAIL] / ${e.message}`);
