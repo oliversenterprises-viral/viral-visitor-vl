@@ -307,11 +307,21 @@ export async function fetchDailyCrownStatus(hallDays = 14): Promise<unknown | nu
   return null;
 }
 
+/** CMS must not hang the first screen. */
+export const SITE_CONTENT_FETCH_TIMEOUT_MS = 8_000;
+
 export async function fetchSiteContent(): Promise<Record<string, unknown>> {
   if (!isSupabaseConfigured) return {};
-  const { data, error } = await supabase
-    .from('site_content')
-    .select('key, id, value');
+  const query = supabase.from('site_content').select('key, id, value');
+  const { data, error } = await Promise.race([
+    query,
+    new Promise<{ data: null; error: { message: string; code: string } }>((resolve) => {
+      setTimeout(
+        () => resolve({ data: null, error: { message: 'site_content timeout', code: 'timeout' } }),
+        SITE_CONTENT_FETCH_TIMEOUT_MS,
+      );
+    }),
+  ]);
 
   if (error) {
     console.warn('[ViralRefer] site_content fetch error:', error.message, error.code);

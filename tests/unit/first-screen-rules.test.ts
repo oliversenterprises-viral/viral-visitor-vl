@@ -3,8 +3,12 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { en } from '../../src/lib/i18n/messages';
 import {
+  FORBIDDEN_INDIGO_H1_ACCENT,
   LOCKED_LIVE_FUNNEL_BADGE,
   LOCKED_LIVE_FUNNEL_STEP3,
+  LOCKED_RECENT_ACTIVITY,
+  LOCKED_SEE_LIVE_SITE_DROPS,
+  LOCKED_SITE_DROP_JUST_ENTERED,
   LOCKED_SITE_DROPS_CTA,
   LOCKED_SITE_DROPS_H1_ACCENT,
   LOCKED_SITE_DROPS_H1_LINE1,
@@ -12,6 +16,7 @@ import {
   LOCKED_SITE_DROPS_SLOT,
   LOCKED_SITE_DROPS_SUB,
   LOCKED_SITE_DROPS_TITLE,
+  LOCKED_YOUR_SITE_HERE,
   SITE_DROPS_TREE_PIN,
 } from '../../src/lib/site-drops-copy';
 
@@ -38,8 +43,8 @@ describe('first-screen Site Drops rules', () => {
     expect(LOCKED_SITE_DROPS_SUB).toContain('Rising drop');
     expect(funnel).toContain('SITE DROP LADDER');
     expect(en['funnel.badge']).toMatch(/SITE DROP/);
-    expect(en['hero.title_accent']).not.toBe('#1 gets a banner for their site.');
-    expect(LOCKED_SITE_DROPS_H1_ACCENT).not.toBe('#1 gets a banner for their site.');
+    expect(en['hero.title_accent']).not.toBe(FORBIDDEN_INDIGO_H1_ACCENT);
+    expect(LOCKED_SITE_DROPS_H1_ACCENT).not.toBe(FORBIDDEN_INDIGO_H1_ACCENT);
   });
 
   it('keeps the locked live Site Drops copy', () => {
@@ -131,18 +136,89 @@ describe('first-screen Site Drops rules', () => {
       /id="leaderboard-title"[^>]*>\s*Recent Activity\s*<\/h2>/,
     );
     expect(html).toContain('data-i18n="leaderboard.title"');
+    expect(html).toMatch(
+      /id="recent-activity-title"[^>]*>Recent Activity<\/h2>/,
+    );
+    expect(html).toContain('data-i18n="recent.activity_title"');
     const board = html.slice(html.indexOf('id="leaderboard-title"'), html.indexOf('id="leaderboard-container"'));
     expect(board).not.toContain('Early Leaderboard');
-    expect(i18n).toContain("'leaderboard.title': 'Recent Activity'");
+    expect(i18n).toContain("'leaderboard.title': LOCKED_RECENT_ACTIVITY");
+    expect(i18n).toContain("'recent.activity_title': LOCKED_RECENT_ACTIVITY");
     expect(i18n).not.toContain("'leaderboard.title': 'Live Leaderboard'");
     expect(i18n).not.toContain("'leaderboard.title': 'Early Leaderboard'");
     expect(content).not.toContain("apply('leaderboard-title', 'leaderboard_title')");
+    expect(content).not.toContain("apply('recent-activity-title', 'recent_activity_title')");
     const lock = read('src/lib/hero-cta-variant.ts');
-    expect(lock).toContain("boardTitle.textContent = 'Recent Activity'");
-    expect(lock).toContain('Early Leaderboard');
+    expect(lock).toContain('LOCKED_RECENT_ACTIVITY');
+    expect(lock).toContain("setText('leaderboard-title', LOCKED_RECENT_ACTIVITY)");
+    expect(lock).toContain("setText('recent-activity-title', LOCKED_RECENT_ACTIVITY)");
     expect(html).toContain('data-i18n="drop.badge">Site Drop ladder</p>');
-    expect(html).toContain('Your site here');
+    expect(html).toContain(LOCKED_YOUR_SITE_HERE);
     expect(html).toContain('id="footer-link-tools"');
+  });
+
+  it('READY: English homepage still matches the zip Site Drops code', () => {
+    const html = read('index.html');
+    const utm = read('src/lib/utm-hero-copy.ts');
+    const i18n = read('src/lib/i18n/messages.ts');
+
+    expect(html).toContain(`<title>${LOCKED_SITE_DROPS_TITLE}</title>`);
+    expect(html).toContain(LOCKED_SITE_DROPS_H1_LINE1);
+    expect(html).toContain(LOCKED_SITE_DROPS_H1_ACCENT);
+    expect(html).toMatch(/Site Drop\s*(·|&middot;)\s*Just entered/);
+    expect(html).toContain('id="post-link-site-drop-title"');
+    expect(html).toContain(LOCKED_SEE_LIVE_SITE_DROPS);
+    expect(html).toContain(LOCKED_LIVE_FUNNEL_BADGE);
+    expect(html).toMatch(/id="recent-activity-title"[^>]*>Recent Activity<\/h2>/);
+    expect(html).toContain(LOCKED_YOUR_SITE_HERE);
+    expect(html).toContain('class="tail-container bg-zinc-950');
+    expect(html).toContain('hero-gradient');
+    expect(html).not.toContain(FORBIDDEN_INDIGO_H1_ACCENT);
+
+    expect(en['hero.title_line1']).toBe(LOCKED_SITE_DROPS_H1_LINE1);
+    expect(en['hero.title_accent']).toBe(LOCKED_SITE_DROPS_H1_ACCENT);
+    expect(en['hero.title_accent']).not.toBe(FORBIDDEN_INDIGO_H1_ACCENT);
+    expect(en['funnel.badge']).toBe(LOCKED_LIVE_FUNNEL_BADGE);
+    expect(en['how.badge']).toBe(LOCKED_LIVE_FUNNEL_BADGE);
+    expect(en['drop.just_entered_title']).toBe(LOCKED_SITE_DROP_JUST_ENTERED);
+    expect(en['drop.jump']).toBe(LOCKED_SEE_LIVE_SITE_DROPS);
+    expect(en['recent.activity_title']).toBe(LOCKED_RECENT_ACTIVITY);
+    expect(en['leaderboard.title']).toBe(LOCKED_RECENT_ACTIVITY);
+    expect(en['hero.prize_one']).not.toMatch(/cash prize/i);
+
+    expect(i18n).not.toContain(FORBIDDEN_INDIGO_H1_ACCENT);
+    expect(utm).not.toContain(FORBIDDEN_INDIGO_H1_ACCENT);
+    expect(utm).toContain('LOCKED_SITE_DROPS_H1_ACCENT');
+  });
+
+  it('first screen does not wait on hung APIs', () => {
+    const app = read('src/app.ts');
+    const main = read('src/main.ts');
+    const supabase = read('src/lib/supabase.ts');
+    const lock = read('src/lib/hero-cta-variant.ts');
+
+    expect(app).toContain('INIT_FETCH_TIMEOUT_MS = 12_000');
+    expect(app).toContain('withInitTimeout(loadSiteContent()');
+    expect(app.indexOf('lock844HomepageCopy()')).toBeGreaterThan(0);
+    expect(app.indexOf('lock844HomepageCopy()')).toBeLessThan(app.indexOf('await fetchSiteContent()'));
+
+    expect(main).toContain('lock844HomepageCopy()');
+    expect(main).toContain("setAttribute('data-vr-first-screen', '1')");
+    expect(main.indexOf('lock844HomepageCopy()')).toBeLessThan(main.indexOf('initApp()'));
+    expect(main.indexOf("setAttribute('data-vr-ready', '1')")).toBeLessThan(main.indexOf('initApp()'));
+
+    expect(app).toContain('Promise.all([');
+    expect(app).toContain('withInitTimeout(loadLeaderboard()');
+    expect(app).toContain('withInitTimeout(renderRecentActivity()');
+    expect(app).toContain('withInitTimeout(renderMyStats(myReferralCode)');
+
+    expect(supabase).toContain('SITE_CONTENT_FETCH_TIMEOUT_MS = 8_000');
+    expect(supabase).toContain('site_content timeout');
+
+    expect(lock).not.toMatch(/await /);
+    expect(lock).not.toMatch(/\.from\(/);
+    expect(lock).not.toMatch(/functions\.invoke/);
+    expect(lock).not.toMatch(/\bfetch\s*\(/);
   });
 
   it('keeps Copy above overlays', () => {

@@ -1,14 +1,18 @@
 /**
- * Locked live Site Drops homepage strings.
+ * Locked Site Drops homepage English — match the original zip code.
+ * Live destination is https://www.viralrefer.app.
  * Do not invent MRR, user counts, funding, or a cash prize.
  *
  * Tree pin: cursor/recent-activity-top-title-848a @ 848540d.
- * READY FOR PROMOTE means title, hero, and funnel still say Site Drop.
+ * READY means ship-quality for live: title, hero, and funnel still say Site Drop.
  * Do not merge old banner-only English ("#1 gets a banner for their site").
  */
 
-/** Identifies this checkout as the Site Drops product tree, not the old banner-only app. */
+/** Identifies this checkout as the Site Drops tree, not the old banner-only app. */
 export const SITE_DROPS_TREE_PIN = '848540d-site-drops' as const;
+
+/** Old indigo banner-only H1. Never paint this on the live homepage. */
+export const FORBIDDEN_INDIGO_H1_ACCENT = '#1 gets a banner for their site.';
 
 export const LOCKED_SITE_DROPS_TITLE =
   'Win the ViralRefer homepage — Site Drops + #1 banner';
@@ -20,6 +24,14 @@ export const LOCKED_SITE_DROPS_H1_LINE1 = 'Win the homepage.';
 
 export const LOCKED_SITE_DROPS_H1_ACCENT =
   'Each step puts your site on this page. #1 owns the banner for 7 days.';
+
+export const LOCKED_SITE_DROP_JUST_ENTERED = 'Site Drop · Just entered';
+
+export const LOCKED_SEE_LIVE_SITE_DROPS = 'See live Site Drops';
+
+export const LOCKED_RECENT_ACTIVITY = 'Recent Activity';
+
+export const LOCKED_YOUR_SITE_HERE = 'Your site here';
 
 export const LOCKED_SITE_DROPS_H1 =
   'Win the homepage. Each step puts your site on this page. #1 owns the banner for 7 days.';

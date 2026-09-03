@@ -8,7 +8,16 @@ import {
   getLocale,
   isLocale,
 } from '../../src/lib/i18n';
-import { MESSAGES, SUPPORTED_LOCALES } from '../../src/lib/i18n/messages';
+import { MESSAGES, SUPPORTED_LOCALES, en } from '../../src/lib/i18n/messages';
+import {
+  FORBIDDEN_INDIGO_H1_ACCENT,
+  LOCKED_RECENT_ACTIVITY,
+  LOCKED_SEE_LIVE_SITE_DROPS,
+  LOCKED_SITE_DROP_JUST_ENTERED,
+  LOCKED_SITE_DROPS_H1_ACCENT,
+  LOCKED_SITE_DROPS_H1_LINE1,
+  LOCKED_SITE_DROPS_TITLE,
+} from '../../src/lib/site-drops-copy';
 
 describe('i18n phase 1', () => {
   beforeEach(() => {
@@ -114,5 +123,17 @@ describe('i18n phase 1', () => {
       expect(MESSAGES[locale]['hero.title_line1']).toBe('Win the homepage.');
       expect(MESSAGES[locale]['funnel.step2']).toBe('2. Send it');
     }
+  });
+
+  it('locks English homepage copy to the Site Drops zip code', () => {
+    expect(en['hero.title_line1']).toBe(LOCKED_SITE_DROPS_H1_LINE1);
+    expect(en['hero.title_accent']).toBe(LOCKED_SITE_DROPS_H1_ACCENT);
+    expect(en['hero.title_accent']).not.toBe(FORBIDDEN_INDIGO_H1_ACCENT);
+    expect(en['drop.just_entered_title']).toBe(LOCKED_SITE_DROP_JUST_ENTERED);
+    expect(en['drop.jump']).toBe(LOCKED_SEE_LIVE_SITE_DROPS);
+    expect(en['recent.activity_title']).toBe(LOCKED_RECENT_ACTIVITY);
+    expect(en['leaderboard.title']).toBe(LOCKED_RECENT_ACTIVITY);
+    expect(LOCKED_SITE_DROPS_TITLE).toContain('Site Drop');
+    expect(en['faq.a2'].toLowerCase()).toContain('no cash prize');
   });
 });

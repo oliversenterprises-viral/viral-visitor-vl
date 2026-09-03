@@ -78,6 +78,18 @@ describe('hero-cta-variant', () => {
     expect(document.getElementById('leaderboard-title')?.textContent).toBe('Recent Activity');
   });
 
+  it('lock844HomepageCopy restores zip Recent Activity and Site Drop · Just entered', () => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<h2 id="recent-activity-title">CMS activity</h2><p id="post-link-site-drop-title">CMS drop</p>',
+    );
+    lock844HomepageCopy();
+    expect(document.getElementById('recent-activity-title')?.textContent).toBe('Recent Activity');
+    expect(document.getElementById('post-link-site-drop-title')?.textContent).toBe(
+      'Site Drop · Just entered',
+    );
+  });
+
   it('skips on referred landings', () => {
     sessionStorage.setItem('vr_landing_ref', 'VIRAL-FRIEND');
     setOptimizerFlags({ hero_cta_variant: 'prize' });

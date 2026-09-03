@@ -292,6 +292,10 @@ export async function loadLeaderboard(options: { pulseCode?: string } = {}) {
  * Delegates the actual DOM updates to `updatePublicContent` in content.ts.
  */
 export async function loadSiteContent() {
+  // Fail-fast: lock Site Drop English before any CMS/network wait.
+  if (!isReferredLanding()) {
+    lock844HomepageCopy();
+  }
   try {
     const content = await fetchSiteContent();
     initOptimizerFlagsFromContent(content);
@@ -358,25 +362,27 @@ export async function initApp() {
   try {
     await withInitTimeout(loadSiteContent(), undefined);
 
-    // Verified worldwide total first so the number is never a mystery on first paint
-    await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
-
-    // Daily Crown first so main-board flair has cached champion/leader codes
-    await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
-    await withInitTimeout(loadLeaderboard(), undefined);
-    // Re-paint total with leader #1 context after board loads
-    paintWorldwideReferralTotal();
-    await withInitTimeout(renderRecentActivity(), undefined);
-
     if (myReferralCode) {
       applyExistingReferralLink(myReferralCode);
-      void withInitTimeout(refreshFunnelTicker(), undefined);
     } else {
       syncMobileReferralCta();
       setFunnelTickerVisible(false);
     }
 
-    await withInitTimeout(renderMyStats(myReferralCode), undefined);
+    // Below-fold hydration — one timeout window, not a serial hang.
+    await Promise.all([
+      withInitTimeout(refreshWorldwideReferralTotals(), undefined),
+      withInitTimeout(loadPublicViralLoops(myReferralCode), undefined),
+      withInitTimeout(loadLeaderboard(), undefined),
+      withInitTimeout(renderRecentActivity(), undefined),
+      withInitTimeout(renderMyStats(myReferralCode), undefined),
+    ]);
+    paintWorldwideReferralTotal();
+
+    if (myReferralCode) {
+      void withInitTimeout(refreshFunnelTicker(), undefined);
+    }
+
     initViralLoopUI();
     initGrowthCommandCenter();
     initPostLinkShare();

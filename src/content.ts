@@ -274,7 +274,8 @@ export async function updatePublicContent(content: Record<string, unknown>) {
   apply('winning-link-description', 'winning_link_description');
   apply('unique-referral-link-title', 'unique_referral_link_title');
   apply('stats-title', 'stats_title');
-  apply('recent-activity-title', 'recent_activity_title');
+  // Owner lock: zip Recent Activity (id=recent-activity-title) stays English.
+  // Do not let CMS recent_activity_title paint over it.
   apply('recent-activity-description', 'recent_activity_description');
   apply('how-step3-title', 'how_step3_title');
 

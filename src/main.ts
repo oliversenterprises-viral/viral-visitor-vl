@@ -18,6 +18,7 @@ import { initPublicPolish } from './lib/public-polish';
 import { initEmbedMode } from './lib/embed-mode';
 import { initViralLoops } from './lib/viral-loops';
 import { initI18n } from './lib/i18n';
+import { lock844HomepageCopy } from './lib/hero-cta-variant';
 
 // Public layer (all onclick handlers, modals, debug, etc.)
 import { initPublic } from './public';
@@ -37,6 +38,12 @@ try {
   initI18n();
 } catch (err) {
   console.warn('[ViralRefer] i18n init skipped:', err);
+}
+// Fail-fast: Site Drop English on the first screen before hung APIs.
+try {
+  lock844HomepageCopy();
+} catch {
+  /* non-fatal */
 }
 
 // console.log('%c[ViralRefer] main.ts module loaded', 'color:#64748b'); // silenced for prod (audit cleanup)
@@ -73,6 +80,14 @@ try {
   initAffiliatePublicUi();
 } catch (err) {
   console.warn('[ViralRefer] promoter UI skipped:', err);
+}
+// First screen is interactive now. Do not wait on hung CMS/board APIs.
+try {
+  lock844HomepageCopy();
+  document.documentElement.setAttribute('data-vr-first-screen', '1');
+  document.documentElement.setAttribute('data-vr-ready', '1');
+} catch {
+  document.documentElement.setAttribute('data-vr-ready', '1');
 }
 initApp().catch((err) => {
   console.warn('[ViralRefer] initApp failed (degraded mode):', err);

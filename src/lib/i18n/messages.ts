@@ -1,7 +1,23 @@
 /**
  * Phase 1 public UI strings — en + es/fr/pt/de/hi.
  * Keys used via data-i18n attributes and t().
+ *
+ * English homepage copy is locked to the original Site Drops zip code.
+ * Do not import the indigo banner-only H1 onto the live homepage.
  */
+
+import {
+  LOCKED_LIVE_FUNNEL_BADGE,
+  LOCKED_LIVE_HOW_BADGE,
+  LOCKED_RECENT_ACTIVITY,
+  LOCKED_SEE_LIVE_SITE_DROPS,
+  LOCKED_SITE_DROPS_CTA,
+  LOCKED_SITE_DROPS_H1_ACCENT,
+  LOCKED_SITE_DROPS_H1_LINE1,
+  LOCKED_SITE_DROPS_RULE,
+  LOCKED_SITE_DROPS_SUB,
+  LOCKED_SITE_DROP_JUST_ENTERED,
+} from '../site-drops-copy';
 
 export type Locale = 'en' | 'es' | 'fr' | 'pt' | 'de' | 'hi';
 
@@ -25,32 +41,30 @@ export const en = {
   'nav.lang': 'Language',
 
   'hero.badge': 'WORLDWIDE • FREE • NO SIGNUP',
-  'hero.title_line1': 'Win the homepage.',
-  'hero.title_accent': 'Each step puts your site on this page. #1 owns the banner for 7 days.',
-  'hero.subtitle':
-    'Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.',
-  'hero.prize_one':
-    'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
+  'hero.title_line1': LOCKED_SITE_DROPS_H1_LINE1,
+  'hero.title_accent': LOCKED_SITE_DROPS_H1_ACCENT,
+  'hero.subtitle': LOCKED_SITE_DROPS_SUB,
+  'hero.prize_one': LOCKED_SITE_DROPS_RULE,
   'hero.lock_rule': 'Your link counts when a friend taps Get my link.',
   'hero.proof_worldwide': 'Open worldwide',
   'hero.proof_age': '18+',
   'hero.proof_no_email': 'No email',
   'hero.proof_live': 'Live free leaderboard',
-  'hero.cta': 'Get my referral link',
+  'hero.cta': LOCKED_SITE_DROPS_CTA,
   'hero.cta_secondary': 'See leaderboard',
   'hero.trust':
     "This week's #1 (not the owner) with 3 friends gets the 7-day banner.",
   'hero.board_link': "See who's on the live board ↓",
   'hero.stats_suffix': ' people on the board · early spots still open',
 
-  'funnel.badge': 'SITE DROP LADDER',
+  'funnel.badge': LOCKED_LIVE_FUNNEL_BADGE,
   'funnel.step1': '1. Get link',
   'funnel.step2': '2. Send it',
   'funnel.step3': '3. Site goes live',
   'funnel.required': 'required',
   'funnel.coach': 'Step 1: tap Get my link.',
 
-  'how.badge': 'SITE DROP LADDER',
+  'how.badge': LOCKED_LIVE_HOW_BADGE,
   'how.title': 'How ViralRefer Works',
   'how.subtitle': 'Get a link. Send it. A friend tapping Get my link puts your site on this page.',
   'how.step1_title': '1. Get your link',
@@ -106,9 +120,11 @@ export const en = {
   'drop.form_entered': 'Just entered (15 min)',
   'drop.form_rising': 'Rising drop (1 hour)',
   'drop.form_challenger': 'Claim Challenger',
-  'drop.jump': 'See live Site Drops',
+  'drop.just_entered_title': LOCKED_SITE_DROP_JUST_ENTERED,
+  'drop.jump': LOCKED_SEE_LIVE_SITE_DROPS,
+  'recent.activity_title': LOCKED_RECENT_ACTIVITY,
 
-  'leaderboard.title': 'Recent Activity',
+  'leaderboard.title': LOCKED_RECENT_ACTIVITY,
   'leaderboard.subtitle': 'Rankings update from verified referrals.',
 
   'claim.modal_title': 'Claim Homepage Feature',
@@ -682,6 +698,10 @@ const PRIZE_FACT_KEYS = [
   'prize.card3_desc',
   'prize.cta',
   'prize.winner_badge',
+  'drop.just_entered_title',
+  'drop.jump',
+  'recent.activity_title',
+  'leaderboard.title',
 ] as const;
 
 function applyEnglishPrizeFacts(d: Dict): void {

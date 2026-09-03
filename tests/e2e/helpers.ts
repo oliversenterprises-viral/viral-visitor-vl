@@ -1,6 +1,6 @@
 import { type Page, expect } from '@playwright/test';
 
-/** Wait until initApp() finishes (leaderboard + stats wired). */
+/** Wait until the first screen is interactive (not blocked on hung APIs). */
 export async function waitForAppReady(page: Page, timeoutMs = 20000): Promise<void> {
   await page.waitForFunction(
     () => document.documentElement.getAttribute('data-vr-ready') === '1',
