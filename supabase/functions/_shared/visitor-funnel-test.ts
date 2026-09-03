@@ -1,5 +1,6 @@
 /** Shared test/owner/smoke detection for visitor_events — client + admin-action edge. */
 
+import { shouldDeleteJunkUtmVisitorEvent } from './junk-traffic.ts';
 import {
   ADMIN_FUNNEL_EXCLUDED_IPS as OWNER_FUNNEL_IPS,
   isAgentAutomationMetadata,
@@ -90,6 +91,44 @@ export function isTestVisitorFunnelEvent(
   }
 
   return false;
+}
+
+/** Get-link / share / claim — never delete these as “junk UTM” or Azure smoke profile. */
+const CREDIT_EVENT_NAMES = new Set([
+  'GetReferralLink',
+  'CopyReferralLink',
+  'ShareReferral',
+  'OpenPrizeClaim',
+  'SubmitPrizeClaim',
+]);
+
+/** Owner IP, test code, webdriver, scout UA — not the burst-IP smoke heuristic. */
+export function isHardTestVisitorFunnelEvent(
+  event: Record<string, unknown>,
+  excludedIps: readonly string[] = ADMIN_FUNNEL_EXCLUDED_IPS,
+  excludedHashes: readonly string[] = ADMIN_FUNNEL_EXCLUDED_IP_HASHES,
+): boolean {
+  return isTestVisitorFunnelEvent(event, undefined, excludedIps, excludedHashes);
+}
+
+/**
+ * HQ Clear junk: test/owner/scout/webdriver rows, plus junk-UTM SiteLanding only.
+ * Never wipe GetReferralLink / Share / Claim for pagerankcafe UTM or Azure smoke IPs.
+ */
+export function shouldClearJunkVisitorEvent(
+  event: Record<string, unknown>,
+  eventsFromSameIp?: readonly Record<string, unknown>[],
+  excludedIps: readonly string[] = ADMIN_FUNNEL_EXCLUDED_IPS,
+  excludedHashes: readonly string[] = ADMIN_FUNNEL_EXCLUDED_IP_HASHES,
+): boolean {
+  const name = String(event.event_name || event.eventName || '').trim();
+  if (CREDIT_EVENT_NAMES.has(name)) {
+    return isHardTestVisitorFunnelEvent(event, excludedIps, excludedHashes);
+  }
+  if (isTestVisitorFunnelEvent(event, eventsFromSameIp, excludedIps, excludedHashes)) {
+    return true;
+  }
+  return shouldDeleteJunkUtmVisitorEvent(event);
 }
 
 export function groupVisitorEventsByIp(

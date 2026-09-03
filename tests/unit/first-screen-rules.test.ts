@@ -81,9 +81,43 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toMatch(/href="#leaderboard"[^>]*data-i18n="nav.board"/);
     expect(html).not.toMatch(/href="#how"[^>]*hidden sm:inline/);
     expect(html).toContain('<footer');
+    expect(html).toContain('id="site-footer"');
+    expect(html).toContain('id="footer-link-tools"');
+    expect(html).toContain('href="/tools/"');
+    expect(html).toContain('/tools/utm-builder.html');
+    expect(html).toContain('utm_source=leadmagnet');
+    expect(html).toContain('href="/guides/');
+    expect(html).toContain('id="footer-link-guides"');
+    expect(html).toContain('/guides/site-drops/');
+    expect(html).toContain('/tools/share-generator.html');
+    expect(html).toContain('/tools/utm-builder.html');
+    expect(html).toContain('/tools/credit-checker.html');
+    expect(html).toContain('id="footer-tools-row"');
+    expect(html).toContain('id="footer-link-telegram-helper"');
+    expect(html).not.toMatch(/href="\/tools\/"[^>]*hidden sm:inline/);
+    expect(css).not.toMatch(/#site-footer\s*\{[^}]*display:\s*none/);
     expect(css).toMatch(
       /html\[data-vr-direct-landing\]:not\(\[data-vr-has-link\]\) \.vr-nav-link:not\(\[href="#how"\]\):not\(\[href="#leaderboard"\]\)/,
     );
+  });
+
+  it('uses Recent Activity as the large board title, not Early Leaderboard', () => {
+    const html = read('index.html');
+    const i18n = read('src/lib/i18n/messages.ts');
+    const content = read('src/content.ts');
+    expect(html).toMatch(
+      /id="leaderboard-title"[^>]*>\s*Recent Activity\s*<\/h2>/,
+    );
+    expect(html).toContain('data-i18n="leaderboard.title"');
+    const board = html.slice(html.indexOf('id="leaderboard-title"'), html.indexOf('id="leaderboard-container"'));
+    expect(board).not.toContain('Early Leaderboard');
+    expect(i18n).toContain("'leaderboard.title': 'Recent Activity'");
+    expect(i18n).not.toContain("'leaderboard.title': 'Live Leaderboard'");
+    expect(i18n).not.toContain("'leaderboard.title': 'Early Leaderboard'");
+    expect(content).not.toContain("apply('leaderboard-title', 'leaderboard_title')");
+    expect(html).toContain('data-i18n="drop.badge">Site Drop ladder</p>');
+    expect(html).toContain('Your site here');
+    expect(html).toContain('id="footer-link-tools"');
   });
 
   it('keeps Copy above overlays', () => {
@@ -150,5 +184,7 @@ describe('first-screen Site Drops rules', () => {
     expect(read('vercel.json')).toContain('https://*.challenges.cloudflare.com');
     expect(read('src/public/modals.ts')).toMatch(/z-\[990\]/);
     expect(read('src/public/modals.ts')).toMatch(/dismissShareAbandonOverlay\(\)/);
+    expect(read('src/public/modals.ts')).toContain('verifyOwnerPassword');
+    expect(read('src/public/modals.ts')).not.toMatch(/functions\.invoke/);
   });
 });

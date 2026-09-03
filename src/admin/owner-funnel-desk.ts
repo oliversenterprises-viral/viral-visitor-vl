@@ -11,8 +11,10 @@ import {
   emptyOwnerFunnelGsc,
   formatGscCount,
   formatGscPosition,
+  GSC_CACHED_NOTE,
   GSC_CONSOLE_URL,
   GSC_MISSING_NOTE,
+  GSC_TIMEOUT_NOTE,
   parseOwnerFunnelGsc,
   type OwnerFunnelDeskMetrics,
   type OwnerFunnelFeedRow,
@@ -36,6 +38,7 @@ const SKELETON = `
 const EMPTY_METRICS: OwnerFunnelDeskMetrics = {
   windowDays: 7,
   visits: 0,
+  junkVisits: 0,
   friendLandings: 0,
   landings: 0,
   getLink: 0,
@@ -45,6 +48,9 @@ const EMPTY_METRICS: OwnerFunnelDeskMetrics = {
   feed: [],
   gsc: emptyOwnerFunnelGsc(),
 };
+
+export const JUNK_CLEAR_CONFIRM =
+  'Clear junk and test visits only? Google Search Console and the verify file stay. Real quality visits stay.';
 
 /** Deployed admin-action may not know get_owner_funnel_desk yet. */
 export function isOwnerFunnelDeskActionMissing(error: string | undefined | null): boolean {
@@ -113,14 +119,19 @@ function renderGscCard(gsc: OwnerFunnelGscMetrics): string {
   const status = gsc.status;
   const clicks = formatGscCount(gsc.clicks, status);
   const shown = formatGscCount(gsc.impressions, status);
-  const tap = status === 'ok' ? gsc.tapRate : '—';
-  const pos = status === 'ok' ? formatGscPosition(gsc.avgPosition) : '—';
+  const showNums = status === 'ok' || status === 'ok-cached';
+  const tap = showNums ? gsc.tapRate : '—';
+  const pos = showNums ? formatGscPosition(gsc.avgPosition) : '—';
   const note =
     status === 'missing_credentials'
       ? gsc.note || GSC_MISSING_NOTE
       : status === 'error'
         ? gsc.note || 'Search Console numbers could not load.'
-        : '';
+        : status === 'timeout'
+          ? gsc.note || GSC_TIMEOUT_NOTE
+          : status === 'ok-cached'
+            ? gsc.note || GSC_CACHED_NOTE
+            : '';
   return `
     <section class="hq-gsc-card rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3" data-owner-desk-gsc="1" data-gsc-status="${escapeHtml(status)}">
       <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
@@ -182,11 +193,15 @@ export function renderOwnerFunnelDeskView(
     ? metrics.feed.map(feedLine).join('')
     : `<div class="text-sm text-zinc-500 py-2">No loop events in the last ${metrics.windowDays} days.</div>`;
 
+  const junkKept = metrics.junkVisits && metrics.junkVisits > 0
+    ? `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="1">${escapeHtml(String(metrics.junkVisits))} junk/test page views kept off these tiles. Search Console is separate.</p>`
+    : `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="0">Junk/test page views stay off these tiles. Search Console is separate.</p>`;
+
   container.innerHTML = `
     <div data-owner-funnel-desk="1" class="hq-desk space-y-4">
-      <p class="text-sm text-zinc-400">Last ${metrics.windowDays} days · owner IP, test codes, and webdriver excluded.</p>
+      <p class="text-sm text-zinc-400">Last ${metrics.windowDays} days · owner IP, test codes, webdriver, and junk sources excluded.</p>
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3" data-owner-desk-tiles>
-        ${tile('Visits', metrics.visits, 'All page views — cheap counter', 'visits')}
+        ${tile('Visits', metrics.visits, 'Real page views — junk/test excluded', 'visits')}
         ${tile('Friend landings', metrics.friendLandings, 'Unique people on /r/ or /a/', 'landings')}
         ${tile('Get-link', metrics.getLink, 'Unique people who tapped Get my link', 'getlink')}
         ${tile('Share', metrics.share, 'Verified send — not copy', 'share')}
@@ -198,6 +213,7 @@ export function renderOwnerFunnelDeskView(
           'rate',
         )}
       </div>
+      ${junkKept}
       ${renderGscCard(parseOwnerFunnelGsc(metrics.gsc))}
       <section class="hq-desk-feed rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3">
         <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-2">
@@ -205,9 +221,10 @@ export function renderOwnerFunnelDeskView(
         </div>
         <div data-owner-desk-feed class="max-h-80 overflow-y-auto">${feedHtml}</div>
       </section>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <button type="button" data-owner-desk-refresh class="hq-desk-refresh text-xs px-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100">↻ Refresh</button>
-        <span class="text-[10px] text-zinc-500">Server only</span>
+        <button type="button" data-owner-desk-clear-junk class="hq-desk-clear-junk text-xs px-3 py-1.5 rounded-2xl bg-amber-600/80 hover:bg-amber-600 text-white" title="Deletes junk/test visitor rows and zeros junk_hits only. Does not touch Google Search Console or the verify file.">Clear junk visits</button>
+        <span class="text-[10px] text-zinc-500">Server only · GSC untouched</span>
       </div>
 
     </div>
@@ -220,10 +237,49 @@ function bindRefresh(container: HTMLElement): void {
   container.addEventListener('click', (event) => {
     const target = event.target as HTMLElement;
     const btn = target.closest('[data-owner-desk-refresh]');
-    if (!btn || !container.contains(btn)) return;
+    if (btn && container.contains(btn)) {
+      event.preventDefault();
+      void refreshOwnerFunnelDesk(container, btn as HTMLButtonElement);
+      return;
+    }
+    const clearBtn = target.closest('[data-owner-desk-clear-junk]');
+    if (!clearBtn || !container.contains(clearBtn)) return;
     event.preventDefault();
-    void refreshOwnerFunnelDesk(container, btn as HTMLButtonElement);
+    void clearJunkDeskVisits(container, clearBtn as HTMLButtonElement);
   });
+}
+
+async function clearJunkDeskVisits(
+  container: HTMLElement,
+  btn?: HTMLButtonElement,
+): Promise<void> {
+  if (typeof window !== 'undefined' && !window.confirm(JUNK_CLEAR_CONFIRM)) return;
+  const original = btn?.textContent || 'Clear junk visits';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Clearing junk…';
+  }
+  try {
+    const result = await invokeAdminAction<{
+      deleted?: number;
+      junk_hits_cleared?: boolean;
+      gsc?: string;
+    }>('clear_junk_visits');
+    if (!result.success) {
+      showToast(result.error || 'Junk clear failed', 'info');
+      return;
+    }
+    const deleted = result.data?.deleted ?? 0;
+    showToast(`Cleared ${deleted} junk/test visits. Search Console unchanged.`, 'success');
+    await renderOwnerFunnelDesk(container);
+  } catch {
+    showToast('Junk clear failed. Search Console was not touched.', 'info');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
 }
 
 async function refreshOwnerFunnelDesk(
@@ -254,7 +310,11 @@ export async function renderOwnerFunnelDesk(container: HTMLElement): Promise<voi
   container.innerHTML = SKELETON;
   try {
     // Tiles come from get_owner_funnel_desk_counts (0052: exclusion must be true/false, never NULL).
-    const result = await invokeAdminAction<OwnerFunnelDeskMetrics>('get_owner_funnel_desk');
+    const result = await invokeAdminAction<OwnerFunnelDeskMetrics>(
+      'get_owner_funnel_desk',
+      {},
+      { timeoutMs: 8_000 },
+    );
     const loaded = ownerFunnelDeskFromInvokeResult(result);
     renderOwnerFunnelDeskView(container, loaded.metrics);
   } catch {

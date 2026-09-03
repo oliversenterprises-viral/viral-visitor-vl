@@ -19,6 +19,9 @@ describe('test-referral guards', () => {
       ),
     ).toBe(true);
     expect(isAutomationUserAgent('Mozilla/5.0 Chrome')).toBe(false);
+    expect(isAutomationUserAgent('Mozilla/5.0 scout Chrome/131')).toBe(true);
+    expect(isAutomationUserAgent('cursor-scout/1.0')).toBe(true);
+    expect(isAutomationUserAgent('cursorbot')).toBe(true);
     expect(isAgentAutomationMetadata({ webdriver: true })).toBe(true);
     expect(isAgentAutomationMetadata({})).toBe(false);
     Object.defineProperty(navigator, 'webdriver', { configurable: true, get: () => true });
@@ -33,6 +36,8 @@ describe('test-referral guards', () => {
     expect(isTestReferrerCode('VIRAL-LIVECHK1')).toBe(true);
     expect(isTestReferrerCode('VIRAL-97UWEGZ')).toBe(false);
     expect(isTestReferrerCode('RELAY')).toBe(true);
+    expect(isTestReferrerCode('VIRAL-SCOUT')).toBe(true);
+    expect(isTestReferrerCode('SCOUT')).toBe(true);
   });
 
   it('skips owner IP and headless automation', () => {

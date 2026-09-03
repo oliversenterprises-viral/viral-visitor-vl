@@ -15,6 +15,8 @@ import {
 
 export const OWNER_FUNNEL_WINDOW_DAYS = 7;
 export const OWNER_FUNNEL_FEED_LIMIT = 40;
+/** Bounded last-N for event-query tiles + feed. Never page the full table. */
+export const OWNER_FUNNEL_WINDOW_LIMIT = 400;
 
 export type OwnerFunnelVia = 'direct' | 'friend' | 'promoter';
 export type OwnerFunnelFeedKind = 'landed' | 'got_link' | 'shared' | 'locked';
@@ -32,6 +34,7 @@ export type OwnerFunnelFeedRow = {
 export type OwnerFunnelDeskMetrics = {
   windowDays: number;
   visits: number;
+  junkVisits?: number;
   friendLandings: number;
   landings: number;
   getLink: number;
@@ -266,6 +269,86 @@ function friendCodeFromReferral(
   return best;
 }
 
+/** Homepage SECURITY DEFINER RPCs — index-friendly LIMIT, not a table scan. */
+export function deskFromPublicSurfaces(input: {
+  ticker?: unknown;
+  linkStats?: unknown;
+  activity?: unknown;
+  visits?: number;
+  junkVisits?: number;
+  windowDays?: number;
+}): OwnerFunnelDeskMetrics {
+  const ticker = Array.isArray(input.ticker) ? input.ticker : [];
+  const activityRaw = input.activity;
+  const activityRows = Array.isArray(activityRaw)
+    ? activityRaw
+    : activityRaw && typeof activityRaw === 'object' && Array.isArray((activityRaw as { rows?: unknown }).rows)
+      ? ((activityRaw as { rows: unknown[] }).rows)
+      : [];
+  const stats =
+    input.linkStats && typeof input.linkStats === 'object' && !Array.isArray(input.linkStats)
+      ? (input.linkStats as Record<string, unknown>)
+      : {};
+  const getLinkRaw = Number(stats.unique_people ?? stats.uniquePeople ?? stats.events ?? 0);
+  const getLink = Number.isFinite(getLinkRaw) && getLinkRaw > 0 ? Math.round(getLinkRaw) : 0;
+
+  const feed: OwnerFunnelFeedRow[] = [];
+  const shareCodes = new Set<string>();
+  const lockedCodes = new Set<string>();
+  const push = (row: Record<string, unknown>) => {
+    const kind = String(row.kind || '');
+    const step = String(row.step || row.event_name || '');
+    const at = String(row.created_at || row.createdAt || '');
+    const code = String(row.referrer_code || row.referrerCode || '').trim().toUpperCase();
+    if (!at) return;
+    if (step === 'SiteLanding') {
+      feed.push(feedRow('landed', at, 'friend'));
+    } else if (step === 'GetReferralLink') {
+      feed.push(feedRow('got_link', at, 'direct'));
+    } else if (kind === 'share' || step === 'ShareReferral') {
+      feed.push(feedRow('shared', at, 'direct', code ? { code } : {}));
+      if (code) shareCodes.add(code);
+    } else if (kind === 'referral') {
+      feed.push(feedRow('locked', at, 'friend', code ? { code } : {}));
+      if (code) lockedCodes.add(code);
+    }
+  };
+  for (const row of [...ticker, ...activityRows]) {
+    if (row && typeof row === 'object' && !Array.isArray(row)) push(row as Record<string, unknown>);
+  }
+  feed.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+  const friendLandings = feed.filter((row) => row.kind === 'landed').length;
+  const visits =
+    Number.isFinite(input.visits) && (input.visits as number) > 0 ? (input.visits as number) : 0;
+  const junkVisits =
+    Number.isFinite(input.junkVisits) && (input.junkVisits as number) > 0
+      ? (input.junkVisits as number)
+      : 0;
+  return {
+    windowDays: input.windowDays ?? OWNER_FUNNEL_WINDOW_DAYS,
+    visits,
+    junkVisits,
+    friendLandings,
+    landings: friendLandings,
+    getLink,
+    share: shareCodes.size,
+    locked: lockedCodes.size,
+    getLinkRate: deskGetLinkRate(getLink, friendLandings, visits),
+    feed: feed.slice(0, OWNER_FUNNEL_FEED_LIMIT),
+  };
+}
+
+export function deskHasVisitorSignal(metrics: OwnerFunnelDeskMetrics): boolean {
+  return (
+    metrics.visits > 0 ||
+    metrics.friendLandings > 0 ||
+    metrics.getLink > 0 ||
+    metrics.share > 0 ||
+    metrics.locked > 0 ||
+    metrics.feed.length > 0
+  );
+}
+
 function feedRow(
   kind: OwnerFunnelFeedKind,
   at: string,
@@ -291,6 +374,7 @@ export function computeOwnerFunnelDeskMetrics(input: {
   now?: number;
   windowDays?: number;
   visits?: number;
+  junkVisits?: number;
 }): OwnerFunnelDeskMetrics {
   const now = input.now ?? Date.now();
   const windowDays = input.windowDays ?? OWNER_FUNNEL_WINDOW_DAYS;
@@ -310,8 +394,14 @@ export function computeOwnerFunnelDeskMetrics(input: {
     return !!code && !isTestReferrerCode(code);
   });
 
-  const visits = Number.isFinite(input.visits) && (input.visits as number) >= 0 ? (input.visits as number) : 0;
   const landings = uniqueAttributedLandingVisitors(events);
+  const landingVisits = uniqueVisitorsForEvent(events, 'SiteLanding');
+  const visits =
+    Number.isFinite(input.visits) && (input.visits as number) >= 0
+      ? (input.visits as number)
+      : landingVisits;
+  const junkVisits =
+    Number.isFinite(input.junkVisits) && (input.junkVisits as number) >= 0 ? (input.junkVisits as number) : 0;
   const getLink = uniqueVisitorsForEvent(events, 'GetReferralLink');
   const shareCodes = new Set<string>();
   for (const row of shares) {
@@ -394,6 +484,7 @@ export function computeOwnerFunnelDeskMetrics(input: {
   return {
     windowDays,
     visits,
+    junkVisits,
     friendLandings: landings,
     landings,
     getLink,
@@ -406,6 +497,7 @@ export function computeOwnerFunnelDeskMetrics(input: {
 
 export function parseOwnerFunnelDeskCounts(raw: unknown): {
   visits: number;
+  junkVisits: number;
   friendLandings: number;
   landings: number;
   getLink: number;
@@ -431,12 +523,13 @@ export function parseOwnerFunnelDeskCounts(raw: unknown): {
   const friendLandings = num('friend_landings', 'friendLandings') ?? num('landings');
   const landings = friendLandings;
   const visits = num('visits') ?? 0;
+  const junkVisits = num('junk_visits', 'junkVisits') ?? 0;
   const getLink = num('get_link', 'getLink');
   const share = num('share');
   const locked = num('locked');
   const windowDays = num('window_days', 'windowDays') ?? OWNER_FUNNEL_WINDOW_DAYS;
   if (landings == null || getLink == null || share == null || locked == null) return null;
-  return { visits, friendLandings: landings, landings, getLink, share, locked, windowDays };
+  return { visits, junkVisits, friendLandings: landings, landings, getLink, share, locked, windowDays };
 }
 
 /** Tile counts come from the RPC when present. A paged dump is feed-only. */
@@ -461,6 +554,7 @@ export function assembleOwnerFunnelDeskFromServer(input: {
   return {
     windowDays: counts.windowDays,
     visits: counts.visits,
+    junkVisits: counts.junkVisits,
     friendLandings: counts.friendLandings,
     landings: counts.landings,
     getLink: counts.getLink,
@@ -473,6 +567,34 @@ export function assembleOwnerFunnelDeskFromServer(input: {
 
 
 export const OWNER_FUNNEL_PAGE_SIZE = 1000;
+
+/** Command tiles are all zero — RPC timeout, miss, or a false empty payload. */
+export function isEmptyOwnerFunnelDeskCounts(
+  counts: ReturnType<typeof parseOwnerFunnelDeskCounts>,
+): boolean {
+  if (!counts) return true;
+  return (
+    counts.visits === 0 &&
+    counts.friendLandings === 0 &&
+    counts.getLink === 0 &&
+    counts.share === 0 &&
+    counts.locked === 0
+  );
+}
+
+export function ownerFunnelWindowHasRows(window: {
+  events?: readonly unknown[];
+  shares?: readonly unknown[];
+  referrals?: readonly unknown[];
+  referrerLinks?: readonly unknown[];
+}): boolean {
+  return Boolean(
+    (window.events && window.events.length) ||
+      (window.shares && window.shares.length) ||
+      (window.referrals && window.referrals.length) ||
+      (window.referrerLinks && window.referrerLinks.length),
+  );
+}
 
 export function isOwnerFunnelRpcMissingError(
   error: { message?: string; code?: string } | null | undefined,
@@ -515,25 +637,25 @@ export async function pageAllOwnerFunnelRows(
  * RPC COUNT DISTINCT when the function exists. Otherwise DISTINCT over a
  * complete 7-day service-role window (not last-1000, not a truncated dump).
  */
+export type OwnerFunnelDeskWindow = {
+  events?: readonly OwnerFunnelEvent[];
+  shares?: readonly OwnerFunnelShareRow[];
+  referrals?: readonly OwnerFunnelReferralRow[];
+  referrerLinks?: readonly OwnerFunnelLinkRow[];
+  visits?: number;
+  junkVisits?: number;
+};
+
 export async function resolveOwnerFunnelDeskMetrics(input: {
   rpcData?: unknown;
   rpcError?: { message?: string; code?: string } | null;
-  loadCompleteWindow: () => Promise<{
-    events?: readonly OwnerFunnelEvent[];
-    shares?: readonly OwnerFunnelShareRow[];
-    referrals?: readonly OwnerFunnelReferralRow[];
-    referrerLinks?: readonly OwnerFunnelLinkRow[];
-  }>;
-  loadFeedWindow?: () => Promise<{
-    events?: readonly OwnerFunnelEvent[];
-    shares?: readonly OwnerFunnelShareRow[];
-    referrals?: readonly OwnerFunnelReferralRow[];
-    referrerLinks?: readonly OwnerFunnelLinkRow[];
-  }>;
+  loadCompleteWindow: () => Promise<OwnerFunnelDeskWindow>;
+  loadFeedWindow?: () => Promise<OwnerFunnelDeskWindow>;
   now?: number;
 }): Promise<OwnerFunnelDeskMetrics> {
   const counts = parseOwnerFunnelDeskCounts(input.rpcData);
-  if (counts) {
+  const rpcUsable = !!counts && !isEmptyOwnerFunnelDeskCounts(counts);
+  if (rpcUsable && counts) {
     try {
       const feed = input.loadFeedWindow ? await input.loadFeedWindow() : {};
       const assembled = assembleOwnerFunnelDeskFromServer({
@@ -549,6 +671,7 @@ export async function resolveOwnerFunnelDeskMetrics(input: {
       return {
         windowDays: counts.windowDays,
         visits: counts.visits,
+        junkVisits: counts.junkVisits,
         friendLandings: counts.friendLandings,
         landings: counts.landings,
         getLink: counts.getLink,
@@ -565,6 +688,8 @@ export async function resolveOwnerFunnelDeskMetrics(input: {
     shares: window.shares,
     referrals: window.referrals,
     referrerLinks: window.referrerLinks,
+    visits: window.visits,
+    junkVisits: window.junkVisits ?? counts?.junkVisits,
     now: input.now,
     windowDays: OWNER_FUNNEL_WINDOW_DAYS,
   });

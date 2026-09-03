@@ -2,8 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   isAttributedLanding,
   isJunkTrafficSource,
+  isJunkUtmEvent,
+  shouldDeleteJunkUtmVisitorEvent,
+  shouldIncrementJunkLandingVisit,
+  shouldIncrementQualityLandingVisit,
   shouldSkipServerLandingWrite,
 } from '../../src/lib/junk-traffic';
+import { shouldClearJunkVisitorEvent } from '../../supabase/functions/_shared/visitor-funnel-test';
 
 describe('junk-traffic (Disk IO guard)', () => {
   it('flags rotator / exchange sources', () => {
@@ -16,6 +21,8 @@ describe('junk-traffic (Disk IO guard)', () => {
     expect(isJunkTrafficSource('herculist')).toBe(true);
     expect(isJunkTrafficSource('pagerankcafe')).toBe(true);
     expect(isJunkTrafficSource('leadsleap')).toBe(true);
+    expect(isJunkTrafficSource('scout')).toBe(true);
+    expect(isJunkTrafficSource('SCOUT')).toBe(true);
   });
 
   it('allows real sources', () => {
@@ -53,5 +60,102 @@ describe('junk-traffic (Disk IO guard)', () => {
     expect(shouldSkipServerLandingWrite('ShareReferral', null)).toBe(false);
     expect(shouldSkipServerLandingWrite('OpenPrizeClaim', null)).toBe(false);
     expect(shouldSkipServerLandingWrite('SubmitPrizeClaim', null)).toBe(false);
+  });
+
+  it('keeps junk/test homepage hits off the quality visit counter', () => {
+    expect(shouldIncrementQualityLandingVisit('SiteLanding', 'rotate4all')).toBe(false);
+    expect(shouldIncrementJunkLandingVisit('SiteLanding', 'rotate4all')).toBe(true);
+    expect(shouldIncrementQualityLandingVisit('SiteLanding', 'reddit')).toBe(true);
+    expect(shouldIncrementJunkLandingVisit('SiteLanding', 'reddit')).toBe(false);
+    expect(
+      shouldIncrementQualityLandingVisit('SiteLanding', 'traffup', {
+        path: '/r/VIRAL-A',
+        refCode: 'VIRAL-A',
+      }),
+    ).toBe(true);
+    expect(
+      shouldIncrementJunkLandingVisit('SiteLanding', 'traffup', {
+        path: '/r/VIRAL-A',
+        refCode: 'VIRAL-A',
+      }),
+    ).toBe(false);
+    expect(shouldIncrementQualityLandingVisit('GetReferralLink', 'rotate4all')).toBe(false);
+    expect(shouldIncrementQualityLandingVisit('SiteLanding', null)).toBe(false);
+    expect(shouldIncrementQualityLandingVisit('SiteLanding', '')).toBe(false);
+    expect(shouldIncrementJunkLandingVisit('SiteLanding', null)).toBe(true);
+    expect(shouldIncrementJunkLandingVisit('SiteLanding', '')).toBe(true);
+    expect(isJunkUtmEvent({ utm_source: 'pagerankcafe' })).toBe(true);
+    expect(isJunkUtmEvent({ utmSource: 'twitter' })).toBe(false);
+  });
+
+  it('Clear junk UTM never deletes GetReferralLink or share/claim rows', () => {
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'SiteLanding', utm_source: 'pagerankcafe' }),
+    ).toBe(true);
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'SiteLanding', utm_source: 'scout' }),
+    ).toBe(true);
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'GetReferralLink', utm_source: 'pagerankcafe' }),
+    ).toBe(false);
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'ShareReferral', utm_source: 'pagerankcafe' }),
+    ).toBe(false);
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'SubmitPrizeClaim', utm_source: 'rotate4all' }),
+    ).toBe(false);
+    expect(
+      shouldDeleteJunkUtmVisitorEvent({ event_name: 'GetReferralLink', utm_source: 'twitter' }),
+    ).toBe(false);
+    expect(shouldDeleteJunkUtmVisitorEvent({ event_name: 'SiteLanding', utm_source: 'reddit' })).toBe(
+      false,
+    );
+  });
+
+  it('HQ Clear keeps pagerankcafe GetReferralLink credits and drops test/scout landings', () => {
+    expect(
+      shouldClearJunkVisitorEvent({
+        event_name: 'GetReferralLink',
+        utm_source: 'pagerankcafe',
+        ref_code: 'VIRAL-97UWEGZ',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(false);
+    expect(
+      shouldClearJunkVisitorEvent({
+        event_name: 'SiteLanding',
+        utm_source: 'pagerankcafe',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(true);
+    expect(
+      shouldClearJunkVisitorEvent({
+        event_name: 'GetReferralLink',
+        utm_source: 'pagerankcafe',
+        ref_code: 'VIRAL-SCOUT',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(true);
+    expect(
+      shouldClearJunkVisitorEvent({
+        event_name: 'SiteLanding',
+        utm_source: null,
+        metadata: { user_agent: 'Mozilla/5.0 scout Chrome/131' },
+      }),
+    ).toBe(true);
+    expect(
+      shouldClearJunkVisitorEvent({
+        event_name: 'GetReferralLink',
+        utm_source: null,
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(false);
+    const azureGetLink = {
+      event_name: 'GetReferralLink',
+      utm_source: 'pagerankcafe',
+      ref_code: 'VIRAL-97UWEGZ',
+      metadata: { client_ip: '20.12.34.56', user_agent: 'Mozilla/5.0 Chrome' },
+    };
+    expect(shouldClearJunkVisitorEvent(azureGetLink, [azureGetLink])).toBe(false);
   });
 });

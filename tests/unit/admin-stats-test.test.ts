@@ -51,5 +51,6 @@ describe('admin-stats-test', () => {
     expect(isAutomationUserAgent('node')).toBe(true);
     expect(isAutomationUserAgent('Mozilla/5.0 HeadlessChrome')).toBe(true);
     expect(isAutomationUserAgent('Mozilla/5.0 Chrome')).toBe(false);
+    expect(isAutomationUserAgent('Mozilla/5.0 scout')).toBe(true);
   });
 });

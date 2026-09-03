@@ -8,6 +8,7 @@ import {
   formatOwnerRate,
   isDeskVerifiedShare,
   isLockedReferrer,
+  isEmptyOwnerFunnelDeskCounts,
   isOwnerFunnelRpcMissingError,
   pageAllOwnerFunnelRows,
   parseOwnerFunnelDeskCounts,
@@ -372,13 +373,86 @@ describe('owner funnel desk metrics', () => {
       }),
       now,
     });
-    expect(metrics.visits).toBe(0);
+    expect(metrics.visits).toBe(2);
     expect(metrics.landings).toBe(1);
     expect(metrics.friendLandings).toBe(1);
     expect(metrics.getLink).toBe(1);
     expect(metrics.share).toBe(1);
     expect(metrics.locked).toBe(0);
     expect(metrics.getLinkRate).toBe('100.0%');
+  });
+
+  it('does not paint zeros when the RPC is empty/timed out and visitor_events have rows', async () => {
+    expect(
+      isEmptyOwnerFunnelDeskCounts({
+        visits: 0,
+        junkVisits: 468,
+        friendLandings: 0,
+        landings: 0,
+        getLink: 0,
+        share: 0,
+        locked: 0,
+        windowDays: 7,
+      }),
+    ).toBe(true);
+    expect(
+      isEmptyOwnerFunnelDeskCounts({
+        visits: 1,
+        junkVisits: 468,
+        friendLandings: 22,
+        landings: 22,
+        getLink: 17,
+        share: 4,
+        locked: 1,
+        windowDays: 7,
+      }),
+    ).toBe(false);
+
+    const window = {
+      events: [
+        landing('a', { metadata: { path: '/' } }),
+        landing('b', { ref_code: 'VIRAL-B', metadata: { path: '/r/VIRAL-B' } }),
+        getLink('b'),
+      ],
+      shares: [
+        { platform: 'native', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:00:00Z' },
+      ],
+      referrals: [
+        {
+          referrer_code: 'VIRAL-REAL1',
+          referred_code: 'VIRAL-FRIEND1',
+          created_at: '2026-08-16T12:30:00Z',
+        },
+      ],
+      referrerLinks: [
+        { referrer_code: 'VIRAL-REAL1', status: 'active', created_at: '2026-08-16T12:30:00Z' },
+      ],
+      visits: 1,
+      junkVisits: 468,
+    };
+
+    for (const rpcData of [
+      null,
+      { visits: 0, junk_visits: 0, friend_landings: 0, landings: 0, get_link: 0, share: 0, locked: 0 },
+    ]) {
+      const metrics = await resolveOwnerFunnelDeskMetrics({
+        rpcData,
+        rpcError: rpcData ? null : { message: 'timeout', code: 'TIMEOUT' },
+        loadCompleteWindow: async () => window,
+        loadFeedWindow: async () => window,
+        now,
+      });
+      expect(metrics.visits).toBe(1);
+      expect(metrics.junkVisits).toBe(468);
+      expect(metrics.friendLandings).toBe(1);
+      expect(metrics.getLink).toBe(1);
+      expect(metrics.share).toBe(1);
+      expect(metrics.locked).toBe(1);
+      expect(metrics.feed.length).toBeGreaterThan(0);
+      expect(metrics.feed.map((row) => row.label)).toEqual(
+        expect.arrayContaining(['Landed', 'Got a link', 'Shared', 'Locked']),
+      );
+    }
   });
 
   it('returns zero tiles for an empty window instead of can’t load', async () => {
@@ -462,6 +536,7 @@ describe('owner funnel desk metrics', () => {
   it('reads visits from a new RPC and defaults visits to 0 on an old payload', () => {
     expect(parseOwnerFunnelDeskCounts({ landings: 12, get_link: 3, share: 1, locked: 1 })).toEqual({
       visits: 0,
+      junkVisits: 0,
       friendLandings: 12,
       landings: 12,
       getLink: 3,
@@ -469,6 +544,72 @@ describe('owner funnel desk metrics', () => {
       locked: 1,
       windowDays: 7,
     });
+  });
+
+  it('reads junk_visits from the RPC without putting them on the Visits tile', () => {
+    const assembled = assembleOwnerFunnelDeskFromServer({
+      counts: {
+        visits: 12,
+        junk_visits: 900,
+        friend_landings: 4,
+        landings: 4,
+        get_link: 2,
+        share: 1,
+        locked: 1,
+        window_days: 7,
+      },
+    });
+    expect(assembled!.visits).toBe(12);
+    expect(assembled!.junkVisits).toBe(900);
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, assembled!);
+    const visitsTile = el.querySelector('[data-hq-tile="visits"]')?.textContent || '';
+    expect(visitsTile).toMatch(/12/);
+    expect(visitsTile).not.toMatch(/900/);
+    expect(el.textContent).toMatch(/900 junk\/test page views kept off these tiles/);
+    expect(el.textContent).toMatch(/Search Console is separate/);
+    expect(el.querySelector('[data-owner-desk-clear-junk]')).toBeTruthy();
+    expect(el.querySelector('[data-owner-desk-gsc]')).toBeTruthy();
+  });
+
+  it('junk-only clear never mentions GSC delete or the verify file', () => {
+    const desk = readFileSync(resolve(import.meta.dirname, '../../src/admin/owner-funnel-desk.ts'), 'utf8');
+    const action = readFileSync(
+      resolve(import.meta.dirname, '../../supabase/functions/admin-action/index.ts'),
+      'utf8',
+    );
+    expect(desk).toContain('clear_junk_visits');
+    expect(desk).toContain('Google Search Console and the verify file stay');
+    expect(action).toContain("action === 'clear_junk_visits'");
+    expect(action).toContain('shouldClearJunkVisitorEvent');
+    expect(action).toContain("gsc: 'untouched'");
+    expect(action).toContain('clear_junk_landing_counts');
+    expect(action).not.toMatch(/clear_junk_visits[\s\S]{0,800}isJunkUtmEvent\(row\)/);
+    expect(action).not.toMatch(/clear_junk_visits[\s\S]{0,1200}resolveOwnerFunnelGsc/);
+    expect(action).not.toContain('google163d31ba24216edd');
+    expect(desk).not.toContain('google163d31ba24216edd');
+    expect(desk).not.toMatch(/showToast\([^)]*'error'/);
+    const html = readFileSync(resolve(import.meta.dirname, '../../index.html'), 'utf8');
+    expect(html).toContain('data-owner-desk-junk-note');
+    expect(html).toContain('data-owner-desk-clear-junk');
+    expect(html).toContain('junk/test excluded');
+    expect(html).not.toMatch(/cheap counter/i);
+    expect(html).toContain('data-owner-desk-gsc-note="missing_credentials"');
+  });
+
+  it('0056 junk harden never touches GSC or the verify file', () => {
+    const sql = readFileSync(
+      resolve(import.meta.dirname, '../../supabase/migrations/0056_junk_visit_hq_harden.sql'),
+      'utf8',
+    );
+    expect(sql).toContain('GREATEST(junk_hits, hits)');
+    expect(sql).toContain('quality_hits = 0');
+    expect(sql).toContain('%scout%');
+    expect(sql).toContain('SCOUT');
+    expect(sql).not.toContain('google163d31ba24216edd');
+    expect(sql).not.toMatch(/SET\s+quality_hits\s*=/);
+    expect(sql).not.toMatch(/quality_hits\s*=\s*0\s*,/);
+    expect(sql).not.toMatch(/DELETE\s+FROM\s+public\.(referrals|visitor_events|shares)/i);
   });
 });
 

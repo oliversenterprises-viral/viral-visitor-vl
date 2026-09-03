@@ -26,6 +26,7 @@ export function isTestReferrerCode(code: string | null | undefined): boolean {
   if (/PROBE/.test(c)) return true;
   if (/TESTFIX/.test(c)) return true;
   if (/LIVECHK/.test(c)) return true;
+  if (/SCOUT/.test(c)) return true;
   if (/^VIRAL-E2E/.test(c)) return true;
   if (/^VIRAL-(LANDING|FUNNEL|TOAST|FAIL|RETRY|ATTRIB|DEMO)/.test(c)) return true;
   return false;
@@ -46,6 +47,8 @@ export function isAutomationUserAgent(ua: string | null | undefined): boolean {
     return true;
   }
   if (/GitHub-Actions|github-actions|actions-runner/i.test(s)) return true;
+  if (/\b(cursor-scout|cursorbot|cursor\/scout)\b/i.test(s)) return true;
+  if (/\bscout\b/i.test(s)) return true;
   return false;
 }
 

@@ -141,7 +141,7 @@
                 <a href="#how" class="vr-nav-link inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.how">How</a>
                 <a href="#prize" class="vr-nav-link inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.feature">Feature</a>
                 <a href="#leaderboard" class="vr-nav-link inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.board">Board</a>
-                <a href="/tools/" class="vr-nav-link hidden sm:inline text-zinc-400 hover:text-violet-400 transition-colors">Tools</a>
+                <a href="/tools/" class="vr-nav-link inline text-zinc-400 hover:text-violet-400 transition-colors">Tools</a>
                 <button type="button" id="nav-get-link-btn" data-vr-zone="nav-get-link" class="sm:hidden px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl text-xs font-semibold min-h-[44px]" data-i18n="nav.get_link">
                     Get link
                 </button>
@@ -583,7 +583,7 @@
             <div class="flex items-center justify-between mb-6">
                 <div>
                     <div class="flex items-center gap-3">
-                        <h2 id="leaderboard-title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-leaderboard-title, #ffffff)">Early Leaderboard</h2>
+                        <h2 id="leaderboard-title" data-i18n="leaderboard.title" class="text-5xl font-bold tracking-tighter" style="color: var(--text-leaderboard-title, #ffffff)">Recent Activity</h2>
                         <div class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-semibold rounded-3xl flex items-center gap-1.5">
                             <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                             LIVE
@@ -610,9 +610,55 @@
         </div>
     </div>
 
-    <footer class="bg-black py-12 border-t border-white/10 text-center text-xs text-zinc-500">
-        <div class="max-w-5xl mx-auto px-4 space-y-2">
-            <div id="footer-legal-disclaimer">
+    <footer id="site-footer" class="bg-black py-12 border-t border-white/10 text-xs text-zinc-500">
+        <div class="max-w-6xl mx-auto px-4 space-y-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-left">
+                <div>
+                    <div class="text-[10px] uppercase tracking-wide text-zinc-400 font-bold mb-2">Play</div>
+                    <ul class="space-y-1.5">
+                        <li><a href="#how" class="underline hover:text-white transition-colors" data-i18n="nav.how">How</a></li>
+                        <li><a href="#leaderboard" class="underline hover:text-white transition-colors" data-i18n="nav.board">Board</a></li>
+                        <li><a href="#prize" class="underline hover:text-white transition-colors" data-i18n="nav.feature">Feature</a></li>
+                        <li><a href="#hero-get-link-btn" class="underline hover:text-white transition-colors" data-i18n="hero.cta">Get my referral link</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="text-[10px] uppercase tracking-wide text-zinc-400 font-bold mb-2" data-i18n="footer.tools">Tools</div>
+                    <ul class="space-y-1.5">
+                        <li><a id="footer-link-tools" href="/tools/?utm_source=leadmagnet&amp;utm_medium=homepage_footer&amp;utm_campaign=organic_tools" class="underline hover:text-white transition-colors">All tools</a></li>
+                        <li><a id="footer-link-credit-checker" href="/tools/credit-checker.html?utm_source=leadmagnet&amp;utm_medium=homepage_footer&amp;utm_campaign=organic_tools" class="underline hover:text-white transition-colors" data-i18n="footer.credit_checker">Does this count?</a></li>
+                        <li><a id="footer-link-utm" href="/tools/utm-builder.html?utm_source=leadmagnet&amp;utm_medium=homepage_footer&amp;utm_campaign=organic_tools" class="underline hover:text-white transition-colors" data-i18n="footer.utm">UTM links</a></li>
+                        <li><a id="footer-link-captions" href="/tools/share-generator.html?utm_source=leadmagnet&amp;utm_medium=homepage_footer&amp;utm_campaign=organic_tools" class="underline hover:text-white transition-colors">Captions</a></li>
+                        <li><a id="footer-link-what-to-paste" href="/tools/what-to-paste.html?utm_source=leadmagnet&amp;utm_medium=homepage_footer&amp;utm_campaign=organic_tools" class="underline hover:text-white transition-colors" data-i18n="footer.what_to_paste">What to paste?</a></li>
+                        <li><a id="footer-link-ladder" href="/tools/site-drop-ladder.html?utm_source=leadmagnet&amp;utm_medium=homepage_footer&amp;utm_campaign=organic_tools" class="underline hover:text-white transition-colors">Site Drop ladder</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="text-[10px] uppercase tracking-wide text-zinc-400 font-bold mb-2" data-i18n="footer.guides">Guides</div>
+                    <ul class="space-y-1.5">
+                        <li><a id="footer-link-guides" href="/guides/?utm_source=leadmagnet&amp;utm_medium=homepage_footer&amp;utm_campaign=organic_tools" class="underline hover:text-white transition-colors">All guides</a></li>
+                        <li><a id="footer-link-site-drops" href="/guides/site-drops/" class="underline hover:text-white transition-colors">Site Drops</a></li>
+                        <li><a href="/guides/how-referrals-count/" class="underline hover:text-white transition-colors">What counts</a></li>
+                        <li><a href="/guides/why-visits-dont-count/" class="underline hover:text-white transition-colors">Why visits don’t count</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="text-[10px] uppercase tracking-wide text-zinc-400 font-bold mb-2">More</div>
+                    <ul class="space-y-1.5">
+                        <li><a id="footer-link-affiliates" href="/go/affiliates/" class="underline hover:text-white transition-colors" data-i18n="footer.promoters">Promoters</a></li>
+                        <li><a id="footer-link-llms" href="/llms.txt" class="underline hover:text-white transition-colors" data-i18n="footer.llms">llms.txt</a></li>
+                        <li><a id="footer-link-telegram-helper" href="https://t.me/myviralreferbot?start=site_footer" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors" title="ViralRefer helper bot on Telegram">Telegram helper</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div id="footer-tools-row" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
+                <a href="/tools/share-generator.html?utm_source=leadmagnet&amp;utm_medium=homepage_footer&amp;utm_campaign=organic_tools" class="underline hover:text-white transition-colors">Captions</a>
+                <span aria-hidden="true">·</span>
+                <a href="/tools/utm-builder.html?utm_source=leadmagnet&amp;utm_medium=homepage_footer&amp;utm_campaign=organic_tools" class="underline hover:text-white transition-colors">UTM builder</a>
+                <span aria-hidden="true">·</span>
+                <a href="/tools/credit-checker.html?utm_source=leadmagnet&amp;utm_medium=homepage_footer&amp;utm_campaign=organic_tools" class="underline hover:text-white transition-colors">Does this count?</a>
+            </div>
+            <div id="footer-legal-disclaimer" class="text-center">
                 © 2026 ViralRefer Premium. All rights reserved. 
                 This is a <span class="font-semibold">skill-based referral contest</span>. 
                 <strong>NO PURCHASE OR PAYMENT NECESSARY TO ENTER OR WIN.</strong> 
@@ -622,14 +668,14 @@
                 All decisions final. Fraud, self-referrals, or abuse will result in disqualification.
             </div>
             <!-- BATCH 5: short "Key Rules" paragraph near footer (visible but not overwhelming; wired to rules_text) -->
-            <div class="text-xs text-zinc-400">
+            <div class="text-xs text-zinc-400 text-center">
               <span class="font-semibold text-zinc-300">Key Rules:</span> <span id="rules-text">No self-referrals. Unique IPs only. Fair play enforced. Turnstile protected.</span>
             </div>
-            <div class="pt-1">
+            <div class="pt-1 text-center">
                 <a id="footer-link-rules" href="/rules/" class="underline hover:text-white transition-colors" data-i18n="footer.rules_link">Official Rules &amp; Full Disclaimers</a> • 
                 <a id="footer-link-privacy" href="/privacy/" class="underline hover:text-white transition-colors" data-i18n="footer.privacy">Privacy Policy</a> • 
                 <a id="footer-link-terms" href="/terms/" class="underline hover:text-white transition-colors" data-i18n="footer.terms">Terms</a> •
-                <a id="footer-link-telegram-helper" href="https://t.me/myviralreferbot?start=site_footer" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors" title="ViralRefer helper bot on Telegram">Telegram helper</a>
+                <a id="footer-link-telegram-legal" href="https://t.me/myviralreferbot?start=site_footer" target="_blank" rel="noopener noreferrer" class="underline hover:text-white transition-colors" title="ViralRefer helper bot on Telegram">Telegram helper</a>
             </div>
         </div>
     </footer>
@@ -658,6 +704,7 @@
                         <article class="hq-desk-tile hq-desk-tile--visits rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3" data-hq-tile="visits">
                             <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Visits</div>
                             <div class="text-2xl font-bold text-white tabular-nums mt-1">0</div>
+                            <div class="text-[11px] text-zinc-400 mt-1">Real page views — junk/test excluded</div>
                         </article>
                         <article class="hq-desk-tile hq-desk-tile--landings rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3" data-hq-tile="landings">
                             <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Friend landings</div>
@@ -680,6 +727,7 @@
                             <div class="text-2xl font-bold text-white tabular-nums mt-1">0%</div>
                         </article>
                     </div>
+                    <p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="0">Junk/test page views stay off these tiles. Search Console is separate.</p>
                     <section class="hq-gsc-card rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3" data-owner-desk-gsc="1" data-gsc-status="missing_credentials">
                         <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
                             <div>
@@ -710,7 +758,7 @@
                                 <div class="text-[11px] text-zinc-400 mt-1">Mean rank</div>
                             </article>
                         </div>
-                        <p class="text-[12px] text-amber-200/90 mb-3" data-owner-desk-gsc-note="missing_credentials">Search Console is verified. Add the API key on the server to show numbers here.</p>
+                        <p class="text-[12px] text-amber-200/90 mb-3" data-owner-desk-gsc-note="missing_credentials">Search Console is verified. Numbers load from the server GSC_SERVICE_ACCOUNT_JSON secret.</p>
                         <div class="grid md:grid-cols-2 gap-3">
                             <div class="hq-gsc-list" data-owner-desk-gsc-list="tools">
                                 <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-1">Tool pages</div>
@@ -729,6 +777,11 @@
                     <section class="hq-desk-feed rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3">
                         <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-2">Landed · Got a link · Shared · Locked</div>
                     </section>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" data-owner-desk-refresh class="hq-desk-refresh text-xs px-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100">↻ Refresh</button>
+                        <button type="button" data-owner-desk-clear-junk class="hq-desk-clear-junk text-xs px-3 py-1.5 rounded-2xl bg-amber-600/80 hover:bg-amber-600 text-white" title="Deletes junk/test visitor rows and zeros junk_hits only. Does not touch Google Search Console or the verify file.">Clear junk visits</button>
+                        <span class="text-[10px] text-zinc-500">Server only · GSC untouched</span>
+                    </div>
                 </div>
             </div>
         </div>

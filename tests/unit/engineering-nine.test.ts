@@ -14,6 +14,9 @@ describe('engineering 9 locks', () => {
     const edge = read('supabase/functions/_shared/junk-traffic.ts');
     expect(edge).toMatch(/from '\.\.\/\.\.\/\.\.\/src\/lib\/junk-traffic\.ts'/);
     expect(edge).toContain('shouldSkipServerLandingWrite');
+    expect(edge).toContain('shouldIncrementQualityLandingVisit');
+    expect(edge).toContain('isJunkUtmEvent');
+    expect(edge).toContain('shouldDeleteJunkUtmVisitorEvent');
     expect(edge).not.toMatch(/const JUNK_SOURCES/);
   });
 

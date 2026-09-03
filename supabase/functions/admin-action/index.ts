@@ -12,6 +12,7 @@ import {
   groupVisitorEventsByIp,
   isTestBannerEvent,
   isTestVisitorFunnelEvent,
+  shouldClearJunkVisitorEvent,
 } from '../_shared/admin-stats-test.ts';
 import {
   getFunnelNotifyChannel,
@@ -604,6 +605,61 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    if (action === 'clear_junk_visits') {
+      // Junk/test visitor rows + junk_hits only. Never GSC. Never quality_hits. Never verify files.
+      const pageSize = 1000;
+      const allRows: Record<string, unknown>[] = [];
+      let start = 0;
+
+      while (true) {
+        const { data, error } = await supabaseAdmin
+          .from('visitor_events')
+          .select('id, event_name, ref_code, ip_hash, metadata, utm_source, created_at')
+          .order('created_at', { ascending: true })
+          .range(start, start + pageSize - 1);
+        if (error) throw error;
+        const batch = data || [];
+        allRows.push(...batch);
+        if (batch.length < pageSize) break;
+        start += pageSize;
+      }
+
+      const byIp = groupVisitorEventsByIp(allRows);
+      const idsToDelete: string[] = [];
+      for (const row of allRows) {
+        const id = row.id;
+        if (!id) continue;
+        const ipKey = getVisitorEventIp(row) || String(row.ip_hash || 'unknown');
+        if (shouldClearJunkVisitorEvent(row, byIp.get(ipKey))) {
+          idsToDelete.push(String(id));
+        }
+      }
+
+      const chunk = 200;
+      for (let i = 0; i < idsToDelete.length; i += chunk) {
+        const slice = idsToDelete.slice(i, i + chunk);
+        const { error: delErr } = await supabaseAdmin.from('visitor_events').delete().in('id', slice);
+        if (delErr) throw delErr;
+      }
+
+      let junkHitsCleared = false;
+      const { error: junkRpcErr } = await supabaseAdmin.rpc('clear_junk_landing_counts');
+      if (!junkRpcErr) junkHitsCleared = true;
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            deleted: idsToDelete.length,
+            junk_hits_cleared: junkHitsCleared,
+            quality_hits_untouched: true,
+            gsc: 'untouched',
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
     if (action === 'clear_test_banner_events') {
       const dryRun = payload?.dry_run === true;
       const pageSize = 1000;
@@ -915,101 +971,122 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'get_owner_funnel_desk') {
       const {
+        deskFromPublicSurfaces,
+        deskHasVisitorSignal,
         filterDeskReferrals,
-        ownerFunnelCutoffIso,
-        OWNER_FUNNEL_FEED_LIMIT,
-        OWNER_FUNNEL_PAGE_SIZE,
-        pageAllOwnerFunnelRows,
         resolveOwnerFunnelDeskMetrics,
         stripOwnerFunnelPii,
       } = await import('../_shared/owner-funnel-desk.ts');
-
-      const windowDays = 7;
-      const cutoff = ownerFunnelCutoffIso();
-      const { data: counts, error: countErr } = await supabaseAdmin.rpc(
-        'get_owner_funnel_desk_counts',
-        { p_days: windowDays },
+      const { emptyOwnerFunnelGsc, resolveOwnerFunnelGscTimed, withTimeout } = await import(
+        '../_shared/owner-funnel-gsc.ts'
       );
 
-      const pageWindow = async (complete: boolean) => {
-        const feedLimit = OWNER_FUNNEL_FEED_LIMIT;
-        const take = async (
-          table: string,
-          columns: string,
-          apply: (q: any) => any,
-        ) => {
-          if (!complete) {
-            const { data, error } = await apply(
-              supabaseAdmin
-                .from(table)
-                .select(columns)
-                .gte('created_at', cutoff)
-                .order('created_at', { ascending: false }),
-            ).limit(feedLimit);
-            if (error) throw error;
-            return (data || []) as Record<string, unknown>[];
-          }
-          return pageAllOwnerFunnelRows(async (offset, pageSize) => {
-            return apply(
-              supabaseAdmin
-                .from(table)
-                .select(columns)
-                .gte('created_at', cutoff)
-                .order('created_at', { ascending: false }),
-            ).range(offset, offset + pageSize - 1);
-          }, OWNER_FUNNEL_PAGE_SIZE);
-        };
+      const takeLast = async (
+        table: string,
+        columns: string,
+        limit: number,
+        tweak?: (q: any) => any,
+      ) => {
+        let query = supabaseAdmin.from(table).select(columns);
+        if (tweak) query = tweak(query);
+        const { data, error } = await query.order('created_at', { ascending: false }).limit(limit);
+        if (error) return [] as Record<string, unknown>[];
+        return (data || []) as Record<string, unknown>[];
+      };
+      const timedLast = (
+        table: string,
+        columns: string,
+        limit: number,
+        ms: number,
+        tweak?: (q: any) => any,
+      ) => withTimeout(takeLast(table, columns, limit, tweak), ms, () => [] as Record<string, unknown>[]);
+      const timedRpc = (name: string, args: Record<string, unknown>, ms: number) =>
+        withTimeout(
+          supabaseAdmin.rpc(name, args).then((res) => (res.error ? null : res.data)),
+          ms,
+          () => null,
+        );
 
-        const eventSelect =
-          'event_name, visitor_id, ref_code, ip_hash, metadata, created_at';
-        const [events, shares, referrals, referrerLinks] = await Promise.all([
-          take('visitor_events', eventSelect, (q) =>
-            q.in('event_name', ['SiteLanding', 'GetReferralLink']),
-          ),
-          take('shares', '*', (q) => q),
-          take(
-            'referrals',
-            'referrer_code, created_at, referred_ip, user_agent',
-            (q) => q,
-          ),
-          complete
-            ? pageAllOwnerFunnelRows(async (offset, pageSize) => {
-                return supabaseAdmin
-                  .from('referrer_links')
-                  .select('referrer_code, status, created_at, first_verified_share_at')
-                  .eq('status', 'active')
-                  .order('created_at', { ascending: false })
-                  .range(offset, offset + pageSize - 1);
-              }, OWNER_FUNNEL_PAGE_SIZE)
-            : Promise.resolve([] as Record<string, unknown>[]),
-        ]);
+      try {
+        // Homepage RPCs are primary (index LIMIT). Skip get_owner_funnel_desk_counts.
+        // Same Deno.env.get path as ADMIN_ACTION_SECRET — do not log the JSON.
+        const secret = String(Deno.env.get('GSC_SERVICE_ACCOUNT_JSON') || '').trim();
+        const site = String(Deno.env.get('GSC_SITE_URL') || '').trim();
+        const eventCols = 'event_name, visitor_id, ref_code, metadata, created_at';
+        const [landings, getLinks, shares, referrals, referrerLinks, dailyRows, ticker, linkStats, activity, gsc] =
+          await Promise.all([
+            timedLast('visitor_events', eventCols, 80, 2_000, (q) =>
+              q.eq('event_name', 'SiteLanding'),
+            ),
+            timedLast('visitor_events', eventCols, 80, 2_000, (q) =>
+              q.eq('event_name', 'GetReferralLink'),
+            ),
+            timedLast(
+              'shares',
+              'platform, referrer_code, referral_link, created_at, confirmed',
+              60,
+              1_500,
+            ),
+            timedLast(
+              'referrals',
+              'referrer_code, created_at, referred_ip, user_agent',
+              60,
+              1_500,
+            ),
+            timedLast(
+              'referrer_links',
+              'referrer_code, status, created_at, first_verified_share_at',
+              80,
+              1_500,
+              (q) => q.eq('status', 'active'),
+            ),
+            withTimeout(
+              supabaseAdmin
+                .from('landing_daily_counts')
+                .select('quality_hits, junk_hits')
+                .order('day', { ascending: false })
+                .limit(14)
+                .then((res) => (Array.isArray(res.data) ? res.data : [])),
+              1_200,
+              () => [] as { quality_hits?: unknown; junk_hits?: unknown }[],
+            ),
+            timedRpc('get_public_funnel_ticker', { p_limit: 40 }, 2_500),
+            timedRpc('get_public_get_link_stats', { p_hours: 168 }, 2_500),
+            timedRpc('get_public_recent_activity', { p_limit: 24 }, 2_500),
+            resolveOwnerFunnelGscTimed({ secret, site }).catch(() =>
+              emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.'),
+            ),
+          ]);
 
-        return {
-          events,
+        let visits = 0;
+        let junkVisits = 0;
+        for (const row of dailyRows) {
+          const q = Number(row.quality_hits);
+          const j = Number(row.junk_hits);
+          if (Number.isFinite(q) && q > 0) visits += q;
+          if (Number.isFinite(j) && j > 0) junkVisits += j;
+        }
+        const windowRes = {
+          events: [...landings, ...getLinks],
           shares,
           referrals: filterDeskReferrals(referrals).map((row) => stripOwnerFunnelPii(row)),
           referrerLinks,
+          ...(visits > 0 || junkVisits > 0 ? { visits, junkVisits } : {}),
         };
-      };
-
-      try {
-        const metrics = await resolveOwnerFunnelDeskMetrics({
-          rpcData: countErr ? null : counts,
-          rpcError: countErr,
-          loadFeedWindow: () => pageWindow(false),
-          loadCompleteWindow: () => pageWindow(true),
+        const loadedWindow = async () => windowRes;
+        const tableMetrics = await resolveOwnerFunnelDeskMetrics({
+          rpcData: null,
+          loadFeedWindow: loadedWindow,
+          loadCompleteWindow: loadedWindow,
         });
-        let gsc;
-        try {
-          const { resolveOwnerFunnelGsc } = await import('../_shared/owner-funnel-gsc.ts');
-          // Same Deno.env.get path as ADMIN_ACTION_SECRET — do not log the JSON.
-          const secret = String(Deno.env.get('GSC_SERVICE_ACCOUNT_JSON') || '').trim();
-          const site = String(Deno.env.get('GSC_SITE_URL') || '').trim();
-          gsc = await resolveOwnerFunnelGsc({ secret, site });
-        } catch {
-          const { emptyOwnerFunnelGsc } = await import('../_shared/owner-funnel-gsc.ts');
-          gsc = emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.');
-        }
+        const publicMetrics = deskFromPublicSurfaces({
+          ticker,
+          linkStats,
+          activity,
+          visits,
+          junkVisits,
+        });
+        const metrics = deskHasVisitorSignal(tableMetrics) ? tableMetrics : publicMetrics;
         return new Response(JSON.stringify({ success: true, data: { ...metrics, gsc } }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });

@@ -18,6 +18,7 @@ const JUNK_SOURCES = new Set([
   'herculist',
   'pagerankcafe',
   'leadsleap',
+  'scout',
 ]);
 
 const JUNK_NEEDLES = [
@@ -30,6 +31,7 @@ const JUNK_NEEDLES = [
   'herculist',
   'pagerankcafe',
   'leadsleap',
+  'scout',
 ];
 
 function normalizeSource(raw: string | null | undefined): string {
@@ -73,4 +75,58 @@ export function shouldSkipServerLandingWrite(
 ): boolean {
   if (eventName !== 'SiteLanding') return false;
   return !isAttributedLanding(attribution);
+}
+
+/**
+ * Desk quality Visits: friend / promoter arrivals, or a named non-junk UTM.
+ * Bare homepage (empty UTM) is not quality — that is where Scout / cheap hits land.
+ */
+export function shouldIncrementQualityLandingVisit(
+  eventName: string,
+  utmSource?: string | null,
+  attribution?: LandingAttribution | null,
+): boolean {
+  if (eventName !== 'SiteLanding') return false;
+  if (isAttributedLanding(attribution)) return true;
+  const utm = String(utmSource || '').trim();
+  if (!utm) return false;
+  return !isJunkTrafficSource(utm);
+}
+
+/**
+ * Homepage rotator / exchange / bare (empty UTM) hits — never the quality Visits tile.
+ * Scout and cheap homepage polls arrive with no UTM.
+ */
+export function shouldIncrementJunkLandingVisit(
+  eventName: string,
+  utmSource?: string | null,
+  attribution?: LandingAttribution | null,
+): boolean {
+  if (eventName !== 'SiteLanding') return false;
+  if (isAttributedLanding(attribution)) return false;
+  const utm = String(utmSource || '').trim();
+  if (!utm) return true;
+  return isJunkTrafficSource(utm);
+}
+
+export function isJunkUtmEvent(event: {
+  utm_source?: unknown;
+  utmSource?: unknown;
+}): boolean {
+  return isJunkTrafficSource(String(event.utm_source || event.utmSource || ''));
+}
+
+/**
+ * Clear junk may delete junk-UTM homepage landings only.
+ * Never GetReferralLink / Share / Claim — pagerankcafe converters are real credits.
+ */
+export function shouldDeleteJunkUtmVisitorEvent(event: {
+  event_name?: unknown;
+  eventName?: unknown;
+  utm_source?: unknown;
+  utmSource?: unknown;
+}): boolean {
+  const name = String(event.event_name || event.eventName || '').trim();
+  if (name !== 'SiteLanding') return false;
+  return isJunkUtmEvent(event);
 }

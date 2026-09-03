@@ -88,7 +88,7 @@ describe('admin one-loop desk', () => {
     expect(content.querySelector('[data-owner-desk-gsc]')).not.toBeNull();
     expect(content.textContent).toMatch(/Google Search · tools & pages/);
     expect(content.textContent).toMatch(
-      /Search Console is verified\. Add the API key on the server to show numbers here\./,
+      /Search Console is verified\. Numbers load from the server GSC_SERVICE_ACCOUNT_JSON secret\./,
     );
     expect(first).not.toMatch(/Friends/);
     expect(first).not.toMatch(/Prize/);
@@ -160,7 +160,7 @@ describe('admin one-loop desk', () => {
     expect(modal).toMatch(/Top searches/);
     expect(modal).toMatch(/Other pages/);
     expect(modal).toMatch(/Search countries/);
-    expect(modal).toMatch(/Search Console is verified\. Add the API key on the server to show numbers here\./);
+    expect(modal).toMatch(/Search Console is verified\. Numbers load from the server GSC_SERVICE_ACCOUNT_JSON secret\./);
     expect(modal).toMatch(/HQ Command/);
     expect(modal).toMatch(/hq-desk-tile/);
     expect(modal).toMatch(/>More</);

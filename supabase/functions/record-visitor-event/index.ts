@@ -4,7 +4,11 @@ import { settleGetLinkAdCredit } from '../_shared/affiliate-ads-credit.ts';
 import { isTestVisitorFunnelEvent } from '../_shared/visitor-funnel-test.ts';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
-import { shouldSkipServerLandingWrite } from '../_shared/junk-traffic.ts';
+import {
+  shouldIncrementJunkLandingVisit,
+  shouldIncrementQualityLandingVisit,
+  shouldSkipServerLandingWrite,
+} from '../_shared/junk-traffic.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -96,8 +100,28 @@ Deno.serve(async (req: Request) => {
       path: rawMeta.path || body.path || null,
     };
     if (eventName === 'SiteLanding') {
-      const { error: incErr } = await supabaseAdmin.rpc('increment_landing_daily');
-      if (incErr) console.error('[record-visitor-event] increment_landing_daily:', incErr);
+      const landingUa = String(req.headers.get('user-agent') || '').slice(0, 300);
+      const landingIp = getClientIp(req);
+      const testLike = isTestVisitorFunnelEvent({
+        ref_code: attribution.refCode,
+        metadata: {
+          ...rawMeta,
+          client_ip: landingIp,
+          user_agent: landingUa,
+          path: attribution.path,
+        },
+      });
+      const quality = shouldIncrementQualityLandingVisit(eventName, utmSource, attribution);
+      const junk = shouldIncrementJunkLandingVisit(eventName, utmSource, attribution);
+      if (testLike || junk) {
+        const { error: junkErr } = await supabaseAdmin.rpc('increment_landing_daily_junk');
+        if (junkErr && !/could not find|does not exist|PGRST202|42883/i.test(String(junkErr.message || ''))) {
+          console.error('[record-visitor-event] increment_landing_daily_junk:', junkErr);
+        }
+      } else if (quality) {
+        const { error: incErr } = await supabaseAdmin.rpc('increment_landing_daily');
+        if (incErr) console.error('[record-visitor-event] increment_landing_daily:', incErr);
+      }
     }
     if (shouldSkipServerLandingWrite(eventName, utmSource, attribution)) {
       return new Response(JSON.stringify({ success: true, skipped: 'landing', visit: true }), {
