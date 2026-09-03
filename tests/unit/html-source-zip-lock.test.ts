@@ -10,8 +10,8 @@ function read(rel: string): string {
   return readFileSync(resolve(root, rel), 'utf8');
 }
 
-describe('html-source zip lock — English Site Drops homepage', () => {
-  it('locks the zip homepage strings on html-source and the live tree index.html', () => {
+describe('zip MATCH fixture — English Site Drops for live', () => {
+  it('matches zip Site Drops English on html-source and index.html (destination is live)', () => {
     const zip = read('html-source/index.html');
     const html = read('index.html');
 
@@ -41,7 +41,7 @@ describe('html-source zip lock — English Site Drops homepage', () => {
     }
   });
 
-  it('keeps 18 locales overlay-only and the GSC /go/sponsor /tools zip pieces', () => {
+  it('keeps 18 locales overlay-only and live must-keep pieces (GSC, /go/sponsor, tools)', () => {
     expect(SUPPORTED_LOCALES).toHaveLength(18);
     expect(EXTRA_LOCALES).toHaveLength(12);
     expect(existsSync(resolve(root, 'public/google163d31ba24216edd.html'))).toBe(true);

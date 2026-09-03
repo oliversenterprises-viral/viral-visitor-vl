@@ -1,6 +1,7 @@
 /**
  * Extra public locales beyond Phase-1 core (en es fr pt de hi).
  * Chrome-only overrides — prize facts, leaderboard.title, and activity.title stay English.
+ * Zip is the Site Drops English to MATCH; destination is live www.viralrefer.app.
  * Do not import old banner-only English ("#1 gets a banner for their site" / "you climb").
  */
 
