@@ -62,7 +62,7 @@ describe('first-screen fail-fast (optimized, no hung-API wait)', () => {
     expect(app).toContain('Get my link is live before any public count RPC');
     expect(app).toContain('hydratePublicFirstPaint(myReferralCode)');
     expect(app).not.toMatch(/INIT_FETCH_TIMEOUT_MS\s*=\s*12_000/);
-    expect(app).toContain("void import('./lib/prize-slot').then((mod) => mod.initWeekRaceClock())");
+    expect(app).toMatch(/void import\('\.\/lib\/prize-slot'\)[\s\S]{0,80}initWeekRaceClock/);
 
     const initStart = app.indexOf('export async function initApp');
     const initBody = app.slice(initStart, app.indexOf('setWindowProp', initStart));
@@ -97,7 +97,8 @@ describe('first-screen fail-fast (optimized, no hung-API wait)', () => {
     expect(lock).toContain('export function lock844HomepageCopy()');
     expect(app).toContain('lock844HomepageCopy()');
     expect(app).toMatch(/setFunnelTickerVisible\(false\)/);
-    expect(app).not.toContain('LIVE WORLDWIDE');
+    expect(app).toContain('Last-night lock: no LIVE WORLDWIDE ticker');
+    expect(html).not.toContain('LIVE WORLDWIDE');
   });
 
   it('keeps the black homepage — does not restyle first screen to blue', () => {
