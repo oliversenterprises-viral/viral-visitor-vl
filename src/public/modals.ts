@@ -6,7 +6,7 @@
 import { ViralRefer, registerGlobal } from '../lib/global';
 import { switchAdminTab, showOwnerFunnelDesk } from '../admin';
 import { initAdminSimple, setAdminMore } from '../lib/admin-simple';
-import { supabase } from '../lib/supabase';
+import { verifyOwnerPassword } from '../lib/admin-action-client';
 import { setAdminSessionToken, clearAdminSessionToken, markOwnerHqSurface } from '../lib/admin-session';
 import { dismissShareAbandonOverlay } from '../lib/share-abandon-rescue';
 
@@ -223,7 +223,7 @@ const toggleAdminPasswordVisibility = () => {
 };
 registerGlobal('toggleAdminPasswordVisibility', toggleAdminPasswordVisibility);
 
-const submitAdminPassword = async () => {
+export const submitAdminPassword = async () => {
   const input = document.getElementById('admin-owner-gate-input') as HTMLInputElement | null;
   const errorEl = document.getElementById('admin-owner-gate-error');
   const btn = document.getElementById('admin-owner-gate-submit') as HTMLButtonElement | null;
@@ -231,26 +231,29 @@ const submitAdminPassword = async () => {
   if (!input) return;
   const val = input.value.trim();
 
-  const btnOrigHtml = btn?.innerHTML || '';
+  const btnOrigHtml = btn?.innerHTML || '<span>Continue</span>';
 
+  if (errorEl) {
+    errorEl.classList.add('hidden');
+    errorEl.textContent = 'Incorrect — try again.';
+  }
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = '<span>Verifying…</span>';
   }
 
   let authorized = false;
+  let verifyError = '';
   try {
-    const { data, error } = await supabase.functions.invoke('admin-action', {
-      body: { action: 'verify_owner_password', payload: { password: val } },
-    });
-    const sessionToken =
-      typeof data?.session_token === 'string' ? data.session_token.trim() : '';
-    if (!error && data?.success === true && sessionToken) {
-      setAdminSessionToken(sessionToken);
+    const result = await verifyOwnerPassword(val);
+    if (result.success) {
+      setAdminSessionToken(result.sessionToken);
       authorized = true;
+    } else {
+      verifyError = result.error;
     }
   } catch {
-    /* edge unavailable */
+    verifyError = 'Owner verify failed — try again.';
   }
 
   if (authorized) {
@@ -258,16 +261,17 @@ const submitAdminPassword = async () => {
     revealOwnerTools();
     closeAdminPasswordModal();
     await ViralRefer.openAdminPanel?.();
-  } else {
-    if (errorEl) errorEl.classList.remove('hidden');
-    if (btn) {
-      btn.innerHTML = 'Incorrect — try again';
-      setTimeout(() => { if (btn) btn.innerHTML = btnOrigHtml; }, 1400);
+  } else if (errorEl) {
+    errorEl.classList.remove('hidden');
+    if (verifyError && !/incorrect/i.test(verifyError)) {
+      errorEl.textContent = verifyError;
     }
   }
 
-  if (btn) btn.disabled = false;
-  if (btn && authorized) btn.innerHTML = btnOrigHtml;
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = btnOrigHtml;
+  }
 };
 registerGlobal('submitAdminPassword', submitAdminPassword);
 

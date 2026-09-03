@@ -165,5 +165,7 @@ describe('first-screen Site Drops rules', () => {
     expect(read('vercel.json')).toContain('https://*.challenges.cloudflare.com');
     expect(read('src/public/modals.ts')).toMatch(/z-\[990\]/);
     expect(read('src/public/modals.ts')).toMatch(/dismissShareAbandonOverlay\(\)/);
+    expect(read('src/public/modals.ts')).toContain('verifyOwnerPassword');
+    expect(read('src/public/modals.ts')).not.toMatch(/functions\.invoke/);
   });
 });

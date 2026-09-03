@@ -29,30 +29,53 @@ function supabaseUrlAndAnon(): { url: string; anon: string } | null {
   return { url, anon };
 }
 
-/** Direct fetch — reliable custom headers + body session when functions.invoke strips headers. */
-async function invokeAdminActionViaFetch<T>(
+/** Owner-password verify must not hang on functions.invoke. */
+export const OWNER_PASSWORD_VERIFY_TIMEOUT_MS = 15_000;
+
+export type AdminActionFetchResult =
+  | { ok: true; status: number; envelope: Record<string, unknown> }
+  | { ok: false; error: string; timedOut?: boolean };
+
+function isAbortError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const name = String((err as { name?: unknown }).name || '');
+  return name === 'AbortError' || name === 'TimeoutError';
+}
+
+/**
+ * Same path the rest of HQ uses: POST /functions/v1/admin-action
+ * Authorization Bearer anon + JSON { action, payload }.
+ */
+export async function fetchAdminAction(
   action: string,
-  payload: Record<string, unknown>,
-  token: string,
-): Promise<AdminActionResult<T>> {
+  payload: Record<string, unknown> = {},
+  options?: { sessionToken?: string; timeoutMs?: number },
+): Promise<AdminActionFetchResult> {
   const cfg = supabaseUrlAndAnon();
   if (!cfg) {
-    return { success: false, error: 'Supabase not configured' };
+    return { ok: false, error: 'Supabase not configured' };
   }
+  const token = String(options?.sessionToken || '').trim();
+  const timeoutMs = options?.timeoutMs;
+  const ctrl = timeoutMs && timeoutMs > 0 ? new AbortController() : null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  if (ctrl && timeoutMs) {
+    timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  }
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${cfg.anon}`,
+    apikey: cfg.anon,
+  };
+  if (token) headers['x-admin-session'] = token;
+  const body: Record<string, unknown> = { action, payload };
+  if (token) body.session_token = token;
   try {
     const res = await fetch(`${cfg.url}/functions/v1/admin-action`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${cfg.anon}`,
-        apikey: cfg.anon,
-        'x-admin-session': token,
-      },
-      body: JSON.stringify({
-        action,
-        payload,
-        session_token: token,
-      }),
+      headers,
+      body: JSON.stringify(body),
+      signal: ctrl?.signal,
     });
     const text = await res.text();
     let envelope: Record<string, unknown> = {};
@@ -60,27 +83,70 @@ async function invokeAdminActionViaFetch<T>(
       envelope = text ? (JSON.parse(text) as Record<string, unknown>) : {};
     } catch {
       return {
-        success: false,
+        ok: false,
         error: `Invalid JSON from admin-action (HTTP ${res.status})`,
       };
     }
-    if (!envelope.success) {
-      return {
-        success: false,
-        error: String(envelope.error || `Admin action rejected (HTTP ${res.status})`),
-      };
+    return { ok: true, status: res.status, envelope };
+  } catch (err) {
+    if (isAbortError(err)) {
+      return { ok: false, error: 'Owner verify timed out — try again.', timedOut: true };
     }
     return {
-      success: true,
-      data: (envelope.data ?? null) as T,
-      envelope,
-    };
-  } catch (err) {
-    return {
-      success: false,
+      ok: false,
       error: err instanceof Error ? err.message : String(err),
     };
+  } finally {
+    if (timer) clearTimeout(timer);
   }
+}
+
+/** Direct fetch — reliable custom headers + body session when functions.invoke strips headers. */
+async function invokeAdminActionViaFetch<T>(
+  action: string,
+  payload: Record<string, unknown>,
+  token: string,
+): Promise<AdminActionResult<T>> {
+  const fetched = await fetchAdminAction(action, payload, { sessionToken: token });
+  if (!fetched.ok) {
+    return { success: false, error: fetched.error };
+  }
+  const envelope = fetched.envelope;
+  if (!envelope.success) {
+    return {
+      success: false,
+      error: String(envelope.error || `Admin action rejected (HTTP ${fetched.status})`),
+    };
+  }
+  return {
+    success: true,
+    data: (envelope.data ?? null) as T,
+    envelope,
+  };
+}
+
+export type VerifyOwnerPasswordResult =
+  | { success: true; sessionToken: string }
+  | { success: false; error: string; timedOut?: boolean };
+
+/** Owner gate: fetch + timeout. Never functions.invoke. Never log the password. */
+export async function verifyOwnerPassword(password: string): Promise<VerifyOwnerPasswordResult> {
+  const fetched = await fetchAdminAction(
+    'verify_owner_password',
+    { password },
+    { timeoutMs: OWNER_PASSWORD_VERIFY_TIMEOUT_MS },
+  );
+  if (!fetched.ok) {
+    return { success: false, error: fetched.error, timedOut: fetched.timedOut };
+  }
+  const token = String(fetched.envelope.session_token || '').trim();
+  if (fetched.envelope.success === true && token) {
+    return { success: true, sessionToken: token };
+  }
+  return {
+    success: false,
+    error: String(fetched.envelope.error || 'Incorrect — try again'),
+  };
 }
 
 export async function invokeAdminAction<T = unknown>(
