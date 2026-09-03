@@ -22,6 +22,7 @@ import {
   shouldShowFunnelTicker,
 } from './lib/funnel-ticker';
 import { applyWorldwideReferralTotal } from './lib/worldwide-referral-total';
+import { FIRST_PAINT_FETCH_MS } from './lib/first-paint-fetch';
 import { renderHeroSocialProof } from './lib/referred-landing-social-proof';
 import { applyHeroStatsSubtext } from './lib/public-clarity';
 import { renderHeroTrustPack } from './lib/referred-landing-trust-pack';
@@ -95,14 +96,13 @@ let siteContentChannel: ReturnType<typeof supabase.channel> | null = null;
 let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
-const INIT_FETCH_TIMEOUT_MS = 12_000;
 /** Disk IO: slower poll + pause when tab hidden (was 45s always-on). */
 const PUBLIC_ACTIVITY_POLL_MS = 90_000;
 
 async function withInitTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
   return Promise.race([
     promise,
-    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), INIT_FETCH_TIMEOUT_MS)),
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), FIRST_PAINT_FETCH_MS)),
   ]);
 }
 
@@ -376,31 +376,36 @@ registerGlobal('loadSiteContent', loadSiteContent);
  *   - Prefilling the user's referral link (if they have a code)
  *   - Handling ?ref= attribution banners
  */
+/**
+ * First-paint hydrations. Each public REST/RPC already aborts at ≤2s.
+ * Must never be awaited from initApp — Get my link cannot wait on counts.
+ */
+function hydratePublicFirstPaint(myReferralCode: string | null): void {
+  void withInitTimeout(loadSiteContent(), undefined);
+  void withInitTimeout(refreshWorldwideReferralTotals(), undefined);
+  void withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
+  void withInitTimeout(loadLeaderboard(), undefined).then(() => {
+    paintWorldwideReferralTotal();
+  });
+  void withInitTimeout(renderRecentActivity(), undefined);
+  if (myReferralCode) {
+    void withInitTimeout(refreshFunnelTicker(), undefined);
+  }
+  void withInitTimeout(renderMyStats(myReferralCode), undefined);
+}
+
 export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
   try {
-    await withInitTimeout(loadSiteContent(), undefined);
-
-    // Verified worldwide total first so the number is never a mystery on first paint
-    await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
-
-    // Daily Crown first so main-board flair has cached champion/leader codes
-    await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
-    await withInitTimeout(loadLeaderboard(), undefined);
-    // Re-paint total with leader #1 context after board loads
-    paintWorldwideReferralTotal();
-    await withInitTimeout(renderRecentActivity(), undefined);
-
+    // First screen: Get my link is live before any public count RPC.
     if (myReferralCode) {
       applyExistingReferralLink(myReferralCode);
-      void withInitTimeout(refreshFunnelTicker(), undefined);
     } else {
       syncMobileReferralCta();
       setFunnelTickerVisible(false);
     }
 
-    await withInitTimeout(renderMyStats(myReferralCode), undefined);
     initViralLoopUI();
     initGrowthCommandCenter();
     initPostLinkShare();
@@ -413,6 +418,8 @@ export async function initApp() {
       initRealtimeSubscriptions();
       window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
     }
+
+    hydratePublicFirstPaint(myReferralCode);
   } catch (err) {
     console.warn('[ViralRefer] initApp partial failure:', err);
   }
