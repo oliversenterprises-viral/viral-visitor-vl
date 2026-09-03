@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   buildFunnelTickerHtml,
+  ensureFunnelTickerDom,
   formatFunnelTickerLabel,
   isTickerFunnelStep,
   mergeFunnelTickerRows,
   normalizeFunnelTickerRows,
   publicActivityToTickerRows,
+  renderFunnelTickerRows,
   shouldShowFunnelTicker,
 } from '../../src/lib/funnel-ticker';
 
@@ -126,5 +130,39 @@ describe('funnel-ticker', () => {
     ]);
     expect(rows[0].kind).toBe('referral');
     expect(rows[1].kind).toBe('share');
+  });
+
+  it('homepage HTML already has ticker markup so bind can fill the track', () => {
+    const html = readFileSync(resolve(import.meta.dirname, '../../index.html'), 'utf8');
+    expect(html).toContain('id="vr-funnel-ticker"');
+    expect(html).toContain('id="vr-funnel-ticker-track"');
+    expect(html).toContain('vr-funnel-ticker-track');
+  });
+
+  it('ensureFunnelTickerDom reuses homepage markup and render fills the track', () => {
+    document.body.innerHTML = `
+      <nav id="vr-nav"></nav>
+      <div id="vr-funnel-ticker" class="vr-funnel-ticker hidden" hidden>
+        <div class="vr-funnel-ticker-bar">
+          <span class="vr-funnel-ticker-live">LIVE WORLDWIDE</span>
+          <div class="vr-funnel-ticker-viewport">
+            <div class="vr-funnel-ticker-track" id="vr-funnel-ticker-track"></div>
+          </div>
+        </div>
+      </div>`;
+    const el = ensureFunnelTickerDom();
+    expect(el?.id).toBe('vr-funnel-ticker');
+    expect(document.querySelectorAll('#vr-funnel-ticker').length).toBe(1);
+    renderFunnelTickerRows([
+      {
+        kind: 'funnel',
+        step: 'GetReferralLink',
+        country_code: 'US',
+        created_at: '2026-07-10T12:00:00Z',
+      },
+    ]);
+    expect(document.getElementById('vr-funnel-ticker-track')?.innerHTML).toContain(
+      'Someone in US just got their referral link',
+    );
   });
 });

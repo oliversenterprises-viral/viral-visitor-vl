@@ -169,6 +169,34 @@ describe('first-screen Site Drops rules', () => {
     expect(hero).toContain(LOCKED_SITE_DROPS_CTA);
   });
 
+  it('keeps LIVE WORLDWIDE funnel ticker markup and bind matching the zip', () => {
+    const html = read('index.html');
+    const app = read('src/app.ts');
+    const css = read('src/style.css');
+    const content = read('src/content.ts');
+    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
+    expect(html).toContain('id="vr-funnel-ticker"');
+    expect(html).toContain('id="vr-funnel-ticker-track"');
+    expect(html).toContain('LIVE WORLDWIDE');
+    expect(html).toMatch(/id="vr-funnel-ticker"[^>]*class="vr-funnel-ticker hidden"/);
+    expect(html).toContain(`id="funnel-journey-badge" data-i18n="funnel.badge">${LOCKED_LIVE_FUNNEL_BADGE}</span>`);
+    expect(hero).not.toContain('LIVE WORLDWIDE');
+    expect(hero).toContain('Your site here');
+    expect(hero).not.toContain('#1 gets a banner for their site.');
+    expect(app).toContain('fetchPublicFunnelTicker');
+    expect(app).toContain('shouldShowFunnelTicker');
+    expect(app).toContain('renderFunnelTickerRows');
+    expect(app).toContain('ensureFunnelTickerDom');
+    expect(app).toContain('lockFunnelJourneyBadge');
+    expect(app).not.toContain('Last-night lock: no LIVE WORLDWIDE ticker over the hero.');
+    expect(app).toMatch(/TICKER_TIMEOUT_MS\s*=\s*2_000/);
+    expect(css).toMatch(
+      /html\[data-vr-kid-simple\]:not\(\[data-vr-has-link\]\):not\(\[data-vr-kid-more\]\) #vr-funnel-ticker/,
+    );
+    expect(content).not.toContain("apply('funnel-journey-badge', 'funnel_journey_badge')");
+    expect(content).toContain('SITE DROP LADDER');
+  });
+
   it('registers one register-referrer-link per Get my link', () => {
     const referral = read('src/referral.ts');
     const deadline = read('src/lib/share-deadline.ts');

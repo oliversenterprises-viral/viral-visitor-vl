@@ -520,7 +520,7 @@ html[data-vr-post-link-one] #referral-section {
   display: block !important;
 }
 
-html[data-vr-kid-simple]:not([data-vr-kid-more]) #vr-funnel-ticker {
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #vr-funnel-ticker {
   display: none !important;
 }
 
