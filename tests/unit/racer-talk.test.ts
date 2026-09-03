@@ -43,6 +43,7 @@ describe('racer-talk (Message from ViralRefer after Get my link)', () => {
   it('homepage has the post-link message box and no email field', () => {
     const html = read('index.html');
     const admin = read('src/admin/edit-content-tab.ts');
+    expect(html).toContain('id="ref-link"');
     expect(html).toContain(`id="${RACER_TALK_ROOT_ID}"`);
     expect(html).toContain('class="vr-bc-title racer-talk__title"');
     expect(html).toContain(RACER_TALK_DEFAULT_TITLE);

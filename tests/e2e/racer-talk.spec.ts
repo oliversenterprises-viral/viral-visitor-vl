@@ -53,8 +53,8 @@ test.describe('racer-talk after Get my link', () => {
     await expect(page.locator('#vr-owner-broadcast-banner')).toHaveCount(0);
 
     await page.locator('#hero-get-link-btn').click();
-    await expect(page.locator('#post-link-url')).toContainText(/\/r\/VIRAL-/i, { timeout: 10000 });
-    await expect(page.locator('#post-link-heading')).toBeVisible();
+    await expect(page.locator('#ref-link')).toHaveValue(/\/r\/VIRAL-/i, { timeout: 10000 });
+    await expect(page.locator('#post-link-status-title')).toBeVisible();
     await expect(panel).toBeVisible();
     await expect(panel.locator('#racer-talk-body')).toContainText('A friend must tap Get my link');
     await expect(page.locator('#referral-section #racer-talk')).toBeVisible();
