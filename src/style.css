@@ -3727,36 +3727,10 @@ h2.racer-talk__title {
   text-underline-offset: 2px;
 }
 
+/* Zip id only — never a first-screen or product panel */
+#racer-ping,
 .racer-ping {
-  display: none;
-  margin: 0.65rem auto 0;
-  max-width: 400px;
-  padding: 0.7rem 1rem;
-  text-align: left;
-  border-radius: 1rem;
-  border: 1px solid rgba(167, 139, 250, 0.22);
-  background: rgba(9, 9, 11, 0.45);
-}
-
-html[data-vr-has-link] .racer-ping:not([hidden]),
-html[data-vr-post-link-one] .racer-ping:not([hidden]) {
-  display: block;
-}
-
-.racer-ping__kicker {
-  margin: 0 0 0.15rem;
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #c4b5fd;
-}
-
-.racer-ping__body {
-  margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: #d4d4d8;
+  display: none !important;
 }
 
 /* Share deadline: keep countdown readable on narrow screens */

@@ -11,13 +11,15 @@ import {
   type OwnerBroadcastPayload,
   type OwnerBroadcastSponsor,
 } from './owner-broadcast';
-import { supabase } from './supabase';
 import {
   RACER_TALK_DEFAULT_TITLE,
   parseRacerTalkMessage,
   racerTalkContentFromPublic,
   type RacerTalkMessage,
 } from '../../supabase/functions/_shared/racer-talk';
+
+/** First screen must not wait on a hung Talk API. Real abort — never the SDK invoke path. */
+export const RACER_TALK_FETCH_TIMEOUT_MS = 2_000;
 
 export {
   RACER_TALK_DEFAULT_TITLE,
@@ -112,11 +114,7 @@ function ensureRacerPing(): HTMLElement | null {
   ping.hidden = true;
   ping.setAttribute('hidden', '');
   ping.setAttribute('data-racer-ping', '1');
-  ping.setAttribute('aria-label', 'Racer ping');
-  ping.innerHTML = `
-    <p class="racer-ping__kicker">Racer ping</p>
-    <p class="racer-ping__body">Ping after Get my link. No email.</p>
-  `;
+  ping.replaceChildren();
   const talk = document.getElementById(RACER_TALK_ROOT_ID);
   if (talk?.parentElement) {
     talk.insertAdjacentElement('afterend', ping);
@@ -293,15 +291,35 @@ function edgePayloadToContent(data: unknown): Record<string, unknown> | null {
   return parseRacerTalkMessage(rec) ? rec : null;
 }
 
+function supabaseUrlAndAnon(): { url: string; anon: string } | null {
+  const url = String(import.meta.env.VITE_SUPABASE_URL || '').trim().replace(/\/$/, '');
+  const anon = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+  if (!url || !anon) return null;
+  return { url, anon };
+}
+
+/** Timed GET. Fail-open on abort, missing env, or bad payload. Never the SDK invoke path. */
 export async function fetchRacerTalkFromEdge(): Promise<Record<string, unknown> | null> {
+  const cfg = supabaseUrlAndAnon();
+  if (!cfg) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), RACER_TALK_FETCH_TIMEOUT_MS);
   try {
-    const { data, error } = await supabase.functions.invoke('racer-talk', {
-      body: { action: 'get' },
+    const res = await fetch(`${cfg.url}/functions/v1/racer-talk`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${cfg.anon}`,
+        apikey: cfg.anon,
+      },
+      signal: ctrl.signal,
     });
-    if (error || !data) return null;
+    if (!res.ok) return null;
+    const data: unknown = await res.json().catch(() => null);
     return edgePayloadToContent(data);
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -311,25 +329,33 @@ async function hydrateRacerTalkFromEdge(): Promise<void> {
   applyRacerTalkFromContent(content);
 }
 
-/** Watch has-link and refresh from the racer-talk function when present. */
+function maybeHydrateAfterLink(): void {
+  if (!visitorMaySeeRacerTalk()) return;
+  revealRacerTalk();
+  const root = document.documentElement;
+  if (root.dataset.racerTalkHydrate === '1') return;
+  root.dataset.racerTalkHydrate = '1';
+  void hydrateRacerTalkFromEdge();
+}
+
+/** Watch has-link. Edge refresh only after Get my link — never on cold land. */
 export function initRacerTalk(): void {
   try {
     ensureRacerTalkRoot();
     const root = document.documentElement;
     if (root.dataset.racerTalkBound === '1') {
-      if (visitorMaySeeRacerTalk()) revealRacerTalk();
+      maybeHydrateAfterLink();
       return;
     }
     root.dataset.racerTalkBound = '1';
     const mo = new MutationObserver(() => {
-      if (visitorMaySeeRacerTalk()) revealRacerTalk();
+      maybeHydrateAfterLink();
     });
     mo.observe(root, {
       attributes: true,
       attributeFilter: ['data-vr-has-link', 'data-vr-post-link-one'],
     });
-    if (visitorMaySeeRacerTalk()) revealRacerTalk();
-    void hydrateRacerTalkFromEdge();
+    maybeHydrateAfterLink();
   } catch {
     /* non-fatal */
   }

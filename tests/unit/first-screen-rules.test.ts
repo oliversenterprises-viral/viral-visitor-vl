@@ -147,6 +147,25 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('id="racer-talk-form"');
     expect(html).toContain('id="racer-ping"');
     expect(html).toContain('Site Drop &middot; Just entered');
+    expect(html).not.toMatch(/Ping after Get my link/);
+  });
+
+  it('does not let Talk hang the first screen on a hung API', () => {
+    const talk = read('src/lib/racer-talk.ts');
+    const app = read('src/app.ts');
+    const html = read('index.html');
+    expect(talk).toContain('RACER_TALK_FETCH_TIMEOUT_MS = 2_000');
+    expect(talk).toContain('AbortController');
+    expect(talk).toContain('/functions/v1/racer-talk');
+    expect(talk).not.toMatch(/functions\.invoke\(/);
+    expect(talk).not.toMatch(/from '\.\/supabase'/);
+    expect(talk).toContain('never on cold land');
+    expect(talk).toMatch(/if \(!visitorMaySeeRacerTalk\(\)\) return;/);
+    expect(app).toMatch(/void import\('\.\/lib\/racer-talk'\)/);
+    expect(app).not.toMatch(/await\s+.*initRacerTalk/);
+    expect(html).toContain('id="racer-talk"');
+    expect(html).toContain('Site Drop &middot; Just entered');
+    expect(html).toContain('Win the homepage.');
   });
 
   it('keeps Copy above overlays', () => {

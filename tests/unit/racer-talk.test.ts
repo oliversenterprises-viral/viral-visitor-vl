@@ -1,9 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildRacerTalkPanelHTML } from '../../src/admin/racer-talk-tab';
 import {
   RACER_TALK_DEFAULT_TITLE,
+  RACER_TALK_FETCH_TIMEOUT_MS,
   RACER_TALK_ROOT_ID,
   applyRacerTalkFromContent,
   hideRacerTalk,
@@ -25,6 +26,10 @@ describe('racer-talk (Message from ViralRefer after Get my link)', () => {
     document.documentElement.removeAttribute('data-vr-has-link');
     document.documentElement.removeAttribute('data-vr-post-link-one');
     delete document.documentElement.dataset.racerTalkBound;
+    delete document.documentElement.dataset.racerTalkHydrate;
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it('keeps the in-repo source files the live bundle currently lacks', () => {
@@ -35,6 +40,13 @@ describe('racer-talk (Message from ViralRefer after Get my link)', () => {
     expect(read('src/lib/racer-talk.ts')).toContain('racer-talk');
     expect(read('src/lib/racer-talk.ts')).toContain(RACER_TALK_DEFAULT_TITLE);
     expect(read('src/lib/racer-talk.ts')).not.toMatch(/email required/i);
+    expect(read('src/lib/racer-talk.ts')).not.toMatch(/functions\.invoke\(/);
+    expect(read('src/lib/racer-talk.ts')).not.toMatch(/from '\.\/supabase'/);
+    expect(read('src/lib/racer-talk.ts')).toContain('RACER_TALK_FETCH_TIMEOUT_MS = 2_000');
+    expect(read('src/lib/racer-talk.ts')).toContain('AbortController');
+    expect(read('src/lib/racer-talk.ts')).toContain('/functions/v1/racer-talk');
+    expect(read('src/lib/racer-talk.ts')).not.toMatch(/Ping after Get my link/);
+    expect(RACER_TALK_FETCH_TIMEOUT_MS).toBe(2_000);
     expect(read('supabase/functions/racer-talk/index.ts')).toContain('email_required: false');
     expect(read('scripts/deploy-prod.mjs')).toMatch(/'racer-talk'/);
   });
@@ -49,6 +61,9 @@ describe('racer-talk (Message from ViralRefer after Get my link)', () => {
     expect(html).toContain(RACER_TALK_DEFAULT_TITLE);
     expect(html).toContain('Site Drop &middot; Just entered');
     expect(html).toContain('Site Drop');
+    expect(html).not.toMatch(/Ping after Get my link/);
+    expect(html).not.toMatch(/Racer ping/);
+    expect(html).toMatch(/id="racer-ping"[^>]*hidden/);
     expect(html).not.toMatch(/id="racer-talk"[\s\S]{0,800}type="email"/);
     expect(html).not.toMatch(/id="racer-talk-form"[\s\S]{0,400}type="email"/);
     expect(css).toMatch(/\.racer-talk__title[\s\S]*color:\s*#f4f4f5/);
@@ -130,5 +145,103 @@ describe('racer-talk (Message from ViralRefer after Get my link)', () => {
     expect(html).toContain('Message box after Get my link');
     expect(html).toContain('No email');
     expect(html).not.toMatch(/type="email"/);
+  });
+
+  it('times out Talk fetch at 2s and never uses functions.invoke', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key');
+    vi.resetModules();
+
+    const invoke = vi.fn(() => new Promise(() => {}));
+    vi.doMock('../../src/lib/supabase', () => ({
+      isSupabaseConfigured: true,
+      supabase: { functions: { invoke } },
+    }));
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_url: string, init?: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => {
+            const err = new Error('Aborted');
+            err.name = 'AbortError';
+            reject(err);
+          });
+        });
+      }),
+    );
+
+    const { fetchRacerTalkFromEdge, RACER_TALK_FETCH_TIMEOUT_MS: timeoutMs } = await import(
+      '../../src/lib/racer-talk'
+    );
+    expect(timeoutMs).toBe(2_000);
+    vi.useFakeTimers();
+    const pending = fetchRacerTalkFromEdge();
+    await vi.advanceTimersByTimeAsync(2_000);
+    const result = await pending;
+    vi.useRealTimers();
+    expect(result).toBeNull();
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it('does not hydrate Talk from the edge on cold land', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key');
+    vi.resetModules();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    document.body.innerHTML = `
+      <div id="referral-section">
+        <div id="post-link-share"></div>
+      </div>
+    `;
+    const { initRacerTalk } = await import('../../src/lib/racer-talk');
+    initRacerTalk();
+    await Promise.resolve();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(visitorMaySeeRacerTalk()).toBe(false);
+  });
+
+  it('hydrates Talk from GET /functions/v1/racer-talk only after Get my link', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key');
+    vi.resetModules();
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        enabled: true,
+        email_required: false,
+        message: {
+          enabled: true,
+          title: 'Message from ViralRefer',
+          body: 'Send it. A friend must tap Get my link.',
+          id: 'after-link',
+          mediaUrl: null,
+          sponsor: null,
+          emailRequired: false,
+        },
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    document.body.innerHTML = `
+      <div id="referral-section">
+        <div id="post-link-share"></div>
+      </div>
+    `;
+    const { initRacerTalk } = await import('../../src/lib/racer-talk');
+    initRacerTalk();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://example.supabase.co/functions/v1/racer-talk');
+    expect(init.method).toBe('GET');
+    const headers = init.headers as Record<string, string>;
+    expect(headers.Authorization).toBe('Bearer anon-key');
+    expect(init.signal).toBeInstanceOf(AbortSignal);
   });
 });
