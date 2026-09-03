@@ -42,8 +42,8 @@ export async function fetchPublicSiteDropsWithTimeout(
   }
 }
 
-async function fetchSiteDropsRpc(signal: AbortSignal): Promise<unknown> {
-  const { data, error } = await supabase.rpc('get_public_site_drops', {}, { abortSignal: signal });
+async function fetchSiteDropsRpc(): Promise<unknown> {
+  const { data, error } = await supabase.rpc('get_public_site_drops');
   if (error || data == null) throw error || new Error('site-drops-rpc-empty');
   return data;
 }
@@ -76,7 +76,7 @@ export async function fetchPublicSiteDrops(
 
   return fetchPublicSiteDropsWithTimeout(async (signal) => {
     try {
-      return await fetchSiteDropsRpc(signal);
+      return await fetchSiteDropsRpc();
     } catch {
       if (signal.aborted) throw new Error('site-drops-timeout');
       return await fetchSiteDropsRest(signal);
