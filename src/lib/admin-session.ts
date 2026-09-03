@@ -1,19 +1,26 @@
 const STORAGE_KEY = 'vr_admin_session_token';
 
+/** Survives sessionStorage blocked/throwing so HQ Command can still fetch after login. */
+let memoryToken = '';
+
 export function getAdminSessionToken(): string {
+  if (memoryToken) return memoryToken;
   try {
-    return sessionStorage.getItem(STORAGE_KEY)?.trim() || '';
+    const stored = sessionStorage.getItem(STORAGE_KEY)?.trim() || '';
+    if (stored) memoryToken = stored;
+    return stored;
   } catch {
     return '';
   }
 }
 
 export function setAdminSessionToken(token: string): void {
+  memoryToken = token ? token.trim() : '';
   try {
-    if (token) sessionStorage.setItem(STORAGE_KEY, token);
+    if (memoryToken) sessionStorage.setItem(STORAGE_KEY, memoryToken);
     else sessionStorage.removeItem(STORAGE_KEY);
   } catch {
-    /* private mode / storage blocked */
+    /* private mode / storage blocked — memory still holds the session */
   }
 }
 

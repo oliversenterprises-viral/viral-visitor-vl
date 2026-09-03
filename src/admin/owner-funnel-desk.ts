@@ -3,11 +3,17 @@
  * Server only. No Claims / Promoters / Died-waiting tiles.
  */
 
-import { invokeAdminAction } from '../lib/admin-action-client';
+import {
+  fetchAdminAction,
+  invokeAdminAction,
+  type AdminActionFetchResult,
+} from '../lib/admin-action-client';
+import { getAdminSessionToken } from '../lib/admin-session';
 import { escapeHtml } from '../lib/escape-html';
 import { formatEventTimestampLabel } from '../lib/stats-helpers';
 import { showToast } from '../ui';
 import {
+  deskGetLinkRate,
   emptyOwnerFunnelGsc,
   formatGscCount,
   formatGscPosition,
@@ -15,6 +21,7 @@ import {
   GSC_CONSOLE_URL,
   GSC_MISSING_NOTE,
   GSC_TIMEOUT_NOTE,
+  parseOwnerFunnelDeskCounts,
   parseOwnerFunnelGsc,
   type OwnerFunnelDeskMetrics,
   type OwnerFunnelFeedRow,
@@ -52,6 +59,61 @@ const EMPTY_METRICS: OwnerFunnelDeskMetrics = {
 export const JUNK_CLEAR_CONFIRM =
   'Clear junk and test visits only? Google Search Console and the verify file stay. Real quality visits stay.';
 
+/** Same abort as login verify — do not hang the Command desk on functions.invoke. */
+export const OWNER_FUNNEL_DESK_TIMEOUT_MS = 8_000;
+
+function finiteDeskNum(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value) && value >= 0) return value;
+  if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) {
+    const parsed = Number(value);
+    if (parsed >= 0) return parsed;
+  }
+  return null;
+}
+
+/** Paint tiles from camelCase or snake_case get_owner_funnel_desk payloads. */
+export function normalizeOwnerFunnelDeskMetrics(raw: unknown): OwnerFunnelDeskMetrics | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const o = raw as Record<string, unknown>;
+  const counts = parseOwnerFunnelDeskCounts(o);
+  const visits = counts?.visits ?? finiteDeskNum(o.visits) ?? 0;
+  const junkVisits = counts?.junkVisits ?? finiteDeskNum(o.junkVisits ?? o.junk_visits) ?? 0;
+  const friendLandings =
+    counts?.friendLandings ??
+    finiteDeskNum(o.friendLandings ?? o.friend_landings ?? o.landings) ??
+    0;
+  const getLink = counts?.getLink ?? finiteDeskNum(o.getLink ?? o.get_link) ?? 0;
+  const share = counts?.share ?? finiteDeskNum(o.share) ?? 0;
+  const locked = counts?.locked ?? finiteDeskNum(o.locked) ?? 0;
+  const windowDays = counts?.windowDays ?? finiteDeskNum(o.windowDays ?? o.window_days) ?? 7;
+  const getLinkRate =
+    typeof o.getLinkRate === 'string' && o.getLinkRate.trim()
+      ? o.getLinkRate.trim()
+      : deskGetLinkRate(getLink, friendLandings, visits);
+  const feed = Array.isArray(o.feed)
+    ? (o.feed as OwnerFunnelFeedRow[]).filter((row) => row && typeof row === 'object')
+    : [];
+  let gsc: OwnerFunnelGscMetrics;
+  try {
+    gsc = parseOwnerFunnelGsc(o.gsc);
+  } catch {
+    gsc = emptyOwnerFunnelGsc();
+  }
+  return {
+    windowDays,
+    visits,
+    junkVisits,
+    friendLandings,
+    landings: friendLandings,
+    getLink,
+    share,
+    locked,
+    getLinkRate,
+    feed,
+    gsc,
+  };
+}
+
 /** Deployed admin-action may not know get_owner_funnel_desk yet. */
 export function isOwnerFunnelDeskActionMissing(error: string | undefined | null): boolean {
   const msg = String(error || '').toLowerCase();
@@ -71,14 +133,39 @@ export function isOwnerFunnelDeskActionMissing(error: string | undefined | null)
  */
 export function ownerFunnelDeskFromInvokeResult(result: {
   success: boolean;
-  data?: OwnerFunnelDeskMetrics | null;
+  data?: OwnerFunnelDeskMetrics | Record<string, unknown> | null;
   error?: string;
 }): { metrics: OwnerFunnelDeskMetrics; error?: string } {
-  if (result.success) {
-    const metrics = result.data || EMPTY_METRICS;
-    return { metrics: { ...metrics, gsc: parseOwnerFunnelGsc(metrics.gsc) } };
+  const normalized = normalizeOwnerFunnelDeskMetrics(result.data);
+  const hasTiles = Boolean(
+    normalized &&
+      (normalized.visits > 0 ||
+        normalized.friendLandings > 0 ||
+        normalized.getLink > 0 ||
+        normalized.share > 0 ||
+        normalized.locked > 0 ||
+        normalized.feed.length > 0),
+  );
+  if (normalized && (result.success || hasTiles)) {
+    return { metrics: normalized };
   }
   return { metrics: EMPTY_METRICS };
+}
+
+/** Fail-fast fetchAdminAction envelope → Command tiles. */
+export function ownerFunnelDeskFromFetchResult(fetched: AdminActionFetchResult): {
+  metrics: OwnerFunnelDeskMetrics;
+} {
+  if (!fetched.ok) {
+    return ownerFunnelDeskFromInvokeResult({ success: false, error: fetched.error });
+  }
+  const envelope = fetched.envelope || {};
+  const data = envelope.data !== undefined ? envelope.data : envelope;
+  return ownerFunnelDeskFromInvokeResult({
+    success: envelope.success === true,
+    data: data as OwnerFunnelDeskMetrics | Record<string, unknown> | null,
+    error: typeof envelope.error === 'string' ? envelope.error : undefined,
+  });
 }
 
 function tile(
@@ -309,13 +396,12 @@ export async function renderOwnerFunnelDesk(container: HTMLElement): Promise<voi
   bindRefresh(container);
   container.innerHTML = SKELETON;
   try {
-    // Tiles come from get_owner_funnel_desk_counts (0052: exclusion must be true/false, never NULL).
-    const result = await invokeAdminAction<OwnerFunnelDeskMetrics>(
-      'get_owner_funnel_desk',
-      {},
-      { timeoutMs: 8_000 },
-    );
-    const loaded = ownerFunnelDeskFromInvokeResult(result);
+    // Same fetch path as owner login — get_owner_funnel_desk + session token + abort.
+    const fetched = await fetchAdminAction('get_owner_funnel_desk', {}, {
+      sessionToken: getAdminSessionToken(),
+      timeoutMs: 8_000,
+    });
+    const loaded = ownerFunnelDeskFromFetchResult(fetched);
     renderOwnerFunnelDeskView(container, loaded.metrics);
   } catch {
     renderOwnerFunnelDeskView(container, EMPTY_METRICS);

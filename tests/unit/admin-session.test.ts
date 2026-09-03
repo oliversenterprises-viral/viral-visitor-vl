@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   clearAdminSessionToken,
   getAdminSessionToken,
@@ -25,6 +25,30 @@ describe('admin-session', () => {
     expect(hasAdminSession()).toBe(true);
     clearAdminSessionToken();
     expect(getAdminSessionToken()).toBe('');
+  });
+
+  it('keeps the owner session in memory when sessionStorage throws', () => {
+    const proto = Object.getPrototypeOf(sessionStorage) as Storage;
+    const getSpy = vi.spyOn(proto, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    const setSpy = vi.spyOn(proto, 'setItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    const removeSpy = vi.spyOn(proto, 'removeItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    try {
+      setAdminSessionToken('memory-hq-token');
+      expect(getAdminSessionToken()).toBe('memory-hq-token');
+      expect(hasAdminSession()).toBe(true);
+      clearAdminSessionToken();
+      expect(getAdminSessionToken()).toBe('');
+    } finally {
+      getSpy.mockRestore();
+      setSpy.mockRestore();
+      removeSpy.mockRestore();
+    }
   });
 
   it('treats ?owner=1 and an owner session as HQ context', () => {
