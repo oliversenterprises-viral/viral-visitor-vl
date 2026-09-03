@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
 /* ============================================
@@ -164,13 +163,19 @@ h1, h2, h3, .logo-font {
   letter-spacing: -0.025em;
 }
 
-/* Always-dark chrome: wordmark + Message from ViralRefer inherit --text-h (#08060d) when OS is light. */
-#vr-nav .vr-wordmark,
+/* Zip nav is always zinc-950. Never inherit light-mode --text-h (#08060d). */
+#vr-nav .vr-wordmark {
+  color: #f4f4f5 !important;
+  -webkit-text-fill-color: #f4f4f5;
+  flex-shrink: 0;
+  overflow: visible;
+}
 #vr-nav a[aria-label="ViralRefer home"] span {
-  color: #f4f4f5;
+  color: #f4f4f5 !important;
+  -webkit-text-fill-color: #f4f4f5;
 }
 #vr-nav .logo-font {
-  color: #f4f4f5;
+  color: #f4f4f5 !important;
 }
 .racer-talk__title,
 h2.racer-talk__title,
@@ -3655,6 +3660,7 @@ svg {
 
 #vr-nav {
   padding-top: env(safe-area-inset-top, 0px);
+  background-color: #09090b;
 }
 
 .vr-hero-title,

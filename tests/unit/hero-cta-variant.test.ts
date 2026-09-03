@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   HERO_CTA_COPY,
+  applyHeroCopyToDom,
   applyHeroCtaVariant,
   lock844HomepageCopy,
 } from '../../src/lib/hero-cta-variant';
@@ -76,6 +77,25 @@ describe('hero-cta-variant', () => {
     );
     lock844HomepageCopy();
     expect(document.getElementById('leaderboard-title')?.textContent).toBe('Recent Activity');
+  });
+
+  it('refuses the indigo #1 gets a banner swap', () => {
+    document.getElementById('hero-title-line1')!.textContent = 'Win the homepage.';
+    document.getElementById('hero-title-accent')!.textContent =
+      'Each step puts your site on this page. #1 owns the banner for 7 days.';
+    applyHeroCopyToDom({
+      titleLine1: 'Win the homepage.',
+      titleAccent: '#1 gets a banner for their site.',
+      subtitle: 'swap',
+      trustLine: 'swap',
+      buttonLabel: 'Get my link',
+    });
+    expect(document.getElementById('hero-title-accent')?.textContent).toBe(
+      'Each step puts your site on this page. #1 owns the banner for 7 days.',
+    );
+    expect(document.querySelector('#hero-get-link-btn span')?.textContent).toBe(
+      'Get my referral link',
+    );
   });
 
   it('skips on referred landings', () => {

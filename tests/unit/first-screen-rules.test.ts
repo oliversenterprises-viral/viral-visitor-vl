@@ -81,7 +81,14 @@ describe('first-screen Site Drops rules', () => {
     const css = read('src/style.css');
     const html = read('index.html');
     expect(html).toContain('vr-wordmark');
+    expect(html).toMatch(/id="vr-nav"[^>]*bg-zinc-950/);
+    expect(html).toContain('bg-violet-600');
+    expect(html).toContain('>ViralRefer</span>');
+    expect(html).toContain('id="vr-first-screen"');
+    expect(html).toMatch(/#vr-nav\{background-color:#09090b\}/);
+    expect(html).toMatch(/#vr-nav \.vr-wordmark[\s\S]{0,120}color:#f4f4f5/);
     expect(css).toMatch(/#vr-nav \.vr-wordmark[\s\S]{0,80}color:\s*#f4f4f5/);
+    expect(css).toMatch(/#vr-nav \{\s*padding-top:[^}]*background-color:\s*#09090b/);
   });
 
   it('keeps the locked H1 accent readable, not transparent', () => {
@@ -143,6 +150,37 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('data-i18n="drop.badge">Site Drop ladder</p>');
     expect(html).toContain('Your site here');
     expect(html).toContain('id="footer-link-tools"');
+  });
+
+  it('paints the first screen without waiting on hung APIs', () => {
+    const app = read('src/app.ts');
+    const main = read('src/main.ts');
+    const css = read('src/style.css');
+    const html = read('index.html');
+    const initFn = app.slice(
+      app.indexOf('export async function initApp'),
+      app.indexOf('async function enhanceAfterFirstPaint'),
+    );
+    expect(app).toMatch(/FIRST_SCREEN_FETCH_TIMEOUT_MS\s*=\s*2_?000/);
+    expect(app).toMatch(/ENHANCE_FETCH_TIMEOUT_MS\s*=\s*12_?000/);
+    expect(app).toMatch(/timeoutMs: number = FIRST_SCREEN_FETCH_TIMEOUT_MS/);
+    expect(initFn).toContain('void enhanceAfterFirstPaint');
+    expect(initFn).toContain('lock844HomepageCopy()');
+    expect(initFn).not.toContain('await ');
+    expect(initFn).not.toContain('ENHANCE_FETCH_TIMEOUT_MS');
+    expect(initFn).not.toContain('initViralLoopUI');
+    expect(main).toContain('does not wait on hung APIs');
+    expect(css).not.toMatch(/@import url\('https:\/\/fonts\.googleapis\.com/);
+    expect(html).toContain("setAttribute('data-vr-first-screen'");
+    expect(html).toContain("setAttribute('data-vr-direct-landing'");
+    expect(html).toContain('Win the ViralRefer homepage — Site Drops + #1 banner');
+    expect(html).toContain('Site Drop &middot; Just entered');
+    expect(html).toContain('SITE DROP LADDER');
+    expect(html).toContain('Recent Activity');
+    expect(html).toContain('Your site here');
+    expect(html).not.toContain('#1 gets a banner for their site.');
+    expect(html).toMatch(/fonts\.googleapis\.com[^>]*media="print"/);
+    expect(html).toMatch(/font-awesome[^>]*media="print"/);
   });
 
   it('keeps Copy above overlays', () => {
