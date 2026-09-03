@@ -87,7 +87,8 @@ let siteContentChannel: ReturnType<typeof supabase.channel> | null = null;
 let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
-const INIT_FETCH_TIMEOUT_MS = 12_000;
+/** First screen must not wait on hung APIs. Per-call cap — race only, then move on. */
+export const INIT_FETCH_TIMEOUT_MS = 2_000;
 /** Disk IO: slower poll + pause when tab hidden (was 45s always-on). */
 const PUBLIC_ACTIVITY_POLL_MS = 90_000;
 
@@ -352,31 +353,30 @@ registerGlobal('loadSiteContent', loadSiteContent);
  *   - Prefilling the user's referral link (if they have a code)
  *   - Handling ?ref= attribution banners
  */
+/** Board / totals / stats stay off the first-screen critical path. */
+async function hydrateBelowFold(myReferralCode: string | null): Promise<void> {
+  await Promise.all([
+    withInitTimeout(refreshWorldwideReferralTotals(), undefined),
+    withInitTimeout(loadPublicViralLoops(myReferralCode), undefined),
+    withInitTimeout(loadLeaderboard(), undefined),
+    withInitTimeout(renderRecentActivity(), undefined),
+    myReferralCode ? withInitTimeout(refreshFunnelTicker(), undefined) : Promise.resolve(),
+    withInitTimeout(renderMyStats(myReferralCode), undefined),
+  ]);
+  paintWorldwideReferralTotal();
+}
+
 export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
   try {
-    await withInitTimeout(loadSiteContent(), undefined);
-
-    // Verified worldwide total first so the number is never a mystery on first paint
-    await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
-
-    // Daily Crown first so main-board flair has cached champion/leader codes
-    await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
-    await withInitTimeout(loadLeaderboard(), undefined);
-    // Re-paint total with leader #1 context after board loads
-    paintWorldwideReferralTotal();
-    await withInitTimeout(renderRecentActivity(), undefined);
-
+    // Sync first screen immediately — never wait on a hung API to show Get my link.
     if (myReferralCode) {
       applyExistingReferralLink(myReferralCode);
-      void withInitTimeout(refreshFunnelTicker(), undefined);
     } else {
       syncMobileReferralCta();
       setFunnelTickerVisible(false);
     }
-
-    await withInitTimeout(renderMyStats(myReferralCode), undefined);
     initViralLoopUI();
     initGrowthCommandCenter();
     initPostLinkShare();
@@ -395,6 +395,11 @@ export async function initApp() {
       initRealtimeSubscriptions();
       window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
     }
+
+    // CMS only, 2s fail-fast. Site Drop English is already in HTML + lock844HomepageCopy.
+    await withInitTimeout(loadSiteContent(), undefined);
+
+    void hydrateBelowFold(myReferralCode);
   } catch (err) {
     console.warn('[ViralRefer] initApp partial failure:', err);
   }

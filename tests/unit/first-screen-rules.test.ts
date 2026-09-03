@@ -168,6 +168,22 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('Win the homepage.');
   });
 
+  it('does not let hung first-screen APIs block Get my link', () => {
+    const app = read('src/app.ts');
+    expect(app).toContain('INIT_FETCH_TIMEOUT_MS = 2_000');
+    expect(app).toMatch(/await withInitTimeout\(loadSiteContent\(\)/);
+    expect(app).not.toMatch(/await withInitTimeout\(refreshWorldwideReferralTotals/);
+    expect(app).not.toMatch(/await withInitTimeout\(loadPublicViralLoops/);
+    expect(app).not.toMatch(/await withInitTimeout\(loadLeaderboard/);
+    expect(app).not.toMatch(/await withInitTimeout\(renderRecentActivity/);
+    expect(app).not.toMatch(/await withInitTimeout\(renderMyStats/);
+    expect(app).toContain('void hydrateBelowFold');
+    expect(app).toMatch(/applyExistingReferralLink\(myReferralCode\)/);
+    expect(app.indexOf('applyExistingReferralLink(myReferralCode)')).toBeLessThan(
+      app.indexOf('await withInitTimeout(loadSiteContent()'),
+    );
+  });
+
   it('keeps Copy above overlays', () => {
     const css = read('src/style.css');
     expect(css).toMatch(/#post-link-copy/);
