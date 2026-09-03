@@ -99,6 +99,15 @@ describe('i18n phase 1', () => {
       'prize.card3_desc',
       'prize.cta',
       'prize.winner_badge',
+      'drop.badge',
+      'drop.title',
+      'drop.lead',
+      'drop.entered_label',
+      'drop.entered_empty',
+      'drop.rising_label',
+      'drop.rising_empty',
+      'drop.challenger_label',
+      'drop.challenger_empty',
     ] as const;
     for (const locale of SUPPORTED_LOCALES) {
       for (const key of facts) {

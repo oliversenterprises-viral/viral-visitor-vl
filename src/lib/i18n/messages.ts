@@ -682,6 +682,15 @@ const PRIZE_FACT_KEYS = [
   'prize.card3_desc',
   'prize.cta',
   'prize.winner_badge',
+  'drop.badge',
+  'drop.title',
+  'drop.lead',
+  'drop.entered_label',
+  'drop.entered_empty',
+  'drop.rising_label',
+  'drop.rising_empty',
+  'drop.challenger_label',
+  'drop.challenger_empty',
 ] as const;
 
 function applyEnglishPrizeFacts(d: Dict): void {

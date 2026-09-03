@@ -17,6 +17,9 @@ export type SiteContentClient = {
         col: string,
         val: string,
       ) => {
+        limit: (n: number) => {
+          maybeSingle: () => Promise<{ data: { value?: unknown } | null; error: unknown }>;
+        };
         maybeSingle: () => Promise<{ data: { value?: unknown } | null; error: unknown }>;
       };
     };
@@ -34,6 +37,7 @@ export async function loadSiteDropsState(
     .from('site_content')
     .select('value')
     .eq('key', SITE_DROPS_KEY)
+    .limit(1)
     .maybeSingle();
   if (error) throw error;
   return parseSiteDrops(data?.value);
