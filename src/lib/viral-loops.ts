@@ -35,7 +35,7 @@ export function initViralLoops(): void {
   mo.observe(root, { attributes: true, attributeFilter: ['data-vr-share-locked'] });
 }
 
-/** Load public sprint + community + Daily Crown widgets (no user code required). */
+/** Load public sprint + community widgets. Daily Crown is not product UI. */
 export async function loadPublicViralLoops(myCode?: string | null): Promise<void> {
   const code = myCode ?? getMyReferralCode();
   try {

@@ -65,12 +65,19 @@
     const err = document.getElementById('aff-err');
     const desk = document.getElementById('aff-desk');
     async function register(name) {
-      const res = await fetch(SUPABASE_URL + '/functions/v1/affiliate-public', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + ANON },
-        body: JSON.stringify({ action: 'register', name: name }),
-      });
-      return res.json();
+      const ctrl = new AbortController();
+      const timer = setTimeout(function () { ctrl.abort(); }, 2000);
+      try {
+        const res = await fetch(SUPABASE_URL + '/functions/v1/affiliate-public', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + ANON },
+          body: JSON.stringify({ action: 'register', name: name }),
+          signal: ctrl.signal,
+        });
+        return res.json();
+      } finally {
+        clearTimeout(timer);
+      }
     }
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

@@ -13,12 +13,14 @@ describe('leaderboard-ui', () => {
     expect(html).toContain('👑');
   });
 
-  it('buildLeaderboardHtml adds Daily Crown flair for crown codes', () => {
+  it('buildLeaderboardHtml never paints Daily Crown product UI', () => {
     const html = buildLeaderboardHtml(entries, {
       crownCodes: new Set(['VIRAL-CHASE']),
     });
-    expect(html).toContain('Daily Crown');
-    expect(html).toContain('leaderboard-row--daily-crown');
+    expect(html).not.toContain('Daily Crown');
+    expect(html).not.toContain('Daily Champion');
+    expect(html).not.toContain('leaderboard-row--daily-crown');
+    expect(html).not.toContain('daily-crown-flair');
   });
 
   it('buildRankGapSummary for chaser', () => {
