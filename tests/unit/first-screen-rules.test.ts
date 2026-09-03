@@ -101,6 +101,25 @@ describe('first-screen Site Drops rules', () => {
     );
   });
 
+  it('uses Recent Activity as the large board title, not Early Leaderboard', () => {
+    const html = read('index.html');
+    const i18n = read('src/lib/i18n/messages.ts');
+    const content = read('src/content.ts');
+    expect(html).toMatch(
+      /id="leaderboard-title"[^>]*>\s*Recent Activity\s*<\/h2>/,
+    );
+    expect(html).toContain('data-i18n="leaderboard.title"');
+    const board = html.slice(html.indexOf('id="leaderboard-title"'), html.indexOf('id="leaderboard-container"'));
+    expect(board).not.toContain('Early Leaderboard');
+    expect(i18n).toContain("'leaderboard.title': 'Recent Activity'");
+    expect(i18n).not.toContain("'leaderboard.title': 'Live Leaderboard'");
+    expect(i18n).not.toContain("'leaderboard.title': 'Early Leaderboard'");
+    expect(content).not.toContain("apply('leaderboard-title', 'leaderboard_title')");
+    expect(html).toContain('data-i18n="drop.badge">Site Drop ladder</p>');
+    expect(html).toContain('Your site here');
+    expect(html).toContain('id="footer-link-tools"');
+  });
+
   it('keeps Copy above overlays', () => {
     const css = read('src/style.css');
     expect(css).toMatch(/#post-link-copy/);

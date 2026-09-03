@@ -267,7 +267,8 @@ export async function updatePublicContent(content: Record<string, unknown>) {
   apply('claim-cash-value', 'cash_amount');
 
   // High-visibility public headings and descriptions
-  apply('leaderboard-title', 'leaderboard_title');
+  // Owner lock: large board title stays Recent Activity. Do not let CMS
+  // leaderboard_title ("Early Leaderboard") paint over #leaderboard-title.
   apply('leaderboard-description', 'leaderboard_description');
   apply('winning-link-title', 'winning_link_title');
   apply('winning-link-description', 'winning_link_description');

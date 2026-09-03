@@ -15,7 +15,7 @@
 -- Usage:
 --   1. Copy the entire BEGIN ... COMMIT block into Supabase SQL Editor → Run.
 --   2. Hard-refresh viralrefer.app (or wait for any in-flight cache).
---   3. The listed texts the user wanted ("Be one of the first...", "Early Leaderboard", badge,
+--   3. The listed texts the user wanted ("Be one of the first...", "Recent Activity", badge,
 --      footer credit, warmer recent activity) will appear where the current bundle supports them.
 --
 -- To undo / preview first, run only the SELECT at the bottom.
@@ -24,7 +24,7 @@ BEGIN;
 
 -- Core campaign positioning (directly address the user's reported stale texts)
 INSERT INTO public.site_content (key, value, description) VALUES
-  ('leaderboard_title', '"Early Leaderboard"'::jsonb, 'Public leaderboard heading (warm early-campaign tone)'),
+  ('leaderboard_title', '"Recent Activity"'::jsonb, 'Public board heading — Recent Activity, not Early Leaderboard'),
   ('leaderboard_description', '"Campaign just launched • Be the first to qualify"'::jsonb, 'Subtitle under leaderboard'),
   ('recent_activity_description', '"Early activity from the first participants"'::jsonb, 'Label above the live recent activity feed'),
   ('hero_campaign_badge', '"Campaign just launched"'::jsonb, 'Small hero badge for honest launch positioning'),
