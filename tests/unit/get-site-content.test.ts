@@ -124,6 +124,11 @@ describe('get_site_content (HQ Website tab)', () => {
     const prize = readFileSync(resolve(root, 'src/admin/prize-claims-tab.ts'), 'utf8');
     expect(website).toContain('data-hq-talk="1"');
     expect(website).toContain('id="owner-broadcast-panel"');
+    expect(website).toContain('buildRacerTalkPanelHTML');
+    const talkTab = readFileSync(resolve(root, 'src/admin/racer-talk-tab.ts'), 'utf8');
+    expect(talkTab).toContain('data-hq-talk="1"');
+    expect(talkTab).toContain('id="owner-broadcast-panel"');
+    expect(talkTab).toContain('Message box after Get my link');
     expect(website).toContain('buildContentListHTML([], loaded)');
     expect(website).not.toMatch(/innerHTML\s*=\s*[`'"][^`'"]*Error loading content/);
     expect(switcher).toContain('await renderPrizeClaimsTab(content)');
