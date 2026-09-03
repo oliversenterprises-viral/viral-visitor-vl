@@ -292,22 +292,22 @@ function buildContentListHTML(rows: ContentRow[]): string {
       </div>
     </div>
 
-    <!-- Owner broadcast: message everyone who visits (no email — product is no-signup) -->
-    <div id="owner-broadcast-panel" class="mb-4 p-5 rounded-2xl border-2 border-violet-500/50 bg-violet-950/30">
+    <!-- Owner talk: message box after Get my link (no email — product is no-signup) -->
+    <div id="owner-broadcast-panel" class="mb-4 p-5 rounded-2xl border-2 border-violet-500/50 bg-violet-950/30" data-hq-talk="1" data-racer-talk-tab="1">
       <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
         <div>
           <div class="text-lg font-bold text-violet-200 flex items-center gap-2">
-            <i class="fa-solid fa-bullhorn"></i> Message all joiners
+            <i class="fa-solid fa-bullhorn"></i> Talk to racers
           </div>
           <p class="text-xs text-zinc-400 mt-1 max-w-xl">
-            Banner for everyone on the site. <strong class="text-violet-200">Only you can remove it</strong> (Turn OFF). Links: paste full <code class="text-violet-300">https://…</code> URLs or use <code class="text-violet-300">[label](https://…)</code>. Optional sponsor ad below.
+            Message box after Get my link. <strong class="text-violet-200">No email.</strong> <strong class="text-violet-200">Only you can remove it</strong> (Turn OFF). Links: paste full <code class="text-violet-300">https://…</code> URLs or use <code class="text-violet-300">[label](https://…)</code>. Optional sponsor ad below.
           </p>
         </div>
         <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border ${
           bcEnabled
             ? 'border-emerald-400/50 text-emerald-300 bg-emerald-500/10'
             : 'border-zinc-500/40 text-zinc-400 bg-zinc-800/50'
-        }">${bcEnabled ? 'LIVE on site' : 'Off'}</span>
+        }" ${bcEnabled ? '' : 'data-hq-talk-idle="1"'}>${bcEnabled ? 'LIVE after Get my link' : 'Off'}</span>
       </div>
       <div class="grid gap-3 md:grid-cols-2">
         <label class="block text-xs text-zinc-400">
@@ -334,7 +334,7 @@ function buildContentListHTML(rows: ContentRow[]): string {
         <div class="text-sm font-semibold text-violet-200 mb-2 flex items-center gap-2">
           <i class="fa-solid fa-image"></i> Message image (optional)
         </div>
-        <p class="text-[11px] text-zinc-500 mb-3">Upload JPG/PNG/GIF/WebP/SVG (max 2MB) or paste a https:// image URL. Shows under the title for everyone.</p>
+        <p class="text-[11px] text-zinc-500 mb-3">Upload JPG/PNG/GIF/WebP/SVG (max 2MB) or paste a https:// image URL. Shows under the title after Get my link.</p>
         <div class="flex flex-wrap items-center gap-2 mb-2">
           <input type="file" id="owner-bc-media-file" accept="${BANNER_UPLOAD_ACCEPT}" class="hidden" />
           <button type="button" id="owner-bc-media-upload" class="px-4 py-2 rounded-xl bg-violet-700/80 hover:bg-violet-600 text-sm font-semibold">
@@ -762,7 +762,7 @@ function attachContentListeners(content: HTMLElement, reloadList: () => Promise<
       publishBc.disabled = false;
       publishBc.textContent = 'Publish message (turn ON)';
       if (ok) {
-        showToast('Broadcast live — visitors will see it on next load', 'success');
+        showToast('Talk live — racers see it after Get my link', 'success');
         await reloadList();
       } else {
         showToast('Publish failed — check admin access', 'info');

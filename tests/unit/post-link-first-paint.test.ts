@@ -40,6 +40,8 @@ describe('post-link first paint', () => {
     expect(stack).toContain('id="post-link-primary"');
     expect(stack).toContain('id="post-link-copy"');
     expect(stack).toContain('Copy link');
+    expect(stack).toContain('id="racer-talk"');
+    expect(stack).toContain('Message from ViralRefer');
     const banned = [
       'Step 2: tap COPY',
       'id="viral-power-meter"',

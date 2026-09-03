@@ -43,6 +43,7 @@ const EDGE_FUNCTIONS = [
   'submit-claim',
   'optimizer-cron',
   'register-referrer-link',
+  'racer-talk',
 ];
 
 for (const name of EDGE_FUNCTIONS) {

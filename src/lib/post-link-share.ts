@@ -199,6 +199,9 @@ export function showPostLinkReady(link: string): void {
     whisper.hidden = !pending;
   }
   requestAnimationFrame(() => focusHeading());
+  void import('./racer-talk')
+    .then((m) => m.revealRacerTalk())
+    .catch(() => {});
 }
 
 export function activatePostLinkShare(link: string): void {

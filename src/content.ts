@@ -360,10 +360,10 @@ export async function updatePublicContent(content: Record<string, unknown>) {
 
   applyReferralBaseFromSiteContent(content);
 
-  // Owner → everyone in-app message (optional CMS keys; missing = no banner)
+  // Owner → racers after Get my link (optional CMS keys; missing = no panel)
   try {
-    const { applyOwnerBroadcast } = await import('./lib/owner-broadcast');
-    applyOwnerBroadcast(content as Record<string, unknown>);
+    const { applyRacerTalkFromContent } = await import('./lib/racer-talk');
+    applyRacerTalkFromContent(content as Record<string, unknown>);
   } catch {
     /* non-fatal */
   }
