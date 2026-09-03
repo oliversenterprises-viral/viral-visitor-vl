@@ -108,13 +108,26 @@ describe('first-screen Site Drops rules', () => {
 
   it('keeps first-screen init fail-fast so hung APIs cannot block paint', () => {
     const app = read('src/app.ts');
+    const main = read('src/main.ts');
+    const initStart = app.indexOf('export async function initApp');
+    const initBody = app.slice(initStart, app.indexOf('setWindowProp(\'renderMyStats\'', initStart));
     expect(app).toMatch(/const INIT_FETCH_TIMEOUT_MS = 12_000/);
     expect(app).toContain('async function withInitTimeout');
-    expect(app).toContain('await withInitTimeout(loadSiteContent(), undefined)');
-    expect(app).toContain('await withInitTimeout(refreshWorldwideReferralTotals(), undefined)');
-    expect(app).toContain('await withInitTimeout(loadLeaderboard(), undefined)');
-    expect(app).toContain('await withInitTimeout(renderRecentActivity(), undefined)');
+    expect(initBody.indexOf('applyExistingReferralLink(myReferralCode)')).toBeGreaterThan(0);
+    expect(initBody.indexOf('applyExistingReferralLink(myReferralCode)')).toBeLessThan(
+      initBody.indexOf('await withInitTimeout(loadSiteContent(), undefined)'),
+    );
+    expect(initBody).toContain('await withInitTimeout(loadSiteContent(), undefined)');
+    expect(initBody).toContain('void Promise.all([');
+    expect(initBody).not.toMatch(
+      /await withInitTimeout\(refreshWorldwideReferralTotals[\s\S]+await withInitTimeout\(loadLeaderboard/,
+    );
+    expect(initBody).toContain('withInitTimeout(refreshWorldwideReferralTotals(), undefined)');
+    expect(initBody).toContain('withInitTimeout(loadLeaderboard(), undefined)');
+    expect(initBody).toContain('withInitTimeout(renderRecentActivity(), undefined)');
     expect(app).toMatch(/initApp partial failure/);
+    expect(main.indexOf('initPublic()')).toBeLessThan(main.indexOf('initApp()'));
+    expect(main.indexOf('seedDefaultTextColors()')).toBeLessThan(main.indexOf('initApp()'));
     expect(read('index.html')).toContain('Site Drop');
   });
 

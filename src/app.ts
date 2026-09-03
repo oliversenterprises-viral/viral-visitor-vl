@@ -356,31 +356,32 @@ export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
   try {
-    await withInitTimeout(loadSiteContent(), undefined);
-
-    // Verified worldwide total first so the number is never a mystery on first paint
-    await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
-
-    // Daily Crown first so main-board flair has cached champion/leader codes
-    await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
-    await withInitTimeout(loadLeaderboard(), undefined);
-    // Re-paint total with leader #1 context after board loads
-    paintWorldwideReferralTotal();
-    await withInitTimeout(renderRecentActivity(), undefined);
-
+    // First screen fail-fast: restore send UI / CTA now. Hung APIs must not block this.
     if (myReferralCode) {
       applyExistingReferralLink(myReferralCode);
-      void withInitTimeout(refreshFunnelTicker(), undefined);
     } else {
       syncMobileReferralCta();
       setFunnelTickerVisible(false);
     }
-
-    await withInitTimeout(renderMyStats(myReferralCode), undefined);
     initViralLoopUI();
     initGrowthCommandCenter();
     initPostLinkShare();
     initPostLinkStatus();
+
+    await withInitTimeout(loadSiteContent(), undefined);
+
+    // Below-fold / enhancement fetches share one 12s budget. Never stack sequential waits.
+    void Promise.all([
+      withInitTimeout(refreshWorldwideReferralTotals(), undefined),
+      withInitTimeout(loadPublicViralLoops(myReferralCode), undefined),
+      withInitTimeout(loadLeaderboard(), undefined).then(() => {
+        paintWorldwideReferralTotal();
+      }),
+      withInitTimeout(renderRecentActivity(), undefined),
+      myReferralCode ? withInitTimeout(refreshFunnelTicker(), undefined) : Promise.resolve(),
+      withInitTimeout(renderMyStats(myReferralCode), undefined),
+    ]);
+
     void import('./lib/prize-slot')
       .then((m) => m.initWeekRaceClock())
       .catch(() => {});
