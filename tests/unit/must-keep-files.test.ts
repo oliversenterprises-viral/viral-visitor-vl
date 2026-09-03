@@ -48,6 +48,8 @@ const MUST_KEEP: Array<{ path: string; minBytes: number; contains?: string }> = 
   { path: 'public/llms.txt', minBytes: 200, contains: 'https://www.viralrefer.app' },
   { path: 'public/llms-full.txt', minBytes: 500, contains: 'viralrefer.app' },
   { path: 'public/guides/site-drops/index.html', minBytes: 500, contains: 'Site Drop' },
+  { path: 'public/go/sponsor/index.html', minBytes: 500, contains: 'Sponsored Featured Partner' },
+  { path: 'public/go/sponsor/thanks/index.html', minBytes: 200, contains: 'not a Site Drop' },
   { path: 'public/tools/credit-checker.html', minBytes: 500, contains: 'Get my referral link' },
   { path: 'src/lib/site-drops.ts', minBytes: 100, contains: 'SITE_DROPS_KEY' },
   { path: 'src/admin/owner-funnel-desk.ts', minBytes: 500, contains: 'renderOwnerFunnelDesk' },
