@@ -90,6 +90,47 @@ describe('first-screen Site Drops rules', () => {
     expect(css).not.toMatch(/\.hero-gradient #hero-title-accent[\s\S]{0,80}color:\s*transparent/);
   });
 
+  it('matches the zip homepage near-black hero (no indigo/purple wash)', () => {
+    const html = read('index.html');
+    const css = read('src/style.css');
+    const heroOpen = html.match(/<div class="vr-hero-panel[^"]*">/)?.[0] ?? '';
+    expect(html).toMatch(/<body class="[^"]*\bbg-zinc-950\b/);
+    expect(heroOpen).toContain('hero-gradient');
+    expect(heroOpen).toContain('bg-zinc-950');
+    expect(css).toMatch(/\.hero-gradient\s*\{[\s\S]{0,120}background:\s*(#09090b|#0a0a0f)/);
+    expect(css).not.toContain('#1e1b4b');
+    expect(css).not.toContain('#312e81');
+    expect(css).not.toMatch(/\.hero-gradient::before[\s\S]{0,280}rgba\(133,\s*76,\s*255/);
+    expect(html).toContain('Site Drop');
+    expect(html).toContain('Your site here');
+    expect(existsSync(resolve(root, 'public/google163d31ba24216edd.html'))).toBe(true);
+  });
+
+  it('keeps first-screen init fail-fast so hung APIs cannot block paint', () => {
+    const app = read('src/app.ts');
+    const main = read('src/main.ts');
+    const initStart = app.indexOf('export async function initApp');
+    const initBody = app.slice(initStart, app.indexOf('setWindowProp(\'renderMyStats\'', initStart));
+    expect(app).toMatch(/const INIT_FETCH_TIMEOUT_MS = 12_000/);
+    expect(app).toContain('async function withInitTimeout');
+    expect(initBody.indexOf('applyExistingReferralLink(myReferralCode)')).toBeGreaterThan(0);
+    expect(initBody.indexOf('applyExistingReferralLink(myReferralCode)')).toBeLessThan(
+      initBody.indexOf('await withInitTimeout(loadSiteContent(), undefined)'),
+    );
+    expect(initBody).toContain('await withInitTimeout(loadSiteContent(), undefined)');
+    expect(initBody).toContain('void Promise.all([');
+    expect(initBody).not.toMatch(
+      /await withInitTimeout\(refreshWorldwideReferralTotals[\s\S]+await withInitTimeout\(loadLeaderboard/,
+    );
+    expect(initBody).toContain('withInitTimeout(refreshWorldwideReferralTotals(), undefined)');
+    expect(initBody).toContain('withInitTimeout(loadLeaderboard(), undefined)');
+    expect(initBody).toContain('withInitTimeout(renderRecentActivity(), undefined)');
+    expect(app).toMatch(/initApp partial failure/);
+    expect(main.indexOf('initPublic()')).toBeLessThan(main.indexOf('initApp()'));
+    expect(main.indexOf('seedDefaultTextColors()')).toBeLessThan(main.indexOf('initApp()'));
+    expect(read('index.html')).toContain('Site Drop');
+  });
+
   it('does not CSS-hide How, Board, or footer', () => {
     const css = read('src/style.css');
     expect(css).not.toMatch(/#how\s*\{[^}]*display:\s*none/);
