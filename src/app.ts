@@ -65,7 +65,6 @@ import { celebrateMilestonesIfAny } from './lib/referral-milestones';
 import { initGrowthCommandCenter } from './lib/growth-command-center';
 import { initPostLinkShare } from './lib/post-link-share';
 import { initPostLinkStatus } from './lib/post-link-status';
-import { initRacerTalk } from './lib/racer-talk';
 import { initViralLoopUI, syncViralLoopUI } from './lib/viral-loop-ui';
 import { initViralLoopsConfigFromContent } from './lib/viral-loops-config';
 import { loadPublicViralLoops, onViralLoopsLinkReady, syncUserViralLoops } from './lib/viral-loops';
@@ -382,7 +381,9 @@ export async function initApp() {
     initGrowthCommandCenter();
     initPostLinkShare();
     initPostLinkStatus();
-    initRacerTalk();
+    void import('./lib/racer-talk')
+      .then((m) => m.initRacerTalk())
+      .catch(() => {});
     void import('./lib/prize-slot')
       .then((m) => m.initWeekRaceClock())
       .catch(() => {});
