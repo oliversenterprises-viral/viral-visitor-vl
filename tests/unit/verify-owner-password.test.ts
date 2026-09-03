@@ -111,7 +111,8 @@ describe('owner verify source contract', () => {
     expect(verify).not.toContain('functions.invoke');
     expect(verify).not.toMatch(/VITE_ADMIN_PASSWORD|VITE_OWNER_PASSWORD/);
     expect(continueSrc).not.toContain('functions.invoke');
-    expect(continueSrc).not.toMatch(/await\s+\w*openAdminPanel/);
+    expect(continueSrc).not.toMatch(/^\s*await\s+.*openAdminPanel/m);
+    expect(continueSrc).toContain('void Promise.resolve(hooks.openAdminPanel())');
     expect(continueSrc).toContain('restoreContinue()');
     expect(modals).not.toContain('functions.invoke');
     expect(modals).toContain('continueOwnerGate');

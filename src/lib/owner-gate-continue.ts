@@ -1,7 +1,7 @@
 /**
  * Owner Continue control flow.
  * Leave "Verifying…" the instant verify_owner_password returns.
- * Never await openAdminPanel — desk load must not keep the button stuck.
+ * Desk open is fire-and-forget — desk load must not keep the button stuck.
  */
 
 import { setAdminSessionToken } from './admin-session';
@@ -16,7 +16,7 @@ export type OwnerGateContinueHooks = {
 };
 
 export async function continueOwnerGate(hooks: OwnerGateContinueHooks): Promise<void> {
-  let result: OwnerVerifyResult = { authorized: false, sessionToken: '' };
+  let result: OwnerVerifyResult;
   try {
     result = await verifyOwnerPassword(hooks.password);
   } catch {

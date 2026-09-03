@@ -1,6 +1,6 @@
 /**
  * Owner password verify — direct fetch only.
- * supabase.functions.invoke can hang with no timeout; Continue must not wait on that.
+ * The JS client invoke helper can hang with no timeout; Continue must not wait on that.
  * Password is POSTed to admin-action. Never read from VITE_ (that would ship in the bundle).
  */
 
