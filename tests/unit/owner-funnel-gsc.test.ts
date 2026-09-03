@@ -252,6 +252,8 @@ describe('owner funnel GSC tracker', () => {
     expect(src).not.toMatch(/vercel --prod/);
     expect(src).not.toMatch(/GSC_API_KEY/);
     const deskUi = readFileSync(resolve(root, 'src/admin/owner-funnel-desk.ts'), 'utf8');
+    expect(deskUi).toContain("fetchAdminAction('get_owner_funnel_desk'");
+    expect(deskUi).toContain('sessionToken: getAdminSessionToken()');
     expect(deskUi).toMatch(/timeoutMs:\s*8_000/);
     const client = readFileSync(resolve(root, 'src/lib/admin-action-client.ts'), 'utf8');
     expect(client).toMatch(/if \(options\?\.timeoutMs\) return viaFetch/);

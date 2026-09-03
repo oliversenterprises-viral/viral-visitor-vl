@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { computeFunnelTotals } from '../../src/admin/visitor-funnel-stats-helpers';
 import {
   assembleOwnerFunnelDeskFromServer,
@@ -17,6 +17,8 @@ import {
 } from '../../src/admin/owner-funnel-desk-helpers';
 import {
   isOwnerFunnelDeskActionMissing,
+  normalizeOwnerFunnelDeskMetrics,
+  ownerFunnelDeskFromFetchResult,
   ownerFunnelDeskFromInvokeResult,
   renderOwnerFunnelDeskView,
 } from '../../src/admin/owner-funnel-desk';
@@ -490,6 +492,145 @@ describe('owner funnel desk metrics', () => {
     expect(el.textContent).toMatch(/Locked/);
     expect(el.textContent).not.toMatch(/can.t load/i);
     expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
+  });
+
+  it('paints live get_owner_funnel_desk tiles instead of zeros', () => {
+    const live = {
+      windowDays: 7,
+      visits: 22,
+      junkVisits: 0,
+      friendLandings: 22,
+      landings: 22,
+      getLink: 17,
+      share: 2,
+      locked: 1,
+      getLinkRate: '77.3%',
+      feed: Array.from({ length: 40 }, () => ({
+        kind: 'landed' as const,
+        label: 'Landed' as const,
+        at: '2026-09-01T00:00:00Z',
+        via: 'direct' as const,
+        viaLabel: 'direct',
+      })),
+    };
+    const loaded = ownerFunnelDeskFromInvokeResult({ success: true, data: live });
+    expect(loaded.metrics.visits).toBe(22);
+    expect(loaded.metrics.junkVisits).toBe(0);
+    expect(loaded.metrics.friendLandings).toBe(22);
+    expect(loaded.metrics.getLink).toBe(17);
+    expect(loaded.metrics.share).toBe(2);
+    expect(loaded.metrics.locked).toBe(1);
+    expect(loaded.metrics.feed).toHaveLength(40);
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, loaded.metrics);
+    expect(el.querySelector('[data-hq-tile="visits"]')?.textContent).toMatch(/22/);
+    expect(el.querySelector('[data-hq-tile="landings"]')?.textContent).toMatch(/22/);
+    expect(el.querySelector('[data-hq-tile="getlink"]')?.textContent).toMatch(/17/);
+    expect(el.querySelector('[data-hq-tile="share"]')?.textContent).toMatch(/\b2\b/);
+    expect(el.querySelector('[data-hq-tile="locked"]')?.textContent).toMatch(/\b1\b/);
+    expect(el.querySelectorAll('[data-owner-desk-feed] .hq-desk-feed-row').length).toBe(40);
+    expect(el.textContent).not.toMatch(/can.t load/i);
+  });
+
+  it('paints snake_case get_owner_funnel_desk tiles and fetch envelopes', () => {
+    const snake = normalizeOwnerFunnelDeskMetrics({
+      visits: 22,
+      junk_visits: 0,
+      friend_landings: 22,
+      get_link: 17,
+      share: 2,
+      locked: 1,
+      window_days: 7,
+      feed: [{ kind: 'locked', label: 'Locked', at: '2026-09-01T00:00:00Z', via: 'friend', viaLabel: "friend's /r/" }],
+    });
+    expect(snake?.visits).toBe(22);
+    expect(snake?.friendLandings).toBe(22);
+    expect(snake?.getLink).toBe(17);
+    expect(snake?.share).toBe(2);
+    expect(snake?.locked).toBe(1);
+    const fromFetch = ownerFunnelDeskFromFetchResult({
+      ok: true,
+      status: 200,
+      envelope: {
+        success: true,
+        data: {
+          visits: 22,
+          junkVisits: 0,
+          friendLandings: 22,
+          getLink: 17,
+          share: 2,
+          locked: 1,
+          getLinkRate: '77.3%',
+          feed: [],
+        },
+      },
+    });
+    expect(fromFetch.metrics.visits).toBe(22);
+    expect(fromFetch.metrics.getLink).toBe(17);
+    expect(fromFetch.metrics.share).toBe(2);
+    expect(fromFetch.metrics.locked).toBe(1);
+  });
+
+  it('renderOwnerFunnelDesk POSTs get_owner_funnel_desk and paints the returned tiles', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key');
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 200,
+      text: async () =>
+        JSON.stringify({
+          success: true,
+          data: {
+            windowDays: 7,
+            visits: 22,
+            junkVisits: 0,
+            friendLandings: 22,
+            landings: 22,
+            getLink: 17,
+            share: 2,
+            locked: 1,
+            getLinkRate: '77.3%',
+            feed: Array.from({ length: 40 }, () => ({
+              kind: 'landed',
+              label: 'Landed',
+              at: '2026-09-01T00:00:00Z',
+              via: 'direct',
+              viaLabel: 'direct',
+            })),
+          },
+        }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    vi.resetModules();
+    const session = await import('../../src/lib/admin-session');
+    session.setAdminSessionToken('session-token-abc');
+    const desk = await import('../../src/admin/owner-funnel-desk');
+    const el = document.createElement('div');
+    await desk.renderOwnerFunnelDesk(el);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://example.supabase.co/functions/v1/admin-action');
+    const body = JSON.parse(String(init.body));
+    expect(body.action).toBe('get_owner_funnel_desk');
+    expect(body.session_token).toBe('session-token-abc');
+    expect(el.querySelector('[data-hq-tile="visits"]')?.textContent).toMatch(/22/);
+    expect(el.querySelector('[data-hq-tile="landings"]')?.textContent).toMatch(/22/);
+    expect(el.querySelector('[data-hq-tile="getlink"]')?.textContent).toMatch(/17/);
+    expect(el.querySelector('[data-hq-tile="share"]')?.textContent).toMatch(/\b2\b/);
+    expect(el.querySelector('[data-hq-tile="locked"]')?.textContent).toMatch(/\b1\b/);
+    expect(el.querySelectorAll('[data-owner-desk-feed] .hq-desk-feed-row').length).toBe(40);
+    session.clearAdminSessionToken();
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  it('Command desk fetch path is get_owner_funnel_desk via fetchAdminAction', () => {
+    const src = readFileSync(resolve(import.meta.dirname, '../../src/admin/owner-funnel-desk.ts'), 'utf8');
+    expect(src).toContain("fetchAdminAction('get_owner_funnel_desk'");
+    expect(src).toContain('sessionToken: getAdminSessionToken()');
+    expect(src).toMatch(/timeoutMs:\s*8_000/);
+    expect(src).not.toMatch(/invokeAdminAction<OwnerFunnelDeskMetrics>/);
+    expect(src).not.toMatch(/get_owner_funnel_desk_counts/);
   });
 
   it('still paints six tiles when get_owner_funnel_desk or the RPC fails', () => {
