@@ -8,12 +8,18 @@ import {
   formatGscPosition,
   GSC_CONSOLE_URL,
   GSC_EDGE_SECRET_NAMES,
+  GSC_CACHED_NOTE,
   GSC_MISSING_NOTE,
   GSC_PROPERTY,
+  GSC_TIMEOUT_NOTE,
   parseOwnerFunnelGsc,
   readGscServerSecret,
   readGscSiteUrl,
+  rememberOkGsc,
+  resetGscOkCache,
   resolveOwnerFunnelGsc,
+  resolveOwnerFunnelGscTimed,
+  withTimeout,
 } from '../../src/admin/owner-funnel-desk-helpers';
 
 const root = resolve(import.meta.dirname, '../..');
@@ -69,7 +75,9 @@ describe('owner funnel GSC tracker', () => {
     expect(empty.note).toBe(GSC_MISSING_NOTE);
     expect(formatGscCount(12, 'missing_credentials')).toBe('—');
     expect(formatGscCount(12, 'error')).toBe('—');
+    expect(formatGscCount(12, 'timeout')).toBe('—');
     expect(formatGscCount(12, 'ok')).toBe('12');
+    expect(formatGscCount(12, 'ok-cached')).toBe('12');
     expect(formatGscPosition(null)).toBe('—');
     expect(formatGscPosition(4.2)).toBe('4.2');
 
@@ -229,11 +237,74 @@ describe('owner funnel GSC tracker', () => {
     expect(src).toMatch(/resolveOwnerFunnelGsc/);
     expect(src).toContain("Deno.env.get('GSC_SERVICE_ACCOUNT_JSON')");
     expect(src).toContain("Deno.env.get('GSC_SITE_URL')");
-    expect(src).toMatch(/resolveOwnerFunnelGsc\(\{ secret, site \}\)/);
+    expect(src).toMatch(/resolveOwnerFunnelGscTimed\(\{ secret, site \}\)/);
+    expect(src).toMatch(/withTimeout/);
+    expect(src).toMatch(/DESK_COUNTS_TIMEOUT_MS/);
+    expect(src).toMatch(/loadCompleteWindow: async \(\) => emptyFeed/);
+    expect(src).toMatch(/Promise\.all\(\[\s*withTimeout\(countsPromise/);
     expect(src).not.toMatch(/console\.(log|info|debug|error|warn)\([^)]*secret/i);
     expect(src).toMatch(/data: \{ \.\.\.metrics, gsc \}/);
     expect(src).not.toMatch(/vercel --prod/);
     expect(src).not.toMatch(/GSC_API_KEY/);
+    const deskUi = readFileSync(resolve(root, 'src/admin/owner-funnel-desk.ts'), 'utf8');
+    expect(deskUi).toMatch(/timeoutMs:\s*8_000/);
+    const client = readFileSync(resolve(root, 'src/lib/admin-action-client.ts'), 'utf8');
+    expect(client).toMatch(/if \(options\?\.timeoutMs\) return viaFetch/);
+  });
+
+  it('times out a slow GSC resolve and returns timeout or last-ok cache', async () => {
+    resetGscOkCache();
+    const hang = () => new Promise<never>(() => {});
+    const timed = await resolveOwnerFunnelGscTimed({
+      secret: 'ya29.test-token',
+      timeoutMs: 20,
+      query: hang,
+    });
+    expect(timed.status).toBe('timeout');
+    expect(timed.note).toBe(GSC_TIMEOUT_NOTE);
+    expect(timed.clicks).toBe(0);
+
+    rememberOkGsc(
+      parseOwnerFunnelGsc({
+        status: 'ok',
+        clicks: 7,
+        impressions: 70,
+        tapRate: '10.0%',
+      }),
+    );
+    const cached = await resolveOwnerFunnelGscTimed({
+      secret: 'ya29.test-token',
+      timeoutMs: 20,
+      query: hang,
+    });
+    expect(cached.status).toBe('ok-cached');
+    expect(cached.clicks).toBe(7);
+    expect(cached.note).toBe(GSC_CACHED_NOTE);
+    resetGscOkCache();
+  });
+
+  it('withTimeout returns the fallback when the promise is slow', async () => {
+    const value = await withTimeout(
+      new Promise<string>((resolve) => {
+        setTimeout(() => resolve('late'), 200);
+      }),
+      20,
+      () => 'fallback',
+    );
+    expect(value).toBe('fallback');
+  });
+
+  it('parses timeout and ok-cached statuses for the desk card', () => {
+    expect(parseOwnerFunnelGsc({ status: 'timeout' }).status).toBe('timeout');
+    expect(parseOwnerFunnelGsc({ status: 'timeout' }).note).toBe(GSC_TIMEOUT_NOTE);
+    expect(parseOwnerFunnelGsc({ status: 'ok-cached', clicks: 3 }).status).toBe('ok-cached');
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(
+      el,
+      deskMetrics(parseOwnerFunnelGsc({ status: 'timeout', note: GSC_TIMEOUT_NOTE })),
+    );
+    expect(el.querySelector('[data-gsc-status]')?.getAttribute('data-gsc-status')).toBe('timeout');
+    expect(el.textContent).toContain(GSC_TIMEOUT_NOTE);
   });
 
   it('does not edit the GSC verification file', () => {

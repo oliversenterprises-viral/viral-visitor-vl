@@ -90,7 +90,14 @@ export async function fetchAdminAction(
     return { ok: true, status: res.status, envelope };
   } catch (err) {
     if (isAbortError(err)) {
-      return { ok: false, error: 'Owner verify timed out — try again.', timedOut: true };
+      return {
+        ok: false,
+        error:
+          action === 'verify_owner_password'
+            ? 'Owner verify timed out — try again.'
+            : 'Request timed out — try again.',
+        timedOut: true,
+      };
     }
     return {
       ok: false,
@@ -106,8 +113,9 @@ async function invokeAdminActionViaFetch<T>(
   action: string,
   payload: Record<string, unknown>,
   token: string,
+  timeoutMs?: number,
 ): Promise<AdminActionResult<T>> {
-  const fetched = await fetchAdminAction(action, payload, { sessionToken: token });
+  const fetched = await fetchAdminAction(action, payload, { sessionToken: token, timeoutMs });
   if (!fetched.ok) {
     return { success: false, error: fetched.error };
   }
@@ -152,6 +160,7 @@ export async function verifyOwnerPassword(password: string): Promise<VerifyOwner
 export async function invokeAdminAction<T = unknown>(
   action: string,
   payload: Record<string, unknown> = {},
+  options?: { timeoutMs?: number },
 ): Promise<AdminActionResult<T>> {
   const token = getAdminSessionToken();
   if (!isSupabaseConfigured || !token) {
@@ -162,8 +171,15 @@ export async function invokeAdminAction<T = unknown>(
   }
 
   // Prefer direct fetch first — more reliable for large admin stats + custom session headers
-  const viaFetch = await invokeAdminActionViaFetch<T>(action, payload, token);
+  const viaFetch = await invokeAdminActionViaFetch<T>(
+    action,
+    payload,
+    token,
+    options?.timeoutMs,
+  );
   if (viaFetch.success) return viaFetch;
+  // Desk (and any timed call) must not fall through to functions.invoke — that path has no abort.
+  if (options?.timeoutMs) return viaFetch;
 
   // Fallback: supabase-js invoke
   try {

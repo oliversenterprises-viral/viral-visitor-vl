@@ -974,98 +974,81 @@ Deno.serve(async (req: Request) => {
         filterDeskReferrals,
         ownerFunnelCutoffIso,
         OWNER_FUNNEL_FEED_LIMIT,
-        OWNER_FUNNEL_PAGE_SIZE,
-        pageAllOwnerFunnelRows,
         resolveOwnerFunnelDeskMetrics,
         stripOwnerFunnelPii,
       } = await import('../_shared/owner-funnel-desk.ts');
+      const {
+        DESK_COUNTS_TIMEOUT_MS,
+        DESK_FEED_TIMEOUT_MS,
+        emptyOwnerFunnelGsc,
+        resolveOwnerFunnelGscTimed,
+        withTimeout,
+      } = await import('../_shared/owner-funnel-gsc.ts');
 
       const windowDays = 7;
       const cutoff = ownerFunnelCutoffIso();
-      const { data: counts, error: countErr } = await supabaseAdmin.rpc(
-        'get_owner_funnel_desk_counts',
-        { p_days: windowDays },
-      );
+      const emptyFeed = {
+        events: [] as Record<string, unknown>[],
+        shares: [] as Record<string, unknown>[],
+        referrals: [] as Record<string, unknown>[],
+        referrerLinks: [] as Record<string, unknown>[],
+      };
 
-      const pageWindow = async (complete: boolean) => {
-        const feedLimit = OWNER_FUNNEL_FEED_LIMIT;
-        const take = async (
-          table: string,
-          columns: string,
-          apply: (q: any) => any,
-        ) => {
-          if (!complete) {
-            const { data, error } = await apply(
-              supabaseAdmin
-                .from(table)
-                .select(columns)
-                .gte('created_at', cutoff)
-                .order('created_at', { ascending: false }),
-            ).limit(feedLimit);
-            if (error) throw error;
-            return (data || []) as Record<string, unknown>[];
-          }
-          return pageAllOwnerFunnelRows(async (offset, pageSize) => {
-            return apply(
-              supabaseAdmin
-                .from(table)
-                .select(columns)
-                .gte('created_at', cutoff)
-                .order('created_at', { ascending: false }),
-            ).range(offset, offset + pageSize - 1);
-          }, OWNER_FUNNEL_PAGE_SIZE);
+      const pageFeedWindow = async () => {
+        const take = async (table: string, columns: string, apply: (q: any) => any) => {
+          const { data, error } = await apply(
+            supabaseAdmin
+              .from(table)
+              .select(columns)
+              .gte('created_at', cutoff)
+              .order('created_at', { ascending: false }),
+          ).limit(OWNER_FUNNEL_FEED_LIMIT);
+          if (error) throw error;
+          return (data || []) as Record<string, unknown>[];
         };
-
         const eventSelect =
           'event_name, visitor_id, ref_code, ip_hash, metadata, created_at';
-        const [events, shares, referrals, referrerLinks] = await Promise.all([
+        const [events, shares, referrals] = await Promise.all([
           take('visitor_events', eventSelect, (q) =>
             q.in('event_name', ['SiteLanding', 'GetReferralLink']),
           ),
           take('shares', '*', (q) => q),
-          take(
-            'referrals',
-            'referrer_code, created_at, referred_ip, user_agent',
-            (q) => q,
-          ),
-          complete
-            ? pageAllOwnerFunnelRows(async (offset, pageSize) => {
-                return supabaseAdmin
-                  .from('referrer_links')
-                  .select('referrer_code, status, created_at, first_verified_share_at')
-                  .eq('status', 'active')
-                  .order('created_at', { ascending: false })
-                  .range(offset, offset + pageSize - 1);
-              }, OWNER_FUNNEL_PAGE_SIZE)
-            : Promise.resolve([] as Record<string, unknown>[]),
+          take('referrals', 'referrer_code, created_at, referred_ip, user_agent', (q) => q),
         ]);
-
         return {
           events,
           shares,
           referrals: filterDeskReferrals(referrals).map((row) => stripOwnerFunnelPii(row)),
-          referrerLinks,
+          referrerLinks: [],
         };
       };
 
       try {
-        const metrics = await resolveOwnerFunnelDeskMetrics({
-          rpcData: countErr ? null : counts,
-          rpcError: countErr,
-          loadFeedWindow: () => pageWindow(false),
-          loadCompleteWindow: () => pageWindow(true),
+        // Same Deno.env.get path as ADMIN_ACTION_SECRET — do not log the JSON.
+        const secret = String(Deno.env.get('GSC_SERVICE_ACCOUNT_JSON') || '').trim();
+        const site = String(Deno.env.get('GSC_SITE_URL') || '').trim();
+        const countsPromise = supabaseAdmin.rpc('get_owner_funnel_desk_counts', {
+          p_days: windowDays,
         });
-        let gsc;
-        try {
-          const { resolveOwnerFunnelGsc } = await import('../_shared/owner-funnel-gsc.ts');
-          // Same Deno.env.get path as ADMIN_ACTION_SECRET — do not log the JSON.
-          const secret = String(Deno.env.get('GSC_SERVICE_ACCOUNT_JSON') || '').trim();
-          const site = String(Deno.env.get('GSC_SITE_URL') || '').trim();
-          gsc = await resolveOwnerFunnelGsc({ secret, site });
-        } catch {
-          const { emptyOwnerFunnelGsc } = await import('../_shared/owner-funnel-gsc.ts');
-          gsc = emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.');
-        }
+        const gscPromise = resolveOwnerFunnelGscTimed({ secret, site }).catch(() =>
+          emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.'),
+        );
+
+        const [countRes, gsc] = await Promise.all([
+          withTimeout(countsPromise, DESK_COUNTS_TIMEOUT_MS, () => ({
+            data: null,
+            error: { message: 'timeout', code: 'TIMEOUT' },
+          })),
+          gscPromise,
+        ]);
+
+        const metrics = await resolveOwnerFunnelDeskMetrics({
+          rpcData: countRes.error ? null : countRes.data,
+          rpcError: countRes.error,
+          loadFeedWindow: () =>
+            withTimeout(pageFeedWindow(), DESK_FEED_TIMEOUT_MS, () => emptyFeed),
+          loadCompleteWindow: async () => emptyFeed,
+        });
         return new Response(JSON.stringify({ success: true, data: { ...metrics, gsc } }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });

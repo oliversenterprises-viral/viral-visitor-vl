@@ -96,6 +96,42 @@ describe('admin-action-client', () => {
     }
   });
 
+  it('timed invokeAdminAction returns on abort and never falls back to functions.invoke', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key');
+    vi.resetModules();
+    setAdminSessionToken('session-token-abc');
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_url: string, init?: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => {
+            const err = new Error('Aborted');
+            err.name = 'AbortError';
+            reject(err);
+          });
+        });
+      }),
+    );
+
+    const invoke = vi.fn(() => new Promise(() => {}));
+    vi.doMock('../../src/lib/supabase', () => ({
+      isSupabaseConfigured: true,
+      supabase: { functions: { invoke } },
+    }));
+
+    const { invokeAdminAction } = await import('../../src/lib/admin-action-client');
+    vi.useFakeTimers();
+    const pending = invokeAdminAction('get_owner_funnel_desk', {}, { timeoutMs: 8_000 });
+    await vi.advanceTimersByTimeAsync(8_000);
+    const result = await pending;
+    vi.useRealTimers();
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toMatch(/timed out/i);
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
   it('owner gate uses fetchAdminAction verify, not functions.invoke', () => {
     const modals = readFileSync(resolve(__dirname, '../../src/public/modals.ts'), 'utf8');
     expect(modals).toContain('verifyOwnerPassword');

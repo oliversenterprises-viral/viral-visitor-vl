@@ -11,8 +11,10 @@ import {
   emptyOwnerFunnelGsc,
   formatGscCount,
   formatGscPosition,
+  GSC_CACHED_NOTE,
   GSC_CONSOLE_URL,
   GSC_MISSING_NOTE,
+  GSC_TIMEOUT_NOTE,
   parseOwnerFunnelGsc,
   type OwnerFunnelDeskMetrics,
   type OwnerFunnelFeedRow,
@@ -117,14 +119,19 @@ function renderGscCard(gsc: OwnerFunnelGscMetrics): string {
   const status = gsc.status;
   const clicks = formatGscCount(gsc.clicks, status);
   const shown = formatGscCount(gsc.impressions, status);
-  const tap = status === 'ok' ? gsc.tapRate : '—';
-  const pos = status === 'ok' ? formatGscPosition(gsc.avgPosition) : '—';
+  const showNums = status === 'ok' || status === 'ok-cached';
+  const tap = showNums ? gsc.tapRate : '—';
+  const pos = showNums ? formatGscPosition(gsc.avgPosition) : '—';
   const note =
     status === 'missing_credentials'
       ? gsc.note || GSC_MISSING_NOTE
       : status === 'error'
         ? gsc.note || 'Search Console numbers could not load.'
-        : '';
+        : status === 'timeout'
+          ? gsc.note || GSC_TIMEOUT_NOTE
+          : status === 'ok-cached'
+            ? gsc.note || GSC_CACHED_NOTE
+            : '';
   return `
     <section class="hq-gsc-card rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3" data-owner-desk-gsc="1" data-gsc-status="${escapeHtml(status)}">
       <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
@@ -303,7 +310,11 @@ export async function renderOwnerFunnelDesk(container: HTMLElement): Promise<voi
   container.innerHTML = SKELETON;
   try {
     // Tiles come from get_owner_funnel_desk_counts (0052: exclusion must be true/false, never NULL).
-    const result = await invokeAdminAction<OwnerFunnelDeskMetrics>('get_owner_funnel_desk');
+    const result = await invokeAdminAction<OwnerFunnelDeskMetrics>(
+      'get_owner_funnel_desk',
+      {},
+      { timeoutMs: 8_000 },
+    );
     const loaded = ownerFunnelDeskFromInvokeResult(result);
     renderOwnerFunnelDeskView(container, loaded.metrics);
   } catch {

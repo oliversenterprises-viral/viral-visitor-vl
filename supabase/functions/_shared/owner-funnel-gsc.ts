@@ -15,7 +15,59 @@ export const GSC_WINDOW_DAYS = 28;
 export const GSC_MISSING_NOTE =
   'Search Console is verified. Numbers load from the server GSC_SERVICE_ACCOUNT_JSON secret.';
 
-export type OwnerFunnelGscStatus = 'ok' | 'missing_credentials' | 'error';
+export type OwnerFunnelGscStatus = 'ok' | 'ok-cached' | 'missing_credentials' | 'error' | 'timeout';
+
+export const GSC_RESOLVE_TIMEOUT_MS = 3_500;
+export const DESK_COUNTS_TIMEOUT_MS = 4_000;
+export const DESK_FEED_TIMEOUT_MS = 2_500;
+export const GSC_TIMEOUT_NOTE = 'Search Console timed out. Desk tiles still loaded.';
+export const GSC_CACHED_NOTE = 'Search Console from the last successful load.';
+
+export async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  fallback: () => T,
+): Promise<T> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      resolve(fallback());
+    }, ms);
+    promise.then(
+      (value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      },
+      () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(fallback());
+      },
+    );
+  });
+}
+
+let lastOkGsc: OwnerFunnelGscMetrics | null = null;
+
+export function rememberOkGsc(gsc: OwnerFunnelGscMetrics): void {
+  if (gsc.status === 'ok') lastOkGsc = { ...gsc };
+}
+
+export function gscOnTimeout(): OwnerFunnelGscMetrics {
+  if (lastOkGsc) {
+    return { ...lastOkGsc, status: 'ok-cached', note: GSC_CACHED_NOTE };
+  }
+  return emptyOwnerFunnelGsc('timeout', GSC_TIMEOUT_NOTE);
+}
+
+export function resetGscOkCache(): void {
+  lastOkGsc = null;
+}
 
 export type OwnerFunnelGscRow = {
   label: string;
@@ -58,7 +110,15 @@ export function emptyOwnerFunnelGsc(
     topSearches: EMPTY_ROWS,
     otherPages: EMPTY_ROWS,
     countries: EMPTY_ROWS,
-    note: note ?? (status === 'missing_credentials' ? GSC_MISSING_NOTE : undefined),
+    note:
+      note ??
+      (status === 'missing_credentials'
+        ? GSC_MISSING_NOTE
+        : status === 'timeout'
+          ? GSC_TIMEOUT_NOTE
+          : status === 'ok-cached'
+            ? GSC_CACHED_NOTE
+            : undefined),
     property,
     consoleUrl: gscConsoleUrlFor(property),
   };
@@ -103,7 +163,11 @@ export function parseOwnerFunnelGsc(raw: unknown): OwnerFunnelGscMetrics {
   const o = raw as Record<string, unknown>;
   const statusRaw = String(o.status || '').trim().toLowerCase();
   const status: OwnerFunnelGscStatus =
-    statusRaw === 'ok' || statusRaw === 'error' || statusRaw === 'missing_credentials'
+    statusRaw === 'ok' ||
+    statusRaw === 'ok-cached' ||
+    statusRaw === 'error' ||
+    statusRaw === 'missing_credentials' ||
+    statusRaw === 'timeout'
       ? statusRaw
       : 'missing_credentials';
   const clicks = num(o.clicks);
@@ -119,7 +183,11 @@ export function parseOwnerFunnelGsc(raw: unknown): OwnerFunnelGscMetrics {
       ? o.note.trim()
       : status === 'missing_credentials'
         ? GSC_MISSING_NOTE
-        : undefined;
+        : status === 'timeout'
+          ? GSC_TIMEOUT_NOTE
+          : status === 'ok-cached'
+            ? GSC_CACHED_NOTE
+            : undefined;
   return {
     status,
     windowDays: num(o.windowDays ?? o.window_days) || GSC_WINDOW_DAYS,
@@ -143,7 +211,7 @@ export function formatGscPosition(pos: number | null): string {
 }
 
 export function formatGscCount(n: number, status: OwnerFunnelGscStatus): string {
-  if (status !== 'ok') return '—';
+  if (status !== 'ok' && status !== 'ok-cached') return '—';
   return String(Math.round(n));
 }
 
@@ -289,6 +357,25 @@ async function importPkcs8(pem: string): Promise<CryptoKey> {
     false,
     ['sign'],
   );
+}
+
+export async function resolveOwnerFunnelGscTimed(opts?: {
+  secret?: string;
+  site?: string;
+  query?: typeof gscQuery;
+  timeoutMs?: number;
+}): Promise<OwnerFunnelGscMetrics> {
+  const pending = resolveOwnerFunnelGsc(opts);
+  pending
+    .then((gsc) => {
+      rememberOkGsc(gsc);
+    })
+    .catch(() => {
+      /* keep last ok */
+    });
+  const gsc = await withTimeout(pending, opts?.timeoutMs ?? GSC_RESOLVE_TIMEOUT_MS, gscOnTimeout);
+  rememberOkGsc(gsc);
+  return gsc;
 }
 
 export async function resolveOwnerFunnelGsc(opts?: {
