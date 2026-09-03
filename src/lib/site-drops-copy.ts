@@ -3,7 +3,9 @@
  * Do not invent MRR, user counts, funding, or a cash prize.
  *
  * Tree pin: cursor/recent-activity-top-title-848a @ 848540d.
- * READY FOR PROMOTE means title, hero, and funnel still say Site Drop.
+ * Destination is live 10/10 on https://www.viralrefer.app — not back to the zip.
+ * The original Site Drops zip is English to MATCH. Owner ships; do not self-promote.
+ * Ship-quality for live means title, hero, and funnel still say Site Drop.
  * Do not merge old banner-only English ("#1 gets a banner for their site").
  */
 

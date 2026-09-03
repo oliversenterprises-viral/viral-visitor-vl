@@ -1,11 +1,28 @@
 /**
- * Phase 1 public UI strings — en + es/fr/pt/de/hi.
+ * Public UI strings — core 6 + EXTRA_LOCALES (18 total).
+ * English source of truth stays Site Drops. Translations may overlay UI chrome.
  * Keys used via data-i18n attributes and t().
  */
 
-export type Locale = 'en' | 'es' | 'fr' | 'pt' | 'de' | 'hi';
+import {
+  EXTRA_LOCALES,
+  EXTRA_LOCALE_LABELS,
+  extraOverrides,
+  type ExtraLocale,
+} from './extra-locales';
 
-export const SUPPORTED_LOCALES: readonly Locale[] = ['en', 'es', 'fr', 'pt', 'de', 'hi'] as const;
+export type { ExtraLocale };
+export type Locale = 'en' | 'es' | 'fr' | 'pt' | 'de' | 'hi' | ExtraLocale;
+
+export const SUPPORTED_LOCALES: readonly Locale[] = [
+  'en',
+  'es',
+  'fr',
+  'pt',
+  'de',
+  'hi',
+  ...EXTRA_LOCALES,
+];
 
 export const LOCALE_LABELS: Record<Locale, string> = {
   en: 'English',
@@ -14,6 +31,7 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   pt: 'Português',
   de: 'Deutsch',
   hi: 'हिन्दी',
+  ...EXTRA_LOCALE_LABELS,
 };
 
 /** English source of truth (also fallback). */
@@ -109,6 +127,7 @@ export const en = {
   'drop.jump': 'See live Site Drops',
 
   'leaderboard.title': 'Recent Activity',
+  'activity.title': 'Recent Activity',
   'leaderboard.subtitle': 'Rankings update from verified referrals.',
 
   'claim.modal_title': 'Claim Homepage Feature',
@@ -653,6 +672,8 @@ const PRIZE_FACT_KEYS = [
   'hero.title_accent',
   'hero.subtitle',
   'hero.cta',
+  'leaderboard.title',
+  'activity.title',
   'funnel.badge',
   'funnel.step1',
   'funnel.step2',
@@ -696,6 +717,16 @@ applyEnglishPrizeFacts(pt);
 applyEnglishPrizeFacts(de);
 applyEnglishPrizeFacts(hi);
 
+function buildExtraLocales(): Record<ExtraLocale, Dict> {
+  const out = {} as Record<ExtraLocale, Dict>;
+  for (const loc of EXTRA_LOCALES) {
+    const d = dict(extraOverrides[loc] as Partial<Dict>);
+    applyEnglishPrizeFacts(d);
+    out[loc] = d;
+  }
+  return out;
+}
+
 // Correct German coach string (must not contain CJK)
 
 export const MESSAGES: Record<Locale, Dict> = {
@@ -705,4 +736,5 @@ export const MESSAGES: Record<Locale, Dict> = {
   pt,
   de,
   hi,
+  ...buildExtraLocales(),
 };

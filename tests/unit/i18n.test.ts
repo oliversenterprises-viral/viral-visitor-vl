@@ -7,8 +7,10 @@ import {
   setLocale,
   getLocale,
   isLocale,
+  initI18n,
 } from '../../src/lib/i18n';
 import { MESSAGES, SUPPORTED_LOCALES } from '../../src/lib/i18n/messages';
+import { EXTRA_LOCALES, EXTRA_LOCALE_LABELS, extraOverrides } from '../../src/lib/i18n/extra-locales';
 
 describe('i18n phase 1', () => {
   beforeEach(() => {
@@ -26,6 +28,8 @@ describe('i18n phase 1', () => {
 
   afterEach(() => {
     localStorage.clear();
+    document.documentElement.removeAttribute('dir');
+    document.documentElement.removeAttribute('data-vr-locale');
   });
 
   it('normalizeLocale maps language tags', () => {
@@ -34,7 +38,9 @@ describe('i18n phase 1', () => {
     expect(normalizeLocale('fr-CA')).toBe('fr');
     expect(normalizeLocale('de-DE')).toBe('de');
     expect(normalizeLocale('hi-IN')).toBe('hi');
-    expect(normalizeLocale('zh-CN')).toBe('en');
+    expect(normalizeLocale('zh-CN')).toBe('zh');
+    expect(normalizeLocale('ja-JP')).toBe('ja');
+    expect(normalizeLocale('ar-SA')).toBe('ar');
     expect(normalizeLocale('')).toBe('en');
   });
 
@@ -72,6 +78,8 @@ describe('i18n phase 1', () => {
       'hero.title_accent',
       'hero.subtitle',
       'hero.cta',
+      'leaderboard.title',
+      'activity.title',
       'funnel.badge',
       'funnel.step1',
       'funnel.step2',
@@ -113,6 +121,70 @@ describe('i18n phase 1', () => {
       expect(MESSAGES[locale]['funnel.step3']).toBe('3. Site goes live');
       expect(MESSAGES[locale]['hero.title_line1']).toBe('Win the homepage.');
       expect(MESSAGES[locale]['funnel.step2']).toBe('2. Send it');
+      expect(MESSAGES[locale]['leaderboard.title']).toBe('Recent Activity');
+      expect(MESSAGES[locale]['activity.title']).toBe('Recent Activity');
+      expect(MESSAGES[locale]['funnel.badge']).toBe('SITE DROP LADDER');
     }
+    expect(MESSAGES.en['hero.title_accent']).not.toBe('#1 gets a banner for their site.');
+    expect(MESSAGES.en['drop.badge']).toContain('Site Drop');
+    expect(MESSAGES.en['hero.badge']).toBe('WORLDWIDE • FREE • NO SIGNUP');
+  });
+
+  it('lists 18 locales: core 6 plus EXTRA_LOCALES, English first', () => {
+    expect(EXTRA_LOCALES).toEqual([
+      'it',
+      'nl',
+      'pl',
+      'ja',
+      'ko',
+      'zh',
+      'tr',
+      'id',
+      'vi',
+      'ar',
+      'ru',
+      'uk',
+    ]);
+    expect(SUPPORTED_LOCALES).toHaveLength(18);
+    expect(SUPPORTED_LOCALES.slice(0, 6)).toEqual(['en', 'es', 'fr', 'pt', 'de', 'hi']);
+    expect(SUPPORTED_LOCALES.slice(6)).toEqual([...EXTRA_LOCALES]);
+    expect(EXTRA_LOCALE_LABELS.ja).toBe('日本語');
+    expect(EXTRA_LOCALE_LABELS.ar).toBe('العربية');
+  });
+
+  it('initI18n injects #vr-lang-select with 18 options, English default', () => {
+    initI18n();
+    const select = document.getElementById('vr-lang-select') as HTMLSelectElement | null;
+    expect(select).toBeTruthy();
+    expect(select?.options.length).toBe(18);
+    expect(select?.options[0]?.value).toBe('en');
+    expect(select?.options[0]?.textContent).toBe('English');
+    expect(select?.value).toBe('en');
+  });
+
+  it('extra-locales overlay chrome only — no old banner-only product English', () => {
+    for (const loc of EXTRA_LOCALES) {
+      const overlay = extraOverrides[loc];
+      expect(overlay['leaderboard.title']).toBeUndefined();
+      expect(overlay['activity.title']).toBeUndefined();
+      expect(overlay['hero.title_accent']).toBeUndefined();
+      expect(overlay['funnel.badge']).toBeUndefined();
+      expect(overlay['drop.badge']).toBeUndefined();
+      expect(JSON.stringify(overlay)).not.toContain('#1 gets a banner for their site');
+      expect(JSON.stringify(overlay)).not.toMatch(/\byou climb\b/i);
+    }
+  });
+
+  it('extra locales change chrome copy and Arabic sets RTL', () => {
+    applyI18n('ja');
+    expect(document.querySelector('[data-i18n="nav.how"]')?.textContent).toBe('使い方');
+    expect(document.documentElement.dir).toBe('ltr');
+    applyI18n('ar');
+    expect(document.querySelector('[data-i18n="nav.how"]')?.textContent).toBe('كيف');
+    expect(document.documentElement.lang).toBe('ar');
+    expect(document.documentElement.dir).toBe('rtl');
+    applyI18n('en');
+    expect(document.documentElement.dir).toBe('ltr');
+    expect(document.querySelector('[data-i18n="nav.how"]')?.textContent).toBe('How');
   });
 });
