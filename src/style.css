@@ -164,6 +164,14 @@ h1, h2, h3, .logo-font {
   letter-spacing: -0.025em;
 }
 
+/* Contrast only: always-black chrome inherits light-scheme --text-h (#08060d).
+   Unlayered body { color } beats Tailwind utilities; pin the wordmark. */
+#vr-nav .vr-wordmark,
+#vr-nav a .vr-wordmark,
+#vr-nav .logo-font {
+  color: #f4f4f5 !important;
+}
+
 h1 { font-size: 3.25rem; line-height: 1.05; }
 h2 { font-size: 1.85rem; line-height: 1.1; }
 h3 { font-size: 1.35rem; }
