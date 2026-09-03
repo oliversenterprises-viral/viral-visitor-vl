@@ -66,5 +66,10 @@ describe('/go/sponsor/ Featured Partner page', () => {
     expect(thanksHtml).toContain('URLSearchParams');
     expect(thanksHtml).toContain('t.me/viralrefer?text=');
     expect(readFileSync(resolve(root, 'public/llms.txt'), 'utf8')).toContain('/go/sponsor/');
+
+    const app = readFileSync(resolve(root, 'src/app.ts'), 'utf8');
+    expect(app).toMatch(/FIRST_SCREEN_FETCH_TIMEOUT_MS\s*=\s*2_?000/);
+    expect(app).toContain('void enhanceAfterFirstPaint');
+    expect(app).not.toMatch(/const INIT_FETCH_TIMEOUT_MS = 12_000/);
   });
 });

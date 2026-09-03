@@ -145,6 +145,31 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('id="footer-link-tools"');
   });
 
+  it('paints the first screen without waiting on hung APIs', () => {
+    const app = read('src/app.ts');
+    const main = read('src/main.ts');
+    const html = read('index.html');
+    const initFn = app.slice(
+      app.indexOf('export async function initApp'),
+      app.indexOf('async function enhanceAfterFirstPaint'),
+    );
+    expect(app).toMatch(/FIRST_SCREEN_FETCH_TIMEOUT_MS\s*=\s*2_?000/);
+    expect(app).toMatch(/ENHANCE_FETCH_TIMEOUT_MS\s*=\s*12_?000/);
+    expect(app).toMatch(/timeoutMs: number = FIRST_SCREEN_FETCH_TIMEOUT_MS/);
+    expect(initFn).toContain('void enhanceAfterFirstPaint');
+    expect(initFn).toContain('lock844HomepageCopy()');
+    expect(initFn).not.toContain('await ');
+    expect(initFn).not.toContain('ENHANCE_FETCH_TIMEOUT_MS');
+    expect(initFn).not.toContain('initViralLoopUI');
+    expect(main).toContain('does not wait on hung APIs');
+    expect(html).toContain('Win the ViralRefer homepage — Site Drops + #1 banner');
+    expect(html).toContain('Site Drop &middot; Just entered');
+    expect(html).toContain('SITE DROP LADDER');
+    expect(html).toContain('Recent Activity');
+    expect(html).toContain('Your site here');
+    expect(html).not.toContain('#1 gets a banner for their site.');
+  });
+
   it('keeps Copy above overlays', () => {
     const css = read('src/style.css');
     expect(css).toMatch(/#post-link-copy/);
