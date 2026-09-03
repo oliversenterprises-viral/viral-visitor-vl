@@ -23,7 +23,8 @@ export const REQUIRED_STATIC_ROUTES = [
   { url: '/terms/', file: 'terms/index.html' },
   { url: '/rules/', file: 'rules/index.html' },
 
-  // Tools hub
+  // Tools + guides hubs (footer organic_tools)
+  { url: '/guides/', file: 'guides/index.html' },
   { url: '/tools/', file: 'tools/index.html' },
   { url: '/tools/share-generator.html', file: 'tools/share-generator.html' },
   { url: '/tools/viral-calculator.html', file: 'tools/viral-calculator.html' },
