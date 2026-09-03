@@ -27,6 +27,7 @@ export function createSupabaseStub(): SupabaseClient {
     delete: () => query(),
     insert: () => query(),
     update: () => query(),
+    abortSignal: () => query(),
     single: () => empty,
     maybeSingle: () => empty,
     then: empty.then.bind(empty),
