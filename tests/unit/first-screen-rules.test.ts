@@ -37,6 +37,9 @@ describe('first-screen Site Drops rules', () => {
     expect(hero).toContain('Rising drop');
     expect(LOCKED_SITE_DROPS_SUB).toContain('Rising drop');
     expect(funnel).toContain('SITE DROP LADDER');
+    const app = read('src/app.ts');
+    expect(app).toContain('void enhanceAfterFirstPaint');
+    expect(app).toContain('FIRST_SCREEN_FETCH_TIMEOUT_MS = 2_000');
     expect(en['funnel.badge']).toMatch(/SITE DROP/);
     expect(en['hero.title_accent']).not.toBe('#1 gets a banner for their site.');
     expect(LOCKED_SITE_DROPS_H1_ACCENT).not.toBe('#1 gets a banner for their site.');
@@ -188,6 +191,13 @@ describe('first-screen Site Drops rules', () => {
     expect(existsSync(resolve(root, 'src/admin/owner-funnel-desk.ts'))).toBe(true);
     expect(existsSync(resolve(root, 'supabase/functions/_shared/owner-funnel-gsc.ts'))).toBe(true);
     expect(existsSync(resolve(root, 'public/tools'))).toBe(true);
+    expect(existsSync(resolve(root, 'public/go/index.html'))).toBe(true);
+    expect(existsSync(resolve(root, 'public/go/affiliates/index.html'))).toBe(true);
+    expect(existsSync(resolve(root, 'public/go/challenge/index.html'))).toBe(true);
+    expect(existsSync(resolve(root, 'public/go/feature/index.html'))).toBe(true);
+    expect(existsSync(resolve(root, 'public/go/herculist/index.html'))).toBe(true);
+    expect(existsSync(resolve(root, 'public/go/makers/index.html'))).toBe(true);
+    expect(existsSync(resolve(root, 'public/go/race/index.html'))).toBe(true);
     expect(read('src/admin/owner-funnel-desk.ts')).toMatch(/data-owner-desk-gsc/);
     expect(read('index.html')).toMatch(/data-owner-desk-gsc/);
     expect(read('supabase/functions/admin-action/index.ts')).toMatch(/resolveOwnerFunnelGsc/);
