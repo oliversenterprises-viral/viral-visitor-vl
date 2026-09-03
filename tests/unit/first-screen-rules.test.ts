@@ -37,6 +37,9 @@ describe('first-screen Site Drops rules', () => {
     expect(hero).toContain('Rising drop');
     expect(LOCKED_SITE_DROPS_SUB).toContain('Rising drop');
     expect(funnel).toContain('SITE DROP LADDER');
+    const app = read('src/app.ts');
+    expect(app).toContain('void enhanceAfterFirstPaint');
+    expect(app).toContain('FIRST_SCREEN_FETCH_TIMEOUT_MS = 2_000');
     expect(en['funnel.badge']).toMatch(/SITE DROP/);
     expect(en['hero.title_accent']).not.toBe('#1 gets a banner for their site.');
     expect(LOCKED_SITE_DROPS_H1_ACCENT).not.toBe('#1 gets a banner for their site.');
