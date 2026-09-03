@@ -21,6 +21,7 @@ describe('supabase configuration', () => {
     await expect(mod.fetchLeaderboard()).resolves.toEqual([]);
     await expect(mod.fetchTotalReferrers()).resolves.toBe(0);
     await expect(mod.fetchSiteContent()).resolves.toEqual({});
+    expect(mod.SITE_CONTENT_FETCH_TIMEOUT_MS).toBe(8_000);
   });
 
   it('stub client invoke returns error without network', async () => {

@@ -292,6 +292,10 @@ export async function loadLeaderboard(options: { pulseCode?: string } = {}) {
  * Delegates the actual DOM updates to `updatePublicContent` in content.ts.
  */
 export async function loadSiteContent() {
+  // Fail-fast: lock Site Drop English before any CMS/network wait.
+  if (!isReferredLanding()) {
+    lock844HomepageCopy();
+  }
   try {
     const content = await fetchSiteContent();
     initOptimizerFlagsFromContent(content);

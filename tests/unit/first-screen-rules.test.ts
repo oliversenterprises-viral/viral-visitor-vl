@@ -157,7 +157,7 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('id="footer-link-tools"');
   });
 
-  it('READY: English homepage still matches the zip Site Drops product', () => {
+  it('READY: English homepage still matches the zip Site Drops code', () => {
     const html = read('index.html');
     const utm = read('src/lib/utm-hero-copy.ts');
     const i18n = read('src/lib/i18n/messages.ts');
@@ -189,6 +189,29 @@ describe('first-screen Site Drops rules', () => {
     expect(i18n).not.toContain(FORBIDDEN_INDIGO_H1_ACCENT);
     expect(utm).not.toContain(FORBIDDEN_INDIGO_H1_ACCENT);
     expect(utm).toContain('LOCKED_SITE_DROPS_H1_ACCENT');
+  });
+
+  it('first screen does not wait on hung APIs', () => {
+    const app = read('src/app.ts');
+    const main = read('src/main.ts');
+    const supabase = read('src/lib/supabase.ts');
+    const lock = read('src/lib/hero-cta-variant.ts');
+
+    expect(app).toContain('INIT_FETCH_TIMEOUT_MS = 12_000');
+    expect(app).toContain('withInitTimeout(loadSiteContent()');
+    expect(app.indexOf('lock844HomepageCopy()')).toBeGreaterThan(0);
+    expect(app.indexOf('lock844HomepageCopy()')).toBeLessThan(app.indexOf('await fetchSiteContent()'));
+
+    expect(main).toContain('lock844HomepageCopy()');
+    expect(main.indexOf('lock844HomepageCopy()')).toBeLessThan(main.indexOf('initApp()'));
+
+    expect(supabase).toContain('SITE_CONTENT_FETCH_TIMEOUT_MS = 8_000');
+    expect(supabase).toContain('site_content timeout');
+
+    expect(lock).not.toMatch(/await /);
+    expect(lock).not.toMatch(/\.from\(/);
+    expect(lock).not.toMatch(/functions\.invoke/);
+    expect(lock).not.toMatch(/\bfetch\s*\(/);
   });
 
   it('keeps Copy above overlays', () => {

@@ -125,7 +125,7 @@ describe('i18n phase 1', () => {
     }
   });
 
-  it('locks English homepage product copy to the Site Drops zip', () => {
+  it('locks English homepage copy to the Site Drops zip code', () => {
     expect(en['hero.title_line1']).toBe(LOCKED_SITE_DROPS_H1_LINE1);
     expect(en['hero.title_accent']).toBe(LOCKED_SITE_DROPS_H1_ACCENT);
     expect(en['hero.title_accent']).not.toBe(FORBIDDEN_INDIGO_H1_ACCENT);

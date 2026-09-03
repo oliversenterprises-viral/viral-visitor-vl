@@ -2,8 +2,8 @@
  * Phase 1 public UI strings — en + es/fr/pt/de/hi.
  * Keys used via data-i18n attributes and t().
  *
- * English homepage product copy is locked to the Site Drops zip.
- * Do not import the indigo banner-only H1 as the English product.
+ * English homepage copy is locked to the original Site Drops zip code.
+ * Do not import the indigo banner-only H1 onto the live homepage.
  */
 
 import {
