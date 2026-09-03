@@ -10,7 +10,9 @@ describe('admin-action-client', () => {
 
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
     vi.resetModules();
+    vi.useRealTimers();
     clearAdminSessionToken();
   });
 
@@ -46,7 +48,7 @@ describe('admin-action-client', () => {
     const { verifyOwnerPassword, OWNER_PASSWORD_VERIFY_TIMEOUT_MS } = await import(
       '../../src/lib/admin-action-client'
     );
-    expect(OWNER_PASSWORD_VERIFY_TIMEOUT_MS).toBe(15_000);
+    expect(OWNER_PASSWORD_VERIFY_TIMEOUT_MS).toBe(8_000);
     const result = await verifyOwnerPassword('owner-test-only');
     expect(result.success).toBe(true);
     if (result.success) expect(result.sessionToken).toBe('hmac-session');
@@ -86,7 +88,7 @@ describe('admin-action-client', () => {
     const { verifyOwnerPassword } = await import('../../src/lib/admin-action-client');
     vi.useFakeTimers();
     const pending = verifyOwnerPassword('owner-test-only');
-    await vi.advanceTimersByTimeAsync(15_000);
+    await vi.advanceTimersByTimeAsync(8_000);
     const result = await pending;
     vi.useRealTimers();
     expect(result.success).toBe(false);
@@ -130,6 +132,29 @@ describe('admin-action-client', () => {
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toMatch(/timed out/i);
     expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it('verifyOwnerPassword returns at 8s even when fetch ignores abort', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key');
+    vi.resetModules();
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise(() => {})),
+    );
+
+    const { verifyOwnerPassword } = await import('../../src/lib/admin-action-client');
+    vi.useFakeTimers();
+    const pending = verifyOwnerPassword('owner-test-only');
+    await vi.advanceTimersByTimeAsync(8_000);
+    const result = await pending;
+    vi.useRealTimers();
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.timedOut).toBe(true);
+      expect(result.error).toMatch(/timed out/i);
+    }
   });
 
   it('owner gate uses fetchAdminAction verify, not functions.invoke', () => {

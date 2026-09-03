@@ -352,46 +352,60 @@ registerGlobal('loadSiteContent', loadSiteContent);
  *   - Prefilling the user's referral link (if they have a code)
  *   - Handling ?ref= attribution banners
  */
+/** Board, activity, totals — below the fold. One timeout. Must not block first screen. */
+async function hydrateBelowFold(myReferralCode: string | null): Promise<void> {
+  await withInitTimeout(
+    (async () => {
+      await Promise.all([
+        refreshWorldwideReferralTotals(),
+        loadPublicViralLoops(myReferralCode),
+      ]);
+      await loadLeaderboard();
+      paintWorldwideReferralTotal();
+      await Promise.all([
+        renderRecentActivity(),
+        renderMyStats(myReferralCode),
+      ]);
+      if (myReferralCode) void refreshFunnelTicker();
+    })(),
+    undefined,
+  );
+}
+
+function wirePostInitChrome(): void {
+  initViralLoopUI();
+  initGrowthCommandCenter();
+  initPostLinkShare();
+  initPostLinkStatus();
+  void import('./lib/prize-slot')
+    .then((m) => m.initWeekRaceClock())
+    .catch(() => {});
+  void import('./lib/promo-kit')
+    .then((m) => m.initPromoKit())
+    .catch(() => {});
+  if (isSupabaseConfigured) {
+    initRealtimeSubscriptions();
+    window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
+  }
+}
+
 export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
   try {
+    // First screen is static Site Drop HTML. CMS only; fail-fast. Do not stack hung RPCs.
     await withInitTimeout(loadSiteContent(), undefined);
-
-    // Verified worldwide total first so the number is never a mystery on first paint
-    await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
-
-    // Daily Crown first so main-board flair has cached champion/leader codes
-    await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
-    await withInitTimeout(loadLeaderboard(), undefined);
-    // Re-paint total with leader #1 context after board loads
-    paintWorldwideReferralTotal();
-    await withInitTimeout(renderRecentActivity(), undefined);
 
     if (myReferralCode) {
       applyExistingReferralLink(myReferralCode);
-      void withInitTimeout(refreshFunnelTicker(), undefined);
     } else {
       syncMobileReferralCta();
       setFunnelTickerVisible(false);
+      await renderMyStats(null);
     }
 
-    await withInitTimeout(renderMyStats(myReferralCode), undefined);
-    initViralLoopUI();
-    initGrowthCommandCenter();
-    initPostLinkShare();
-    initPostLinkStatus();
-    void import('./lib/prize-slot')
-      .then((m) => m.initWeekRaceClock())
-      .catch(() => {});
-    void import('./lib/promo-kit')
-      .then((m) => m.initPromoKit())
-      .catch(() => {});
-
-    if (isSupabaseConfigured) {
-      initRealtimeSubscriptions();
-      window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
-    }
+    wirePostInitChrome();
+    void hydrateBelowFold(myReferralCode);
   } catch (err) {
     console.warn('[ViralRefer] initApp partial failure:', err);
   }

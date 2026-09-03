@@ -35,6 +35,41 @@ test.describe('ViralRefer - Prize Claim Flow & Admin', () => {
     await expect(page.locator('#admin-owner-gate-input')).toBeVisible({ timeout: 5000 });
   });
 
+  test('owner Continue leaves Verifying even if HQ desk never answers', async ({ page }) => {
+    await page.route('**/functions/v1/admin-action', async (route) => {
+      const raw = route.request().postData() || '{}';
+      let action = '';
+      try {
+        action = String((JSON.parse(raw) as { action?: string }).action || '');
+      } catch {
+        action = '';
+      }
+      if (action === 'verify_owner_password') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, session_token: 'e2e-hmac-session' }),
+        });
+        return;
+      }
+      // Desk stays pending — login must not wait on this.
+      await new Promise(() => {});
+    });
+
+    await page.goto('/?owner=1');
+    await waitForAppReady(page);
+    await expect(page).toHaveTitle(/Site Drop/i);
+    await page.locator('#admin-btn').click();
+    const btn = page.locator('#admin-owner-gate-submit');
+    await expect(btn).toBeVisible();
+    await page.fill('#admin-owner-gate-input', 'owner-e2e-not-a-secret');
+    await btn.click();
+    await expect(btn).not.toContainText(/Verifying/i, { timeout: 3000 });
+    await expect(btn).toContainText(/Continue/i);
+    await expect(page.locator('#admin-modal')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#admin-owner-gate-modal')).toHaveClass(/hidden/);
+  });
+
   test('Admin login flow (owner password + session)', async ({ page }) => {
     const adminPass = process.env.ADMIN_TEST_PASSWORD;
     test.skip(!adminPass, 'ADMIN_TEST_PASSWORD not set — skip in CI until GitHub secret is configured');

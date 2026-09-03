@@ -212,4 +212,25 @@ describe('first-screen Site Drops rules', () => {
     expect(read('src/public/modals.ts')).toContain('verifyOwnerPassword');
     expect(read('src/public/modals.ts')).not.toMatch(/functions\.invoke/);
   });
+
+  it('does not let first-screen or owner verify wait on a hung API', () => {
+    const app = read('src/app.ts');
+    expect(app).toContain('INIT_FETCH_TIMEOUT_MS');
+    expect(app).toContain('withInitTimeout');
+    expect(app).toContain('await withInitTimeout(loadSiteContent(), undefined)');
+    expect(app).toContain('void hydrateBelowFold(myReferralCode)');
+    expect(app).not.toMatch(/await withInitTimeout\(loadLeaderboard/);
+    expect(app).not.toMatch(/await withInitTimeout\(renderRecentActivity/);
+    expect(app).not.toMatch(/await withInitTimeout\(refreshWorldwideReferralTotals/);
+    expect(app).not.toMatch(/await hydrateBelowFold/);
+    const client = read('src/lib/admin-action-client.ts');
+    expect(client).toMatch(/OWNER_PASSWORD_VERIFY_TIMEOUT_MS = 8_000/);
+    expect(client).toContain('Promise.race');
+    expect(client).toContain("fetch(`${cfg.url}/functions/v1/admin-action`");
+    const modals = read('src/public/modals.ts');
+    expect(modals).toContain('Promise.race');
+    expect(modals).not.toMatch(/await ViralRefer\.openAdminPanel/);
+    expect(read('index.html')).toContain('Site Drop');
+    expect(read('index.html')).not.toContain('#1 gets a banner for their site.');
+  });
 });

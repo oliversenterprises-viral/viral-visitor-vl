@@ -29,8 +29,8 @@ function supabaseUrlAndAnon(): { url: string; anon: string } | null {
   return { url, anon };
 }
 
-/** Owner-password verify must not hang on functions.invoke. */
-export const OWNER_PASSWORD_VERIFY_TIMEOUT_MS = 15_000;
+/** Owner-password verify must not wait on a hung fetch. First-screen fail-fast. */
+export const OWNER_PASSWORD_VERIFY_TIMEOUT_MS = 8_000;
 
 export type AdminActionFetchResult =
   | { ok: true; status: number; envelope: Record<string, unknown> }
@@ -58,9 +58,10 @@ export async function fetchAdminAction(
   const token = String(options?.sessionToken || '').trim();
   const timeoutMs = options?.timeoutMs;
   const ctrl = timeoutMs && timeoutMs > 0 ? new AbortController() : null;
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  let abortTimer: ReturnType<typeof setTimeout> | undefined;
+  let raceTimer: ReturnType<typeof setTimeout> | undefined;
   if (ctrl && timeoutMs) {
-    timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    abortTimer = setTimeout(() => ctrl.abort(), timeoutMs);
   }
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -70,41 +71,57 @@ export async function fetchAdminAction(
   if (token) headers['x-admin-session'] = token;
   const body: Record<string, unknown> = { action, payload };
   if (token) body.session_token = token;
-  try {
-    const res = await fetch(`${cfg.url}/functions/v1/admin-action`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-      signal: ctrl?.signal,
-    });
-    const text = await res.text();
-    let envelope: Record<string, unknown> = {};
+  const timedOutResult = (): AdminActionFetchResult => ({
+    ok: false,
+    error:
+      action === 'verify_owner_password'
+        ? 'Owner verify timed out — try again.'
+        : 'Request timed out — try again.',
+    timedOut: true,
+  });
+  const work = (async (): Promise<AdminActionFetchResult> => {
     try {
-      envelope = text ? (JSON.parse(text) as Record<string, unknown>) : {};
-    } catch {
+      const res = await fetch(`${cfg.url}/functions/v1/admin-action`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+        signal: ctrl?.signal,
+      });
+      const text = await res.text();
+      let envelope: Record<string, unknown> = {};
+      try {
+        envelope = text ? (JSON.parse(text) as Record<string, unknown>) : {};
+      } catch {
+        return {
+          ok: false,
+          error: `Invalid JSON from admin-action (HTTP ${res.status})`,
+        };
+      }
+      return { ok: true, status: res.status, envelope };
+    } catch (err) {
+      if (isAbortError(err)) return timedOutResult();
       return {
         ok: false,
-        error: `Invalid JSON from admin-action (HTTP ${res.status})`,
+        error: err instanceof Error ? err.message : String(err),
       };
     }
-    return { ok: true, status: res.status, envelope };
-  } catch (err) {
-    if (isAbortError(err)) {
-      return {
-        ok: false,
-        error:
-          action === 'verify_owner_password'
-            ? 'Owner verify timed out — try again.'
-            : 'Request timed out — try again.',
-        timedOut: true,
-      };
-    }
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : String(err),
-    };
+  })();
+  if (!timeoutMs || timeoutMs <= 0) return work;
+  try {
+    return await Promise.race([
+      work,
+      new Promise<AdminActionFetchResult>((resolve) => {
+        raceTimer = setTimeout(() => resolve(timedOutResult()), timeoutMs);
+      }),
+    ]);
   } finally {
-    if (timer) clearTimeout(timer);
+    if (abortTimer) clearTimeout(abortTimer);
+    if (raceTimer) clearTimeout(raceTimer);
+    try {
+      ctrl?.abort();
+    } catch {
+      /* already settled */
+    }
   }
 }
 

@@ -3,7 +3,12 @@
  * Server only. No Claims / Promoters / Died-waiting tiles.
  */
 
-import { invokeAdminAction } from '../lib/admin-action-client';
+import {
+  fetchAdminAction,
+  invokeAdminAction,
+  type AdminActionFetchResult,
+} from '../lib/admin-action-client';
+import { getAdminSessionToken } from '../lib/admin-session';
 import { escapeHtml } from '../lib/escape-html';
 import { formatEventTimestampLabel } from '../lib/stats-helpers';
 import { showToast } from '../ui';
@@ -52,6 +57,10 @@ const EMPTY_METRICS: OwnerFunnelDeskMetrics = {
 export const JUNK_CLEAR_CONFIRM =
   'Clear junk and test visits only? Google Search Console and the verify file stay. Real quality visits stay.';
 
+/** Same abort as owner verify — Command desk first paint uses fetch + timeout. */
+export const OWNER_FUNNEL_DESK_TIMEOUT_MS = 8_000;
+export const OWNER_FUNNEL_DESK_TIMEOUT_NOTE = 'Command desk timed out — tap Refresh.';
+
 /** Deployed admin-action may not know get_owner_funnel_desk yet. */
 export function isOwnerFunnelDeskActionMissing(error: string | undefined | null): boolean {
   const msg = String(error || '').toLowerCase();
@@ -79,6 +88,27 @@ export function ownerFunnelDeskFromInvokeResult(result: {
     return { metrics: { ...metrics, gsc: parseOwnerFunnelGsc(metrics.gsc) } };
   }
   return { metrics: EMPTY_METRICS };
+}
+
+/** Fail-fast fetchAdminAction envelope → Command tiles. */
+export function ownerFunnelDeskFromFetchResult(fetched: AdminActionFetchResult): {
+  metrics: OwnerFunnelDeskMetrics;
+  error?: string;
+} {
+  if (!fetched.ok) {
+    const loaded = ownerFunnelDeskFromInvokeResult({ success: false, error: fetched.error });
+    return fetched.timedOut ? { ...loaded, error: fetched.error } : loaded;
+  }
+  const envelope = fetched.envelope || {};
+  const data = (envelope.data !== undefined ? envelope.data : envelope) as
+    | OwnerFunnelDeskMetrics
+    | Record<string, unknown>
+    | null;
+  return ownerFunnelDeskFromInvokeResult({
+    success: envelope.success === true,
+    data: data as OwnerFunnelDeskMetrics | null,
+    error: typeof envelope.error === 'string' ? envelope.error : undefined,
+  });
 }
 
 function tile(
@@ -185,7 +215,7 @@ function feedLine(row: OwnerFunnelFeedRow): string {
 export function renderOwnerFunnelDeskView(
   container: HTMLElement,
   metrics: OwnerFunnelDeskMetrics,
-  _error?: string,
+  error?: string,
 ): void {
   container.classList.add('owner-funnel-desk');
 
@@ -197,9 +227,15 @@ export function renderOwnerFunnelDeskView(
     ? `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="1">${escapeHtml(String(metrics.junkVisits))} junk/test page views kept off these tiles. Search Console is separate.</p>`
     : `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="0">Junk/test page views stay off these tiles. Search Console is separate.</p>`;
 
+  const fetchError =
+    error && /timed out/i.test(error)
+      ? `<p class="text-[12px] text-amber-200/90" data-owner-desk-fetch-error="1">${escapeHtml(error)}</p>`
+      : '';
+
   container.innerHTML = `
     <div data-owner-funnel-desk="1" class="hq-desk space-y-4">
       <p class="text-sm text-zinc-400">Last ${metrics.windowDays} days · owner IP, test codes, webdriver, and junk sources excluded.</p>
+      ${fetchError}
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3" data-owner-desk-tiles>
         ${tile('Visits', metrics.visits, 'Real page views — junk/test excluded', 'visits')}
         ${tile('Friend landings', metrics.friendLandings, 'Unique people on /r/ or /a/', 'landings')}
@@ -309,14 +345,16 @@ export async function renderOwnerFunnelDesk(container: HTMLElement): Promise<voi
   bindRefresh(container);
   container.innerHTML = SKELETON;
   try {
-    // Tiles come from get_owner_funnel_desk_counts (0052: exclusion must be true/false, never NULL).
-    const result = await invokeAdminAction<OwnerFunnelDeskMetrics>(
-      'get_owner_funnel_desk',
-      {},
-      { timeoutMs: 8_000 },
-    );
-    const loaded = ownerFunnelDeskFromInvokeResult(result);
-    renderOwnerFunnelDeskView(container, loaded.metrics);
+    // Same fetch path as owner login — get_owner_funnel_desk + session token + abort.
+    const fetched = await fetchAdminAction('get_owner_funnel_desk', {}, {
+      sessionToken: getAdminSessionToken(),
+      timeoutMs: 8_000,
+    });
+    const loaded = ownerFunnelDeskFromFetchResult(fetched);
+    const error = fetched.ok === false && fetched.timedOut
+      ? OWNER_FUNNEL_DESK_TIMEOUT_NOTE
+      : loaded.error;
+    renderOwnerFunnelDeskView(container, loaded.metrics, error);
   } catch {
     renderOwnerFunnelDeskView(container, EMPTY_METRICS);
   }
