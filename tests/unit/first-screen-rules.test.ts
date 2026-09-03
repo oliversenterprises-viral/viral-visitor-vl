@@ -32,6 +32,20 @@ describe('first-screen Site Drops rules', () => {
     expect(read('index.html')).toContain('Site Drop');
   });
 
+  it('first screen fail-fasts hung APIs at 2.5s and locks Site Drop English before network', () => {
+    const app = read('src/app.ts');
+    const init = app.slice(app.indexOf('export async function initApp'));
+    expect(app).toMatch(/INIT_FETCH_TIMEOUT_MS = 2_500/);
+    expect(app).not.toMatch(/INIT_FETCH_TIMEOUT_MS = 12_000/);
+    expect(init).toMatch(/lock844HomepageCopy\(\)/);
+    expect(init.indexOf('lock844HomepageCopy()')).toBeLessThan(init.indexOf('await Promise.all(['));
+    expect(init).toMatch(/withInitTimeout\(loadSiteContent/);
+    expect(init).toMatch(/withInitTimeout\(loadLeaderboard/);
+    expect(init).not.toMatch(/await withInitTimeout\(loadSiteContent/);
+    expect(init).not.toMatch(/await withInitTimeout\(loadLeaderboard/);
+    expect(read('index.html')).toContain('Site Drop');
+  });
+
   it('pins the Site Drops tree: title, hero, and funnel still say Site Drop', () => {
     const html = read('index.html');
     const title = html.match(/<title>([^<]+)<\/title>/)?.[1] ?? '';
