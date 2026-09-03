@@ -46,6 +46,7 @@ describe('site-drops ladder fail-fast', () => {
     expect(sql).toMatch(/SET statement_timeout = '2s'/);
     expect(sql).toMatch(/LIMIT 1/);
     expect(sql).toContain("WHERE sc.key = 'site_drops'");
+    expect(sql).toContain('sc.value::text');
   });
 
   it('store load is LIMIT 1 so it cannot scan site_content', () => {
