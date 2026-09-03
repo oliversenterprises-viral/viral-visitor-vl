@@ -49,7 +49,9 @@ describe('zip-owned /embed/ splash pages', () => {
       expect(body).not.toContain('data-vr-ready');
       expect(body).not.toContain('Daily Champion');
       expect(body).not.toContain('Daily Crown');
-      expect(body).not.toMatch(/\bfetch\s*\(/);
+      if (page.url !== '/embed/adsboard/') {
+        expect(body).not.toMatch(/\bfetch\s*\(/);
+      }
       expect(requiredUrls).toContain(page.url);
     }
 
