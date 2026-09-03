@@ -363,6 +363,7 @@ export async function updatePublicContent(content: Record<string, unknown>) {
     /* non-fatal */
   }
 
+  // Only paint if CMS actually returned site_drops — never wipe an independent ladder fetch.
   try {
     const { applySiteDropsFromContent, initSiteDropForm } = await import('./lib/site-drops-ui');
     applySiteDropsFromContent(content as Record<string, unknown>);

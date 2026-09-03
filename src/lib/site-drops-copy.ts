@@ -101,3 +101,20 @@ export const LOCKED_LIVE_PRIZE_WINNER_BADGE =
 
 export const LOCKED_LIVE_HERO_TRUST =
   "This week's #1 (not the owner) with 3 friends gets the 7-day banner.";
+
+/** Zip Site Drop ladder section — do not shorten or rename these labels. */
+export const LOCKED_DROP_BADGE = 'Site Drop ladder';
+export const LOCKED_DROP_TITLE = 'Your site goes live as you climb';
+export const LOCKED_DROP_LEAD =
+  'Paste your website in the slot after Get my link. No URL = no chip. 1 verified friend → 1-hour Rising. 2 friends → week text line. #2/#3 → Challenger. #1 → 7-day banner. Visits and copies do not count.';
+export const LOCKED_DROP_ENTERED_LABEL = 'Just entered · 15 min';
+export const LOCKED_DROP_ENTERED_EMPTY =
+  'No one just entered. Get a link, add your site, and take a chip.';
+export const LOCKED_DROP_RISING_LABEL = 'Rising Site Drops · 1 hour · not the week text line';
+export const LOCKED_DROP_RISING_EMPTY =
+  'Rising slots are open. One verified friend who taps Get my link unlocks a 1-hour drop here.';
+export const LOCKED_DROP_CHALLENGER_LABEL = 'Challenger strip · #2 / #3 · not #1';
+export const LOCKED_DROP_CHALLENGER_EMPTY =
+  'No challengers yet. Hit board #2 or #3 with your site on file.';
+export const LOCKED_BOARD_TITLE = 'Recent Activity';
+export const LOCKED_PRIZE_SLOT = 'Your site here';

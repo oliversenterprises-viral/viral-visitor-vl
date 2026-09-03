@@ -25,6 +25,7 @@ import {
   type SiteDrop,
   type SiteDropsState,
 } from './site-drops';
+import { fetchPublicSiteDrops } from './site-drops-fetch';
 
 const URL_KEY = 'vr_site_drop_url';
 const LABEL_KEY = 'vr_site_drop_label';
@@ -136,7 +137,18 @@ export function paintSiteDrops(raw: unknown, now: Date = new Date()): SiteDropsS
 }
 
 export function applySiteDropsFromContent(content: Record<string, unknown>): void {
-  paintSiteDrops(content.site_drops ?? content['site_drops']);
+  if (!content || !Object.prototype.hasOwnProperty.call(content, 'site_drops')) return;
+  paintSiteDrops(content.site_drops);
+}
+
+/**
+ * Dedicated ladder paint — does not wait on the hung site_content REST.
+ * Timeout (≤2s) paints the existing zip empty-state copy immediately.
+ */
+export async function loadSiteDropsLadder(): Promise<SiteDropsState> {
+  initSiteDropForm();
+  const { raw } = await fetchPublicSiteDrops();
+  return paintSiteDrops(raw);
 }
 
 function readFormWebsite(): string {
