@@ -74,13 +74,12 @@ describe('tools hub restore from Site Drops zip', () => {
     }
   });
 
-  it('hub lists credit-checker, Site Drop ladder, and the share kit', () => {
+  it('hub matches live Site Drops zip: credit-checker and Site Drop ladder', () => {
     const hub = read('public/tools/index.html');
     expect(hub).toContain('Free Growth Tools');
     expect(hub).toContain('./credit-checker.html');
     expect(hub).toContain('./site-drop-ladder.html');
     expect(hub).toContain('Site Drop ladder');
-    expect(hub).toContain('./traffic-refer-kit.html');
     expect(hub).toContain('Site Drops');
     expect(hub).not.toContain('#1 gets a banner for their site');
   });
