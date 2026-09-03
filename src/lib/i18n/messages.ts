@@ -127,6 +127,7 @@ export const en = {
   'drop.jump': 'See live Site Drops',
 
   'leaderboard.title': 'Recent Activity',
+  'activity.title': 'Recent Activity',
   'leaderboard.subtitle': 'Rankings update from verified referrals.',
 
   'claim.modal_title': 'Claim Homepage Feature',
@@ -672,6 +673,7 @@ const PRIZE_FACT_KEYS = [
   'hero.subtitle',
   'hero.cta',
   'leaderboard.title',
+  'activity.title',
   'funnel.badge',
   'funnel.step1',
   'funnel.step2',

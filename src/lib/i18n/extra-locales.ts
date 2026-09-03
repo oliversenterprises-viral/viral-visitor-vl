@@ -1,6 +1,6 @@
 /**
  * Extra public locales beyond Phase-1 core (en es fr pt de hi).
- * Chrome-only overrides — prize facts and leaderboard.title stay English.
+ * Chrome-only overrides — prize facts, leaderboard.title, and activity.title stay English.
  * Do not import old banner-only English ("#1 gets a banner for their site" / "you climb").
  */
 
@@ -36,7 +36,7 @@ export const EXTRA_LOCALE_LABELS: Record<ExtraLocale, string> = {
   uk: 'Українська',
 };
 
-/** Visible chrome only. Do not override prize facts, hero product copy, or leaderboard.title. */
+/** Visible chrome only. Do not override prize facts, hero product copy, leaderboard.title, or activity.title. */
 export const extraOverrides: Record<ExtraLocale, Record<string, string>> = {
   it: {
     'nav.how': 'Come',

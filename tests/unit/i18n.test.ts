@@ -78,6 +78,8 @@ describe('i18n phase 1', () => {
       'hero.title_accent',
       'hero.subtitle',
       'hero.cta',
+      'leaderboard.title',
+      'activity.title',
       'funnel.badge',
       'funnel.step1',
       'funnel.step2',
@@ -120,6 +122,7 @@ describe('i18n phase 1', () => {
       expect(MESSAGES[locale]['hero.title_line1']).toBe('Win the homepage.');
       expect(MESSAGES[locale]['funnel.step2']).toBe('2. Send it');
       expect(MESSAGES[locale]['leaderboard.title']).toBe('Recent Activity');
+      expect(MESSAGES[locale]['activity.title']).toBe('Recent Activity');
       expect(MESSAGES[locale]['funnel.badge']).toBe('SITE DROP LADDER');
     }
     expect(MESSAGES.en['hero.title_accent']).not.toBe('#1 gets a banner for their site.');
@@ -163,6 +166,7 @@ describe('i18n phase 1', () => {
     for (const loc of EXTRA_LOCALES) {
       const overlay = extraOverrides[loc];
       expect(overlay['leaderboard.title']).toBeUndefined();
+      expect(overlay['activity.title']).toBeUndefined();
       expect(overlay['hero.title_accent']).toBeUndefined();
       expect(overlay['funnel.badge']).toBeUndefined();
       expect(overlay['drop.badge']).toBeUndefined();

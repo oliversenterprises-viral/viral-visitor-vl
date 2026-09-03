@@ -33,6 +33,7 @@ export default function handler(_req, res) {
     { loc: `${ORIGIN}/go/challenge/`, changefreq: 'weekly', priority: '0.7' },
     { loc: `${ORIGIN}/go/herculist/`, changefreq: 'weekly', priority: '0.75' },
     { loc: `${ORIGIN}/go/adsboard/`, changefreq: 'weekly', priority: '0.7' },
+    { loc: `${ORIGIN}/go/sponsor/`, changefreq: 'weekly', priority: '0.75' },
     { loc: `${ORIGIN}/llms.txt`, changefreq: 'monthly', priority: '0.4' },
   ];
   const body = urls

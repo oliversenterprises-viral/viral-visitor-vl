@@ -44,6 +44,7 @@ const EDGE_FUNCTIONS = [
   'optimizer-cron',
   'register-referrer-link',
   'submit-site-drop',
+  'racer-talk',
 ];
 
 for (const name of EDGE_FUNCTIONS) {
