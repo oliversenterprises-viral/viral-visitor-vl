@@ -63,8 +63,6 @@ import { buildLeaderboardHtml, buildRankGapSummary, pulseLeaderboardActivity } f
 import { dailyCrownFlairCodes, getCachedDailyCrownStatus } from './lib/daily-crown';
 import { buildRecentActivityHtml, pulseRecentActivity } from './lib/activity-ui';
 import {
-  activitySkeletonHtml,
-  leaderboardSkeletonHtml,
   statsSkeletonHtml,
   staggerReveal,
 } from './lib/public-polish';
@@ -95,9 +93,8 @@ let siteContentChannel: ReturnType<typeof supabase.channel> | null = null;
 let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
-const INIT_FETCH_TIMEOUT_MS = 12_000;
-/** Zip ticker bind — 2s cap; never await this on first-screen init. */
-const TICKER_TIMEOUT_MS = 2_000;
+/** Homepage first paint: never wait longer than public REST abort (≤2s). */
+export const INIT_FETCH_TIMEOUT_MS = 2_000;
 /** Disk IO: slower poll + pause when tab hidden (was 45s always-on). */
 const PUBLIC_ACTIVITY_POLL_MS = 90_000;
 
@@ -106,22 +103,6 @@ async function withInitTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> 
     promise,
     new Promise<T>((resolve) => setTimeout(() => resolve(fallback), INIT_FETCH_TIMEOUT_MS)),
   ]);
-}
-
-async function withTickerTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<T>((resolve) => {
-        timer = setTimeout(() => resolve(fallback), TICKER_TIMEOUT_MS);
-      }),
-    ]);
-  } catch {
-    return fallback;
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
 }
 
 function updateRealtimeStatus(status: string) {
@@ -161,24 +142,19 @@ async function refreshFunnelTicker(activityRows?: PublicActivityRow[]): Promise<
   ensureFunnelTickerDom();
   setFunnelTickerVisible(true);
   try {
-    await withTickerTimeout(
-      (async () => {
-        const tickerRows = await fetchPublicFunnelTicker(24);
-        let fallbackSource = activityRows;
-        if (!fallbackSource?.length) {
-          const activity = await fetchPublicRecentActivity(12);
-          fallbackSource = activity.rows;
-        }
-        const rankRows = publicActivityToTickerRows(
-          mergePublicActivityWithRankMoves(fallbackSource || [], getEphemeralRankMoves(), 8),
-        );
-        const merged = mergeFunnelTickerRows(tickerRows, rankRows, 24);
-        renderFunnelTickerRows(merged);
-      })(),
-      undefined,
+    const tickerRows = await fetchPublicFunnelTicker(24);
+    let fallbackSource = activityRows;
+    if (!fallbackSource?.length) {
+      const activity = await fetchPublicRecentActivity(12);
+      fallbackSource = activity.rows;
+    }
+    const rankRows = publicActivityToTickerRows(
+      mergePublicActivityWithRankMoves(fallbackSource || [], getEphemeralRankMoves(), 8),
     );
+    const merged = mergeFunnelTickerRows(tickerRows, rankRows, 24);
+    renderFunnelTickerRows(merged);
   } catch {
-    /* non-fatal FOMO chrome */
+    /* non-fatal FOMO chrome — RPCs already abort in ≤2s */
   }
 }
 
@@ -192,9 +168,6 @@ export function onReferralLinkReadyForTicker(): void {
 async function renderRecentActivity(options: { pulse?: boolean } = {}) {
   const actEl = document.getElementById('recent-activity');
   if (!actEl) return;
-  if (!actEl.querySelector('.activity-row')) {
-    actEl.innerHTML = activitySkeletonHtml();
-  }
   try {
     const { rows, velocityLastHour } = await fetchPublicRecentActivity(10);
     const merged = mergePublicActivityWithRankMoves(rows, getEphemeralRankMoves(), 8);
@@ -208,7 +181,8 @@ async function renderRecentActivity(options: { pulse?: boolean } = {}) {
     // Reuse activity rows so ticker refresh does not double-hit the public activity RPC
     void refreshFunnelTicker(rows);
   } catch {
-    actEl.innerHTML = `<div class="text-center py-4 text-zinc-400 text-sm">Unable to load activity.</div>`;
+    actEl.innerHTML = buildRecentActivityHtml([]);
+    actEl.setAttribute('aria-busy', 'false');
   }
 }
 
@@ -310,10 +284,6 @@ export async function loadLeaderboard(options: { pulseCode?: string } = {}) {
   const container = document.getElementById('leaderboard-container');
   if (!container) return;
 
-  if (!container.querySelector('.leaderboard-row')) {
-    container.innerHTML = leaderboardSkeletonHtml();
-  }
-
   try {
     const entries = await fetchLeaderboard(0);
     cachedLeaderboard = entries || [];
@@ -327,14 +297,16 @@ export async function loadLeaderboard(options: { pulseCode?: string } = {}) {
     if (options.pulseCode) pulseLeaderboardActivity(options.pulseCode);
     renderHeroTrustPack(cachedLeaderboard);
     paintWorldwideReferralTotal();
-    // Keep legacy helper in sync for any i18n listeners still using board-size FOMO
     applyHeroStatsSubtext(
       cachedUniqueReferrers,
       cachedLeaderboard[0]?.referral_count ?? 0,
     );
     void import('./lib/prize-pull').then((m) => m.initPrizePullProof()).catch(() => {});
   } catch {
-    container.innerHTML = `<div class="text-zinc-400">Leaderboard temporarily unavailable.</div>`;
+    if (!container.querySelector('.leaderboard-row, .public-empty-state')) {
+      container.innerHTML = buildLeaderboardHtml([]);
+    }
+    container.setAttribute('aria-busy', 'false');
   }
 }
 
@@ -398,40 +370,65 @@ export async function loadSiteContent() {
 registerGlobal('loadSiteContent', loadSiteContent);
 
 /**
+ * Static Site Drops first screen — Your site here, Get my referral link,
+ * SITE DROP LADDER badge. Used immediately and on hung REST/RPC timeout.
+ * Does not wait on the funnel ticker.
+ */
+export function paintStaticFirstScreen(): void {
+  setFunnelTickerVisible(false);
+  try {
+    lock844HomepageCopy();
+    lockFunnelJourneyBadge();
+  } catch {
+    /* hero is already in index.html */
+  }
+  const lb = document.getElementById('leaderboard-container');
+  if (lb && !lb.querySelector('.leaderboard-row')) {
+    lb.innerHTML = buildLeaderboardHtml([]);
+    lb.setAttribute('aria-busy', 'false');
+  }
+  const act = document.getElementById('recent-activity');
+  if (act && !act.querySelector('.activity-row')) {
+    act.innerHTML = buildRecentActivityHtml([]);
+    act.setAttribute('aria-busy', 'false');
+  }
+}
+
+/**
  * Main public site initializer.
- * Runs on page load and orchestrates:
- *   - Admin button wiring
- *   - Loading dynamic site content
- *   - Populating stats, leaderboard, and recent activity
- *   - Prefilling the user's referral link (if they have a code)
- *   - Handling ?ref= attribution banners
+ * First paint is the static Site Drops screen. Public REST/RPC hydrate in
+ * parallel and abort in ≤2s — hung RPCs never block the hero or ticker bind.
  */
 export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
+  paintStaticFirstScreen();
+
+  if (myReferralCode) {
+    applyExistingReferralLink(myReferralCode);
+  } else {
+    syncMobileReferralCta();
+  }
+
   try {
-    await withInitTimeout(loadSiteContent(), undefined);
+    await Promise.all([
+      withInitTimeout(loadSiteContent(), undefined),
+      withInitTimeout(refreshWorldwideReferralTotals(), undefined),
+      withInitTimeout(loadPublicViralLoops(myReferralCode), undefined),
+      withInitTimeout(loadLeaderboard(), undefined),
+      withInitTimeout(renderRecentActivity(), undefined),
+      withInitTimeout(renderMyStats(myReferralCode), undefined),
+    ]);
 
-    // Verified worldwide total first so the number is never a mystery on first paint
-    await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
-
-    // Daily Crown first so main-board flair has cached champion/leader codes
-    await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
-    await withInitTimeout(loadLeaderboard(), undefined);
-    // Re-paint total with leader #1 context after board loads
     paintWorldwideReferralTotal();
-    await withInitTimeout(renderRecentActivity(), undefined);
 
+    // Zip ticker is optional FOMO — never on the first-paint critical path
     if (myReferralCode) {
-      applyExistingReferralLink(myReferralCode);
-      // Off first-screen path: zip ticker bind, 2s fail-fast, never await.
-      void refreshFunnelTicker();
-    } else {
-      syncMobileReferralCta();
-      setFunnelTickerVisible(false);
+      void refreshFunnelTicker().catch(() => {
+        /* ticker optional */
+      });
     }
 
-    await withInitTimeout(renderMyStats(myReferralCode), undefined);
     initViralLoopUI();
     initGrowthCommandCenter();
     initPostLinkShare();
@@ -449,6 +446,7 @@ export async function initApp() {
     }
   } catch (err) {
     console.warn('[ViralRefer] initApp partial failure:', err);
+    paintStaticFirstScreen();
   }
 }
 

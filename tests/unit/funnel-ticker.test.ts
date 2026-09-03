@@ -12,7 +12,8 @@ import {
   renderFunnelTickerRows,
   shouldShowFunnelTicker,
 } from '../../src/lib/funnel-ticker';
-import { PUBLIC_TICKER_TIMEOUT_MS, withPublicTickerTimeout } from '../../src/lib/supabase';
+import { PUBLIC_TICKER_TIMEOUT_MS } from '../../src/lib/supabase';
+import { PUBLIC_REST_TIMEOUT_MS, withPublicRestTimeout } from '../../src/lib/public-rest-timeout';
 
 describe('funnel-ticker', () => {
   it('shouldShowFunnelTicker only for VIRAL- codes', () => {
@@ -169,13 +170,20 @@ describe('funnel-ticker', () => {
 
   it('ticker RPC fail-fast in 2s when PostgREST hangs (live first-screen lock)', async () => {
     expect(PUBLIC_TICKER_TIMEOUT_MS).toBe(2_000);
+    expect(PUBLIC_REST_TIMEOUT_MS).toBe(2_000);
     vi.useFakeTimers();
-    const hung = new Promise<string>(() => {
-      /* never resolves */
-    });
-    const raced = withPublicTickerTimeout(hung, 'fallback');
-    vi.advanceTimersByTime(2_000);
+    let aborted = false;
+    const raced = withPublicRestTimeout((signal) => {
+      signal.addEventListener('abort', () => {
+        aborted = true;
+      });
+      return new Promise<string>(() => {
+        /* never resolves */
+      });
+    }, 'fallback');
+    await vi.advanceTimersByTimeAsync(2_000);
     await expect(raced).resolves.toBe('fallback');
+    expect(aborted).toBe(true);
     vi.useRealTimers();
   });
 });

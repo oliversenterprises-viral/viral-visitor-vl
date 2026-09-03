@@ -190,12 +190,16 @@ describe('first-screen Site Drops rules', () => {
     expect(app).toContain('ensureFunnelTickerDom');
     expect(app).toContain('lockFunnelJourneyBadge');
     expect(app).not.toContain('Last-night lock: no LIVE WORLDWIDE ticker over the hero.');
-    expect(app).toMatch(/TICKER_TIMEOUT_MS\s*=\s*2_000/);
+    expect(app).toContain('INIT_FETCH_TIMEOUT_MS = 2_000');
+    expect(app).not.toContain('INIT_FETCH_TIMEOUT_MS = 12_000');
+    expect(app).toContain('paintStaticFirstScreen');
+    expect(app).toContain('Promise.all');
     expect(app).not.toMatch(/await\s+refreshFunnelTicker\(/);
     expect(app).toMatch(/void refreshFunnelTicker\(/);
     expect(app).not.toContain('await withInitTimeout(refreshFunnelTicker()');
     expect(supabase).toMatch(/PUBLIC_TICKER_TIMEOUT_MS\s*=\s*2_000/);
-    expect(supabase).toContain('withPublicTickerTimeout');
+    expect(supabase).toContain('withPublicRestTimeout');
+    expect(supabase).toMatch(/get_public_funnel_ticker[\s\S]*abortSignal/);
     expect(supabase).toContain('get_public_funnel_ticker');
     expect(css).toMatch(
       /html\[data-vr-kid-simple\]:not\(\[data-vr-has-link\]\):not\(\[data-vr-kid-more\]\) #vr-funnel-ticker/,
