@@ -10,6 +10,7 @@ import { getMyReferralCode } from '../public/globals';
 import { getClaimOwnershipToken } from './claim-ownership';
 import { showToast } from '../ui';
 import {
+  DEFAULT_TOKEN_TIMEOUT_MS,
   ensureTurnstileReady,
   getTurnstileSiteKey,
   getTurnstileToken,
@@ -157,7 +158,7 @@ async function tokenForSiteDrop(): Promise<string> {
   return getTurnstileToken(host, siteKey, 'site-drop', {
     action: 'site-drop',
     size: 'compact',
-    timeoutMs: 30_000,
+    timeoutMs: DEFAULT_TOKEN_TIMEOUT_MS,
   });
 }
 

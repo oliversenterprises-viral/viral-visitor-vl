@@ -23,7 +23,14 @@ import {
   parseRefFromLocation,
 } from './lib/referral-url';
 import { parseEdgeFunctionBody } from './lib/edge-response';
-import { getCreditTurnstileToken, prefetchCreditTurnstileToken, resetCreditTurnstileStateForTests } from './lib/turnstile';
+import {
+  DEFAULT_TOKEN_TIMEOUT_MS,
+  HUMAN_CHECK_STALL_MESSAGE,
+  getCreditTurnstileToken,
+  isHumanCheckStallError,
+  prefetchCreditTurnstileToken,
+  resetCreditTurnstileStateForTests,
+} from './lib/turnstile';
 import { escapeHtml } from './content';
 import { showToast } from './ui';
 import { ViralRefer } from './lib/global';
@@ -62,7 +69,13 @@ let referralRecordingInFlight = false;
 let referralSuccessToastShown = false;
 let referralFailureToastShown = false;
 
-export type ReferralRecordOutcome = 'success' | 'duplicate' | 'skipped' | 'failed' | 'in_flight';
+export type ReferralRecordOutcome =
+  | 'success'
+  | 'duplicate'
+  | 'skipped'
+  | 'failed'
+  | 'in_flight'
+  | 'stall';
 
 /**
  * Robustly builds a referral link, properly handling custom base URLs
@@ -121,12 +134,12 @@ async function recordReferralIfAttributed(options: {
     }
     const referredCode = visitorCode;
 
-    const turnstileToken = await getCreditTurnstileToken(45_000);
+    const turnstileToken = await getCreditTurnstileToken(DEFAULT_TOKEN_TIMEOUT_MS);
     if (!turnstileToken) {
       if (notify) {
         notifyReferralOutcome('failed', options.allowFailureRetryToast);
       }
-      return 'failed';
+      return 'stall';
     }
 
     const { data, error } = await supabase.functions.invoke('record-referral', {
@@ -202,6 +215,10 @@ async function runFunnelReferralRecording(): Promise<ReferralRecordOutcome> {
     if (outcome === 'success' || outcome === 'duplicate') {
       onReferralCredited();
       return outcome;
+    }
+    if (outcome === 'stall') {
+      onReferralCreditFailed();
+      return 'failed';
     }
     if (outcome === 'skipped') {
       if (pendingReferrerCode) onReferralSelfReferralBlocked();
@@ -351,13 +368,27 @@ export function syncMobileReferralCta(): void {
 /**
  * Gets or generates a referral code for the current user and pre-fills the referral input.
  * Link + funnel events fire first (conversion); Turnstile recording runs in the background.
+ * Fail-fast: "Getting your link…" cannot spin forever if a human-check stalls.
  */
 let getLinkInFlight = false;
+export const GET_LINK_FAILFAST_MS = 6_000;
+
+/** Leave "Getting your link…" if a human-check (or anything else) stalled. */
+export function failGetLinkIfHumanCheckStalled(): boolean {
+  const root = document.getElementById('post-link-share');
+  if (root?.dataset.state !== 'loading') return false;
+  showPostLinkError(HUMAN_CHECK_STALL_MESSAGE);
+  getLinkInFlight = false;
+  return true;
+}
 
 export async function getMyReferralLinkInstant(): Promise<void> {
   if (getLinkInFlight) return;
   getLinkInFlight = true;
   showPostLinkLoading();
+  const watchdog = window.setTimeout(() => {
+    failGetLinkIfHumanCheckStalled();
+  }, GET_LINK_FAILFAST_MS);
   try {
     let code = getMyReferralCode();
 
@@ -407,9 +438,10 @@ export async function getMyReferralLinkInstant(): Promise<void> {
     if (pendingReferrerCode && !referralRecordedThisSession) {
       void runFunnelReferralRecording();
     }
-  } catch {
-    showPostLinkError();
+  } catch (err) {
+    showPostLinkError(isHumanCheckStallError(err) ? HUMAN_CHECK_STALL_MESSAGE : undefined);
   } finally {
+    window.clearTimeout(watchdog);
     getLinkInFlight = false;
   }
 }

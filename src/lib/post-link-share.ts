@@ -145,14 +145,14 @@ export function showPostLinkLoading(): void {
   }
 }
 
-export function showPostLinkError(): void {
+export function showPostLinkError(headingText?: string): void {
   wireOnce();
   revealReferralSection();
   const root = el(IDS.root);
   if (!root) return;
   setState('error');
   const heading = el(IDS.heading);
-  if (heading) heading.textContent = 'Couldn’t make your link.';
+  if (heading) heading.textContent = headingText?.trim() || 'Couldn’t make your link.';
   const url = el(IDS.url);
   if (url) {
     url.textContent = '';
