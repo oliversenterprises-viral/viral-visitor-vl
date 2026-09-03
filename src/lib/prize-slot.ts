@@ -151,8 +151,10 @@ export function isClaimedPrizeBanner(banner: PrizeBannerInput | null | undefined
   if ((host === 'x.com' || host === 'twitter.com') && /viralrefer/i.test(href)) return false;
   const img = String(banner.imageUrl || '').toLowerCase();
   if (img.includes('winner-spotlight') || img.includes('featured-partner')) return false;
+  if (img.includes('/assets/banners/') || img.includes('/assets/hero.png')) return false;
   const label = String(banner.label || '').trim().toLowerCase();
   if (label === 'winner spotlight' || label === 'featured partner') return false;
+  if (label === EMPTY_SLOT_NAME.toLowerCase() || label === 'your brand') return false;
   return true;
 }
 
@@ -165,7 +167,7 @@ export function resolvePrizeSlot(input: {
     (input.selected && isClaimedPrizeBanner(input.selected) ? input.selected : null) ||
     enabled[0] ||
     null;
-  if (!candidate) return examplePrizeSlot();
+  if (!candidate) return emptyPrizeSlot();
 
   const href = safeHttpUrl(candidate.redirectUrl || '');
   const host = href ? hostnameFromUrl(href) : null;
@@ -239,22 +241,25 @@ export function paintPrizeSlot(slot: PrizeSlot): void {
     preview.toggleAttribute('hidden', !showPreview);
   }
 
-  const thumbs = [
-    document.getElementById('hero-slot-thumb') as HTMLImageElement | null,
-    document.getElementById('prize-slot-thumb') as HTMLImageElement | null,
-  ];
-  const showThumb = slot.kind === 'winner';
-  for (const thumb of thumbs) {
-    if (!thumb) continue;
-    const src = showThumb ? slot.imageUrl : undefined;
+  // Never paint a CMS / winner image over the black hero. Prize card only.
+  const heroThumb = document.getElementById('hero-slot-thumb') as HTMLImageElement | null;
+  if (heroThumb) {
+    heroThumb.removeAttribute('src');
+    heroThumb.alt = '';
+    heroThumb.classList.add('hidden');
+  }
+
+  const prizeThumb = document.getElementById('prize-slot-thumb') as HTMLImageElement | null;
+  if (prizeThumb) {
+    const src = slot.kind === 'winner' ? slot.imageUrl : undefined;
     if (src) {
-      thumb.src = src;
-      thumb.alt = `${slot.siteName} homepage banner`;
-      thumb.classList.remove('hidden');
+      prizeThumb.src = src;
+      prizeThumb.alt = `${slot.siteName} homepage banner`;
+      prizeThumb.classList.remove('hidden');
     } else {
-      thumb.removeAttribute('src');
-      thumb.alt = '';
-      thumb.classList.add('hidden');
+      prizeThumb.removeAttribute('src');
+      prizeThumb.alt = '';
+      prizeThumb.classList.add('hidden');
     }
   }
 

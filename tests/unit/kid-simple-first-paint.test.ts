@@ -34,12 +34,12 @@ describe('kid-simple first paint', () => {
     expect(hero).not.toContain('Get my free link');
     expect(hero).toContain('Verified #1 gets a 30-day banner for their website.');
     expect(hero).toContain('id="hero-banner-mock"');
-    expect(hero).toContain('ViralRefer Tools');
-    expect(hero).toContain('Example — this is what #1 gets');
-    expect(hero).toContain('/tools/');
-    expect(hero).toContain('Example ad');
-    expect(hero).toContain('Free growth tools');
-    expect(hero).toContain('Share generator');
+    expect(hero).toContain('Your site here');
+    expect(hero).toContain('Your site here · 30 days');
+    expect(hero).toContain('This slot is empty. #1 puts their site here.');
+    expect(hero).toContain('data-vr-prize-slot="empty"');
+    expect(hero).not.toContain('ViralRefer Tools');
+    expect(hero).not.toContain('Example ad');
     expect(hero).not.toMatch(/CURRENT #1/);
     expect(hero).not.toContain('yourwebsite.com');
     expect(hero).toContain('Early ranks are open. #1 puts their website on this page.');
