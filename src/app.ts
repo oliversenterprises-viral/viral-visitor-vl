@@ -381,6 +381,9 @@ export async function initApp() {
     initGrowthCommandCenter();
     initPostLinkShare();
     initPostLinkStatus();
+    void import('./lib/racer-talk')
+      .then((m) => m.initRacerTalk())
+      .catch(() => {});
     void import('./lib/prize-slot')
       .then((m) => m.initWeekRaceClock())
       .catch(() => {});
