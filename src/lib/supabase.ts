@@ -46,11 +46,9 @@ export const supabase: SupabaseClient = isSupabaseConfigured
 export async function fetchLeaderboard(minReferrals: number = 1): Promise<LeaderboardEntry[]> {
   if (!isSupabaseConfigured) return [];
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc(
-      'get_leaderboard',
-      { min_referrals: minReferrals },
-      { abortSignal: signal },
-    );
+    const { data, error } = await supabase
+      .rpc('get_leaderboard', { min_referrals: minReferrals })
+      .abortSignal(signal);
     if (!error && Array.isArray(data)) {
       return data as LeaderboardEntry[];
     }
@@ -61,7 +59,7 @@ export async function fetchLeaderboard(minReferrals: number = 1): Promise<Leader
 export async function fetchTotalReferrers(): Promise<number> {
   if (!isSupabaseConfigured) return 0;
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc('get_total_referral_count', {}, { abortSignal: signal });
+    const { data, error } = await supabase.rpc('get_total_referral_count').abortSignal(signal);
     if (!error && typeof data === 'number') return data;
     return 0;
   }, 0);
@@ -71,7 +69,7 @@ export async function fetchTotalReferrers(): Promise<number> {
 export async function fetchUniqueReferrerCount(): Promise<number> {
   if (!isSupabaseConfigured) return 0;
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc('get_unique_referrer_count', {}, { abortSignal: signal });
+    const { data, error } = await supabase.rpc('get_unique_referrer_count').abortSignal(signal);
     if (!error && typeof data === 'number') return data;
     return 0;
   }, 0);
@@ -97,11 +95,9 @@ export async function fetchPublicGetLinkStats(hours = 24): Promise<PublicGetLink
   const empty: PublicGetLinkStats = { uniquePeople: 0, events: 0, windowHours: hours };
   if (!isSupabaseConfigured) return empty;
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc(
-      'get_public_get_link_stats',
-      { p_hours: hours },
-      { abortSignal: signal },
-    );
+    const { data, error } = await supabase
+      .rpc('get_public_get_link_stats', { p_hours: hours })
+      .abortSignal(signal);
     if (error || data == null) return empty;
     const payload = typeof data === 'object' ? (data as Record<string, unknown>) : {};
     return {
@@ -117,7 +113,7 @@ export async function fetchPublicPrizePull(): Promise<PublicPrizePull> {
   const empty: PublicPrizePull = { visits7d: 0, leaderReferrals: 0, minForClaim: 10 };
   if (!isSupabaseConfigured) return empty;
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc('get_public_prize_pull', {}, { abortSignal: signal });
+    const { data, error } = await supabase.rpc('get_public_prize_pull').abortSignal(signal);
     if (error || data == null) return empty;
     const payload = typeof data === 'object' ? (data as Record<string, unknown>) : {};
     return {
@@ -144,11 +140,9 @@ export async function fetchMyLeaderboardRank(referrerCode: string): Promise<numb
 export async function fetchMyReferralCount(referrerCode: string): Promise<number> {
   if (!referrerCode || !isSupabaseConfigured) return 0;
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc(
-      'get_my_referral_count',
-      { p_referrer_code: referrerCode },
-      { abortSignal: signal },
-    );
+    const { data, error } = await supabase
+      .rpc('get_my_referral_count', { p_referrer_code: referrerCode })
+      .abortSignal(signal);
     if (!error && typeof data === 'number') return data;
     return 0;
   }, 0);
@@ -170,11 +164,9 @@ export async function fetchPublicRecentActivity(limit = 8): Promise<{
   const empty = { rows: [] as PublicActivityRow[], velocityLastHour: 0 };
 
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc(
-      'get_public_recent_activity',
-      { p_limit: fetchLimit },
-      { abortSignal: signal },
-    );
+    const { data, error } = await supabase
+      .rpc('get_public_recent_activity', { p_limit: fetchLimit })
+      .abortSignal(signal);
     if (!error && data && typeof data === 'object') {
       const payload = data as {
         rows?: Array<{
@@ -210,11 +202,9 @@ export async function fetchPublicRecentActivity(limit = 8): Promise<{
 export async function fetchPublicFunnelTicker(limit = 24): Promise<FunnelTickerRow[]> {
   if (!isSupabaseConfigured) return [];
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc(
-      'get_public_funnel_ticker',
-      { p_limit: Math.max(limit, 8) },
-      { abortSignal: signal },
-    );
+    const { data, error } = await supabase
+      .rpc('get_public_funnel_ticker', { p_limit: Math.max(limit, 8) })
+      .abortSignal(signal);
     if (error || data == null) return [];
     if (Array.isArray(data)) return normalizeFunnelTickerRows(data);
     if (typeof data === 'object' && Array.isArray((data as { rows?: unknown }).rows)) {
@@ -240,11 +230,9 @@ export async function fetchReferrerPublicStats(referrerCode: string): Promise<Re
   };
   if (!referrerCode || !isSupabaseConfigured) return fallback;
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc(
-      'get_referrer_public_stats',
-      { p_referrer_code: referrerCode },
-      { abortSignal: signal },
-    );
+    const { data, error } = await supabase
+      .rpc('get_referrer_public_stats', { p_referrer_code: referrerCode })
+      .abortSignal(signal);
     if (!error && data && typeof data === 'object') {
       const row = data as Record<string, unknown>;
       return {
@@ -261,11 +249,9 @@ export async function fetchReferrerPublicStats(referrerCode: string): Promise<Re
 export async function fetchWeeklySprintLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
   if (!isSupabaseConfigured) return [];
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc(
-      'get_weekly_sprint_leaderboard',
-      { p_limit: limit },
-      { abortSignal: signal },
-    );
+    const { data, error } = await supabase
+      .rpc('get_weekly_sprint_leaderboard', { p_limit: limit })
+      .abortSignal(signal);
     if (!error && Array.isArray(data)) {
       return data as LeaderboardEntry[];
     }
@@ -276,7 +262,7 @@ export async function fetchWeeklySprintLeaderboard(limit = 10): Promise<Leaderbo
 export async function fetchWeeklyReferralCount(): Promise<number> {
   if (!isSupabaseConfigured) return 0;
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc('get_weekly_referral_count', {}, { abortSignal: signal });
+    const { data, error } = await supabase.rpc('get_weekly_referral_count').abortSignal(signal);
     if (!error && typeof data === 'number') return data;
     return 0;
   }, 0);
@@ -286,11 +272,9 @@ export async function fetchWeeklyReferralCount(): Promise<number> {
 export async function fetchDailyCrownStatus(hallDays = 14): Promise<unknown | null> {
   if (!isSupabaseConfigured) return null;
   return withPublicRestTimeout(async (signal) => {
-    const { data, error } = await supabase.rpc(
-      'get_daily_crown_status',
-      { p_hall_days: hallDays },
-      { abortSignal: signal },
-    );
+    const { data, error } = await supabase
+      .rpc('get_daily_crown_status', { p_hall_days: hallDays })
+      .abortSignal(signal);
     if (!error && data != null) return data;
     return null;
   }, null);

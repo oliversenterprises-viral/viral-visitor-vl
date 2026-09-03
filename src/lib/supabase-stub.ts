@@ -35,7 +35,13 @@ export function createSupabaseStub(): SupabaseClient {
 
   return {
     from: () => query(),
-    rpc: () => empty,
+    rpc: () => {
+      const builder = {
+        abortSignal: () => builder,
+        then: empty.then.bind(empty),
+      };
+      return builder;
+    },
     functions: {
       invoke: (name: string, options?: unknown) => {
         invokeLog.push({ name, options });
