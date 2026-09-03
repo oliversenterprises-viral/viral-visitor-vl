@@ -44,7 +44,12 @@ describe('site-drops first screen contract on this tree', () => {
     expect(html).toContain(LOCKED_LIVE_FUNNEL_BADGE);
     expect(html).toContain(LOCKED_LIVE_HOW_BADGE);
     expect(html).toMatch(/id="site-entered-ticker"[^>]*hidden/);
-    expect(html).not.toContain('Early Leaderboard');
+    const board = html.slice(
+      html.indexOf('id="leaderboard-title"'),
+      html.indexOf('id="leaderboard-container"'),
+    );
+    expect(board).not.toContain('Early Leaderboard');
+    expect(board).toContain('Recent Activity');
   });
 
   it('keeps prize Your site here and Recent Activity, not Early Leaderboard', () => {

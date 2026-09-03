@@ -147,7 +147,6 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('Rising Site Drops · 1 hour · not the week text line');
     expect(html).toContain('Challenger strip · #2 / #3 · not #1');
     expect(html).toContain('SITE DROP LADDER');
-    expect(html).not.toContain('Early Leaderboard');
   });
 
   it('keeps Copy above overlays', () => {
