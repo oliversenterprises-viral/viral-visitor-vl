@@ -6,7 +6,11 @@
 import { ViralRefer, registerGlobal } from '../lib/global';
 import { switchAdminTab, showOwnerFunnelDesk } from '../admin';
 import { initAdminSimple, setAdminMore } from '../lib/admin-simple';
-import { verifyOwnerPassword } from '../lib/admin-action-client';
+import {
+  OWNER_PASSWORD_VERIFY_TIMEOUT_MS,
+  verifyOwnerPassword,
+  type VerifyOwnerPasswordResult,
+} from '../lib/admin-action-client';
 import { setAdminSessionToken, clearAdminSessionToken, markOwnerHqSurface } from '../lib/admin-session';
 import { dismissShareAbandonOverlay } from '../lib/share-abandon-rescue';
 
@@ -244,8 +248,23 @@ export const submitAdminPassword = async () => {
 
   let authorized = false;
   let verifyError = '';
+  let raceTimer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const result = await verifyOwnerPassword(val);
+    // Hard deadline — Verifying cannot stick if fetch never aborts.
+    const result = await Promise.race<VerifyOwnerPasswordResult>([
+      verifyOwnerPassword(val),
+      new Promise((resolve) => {
+        raceTimer = setTimeout(
+          () =>
+            resolve({
+              success: false,
+              error: 'Owner verify timed out — try again.',
+              timedOut: true,
+            }),
+          OWNER_PASSWORD_VERIFY_TIMEOUT_MS,
+        );
+      }),
+    ]);
     if (result.success) {
       setAdminSessionToken(result.sessionToken);
       authorized = true;
@@ -254,6 +273,8 @@ export const submitAdminPassword = async () => {
     }
   } catch {
     verifyError = 'Owner verify failed — try again.';
+  } finally {
+    if (raceTimer) clearTimeout(raceTimer);
   }
 
   // Leave Verifying as soon as verifyOwnerPassword returns. Do not wait for HQ paint.

@@ -25,6 +25,7 @@ describe('owner password gate button', () => {
   it('restores Continue after a timed-out verify and never stays on Verifying', async () => {
     vi.resetModules();
     vi.doMock('../../src/lib/admin-action-client', () => ({
+      OWNER_PASSWORD_VERIFY_TIMEOUT_MS: 8_000,
       verifyOwnerPassword: vi.fn().mockResolvedValue({
         success: false,
         error: 'Owner verify timed out — try again.',
@@ -45,6 +46,7 @@ describe('owner password gate button', () => {
   it('leaves Verifying as soon as verify returns even if HQ desk never opens', async () => {
     vi.resetModules();
     vi.doMock('../../src/lib/admin-action-client', () => ({
+      OWNER_PASSWORD_VERIFY_TIMEOUT_MS: 8_000,
       verifyOwnerPassword: vi.fn().mockResolvedValue({
         success: true,
         sessionToken: 'hmac-session',
@@ -65,11 +67,31 @@ describe('owner password gate button', () => {
     expect(btn.innerHTML).toMatch(/Continue/);
   });
 
+  it('leaves Verifying at 8s when verify fetch never settles', async () => {
+    vi.resetModules();
+    vi.doMock('../../src/lib/admin-action-client', () => ({
+      OWNER_PASSWORD_VERIFY_TIMEOUT_MS: 8_000,
+      verifyOwnerPassword: vi.fn(() => new Promise(() => {})),
+    }));
+    const { submitAdminPassword } = await import('../../src/public/modals');
+    const btn = document.getElementById('admin-owner-gate-submit') as HTMLButtonElement;
+    vi.useFakeTimers();
+    const pending = submitAdminPassword();
+    await vi.advanceTimersByTimeAsync(8_000);
+    await pending;
+    vi.useRealTimers();
+    expect(btn.disabled).toBe(false);
+    expect(btn.innerHTML).not.toMatch(/Verifying/);
+    expect(btn.innerHTML).toMatch(/Continue/);
+  });
+
   it('does not await openAdminPanel before restoring Continue', () => {
     const src = readFileSync(resolve(__dirname, '../../src/public/modals.ts'), 'utf8');
     expect(src).not.toMatch(/await ViralRefer\.openAdminPanel/);
     expect(src).toContain('void Promise.resolve(ViralRefer.openAdminPanel?.())');
     expect(src).toContain('verifyOwnerPassword');
+    expect(src).toContain('OWNER_PASSWORD_VERIFY_TIMEOUT_MS');
+    expect(src).toContain('Promise.race');
     expect(src).not.toMatch(/functions\.invoke/);
   });
 });
