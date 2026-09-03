@@ -19,6 +19,10 @@ CREATE INDEX IF NOT EXISTS idx_visitor_events_getreferrallink_created_at
 CREATE INDEX IF NOT EXISTS idx_shares_created_at
   ON public.shares (created_at DESC);
 
+-- Prod already has idx_shares_created_at as ASC (0001). Guarantee a DESC last-N path.
+CREATE INDEX IF NOT EXISTS idx_shares_created_at_desc
+  ON public.shares (created_at DESC);
+
 CREATE INDEX IF NOT EXISTS idx_referrals_created_at
   ON public.referrals (created_at DESC);
 

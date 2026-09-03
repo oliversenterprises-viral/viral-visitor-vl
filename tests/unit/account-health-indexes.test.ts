@@ -16,6 +16,7 @@ describe('0057 account health scan caps', () => {
     expect(sql).toContain('idx_visitor_events_getreferrallink_created_at');
     expect(sql).toContain("WHERE event_name = 'GetReferralLink'");
     expect(sql).toContain('idx_shares_created_at');
+    expect(sql).toContain('idx_shares_created_at_desc');
     expect(sql).toContain('idx_referrals_created_at');
     expect(sql).toMatch(/ON public\.shares \(created_at DESC\)/);
     expect(sql).toMatch(/ON public\.referrals \(created_at DESC\)/);
