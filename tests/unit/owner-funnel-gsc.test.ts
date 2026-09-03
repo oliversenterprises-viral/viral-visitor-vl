@@ -257,8 +257,9 @@ describe('owner funnel GSC tracker', () => {
     expect(deskSrc).toMatch(/eq\('event_name', 'SiteLanding'\)/);
     expect(deskSrc).toMatch(/eq\('event_name', 'GetReferralLink'\)/);
     expect(deskSrc).toMatch(/from\('shares'\)/);
-    expect(deskSrc).toMatch(/platform, referrer_code, referral_link, created_at'/);
+    expect(deskSrc).toMatch(/platform, referrer_code, created_at'/);
     expect(deskSrc).not.toMatch(/confirmed/);
+    expect(deskSrc).not.toMatch(/referral_link/);
     expect(deskSrc).toMatch(/from\('referrals'\)/);
     expect(src).toMatch(/get_owner_funnel_desk caught:/);
     expect(deskSrc).toMatch(/computeOwnerFunnelDeskMetrics/);

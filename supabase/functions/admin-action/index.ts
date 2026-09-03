@@ -1020,7 +1020,7 @@ Deno.serve(async (req: Request) => {
               () =>
                 supabaseAdmin
                   .from('shares')
-                  .select('platform, referrer_code, referral_link, created_at'),
+                  .select('platform, referrer_code, created_at'),
               signal,
               OWNER_FUNNEL_LAST_N,
               'shares',
