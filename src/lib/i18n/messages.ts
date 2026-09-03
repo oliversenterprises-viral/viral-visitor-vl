@@ -1,11 +1,27 @@
 /**
- * Phase 1 public UI strings — en + es/fr/pt/de/hi.
+ * Public UI strings — core 6 + EXTRA_LOCALES (18 total).
  * Keys used via data-i18n attributes and t().
  */
 
-export type Locale = 'en' | 'es' | 'fr' | 'pt' | 'de' | 'hi';
+import {
+  EXTRA_LOCALES,
+  EXTRA_LOCALE_LABELS,
+  extraOverrides,
+  type ExtraLocale,
+} from './extra-locales';
 
-export const SUPPORTED_LOCALES: readonly Locale[] = ['en', 'es', 'fr', 'pt', 'de', 'hi'] as const;
+export type { ExtraLocale };
+export type Locale = 'en' | 'es' | 'fr' | 'pt' | 'de' | 'hi' | ExtraLocale;
+
+export const SUPPORTED_LOCALES: readonly Locale[] = [
+  'en',
+  'es',
+  'fr',
+  'pt',
+  'de',
+  'hi',
+  ...EXTRA_LOCALES,
+];
 
 export const LOCALE_LABELS: Record<Locale, string> = {
   en: 'English',
@@ -14,6 +30,7 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   pt: 'Português',
   de: 'Deutsch',
   hi: 'हिन्दी',
+  ...EXTRA_LOCALE_LABELS,
 };
 
 /** English source of truth (also fallback). */
@@ -24,7 +41,7 @@ export const en = {
   'nav.get_link': 'Get link',
   'nav.lang': 'Language',
 
-  'hero.badge': 'WORLDWIDE • FREE • NO SIGNUP',
+  'hero.badge': 'THIS WEEK • FREE • NO SIGNUP',
   'hero.title_line1': 'Win the homepage.',
   'hero.title_accent': '#1 gets a banner for their site.',
   'hero.subtitle':
@@ -73,7 +90,7 @@ export const en = {
   'prize.cta': "I'm #1 — Claim Homepage Feature",
   'prize.winner_badge': 'Verified #1 can claim this',
 
-  'leaderboard.title': 'Live Leaderboard',
+  'leaderboard.title': 'Recent Activity',
   'leaderboard.subtitle': 'Rankings update from verified referrals.',
 
   'claim.modal_title': 'Claim Homepage Feature',
@@ -239,7 +256,7 @@ const es = dict({
   'nav.board': 'Ranking',
   'nav.get_link': 'Obtener enlace',
   'nav.lang': 'Idioma',
-  'hero.badge': 'MUNDIAL • GRATIS',
+  'hero.badge': 'ESTA SEMANA • GRATIS • SIN REGISTRO',
   'hero.title_line1': '#1 obtiene un banner en la portada',
   'hero.title_accent': 'para su sitio.',
   'hero.subtitle': 'Toca Obtener mi enlace gratis. Envíalo. Cuando un amigo toca Obtener mi enlace, subes.',
@@ -278,7 +295,7 @@ const es = dict({
   'prize.card3_desc': 'Solo altas únicas y verificadas (ver umbral en el sitio).',
   'prize.cta': 'Soy el #1 — Reclamar destacado',
   'prize.winner_badge': 'EL #1 ACTUAL PUEDE RECLAMAR ESTO',
-  'leaderboard.title': 'Ranking en vivo',
+  'leaderboard.title': 'Actividad reciente',
   'leaderboard.subtitle': 'El ranking se actualiza con referidos verificados.',
   'claim.modal_title': 'Reclamar destacado en la web',
   'claim.modal_sub': 'Solo #1 verificado — sin premio en efectivo; web para el banner',
@@ -338,7 +355,7 @@ const fr = dict({
   'nav.board': 'Classement',
   'nav.get_link': 'Obtenir le lien',
   'nav.lang': 'Langue',
-  'hero.badge': 'MONDIAL • GRATUIT',
+  'hero.badge': 'CETTE SEMAINE • GRATUIT • SANS INSCRIPTION',
   'hero.title_line1': '#1 obtient une bannière d\'accueil',
   'hero.title_accent': 'pour son site.',
   'hero.subtitle': 'Touchez Obtenir mon lien gratuit. Envoyez-le. Quand un ami touche Obtenir mon lien, vous montez.',
@@ -377,7 +394,7 @@ const fr = dict({
   'prize.card3_desc': 'Inscriptions uniques et vérifiées uniquement (seuil sur le site).',
   'prize.cta': 'Je suis #1 — Revendiquer la mise en avant',
   'prize.winner_badge': 'LE #1 ACTUEL PEUT REVENDIQUER CECI',
-  'leaderboard.title': 'Classement en direct',
+  'leaderboard.title': 'Activité récente',
   'leaderboard.subtitle': 'Le classement se met à jour avec les parrainages vérifiés.',
   'claim.modal_title': 'Revendiquer la mise en avant',
   'claim.modal_sub': 'Uniquement le #1 vérifié — pas de prix en cash ; site pour la bannière',
@@ -397,7 +414,7 @@ const pt = dict({
   'nav.board': 'Ranking',
   'nav.get_link': 'Pegar link',
   'nav.lang': 'Idioma',
-  'hero.badge': 'MUNDIAL • GRÁTIS',
+  'hero.badge': 'ESTA SEMANA • GRÁTIS • SEM CADASTRO',
   'hero.title_line1': '#1 ganha um banner na home',
   'hero.title_accent': 'para o site dele.',
   'hero.subtitle': 'Toque Pegar meu link grátis. Envie. Quando um amigo toca Pegar meu link, você sobe.',
@@ -436,7 +453,7 @@ const pt = dict({
   'prize.card3_desc': 'Apenas cadastros únicos e verificados (veja o limite no site).',
   'prize.cta': 'Sou o #1 — Reivindicar destaque',
   'prize.winner_badge': 'O #1 ATUAL PODE REIVINDICAR ISTO',
-  'leaderboard.title': 'Ranking ao vivo',
+  'leaderboard.title': 'Atividade recente',
   'leaderboard.subtitle': 'O ranking atualiza com indicações verificadas.',
   'claim.modal_title': 'Reivindicar destaque na home',
   'claim.modal_sub': 'Somente #1 verificado — sem prêmio em dinheiro; site para o banner',
@@ -456,7 +473,7 @@ const de = dict({
   'nav.board': 'Rangliste',
   'nav.get_link': 'Link holen',
   'nav.lang': 'Sprache',
-  'hero.badge': 'WELTWEIT • KOSTENLOS',
+  'hero.badge': 'DIESE WOCHE • KOSTENLOS • OHNE ANMELDUNG',
   'hero.title_line1': '#1 bekommt ein Homepage-Banner',
   'hero.title_accent': 'für die eigene Website.',
   'hero.subtitle': 'Tippe auf Meinen kostenlosen Link holen. Sende ihn. Wenn ein Freund auf Meinen Link holen tippt, steigst du.',
@@ -495,7 +512,7 @@ const de = dict({
   'prize.card3_desc': 'Nur einzigartige, verifizierte Anmeldungen (Schwelle auf der Seite).',
   'prize.cta': 'Ich bin #1 — Homepage-Feature anfordern',
   'prize.winner_badge': 'AKTUELLES #1 KANN DIES ANFORDERN',
-  'leaderboard.title': 'Live-Rangliste',
+  'leaderboard.title': 'Letzte Aktivität',
   'leaderboard.subtitle': 'Ränge aktualisieren sich mit verifizierten Empfehlungen.',
   'claim.modal_title': 'Homepage-Feature anfordern',
   'claim.modal_sub': 'Nur verifiziertes #1 — kein Geldpreis; Website für den Banner-Slot',
@@ -517,7 +534,7 @@ const hi = dict({
   'nav.board': 'बोर्ड',
   'nav.get_link': 'लिंक लें',
   'nav.lang': 'भाषा',
-  'hero.badge': 'वैश्विक • मुफ़्त',
+  'hero.badge': 'इस सप्ताह • मुफ़्त • बिना साइनअप',
   'hero.title_line1': '#1 को होमपेज बैनर मिलता है',
   'hero.title_accent': 'उनकी साइट के लिए।',
   'hero.subtitle': 'मेरा मुफ़्त लिंक लें टैप करें। भेजें। जब दोस्त मेरा लिंक लें टैप करे, आप चढ़ते हैं।',
@@ -556,7 +573,7 @@ const hi = dict({
   'prize.card3_desc': 'केवल यूनिक, वेरिफ़ाइड साइनअप (साइट पर थ्रेशहोल्ड देखें)।',
   'prize.cta': 'मैं #1 हूँ — होमपेज फ़ीचर क्लेम करें',
   'prize.winner_badge': 'वर्तमान #1 इसे क्लेम कर सकता है',
-  'leaderboard.title': 'लाइव लीडरबोर्ड',
+  'leaderboard.title': 'हाल की गतिविधि',
   'leaderboard.subtitle': 'वेरिफ़ाइड रेफ़रल से रैंक अपडेट होती है।',
   'claim.modal_title': 'होमपेज फ़ीचर क्लेम करें',
   'claim.modal_sub': 'केवल वेरिफ़ाइड #1 — कोई कैश नहीं; बैनर के लिए वेबसाइट',
@@ -572,6 +589,10 @@ const hi = dict({
 
 // Correct German coach string (must not contain CJK)
 
+const extraMessages = Object.fromEntries(
+  EXTRA_LOCALES.map((loc) => [loc, dict(extraOverrides[loc] as Partial<Dict>)]),
+) as Record<ExtraLocale, Dict>;
+
 export const MESSAGES: Record<Locale, Dict> = {
   en: dict({}),
   es,
@@ -579,4 +600,5 @@ export const MESSAGES: Record<Locale, Dict> = {
   pt,
   de,
   hi,
+  ...extraMessages,
 };
