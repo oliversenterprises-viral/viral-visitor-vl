@@ -25,7 +25,7 @@ export interface HeroCtaCopy {
 /** Tight conversion copy — one action, worldwide, no cash spam. */
 export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
   control: {
-    badge: 'WORLDWIDE • FREE • NO SIGNUP',
+    badge: 'THIS WEEK • FREE • NO SIGNUP',
     titleLine1: LOCKED_SITE_DROPS_H1_LINE1,
     titleAccent: LOCKED_SITE_DROPS_H1_ACCENT,
     subtitle: LOCKED_SITE_DROPS_SUB,
@@ -33,7 +33,7 @@ export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
     buttonLabel: LOCKED_SITE_DROPS_CTA,
   },
   prize: {
-    badge: 'WORLDWIDE • FREE • NO SIGNUP',
+    badge: 'THIS WEEK • FREE • NO SIGNUP',
     titleLine1: LOCKED_SITE_DROPS_H1_LINE1,
     titleAccent: LOCKED_SITE_DROPS_H1_ACCENT,
     subtitle: LOCKED_SITE_DROPS_SUB,
@@ -68,6 +68,8 @@ export function lock844HomepageCopy(): void {
   if (isReferredLanding()) return;
   applyHeroCopyToDom(HERO_CTA_COPY.control);
   setText('hero-prize-one', LOCKED_SITE_DROPS_RULE);
+  const badgeSpan = document.querySelector('#hero-badge [data-i18n-text]');
+  if (badgeSpan) badgeSpan.textContent = 'THIS WEEK • FREE • NO SIGNUP';
   // Owner lock: large Site Drop board title stays Recent Activity.
   const boardTitle = document.getElementById('leaderboard-title');
   const painted = (boardTitle?.textContent || '').trim();

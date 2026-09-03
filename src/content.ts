@@ -213,7 +213,7 @@ export async function updatePublicContent(content: Record<string, unknown>) {
   };
 
   // 8:44 lock: do not let CMS rewrite homepage title / sub / CTA.
-  apply('hero-badge', 'hero_badge');
+  // hero.badge is i18n-locked (THIS WEEK • FREE • NO SIGNUP) — skip CMS WORLDWIDE.
   apply('hero-trust-line', 'hero_trust_line');
 
   // HOW IT WORKS batch (high priority)
