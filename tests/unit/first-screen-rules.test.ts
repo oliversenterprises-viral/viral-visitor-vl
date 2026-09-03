@@ -115,6 +115,9 @@ describe('first-screen Site Drops rules', () => {
     expect(i18n).not.toContain("'leaderboard.title': 'Live Leaderboard'");
     expect(i18n).not.toContain("'leaderboard.title': 'Early Leaderboard'");
     expect(content).not.toContain("apply('leaderboard-title', 'leaderboard_title')");
+    const lock = read('src/lib/hero-cta-variant.ts');
+    expect(lock).toContain("boardTitle.textContent = 'Recent Activity'");
+    expect(lock).toContain('Early Leaderboard');
     expect(html).toContain('data-i18n="drop.badge">Site Drop ladder</p>');
     expect(html).toContain('Your site here');
     expect(html).toContain('id="footer-link-tools"');

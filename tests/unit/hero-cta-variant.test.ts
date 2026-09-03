@@ -69,6 +69,15 @@ describe('hero-cta-variant', () => {
     );
   });
 
+  it('lock844HomepageCopy demotes Early Leaderboard to Recent Activity', () => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<h2 id="leaderboard-title">Early Leaderboard</h2>',
+    );
+    lock844HomepageCopy();
+    expect(document.getElementById('leaderboard-title')?.textContent).toBe('Recent Activity');
+  });
+
   it('skips on referred landings', () => {
     sessionStorage.setItem('vr_landing_ref', 'VIRAL-FRIEND');
     setOptimizerFlags({ hero_cta_variant: 'prize' });
