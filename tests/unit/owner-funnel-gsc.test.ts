@@ -233,22 +233,44 @@ describe('owner funnel GSC tracker', () => {
 
   it('wires get_owner_funnel_desk to attach metrics.gsc', () => {
     const src = readFileSync(resolve(root, 'supabase/functions/admin-action/index.ts'), 'utf8');
+    const deskStart = src.indexOf("action === 'get_owner_funnel_desk'");
+    const deskSrc = deskStart >= 0 ? src.slice(deskStart, src.indexOf('return new Response', deskStart + 1) + 400) : '';
     expect(src).toMatch(/action === 'get_owner_funnel_desk'/);
     expect(src).toMatch(/resolveOwnerFunnelGsc/);
     expect(src).toContain("Deno.env.get('GSC_SERVICE_ACCOUNT_JSON')");
     expect(src).toContain("Deno.env.get('GSC_SITE_URL')");
     expect(src).toMatch(/resolveOwnerFunnelGscTimed\(\{ secret, site \}\)/);
-    expect(src).toMatch(/withTimeout/);
-    expect(src).toMatch(/rpcData: null/);
-    expect(src).toMatch(/get_public_funnel_ticker/);
-    expect(src).toMatch(/get_public_get_link_stats/);
-    expect(src).toMatch(/deskFromPublicSurfaces/);
-    expect(src).toMatch(/timedLast\('visitor_events'/);
-    expect(src).toMatch(/loadCompleteWindow: loadedWindow/);
-    expect(src).not.toMatch(/loadCompleteWindow: async \(\) => emptyFeed/);
-    expect(src).not.toMatch(/get_owner_funnel_desk_counts/);
+    expect(deskSrc).toMatch(/runOwnerFunnelDeskQueries/);
+    expect(deskSrc).toMatch(/queryOwnerFunnelLastN/);
+    expect(deskSrc).toMatch(/OWNER_FUNNEL_LAST_N/);
+    expect(deskSrc).toMatch(/OWNER_FUNNEL_QUERY_TIMEOUT_MS/);
+    const deskShared = readFileSync(
+      resolve(root, 'supabase/functions/_shared/owner-funnel-desk.ts'),
+      'utf8',
+    );
+    expect(deskShared).toMatch(/abortSignal/);
+    expect(deskShared).toMatch(/ctrl\.abort\(\)/);
+    expect(deskShared).toMatch(/OWNER_FUNNEL_LAST_N = 80/);
+    expect(deskShared).toMatch(/OWNER_FUNNEL_QUERY_TIMEOUT_MS = 2_000/);
+    expect(deskShared).not.toMatch(/withTimeout/);
+    expect(deskSrc).toMatch(/eq\('event_name', 'SiteLanding'\)/);
+    expect(deskSrc).toMatch(/eq\('event_name', 'GetReferralLink'\)/);
+    expect(deskSrc).toMatch(/from\('shares'\)/);
+    expect(deskSrc).toMatch(/from\('referrals'\)/);
+    expect(deskSrc).toMatch(/computeOwnerFunnelDeskMetrics/);
+    expect(deskSrc).toMatch(/success: false, error: "can't load\."/);
+    expect(deskSrc).not.toMatch(/withTimeout/);
+    expect(deskSrc).not.toMatch(/timedLast/);
+    expect(deskSrc).not.toMatch(/get_public_funnel_ticker/);
+    expect(deskSrc).not.toMatch(/get_public_get_link_stats/);
+    expect(deskSrc).not.toMatch(/get_public_recent_activity/);
+    expect(deskSrc).not.toMatch(/deskFromPublicSurfaces/);
+    expect(deskSrc).not.toMatch(/landing_daily_counts/);
+    expect(deskSrc).not.toMatch(/from\('referrer_links'\)/);
+    expect(deskSrc).not.toMatch(/get_owner_funnel_desk_counts/);
+    expect(deskSrc).not.toMatch(/\(\) => \[\]/);
     expect(src).not.toMatch(/console\.(log|info|debug|error|warn)\([^)]*secret/i);
-    expect(src).toMatch(/data: \{ \.\.\.metrics, gsc \}/);
+    expect(deskSrc).toMatch(/data: \{ \.\.\.metrics, gsc \}/);
     expect(src).not.toMatch(/vercel --prod/);
     expect(src).not.toMatch(/GSC_API_KEY/);
     const deskUi = readFileSync(resolve(root, 'src/admin/owner-funnel-desk.ts'), 'utf8');

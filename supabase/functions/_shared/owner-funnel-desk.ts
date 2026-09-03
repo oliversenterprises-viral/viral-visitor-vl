@@ -17,6 +17,83 @@ export const OWNER_FUNNEL_WINDOW_DAYS = 7;
 export const OWNER_FUNNEL_FEED_LIMIT = 40;
 /** Bounded last-N for event-query tiles + feed. Never page the full table. */
 export const OWNER_FUNNEL_WINDOW_LIMIT = 400;
+/** HQ desk last-N. Index-friendly; never a full scan or hung RPC. */
+export const OWNER_FUNNEL_LAST_N = 80;
+/** Abort + statement timeout. withTimeout must not be used — it leaves the query running. */
+export const OWNER_FUNNEL_QUERY_TIMEOUT_MS = 2_000;
+
+export class OwnerFunnelDeskQueryError extends Error {
+  readonly timedOut: boolean;
+  constructor(message: string, timedOut = false) {
+    super(message);
+    this.name = 'OwnerFunnelDeskQueryError';
+    this.timedOut = timedOut;
+  }
+}
+
+type OwnerFunnelLastNBuilder = {
+  order: (column: string, opts: { ascending: boolean }) => OwnerFunnelLastNBuilder;
+  limit: (n: number) => OwnerFunnelLastNBuilder;
+  abortSignal?: (signal: AbortSignal) => OwnerFunnelLastNBuilder;
+  then: (
+    onfulfilled?: (value: { data: unknown[] | null; error?: { message?: string } | null }) => unknown,
+    onrejected?: (reason: unknown) => unknown,
+  ) => Promise<unknown>;
+};
+
+/**
+ * Run desk table reads under one AbortController.
+ * On timeout or error the signal is aborted so PostgREST/postgres does not keep running.
+ * Never returns a fallback empty window.
+ */
+export async function runOwnerFunnelDeskQueries<T>(
+  run: (signal: AbortSignal) => Promise<T>,
+  timeoutMs = OWNER_FUNNEL_QUERY_TIMEOUT_MS,
+): Promise<T> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await run(ctrl.signal);
+  } catch (err) {
+    if (!ctrl.signal.aborted) ctrl.abort();
+    const msg = err instanceof Error ? err.message : 'desk query failed';
+    const timedOut =
+      ctrl.signal.aborted ||
+      (err instanceof OwnerFunnelDeskQueryError && err.timedOut) ||
+      (err instanceof Error && (err.name === 'AbortError' || /abort|timed out/i.test(msg)));
+    throw new OwnerFunnelDeskQueryError(timedOut ? 'desk query timed out' : msg, timedOut);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Last-N with abortSignal. Throws on error/timeout — never paints [] as an empty table. */
+export async function queryOwnerFunnelLastN(
+  build: () => OwnerFunnelLastNBuilder,
+  signal: AbortSignal,
+  limit = OWNER_FUNNEL_LAST_N,
+): Promise<Record<string, unknown>[]> {
+  if (signal.aborted) throw new OwnerFunnelDeskQueryError('desk query timed out', true);
+  let query = build().order('created_at', { ascending: false }).limit(limit);
+  if (typeof query.abortSignal === 'function') {
+    query = query.abortSignal(signal);
+  }
+  let data: unknown[] | null = null;
+  let error: { message?: string } | null | undefined;
+  try {
+    const res = (await query) as { data: unknown[] | null; error?: { message?: string } | null };
+    data = res.data;
+    error = res.error;
+  } catch (err) {
+    if (signal.aborted || (err instanceof Error && err.name === 'AbortError')) {
+      throw new OwnerFunnelDeskQueryError('desk query timed out', true);
+    }
+    throw new OwnerFunnelDeskQueryError(err instanceof Error ? err.message : 'desk query failed');
+  }
+  if (signal.aborted) throw new OwnerFunnelDeskQueryError('desk query timed out', true);
+  if (error) throw new OwnerFunnelDeskQueryError(error.message || 'desk query failed');
+  return (data || []) as Record<string, unknown>[];
+}
 
 export type OwnerFunnelVia = 'direct' | 'friend' | 'promoter';
 export type OwnerFunnelFeedKind = 'landed' | 'got_link' | 'shared' | 'locked';
