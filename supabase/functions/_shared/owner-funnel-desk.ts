@@ -15,6 +15,8 @@ import {
 
 export const OWNER_FUNNEL_WINDOW_DAYS = 7;
 export const OWNER_FUNNEL_FEED_LIMIT = 40;
+/** Bounded last-N for event-query tiles + feed. Never page the full table. */
+export const OWNER_FUNNEL_WINDOW_LIMIT = 400;
 
 export type OwnerFunnelVia = 'direct' | 'friend' | 'promoter';
 export type OwnerFunnelFeedKind = 'landed' | 'got_link' | 'shared' | 'locked';
@@ -312,10 +314,14 @@ export function computeOwnerFunnelDeskMetrics(input: {
     return !!code && !isTestReferrerCode(code);
   });
 
-  const visits = Number.isFinite(input.visits) && (input.visits as number) >= 0 ? (input.visits as number) : 0;
+  const landings = uniqueAttributedLandingVisitors(events);
+  const landingVisits = uniqueVisitorsForEvent(events, 'SiteLanding');
+  const visits =
+    Number.isFinite(input.visits) && (input.visits as number) >= 0
+      ? (input.visits as number)
+      : landingVisits;
   const junkVisits =
     Number.isFinite(input.junkVisits) && (input.junkVisits as number) >= 0 ? (input.junkVisits as number) : 0;
-  const landings = uniqueAttributedLandingVisitors(events);
   const getLink = uniqueVisitorsForEvent(events, 'GetReferralLink');
   const shareCodes = new Set<string>();
   for (const row of shares) {
@@ -482,6 +488,34 @@ export function assembleOwnerFunnelDeskFromServer(input: {
 
 export const OWNER_FUNNEL_PAGE_SIZE = 1000;
 
+/** Command tiles are all zero — RPC timeout, miss, or a false empty payload. */
+export function isEmptyOwnerFunnelDeskCounts(
+  counts: ReturnType<typeof parseOwnerFunnelDeskCounts>,
+): boolean {
+  if (!counts) return true;
+  return (
+    counts.visits === 0 &&
+    counts.friendLandings === 0 &&
+    counts.getLink === 0 &&
+    counts.share === 0 &&
+    counts.locked === 0
+  );
+}
+
+export function ownerFunnelWindowHasRows(window: {
+  events?: readonly unknown[];
+  shares?: readonly unknown[];
+  referrals?: readonly unknown[];
+  referrerLinks?: readonly unknown[];
+}): boolean {
+  return Boolean(
+    (window.events && window.events.length) ||
+      (window.shares && window.shares.length) ||
+      (window.referrals && window.referrals.length) ||
+      (window.referrerLinks && window.referrerLinks.length),
+  );
+}
+
 export function isOwnerFunnelRpcMissingError(
   error: { message?: string; code?: string } | null | undefined,
 ): boolean {
@@ -523,25 +557,25 @@ export async function pageAllOwnerFunnelRows(
  * RPC COUNT DISTINCT when the function exists. Otherwise DISTINCT over a
  * complete 7-day service-role window (not last-1000, not a truncated dump).
  */
+export type OwnerFunnelDeskWindow = {
+  events?: readonly OwnerFunnelEvent[];
+  shares?: readonly OwnerFunnelShareRow[];
+  referrals?: readonly OwnerFunnelReferralRow[];
+  referrerLinks?: readonly OwnerFunnelLinkRow[];
+  visits?: number;
+  junkVisits?: number;
+};
+
 export async function resolveOwnerFunnelDeskMetrics(input: {
   rpcData?: unknown;
   rpcError?: { message?: string; code?: string } | null;
-  loadCompleteWindow: () => Promise<{
-    events?: readonly OwnerFunnelEvent[];
-    shares?: readonly OwnerFunnelShareRow[];
-    referrals?: readonly OwnerFunnelReferralRow[];
-    referrerLinks?: readonly OwnerFunnelLinkRow[];
-  }>;
-  loadFeedWindow?: () => Promise<{
-    events?: readonly OwnerFunnelEvent[];
-    shares?: readonly OwnerFunnelShareRow[];
-    referrals?: readonly OwnerFunnelReferralRow[];
-    referrerLinks?: readonly OwnerFunnelLinkRow[];
-  }>;
+  loadCompleteWindow: () => Promise<OwnerFunnelDeskWindow>;
+  loadFeedWindow?: () => Promise<OwnerFunnelDeskWindow>;
   now?: number;
 }): Promise<OwnerFunnelDeskMetrics> {
   const counts = parseOwnerFunnelDeskCounts(input.rpcData);
-  if (counts) {
+  const rpcUsable = !!counts && !isEmptyOwnerFunnelDeskCounts(counts);
+  if (rpcUsable && counts) {
     try {
       const feed = input.loadFeedWindow ? await input.loadFeedWindow() : {};
       const assembled = assembleOwnerFunnelDeskFromServer({
@@ -574,6 +608,8 @@ export async function resolveOwnerFunnelDeskMetrics(input: {
     shares: window.shares,
     referrals: window.referrals,
     referrerLinks: window.referrerLinks,
+    visits: window.visits,
+    junkVisits: window.junkVisits ?? counts?.junkVisits,
     now: input.now,
     windowDays: OWNER_FUNNEL_WINDOW_DAYS,
   });

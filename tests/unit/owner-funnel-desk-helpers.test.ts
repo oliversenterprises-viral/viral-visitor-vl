@@ -8,6 +8,7 @@ import {
   formatOwnerRate,
   isDeskVerifiedShare,
   isLockedReferrer,
+  isEmptyOwnerFunnelDeskCounts,
   isOwnerFunnelRpcMissingError,
   pageAllOwnerFunnelRows,
   parseOwnerFunnelDeskCounts,
@@ -372,13 +373,86 @@ describe('owner funnel desk metrics', () => {
       }),
       now,
     });
-    expect(metrics.visits).toBe(0);
+    expect(metrics.visits).toBe(2);
     expect(metrics.landings).toBe(1);
     expect(metrics.friendLandings).toBe(1);
     expect(metrics.getLink).toBe(1);
     expect(metrics.share).toBe(1);
     expect(metrics.locked).toBe(0);
     expect(metrics.getLinkRate).toBe('100.0%');
+  });
+
+  it('does not paint zeros when the RPC is empty/timed out and visitor_events have rows', async () => {
+    expect(
+      isEmptyOwnerFunnelDeskCounts({
+        visits: 0,
+        junkVisits: 468,
+        friendLandings: 0,
+        landings: 0,
+        getLink: 0,
+        share: 0,
+        locked: 0,
+        windowDays: 7,
+      }),
+    ).toBe(true);
+    expect(
+      isEmptyOwnerFunnelDeskCounts({
+        visits: 1,
+        junkVisits: 468,
+        friendLandings: 22,
+        landings: 22,
+        getLink: 17,
+        share: 4,
+        locked: 1,
+        windowDays: 7,
+      }),
+    ).toBe(false);
+
+    const window = {
+      events: [
+        landing('a', { metadata: { path: '/' } }),
+        landing('b', { ref_code: 'VIRAL-B', metadata: { path: '/r/VIRAL-B' } }),
+        getLink('b'),
+      ],
+      shares: [
+        { platform: 'native', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:00:00Z' },
+      ],
+      referrals: [
+        {
+          referrer_code: 'VIRAL-REAL1',
+          referred_code: 'VIRAL-FRIEND1',
+          created_at: '2026-08-16T12:30:00Z',
+        },
+      ],
+      referrerLinks: [
+        { referrer_code: 'VIRAL-REAL1', status: 'active', created_at: '2026-08-16T12:30:00Z' },
+      ],
+      visits: 1,
+      junkVisits: 468,
+    };
+
+    for (const rpcData of [
+      null,
+      { visits: 0, junk_visits: 0, friend_landings: 0, landings: 0, get_link: 0, share: 0, locked: 0 },
+    ]) {
+      const metrics = await resolveOwnerFunnelDeskMetrics({
+        rpcData,
+        rpcError: rpcData ? null : { message: 'timeout', code: 'TIMEOUT' },
+        loadCompleteWindow: async () => window,
+        loadFeedWindow: async () => window,
+        now,
+      });
+      expect(metrics.visits).toBe(1);
+      expect(metrics.junkVisits).toBe(468);
+      expect(metrics.friendLandings).toBe(1);
+      expect(metrics.getLink).toBe(1);
+      expect(metrics.share).toBe(1);
+      expect(metrics.locked).toBe(1);
+      expect(metrics.feed.length).toBeGreaterThan(0);
+      expect(metrics.feed.map((row) => row.label)).toEqual(
+        expect.arrayContaining(['Landed', 'Got a link', 'Shared', 'Locked']),
+      );
+    }
   });
 
   it('returns zero tiles for an empty window instead of can’t load', async () => {

@@ -972,14 +972,16 @@ Deno.serve(async (req: Request) => {
     if (action === 'get_owner_funnel_desk') {
       const {
         filterDeskReferrals,
+        isEmptyOwnerFunnelDeskCounts,
         ownerFunnelCutoffIso,
-        OWNER_FUNNEL_FEED_LIMIT,
+        OWNER_FUNNEL_WINDOW_LIMIT,
+        parseOwnerFunnelDeskCounts,
         resolveOwnerFunnelDeskMetrics,
         stripOwnerFunnelPii,
       } = await import('../_shared/owner-funnel-desk.ts');
       const {
         DESK_COUNTS_TIMEOUT_MS,
-        DESK_FEED_TIMEOUT_MS,
+        DESK_WINDOW_TIMEOUT_MS,
         emptyOwnerFunnelGsc,
         resolveOwnerFunnelGscTimed,
         withTimeout,
@@ -987,39 +989,69 @@ Deno.serve(async (req: Request) => {
 
       const windowDays = 7;
       const cutoff = ownerFunnelCutoffIso();
-      const emptyFeed = {
+      const emptyWindow = {
         events: [] as Record<string, unknown>[],
         shares: [] as Record<string, unknown>[],
         referrals: [] as Record<string, unknown>[],
         referrerLinks: [] as Record<string, unknown>[],
       };
 
-      const pageFeedWindow = async () => {
-        const take = async (table: string, columns: string, apply: (q: any) => any) => {
-          const { data, error } = await apply(
-            supabaseAdmin
-              .from(table)
-              .select(columns)
-              .gte('created_at', cutoff)
-              .order('created_at', { ascending: false }),
-          ).limit(OWNER_FUNNEL_FEED_LIMIT);
+      const pageMetricsWindow = async () => {
+        const take = async (
+          table: string,
+          columns: string,
+          apply: (q: any) => any,
+          opts?: { limit?: number; sinceCutoff?: boolean },
+        ) => {
+          const limit = opts?.limit ?? OWNER_FUNNEL_WINDOW_LIMIT;
+          let query = supabaseAdmin.from(table).select(columns);
+          if (opts?.sinceCutoff !== false) query = query.gte('created_at', cutoff);
+          const { data, error } = await apply(query.order('created_at', { ascending: false })).limit(
+            limit,
+          );
           if (error) throw error;
           return (data || []) as Record<string, unknown>[];
         };
         const eventSelect =
           'event_name, visitor_id, ref_code, ip_hash, metadata, created_at';
-        const [events, shares, referrals] = await Promise.all([
+        const visitFrom = new Date(Date.now() - (windowDays - 1) * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10);
+        const [events, shares, referrals, referrerLinks, dailyRes] = await Promise.all([
           take('visitor_events', eventSelect, (q) =>
             q.in('event_name', ['SiteLanding', 'GetReferralLink']),
           ),
           take('shares', '*', (q) => q),
           take('referrals', 'referrer_code, created_at, referred_ip, user_agent', (q) => q),
+          take(
+            'referrer_links',
+            'referrer_code, status, created_at, first_verified_share_at',
+            (q) => q.eq('status', 'active'),
+            { sinceCutoff: false },
+          ),
+          supabaseAdmin
+            .from('landing_daily_counts')
+            .select('quality_hits, junk_hits, day')
+            .gte('day', visitFrom)
+            .then((res) => res)
+            .catch(() => ({ data: null, error: { message: 'daily timeout' } })),
         ]);
+        const dailyRows = Array.isArray(dailyRes?.data) ? dailyRes.data : [];
+        let visits = 0;
+        let junkVisits = 0;
+        for (const row of dailyRows) {
+          const o = row as { quality_hits?: unknown; junk_hits?: unknown };
+          const q = Number(o.quality_hits);
+          const j = Number(o.junk_hits);
+          if (Number.isFinite(q) && q > 0) visits += q;
+          if (Number.isFinite(j) && j > 0) junkVisits += j;
+        }
         return {
           events,
           shares,
           referrals: filterDeskReferrals(referrals).map((row) => stripOwnerFunnelPii(row)),
-          referrerLinks: [],
+          referrerLinks,
+          ...(visits > 0 || junkVisits > 0 ? { visits, junkVisits } : {}),
         };
       };
 
@@ -1033,21 +1065,30 @@ Deno.serve(async (req: Request) => {
         const gscPromise = resolveOwnerFunnelGscTimed({ secret, site }).catch(() =>
           emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.'),
         );
+        const windowPromise = withTimeout(
+          pageMetricsWindow(),
+          DESK_WINDOW_TIMEOUT_MS,
+          () => emptyWindow,
+        );
 
-        const [countRes, gsc] = await Promise.all([
+        const [countRes, windowRes, gsc] = await Promise.all([
           withTimeout(countsPromise, DESK_COUNTS_TIMEOUT_MS, () => ({
             data: null,
             error: { message: 'timeout', code: 'TIMEOUT' },
           })),
+          windowPromise,
           gscPromise,
         ]);
 
+        const parsed = countRes.error ? null : parseOwnerFunnelDeskCounts(countRes.data);
+        const rpcData = isEmptyOwnerFunnelDeskCounts(parsed) ? null : countRes.data;
+        const loadedWindow = async () => windowRes;
+
         const metrics = await resolveOwnerFunnelDeskMetrics({
-          rpcData: countRes.error ? null : countRes.data,
+          rpcData,
           rpcError: countRes.error,
-          loadFeedWindow: () =>
-            withTimeout(pageFeedWindow(), DESK_FEED_TIMEOUT_MS, () => emptyFeed),
-          loadCompleteWindow: async () => emptyFeed,
+          loadFeedWindow: loadedWindow,
+          loadCompleteWindow: loadedWindow,
         });
         return new Response(JSON.stringify({ success: true, data: { ...metrics, gsc } }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

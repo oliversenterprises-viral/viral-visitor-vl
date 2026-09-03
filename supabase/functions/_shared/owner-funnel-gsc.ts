@@ -18,8 +18,9 @@ export const GSC_MISSING_NOTE =
 export type OwnerFunnelGscStatus = 'ok' | 'ok-cached' | 'missing_credentials' | 'error' | 'timeout';
 
 export const GSC_RESOLVE_TIMEOUT_MS = 3_500;
-export const DESK_COUNTS_TIMEOUT_MS = 4_000;
+export const DESK_COUNTS_TIMEOUT_MS = 3_500;
 export const DESK_FEED_TIMEOUT_MS = 2_500;
+export const DESK_WINDOW_TIMEOUT_MS = 4_000;
 export const GSC_TIMEOUT_NOTE = 'Search Console timed out. Desk tiles still loaded.';
 export const GSC_CACHED_NOTE = 'Search Console from the last successful load.';
 
