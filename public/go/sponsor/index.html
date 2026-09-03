@@ -19,6 +19,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Sponsored Featured Partner · $29 / 7 days" />
   <meta name="twitter:description" content="Labeled homepage slot. Not a Site Drop. Not the contest banner." />
+  <meta name="twitter:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
 
   <script type="application/ld+json">
   {
@@ -198,6 +199,11 @@
       padding: 0.8rem 1rem; font-size: 1rem; font-family: inherit;
     }
     textarea { min-height: 5.5rem; resize: vertical; }
+    label.sr {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    .field { display: grid; gap: 0.35rem; }
     .err { color: #fbbf24; min-height: 1.2rem; font-size: 0.9rem; }
     details {
       background: rgba(255,255,255,0.03); border: 1px solid var(--border);
@@ -275,12 +281,24 @@
 
     <div class="section-label" id="request">Request the slot</div>
     <form id="sponsor-form" action="/go/sponsor/thanks/" method="get">
-      <input name="site" type="url" required maxlength="2000" placeholder="https://yoursite.com" autocomplete="url" inputmode="url" />
-      <input name="brand" maxlength="80" placeholder="Brand or site name" autocomplete="organization" />
-      <input name="contact" required maxlength="120" placeholder="Email or Telegram @handle" autocomplete="email" />
-      <textarea name="note" maxlength="400" placeholder="Click URL if different, plus any note (optional)"></textarea>
+      <div class="field">
+        <label class="sr" for="sponsor-site">Website URL</label>
+        <input id="sponsor-site" name="site" type="url" required maxlength="2000" placeholder="https://yoursite.com" autocomplete="url" inputmode="url" />
+      </div>
+      <div class="field">
+        <label class="sr" for="sponsor-brand">Brand or site name</label>
+        <input id="sponsor-brand" name="brand" maxlength="80" placeholder="Brand or site name" autocomplete="organization" />
+      </div>
+      <div class="field">
+        <label class="sr" for="sponsor-contact">Email or Telegram handle</label>
+        <input id="sponsor-contact" name="contact" required maxlength="120" placeholder="Email or Telegram @handle" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label class="sr" for="sponsor-note">Optional note</label>
+        <textarea id="sponsor-note" name="note" maxlength="400" placeholder="Click URL if different, plus any note (optional)"></textarea>
+      </div>
       <button class="cta" type="submit">Build my $29 request</button>
-      <p class="err" id="sponsor-err"></p>
+      <p class="err" id="sponsor-err" role="alert"></p>
     </form>
 
     <div class="section-label">FAQ</div>
@@ -355,7 +373,12 @@
         try {
           sessionStorage.setItem('vr-sponsor-request', lines.join('\n'));
         } catch (e2) { /* ignore */ }
-        window.location.assign('/go/sponsor/thanks/');
+        var qs = new URLSearchParams();
+        qs.set('site', site);
+        qs.set('brand', brand);
+        qs.set('contact', contact);
+        if (note) qs.set('note', note);
+        window.location.assign('/go/sponsor/thanks/?' + qs.toString());
       });
     })();
   </script>

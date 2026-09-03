@@ -53,4 +53,18 @@ describe('/go/sponsor/ Featured Partner page', () => {
     expect(existsSync(gsc)).toBe(true);
     expect(readFileSync(gsc, 'utf8')).toContain('google-site-verification: google163d31ba24216edd.html');
   });
+
+  it('is static ship-quality for live: no hung API calls on the splash', () => {
+    const html = readFileSync(page, 'utf8');
+    const thanksHtml = readFileSync(thanks, 'utf8');
+    expect(html).not.toMatch(/\bfetch\s*\(/);
+    expect(thanksHtml).not.toMatch(/\bfetch\s*\(/);
+    expect(html).not.toContain('supabase');
+    expect(thanksHtml).not.toContain('supabase');
+    expect(html).toContain('for="sponsor-site"');
+    expect(html).toContain('twitter:image');
+    expect(thanksHtml).toContain('URLSearchParams');
+    expect(thanksHtml).toContain('t.me/viralrefer?text=');
+    expect(readFileSync(resolve(root, 'public/llms.txt'), 'utf8')).toContain('/go/sponsor/');
+  });
 });

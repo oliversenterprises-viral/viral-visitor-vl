@@ -14,7 +14,11 @@
   <meta property="og:url" content="https://www.viralrefer.app/go/sponsor/thanks/" />
   <meta property="og:title" content="Thanks · Sponsored Featured Partner · $29 / 7 days" />
   <meta property="og:description" content="Request received. Labeled paid slot. Not a Site Drop." />
+  <meta property="og:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
   <meta property="og:site_name" content="ViralRefer" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Thanks · Sponsored Featured Partner · $29 / 7 days" />
+  <meta name="twitter:image" content="https://www.viralrefer.app/assets/og-homepage-banner-v2.png" />
 
   <style>
     :root {
@@ -127,14 +131,35 @@ $29 / 7 days · labeled slot · not a Site Drop</pre>
     (function () {
       var pre = document.getElementById('sponsor-msg');
       var copy = document.getElementById('sponsor-copy');
+      var tg = document.getElementById('sponsor-tg');
       var stored = '';
       try { stored = sessionStorage.getItem('vr-sponsor-request') || ''; } catch (e) { stored = ''; }
-      if (stored && pre) pre.textContent = stored;
+      var params = new URLSearchParams(window.location.search);
+      var site = String(params.get('site') || '').trim();
+      var brand = String(params.get('brand') || '').trim();
+      var contact = String(params.get('contact') || '').trim();
+      var note = String(params.get('note') || '').trim();
+      var fromQuery = '';
+      if (site || contact) {
+        fromQuery = [
+          'Sponsored Featured Partner request',
+          '$29 / 7 days · labeled slot · not a Site Drop',
+          site ? 'Site: ' + site : '',
+          brand ? 'Name: ' + brand : '',
+          contact ? 'Contact: ' + contact : '',
+          note ? 'Note: ' + note : ''
+        ].filter(Boolean).join('\n');
+      }
+      var text = stored || fromQuery;
+      if (text && pre) pre.textContent = text;
+      if (tg && text) {
+        tg.href = 'https://t.me/viralrefer?text=' + encodeURIComponent(text);
+      }
       if (copy) {
         copy.addEventListener('click', function () {
-          var text = (pre && pre.textContent) || stored;
+          var out = (pre && pre.textContent) || text;
           if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text);
+            navigator.clipboard.writeText(out);
             copy.textContent = 'Copied';
           }
         });
