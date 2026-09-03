@@ -16,6 +16,8 @@ export const LOCKED_SITE_DROPS_TITLE =
 export const LOCKED_SITE_DROPS_DESCRIPTION =
   "I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner. Get a free link and try to beat me.";
 
+export const LOCKED_SITE_DROPS_BADGE = 'THIS WEEK • FREE • NO SIGNUP';
+
 export const LOCKED_SITE_DROPS_H1_LINE1 = 'Win the homepage.';
 
 export const LOCKED_SITE_DROPS_H1_ACCENT =

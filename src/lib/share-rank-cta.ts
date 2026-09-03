@@ -20,7 +20,7 @@ export function buildShareRankCta(
 ): ShareRankCta {
   if (rank === 1) {
     return {
-      headline: "You're #1 — defend your spot!",
+      headline: "You're racing.",
       subline: 'Every share keeps you on top. Challenge friends who might dethrone you.',
       tone: 'gold',
       emphasizeBoost: true,

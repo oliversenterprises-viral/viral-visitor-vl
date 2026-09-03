@@ -10,23 +10,13 @@ import { renderCommunityUnlockMeter } from './community-unlock';
 import { shouldShowWeeklySideWidgets } from './prize-slot';
 import {
   ensureCommunityUnlockMount,
-  ensureDailyChampionStrip,
-  ensureDailyCrownMount,
   ensureWeeklySprintMount,
   isShareLocked,
 } from './side-loop-mounts';
 import { offerRankReceipt } from './rank-receipt-card';
 import { formatSprintHeroLine, renderWeeklySprintBoard } from './weekly-sprint';
-import {
-  fetchDailyCrownStatus,
-  fetchWeeklyReferralCount,
-  fetchWeeklySprintLeaderboard,
-} from './supabase';
-import {
-  parseDailyCrownStatus,
-  renderDailyCrown,
-  getCachedDailyCrownStatus,
-} from './daily-crown';
+import { fetchWeeklyReferralCount, fetchWeeklySprintLeaderboard } from './supabase';
+import { getCachedDailyCrownStatus } from './daily-crown';
 import type { LeaderboardEntry } from './types';
 
 function hasReferralLink(): boolean {
@@ -45,14 +35,13 @@ export function initViralLoops(): void {
   mo.observe(root, { attributes: true, attributeFilter: ['data-vr-share-locked'] });
 }
 
-/** Load public sprint + community + Daily Crown widgets (no user code required). */
+/** Load public sprint + community widgets. Daily Crown is not product UI. */
 export async function loadPublicViralLoops(myCode?: string | null): Promise<void> {
   const code = myCode ?? getMyReferralCode();
   try {
-    const [sprint, weeklyCount, crownRaw] = await Promise.all([
+    const [sprint, weeklyCount] = await Promise.all([
       fetchWeeklySprintLeaderboard(10),
       fetchWeeklyReferralCount(),
-      fetchDailyCrownStatus(14),
     ]);
     if (shouldShowWeeklySideWidgets(weeklyCount)) {
       ensureWeeklySprintMount();
@@ -69,12 +58,9 @@ export async function loadPublicViralLoops(myCode?: string | null): Promise<void
         sprintLine.textContent = '';
       }
     }
-    if (isShareLocked()) {
-      ensureDailyCrownMount();
-      ensureDailyChampionStrip();
-      const crown = parseDailyCrownStatus(crownRaw);
-      renderDailyCrown(crown, code);
-    }
+    document.getElementById('hero-daily-crown-line')?.classList.add('hidden');
+    document.getElementById('daily-champion-strip')?.classList.add('hidden');
+    document.getElementById('daily-crown-section')?.classList.add('hidden');
   } catch {
     // non-fatal
   }

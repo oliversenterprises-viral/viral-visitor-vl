@@ -5,6 +5,7 @@ import { en } from '../../src/lib/i18n/messages';
 import {
   LOCKED_LIVE_FUNNEL_BADGE,
   LOCKED_LIVE_FUNNEL_STEP3,
+  LOCKED_SITE_DROPS_BADGE,
   LOCKED_SITE_DROPS_CTA,
   LOCKED_SITE_DROPS_H1_ACCENT,
   LOCKED_SITE_DROPS_H1_LINE1,
@@ -36,6 +37,10 @@ describe('first-screen Site Drops rules', () => {
     expect(LOCKED_SITE_DROPS_TITLE).toContain('Site Drop');
     expect(hero).toContain('Rising drop');
     expect(LOCKED_SITE_DROPS_SUB).toContain('Rising drop');
+    expect(html).toContain('THIS WEEK');
+    expect(html).toContain('FREE');
+    expect(html).toContain('NO SIGNUP');
+    expect(LOCKED_SITE_DROPS_BADGE).toBe('THIS WEEK • FREE • NO SIGNUP');
     expect(funnel).toContain('SITE DROP LADDER');
     expect(en['funnel.badge']).toMatch(/SITE DROP/);
     expect(en['hero.title_accent']).not.toBe('#1 gets a banner for their site.');
@@ -56,6 +61,23 @@ describe('first-screen Site Drops rules', () => {
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).not.toMatch(/\$\d|Cash App/i);
     expect(hero.toLowerCase()).not.toContain('cash prize');
+  });
+
+  it('keeps Daily Champion and verified-total off the zip homepage', () => {
+    const css = read('src/style.css');
+    const html = read('index.html');
+    const lock = read('src/lib/hero-cta-variant.ts');
+    const crown = read('src/lib/daily-crown.ts');
+    expect(html).toContain('THIS WEEK &bull; FREE &bull; NO SIGNUP');
+    expect(html).not.toContain('Daily Champion');
+    expect(html).not.toContain('id="daily-champion-strip"');
+    expect(html).not.toContain('id="daily-crown-section"');
+    expect(css).toMatch(/#hero-daily-crown-line/);
+    expect(css).toMatch(/#daily-champion-strip/);
+    expect(css).toMatch(/#vr-verified-total/);
+    expect(lock).toContain("hideZipHeroOverlay('hero-daily-crown-line')");
+    expect(lock).toContain("hideZipHeroOverlay('daily-champion-strip')");
+    expect(crown).toContain('never fill the homepage hero with Daily Crown');
   });
 
   it('keeps Get my referral link as the first-screen CTA', () => {

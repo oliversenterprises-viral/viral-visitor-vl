@@ -5,7 +5,7 @@ describe('share-rank-cta', () => {
   it('returns gold CTA for #1', () => {
     const cta = buildShareRankCta(1, 5);
     expect(cta.tone).toBe('gold');
-    expect(cta.headline).toContain('#1');
+    expect(cta.headline).toBe("You're racing.");
     expect(cta.emphasizeBoost).toBe(true);
   });
 

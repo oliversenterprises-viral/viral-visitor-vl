@@ -19,7 +19,7 @@ export function buildLeaderboardHtml(
   options: {
     myCode?: string | null;
     highlightCode?: string | null;
-    /** Codes with Daily Crown flair (yesterday champion and/or live day leader). */
+    /** Ignored. Zip product has no Daily Crown flair. */
     crownCodes?: ReadonlySet<string> | null;
   } = {},
 ): string {
@@ -36,21 +36,18 @@ export function buildLeaderboardHtml(
   }
 
   const myCode = (options.myCode || options.highlightCode || '').trim().toUpperCase();
-  const crowns = options.crownCodes ?? null;
   let html = '<div class="space-y-2" id="leaderboard-rows">';
 
   entries.slice(0, 12).forEach((e, index) => {
     const isLeader = e.rank === 1;
     const codeUpper = (e.referrer_code || '').toUpperCase();
     const isMe = myCode && codeUpper === myCode;
-    const hasCrown = !!crowns?.has(codeUpper);
     const rowClass = [
       'leaderboard-row flex justify-between items-center px-5 py-3 rounded-2xl transition-all duration-300',
       isLeader
         ? 'leaderboard-row--gold bg-gradient-to-r from-amber-500/15 to-yellow-500/5 border border-amber-400/35 shadow-lg shadow-amber-900/20'
         : 'bg-zinc-900/70 border border-white/10 hover:bg-primary/8',
       isMe ? 'ring-2 ring-emerald-400/40' : '',
-      hasCrown && !isLeader ? 'leaderboard-row--daily-crown' : '',
     ]
       .filter(Boolean)
       .join(' ');
@@ -59,15 +56,11 @@ export function buildLeaderboardHtml(
       ? `<div class="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center text-sm font-black text-zinc-900" title="#1 overall">👑</div>`
       : `<div class="w-7 h-7 rounded-full bg-violet-600 flex items-center justify-center text-xs font-bold">${e.rank}</div>`;
 
-    const crownFlair = hasCrown
-      ? `<span class="daily-crown-flair ml-1.5 text-[9px] font-bold uppercase tracking-wide text-amber-300/95 px-1.5 py-0.5 rounded-full border border-amber-400/35 bg-amber-500/10" title="Daily Crown (24h UTC)">Daily Crown</span>`
-      : '';
-
     html += `
       <div class="${rowClass} vr-reveal-row" data-rank="${e.rank}" data-code="${escapeHtml(e.referrer_code)}" style="--vr-stagger:${index}">
         <div class="flex items-center gap-3 min-w-0">
           ${rankBadge}
-          <div class="font-mono ${isLeader ? 'text-amber-200' : 'text-emerald-400'} truncate">${escapeHtml(e.referrer_code)}${isMe ? ' <span class="text-[10px] text-emerald-300/80">(you)</span>' : ''}${crownFlair}</div>
+          <div class="font-mono ${isLeader ? 'text-amber-200' : 'text-emerald-400'} truncate">${escapeHtml(e.referrer_code)}${isMe ? ' <span class="text-[10px] text-emerald-300/80">(you)</span>' : ''}</div>
         </div>
         <div class="font-semibold ${isLeader ? 'text-amber-300' : 'text-emerald-400'} shrink-0">${e.referral_count} <span class="text-xs text-zinc-400">refs</span></div>
       </div>`;
@@ -86,7 +79,7 @@ export function buildRankGapSummary(
 ): string {
   if (!rank || rank < 1) return '';
   if (rank === 1) {
-    return `<div class="text-xs text-amber-300/90 mt-1 font-medium">👑 Leading the board — defend your spot!</div>`;
+    return `<div class="text-xs text-amber-300/90 mt-1 font-medium">#1 this week</div>`;
   }
   const gap = referralsToNextRank(myCode, myCount, board);
   if (gap == null) return '';

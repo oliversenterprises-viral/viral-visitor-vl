@@ -4,14 +4,6 @@
  */
 
 import type { LeaderboardEntry } from './types';
-import { getViralLoopsConfig } from './viral-loops-config';
-import { staggerReveal } from './public-polish';
-import { trackViralLoopEvent } from './visitor-tracking';
-import {
-  buildDailyCrownShareCardHtml,
-  downloadDailyCrownCard,
-  type DailyCrownCardSpec,
-} from './daily-crown-card';
 
 export interface DailyCrownPerson {
   referrer_code: string;
@@ -32,15 +24,7 @@ export interface DailyCrownStatus {
   hall: DailyCrownPerson[];
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-/** Codes that should show crown flair on the main leaderboard (24h champion + live day leader). */
+/** Codes that would have shown crown flair. Zip product never paints that flair. */
 export function dailyCrownFlairCodes(status: DailyCrownStatus | null | undefined): Set<string> {
   const set = new Set<string>();
   if (!status) return set;
@@ -144,266 +128,41 @@ export function parseDailyCrownStatus(raw: unknown): DailyCrownStatus | null {
   };
 }
 
-function buildTodayRaceHtml(
-  board: readonly LeaderboardEntry[],
-  myCode?: string | null,
-): string {
-  if (!board.length) {
-    return `<div class="text-center py-4 text-zinc-400 text-sm">
-      <p class="font-medium text-zinc-300 mb-1">Crown race is open</p>
-      <p class="mb-3 text-xs">No verified referrals yet today (UTC). Be first.</p>
-      <button type="button" onclick="getMyReferralLinkInstant()"
-        class="text-xs font-semibold px-4 py-2 rounded-xl bg-amber-500/90 hover:bg-amber-400 text-zinc-900">
-        Get my link — chase the crown
-      </button>
-    </div>`;
-  }
-
-  const me = (myCode || '').trim().toUpperCase();
-  let html = '<div class="space-y-1.5" id="daily-crown-race-rows">';
-  board.slice(0, 6).forEach((e, index) => {
-    const isMe = me && (e.referrer_code || '').toUpperCase() === me;
-    const isTop = e.rank === 1;
-    html += `
-      <div class="daily-crown-row vr-reveal-row flex justify-between items-center px-3 py-2 rounded-xl border transition-all ${
-        isTop
-          ? 'border-amber-400/40 bg-amber-500/10'
-          : 'border-white/10 bg-zinc-900/50'
-      } ${isMe ? 'ring-1 ring-emerald-400/40' : ''}" data-crown-rank="${e.rank}" style="--vr-stagger:${index}">
-        <div class="flex items-center gap-2">
-          <span class="w-6 h-6 rounded-full ${isTop ? 'bg-amber-400 text-zinc-900' : 'bg-violet-600 text-white'} text-[10px] font-bold flex items-center justify-center" aria-hidden="true">${isTop ? '👑' : e.rank}</span>
-          <span class="font-mono text-sm ${isTop ? 'text-amber-200' : 'text-emerald-400'}">${escapeHtml(e.referrer_code)}${isMe ? ' <span class="text-[9px] text-emerald-300/80">(you)</span>' : ''}</span>
-          ${isTop ? '<span class="text-[9px] font-bold uppercase tracking-wide text-amber-300/90 px-1.5 py-0.5 rounded-full border border-amber-400/30 bg-amber-500/10">Daily lead</span>' : ''}
-        </div>
-        <span class="text-sm font-semibold ${isTop ? 'text-amber-300' : 'text-zinc-200'} tabular-nums">${e.referral_count} <span class="text-[10px] text-zinc-500">today</span></span>
-      </div>`;
-  });
-  html += '</div>';
-  return html;
-}
-
-function buildHallHtml(hall: readonly DailyCrownPerson[]): string {
-  if (!hall.length) {
-    return `<p class="text-sm text-zinc-500 text-center py-4">Hall of Crowns fills as each UTC day closes. Win a day — your name stays forever.</p>`;
-  }
-  let html = '<div class="space-y-1.5" id="hall-of-crowns-rows">';
-  hall.forEach((h, index) => {
-    html += `
-      <div class="hall-crown-row vr-reveal-row flex justify-between items-center px-3 py-2 rounded-xl border border-white/10 bg-zinc-900/40" style="--vr-stagger:${index}">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="text-amber-400 text-sm" aria-hidden="true">👑</span>
-          <span class="font-mono text-sm text-amber-100/95 truncate">${escapeHtml(h.referrer_code)}</span>
-          <span class="text-[10px] text-zinc-500 shrink-0">${escapeHtml(formatCrownDay(h.day_utc))}</span>
-        </div>
-        <span class="text-xs font-semibold text-zinc-300 tabular-nums shrink-0">${h.referral_count} refs</span>
-      </div>`;
-  });
-  html += '</div>';
-  return html;
-}
-
-function paintChampionStrip(status: DailyCrownStatus): void {
+function paintChampionStrip(): void {
   const strip = document.getElementById('daily-champion-strip');
   if (!strip) return;
-
-  const champ = status.yesterday_champion;
-  if (!champ?.referrer_code) {
-    strip.classList.add('hidden');
-    strip.innerHTML = '';
-    return;
-  }
-
-  const until = formatCountdown(status.seconds_remaining);
-  strip.innerHTML = `
-    <div class="daily-champion-strip__inner flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3 min-w-0">
-        <span class="daily-champion-strip__crown text-2xl" aria-hidden="true">👑</span>
-        <div class="min-w-0">
-          <div class="text-[10px] font-bold uppercase tracking-wider text-amber-300/90">Daily Champion · 24h crown</div>
-          <div class="font-mono text-lg sm:text-xl font-bold text-amber-100 truncate">${escapeHtml(champ.referrer_code)}</div>
-          <div class="text-xs text-zinc-400">
-            Won ${escapeHtml(formatCrownDay(champ.day_utc))} with ${champ.referral_count} referral${champ.referral_count === 1 ? '' : 's'}
-            · recognition only · not the overall homepage feature
-          </div>
-        </div>
-      </div>
-      <div class="flex flex-col items-end gap-1 shrink-0">
-        <span class="text-[11px] text-amber-200/80 tabular-nums">Crown until UTC midnight · ${until}</span>
-        <button type="button" data-daily-crown-share="champion"
-          class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-amber-400/40 bg-amber-500/15 text-amber-100 hover:bg-amber-500/25 transition-colors">
-          Share crown card
-        </button>
-      </div>
-    </div>`;
-  strip.classList.remove('hidden');
+  // Zip product: Daily Champion is not the public homepage.
+  strip.classList.add('hidden');
+  strip.setAttribute('hidden', '');
+  strip.innerHTML = '';
 }
 
-function paintRaceLine(status: DailyCrownStatus): void {
+function paintRaceLine(): void {
   const el = document.getElementById('hero-daily-crown-line');
   if (!el) return;
-  const line = formatDailyCrownRaceLine(status);
-  if (!line) {
-    el.classList.add('hidden');
-    el.textContent = '';
-    return;
-  }
-  el.textContent = line;
-  el.classList.remove('hidden');
+  // Zip product: never fill the homepage hero with Daily Crown.
+  el.classList.add('hidden');
+  el.setAttribute('hidden', '');
+  el.textContent = '';
 }
 
-let crownTracked = false;
 let cachedStatus: DailyCrownStatus | null = null;
 
 export function getCachedDailyCrownStatus(): DailyCrownStatus | null {
   return cachedStatus;
 }
 
-/** Full UI paint for Daily Crown sections. */
+/** Zip product: Daily Crown is not public UI. Cache status only. */
 export function renderDailyCrown(
   status: DailyCrownStatus | null,
-  myCode?: string | null,
+  _myCode?: string | null,
 ): void {
   cachedStatus = status;
   const root = document.getElementById('daily-crown-section');
-  const raceContainer = document.getElementById('daily-crown-race-container');
-  const hallContainer = document.getElementById('hall-of-crowns-container');
-  const countdownEl = document.getElementById('daily-crown-countdown');
-
-  if (!getViralLoopsConfig().daily_crown_enabled) {
-    root?.classList.add('hidden');
-    document.getElementById('daily-champion-strip')?.classList.add('hidden');
-    document.getElementById('hero-daily-crown-line')?.classList.add('hidden');
-    return;
-  }
-
-  if (!status) {
-    root?.classList.add('hidden');
-    document.getElementById('daily-champion-strip')?.classList.add('hidden');
-    document.getElementById('hero-daily-crown-line')?.classList.add('hidden');
-    return;
-  }
-
-  paintChampionStrip(status);
-  paintRaceLine(status);
-
-  if (countdownEl) {
-    countdownEl.textContent = formatCountdown(status.seconds_remaining);
-  }
-
-  if (raceContainer) {
-    raceContainer.innerHTML = buildTodayRaceHtml(status.today_board, myCode);
-    staggerReveal(raceContainer, '.daily-crown-row');
-    raceContainer.setAttribute('aria-busy', 'false');
-  }
-
-  if (hallContainer) {
-    hallContainer.innerHTML = buildHallHtml(status.hall);
-    staggerReveal(hallContainer, '.hall-crown-row');
-    hallContainer.setAttribute('aria-busy', 'false');
-  }
-
-  // Share card CTA panel
-  const sharePanel = document.getElementById('daily-crown-share-panel');
-  if (sharePanel) {
-    const me = (myCode || '').trim().toUpperCase();
-    const isLiveLead =
-      !!me && status.current_leader?.referrer_code?.toUpperCase() === me;
-    const isChamp =
-      !!me && status.yesterday_champion?.referrer_code?.toUpperCase() === me;
-    if (isLiveLead || isChamp) {
-      const kind = isChamp && !isLiveLead ? 'champion' : 'leader';
-      const person = isLiveLead ? status.current_leader! : status.yesterday_champion!;
-      sharePanel.innerHTML = buildDailyCrownShareCardHtml({
-        code: person.referrer_code,
-        refs: person.referral_count,
-        kind,
-        dayLabel: isChamp
-          ? formatCrownDay(status.yesterday_champion?.day_utc)
-          : formatCrownDay(status.today_utc),
-      });
-      sharePanel.classList.remove('hidden');
-    } else {
-      sharePanel.innerHTML = '';
-      sharePanel.classList.add('hidden');
-    }
-  }
-
-  root?.classList.remove('hidden');
-  wireShareButtons(status, myCode);
-
-  if (!crownTracked) {
-    crownTracked = true;
-    trackViralLoopEvent('DailyCrownView', {
-      has_leader: !!status.current_leader,
-      has_champion: !!status.yesterday_champion,
-      hall: status.hall.length,
-    });
-  }
-}
-
-function wireShareButtons(status: DailyCrownStatus, myCode?: string | null): void {
-  const handlers: Array<{ el: Element; spec: DailyCrownCardSpec }> = [];
-
-  document.querySelectorAll('[data-daily-crown-share]').forEach((el) => {
-    const kind = el.getAttribute('data-daily-crown-share');
-    if (kind === 'champion' && status.yesterday_champion) {
-      handlers.push({
-        el,
-        spec: {
-          code: status.yesterday_champion.referrer_code,
-          refs: status.yesterday_champion.referral_count,
-          kind: 'champion',
-          dayLabel: formatCrownDay(status.yesterday_champion.day_utc),
-        },
-      });
-    }
-    if (kind === 'leader' && status.current_leader) {
-      handlers.push({
-        el,
-        spec: {
-          code: status.current_leader.referrer_code,
-          refs: status.current_leader.referral_count,
-          kind: 'leader',
-          dayLabel: formatCrownDay(status.today_utc),
-        },
-      });
-    }
-    if (kind === 'mine' && myCode) {
-      const me = myCode.trim().toUpperCase();
-      const live = status.current_leader?.referrer_code?.toUpperCase() === me;
-      const champ = status.yesterday_champion?.referrer_code?.toUpperCase() === me;
-      if (live && status.current_leader) {
-        handlers.push({
-          el,
-          spec: {
-            code: status.current_leader.referrer_code,
-            refs: status.current_leader.referral_count,
-            kind: 'leader',
-            dayLabel: formatCrownDay(status.today_utc),
-          },
-        });
-      } else if (champ && status.yesterday_champion) {
-        handlers.push({
-          el,
-          spec: {
-            code: status.yesterday_champion.referrer_code,
-            refs: status.yesterday_champion.referral_count,
-            kind: 'champion',
-            dayLabel: formatCrownDay(status.yesterday_champion.day_utc),
-          },
-        });
-      }
-    }
-  });
-
-  handlers.forEach(({ el, spec }) => {
-    const btn = el as HTMLButtonElement;
-    btn.onclick = () => {
-      void downloadDailyCrownCard(spec).then((ok) => {
-        if (ok) {
-          trackViralLoopEvent('DailyCrownShare', { kind: spec.kind, code: spec.code });
-        }
-      });
-    };
-  });
+  root?.classList.add('hidden');
+  root?.setAttribute('hidden', '');
+  if (root) root.innerHTML = '';
+  document.getElementById('daily-crown-share-panel')?.classList.add('hidden');
+  paintChampionStrip();
+  paintRaceLine();
 }

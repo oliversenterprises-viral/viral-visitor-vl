@@ -47,8 +47,13 @@ const MUST_KEEP: Array<{ path: string; minBytes: number; contains?: string }> = 
   },
   { path: 'public/llms.txt', minBytes: 200, contains: 'https://www.viralrefer.app' },
   { path: 'public/llms-full.txt', minBytes: 500, contains: 'viralrefer.app' },
+  { path: 'public/guides/index.html', minBytes: 500, contains: 'href="/guides/site-drops/"' },
   { path: 'public/guides/site-drops/index.html', minBytes: 500, contains: 'Site Drop' },
+  { path: 'public/tools/index.html', minBytes: 500, contains: 'Free Growth Tools' },
   { path: 'public/tools/credit-checker.html', minBytes: 500, contains: 'Get my referral link' },
+  { path: 'public/go/sponsor/index.html', minBytes: 500, contains: 'Sponsored Featured Partner' },
+  { path: 'public/go/sponsor/thanks/index.html', minBytes: 500, contains: 'Sponsored Featured Partner' },
+  { path: 'public/embed/race/index.html', minBytes: 500, contains: 'EMBED_MODE=embed' },
   { path: 'src/lib/site-drops.ts', minBytes: 100, contains: 'SITE_DROPS_KEY' },
   { path: 'src/admin/owner-funnel-desk.ts', minBytes: 500, contains: 'renderOwnerFunnelDesk' },
 ];

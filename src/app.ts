@@ -52,7 +52,6 @@ import {
 } from './lib/referrer-notices';
 import { syncSharePowerUI } from './lib/share-ui';
 import { buildLeaderboardHtml, buildRankGapSummary, pulseLeaderboardActivity } from './lib/leaderboard-ui';
-import { dailyCrownFlairCodes, getCachedDailyCrownStatus } from './lib/daily-crown';
 import { buildRecentActivityHtml, pulseRecentActivity } from './lib/activity-ui';
 import {
   activitySkeletonHtml,
@@ -266,10 +265,8 @@ export async function loadLeaderboard(options: { pulseCode?: string } = {}) {
   try {
     const entries = await fetchLeaderboard(0);
     cachedLeaderboard = entries || [];
-    const crownCodes = dailyCrownFlairCodes(getCachedDailyCrownStatus());
     container.innerHTML = buildLeaderboardHtml(cachedLeaderboard, {
       myCode: getMyReferralCode(),
-      crownCodes,
     });
     staggerReveal(container, '.leaderboard-row');
     container.setAttribute('aria-busy', 'false');
@@ -361,7 +358,6 @@ export async function initApp() {
     // Verified worldwide total first so the number is never a mystery on first paint
     await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
 
-    // Daily Crown first so main-board flair has cached champion/leader codes
     await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
     await withInitTimeout(loadLeaderboard(), undefined);
     // Re-paint total with leader #1 context after board loads
@@ -392,6 +388,8 @@ export async function initApp() {
       initRealtimeSubscriptions();
       window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
     }
+
+    if (!isReferredLanding()) lock844HomepageCopy();
   } catch (err) {
     console.warn('[ViralRefer] initApp partial failure:', err);
   }
