@@ -227,9 +227,10 @@ export function renderOwnerFunnelDeskView(
     ? `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="1">${escapeHtml(String(metrics.junkVisits))} junk/test page views kept off these tiles. Search Console is separate.</p>`
     : `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="0">Junk/test page views stay off these tiles. Search Console is separate.</p>`;
 
-  const fetchError = error
-    ? `<p class="text-[12px] text-amber-200/90" data-owner-desk-fetch-error="1">${escapeHtml(error)}</p>`
-    : '';
+  const fetchError =
+    error && /timed out/i.test(error)
+      ? `<p class="text-[12px] text-amber-200/90" data-owner-desk-fetch-error="1">${escapeHtml(error)}</p>`
+      : '';
 
   container.innerHTML = `
     <div data-owner-funnel-desk="1" class="hq-desk space-y-4">
