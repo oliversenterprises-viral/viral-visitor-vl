@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { en } from '../../src/lib/i18n/messages';
 import {
   LOCKED_LIVE_FUNNEL_BADGE,
   LOCKED_LIVE_FUNNEL_STEP3,
@@ -11,6 +12,7 @@ import {
   LOCKED_SITE_DROPS_SLOT,
   LOCKED_SITE_DROPS_SUB,
   LOCKED_SITE_DROPS_TITLE,
+  SITE_DROPS_TREE_PIN,
 } from '../../src/lib/site-drops-copy';
 
 const root = resolve(import.meta.dirname, '../..');
@@ -20,6 +22,26 @@ function read(rel: string): string {
 }
 
 describe('first-screen Site Drops rules', () => {
+  it('pins the Site Drops tree: title, hero, and funnel still say Site Drop', () => {
+    const html = read('index.html');
+    const title = html.match(/<title>([^<]+)<\/title>/)?.[1] ?? '';
+    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
+    const funnel = html.slice(
+      html.indexOf('id="funnel-journey"'),
+      html.indexOf('id="funnel-steps"'),
+    );
+
+    expect(SITE_DROPS_TREE_PIN).toBe('848540d-site-drops');
+    expect(title).toContain('Site Drop');
+    expect(LOCKED_SITE_DROPS_TITLE).toContain('Site Drop');
+    expect(hero).toContain('Rising drop');
+    expect(LOCKED_SITE_DROPS_SUB).toContain('Rising drop');
+    expect(funnel).toContain('SITE DROP LADDER');
+    expect(en['funnel.badge']).toMatch(/SITE DROP/);
+    expect(en['hero.title_accent']).not.toBe('#1 gets a banner for their site.');
+    expect(LOCKED_SITE_DROPS_H1_ACCENT).not.toBe('#1 gets a banner for their site.');
+  });
+
   it('keeps the locked live Site Drops copy', () => {
     const html = read('index.html');
     expect(html).toContain(`<title>${LOCKED_SITE_DROPS_TITLE}</title>`);
