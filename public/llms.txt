@@ -23,6 +23,7 @@ Signup: None required
 - Terms: https://www.viralrefer.app/terms/
 - Leaderboard: https://www.viralrefer.app/#leaderboard
 - Homepage feature: https://www.viralrefer.app/#prize
+- Featured Partner ($29 / 7 days, labeled, not a Site Drop): https://www.viralrefer.app/go/sponsor/
 
 ## Contact / social
 - Telegram: https://t.me/viralrefer

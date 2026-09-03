@@ -43,6 +43,8 @@ export const REQUIRED_STATIC_ROUTES = [
   { url: '/go/herculist/', file: 'go/herculist/index.html' },
   { url: '/go/adsboard/', file: 'go/adsboard/index.html' },
   { url: '/go/affiliates/', file: 'go/affiliates/index.html' },
+  { url: '/go/sponsor/', file: 'go/sponsor/index.html', note: 'Sponsored Featured Partner $29 / 7 days' },
+  { url: '/go/sponsor/thanks/', file: 'go/sponsor/thanks/index.html', note: 'Featured Partner request confirmation' },
 
   // Iframe-safe embed variants (traffic exchanges)
   { url: '/embed/makers/', file: 'embed/makers/index.html' },

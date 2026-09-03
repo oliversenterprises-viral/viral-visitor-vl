@@ -77,6 +77,7 @@ try {
 initApp().catch((err) => {
   console.warn('[ViralRefer] initApp failed (degraded mode):', err);
 }).finally(() => {
+  // First screen already painted from HTML. Ready does not wait on hung APIs.
   document.documentElement.setAttribute('data-vr-ready', '1');
   syncMobileReferralCta();
   refreshPublicClarityState();

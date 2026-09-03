@@ -87,14 +87,21 @@ let siteContentChannel: ReturnType<typeof supabase.channel> | null = null;
 let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
-const INIT_FETCH_TIMEOUT_MS = 12_000;
+/** First screen must paint without waiting this long on APIs. */
+export const FIRST_SCREEN_FETCH_TIMEOUT_MS = 2_000;
+/** Background board/CMS can wait longer so a slow live RPC still lands. */
+export const ENHANCE_FETCH_TIMEOUT_MS = 12_000;
 /** Disk IO: slower poll + pause when tab hidden (was 45s always-on). */
 const PUBLIC_ACTIVITY_POLL_MS = 90_000;
 
-async function withInitTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
+export async function withInitTimeout<T>(
+  promise: Promise<T>,
+  fallback: T,
+  timeoutMs: number = FIRST_SCREEN_FETCH_TIMEOUT_MS,
+): Promise<T> {
   return Promise.race([
     promise,
-    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), INIT_FETCH_TIMEOUT_MS)),
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), timeoutMs)),
   ]);
 }
 
@@ -345,38 +352,37 @@ registerGlobal('loadSiteContent', loadSiteContent);
 
 /**
  * Main public site initializer.
- * Runs on page load and orchestrates:
- *   - Admin button wiring
- *   - Loading dynamic site content
- *   - Populating stats, leaderboard, and recent activity
- *   - Prefilling the user's referral link (if they have a code)
- *   - Handling ?ref= attribution banners
+ * First screen is static HTML (Site Drop hero). Paint that now.
+ * Hung APIs enhance the board later and must not block first paint.
  */
 export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
   try {
-    await withInitTimeout(loadSiteContent(), undefined);
-
-    // Verified worldwide total first so the number is never a mystery on first paint
-    await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
-
-    // Daily Crown first so main-board flair has cached champion/leader codes
-    await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
-    await withInitTimeout(loadLeaderboard(), undefined);
-    // Re-paint total with leader #1 context after board loads
-    paintWorldwideReferralTotal();
-    await withInitTimeout(renderRecentActivity(), undefined);
+    if (isReferredLanding()) {
+      applyReferredLandingOverrides();
+    } else {
+      lock844HomepageCopy();
+    }
 
     if (myReferralCode) {
       applyExistingReferralLink(myReferralCode);
-      void withInitTimeout(refreshFunnelTicker(), undefined);
     } else {
       syncMobileReferralCta();
       setFunnelTickerVisible(false);
     }
 
-    await withInitTimeout(renderMyStats(myReferralCode), undefined);
+    // Do not wait on APIs here. 12s enhance stays in the background only.
+    void enhanceAfterFirstPaint(myReferralCode);
+  } catch (err) {
+    console.warn('[ViralRefer] initApp partial failure:', err);
+    void enhanceAfterFirstPaint(myReferralCode);
+  }
+}
+
+/** Board / CMS / stats after first paint. Hung APIs must not block the hero. */
+async function enhanceAfterFirstPaint(myReferralCode: string | null): Promise<void> {
+  try {
     initViralLoopUI();
     initGrowthCommandCenter();
     initPostLinkShare();
@@ -392,8 +398,21 @@ export async function initApp() {
       initRealtimeSubscriptions();
       window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
     }
+
+    await withInitTimeout(loadSiteContent(), undefined, ENHANCE_FETCH_TIMEOUT_MS);
+    await Promise.all([
+      withInitTimeout(refreshWorldwideReferralTotals(), undefined, ENHANCE_FETCH_TIMEOUT_MS),
+      withInitTimeout(loadPublicViralLoops(myReferralCode), undefined, ENHANCE_FETCH_TIMEOUT_MS),
+      withInitTimeout(loadLeaderboard(), undefined, ENHANCE_FETCH_TIMEOUT_MS),
+      withInitTimeout(renderRecentActivity(), undefined, ENHANCE_FETCH_TIMEOUT_MS),
+      myReferralCode
+        ? withInitTimeout(refreshFunnelTicker(), undefined, ENHANCE_FETCH_TIMEOUT_MS)
+        : Promise.resolve(),
+      withInitTimeout(renderMyStats(myReferralCode), undefined, ENHANCE_FETCH_TIMEOUT_MS),
+    ]);
+    paintWorldwideReferralTotal();
   } catch (err) {
-    console.warn('[ViralRefer] initApp partial failure:', err);
+    console.warn('[ViralRefer] post-paint enhance failed:', err);
   }
 }
 
