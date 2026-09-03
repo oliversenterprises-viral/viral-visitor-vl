@@ -25,18 +25,21 @@ export function isLocale(raw: string | null | undefined): raw is Locale {
   return !!raw && (SUPPORTED_LOCALES as readonly string[]).includes(raw);
 }
 
+const RTL_LOCALES = new Set<string>(['ar']);
+
+function applyDocumentDir(locale: Locale): void {
+  try {
+    document.documentElement.dir = RTL_LOCALES.has(locale) ? 'rtl' : 'ltr';
+  } catch {
+    /* non-fatal */
+  }
+}
+
 /** Map navigator / Accept-Language tags → supported locale. */
 export function normalizeLocale(tag: string | null | undefined): Locale {
   if (!tag) return 'en';
   const base = tag.trim().toLowerCase().split(/[-_]/)[0] || 'en';
-  if (base === 'en') return 'en';
-  if (base === 'es') return 'es';
-  if (base === 'fr') return 'fr';
-  if (base === 'pt') return 'pt';
-  if (base === 'de') return 'de';
-  if (base === 'hi') return 'hi';
-  // Portuguese Brazil / European already covered by pt
-  // Chinese etc. → English until Phase 2
+  if (isLocale(base)) return base;
   return 'en';
 }
 
@@ -106,6 +109,7 @@ export function applyI18n(locale: Locale = current, root: ParentNode = document)
   try {
     document.documentElement.lang = locale === 'en' ? 'en' : locale;
     document.documentElement.setAttribute(ATTR, locale);
+    applyDocumentDir(locale);
   } catch {
     /* non-fatal */
   }
