@@ -1,8 +1,11 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
+  HUMAN_CHECK_STALL_MESSAGE,
+  TURNSTILE_READY_TIMEOUT_MS,
   ensureTurnstileReady,
   getTurnstileSiteKey,
   getTurnstileToken,
+  tryOptionalTurnstileToken,
 } from '../../src/lib/turnstile';
 
 describe('turnstile (shared by referral.ts + handlers.ts)', () => {
@@ -74,5 +77,49 @@ describe('turnstile (shared by referral.ts + handlers.ts)', () => {
     await expect(getTurnstileToken(container, 'test-site-key', 'claim')).rejects.toThrow(
       'Turnstile API not available',
     );
+  });
+
+  it('ensureTurnstileReady fail-fast rejects when the human-check never appears', async () => {
+    vi.useFakeTimers();
+    const pending = ensureTurnstileReady();
+    const expectReject = expect(pending).rejects.toThrow(HUMAN_CHECK_STALL_MESSAGE);
+    await vi.advanceTimersByTimeAsync(TURNSTILE_READY_TIMEOUT_MS);
+    await expectReject;
+    vi.useRealTimers();
+  });
+
+  it('ensureTurnstileReady does not depend on requestAnimationFrame (hidden-tab safe)', async () => {
+    vi.useFakeTimers();
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0 as unknown as number);
+    const pending = ensureTurnstileReady(200);
+    const expectReject = expect(pending).rejects.toThrow(HUMAN_CHECK_STALL_MESSAGE);
+    await vi.advanceTimersByTimeAsync(200);
+    await expectReject;
+    expect(raf).not.toHaveBeenCalled();
+    raf.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('getTurnstileToken fail-fast rejects when the widget never callbacks', async () => {
+    vi.useFakeTimers();
+    (window as { turnstile?: { render: () => string } }).turnstile = {
+      render: () => 'hung-widget',
+    };
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const pending = getTurnstileToken(container, 'test-site-key', 'claim', { timeoutMs: 250 });
+    const expectReject = expect(pending).rejects.toThrow(HUMAN_CHECK_STALL_MESSAGE);
+    await vi.advanceTimersByTimeAsync(250);
+    await expectReject;
+    vi.useRealTimers();
+  });
+
+  it('tryOptionalTurnstileToken returns null within the deadline when script/API stalls', async () => {
+    vi.useFakeTimers();
+    const pending = tryOptionalTurnstileToken(300);
+    const expectNull = expect(pending).resolves.toBeNull();
+    await vi.advanceTimersByTimeAsync(300);
+    await expectNull;
+    vi.useRealTimers();
   });
 });
