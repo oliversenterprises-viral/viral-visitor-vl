@@ -10,10 +10,15 @@ import {
   isLockedReferrer,
   isEmptyOwnerFunnelDeskCounts,
   isOwnerFunnelRpcMissingError,
+  OWNER_FUNNEL_LAST_N,
+  OWNER_FUNNEL_QUERY_TIMEOUT_MS,
+  OwnerFunnelDeskQueryError,
   pageAllOwnerFunnelRows,
   parseOwnerFunnelDeskCounts,
+  queryOwnerFunnelLastN,
   resolveOwnerFunnelDeskMetrics,
   resolveOwnerFunnelVia,
+  runOwnerFunnelDeskQueries,
 } from '../../src/admin/owner-funnel-desk-helpers';
 import {
   isOwnerFunnelDeskActionMissing,
@@ -380,6 +385,79 @@ describe('owner funnel desk metrics', () => {
     expect(metrics.share).toBe(1);
     expect(metrics.locked).toBe(0);
     expect(metrics.getLinkRate).toBe('100.0%');
+  });
+
+  it('aborts a hanging last-N read and throws instead of returning zeros', async () => {
+    expect(OWNER_FUNNEL_LAST_N).toBe(80);
+    expect(OWNER_FUNNEL_QUERY_TIMEOUT_MS).toBe(4_000);
+    let aborted = false;
+    await expect(
+      runOwnerFunnelDeskQueries(async (signal) => {
+        signal.addEventListener('abort', () => {
+          aborted = true;
+        });
+        await new Promise(() => {});
+      }, 20),
+    ).rejects.toThrow(OwnerFunnelDeskQueryError);
+    expect(aborted).toBe(true);
+  });
+
+  it('throws when a table query errors so zeros are not painted as empty', async () => {
+    const hanging = {
+      order() {
+        return this;
+      },
+      limit() {
+        return this;
+      },
+      abortSignal() {
+        return this;
+      },
+      then(
+        onfulfilled?: (value: unknown) => unknown,
+        onrejected?: (reason: unknown) => unknown,
+      ) {
+        return Promise.resolve({ data: null, error: { message: 'db busy' } }).then(
+          onfulfilled,
+          onrejected,
+        );
+      },
+    };
+    await expect(
+      queryOwnerFunnelLastN(() => hanging, new AbortController().signal, 80, 'shares'),
+    ).rejects.toThrow(/shares: db busy/);
+  });
+
+  it('aborts last-N when the signal is already aborted', async () => {
+    const ctrl = new AbortController();
+    ctrl.abort();
+    await expect(
+      queryOwnerFunnelLastN(() => {
+        throw new Error('must not start query after abort');
+      }, ctrl.signal),
+    ).rejects.toThrow(/timed out/);
+  });
+
+  it('computes Landed / Got a link / Shared / Locked from last-N rows', () => {
+    const metrics = computeOwnerFunnelDeskMetrics({
+      events: [
+        landing('b', { ref_code: 'VIRAL-REAL1', metadata: { path: '/r/VIRAL-REAL1' } }),
+        getLink('b'),
+      ],
+      shares: [{ platform: 'native', referrer_code: 'VIRAL-REAL1', created_at: '2026-08-16T12:00:00Z' }],
+      referrals: [
+        {
+          referrer_code: 'VIRAL-REAL1',
+          referred_code: 'VIRAL-FRIEND1',
+          created_at: '2026-08-16T12:30:00Z',
+        },
+      ],
+      referrerLinks: [{ referrer_code: 'VIRAL-REAL1', status: 'active', created_at: '2026-08-16T12:30:00Z' }],
+      now,
+    });
+    expect(metrics.feed.map((row) => row.label)).toEqual(
+      expect.arrayContaining(['Landed', 'Got a link', 'Shared', 'Locked']),
+    );
   });
 
   it('does not paint zeros when the RPC is empty/timed out and visitor_events have rows', async () => {

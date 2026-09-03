@@ -2,9 +2,12 @@
 
 export {
   OWNER_FUNNEL_FEED_LIMIT,
+  OWNER_FUNNEL_LAST_N,
   OWNER_FUNNEL_PAGE_SIZE,
+  OWNER_FUNNEL_QUERY_TIMEOUT_MS,
   OWNER_FUNNEL_WINDOW_DAYS,
   OWNER_FUNNEL_WINDOW_LIMIT,
+  OwnerFunnelDeskQueryError,
   assembleOwnerFunnelDeskFromServer,
   computeOwnerFunnelDeskMetrics,
   deskFromPublicSurfaces,
@@ -26,8 +29,10 @@ export {
   ownerFunnelViaLabel,
   pageAllOwnerFunnelRows,
   parseOwnerFunnelDeskCounts,
+  queryOwnerFunnelLastN,
   resolveOwnerFunnelDeskMetrics,
   resolveOwnerFunnelVia,
+  runOwnerFunnelDeskQueries,
   stripOwnerFunnelPii,
   uniqueVisitorsForEvent,
   type OwnerFunnelDeskMetrics,

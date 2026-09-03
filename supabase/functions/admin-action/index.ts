@@ -971,127 +971,94 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'get_owner_funnel_desk') {
       const {
-        deskFromPublicSurfaces,
-        deskHasVisitorSignal,
+        OWNER_FUNNEL_LAST_N,
+        OWNER_FUNNEL_QUERY_TIMEOUT_MS,
+        computeOwnerFunnelDeskMetrics,
         filterDeskReferrals,
-        resolveOwnerFunnelDeskMetrics,
+        queryOwnerFunnelLastN,
+        runOwnerFunnelDeskQueries,
         stripOwnerFunnelPii,
       } = await import('../_shared/owner-funnel-desk.ts');
-      const { emptyOwnerFunnelGsc, resolveOwnerFunnelGscTimed, withTimeout } = await import(
+      const { emptyOwnerFunnelGsc, resolveOwnerFunnelGscTimed } = await import(
         '../_shared/owner-funnel-gsc.ts'
       );
 
-      const takeLast = async (
-        table: string,
-        columns: string,
-        limit: number,
-        tweak?: (q: any) => any,
-      ) => {
-        let query = supabaseAdmin.from(table).select(columns);
-        if (tweak) query = tweak(query);
-        const { data, error } = await query.order('created_at', { ascending: false }).limit(limit);
-        if (error) return [] as Record<string, unknown>[];
-        return (data || []) as Record<string, unknown>[];
-      };
-      const timedLast = (
-        table: string,
-        columns: string,
-        limit: number,
-        ms: number,
-        tweak?: (q: any) => any,
-      ) => withTimeout(takeLast(table, columns, limit, tweak), ms, () => [] as Record<string, unknown>[]);
-      const timedRpc = (name: string, args: Record<string, unknown>, ms: number) =>
-        withTimeout(
-          supabaseAdmin.rpc(name, args).then((res) => (res.error ? null : res.data)),
-          ms,
-          () => null,
-        );
-
       try {
-        // Homepage RPCs are primary (index LIMIT). Skip get_owner_funnel_desk_counts.
+        // Skip hung counts/ticker RPCs — they wedge the Nano pool.
+        // Last-N service-role reads, LIMIT 80, ~4s abort (cancels the in-flight query).
         // Same Deno.env.get path as ADMIN_ACTION_SECRET — do not log the JSON.
         const secret = String(Deno.env.get('GSC_SERVICE_ACCOUNT_JSON') || '').trim();
         const site = String(Deno.env.get('GSC_SITE_URL') || '').trim();
         const eventCols = 'event_name, visitor_id, ref_code, metadata, created_at';
-        const [landings, getLinks, shares, referrals, referrerLinks, dailyRows, ticker, linkStats, activity, gsc] =
-          await Promise.all([
-            timedLast('visitor_events', eventCols, 80, 2_000, (q) =>
-              q.eq('event_name', 'SiteLanding'),
+        const gscPromise = resolveOwnerFunnelGscTimed({ secret, site }).catch(() =>
+          emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.'),
+        );
+
+        const deskWindow = await runOwnerFunnelDeskQueries(async (signal) => {
+          const [landings, getLinks, shares, referrals] = await Promise.all([
+            queryOwnerFunnelLastN(
+              () =>
+                supabaseAdmin
+                  .from('visitor_events')
+                  .select(eventCols)
+                  .eq('event_name', 'SiteLanding'),
+              signal,
+              OWNER_FUNNEL_LAST_N,
+              'visitor_events.SiteLanding',
             ),
-            timedLast('visitor_events', eventCols, 80, 2_000, (q) =>
-              q.eq('event_name', 'GetReferralLink'),
+            queryOwnerFunnelLastN(
+              () =>
+                supabaseAdmin
+                  .from('visitor_events')
+                  .select(eventCols)
+                  .eq('event_name', 'GetReferralLink'),
+              signal,
+              OWNER_FUNNEL_LAST_N,
+              'visitor_events.GetReferralLink',
             ),
-            timedLast(
+            queryOwnerFunnelLastN(
+              () =>
+                supabaseAdmin
+                  .from('shares')
+                  .select('platform, referrer_code, created_at'),
+              signal,
+              OWNER_FUNNEL_LAST_N,
               'shares',
-              'platform, referrer_code, referral_link, created_at, confirmed',
-              60,
-              1_500,
             ),
-            timedLast(
+            queryOwnerFunnelLastN(
+              () =>
+                supabaseAdmin
+                  .from('referrals')
+                  .select('referrer_code, created_at, referred_ip, user_agent'),
+              signal,
+              OWNER_FUNNEL_LAST_N,
               'referrals',
-              'referrer_code, created_at, referred_ip, user_agent',
-              60,
-              1_500,
-            ),
-            timedLast(
-              'referrer_links',
-              'referrer_code, status, created_at, first_verified_share_at',
-              80,
-              1_500,
-              (q) => q.eq('status', 'active'),
-            ),
-            withTimeout(
-              supabaseAdmin
-                .from('landing_daily_counts')
-                .select('quality_hits, junk_hits')
-                .order('day', { ascending: false })
-                .limit(14)
-                .then((res) => (Array.isArray(res.data) ? res.data : [])),
-              1_200,
-              () => [] as { quality_hits?: unknown; junk_hits?: unknown }[],
-            ),
-            timedRpc('get_public_funnel_ticker', { p_limit: 40 }, 2_500),
-            timedRpc('get_public_get_link_stats', { p_hours: 168 }, 2_500),
-            timedRpc('get_public_recent_activity', { p_limit: 24 }, 2_500),
-            resolveOwnerFunnelGscTimed({ secret, site }).catch(() =>
-              emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.'),
             ),
           ]);
+          return { landings, getLinks, shares, referrals };
+        }, OWNER_FUNNEL_QUERY_TIMEOUT_MS);
 
-        let visits = 0;
-        let junkVisits = 0;
-        for (const row of dailyRows) {
-          const q = Number(row.quality_hits);
-          const j = Number(row.junk_hits);
-          if (Number.isFinite(q) && q > 0) visits += q;
-          if (Number.isFinite(j) && j > 0) junkVisits += j;
-        }
-        const windowRes = {
-          events: [...landings, ...getLinks],
-          shares,
-          referrals: filterDeskReferrals(referrals).map((row) => stripOwnerFunnelPii(row)),
-          referrerLinks,
-          ...(visits > 0 || junkVisits > 0 ? { visits, junkVisits } : {}),
-        };
-        const loadedWindow = async () => windowRes;
-        const tableMetrics = await resolveOwnerFunnelDeskMetrics({
-          rpcData: null,
-          loadFeedWindow: loadedWindow,
-          loadCompleteWindow: loadedWindow,
+        const metrics = computeOwnerFunnelDeskMetrics({
+          events: [...deskWindow.landings, ...deskWindow.getLinks],
+          shares: deskWindow.shares,
+          referrals: filterDeskReferrals(deskWindow.referrals).map((row) => stripOwnerFunnelPii(row)),
         });
-        const publicMetrics = deskFromPublicSurfaces({
-          ticker,
-          linkStats,
-          activity,
-          visits,
-          junkVisits,
-        });
-        const metrics = deskHasVisitorSignal(tableMetrics) ? tableMetrics : publicMetrics;
+        const gsc = await gscPromise;
         return new Response(JSON.stringify({ success: true, data: { ...metrics, gsc } }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (deskErr) {
-        console.error('[admin-action] get_owner_funnel_desk:', deskErr);
+        const err = deskErr instanceof Error ? deskErr : new Error(String(deskErr));
+        const timedOut =
+          (deskErr as { timedOut?: boolean } | null)?.timedOut === true ||
+          /timed out/i.test(err.message);
+        console.error('[admin-action] get_owner_funnel_desk caught:', {
+          name: err.name,
+          message: err.message,
+          timedOut,
+          table: (deskErr as { table?: string } | null)?.table,
+          stack: err.stack,
+        });
         return new Response(JSON.stringify({ success: false, error: "can't load." }), {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
