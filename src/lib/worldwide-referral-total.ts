@@ -6,7 +6,6 @@
  */
 
 import { t, type MessageKey } from './i18n';
-import { EMPTY_BOARD_LINE } from './prize-slot';
 
 export function formatVerifiedReferralTotalLabel(total: number): string {
   if (total === 1) return 'verified referral worldwide';
@@ -68,46 +67,30 @@ export function applyWorldwideReferralTotal(input: {
   const gotLink = Math.max(0, Math.floor(Number(input.peopleGotLinkToday) || 0));
   const numText = total.toLocaleString();
 
+  const heroTotal = document.getElementById('vr-verified-total');
+  if (heroTotal) {
+    heroTotal.classList.remove('vr-verified-total--ready');
+    heroTotal.classList.add('hidden');
+    heroTotal.setAttribute('hidden', '');
+  }
   const numEl = document.getElementById('total-referrers');
   const labelEl = document.getElementById('hero-stats-suffix');
-  if (total <= 0) {
-    if (numEl) {
-      numEl.textContent = '';
-      numEl.setAttribute('data-vr-total-verified', '0');
-    }
-    if (labelEl) labelEl.textContent = EMPTY_BOARD_LINE;
-  } else {
-    if (numEl) {
-      numEl.textContent = numText;
-      numEl.setAttribute('data-vr-total-verified', String(total));
-    }
-    if (labelEl) {
-      labelEl.textContent = ` ${formatVerifiedReferralTotalLabel(total)}`;
-    }
+  if (numEl) {
+    numEl.textContent = '';
+    numEl.removeAttribute('data-vr-total-verified');
   }
+  if (labelEl) labelEl.textContent = '';
 
-  // Prominent second line: get-link activity (what admin funnel "Get link" shows)
   const gotLinkEl = document.getElementById('hero-got-link-today');
   if (gotLinkEl) {
-    gotLinkEl.textContent = formatPeopleGotLinkToday(gotLink);
-    gotLinkEl.setAttribute('data-vr-got-link-today', String(gotLink));
-    gotLinkEl.classList.toggle('vr-got-link-today--active', gotLink > 0);
+    gotLinkEl.textContent = '';
+    gotLinkEl.removeAttribute('data-vr-got-link-today');
+    gotLinkEl.classList.remove('vr-got-link-today--active');
   }
 
   const metaEl = document.getElementById('hero-board-meta');
   if (metaEl) {
     metaEl.textContent = formatVerifiedReferralTotalMeta(unique, leader);
-  }
-
-  const globalLive = document.getElementById('hero-global-proof-live');
-  if (globalLive) {
-    // Prefer get-link energy when live; always keep verified total in the main card
-    if (gotLink > 0) {
-      globalLive.textContent = formatPeopleGotLinkToday(gotLink);
-    } else {
-      globalLive.textContent = formatVerifiedReferralTotalLive(total);
-    }
-    globalLive.removeAttribute('data-i18n');
   }
 
   const lbTotal = document.getElementById('leaderboard-total-referrals');
@@ -131,10 +114,8 @@ export function applyWorldwideReferralTotal(input: {
 
   const root = document.getElementById('vr-verified-total');
   if (root) {
-    root.classList.toggle('vr-verified-total--ready', total > 0 || unique > 0 || gotLink > 0);
-    root.setAttribute(
-      'aria-label',
-      `${numText} ${formatVerifiedReferralTotalLabel(total)}. ${formatPeopleGotLinkToday(gotLink)}`,
-    );
+    root.classList.remove('vr-verified-total--ready');
+    root.classList.add('hidden');
+    root.setAttribute('hidden', '');
   }
 }

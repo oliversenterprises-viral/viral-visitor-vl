@@ -443,6 +443,15 @@ html:not([data-vr-has-link]) #nav-get-link-btn {
   display: none !important;
 }
 
+/* Zip product: Daily Champion / verified-total / trust pack are not the homepage. */
+#vr-verified-total,
+#hero-daily-crown-line,
+#daily-champion-strip,
+#daily-crown-section,
+#hero-referred-trust-pack {
+  display: none !important;
+}
+
 
 /* Extra slot lines stay off the first view so Get my referral link fits */
 html:not([data-vr-has-link]) #hero-ad-inventory,
@@ -484,7 +493,6 @@ html:not([data-vr-has-link]) #hero-referred-trust-pack,
 html:not([data-vr-has-link]) #hero-prize-fomo,
 html:not([data-vr-has-link]) #hero-security-trust,
 html:not([data-vr-has-link]) #vr-verified-total,
-html:not([data-vr-has-link]) #hero-badge,
 html:not([data-vr-has-link]) #hero-global-proof,
 html:not([data-vr-has-link]) #hero-trust-line,
 html:not([data-vr-has-link]) #hero-lock-rule {
@@ -509,7 +517,6 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #weekly
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #daily-crown-section,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-campaign-badge,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #referral-section,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #prize {
   display: none !important;
 }
@@ -2815,10 +2822,7 @@ html[data-vr-visitor-slim] #share-more-options-btn:not(.hidden) {
    Keeps hero CTA + FOMO proof; stages secondary chrome until engaged.
    ═══════════════════════════════════════════════════════════ */
 
-/* Direct first paint: one path — Get link. Hide multi-step card until they have a link. */
-html[data-vr-direct-landing]:not([data-vr-has-link]) #funnel-journey {
-  display: none !important;
-}
+/* Zip homepage: SITE DROP LADDER stays on the first viewport. */
 
 /* Secondary hero chrome (regions, legal-ish meta) — less noise on fold */
 html[data-vr-direct-landing]:not([data-vr-has-link]) [data-vr-declutter-secondary] {

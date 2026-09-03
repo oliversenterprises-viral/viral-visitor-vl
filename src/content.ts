@@ -212,8 +212,7 @@ export async function updatePublicContent(content: Record<string, unknown>) {
     else btn.textContent = display;
   };
 
-  // 8:44 lock: do not let CMS rewrite homepage title / sub / CTA.
-  apply('hero-badge', 'hero_badge');
+  // Zip lock: do not let CMS rewrite homepage title / badge / sub / CTA.
   apply('hero-trust-line', 'hero_trust_line');
 
   // HOW IT WORKS batch (high priority)

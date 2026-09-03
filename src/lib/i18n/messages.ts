@@ -24,7 +24,7 @@ export const en = {
   'nav.get_link': 'Get link',
   'nav.lang': 'Language',
 
-  'hero.badge': 'WORLDWIDE • FREE • NO SIGNUP',
+  'hero.badge': 'THIS WEEK • FREE • NO SIGNUP',
   'hero.title_line1': 'Win the homepage.',
   'hero.title_accent': 'Each step puts your site on this page. #1 owns the banner for 7 days.',
   'hero.subtitle':
@@ -649,6 +649,7 @@ const hi = dict({
 
 /** Prize / How ladder facts stay the English live lines — do not invent locale copy. */
 const PRIZE_FACT_KEYS = [
+  'hero.badge',
   'hero.title_line1',
   'hero.title_accent',
   'hero.subtitle',

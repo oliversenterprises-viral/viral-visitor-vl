@@ -53,7 +53,20 @@ describe('hero-cta-variant', () => {
       'beforeend',
       '<p id="hero-prize-one">CMS prize</p>',
     );
+    document.getElementById('hero-badge')!.innerHTML =
+      '<span data-i18n-text>WORLDWIDE • FREE • NO SIGNUP</span>';
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<p id="hero-daily-crown-line">Daily Crown race: VIRAL-BA0S5MF</p>',
+    );
     lock844HomepageCopy();
+    expect(document.getElementById('hero-badge')?.textContent).toBe(
+      'THIS WEEK • FREE • NO SIGNUP',
+    );
+    expect(document.getElementById('hero-daily-crown-line')?.textContent).toBe('');
+    expect(document.getElementById('hero-daily-crown-line')?.classList.contains('hidden')).toBe(
+      true,
+    );
     expect(document.getElementById('hero-title-line1')?.textContent).toBe('Win the homepage.');
     expect(document.getElementById('hero-title-accent')?.textContent).toBe(
       'Each step puts your site on this page. #1 owns the banner for 7 days.',

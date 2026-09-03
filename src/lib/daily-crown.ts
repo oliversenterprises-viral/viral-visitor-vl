@@ -202,53 +202,22 @@ function buildHallHtml(hall: readonly DailyCrownPerson[]): string {
   return html;
 }
 
-function paintChampionStrip(status: DailyCrownStatus): void {
+function paintChampionStrip(_status: DailyCrownStatus): void {
   const strip = document.getElementById('daily-champion-strip');
   if (!strip) return;
-
-  const champ = status.yesterday_champion;
-  if (!champ?.referrer_code) {
-    strip.classList.add('hidden');
-    strip.innerHTML = '';
-    return;
-  }
-
-  const until = formatCountdown(status.seconds_remaining);
-  strip.innerHTML = `
-    <div class="daily-champion-strip__inner flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3 min-w-0">
-        <span class="daily-champion-strip__crown text-2xl" aria-hidden="true">👑</span>
-        <div class="min-w-0">
-          <div class="text-[10px] font-bold uppercase tracking-wider text-amber-300/90">Daily Champion · 24h crown</div>
-          <div class="font-mono text-lg sm:text-xl font-bold text-amber-100 truncate">${escapeHtml(champ.referrer_code)}</div>
-          <div class="text-xs text-zinc-400">
-            Won ${escapeHtml(formatCrownDay(champ.day_utc))} with ${champ.referral_count} referral${champ.referral_count === 1 ? '' : 's'}
-            · recognition only · not the overall homepage feature
-          </div>
-        </div>
-      </div>
-      <div class="flex flex-col items-end gap-1 shrink-0">
-        <span class="text-[11px] text-amber-200/80 tabular-nums">Crown until UTC midnight · ${until}</span>
-        <button type="button" data-daily-crown-share="champion"
-          class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-amber-400/40 bg-amber-500/15 text-amber-100 hover:bg-amber-500/25 transition-colors">
-          Share crown card
-        </button>
-      </div>
-    </div>`;
-  strip.classList.remove('hidden');
+  // Zip product: Daily Champion is not the public homepage.
+  strip.classList.add('hidden');
+  strip.setAttribute('hidden', '');
+  strip.innerHTML = '';
 }
 
-function paintRaceLine(status: DailyCrownStatus): void {
+function paintRaceLine(_status: DailyCrownStatus): void {
   const el = document.getElementById('hero-daily-crown-line');
   if (!el) return;
-  const line = formatDailyCrownRaceLine(status);
-  if (!line) {
-    el.classList.add('hidden');
-    el.textContent = '';
-    return;
-  }
-  el.textContent = line;
-  el.classList.remove('hidden');
+  // Zip product: never fill the homepage hero with Daily Crown.
+  el.classList.add('hidden');
+  el.setAttribute('hidden', '');
+  el.textContent = '';
 }
 
 let crownTracked = false;

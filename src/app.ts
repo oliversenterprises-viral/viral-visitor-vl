@@ -392,6 +392,8 @@ export async function initApp() {
       initRealtimeSubscriptions();
       window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
     }
+
+    if (!isReferredLanding()) lock844HomepageCopy();
   } catch (err) {
     console.warn('[ViralRefer] initApp partial failure:', err);
   }

@@ -55,7 +55,7 @@ export function buildReferredTrustPackPersonalLine(input: ReferredTrustPackInput
   const myCount = input.myCount ?? 0;
   const myRank = input.myRank ?? null;
 
-  if (myRank === 1) return "You're #1 — defend your spot";
+  if (myRank === 1) return '';
 
   if (myRank && myRank > 1) {
     const gap = referralsToNextRank(myCode, myCount, input.board);

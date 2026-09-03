@@ -86,7 +86,7 @@ export function buildRankGapSummary(
 ): string {
   if (!rank || rank < 1) return '';
   if (rank === 1) {
-    return `<div class="text-xs text-amber-300/90 mt-1 font-medium">👑 Leading the board — defend your spot!</div>`;
+    return `<div class="text-xs text-amber-300/90 mt-1 font-medium">#1 this week</div>`;
   }
   const gap = referralsToNextRank(myCode, myCount, board);
   if (gap == null) return '';

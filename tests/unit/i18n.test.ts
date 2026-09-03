@@ -68,6 +68,7 @@ describe('i18n phase 1', () => {
 
   it('every locale uses the English 7-day / 3 friends / no-cash prize facts', () => {
     const facts = [
+      'hero.badge',
       'hero.title_line1',
       'hero.title_accent',
       'hero.subtitle',
@@ -111,6 +112,7 @@ describe('i18n phase 1', () => {
       expect(MESSAGES[locale]['how.badge']).toBe('SITE DROP LADDER');
       expect(MESSAGES[locale]['funnel.badge']).toBe('SITE DROP LADDER');
       expect(MESSAGES[locale]['funnel.step3']).toBe('3. Site goes live');
+      expect(MESSAGES[locale]['hero.badge']).toBe('THIS WEEK • FREE • NO SIGNUP');
       expect(MESSAGES[locale]['hero.title_line1']).toBe('Win the homepage.');
       expect(MESSAGES[locale]['funnel.step2']).toBe('2. Send it');
     }

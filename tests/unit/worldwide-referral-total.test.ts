@@ -45,39 +45,31 @@ describe('worldwide-referral-total', () => {
     expect(formatVerifiedReferralTotalMeta(3, 5)).toMatch(/#1 has 5/);
   });
 
-  it('applyWorldwideReferralTotal paints verified + got-link lines', () => {
+  it('applyWorldwideReferralTotal keeps verified totals off the zip hero', () => {
     applyWorldwideReferralTotal({
       total: 6,
       uniqueReferrers: 2,
       leaderCount: 4,
       peopleGotLinkToday: 15,
     });
-    expect(document.getElementById('total-referrers')!.textContent).toBe('6');
-    expect(document.getElementById('total-referrers')!.getAttribute('data-vr-total-verified')).toBe(
-      '6',
-    );
-    expect(document.getElementById('hero-stats-suffix')!.textContent).toMatch(/verified referrals worldwide/);
-    expect(document.getElementById('hero-got-link-today')!.textContent).toBe(
-      '15 people got a link today',
-    );
-    expect(document.getElementById('hero-global-proof-live')!.textContent).toMatch(
-      /15 people got a link/,
-    );
+    expect(document.getElementById('total-referrers')!.textContent).toBe('');
+    expect(document.getElementById('hero-stats-suffix')!.textContent).toBe('');
+    expect(document.getElementById('hero-got-link-today')!.textContent).toBe('');
+    expect(document.getElementById('hero-global-proof-live')!.textContent).toBe('');
     expect(document.getElementById('leaderboard-total-referrals')!.textContent).toBe('6');
     expect(document.getElementById('leaderboard-got-link-today')!.textContent).toBe(
       '15 people got a link today',
     );
     expect(document.getElementById('vr-verified-total')!.classList.contains('vr-verified-total--ready')).toBe(
-      true,
+      false,
     );
+    expect(document.getElementById('vr-verified-total')!.classList.contains('hidden')).toBe(true);
   });
 
-  it('empty totals use the open-board line, not a zero meter', () => {
+  it('empty totals use the open-board line on the board, not the hero', () => {
     applyWorldwideReferralTotal({ total: 0, uniqueReferrers: 0, leaderCount: 0, peopleGotLinkToday: 0 });
     expect(document.getElementById('total-referrers')!.textContent).toBe('');
-    expect(document.getElementById('hero-stats-suffix')!.textContent).toBe(
-      'Board is open. #1 is winnable this week.',
-    );
+    expect(document.getElementById('hero-stats-suffix')!.textContent).toBe('');
     expect(document.getElementById('leaderboard-total-label')!.textContent).toBe(
       'Board is open. #1 is winnable this week.',
     );

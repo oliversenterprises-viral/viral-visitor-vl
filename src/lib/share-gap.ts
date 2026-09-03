@@ -64,7 +64,7 @@ export function buildDistanceToGlory(
 
   if (rank === 1) {
     return {
-      line: '#1 — defend your spot',
+      line: '#1 this week',
       subline: 'Every share keeps you on the homepage-feature throne.',
       rankLabel: '#1',
       gapLabel: '0',
