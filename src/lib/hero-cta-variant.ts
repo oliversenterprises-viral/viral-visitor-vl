@@ -68,6 +68,12 @@ export function lock844HomepageCopy(): void {
   if (isReferredLanding()) return;
   applyHeroCopyToDom(HERO_CTA_COPY.control);
   setText('hero-prize-one', LOCKED_SITE_DROPS_RULE);
+  // Owner lock: large Site Drop board title stays Recent Activity.
+  const boardTitle = document.getElementById('leaderboard-title');
+  const painted = (boardTitle?.textContent || '').trim();
+  if (boardTitle && (painted === 'Early Leaderboard' || painted === 'Live Leaderboard' || painted === '')) {
+    boardTitle.textContent = 'Recent Activity';
+  }
 }
 
 /** Apply feature-variant hero copy on direct landings (control leaves CMS/static defaults). */
