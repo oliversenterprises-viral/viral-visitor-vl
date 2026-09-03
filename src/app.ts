@@ -353,8 +353,8 @@ registerGlobal('loadSiteContent', loadSiteContent);
  *   - Handling ?ref= attribution banners
  */
 /**
- * First-paint hydrations. Each public REST/RPC already aborts at ≤2s.
- * Must never be awaited from initApp — Get my link cannot wait on counts.
+ * HARD LOCK — first-paint hydrations. Each public REST/RPC aborts at ≤2s.
+ * Must never be awaited from initApp — Get my link cannot wait on hung APIs.
  */
 function hydratePublicFirstPaint(myReferralCode: string | null): void {
   void import('./lib/site-drops-ui')

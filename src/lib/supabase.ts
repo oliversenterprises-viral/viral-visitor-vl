@@ -235,10 +235,10 @@ export async function fetchReferrerPublicStats(referrerCode: string): Promise<Re
     on_board: false,
   };
   if (!referrerCode || !isSupabaseConfigured) return fallback;
-  try {
-    const { data, error } = await supabase.rpc('get_referrer_public_stats', {
-      p_referrer_code: referrerCode,
-    });
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase
+      .rpc('get_referrer_public_stats', { p_referrer_code: referrerCode })
+      .abortSignal(signal);
     if (!error && data && typeof data === 'object') {
       const row = data as Record<string, unknown>;
       return {
@@ -248,10 +248,8 @@ export async function fetchReferrerPublicStats(referrerCode: string): Promise<Re
         on_board: row.on_board === true,
       };
     }
-  } catch {
-    // RPC may not exist until migration 0031
-  }
-  return fallback;
+    return fallback;
+  }, fallback);
 }
 
 export async function fetchWeeklySprintLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {

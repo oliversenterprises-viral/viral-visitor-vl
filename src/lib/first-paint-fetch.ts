@@ -1,10 +1,15 @@
 /**
- * Homepage first-paint public REST/RPC — fail-fast with AbortController.
- * A hung Supabase call must not hold first screen or Get my link.
+ * HARD LOCK — homepage first-paint public REST/RPC.
+ * Fail-fast with AbortController. Do not raise the cap. Do not await these
+ * from initApp. A hung Supabase call must not hold Get my link.
+ * Destination: live viralrefer.app. Site Drop English stays.
  */
 
 /** Hard cap for public first-paint REST/RPC. Do not raise above 2s. */
 export const FIRST_PAINT_FETCH_MS = 2000;
+
+/** Regression lock: first screen hydrations are fire-and-forget + ≤2s abort. */
+export const FIRST_PAINT_HARD_LOCK = 'no-await-hung-apis' as const;
 
 export type FirstPaintAbort = {
   controller: AbortController;

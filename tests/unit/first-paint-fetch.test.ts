@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   FIRST_PAINT_FETCH_MS,
+  FIRST_PAINT_HARD_LOCK,
   firstPaintAbortController,
   withFirstPaintAbort,
 } from '../../src/lib/first-paint-fetch';
@@ -13,6 +14,7 @@ describe('first-paint AbortController fail-fast', () => {
   it('caps public first-paint REST/RPC at 2s', () => {
     expect(FIRST_PAINT_FETCH_MS).toBe(2000);
     expect(FIRST_PAINT_FETCH_MS).toBeLessThanOrEqual(2000);
+    expect(FIRST_PAINT_HARD_LOCK).toBe('no-await-hung-apis');
   });
 
   it('firstPaintAbortController uses AbortController and fires at ≤2s', async () => {

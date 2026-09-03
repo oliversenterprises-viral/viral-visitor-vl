@@ -4,6 +4,10 @@ import { fileURLToPath } from 'url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EMPTY_SLOT_NAME, EMPTY_SLOT_META } from '../../src/lib/prize-slot';
 import {
+  FIRST_PAINT_FETCH_MS,
+  FIRST_PAINT_HARD_LOCK,
+} from '../../src/lib/first-paint-fetch';
+import {
   LOCKED_BOARD_TITLE,
   LOCKED_DROP_CHALLENGER_LABEL,
   LOCKED_DROP_ENTERED_LABEL,
@@ -37,6 +41,7 @@ describe('first-screen paint fail-fast (this tree)', () => {
       'fetchWeeklyReferralCount',
       'fetchDailyCrownStatus',
       'fetchSiteContent',
+      'fetchReferrerPublicStats',
     ];
     for (const name of firstPaintFns) {
       const start = supabase.indexOf(`export async function ${name}`);
@@ -62,7 +67,12 @@ describe('first-screen paint fail-fast (this tree)', () => {
     expect(initBody).not.toMatch(/await withInitTimeout\(renderRecentActivity/);
     expect(initBody).not.toMatch(/await withInitTimeout\(renderMyStats/);
     expect(initBody).not.toMatch(/await withInitTimeout\(loadSiteContent/);
+    expect(initBody).not.toMatch(/await withInitTimeout\(/);
+    expect(initBody).not.toMatch(/await loadSiteContent/);
+    expect(initBody).not.toMatch(/await loadLeaderboard/);
     expect(initBody).toContain('hydratePublicFirstPaint(myReferralCode)');
+    expect(FIRST_PAINT_FETCH_MS).toBe(2000);
+    expect(FIRST_PAINT_HARD_LOCK).toBe('no-await-hung-apis');
 
     const hydrateStart = app.indexOf('function hydratePublicFirstPaint');
     const hydrateBody = app.slice(hydrateStart, initStart);

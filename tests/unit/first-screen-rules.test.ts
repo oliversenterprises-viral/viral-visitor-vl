@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { en } from '../../src/lib/i18n/messages';
+import { FIRST_PAINT_FETCH_MS, FIRST_PAINT_HARD_LOCK } from '../../src/lib/first-paint-fetch';
 import {
   LOCKED_LIVE_FUNNEL_BADGE,
   LOCKED_LIVE_FUNNEL_STEP3,
@@ -147,6 +148,21 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('Rising Site Drops · 1 hour · not the week text line');
     expect(html).toContain('Challenger strip · #2 / #3 · not #1');
     expect(html).toContain('SITE DROP LADDER');
+  });
+
+  it('hard-locks first-screen fail-fast: no await on hung APIs', () => {
+    const app = read('src/app.ts');
+    const fetch = read('src/lib/first-paint-fetch.ts');
+    expect(FIRST_PAINT_FETCH_MS).toBe(2000);
+    expect(FIRST_PAINT_HARD_LOCK).toBe('no-await-hung-apis');
+    expect(fetch).toContain('HARD LOCK');
+    expect(fetch).toContain('Do not raise the cap');
+    const initStart = app.indexOf('export async function initApp');
+    const initBody = app.slice(initStart, app.indexOf('setWindowProp', initStart));
+    expect(initBody).not.toMatch(/await withInitTimeout\(/);
+    expect(initBody).toContain('hydratePublicFirstPaint(myReferralCode)');
+    expect(en['funnel.badge']).toBe('SITE DROP LADDER');
+    expect(en['drop.rising_label']).toContain('Rising Site Drops');
   });
 
   it('keeps Copy above overlays', () => {
