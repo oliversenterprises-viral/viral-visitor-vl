@@ -155,7 +155,9 @@ async function refreshFunnelTicker(activityRows?: PublicActivityRow[]): Promise<
     setFunnelTickerVisible(false);
     return;
   }
-  bindFunnelTicker() ?? ensureFunnelTickerDom();
+  if (!bindFunnelTicker()) {
+    ensureFunnelTickerDom();
+  }
   setFunnelTickerVisible(true);
   renderFunnelTickerRows([]);
   try {
