@@ -62,9 +62,10 @@ describe('site-drops ladder fail-fast', () => {
     expect(app).toContain('loadSiteDropsLadder');
     expect(app).toMatch(/void import\('\.\/lib\/site-drops-ui'\)/);
     const idxLadder = app.indexOf('loadSiteDropsLadder');
-    const idxContent = app.indexOf('await withInitTimeout(loadSiteContent()');
+    const idxContent = app.indexOf('void withInitTimeout(loadSiteContent()');
     expect(idxLadder).toBeGreaterThan(0);
     expect(idxContent).toBeGreaterThan(idxLadder);
-    expect(app).toContain('const INIT_FETCH_TIMEOUT_MS = 12_000');
+    expect(app).toContain('FIRST_PAINT_FETCH_MS');
+    expect(app).toContain('hydratePublicFirstPaint');
   });
 });

@@ -5,8 +5,9 @@
 
 import { supabase, isSupabaseConfigured } from './supabase';
 import { SITE_DROPS_KEY } from './site-drops';
+import { FIRST_PAINT_FETCH_MS } from './first-paint-fetch';
 
-export const SITE_DROPS_FETCH_TIMEOUT_MS = 2_000;
+export const SITE_DROPS_FETCH_TIMEOUT_MS = FIRST_PAINT_FETCH_MS;
 
 export const EMPTY_SITE_DROPS = { drops: [] as const, pending_entered: [] as const };
 

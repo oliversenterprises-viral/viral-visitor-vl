@@ -6,6 +6,7 @@ import {
   normalizeFunnelTickerRows,
   type FunnelTickerRow,
 } from './funnel-ticker';
+import { withFirstPaintAbort } from './first-paint-fetch';
 
 // CRITICAL: Secrets must come ONLY from Vite env vars (VITE_*).
 // Production deploys (Vercel) inject real values at build time.
@@ -43,37 +44,35 @@ export const supabase: SupabaseClient = isSupabaseConfigured
 // Typed query helpers — prefer SECURITY DEFINER RPCs (no direct referrals table reads)
 export async function fetchLeaderboard(minReferrals: number = 1): Promise<LeaderboardEntry[]> {
   if (!isSupabaseConfigured) return [];
-  try {
-    const { data, error } = await supabase.rpc('get_leaderboard', { min_referrals: minReferrals });
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase
+      .rpc('get_leaderboard', { min_referrals: minReferrals })
+      .abortSignal(signal);
     if (!error && Array.isArray(data)) {
       return data as LeaderboardEntry[];
     }
-  } catch {
-    // RPC unavailable
-  }
-  return [];
+    return [];
+  }, []);
 }
 
 export async function fetchTotalReferrers(): Promise<number> {
   if (!isSupabaseConfigured) return 0;
-  try {
-    const { data, error } = await supabase.rpc('get_total_referral_count');
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase.rpc('get_total_referral_count').abortSignal(signal);
     if (!error && typeof data === 'number') return data;
-  } catch {
-    // RPC unavailable
-  }
-  return 0;
+    return 0;
+  }, 0);
 }
 
 /** Distinct real referrers (Phase 3 trust pack). Falls back to leaderboard size. */
 export async function fetchUniqueReferrerCount(): Promise<number> {
   if (!isSupabaseConfigured) return 0;
-  try {
-    const { data, error } = await supabase.rpc('get_unique_referrer_count');
+  const fromRpc = await withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase.rpc('get_unique_referrer_count').abortSignal(signal);
     if (!error && typeof data === 'number') return data;
-  } catch {
-    // RPC may not exist until migration 0018
-  }
+    return 0;
+  }, 0);
+  if (fromRpc > 0) return fromRpc;
   try {
     const board = await fetchLeaderboard(1);
     return board.length;
@@ -99,33 +98,28 @@ export type PublicPrizePull = {
  * Additive public RPC — returns zeros if not deployed yet.
  */
 export async function fetchPublicGetLinkStats(hours = 24): Promise<PublicGetLinkStats> {
-  if (!isSupabaseConfigured) {
-    return { uniquePeople: 0, events: 0, windowHours: hours };
-  }
-  try {
-    const { data, error } = await supabase.rpc('get_public_get_link_stats', {
-      p_hours: hours,
-    });
-    if (error || data == null) {
-      return { uniquePeople: 0, events: 0, windowHours: hours };
-    }
+  const empty: PublicGetLinkStats = { uniquePeople: 0, events: 0, windowHours: hours };
+  if (!isSupabaseConfigured) return empty;
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase
+      .rpc('get_public_get_link_stats', { p_hours: hours })
+      .abortSignal(signal);
+    if (error || data == null) return empty;
     const payload = typeof data === 'object' ? (data as Record<string, unknown>) : {};
     return {
       uniquePeople: Number(payload.unique_people) || 0,
       events: Number(payload.events) || 0,
       windowHours: Number(payload.window_hours) || hours,
     };
-  } catch {
-    return { uniquePeople: 0, events: 0, windowHours: hours };
-  }
+  }, empty);
 }
 
 /** Homepage ad-slot proof. Zeros if the RPC is not applied yet. */
 export async function fetchPublicPrizePull(): Promise<PublicPrizePull> {
   const empty: PublicPrizePull = { visits7d: 0, leaderReferrals: 0, minForClaim: 10 };
   if (!isSupabaseConfigured) return empty;
-  try {
-    const { data, error } = await supabase.rpc('get_public_prize_pull');
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase.rpc('get_public_prize_pull').abortSignal(signal);
     if (error || data == null) return empty;
     const payload = typeof data === 'object' ? (data as Record<string, unknown>) : {};
     return {
@@ -133,9 +127,7 @@ export async function fetchPublicPrizePull(): Promise<PublicPrizePull> {
       leaderReferrals: Number(payload.leader_referrals) || 0,
       minForClaim: Number(payload.min_for_claim) || 10,
     };
-  } catch {
-    return empty;
-  }
+  }, empty);
 }
 
 /** Public leaderboard rank for a referrer (null if not on board). */
@@ -153,13 +145,13 @@ export async function fetchMyLeaderboardRank(referrerCode: string): Promise<numb
 
 export async function fetchMyReferralCount(referrerCode: string): Promise<number> {
   if (!referrerCode || !isSupabaseConfigured) return 0;
-  try {
-    const { data, error } = await supabase.rpc('get_my_referral_count', { p_referrer_code: referrerCode });
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase
+      .rpc('get_my_referral_count', { p_referrer_code: referrerCode })
+      .abortSignal(signal);
     if (!error && typeof data === 'number') return data;
-  } catch {
-    // RPC unavailable
-  }
-  return 0;
+    return 0;
+  }, 0);
 }
 
 export async function fetchRecentActivity(limit = 8): Promise<RecentActivityItem[]> {
@@ -172,14 +164,15 @@ export async function fetchPublicRecentActivity(limit = 8): Promise<{
   rows: PublicActivityRow[];
   velocityLastHour: number;
 }> {
-  if (!isSupabaseConfigured) return { rows: [], velocityLastHour: 0 };
+  const empty = { rows: [] as PublicActivityRow[], velocityLastHour: 0 };
+  if (!isSupabaseConfigured) return empty;
 
   const fetchLimit = Math.max(limit * 2, 12);
 
-  try {
-    const { data, error } = await supabase.rpc('get_public_recent_activity', {
-      p_limit: fetchLimit,
-    });
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase
+      .rpc('get_public_recent_activity', { p_limit: fetchLimit })
+      .abortSignal(signal);
     if (!error && data && typeof data === 'object') {
       const payload = data as {
         rows?: Array<{
@@ -204,11 +197,8 @@ export async function fetchPublicRecentActivity(limit = 8): Promise<{
           typeof payload.velocity_last_hour === 'number' ? payload.velocity_last_hour : 0,
       };
     }
-  } catch {
-    // RPC not deployed yet
-  }
-
-  return { rows: [], velocityLastHour: 0 };
+    return empty;
+  }, empty);
 }
 
 /**
@@ -217,20 +207,17 @@ export async function fetchPublicRecentActivity(limit = 8): Promise<{
  */
 export async function fetchPublicFunnelTicker(limit = 24): Promise<FunnelTickerRow[]> {
   if (!isSupabaseConfigured) return [];
-  try {
-    const { data, error } = await supabase.rpc('get_public_funnel_ticker', {
-      p_limit: Math.max(limit, 8),
-    });
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase
+      .rpc('get_public_funnel_ticker', { p_limit: Math.max(limit, 8) })
+      .abortSignal(signal);
     if (error || data == null) return [];
-    // RPC returns a JSON array directly
     if (Array.isArray(data)) return normalizeFunnelTickerRows(data);
     if (typeof data === 'object' && Array.isArray((data as { rows?: unknown }).rows)) {
       return normalizeFunnelTickerRows((data as { rows: unknown }).rows);
     }
     return normalizeFunnelTickerRows(data);
-  } catch {
-    return [];
-  }
+  }, []);
 }
 
 export interface ReferrerPublicStats {
@@ -269,64 +256,60 @@ export async function fetchReferrerPublicStats(referrerCode: string): Promise<Re
 
 export async function fetchWeeklySprintLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
   if (!isSupabaseConfigured) return [];
-  try {
-    const { data, error } = await supabase.rpc('get_weekly_sprint_leaderboard', {
-      p_limit: limit,
-    });
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase
+      .rpc('get_weekly_sprint_leaderboard', { p_limit: limit })
+      .abortSignal(signal);
     if (!error && Array.isArray(data)) {
       return data as LeaderboardEntry[];
     }
-  } catch {
-    // RPC unavailable
-  }
-  return [];
+    return [];
+  }, []);
 }
 
 export async function fetchWeeklyReferralCount(): Promise<number> {
   if (!isSupabaseConfigured) return 0;
-  try {
-    const { data, error } = await supabase.rpc('get_weekly_referral_count');
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase.rpc('get_weekly_referral_count').abortSignal(signal);
     if (!error && typeof data === 'number') return data;
-  } catch {
-    // RPC unavailable
-  }
-  return 0;
+    return 0;
+  }, 0);
 }
 
 /** Daily Crown status (UTC day race + Hall of Crowns). Null if RPC not applied yet. */
 export async function fetchDailyCrownStatus(hallDays = 14): Promise<unknown | null> {
   if (!isSupabaseConfigured) return null;
-  try {
-    const { data, error } = await supabase.rpc('get_daily_crown_status', {
-      p_hall_days: hallDays,
-    });
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase
+      .rpc('get_daily_crown_status', { p_hall_days: hallDays })
+      .abortSignal(signal);
     if (!error && data != null) return data;
-  } catch {
-    // RPC unavailable until migration 0045
-  }
-  return null;
+    return null;
+  }, null);
 }
 
 export async function fetchSiteContent(): Promise<Record<string, unknown>> {
   if (!isSupabaseConfigured) return {};
-  const { data, error } = await supabase
-    .from('site_content')
-    .select('key, id, value');
+  return withFirstPaintAbort(async (signal) => {
+    const { data, error } = await supabase
+      .from('site_content')
+      .select('key, id, value')
+      .abortSignal(signal);
 
-  if (error) {
-    console.warn('[ViralRefer] site_content fetch error:', error.message, error.code);
-    return {};
-  }
-
-  const content: Record<string, unknown> = {};
-  (data as Array<{ key?: string; id?: string; value: unknown }> | null)?.forEach((row) => {
-    // Support both schemas: some code uses `id` as the logical key, others expect `key`
-    const logicalKey = row.key ?? row.id;
-    if (logicalKey != null) {
-      content[logicalKey] = row.value;
+    if (error) {
+      console.warn('[ViralRefer] site_content fetch error:', error.message, error.code);
+      return {};
     }
-  });
-  return content;
+
+    const content: Record<string, unknown> = {};
+    (data as Array<{ key?: string; id?: string; value: unknown }> | null)?.forEach((row) => {
+      const logicalKey = row.key ?? row.id;
+      if (logicalKey != null) {
+        content[logicalKey] = row.value;
+      }
+    });
+    return content;
+  }, {});
 }
 
 /**

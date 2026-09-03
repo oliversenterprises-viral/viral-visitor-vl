@@ -78,11 +78,12 @@ describe('site-drops first screen contract on this tree', () => {
     const ui = read('src/lib/site-drops-ui.ts');
     const content = read('src/content.ts');
     expect(fetch).toContain('new AbortController()');
-    expect(fetch).toContain('SITE_DROPS_FETCH_TIMEOUT_MS = 2_000');
+    expect(fetch).toContain('SITE_DROPS_FETCH_TIMEOUT_MS = FIRST_PAINT_FETCH_MS');
     expect(ui).toContain('loadSiteDropsLadder');
     expect(content).toContain('never wipe an independent ladder fetch');
     expect(app.indexOf('loadSiteDropsLadder')).toBeLessThan(
-      app.indexOf('await withInitTimeout(loadSiteContent()'),
+      app.indexOf('void withInitTimeout(loadSiteContent()'),
     );
+    expect(app).toContain('hydratePublicFirstPaint');
   });
 });
