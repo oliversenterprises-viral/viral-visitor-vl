@@ -389,7 +389,7 @@ describe('owner funnel desk metrics', () => {
 
   it('aborts a hanging last-N read and throws instead of returning zeros', async () => {
     expect(OWNER_FUNNEL_LAST_N).toBe(80);
-    expect(OWNER_FUNNEL_QUERY_TIMEOUT_MS).toBe(2_000);
+    expect(OWNER_FUNNEL_QUERY_TIMEOUT_MS).toBe(4_000);
     let aborted = false;
     await expect(
       runOwnerFunnelDeskQueries(async (signal) => {
@@ -423,9 +423,9 @@ describe('owner funnel desk metrics', () => {
         );
       },
     };
-    await expect(queryOwnerFunnelLastN(() => hanging, new AbortController().signal)).rejects.toThrow(
-      /db busy/,
-    );
+    await expect(
+      queryOwnerFunnelLastN(() => hanging, new AbortController().signal, 80, 'shares'),
+    ).rejects.toThrow(/shares: db busy/);
   });
 
   it('aborts last-N when the signal is already aborted', async () => {

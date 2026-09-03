@@ -20,14 +20,16 @@ export const OWNER_FUNNEL_WINDOW_LIMIT = 400;
 /** HQ desk last-N. Index-friendly; never a full scan or hung RPC. */
 export const OWNER_FUNNEL_LAST_N = 80;
 /** Abort + statement timeout. A race-only timer leaves the query running. */
-export const OWNER_FUNNEL_QUERY_TIMEOUT_MS = 2_000;
+export const OWNER_FUNNEL_QUERY_TIMEOUT_MS = 4_000;
 
 export class OwnerFunnelDeskQueryError extends Error {
   readonly timedOut: boolean;
-  constructor(message: string, timedOut = false) {
-    super(message);
+  readonly table?: string;
+  constructor(message: string, timedOut = false, table?: string) {
+    super(table ? `${table}: ${message}` : message);
     this.name = 'OwnerFunnelDeskQueryError';
     this.timedOut = timedOut;
+    this.table = table;
   }
 }
 
@@ -77,8 +79,9 @@ export async function queryOwnerFunnelLastN(
   build: () => OwnerFunnelLastNBuilder,
   signal: AbortSignal,
   limit = OWNER_FUNNEL_LAST_N,
+  table?: string,
 ): Promise<Record<string, unknown>[]> {
-  if (signal.aborted) throw new OwnerFunnelDeskQueryError('desk query timed out', true);
+  if (signal.aborted) throw new OwnerFunnelDeskQueryError('desk query timed out', true, table);
   let query = build().order('created_at', { ascending: false }).limit(limit);
   if (typeof query.abortSignal === 'function') {
     query = query.abortSignal(signal);
@@ -91,12 +94,16 @@ export async function queryOwnerFunnelLastN(
     error = res.error;
   } catch (err) {
     if (signal.aborted || (err instanceof Error && err.name === 'AbortError')) {
-      throw new OwnerFunnelDeskQueryError('desk query timed out', true);
+      throw new OwnerFunnelDeskQueryError('desk query timed out', true, table);
     }
-    throw new OwnerFunnelDeskQueryError(err instanceof Error ? err.message : 'desk query failed');
+    throw new OwnerFunnelDeskQueryError(
+      err instanceof Error ? err.message : 'desk query failed',
+      false,
+      table,
+    );
   }
-  if (signal.aborted) throw new OwnerFunnelDeskQueryError('desk query timed out', true);
-  if (error) throw new OwnerFunnelDeskQueryError(error.message || 'desk query failed');
+  if (signal.aborted) throw new OwnerFunnelDeskQueryError('desk query timed out', true, table);
+  if (error) throw new OwnerFunnelDeskQueryError(error.message || 'desk query failed', false, table);
   return (data || []) as Record<string, unknown>[];
 }
 

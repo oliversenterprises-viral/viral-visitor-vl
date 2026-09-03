@@ -234,7 +234,8 @@ describe('owner funnel GSC tracker', () => {
   it('wires get_owner_funnel_desk to attach metrics.gsc', () => {
     const src = readFileSync(resolve(root, 'supabase/functions/admin-action/index.ts'), 'utf8');
     const deskStart = src.indexOf("action === 'get_owner_funnel_desk'");
-    const deskSrc = deskStart >= 0 ? src.slice(deskStart, src.indexOf('return new Response', deskStart + 1) + 400) : '';
+    const deskEnd = src.indexOf("error: 'Unknown action'", deskStart);
+    const deskSrc = deskStart >= 0 ? src.slice(deskStart, deskEnd > deskStart ? deskEnd : src.length) : '';
     expect(src).toMatch(/action === 'get_owner_funnel_desk'/);
     expect(src).toMatch(/resolveOwnerFunnelGsc/);
     expect(src).toContain("Deno.env.get('GSC_SERVICE_ACCOUNT_JSON')");
@@ -251,12 +252,15 @@ describe('owner funnel GSC tracker', () => {
     expect(deskShared).toMatch(/abortSignal/);
     expect(deskShared).toMatch(/ctrl\.abort\(\)/);
     expect(deskShared).toMatch(/OWNER_FUNNEL_LAST_N = 80/);
-    expect(deskShared).toMatch(/OWNER_FUNNEL_QUERY_TIMEOUT_MS = 2_000/);
+    expect(deskShared).toMatch(/OWNER_FUNNEL_QUERY_TIMEOUT_MS = 4_000/);
     expect(deskShared).not.toMatch(/withTimeout/);
     expect(deskSrc).toMatch(/eq\('event_name', 'SiteLanding'\)/);
     expect(deskSrc).toMatch(/eq\('event_name', 'GetReferralLink'\)/);
     expect(deskSrc).toMatch(/from\('shares'\)/);
+    expect(deskSrc).toMatch(/platform, referrer_code, referral_link, created_at'/);
+    expect(deskSrc).not.toMatch(/confirmed/);
     expect(deskSrc).toMatch(/from\('referrals'\)/);
+    expect(src).toMatch(/get_owner_funnel_desk caught:/);
     expect(deskSrc).toMatch(/computeOwnerFunnelDeskMetrics/);
     expect(deskSrc).toMatch(/success: false, error: "can't load\."/);
     expect(deskSrc).not.toMatch(/withTimeout/);

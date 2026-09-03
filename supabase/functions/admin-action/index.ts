@@ -985,7 +985,7 @@ Deno.serve(async (req: Request) => {
 
       try {
         // Skip hung counts/ticker RPCs — they wedge the Nano pool.
-        // Last-N service-role reads, LIMIT 80, ~2s abort (cancels the in-flight query).
+        // Last-N service-role reads, LIMIT 80, ~4s abort (cancels the in-flight query).
         // Same Deno.env.get path as ADMIN_ACTION_SECRET — do not log the JSON.
         const secret = String(Deno.env.get('GSC_SERVICE_ACCOUNT_JSON') || '').trim();
         const site = String(Deno.env.get('GSC_SITE_URL') || '').trim();
@@ -1004,6 +1004,7 @@ Deno.serve(async (req: Request) => {
                   .eq('event_name', 'SiteLanding'),
               signal,
               OWNER_FUNNEL_LAST_N,
+              'visitor_events.SiteLanding',
             ),
             queryOwnerFunnelLastN(
               () =>
@@ -1013,14 +1014,16 @@ Deno.serve(async (req: Request) => {
                   .eq('event_name', 'GetReferralLink'),
               signal,
               OWNER_FUNNEL_LAST_N,
+              'visitor_events.GetReferralLink',
             ),
             queryOwnerFunnelLastN(
               () =>
                 supabaseAdmin
                   .from('shares')
-                  .select('platform, referrer_code, referral_link, created_at, confirmed'),
+                  .select('platform, referrer_code, referral_link, created_at'),
               signal,
               OWNER_FUNNEL_LAST_N,
+              'shares',
             ),
             queryOwnerFunnelLastN(
               () =>
@@ -1029,6 +1032,7 @@ Deno.serve(async (req: Request) => {
                   .select('referrer_code, created_at, referred_ip, user_agent'),
               signal,
               OWNER_FUNNEL_LAST_N,
+              'referrals',
             ),
           ]);
           return { landings, getLinks, shares, referrals };
@@ -1044,7 +1048,17 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (deskErr) {
-        console.error('[admin-action] get_owner_funnel_desk:', deskErr);
+        const err = deskErr instanceof Error ? deskErr : new Error(String(deskErr));
+        const timedOut =
+          (deskErr as { timedOut?: boolean } | null)?.timedOut === true ||
+          /timed out/i.test(err.message);
+        console.error('[admin-action] get_owner_funnel_desk caught:', {
+          name: err.name,
+          message: err.message,
+          timedOut,
+          table: (deskErr as { table?: string } | null)?.table,
+          stack: err.stack,
+        });
         return new Response(JSON.stringify({ success: false, error: "can't load." }), {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
