@@ -261,13 +261,13 @@ describe('owner funnel GSC tracker', () => {
     expect(deskSrc).toMatch(/success: false, error: "can't load\."/);
     expect(deskSrc).not.toMatch(/withTimeout/);
     expect(deskSrc).not.toMatch(/timedLast/);
-    expect(deskSrc).not.toMatch(/get_public_funnel_ticker/);
-    expect(deskSrc).not.toMatch(/get_public_get_link_stats/);
-    expect(deskSrc).not.toMatch(/get_public_recent_activity/);
+    expect(deskSrc).not.toMatch(/rpc\('get_public_funnel_ticker'/);
+    expect(deskSrc).not.toMatch(/rpc\('get_public_get_link_stats'/);
+    expect(deskSrc).not.toMatch(/rpc\('get_public_recent_activity'/);
     expect(deskSrc).not.toMatch(/deskFromPublicSurfaces/);
     expect(deskSrc).not.toMatch(/landing_daily_counts/);
     expect(deskSrc).not.toMatch(/from\('referrer_links'\)/);
-    expect(deskSrc).not.toMatch(/get_owner_funnel_desk_counts/);
+    expect(deskSrc).not.toMatch(/rpc\('get_owner_funnel_desk_counts'/);
     expect(deskSrc).not.toMatch(/\(\) => \[\]/);
     expect(src).not.toMatch(/console\.(log|info|debug|error|warn)\([^)]*secret/i);
     expect(deskSrc).toMatch(/data: \{ \.\.\.metrics, gsc \}/);

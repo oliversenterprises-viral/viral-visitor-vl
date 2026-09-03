@@ -984,7 +984,7 @@ Deno.serve(async (req: Request) => {
       );
 
       try {
-        // Skip get_owner_funnel_desk_counts and homepage RPCs — they hang and wedge Nano.
+        // Skip hung counts/ticker RPCs — they wedge the Nano pool.
         // Last-N service-role reads, LIMIT 80, ~2s abort (cancels the in-flight query).
         // Same Deno.env.get path as ADMIN_ACTION_SECRET — do not log the JSON.
         const secret = String(Deno.env.get('GSC_SERVICE_ACCOUNT_JSON') || '').trim();
