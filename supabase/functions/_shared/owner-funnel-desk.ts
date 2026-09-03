@@ -17,6 +17,9 @@ export const OWNER_FUNNEL_WINDOW_DAYS = 7;
 export const OWNER_FUNNEL_FEED_LIMIT = 40;
 /** Bounded last-N for event-query tiles + feed. Never page the full table. */
 export const OWNER_FUNNEL_WINDOW_LIMIT = 400;
+/** Capped last-N for Command desk table reads. Never scan visitor_events. */
+export const OWNER_FUNNEL_DESK_LAST_N = 80;
+export type OwnerFunnelDeskStatus = 'ok' | 'empty' | 'timeout';
 
 export type OwnerFunnelVia = 'direct' | 'friend' | 'promoter';
 export type OwnerFunnelFeedKind = 'landed' | 'got_link' | 'shared' | 'locked';
@@ -43,6 +46,8 @@ export type OwnerFunnelDeskMetrics = {
   getLinkRate: string;
   feed: OwnerFunnelFeedRow[];
   gsc?: OwnerFunnelGscMetrics;
+  /** ok = honest numbers. empty = queries finished with no rows. timeout = do not paint zeros. */
+  deskStatus?: OwnerFunnelDeskStatus;
 };
 
 export type OwnerFunnelEvent = Record<string, unknown>;
@@ -347,6 +352,15 @@ export function deskHasVisitorSignal(metrics: OwnerFunnelDeskMetrics): boolean {
     metrics.locked > 0 ||
     metrics.feed.length > 0
   );
+}
+
+/** Timeout with no rows is not a real zero window. */
+export function deskStatusForPaint(input: {
+  hasSignal: boolean;
+  timedOut: boolean;
+}): OwnerFunnelDeskStatus {
+  if (input.hasSignal) return 'ok';
+  return input.timedOut ? 'timeout' : 'empty';
 }
 
 function feedRow(

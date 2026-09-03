@@ -49,7 +49,7 @@ function isAbortError(err: unknown): boolean {
 export async function fetchAdminAction(
   action: string,
   payload: Record<string, unknown> = {},
-  options?: { sessionToken?: string; timeoutMs?: number },
+  options?: { sessionToken?: string; timeoutMs?: number; signal?: AbortSignal },
 ): Promise<AdminActionFetchResult> {
   const cfg = supabaseUrlAndAnon();
   if (!cfg) {
@@ -57,9 +57,14 @@ export async function fetchAdminAction(
   }
   const token = String(options?.sessionToken || '').trim();
   const timeoutMs = options?.timeoutMs;
-  const ctrl = timeoutMs && timeoutMs > 0 ? new AbortController() : null;
+  const ctrl = new AbortController();
+  const onOuterAbort = () => ctrl.abort();
+  if (options?.signal) {
+    if (options.signal.aborted) ctrl.abort();
+    else options.signal.addEventListener('abort', onOuterAbort, { once: true });
+  }
   let timer: ReturnType<typeof setTimeout> | undefined;
-  if (ctrl && timeoutMs) {
+  if (timeoutMs && timeoutMs > 0 && !ctrl.signal.aborted) {
     timer = setTimeout(() => ctrl.abort(), timeoutMs);
   }
   const headers: Record<string, string> = {
@@ -75,7 +80,7 @@ export async function fetchAdminAction(
       method: 'POST',
       headers,
       body: JSON.stringify(body),
-      signal: ctrl?.signal,
+      signal: ctrl.signal,
     });
     const text = await res.text();
     let envelope: Record<string, unknown> = {};
@@ -105,6 +110,7 @@ export async function fetchAdminAction(
     };
   } finally {
     if (timer) clearTimeout(timer);
+    options?.signal?.removeEventListener('abort', onOuterAbort);
   }
 }
 
@@ -114,8 +120,9 @@ async function invokeAdminActionViaFetch<T>(
   payload: Record<string, unknown>,
   token: string,
   timeoutMs?: number,
+  signal?: AbortSignal,
 ): Promise<AdminActionResult<T>> {
-  const fetched = await fetchAdminAction(action, payload, { sessionToken: token, timeoutMs });
+  const fetched = await fetchAdminAction(action, payload, { sessionToken: token, timeoutMs, signal });
   if (!fetched.ok) {
     return { success: false, error: fetched.error };
   }
@@ -160,7 +167,7 @@ export async function verifyOwnerPassword(password: string): Promise<VerifyOwner
 export async function invokeAdminAction<T = unknown>(
   action: string,
   payload: Record<string, unknown> = {},
-  options?: { timeoutMs?: number },
+  options?: { timeoutMs?: number; signal?: AbortSignal },
 ): Promise<AdminActionResult<T>> {
   const token = getAdminSessionToken();
   if (!isSupabaseConfigured || !token) {
@@ -176,10 +183,11 @@ export async function invokeAdminAction<T = unknown>(
     payload,
     token,
     options?.timeoutMs,
+    options?.signal,
   );
   if (viaFetch.success) return viaFetch;
   // Desk (and any timed call) must not fall through to functions.invoke — that path has no abort.
-  if (options?.timeoutMs) return viaFetch;
+  if (options?.timeoutMs || options?.signal) return viaFetch;
 
   // Fallback: supabase-js invoke
   try {
