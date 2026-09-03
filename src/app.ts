@@ -97,7 +97,7 @@ const PUBLIC_ACTIVITY_POLL_MS = 90_000;
 export async function withInitTimeout<T>(
   promise: Promise<T>,
   fallback: T,
-  timeoutMs: number = ENHANCE_FETCH_TIMEOUT_MS,
+  timeoutMs: number = FIRST_SCREEN_FETCH_TIMEOUT_MS,
 ): Promise<T> {
   return Promise.race([
     promise,
@@ -372,6 +372,17 @@ export async function initApp() {
       setFunnelTickerVisible(false);
     }
 
+    // Do not wait on APIs here. 12s enhance stays in the background only.
+    void enhanceAfterFirstPaint(myReferralCode);
+  } catch (err) {
+    console.warn('[ViralRefer] initApp partial failure:', err);
+    void enhanceAfterFirstPaint(myReferralCode);
+  }
+}
+
+/** Board / CMS / stats after first paint. Hung APIs must not block the hero. */
+async function enhanceAfterFirstPaint(myReferralCode: string | null): Promise<void> {
+  try {
     initViralLoopUI();
     initGrowthCommandCenter();
     initPostLinkShare();
@@ -388,16 +399,6 @@ export async function initApp() {
       window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
     }
 
-    void enhanceAfterFirstPaint(myReferralCode);
-  } catch (err) {
-    console.warn('[ViralRefer] initApp partial failure:', err);
-    void enhanceAfterFirstPaint(myReferralCode);
-  }
-}
-
-/** Board / CMS / stats — fail-fast if PostgREST hangs. Never awaited by first paint. */
-async function enhanceAfterFirstPaint(myReferralCode: string | null): Promise<void> {
-  try {
     await withInitTimeout(loadSiteContent(), undefined, ENHANCE_FETCH_TIMEOUT_MS);
     await Promise.all([
       withInitTimeout(refreshWorldwideReferralTotals(), undefined, ENHANCE_FETCH_TIMEOUT_MS),

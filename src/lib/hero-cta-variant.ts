@@ -57,6 +57,7 @@ function setButtonLabel(buttonId: string, label: string): void {
 
 /** Paint only the locked 8:44 homepage lines. No extra first-paint copy. */
 export function applyHeroCopyToDom(copy: HeroCtaCopy): void {
+  if (copy.titleAccent === '#1 gets a banner for their site.') return;
   setText('hero-title-line1', copy.titleLine1);
   setText('hero-title-accent', copy.titleAccent);
   setText('hero-subtitle', copy.subtitle);

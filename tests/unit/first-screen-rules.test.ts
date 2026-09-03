@@ -163,15 +163,24 @@ describe('first-screen Site Drops rules', () => {
     );
     expect(app).toMatch(/FIRST_SCREEN_FETCH_TIMEOUT_MS\s*=\s*2_?000/);
     expect(app).toMatch(/ENHANCE_FETCH_TIMEOUT_MS\s*=\s*12_?000/);
+    expect(app).toMatch(/timeoutMs: number = FIRST_SCREEN_FETCH_TIMEOUT_MS/);
     expect(initFn).toContain('void enhanceAfterFirstPaint');
     expect(initFn).toContain('lock844HomepageCopy()');
-    expect(initFn).not.toContain('await withInitTimeout(loadSiteContent');
+    expect(initFn).not.toContain('await ');
+    expect(initFn).not.toContain('ENHANCE_FETCH_TIMEOUT_MS');
+    expect(initFn).not.toContain('initViralLoopUI');
     expect(main).toContain('does not wait on hung APIs');
     expect(css).not.toMatch(/@import url\('https:\/\/fonts\.googleapis\.com/);
     expect(html).toContain("setAttribute('data-vr-first-screen'");
     expect(html).toContain("setAttribute('data-vr-direct-landing'");
-    expect(html).toContain('Site Drop');
+    expect(html).toContain('Win the ViralRefer homepage — Site Drops + #1 banner');
+    expect(html).toContain('Site Drop &middot; Just entered');
+    expect(html).toContain('SITE DROP LADDER');
+    expect(html).toContain('Recent Activity');
     expect(html).toContain('Your site here');
+    expect(html).not.toContain('#1 gets a banner for their site.');
+    expect(html).toMatch(/fonts\.googleapis\.com[^>]*media="print"/);
+    expect(html).toMatch(/font-awesome[^>]*media="print"/);
   });
 
   it('keeps Copy above overlays', () => {
