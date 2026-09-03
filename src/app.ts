@@ -4,6 +4,7 @@ import {
   fetchUniqueReferrerCount,
   fetchPublicGetLinkStats,
   fetchPublicRecentActivity,
+  fetchPublicFunnelTicker,
   fetchSiteContent,
   fetchMyReferralCount,
   fetchMyLeaderboardRank,
@@ -12,7 +13,14 @@ import {
 } from './lib/supabase';
 import { applyExistingReferralLink, syncMobileReferralCta } from './referral';
 import { buildActivityVelocityHtml, type PublicActivityRow } from './lib/public-activity';
-import { setFunnelTickerVisible } from './lib/funnel-ticker';
+import {
+  ensureFunnelTickerDom,
+  mergeFunnelTickerRows,
+  publicActivityToTickerRows,
+  renderFunnelTickerRows,
+  setFunnelTickerVisible,
+  shouldShowFunnelTicker,
+} from './lib/funnel-ticker';
 import { applyWorldwideReferralTotal } from './lib/worldwide-referral-total';
 import { renderHeroSocialProof } from './lib/referred-landing-social-proof';
 import { applyHeroStatsSubtext } from './lib/public-clarity';
@@ -88,6 +96,8 @@ let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
 const INIT_FETCH_TIMEOUT_MS = 12_000;
+/** Homepage count/ticker RPCs must not hang first paint. */
+const COUNTS_TIMEOUT_MS = 2_000;
 /** Disk IO: slower poll + pause when tab hidden (was 45s always-on). */
 const PUBLIC_ACTIVITY_POLL_MS = 90_000;
 
@@ -95,6 +105,13 @@ async function withInitTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> 
   return Promise.race([
     promise,
     new Promise<T>((resolve) => setTimeout(() => resolve(fallback), INIT_FETCH_TIMEOUT_MS)),
+  ]);
+}
+
+async function withCountsTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), COUNTS_TIMEOUT_MS)),
   ]);
 }
 
@@ -126,9 +143,34 @@ function updateActivityVelocity(count: number): void {
   }
 }
 
-async function refreshFunnelTicker(_activityRows?: PublicActivityRow[]): Promise<void> {
-  // Last-night lock: no LIVE WORLDWIDE ticker over the hero.
-  setFunnelTickerVisible(false);
+async function refreshFunnelTicker(activityRows?: PublicActivityRow[]): Promise<void> {
+  const myCode = getMyReferralCode();
+  if (!shouldShowFunnelTicker(myCode)) {
+    setFunnelTickerVisible(false);
+    return;
+  }
+  ensureFunnelTickerDom();
+  setFunnelTickerVisible(true);
+  try {
+    await withCountsTimeout(
+      (async () => {
+        const tickerRows = await fetchPublicFunnelTicker(24);
+        let fallbackSource = activityRows;
+        if (!fallbackSource?.length) {
+          const activity = await fetchPublicRecentActivity(12);
+          fallbackSource = activity.rows;
+        }
+        const rankRows = publicActivityToTickerRows(
+          mergePublicActivityWithRankMoves(fallbackSource || [], getEphemeralRankMoves(), 8),
+        );
+        const merged = mergeFunnelTickerRows(tickerRows, rankRows, 24);
+        renderFunnelTickerRows(merged);
+      })(),
+      undefined,
+    );
+  } catch {
+    /* non-fatal FOMO chrome */
+  }
 }
 
 /** Call after GetReferralLink so the ticker appears immediately for new participants. */
@@ -179,11 +221,14 @@ function initSiteContentRealtime() {
 /** Refresh verified total + get-link-today + unique board size (cheap RPCs; called on poll). */
 async function refreshWorldwideReferralTotals(): Promise<void> {
   try {
-    const [total, unique, getLink] = await Promise.all([
-      fetchTotalReferrers(),
-      fetchUniqueReferrerCount(),
-      fetchPublicGetLinkStats(24),
-    ]);
+    const [total, unique, getLink] = await withCountsTimeout(
+      Promise.all([
+        fetchTotalReferrers(),
+        fetchUniqueReferrerCount(),
+        fetchPublicGetLinkStats(24),
+      ]),
+      [cachedTotalVerifiedReferrals, cachedUniqueReferrers, { uniquePeople: cachedPeopleGotLinkToday, events: 0, windowHours: 24 }],
+    );
     cachedTotalVerifiedReferrals = total;
     // Prefer RPC unique count; fall back to leaderboard length when RPC empty
     cachedUniqueReferrers =

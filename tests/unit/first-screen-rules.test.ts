@@ -147,6 +147,24 @@ describe('first-screen Site Drops rules', () => {
     expect(hero).toContain(LOCKED_SITE_DROPS_CTA);
   });
 
+  it('keeps LIVE WORLDWIDE funnel ticker markup and bind', () => {
+    const html = read('index.html');
+    const app = read('src/app.ts');
+    const supabase = read('src/lib/supabase.ts');
+    expect(html).toContain('id="vr-funnel-ticker"');
+    expect(html).toContain('id="vr-funnel-ticker-track"');
+    expect(html).toContain('LIVE WORLDWIDE');
+    expect(html).toMatch(/id="vr-funnel-ticker"[^>]*class="vr-funnel-ticker hidden"/);
+    expect(app).toContain('fetchPublicFunnelTicker');
+    expect(app).toContain('shouldShowFunnelTicker');
+    expect(app).toContain('renderFunnelTickerRows');
+    expect(app).toContain('ensureFunnelTickerDom');
+    expect(app).not.toContain('Last-night lock: no LIVE WORLDWIDE ticker over the hero.');
+    expect(app).toMatch(/COUNTS_TIMEOUT_MS\s*=\s*2_000/);
+    expect(supabase).toMatch(/PUBLIC_COUNTS_TIMEOUT_MS\s*=\s*2_000/);
+    expect(supabase).toContain('withPublicCountsTimeout');
+  });
+
   it('registers one register-referrer-link per Get my link', () => {
     const referral = read('src/referral.ts');
     const deadline = read('src/lib/share-deadline.ts');
