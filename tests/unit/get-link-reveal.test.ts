@@ -114,7 +114,13 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(sendSrc).not.toContain('Send to a friend now');
     expect(html).not.toContain('One tap to get your link');
     expect(html).not.toContain('Wait — free worldwide link');
-    expect(html).not.toContain('LIVE WORLDWIDE');
+    expect(hero).not.toContain('LIVE WORLDWIDE');
+    expect(html).toContain('id="vr-funnel-ticker"');
+    expect(html).toContain('id="vr-funnel-ticker-track"');
+    expect(html).toMatch(/id="vr-funnel-ticker"[^>]*\bhidden\b/);
+    expect(html).toContain('LIVE WORLDWIDE');
+    expect(html).toContain('id="funnel-journey-badge"');
+    expect(html).toContain('SITE DROP LADDER');
   });
 
   it('CSS un-hides #referral-section after has-link / post-link', () => {
@@ -122,7 +128,9 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(css).toMatch(/html\[data-vr-has-link\] #referral-section/);
     expect(css).toMatch(/html\[data-vr-post-link-one\] #referral-section/);
     expect(css).not.toMatch(/html\[data-vr-post-link-one\] #post-link-status/);
-    expect(css).toMatch(/html\[data-vr-kid-simple\]:not\(\[data-vr-kid-more\]\) #vr-funnel-ticker/);
+    expect(css).toMatch(
+      /html\[data-vr-kid-simple\]:not\(\[data-vr-has-link\]\):not\(\[data-vr-kid-more\]\) #vr-funnel-ticker/,
+    );
   });
 
   it('showPostLinkReady paints You\'re racing / Send it now / Copy link and reveals the section', () => {

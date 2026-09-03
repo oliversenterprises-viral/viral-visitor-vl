@@ -3,7 +3,9 @@ import {
   HERO_CTA_COPY,
   applyHeroCtaVariant,
   lock844HomepageCopy,
+  lockFunnelJourneyBadge,
 } from '../../src/lib/hero-cta-variant';
+import { LOCKED_LIVE_FUNNEL_BADGE } from '../../src/lib/site-drops-copy';
 import { setOptimizerFlags } from '../../src/lib/optimizer-flags';
 
 describe('hero-cta-variant', () => {
@@ -76,6 +78,34 @@ describe('hero-cta-variant', () => {
     );
     lock844HomepageCopy();
     expect(document.getElementById('leaderboard-title')?.textContent).toBe('Recent Activity');
+  });
+
+  it('lockFunnelJourneyBadge restores SITE DROP LADDER after CMS 3-step copy', () => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<span id="funnel-journey-badge">YOUR 3-STEP PATH TO #1</span>',
+    );
+    lockFunnelJourneyBadge();
+    expect(document.getElementById('funnel-journey-badge')?.textContent).toBe(
+      LOCKED_LIVE_FUNNEL_BADGE,
+    );
+    expect(document.getElementById('funnel-journey-badge')?.textContent).toBe('SITE DROP LADDER');
+  });
+
+  it('lock844HomepageCopy re-asserts SITE DROP LADDER and never paints #1 gets a banner', () => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<span id="funnel-journey-badge">3 STEPS TO #1</span>',
+    );
+    document.getElementById('hero-title-accent')!.textContent = '#1 gets a banner for their site.';
+    lock844HomepageCopy();
+    expect(document.getElementById('funnel-journey-badge')?.textContent).toBe('SITE DROP LADDER');
+    expect(document.getElementById('hero-title-accent')?.textContent).not.toBe(
+      '#1 gets a banner for their site.',
+    );
+    expect(document.getElementById('hero-title-accent')?.textContent).toBe(
+      HERO_CTA_COPY.control.titleAccent,
+    );
   });
 
   it('skips on referred landings', () => {

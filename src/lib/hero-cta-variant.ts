@@ -6,6 +6,7 @@
 import { isReferredLanding } from './funnel-conversion';
 import { getHeroCtaVariant, type HeroCtaVariant } from './optimizer-flags';
 import {
+  LOCKED_LIVE_FUNNEL_BADGE,
   LOCKED_SITE_DROPS_CTA,
   LOCKED_SITE_DROPS_H1_ACCENT,
   LOCKED_SITE_DROPS_H1_LINE1,
@@ -74,6 +75,13 @@ export function lock844HomepageCopy(): void {
   if (boardTitle && (painted === 'Early Leaderboard' || painted === 'Live Leaderboard' || painted === '')) {
     boardTitle.textContent = 'Recent Activity';
   }
+  lockFunnelJourneyBadge();
+}
+
+/** Zip lock: id funnel-journey-badge text SITE DROP LADDER. CMS / i18n cannot swap 3-step copy. */
+export function lockFunnelJourneyBadge(): void {
+  const badge = document.getElementById('funnel-journey-badge');
+  if (badge) badge.textContent = LOCKED_LIVE_FUNNEL_BADGE;
 }
 
 /** Apply feature-variant hero copy on direct landings (control leaves CMS/static defaults). */

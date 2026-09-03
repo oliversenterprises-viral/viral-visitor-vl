@@ -127,6 +127,11 @@ describe('must-keep files', () => {
     expect(html).not.toMatch(/id="how-it-works-badge"[^>]*>3 EASY STEPS/);
     expect(html).not.toMatch(/id="funnel-journey-badge"[^>]*>3 STEPS TO #1/);
     expect(html).not.toMatch(/id="funnel-journey-badge"[^>]*>3 EASY STEPS/);
+    expect(html).toContain('id="vr-funnel-ticker"');
+    expect(html).toContain('Your site here');
+    expect(readFileSync(resolve(root, 'src/content.ts'), 'utf8')).not.toContain(
+      "apply('funnel-journey-badge', 'funnel_journey_badge')",
+    );
     expect(html).not.toMatch(/id="funnel-step3-label"[^>]*>3\. Climb</);
     expect(html).toContain(LOCKED_LIVE_HOW_SUBTITLE);
     expect(html).toContain(LOCKED_LIVE_HOW_STEP1_DESC);

@@ -285,8 +285,8 @@ export async function updatePublicContent(content: Record<string, unknown>) {
   apply('footer-credit', 'footer_credit');
   applyButtonLabel('hero-leaderboard-btn', 'leaderboard_button_text');
 
-  // Funnel journey (above-fold) — editable in Admin → Edit Content
-  apply('funnel-journey-badge', 'funnel_journey_badge');
+  // Owner lock: #funnel-journey-badge stays SITE DROP LADDER (owner HTML zip).
+  // Do NOT apply funnel_journey_badge ("YOUR 3-STEP PATH TO #1") over it.
   apply('funnel-step1-label', 'funnel_step1_label');
   apply('funnel-step2-label', 'funnel_step2_label');
   apply('funnel-step3-label', 'funnel_step3_label');
