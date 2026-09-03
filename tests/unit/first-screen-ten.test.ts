@@ -36,6 +36,15 @@ describe('five-layer first screen (Helix order)', () => {
     expect(css).not.toMatch(/html\[data-vr-has-link\] #hero-telegram-helper-btn \{\s*display: flex;/);
   });
 
+  it('homepage color: first-screen hero is black, not the indigo wash', () => {
+    const css = read('src/style.css');
+    const heroBlock = css.match(/^\.hero-gradient\s*\{[^}]+\}/m);
+    expect(heroBlock?.[0]).toMatch(/background:\s*#0a0a0f/);
+    expect(css).not.toContain('#1e1b4b');
+    expect(css).not.toContain('#312e81');
+    expect(css).not.toContain('.hero-gradient::before');
+  });
+
   it('trust: first screen says the prize once and does not chant no-cash', () => {
     const html = read('index.html');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
