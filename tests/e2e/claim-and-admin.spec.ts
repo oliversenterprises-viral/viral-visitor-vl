@@ -35,6 +35,34 @@ test.describe('ViralRefer - Prize Claim Flow & Admin', () => {
     await expect(page.locator('#admin-owner-gate-input')).toBeVisible({ timeout: 5000 });
   });
 
+  test('Continue leaves Verifying as soon as verify returns', async ({ page }) => {
+    await page.route('**/functions/v1/admin-action', async (route) => {
+      const post = route.request().postData() || '';
+      if (post.includes('verify_owner_password')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, session_token: 'e2e-owner-session' }),
+        });
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 45_000));
+      await route.abort('timedout');
+    });
+
+    await page.goto('/?owner=1');
+    await waitForAppReady(page);
+    await page.locator('#admin-btn').click();
+    await expect(page.locator('#admin-owner-gate-input')).toBeVisible({ timeout: 5000 });
+    await page.fill('#admin-owner-gate-input', 'any-owner-key');
+    await page.click('#admin-owner-gate-submit');
+
+    const submit = page.locator('#admin-owner-gate-submit');
+    await expect(submit).not.toContainText('Verifying', { timeout: 2000 });
+    await expect(page.locator('#admin-owner-gate-modal')).toBeHidden({ timeout: 2000 });
+    await expect(page.locator('#admin-modal')).toBeVisible({ timeout: 5000 });
+  });
+
   test('Admin login flow (owner password + session)', async ({ page }) => {
     const adminPass = process.env.ADMIN_TEST_PASSWORD;
     test.skip(!adminPass, 'ADMIN_TEST_PASSWORD not set — skip in CI until GitHub secret is configured');
