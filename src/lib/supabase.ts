@@ -19,6 +19,25 @@ const SUPABASE_ANON_KEY = envString(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
+/** Homepage count/ticker RPCs fail-fast so a hung PostgREST call cannot block first paint. */
+export const PUBLIC_COUNTS_TIMEOUT_MS = 2_000;
+
+export async function withPublicCountsTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((resolve) => {
+        timer = setTimeout(() => resolve(fallback), PUBLIC_COUNTS_TIMEOUT_MS);
+      }),
+    ]);
+  } catch {
+    return fallback;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 if (!isSupabaseConfigured) {
   console.warn(
     '[ViralRefer] Supabase env not configured — static/degraded mode. ' +
@@ -56,30 +75,40 @@ export async function fetchLeaderboard(minReferrals: number = 1): Promise<Leader
 
 export async function fetchTotalReferrers(): Promise<number> {
   if (!isSupabaseConfigured) return 0;
-  try {
-    const { data, error } = await supabase.rpc('get_total_referral_count');
-    if (!error && typeof data === 'number') return data;
-  } catch {
-    // RPC unavailable
-  }
-  return 0;
+  return withPublicCountsTimeout(
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_total_referral_count');
+        if (!error && typeof data === 'number') return data;
+      } catch {
+        // RPC unavailable
+      }
+      return 0;
+    })(),
+    0,
+  );
 }
 
 /** Distinct real referrers (Phase 3 trust pack). Falls back to leaderboard size. */
 export async function fetchUniqueReferrerCount(): Promise<number> {
   if (!isSupabaseConfigured) return 0;
-  try {
-    const { data, error } = await supabase.rpc('get_unique_referrer_count');
-    if (!error && typeof data === 'number') return data;
-  } catch {
-    // RPC may not exist until migration 0018
-  }
-  try {
-    const board = await fetchLeaderboard(1);
-    return board.length;
-  } catch {
-    return 0;
-  }
+  return withPublicCountsTimeout(
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_unique_referrer_count');
+        if (!error && typeof data === 'number') return data;
+      } catch {
+        // RPC may not exist until migration 0018
+      }
+      try {
+        const board = await fetchLeaderboard(1);
+        return board.length;
+      } catch {
+        return 0;
+      }
+    })(),
+    0,
+  );
 }
 
 export type PublicGetLinkStats = {
@@ -99,25 +128,27 @@ export type PublicPrizePull = {
  * Additive public RPC — returns zeros if not deployed yet.
  */
 export async function fetchPublicGetLinkStats(hours = 24): Promise<PublicGetLinkStats> {
-  if (!isSupabaseConfigured) {
-    return { uniquePeople: 0, events: 0, windowHours: hours };
-  }
-  try {
-    const { data, error } = await supabase.rpc('get_public_get_link_stats', {
-      p_hours: hours,
-    });
-    if (error || data == null) {
-      return { uniquePeople: 0, events: 0, windowHours: hours };
-    }
-    const payload = typeof data === 'object' ? (data as Record<string, unknown>) : {};
-    return {
-      uniquePeople: Number(payload.unique_people) || 0,
-      events: Number(payload.events) || 0,
-      windowHours: Number(payload.window_hours) || hours,
-    };
-  } catch {
-    return { uniquePeople: 0, events: 0, windowHours: hours };
-  }
+  const empty: PublicGetLinkStats = { uniquePeople: 0, events: 0, windowHours: hours };
+  if (!isSupabaseConfigured) return empty;
+  return withPublicCountsTimeout(
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_public_get_link_stats', {
+          p_hours: hours,
+        });
+        if (error || data == null) return empty;
+        const payload = typeof data === 'object' ? (data as Record<string, unknown>) : {};
+        return {
+          uniquePeople: Number(payload.unique_people) || 0,
+          events: Number(payload.events) || 0,
+          windowHours: Number(payload.window_hours) || hours,
+        };
+      } catch {
+        return empty;
+      }
+    })(),
+    empty,
+  );
 }
 
 /** Homepage ad-slot proof. Zeros if the RPC is not applied yet. */
@@ -217,20 +248,25 @@ export async function fetchPublicRecentActivity(limit = 8): Promise<{
  */
 export async function fetchPublicFunnelTicker(limit = 24): Promise<FunnelTickerRow[]> {
   if (!isSupabaseConfigured) return [];
-  try {
-    const { data, error } = await supabase.rpc('get_public_funnel_ticker', {
-      p_limit: Math.max(limit, 8),
-    });
-    if (error || data == null) return [];
-    // RPC returns a JSON array directly
-    if (Array.isArray(data)) return normalizeFunnelTickerRows(data);
-    if (typeof data === 'object' && Array.isArray((data as { rows?: unknown }).rows)) {
-      return normalizeFunnelTickerRows((data as { rows: unknown }).rows);
-    }
-    return normalizeFunnelTickerRows(data);
-  } catch {
-    return [];
-  }
+  return withPublicCountsTimeout(
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_public_funnel_ticker', {
+          p_limit: Math.max(limit, 8),
+        });
+        if (error || data == null) return [];
+        // RPC returns a JSON array directly
+        if (Array.isArray(data)) return normalizeFunnelTickerRows(data);
+        if (typeof data === 'object' && Array.isArray((data as { rows?: unknown }).rows)) {
+          return normalizeFunnelTickerRows((data as { rows: unknown }).rows);
+        }
+        return normalizeFunnelTickerRows(data);
+      } catch {
+        return [];
+      }
+    })(),
+    [],
+  );
 }
 
 export interface ReferrerPublicStats {

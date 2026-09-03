@@ -1,13 +1,18 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   buildFunnelTickerHtml,
+  ensureFunnelTickerDom,
   formatFunnelTickerLabel,
   isTickerFunnelStep,
   mergeFunnelTickerRows,
   normalizeFunnelTickerRows,
   publicActivityToTickerRows,
+  renderFunnelTickerRows,
   shouldShowFunnelTicker,
 } from '../../src/lib/funnel-ticker';
+import { PUBLIC_COUNTS_TIMEOUT_MS, withPublicCountsTimeout } from '../../src/lib/supabase';
 
 describe('funnel-ticker', () => {
   it('shouldShowFunnelTicker only for VIRAL- codes', () => {
@@ -126,5 +131,51 @@ describe('funnel-ticker', () => {
     ]);
     expect(rows[0].kind).toBe('referral');
     expect(rows[1].kind).toBe('share');
+  });
+
+  it('homepage HTML already has ticker markup so bind can fill the track', () => {
+    const html = readFileSync(resolve(import.meta.dirname, '../../index.html'), 'utf8');
+    expect(html).toContain('id="vr-funnel-ticker"');
+    expect(html).toContain('id="vr-funnel-ticker-track"');
+    expect(html).toContain('vr-funnel-ticker-track');
+  });
+
+  it('ensureFunnelTickerDom reuses homepage markup and render fills the track', () => {
+    document.body.innerHTML = `
+      <nav id="vr-nav"></nav>
+      <div id="vr-funnel-ticker" class="vr-funnel-ticker hidden" hidden>
+        <div class="vr-funnel-ticker-bar">
+          <span class="vr-funnel-ticker-live">LIVE WORLDWIDE</span>
+          <div class="vr-funnel-ticker-viewport">
+            <div class="vr-funnel-ticker-track" id="vr-funnel-ticker-track"></div>
+          </div>
+        </div>
+      </div>`;
+    const el = ensureFunnelTickerDom();
+    expect(el?.id).toBe('vr-funnel-ticker');
+    expect(document.querySelectorAll('#vr-funnel-ticker').length).toBe(1);
+    renderFunnelTickerRows([
+      {
+        kind: 'funnel',
+        step: 'GetReferralLink',
+        country_code: 'US',
+        created_at: '2026-07-10T12:00:00Z',
+      },
+    ]);
+    expect(document.getElementById('vr-funnel-ticker-track')?.innerHTML).toContain(
+      'Someone in US just got their referral link',
+    );
+  });
+
+  it('count fetches fail-fast in 2s when the RPC hangs', async () => {
+    expect(PUBLIC_COUNTS_TIMEOUT_MS).toBe(2_000);
+    vi.useFakeTimers();
+    const hung = new Promise<string>(() => {
+      /* never resolves */
+    });
+    const raced = withPublicCountsTimeout(hung, 'fallback');
+    vi.advanceTimersByTime(2_000);
+    await expect(raced).resolves.toBe('fallback');
+    vi.useRealTimers();
   });
 });
