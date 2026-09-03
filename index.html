@@ -287,6 +287,11 @@
             </div>
         </div>
 
+        <div id="site-entered-ticker" class="hidden mt-4 max-w-3xl mx-auto text-center" hidden aria-label="Live Site Drops">
+            <p class="text-[10px] uppercase tracking-wider font-semibold text-zinc-400 mb-2">Live on this homepage</p>
+            <div id="site-entered-chips" class="flex flex-wrap gap-2 justify-center"></div>
+        </div>
+
         <!-- FUNNEL JOURNEY — hidden on quiet first paint; expands after get-link (competitive guidance) -->
         <div id="funnel-journey" class="funnel-journey-card funnel-journey-quiet mt-6 max-w-3xl mx-auto" data-vr-zone="funnel-journey" data-vr-declutter-post-link>
             <div class="funnel-journey-header">
@@ -404,6 +409,27 @@
                 <!-- Skeleton seeded by public-polish.ts until activity loads -->
             </div>
         </div>
+
+        <section id="site-drops" data-vr-below-fold class="mt-12 glass border border-white/10 rounded-3xl p-8 md:p-10">
+            <p class="text-[10px] uppercase tracking-wider font-semibold text-violet-300">Site Drop ladder</p>
+            <h2 id="site-drops-title" class="text-3xl sm:text-4xl font-bold tracking-tighter mt-2">Your site goes live as you climb</h2>
+            <p id="site-drops-lead" class="text-zinc-300 mt-2 max-w-2xl">Just entered, Rising, and Challenger chips. Empty means open — this block never waits on a hung public RPC.</p>
+            <div class="mt-6">
+                <p class="text-[10px] uppercase tracking-wider font-semibold text-emerald-400/90">Just entered · 15 min</p>
+                <ul id="site-drops-entered-list" class="mt-3 flex flex-wrap gap-2"></ul>
+                <p id="site-drops-entered-empty" class="mt-2 text-sm text-zinc-500">No one just entered. Get a link, add your site, and take a chip.</p>
+            </div>
+            <div class="mt-8">
+                <p class="text-[10px] uppercase tracking-wider font-semibold text-violet-300">Rising · 1 hour</p>
+                <ul id="site-drops-rising-list" class="mt-3 flex flex-wrap gap-2"></ul>
+                <p id="site-drops-rising-empty" class="mt-2 text-sm text-zinc-500">Rising slots are open. One verified friend who taps Get my link unlocks a 1-hour drop here.</p>
+            </div>
+            <div id="site-drops-challenger" class="mt-8">
+                <p class="text-[10px] uppercase tracking-wider font-semibold text-amber-300/90">Challenger · #2 / #3</p>
+                <ul id="site-drops-challenger-list" class="mt-3 flex flex-wrap gap-2"></ul>
+                <p id="site-drops-challenger-empty" class="mt-2 text-sm text-zinc-500">No challengers yet. Hit board #2 or #3 with your site on file.</p>
+            </div>
+        </section>
 
         <!-- HOW IT WORKS -->
         <div id="how" data-vr-below-fold class="mt-12">

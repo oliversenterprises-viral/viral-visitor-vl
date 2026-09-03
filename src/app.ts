@@ -380,6 +380,11 @@ export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
   try {
+    // Ladder chips: dedicated ≤2s RPC. Do not wait on site_content REST.
+    void import('./lib/site-drops-ui')
+      .then((m) => m.loadSiteDropsLadder())
+      .catch(() => {});
+
     await withInitTimeout(loadSiteContent(), undefined);
 
     // Verified worldwide total first so the number is never a mystery on first paint
