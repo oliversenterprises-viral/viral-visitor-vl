@@ -236,7 +236,7 @@ export async function updatePublicContent(content: Record<string, unknown>) {
   apply('prize-banner-description', 'prize_banner_description');
   apply('cash-amount-value', 'cash_amount');
 
-  // Helix Bet 2: keep the 30-day slot mock. Featured banners paint site name + link.
+  // Empty slot stays "Your site here". Promo CMS banners do not paint the hero.
   const bannersRaw = content['banners'];
   const parsedBanners = parseBanners(bannersRaw);
   const selection = parsedBanners.length > 0 ? selectBanner(parsedBanners) : null;
@@ -245,7 +245,7 @@ export async function updatePublicContent(content: Record<string, unknown>) {
     selected: selection?.banner ?? null,
   });
   paintPrizeSlot(slot);
-  if (selection) {
+  if (selection && slot.kind === 'winner') {
     logBannerEvent('impression', selection.banner);
     const slotLink = document.getElementById('prize-slot-site');
     if (slotLink) {
