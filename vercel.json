@@ -120,7 +120,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/((?!api/|go/|embed/|tools/|privacy/|terms/|rules/|assets/|favicon\\.svg|robots\\.txt|sitemap\\.xml|manifest\\.json|llms\\.txt|security\\.txt|version\\.json|icons\\.svg).*)",
+      "source": "/((?!api/|go/|embed/|tools/|guides/|privacy/|terms/|rules/|assets/|favicon\\.svg|robots\\.txt|sitemap\\.xml|manifest\\.json|llms\\.txt|security\\.txt|version\\.json|icons\\.svg|google163d31ba24216edd\\.html).*)",
       "destination": "/index.html"
     }
   ],
