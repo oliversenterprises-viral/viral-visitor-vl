@@ -6,6 +6,8 @@
 import { isReferredLanding } from './funnel-conversion';
 import { getHeroCtaVariant, type HeroCtaVariant } from './optimizer-flags';
 import {
+  LOCKED_RECENT_ACTIVITY,
+  LOCKED_SITE_DROP_JUST_ENTERED,
   LOCKED_SITE_DROPS_CTA,
   LOCKED_SITE_DROPS_H1_ACCENT,
   LOCKED_SITE_DROPS_H1_LINE1,
@@ -68,12 +70,10 @@ export function lock844HomepageCopy(): void {
   if (isReferredLanding()) return;
   applyHeroCopyToDom(HERO_CTA_COPY.control);
   setText('hero-prize-one', LOCKED_SITE_DROPS_RULE);
-  // Owner lock: large Site Drop board title stays Recent Activity.
-  const boardTitle = document.getElementById('leaderboard-title');
-  const painted = (boardTitle?.textContent || '').trim();
-  if (boardTitle && (painted === 'Early Leaderboard' || painted === 'Live Leaderboard' || painted === '')) {
-    boardTitle.textContent = 'Recent Activity';
-  }
+  // Owner lock: zip Recent Activity titles stay English.
+  setText('leaderboard-title', LOCKED_RECENT_ACTIVITY);
+  setText('recent-activity-title', LOCKED_RECENT_ACTIVITY);
+  setText('post-link-site-drop-title', LOCKED_SITE_DROP_JUST_ENTERED);
 }
 
 /** Apply feature-variant hero copy on direct landings (control leaves CMS/static defaults). */

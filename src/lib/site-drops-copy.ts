@@ -10,6 +10,9 @@
 /** Identifies this checkout as the Site Drops product tree, not the old banner-only app. */
 export const SITE_DROPS_TREE_PIN = '848540d-site-drops' as const;
 
+/** Old indigo banner-only H1. Never paint this as the product. */
+export const FORBIDDEN_INDIGO_H1_ACCENT = '#1 gets a banner for their site.';
+
 export const LOCKED_SITE_DROPS_TITLE =
   'Win the ViralRefer homepage — Site Drops + #1 banner';
 
@@ -20,6 +23,14 @@ export const LOCKED_SITE_DROPS_H1_LINE1 = 'Win the homepage.';
 
 export const LOCKED_SITE_DROPS_H1_ACCENT =
   'Each step puts your site on this page. #1 owns the banner for 7 days.';
+
+export const LOCKED_SITE_DROP_JUST_ENTERED = 'Site Drop · Just entered';
+
+export const LOCKED_SEE_LIVE_SITE_DROPS = 'See live Site Drops';
+
+export const LOCKED_RECENT_ACTIVITY = 'Recent Activity';
+
+export const LOCKED_YOUR_SITE_HERE = 'Your site here';
 
 export const LOCKED_SITE_DROPS_H1 =
   'Win the homepage. Each step puts your site on this page. #1 owns the banner for 7 days.';
