@@ -405,6 +405,9 @@ export async function initApp() {
     initGrowthCommandCenter();
     initPostLinkShare();
     initPostLinkStatus();
+    void import('./lib/racer-talk')
+      .then((m) => m.initRacerTalk())
+      .catch(() => {});
     void import('./lib/promo-kit')
       .then((m) => m.initPromoKit())
       .catch(() => {});

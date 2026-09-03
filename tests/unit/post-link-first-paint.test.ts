@@ -32,6 +32,7 @@ describe('post-link first paint', () => {
   it('post-link stack is status + #31 share + existing clock only', () => {
     const html = readFileSync(resolve(ROOT, 'index.html'), 'utf8');
     const stack = sliceById(html, 'referral-section', 'my-stats');
+    expect(stack).toContain('id="ref-link"');
     expect(stack).toContain('id="post-link-status"');
     expect(stack).toContain('id="post-link-status-title"');
     expect(stack).toContain('id="post-link-status-line"');
@@ -40,6 +41,8 @@ describe('post-link first paint', () => {
     expect(stack).toContain('id="post-link-primary"');
     expect(stack).toContain('id="post-link-copy"');
     expect(stack).toContain('Copy link');
+    expect(stack).toContain('id="racer-talk"');
+    expect(stack).toContain('Message from ViralRefer');
     const banned = [
       'Step 2: tap COPY',
       'id="viral-power-meter"',

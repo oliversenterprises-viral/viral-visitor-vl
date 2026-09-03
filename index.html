@@ -357,6 +357,7 @@
 
         <!-- REFERRAL LINK + SOCIAL SHARING -->
         <div id="referral-section" class="mt-6" data-vr-zone="referral-section" data-vr-post-link-stack>
+            <input id="ref-link" type="text" readonly hidden class="hidden" aria-hidden="true" value="" tabindex="-1" autocomplete="off" />
             <div id="post-link-status" class="post-link-status hidden" hidden data-state="hidden" role="status" aria-live="polite">
                 <h2 id="post-link-status-title" class="post-link-status__title"></h2>
                 <p id="post-link-status-line" class="post-link-status__line"></p>
@@ -371,6 +372,18 @@
                 <button type="button" id="post-link-copy" class="post-link-share__copy">Copy link</button>
                 <p id="post-link-tool" class="post-link-share__tool">This is your public link. Paste it in any bio, story, or text.</p>
             </div>
+            <aside id="racer-talk" class="vr-owner-broadcast racer-talk hidden" hidden data-racer-talk="1" role="region" aria-label="Message from ViralRefer">
+                <div class="vr-bc-inner">
+                    <span class="vr-bc-icon" aria-hidden="true"><i class="fa-solid fa-bullhorn"></i></span>
+                    <div class="vr-bc-main min-w-0">
+                        <p class="vr-bc-kicker racer-talk__kicker">Message from ViralRefer</p>
+                        <p class="vr-bc-title racer-talk__title">Message from ViralRefer</p>
+                        <div id="racer-talk-media" class="vr-bc-media racer-talk__media hidden" hidden></div>
+                        <div id="racer-talk-body" class="vr-bc-body racer-talk__body"></div>
+                        <div id="racer-talk-sponsor" class="vr-bc-sponsor racer-talk__sponsor hidden" hidden></div>
+                    </div>
+                </div>
+            </aside>
                     </div>
 
         <!-- MY STATS -->
