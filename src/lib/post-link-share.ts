@@ -37,6 +37,9 @@ export function revealReferralSection(): void {
   root.removeAttribute('data-vr-paid-nudge');
   root.removeAttribute('data-vr-exit-rescue');
   hidePostLinkStatus();
+  void import('./racer-talk')
+    .then((m) => m.revealRacerTalk())
+    .catch(() => {});
 }
 
 const IDS = {

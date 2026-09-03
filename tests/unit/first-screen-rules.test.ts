@@ -143,6 +143,45 @@ describe('first-screen Site Drops rules', () => {
     expect(html).toContain('data-i18n="drop.badge">Site Drop ladder</p>');
     expect(html).toContain('Your site here');
     expect(html).toContain('id="footer-link-tools"');
+    expect(html).toContain('id="racer-talk"');
+    expect(html).toContain('id="racer-talk-form"');
+    expect(html).toContain('id="racer-ping"');
+    expect(html).toContain('Site Drop &middot; Just entered');
+    expect(html).not.toMatch(/Ping after Get my link/);
+  });
+
+  it('does not let Talk hang the first screen on a hung API', () => {
+    const talk = read('src/lib/racer-talk.ts');
+    const app = read('src/app.ts');
+    const html = read('index.html');
+    expect(talk).toContain('RACER_TALK_FETCH_TIMEOUT_MS = 2_000');
+    expect(talk).toContain('AbortController');
+    expect(talk).toContain('/functions/v1/racer-talk');
+    expect(talk).not.toMatch(/functions\.invoke\(/);
+    expect(talk).not.toMatch(/from '\.\/supabase'/);
+    expect(talk).toContain('never on cold land');
+    expect(talk).toMatch(/if \(!visitorMaySeeRacerTalk\(\)\) return;/);
+    expect(app).toMatch(/void import\('\.\/lib\/racer-talk'\)/);
+    expect(app).not.toMatch(/await\s+.*initRacerTalk/);
+    expect(html).toContain('id="racer-talk"');
+    expect(html).toContain('Site Drop &middot; Just entered');
+    expect(html).toContain('Win the homepage.');
+  });
+
+  it('does not let hung first-screen APIs block Get my link', () => {
+    const app = read('src/app.ts');
+    expect(app).toContain('INIT_FETCH_TIMEOUT_MS = 2_000');
+    expect(app).toMatch(/await withInitTimeout\(loadSiteContent\(\)/);
+    expect(app).not.toMatch(/await withInitTimeout\(refreshWorldwideReferralTotals/);
+    expect(app).not.toMatch(/await withInitTimeout\(loadPublicViralLoops/);
+    expect(app).not.toMatch(/await withInitTimeout\(loadLeaderboard/);
+    expect(app).not.toMatch(/await withInitTimeout\(renderRecentActivity/);
+    expect(app).not.toMatch(/await withInitTimeout\(renderMyStats/);
+    expect(app).toContain('void hydrateBelowFold');
+    expect(app).toMatch(/applyExistingReferralLink\(myReferralCode\)/);
+    expect(app.indexOf('applyExistingReferralLink(myReferralCode)')).toBeLessThan(
+      app.indexOf('await withInitTimeout(loadSiteContent()'),
+    );
   });
 
   it('keeps Copy above overlays', () => {

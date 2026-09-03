@@ -363,6 +363,14 @@ export async function updatePublicContent(content: Record<string, unknown>) {
     /* non-fatal */
   }
 
+  // Post–Get my link Message from ViralRefer (racer-talk). No email.
+  try {
+    const { applyRacerTalkFromContent } = await import('./lib/racer-talk');
+    applyRacerTalkFromContent(content as Record<string, unknown>);
+  } catch {
+    /* non-fatal */
+  }
+
   try {
     const { applySiteDropsFromContent, initSiteDropForm } = await import('./lib/site-drops-ui');
     applySiteDropsFromContent(content as Record<string, unknown>);

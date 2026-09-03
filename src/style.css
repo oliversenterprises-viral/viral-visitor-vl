@@ -452,7 +452,10 @@ html:not([data-vr-has-link]) #hero-ad-visit,
 html:not([data-vr-has-link]) #hero-week-clock,
 html:not([data-vr-has-link]) #hero-slot-thumb,
 html:not([data-vr-has-link]) #site-challenger-strip,
-html:not([data-vr-has-link]) #site-entered-ticker {
+html:not([data-vr-has-link]) #site-entered-ticker,
+html:not([data-vr-has-link]) #racer-talk,
+html:not([data-vr-has-link]) #racer-talk-form,
+html:not([data-vr-has-link]) #racer-ping {
   display: none !important;
 }
 
@@ -3602,6 +3605,132 @@ body {
 
 .vr-bc-sponsor-cta i {
   font-size: 0.65rem;
+}
+
+/* After Get my link, Talk moves into the send stack (racer-talk). */
+html[data-vr-has-link] .vr-owner-broadcast,
+html[data-vr-post-link-one] .vr-owner-broadcast {
+  display: none;
+}
+
+.racer-talk {
+  display: none;
+  margin: 0.85rem auto 0;
+  max-width: 400px;
+  padding: 0.95rem 1rem;
+  text-align: left;
+  border-radius: 1rem;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: linear-gradient(180deg, rgba(76, 29, 149, 0.28), rgba(9, 9, 11, 0.55));
+}
+
+html[data-vr-has-link] .racer-talk[data-talk-ready='1'],
+html[data-vr-post-link-one] .racer-talk[data-talk-ready='1'] {
+  display: block;
+}
+
+.racer-talk__kicker {
+  margin: 0 0 0.2rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+}
+
+.racer-talk__title,
+h2.racer-talk__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: #f4f4f5;
+}
+
+.racer-talk__media {
+  margin-top: 0.55rem;
+  border-radius: 0.65rem;
+  overflow: hidden;
+}
+
+.racer-talk__media-img {
+  display: block;
+  width: 100%;
+  max-height: 11rem;
+  object-fit: cover;
+}
+
+.racer-talk__body {
+  margin-top: 0.4rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: #d4d4d8;
+}
+
+.racer-talk__body a {
+  color: #c4b5fd;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}
+
+.racer-talk__form[hidden],
+.racer-talk__form.hidden {
+  display: none;
+}
+
+.racer-talk__sponsor {
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.racer-talk__sponsor-badge {
+  margin: 0 0 0.45rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fcd34d;
+}
+
+.racer-talk__sponsor-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.racer-talk__sponsor-img {
+  display: block;
+  width: 100%;
+  max-height: 5.5rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+.racer-talk__sponsor-label {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: #fffbeb;
+}
+
+.racer-talk__sponsor-cta {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.35rem;
+  color: #fde68a;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Zip id only — never a first-screen or product panel */
+#racer-ping,
+.racer-ping {
+  display: none !important;
 }
 
 /* Share deadline: keep countdown readable on narrow screens */
