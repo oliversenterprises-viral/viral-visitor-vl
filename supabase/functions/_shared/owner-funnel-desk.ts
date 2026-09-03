@@ -269,6 +269,86 @@ function friendCodeFromReferral(
   return best;
 }
 
+/** Homepage SECURITY DEFINER RPCs — index-friendly LIMIT, not a table scan. */
+export function deskFromPublicSurfaces(input: {
+  ticker?: unknown;
+  linkStats?: unknown;
+  activity?: unknown;
+  visits?: number;
+  junkVisits?: number;
+  windowDays?: number;
+}): OwnerFunnelDeskMetrics {
+  const ticker = Array.isArray(input.ticker) ? input.ticker : [];
+  const activityRaw = input.activity;
+  const activityRows = Array.isArray(activityRaw)
+    ? activityRaw
+    : activityRaw && typeof activityRaw === 'object' && Array.isArray((activityRaw as { rows?: unknown }).rows)
+      ? ((activityRaw as { rows: unknown[] }).rows)
+      : [];
+  const stats =
+    input.linkStats && typeof input.linkStats === 'object' && !Array.isArray(input.linkStats)
+      ? (input.linkStats as Record<string, unknown>)
+      : {};
+  const getLinkRaw = Number(stats.unique_people ?? stats.uniquePeople ?? stats.events ?? 0);
+  const getLink = Number.isFinite(getLinkRaw) && getLinkRaw > 0 ? Math.round(getLinkRaw) : 0;
+
+  const feed: OwnerFunnelFeedRow[] = [];
+  const shareCodes = new Set<string>();
+  const lockedCodes = new Set<string>();
+  const push = (row: Record<string, unknown>) => {
+    const kind = String(row.kind || '');
+    const step = String(row.step || row.event_name || '');
+    const at = String(row.created_at || row.createdAt || '');
+    const code = String(row.referrer_code || row.referrerCode || '').trim().toUpperCase();
+    if (!at) return;
+    if (step === 'SiteLanding') {
+      feed.push(feedRow('landed', at, 'friend'));
+    } else if (step === 'GetReferralLink') {
+      feed.push(feedRow('got_link', at, 'direct'));
+    } else if (kind === 'share' || step === 'ShareReferral') {
+      feed.push(feedRow('shared', at, 'direct', code ? { code } : {}));
+      if (code) shareCodes.add(code);
+    } else if (kind === 'referral') {
+      feed.push(feedRow('locked', at, 'friend', code ? { code } : {}));
+      if (code) lockedCodes.add(code);
+    }
+  };
+  for (const row of [...ticker, ...activityRows]) {
+    if (row && typeof row === 'object' && !Array.isArray(row)) push(row as Record<string, unknown>);
+  }
+  feed.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+  const friendLandings = feed.filter((row) => row.kind === 'landed').length;
+  const visits =
+    Number.isFinite(input.visits) && (input.visits as number) > 0 ? (input.visits as number) : 0;
+  const junkVisits =
+    Number.isFinite(input.junkVisits) && (input.junkVisits as number) > 0
+      ? (input.junkVisits as number)
+      : 0;
+  return {
+    windowDays: input.windowDays ?? OWNER_FUNNEL_WINDOW_DAYS,
+    visits,
+    junkVisits,
+    friendLandings,
+    landings: friendLandings,
+    getLink,
+    share: shareCodes.size,
+    locked: lockedCodes.size,
+    getLinkRate: deskGetLinkRate(getLink, friendLandings, visits),
+    feed: feed.slice(0, OWNER_FUNNEL_FEED_LIMIT),
+  };
+}
+
+export function deskHasVisitorSignal(metrics: OwnerFunnelDeskMetrics): boolean {
+  return (
+    metrics.visits > 0 ||
+    metrics.friendLandings > 0 ||
+    metrics.getLink > 0 ||
+    metrics.share > 0 ||
+    metrics.locked > 0 ||
+    metrics.feed.length > 0
+  );
+}
+
 function feedRow(
   kind: OwnerFunnelFeedKind,
   at: string,

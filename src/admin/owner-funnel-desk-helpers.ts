@@ -7,6 +7,8 @@ export {
   OWNER_FUNNEL_WINDOW_LIMIT,
   assembleOwnerFunnelDeskFromServer,
   computeOwnerFunnelDeskMetrics,
+  deskFromPublicSurfaces,
+  deskHasVisitorSignal,
   deskGetLinkRate,
   filterDeskReferrals,
   filterDeskShares,
