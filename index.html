@@ -12,12 +12,20 @@
       var q = location.search || '';
       if (/(?:^|[?&])(?:embed|iframe)=1(?:&|$)/.test(q)) return;
       document.documentElement.setAttribute('data-vr-kid-simple', '1');
+      document.documentElement.setAttribute('data-vr-first-screen', '1');
       if (/\/r\/[A-Za-z0-9_-]+\/?$/i.test(p) || /(?:^|[?&])ref=/.test(q)) {
         document.documentElement.setAttribute('data-vr-referred-landing', '1');
         document.documentElement.setAttribute('data-vr-referred-micro', '1');
+      } else {
+        document.documentElement.setAttribute('data-vr-direct-landing', '1');
       }
     })();
     </script>
+    <!-- First-screen chrome paints before CSS/fonts/APIs. Zip nav: zinc-950 + light wordmark. -->
+    <style id="vr-first-screen">
+      #vr-nav{background-color:#09090b}
+      #vr-nav .vr-wordmark,#vr-nav .logo-font,#vr-nav a[aria-label="ViralRefer home"] span{color:#f4f4f5;-webkit-text-fill-color:#f4f4f5}
+    </style>
     
     <!-- SEO (organic Google + social) -->
     <title>Win the ViralRefer homepage — Site Drops + #1 banner</title>
@@ -111,6 +119,9 @@
     </script>
 
     <link rel="stylesheet" href="/src/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <!-- Cloudflare Turnstile (explicit render for referral debug + future claim flow) -->
@@ -131,11 +142,11 @@
 </head>
 <body class="tail-container bg-zinc-950 text-zinc-100 min-h-screen">
     <!-- NAVBAR -->
-    <nav id="vr-nav" class="border-b border-white/10 bg-zinc-950/80 backdrop-blur-lg fixed w-full z-50">
+    <nav id="vr-nav" class="border-b border-white/10 bg-zinc-950 fixed w-full z-50">
         <div class="max-w-6xl mx-auto px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between gap-2">
-            <a href="#" class="flex items-center gap-2 sm:gap-3 min-w-0 shrink" aria-label="ViralRefer home">
+            <a href="#" class="flex items-center gap-2 sm:gap-3 shrink-0" aria-label="ViralRefer home">
                 <div class="w-8 h-8 sm:w-9 sm:h-9 bg-violet-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl logo-font shrink-0">V</div>
-                <span class="vr-wordmark text-xl sm:text-3xl font-semibold tracking-tighter logo-font truncate">ViralRefer</span>
+                <span class="vr-wordmark text-xl sm:text-3xl font-semibold tracking-tighter logo-font">ViralRefer</span>
             </a>
             <div class="vr-nav-links flex items-center gap-2 sm:gap-6 text-sm font-medium shrink-0">
                 <a href="#how" class="vr-nav-link inline text-zinc-300 hover:text-violet-400 transition-colors" data-i18n="nav.how">How</a>

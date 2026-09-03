@@ -87,14 +87,15 @@ let siteContentChannel: ReturnType<typeof supabase.channel> | null = null;
 let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
-const INIT_FETCH_TIMEOUT_MS = 12_000;
+/** Fail-fast: hung PostgREST must not delay first-screen paint. */
+export const FIRST_SCREEN_FETCH_TIMEOUT_MS = 2_000;
 /** Disk IO: slower poll + pause when tab hidden (was 45s always-on). */
 const PUBLIC_ACTIVITY_POLL_MS = 90_000;
 
-async function withInitTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
+export async function withInitTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
   return Promise.race([
     promise,
-    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), INIT_FETCH_TIMEOUT_MS)),
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), FIRST_SCREEN_FETCH_TIMEOUT_MS)),
   ]);
 }
 
@@ -345,38 +346,26 @@ registerGlobal('loadSiteContent', loadSiteContent);
 
 /**
  * Main public site initializer.
- * Runs on page load and orchestrates:
- *   - Admin button wiring
- *   - Loading dynamic site content
- *   - Populating stats, leaderboard, and recent activity
- *   - Prefilling the user's referral link (if they have a code)
- *   - Handling ?ref= attribution banners
+ * First screen is static HTML (zinc-950 nav + Site Drop hero). Paint that now.
+ * Hung APIs enhance the board later and must not block first paint.
  */
 export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
   try {
-    await withInitTimeout(loadSiteContent(), undefined);
-
-    // Verified worldwide total first so the number is never a mystery on first paint
-    await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
-
-    // Daily Crown first so main-board flair has cached champion/leader codes
-    await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
-    await withInitTimeout(loadLeaderboard(), undefined);
-    // Re-paint total with leader #1 context after board loads
-    paintWorldwideReferralTotal();
-    await withInitTimeout(renderRecentActivity(), undefined);
+    if (isReferredLanding()) {
+      applyReferredLandingOverrides();
+    } else {
+      lock844HomepageCopy();
+    }
 
     if (myReferralCode) {
       applyExistingReferralLink(myReferralCode);
-      void withInitTimeout(refreshFunnelTicker(), undefined);
     } else {
       syncMobileReferralCta();
       setFunnelTickerVisible(false);
     }
 
-    await withInitTimeout(renderMyStats(myReferralCode), undefined);
     initViralLoopUI();
     initGrowthCommandCenter();
     initPostLinkShare();
@@ -392,8 +381,29 @@ export async function initApp() {
       initRealtimeSubscriptions();
       window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
     }
+
+    void enhanceAfterFirstPaint(myReferralCode);
   } catch (err) {
     console.warn('[ViralRefer] initApp partial failure:', err);
+    void enhanceAfterFirstPaint(myReferralCode);
+  }
+}
+
+/** Board / CMS / stats — fail-fast if PostgREST hangs. Never awaited by first paint. */
+async function enhanceAfterFirstPaint(myReferralCode: string | null): Promise<void> {
+  try {
+    await withInitTimeout(loadSiteContent(), undefined);
+    await Promise.all([
+      withInitTimeout(refreshWorldwideReferralTotals(), undefined),
+      withInitTimeout(loadPublicViralLoops(myReferralCode), undefined),
+      withInitTimeout(loadLeaderboard(), undefined),
+      withInitTimeout(renderRecentActivity(), undefined),
+      myReferralCode ? withInitTimeout(refreshFunnelTicker(), undefined) : Promise.resolve(),
+      withInitTimeout(renderMyStats(myReferralCode), undefined),
+    ]);
+    paintWorldwideReferralTotal();
+  } catch (err) {
+    console.warn('[ViralRefer] post-paint enhance failed:', err);
   }
 }
 
