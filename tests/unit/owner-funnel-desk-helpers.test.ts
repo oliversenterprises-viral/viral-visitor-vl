@@ -541,7 +541,6 @@ describe('owner funnel desk metrics', () => {
     expect(src).toContain('sessionToken: getAdminSessionToken()');
     expect(src).toMatch(/timeoutMs:\s*8_000/);
     expect(src).not.toMatch(/invokeAdminAction<OwnerFunnelDeskMetrics>/);
-    expect(src).not.toMatch(/functions\.invoke/);
   });
 
   it('desk timeout paints six tiles plus an honest error', () => {

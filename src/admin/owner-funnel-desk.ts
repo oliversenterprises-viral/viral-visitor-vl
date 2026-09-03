@@ -57,7 +57,7 @@ const EMPTY_METRICS: OwnerFunnelDeskMetrics = {
 export const JUNK_CLEAR_CONFIRM =
   'Clear junk and test visits only? Google Search Console and the verify file stay. Real quality visits stay.';
 
-/** Same abort as owner verify — Command desk must not hang on functions.invoke. */
+/** Same abort as owner verify — Command desk first paint uses fetch + timeout. */
 export const OWNER_FUNNEL_DESK_TIMEOUT_MS = 8_000;
 export const OWNER_FUNNEL_DESK_TIMEOUT_NOTE = 'Command desk timed out — tap Refresh.';
 
