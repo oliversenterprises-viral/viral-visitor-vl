@@ -17,6 +17,9 @@ export const OWNER_FUNNEL_WINDOW_DAYS = 7;
 export const OWNER_FUNNEL_FEED_LIMIT = 40;
 /** Bounded last-N for event-query tiles + feed. Never page the full table. */
 export const OWNER_FUNNEL_WINDOW_LIMIT = 400;
+/** Capped last-N for Command desk table reads. Never scan visitor_events. */
+export const OWNER_FUNNEL_DESK_LAST_N = 80;
+export type OwnerFunnelDeskStatus = 'ok' | 'empty' | 'timeout';
 
 export type OwnerFunnelVia = 'direct' | 'friend' | 'promoter';
 export type OwnerFunnelFeedKind = 'landed' | 'got_link' | 'shared' | 'locked';
@@ -43,6 +46,8 @@ export type OwnerFunnelDeskMetrics = {
   getLinkRate: string;
   feed: OwnerFunnelFeedRow[];
   gsc?: OwnerFunnelGscMetrics;
+  /** ok = honest numbers. empty = queries finished with no rows. timeout = do not paint zeros. */
+  deskStatus?: OwnerFunnelDeskStatus;
 };
 
 export type OwnerFunnelEvent = Record<string, unknown>;
@@ -347,6 +352,44 @@ export function deskHasVisitorSignal(metrics: OwnerFunnelDeskMetrics): boolean {
     metrics.locked > 0 ||
     metrics.feed.length > 0
   );
+}
+
+/** Timeout with no rows is not a real zero window. */
+export function deskStatusForPaint(input: {
+  hasSignal: boolean;
+  timedOut: boolean;
+}): OwnerFunnelDeskStatus {
+  if (input.hasSignal) return 'ok';
+  return input.timedOut ? 'timeout' : 'empty';
+}
+
+/** Last-N tables + homepage LIMIT RPCs. Take the stronger honest count, not hung zeros. */
+export function pickOwnerFunnelDeskMetrics(
+  table: OwnerFunnelDeskMetrics,
+  pub: OwnerFunnelDeskMetrics,
+): OwnerFunnelDeskMetrics {
+  const tableOk = deskHasVisitorSignal(table);
+  const pubOk = deskHasVisitorSignal(pub);
+  if (!tableOk) return pub;
+  if (!pubOk) return table;
+  const visits = Math.max(table.visits, pub.visits);
+  const friendLandings = Math.max(table.friendLandings, pub.friendLandings);
+  const getLink = Math.max(table.getLink, pub.getLink);
+  const share = Math.max(table.share, pub.share);
+  const locked = Math.max(table.locked, pub.locked);
+  const junkVisits = Math.max(table.junkVisits || 0, pub.junkVisits || 0);
+  return {
+    windowDays: table.windowDays || pub.windowDays,
+    visits,
+    junkVisits,
+    friendLandings,
+    landings: friendLandings,
+    getLink,
+    share,
+    locked,
+    getLinkRate: deskGetLinkRate(getLink, friendLandings, visits),
+    feed: table.feed.length >= pub.feed.length ? table.feed : pub.feed,
+  };
 }
 
 function feedRow(

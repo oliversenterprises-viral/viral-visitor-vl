@@ -87,7 +87,8 @@ let siteContentChannel: ReturnType<typeof supabase.channel> | null = null;
 let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
-const INIT_FETCH_TIMEOUT_MS = 12_000;
+/** First screen must not wait on hung APIs. Extras fill in or time out. */
+export const INIT_FETCH_TIMEOUT_MS = 2_500;
 /** Disk IO: slower poll + pause when tab hidden (was 45s always-on). */
 const PUBLIC_ACTIVITY_POLL_MS = 90_000;
 
@@ -356,27 +357,17 @@ export async function initApp() {
   const myReferralCode = getMyReferralCode();
 
   try {
-    await withInitTimeout(loadSiteContent(), undefined);
-
-    // Verified worldwide total first so the number is never a mystery on first paint
-    await withInitTimeout(refreshWorldwideReferralTotals(), undefined);
-
-    // Daily Crown first so main-board flair has cached champion/leader codes
-    await withInitTimeout(loadPublicViralLoops(myReferralCode), undefined);
-    await withInitTimeout(loadLeaderboard(), undefined);
-    // Re-paint total with leader #1 context after board loads
-    paintWorldwideReferralTotal();
-    await withInitTimeout(renderRecentActivity(), undefined);
+    // First screen is static HTML. Lock Site Drop English before any network.
+    if (isReferredLanding()) applyReferredLandingOverrides();
+    else lock844HomepageCopy();
 
     if (myReferralCode) {
       applyExistingReferralLink(myReferralCode);
-      void withInitTimeout(refreshFunnelTicker(), undefined);
     } else {
       syncMobileReferralCta();
       setFunnelTickerVisible(false);
     }
 
-    await withInitTimeout(renderMyStats(myReferralCode), undefined);
     initViralLoopUI();
     initGrowthCommandCenter();
     initPostLinkShare();
@@ -392,6 +383,17 @@ export async function initApp() {
       initRealtimeSubscriptions();
       window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
     }
+
+    await Promise.all([
+      withInitTimeout(loadSiteContent(), undefined),
+      withInitTimeout(refreshWorldwideReferralTotals(), undefined),
+      withInitTimeout(loadPublicViralLoops(myReferralCode), undefined),
+      withInitTimeout(loadLeaderboard(), undefined),
+      withInitTimeout(renderRecentActivity(), undefined),
+      myReferralCode ? withInitTimeout(refreshFunnelTicker(), undefined) : Promise.resolve(),
+      withInitTimeout(renderMyStats(myReferralCode), undefined),
+    ]);
+    paintWorldwideReferralTotal();
   } catch (err) {
     console.warn('[ViralRefer] initApp partial failure:', err);
   }

@@ -53,7 +53,7 @@ export async function showOwnerFunnelDesk() {
     // Desk tiles + Google Search · tools & pages card (metrics.gsc).
     await renderOwnerFunnelDesk(content);
   } catch {
-    /* renderOwnerFunnelDesk paints zeros — never "can't load" after login */
+    /* renderOwnerFunnelDesk paints numbers or honest-empty — never "can't load" after login */
   }
   if (isStale(requestId)) return;
 }

@@ -8,6 +8,8 @@ import { escapeHtml } from '../lib/escape-html';
 import { formatEventTimestampLabel } from '../lib/stats-helpers';
 import { showToast } from '../ui';
 import {
+  deskGetLinkRate,
+  deskHasVisitorSignal,
   emptyOwnerFunnelGsc,
   formatGscCount,
   formatGscPosition,
@@ -15,14 +17,19 @@ import {
   GSC_CONSOLE_URL,
   GSC_MISSING_NOTE,
   GSC_TIMEOUT_NOTE,
+  parseOwnerFunnelDeskCounts,
   parseOwnerFunnelGsc,
   type OwnerFunnelDeskMetrics,
+  type OwnerFunnelDeskStatus,
   type OwnerFunnelFeedRow,
   type OwnerFunnelGscMetrics,
 } from './owner-funnel-desk-helpers';
 
+/** Command desk must abort get_owner_funnel_desk so tiles paint or honest-empty. */
+export const OWNER_FUNNEL_DESK_TIMEOUT_MS = 8_000;
+
 const SKELETON = `
-  <div class="space-y-4 py-1" data-owner-funnel-desk="1">
+  <div class="space-y-4 py-1" data-owner-funnel-desk="1" data-owner-desk-pending="1">
     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
       <div class="h-24 skeleton rounded-2xl"></div>
       <div class="h-24 skeleton rounded-2xl"></div>
@@ -52,6 +59,113 @@ const EMPTY_METRICS: OwnerFunnelDeskMetrics = {
 export const JUNK_CLEAR_CONFIRM =
   'Clear junk and test visits only? Google Search Console and the verify file stay. Real quality visits stay.';
 
+export type OwnerFunnelDeskPaint = {
+  metrics: OwnerFunnelDeskMetrics;
+  empty: boolean;
+  error?: string;
+};
+
+function finiteDeskNum(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value) && value >= 0) return value;
+  if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) {
+    const parsed = Number(value);
+    if (parsed >= 0) return parsed;
+  }
+  return null;
+}
+
+function unwrapDeskPayload(raw: unknown): unknown {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const o = raw as Record<string, unknown>;
+  if (o.data && typeof o.data === 'object' && !Array.isArray(o.data)) {
+    const inner = o.data as Record<string, unknown>;
+    if (
+      parseOwnerFunnelDeskCounts(inner) ||
+      inner.visits != null ||
+      inner.friend_landings != null ||
+      inner.friendLandings != null ||
+      inner.get_link != null ||
+      inner.getLink != null ||
+      inner.deskStatus != null
+    ) {
+      return inner;
+    }
+  }
+  return raw;
+}
+
+function normalizeFeedRow(row: unknown): OwnerFunnelFeedRow | null {
+  if (!row || typeof row !== 'object') return null;
+  const o = row as Record<string, unknown>;
+  const kind = String(o.kind || '').trim();
+  const label = String(o.label || '').trim();
+  const at = String(o.at || o.created_at || o.createdAt || '').trim();
+  if (!kind || !label || !at) return null;
+  const friendCode = o.friendCode ?? o.friend_code;
+  return {
+    kind: kind as OwnerFunnelFeedRow['kind'],
+    label: label as OwnerFunnelFeedRow['label'],
+    at,
+    via: (o.via as OwnerFunnelFeedRow['via']) || 'direct',
+    viaLabel: String(o.viaLabel || o.via_label || '').trim() || 'direct',
+    ...(o.code ? { code: String(o.code) } : {}),
+    ...(friendCode ? { friendCode: String(friendCode) } : {}),
+  };
+}
+
+function readDeskStatus(raw: unknown): OwnerFunnelDeskStatus | undefined {
+  const value = String(raw || '').trim();
+  if (value === 'ok' || value === 'empty' || value === 'timeout') return value;
+  return undefined;
+}
+
+/** Paint tiles from camelCase or snake_case get_owner_funnel_desk payloads. */
+export function normalizeOwnerFunnelDeskMetrics(raw: unknown): OwnerFunnelDeskMetrics | null {
+  const payload = unwrapDeskPayload(raw);
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  const o = payload as Record<string, unknown>;
+  const counts = parseOwnerFunnelDeskCounts(o);
+  const visits = counts?.visits ?? finiteDeskNum(o.visits);
+  const friendLandings =
+    counts?.friendLandings ?? finiteDeskNum(o.friendLandings ?? o.friend_landings ?? o.landings);
+  const getLink = counts?.getLink ?? finiteDeskNum(o.getLink ?? o.get_link);
+  const share = counts?.share ?? finiteDeskNum(o.share);
+  const locked = counts?.locked ?? finiteDeskNum(o.locked);
+  if (visits == null || friendLandings == null || getLink == null || share == null || locked == null) {
+    return null;
+  }
+  const windowDays = counts?.windowDays ?? finiteDeskNum(o.windowDays ?? o.window_days) ?? 7;
+  const junkVisits = counts?.junkVisits ?? finiteDeskNum(o.junkVisits ?? o.junk_visits) ?? 0;
+  const rateRaw = o.getLinkRate ?? o.get_link_rate;
+  const getLinkRate =
+    typeof rateRaw === 'string' && rateRaw.trim()
+      ? rateRaw.trim()
+      : deskGetLinkRate(getLink, friendLandings, visits);
+  const feed = Array.isArray(o.feed)
+    ? o.feed.map(normalizeFeedRow).filter((row): row is OwnerFunnelFeedRow => row != null)
+    : [];
+  const deskStatus = readDeskStatus(o.deskStatus ?? o.desk_status);
+  return {
+    windowDays,
+    visits,
+    junkVisits,
+    friendLandings,
+    landings: friendLandings,
+    getLink,
+    share,
+    locked,
+    getLinkRate,
+    feed,
+    gsc: parseOwnerFunnelGsc(o.gsc),
+    ...(deskStatus ? { deskStatus } : {}),
+  };
+}
+
+function isTimeoutError(error: string | undefined | null): boolean {
+  const msg = String(error || '').toLowerCase();
+  return msg.includes('timed out') || msg.includes('abort');
+}
+
 /** Deployed admin-action may not know get_owner_funnel_desk yet. */
 export function isOwnerFunnelDeskActionMissing(error: string | undefined | null): boolean {
   const msg = String(error || '').toLowerCase();
@@ -65,20 +179,34 @@ export function isOwnerFunnelDeskActionMissing(error: string | undefined | null)
 }
 
 /**
- * After a valid owner session, always return tiles.
- * Missing action / RPC / query miss → zeros. Real counts when the server has them.
- * Never signal an error that would replace the desk with "can't load."
+ * After a valid owner session, paint real tiles when the payload is there.
+ * camelCase or snake_case. Timeout / miss → honest-empty, not fake zeros.
  */
 export function ownerFunnelDeskFromInvokeResult(result: {
   success: boolean;
-  data?: OwnerFunnelDeskMetrics | null;
+  data?: OwnerFunnelDeskMetrics | Record<string, unknown> | null;
   error?: string;
-}): { metrics: OwnerFunnelDeskMetrics; error?: string } {
-  if (result.success) {
-    const metrics = result.data || EMPTY_METRICS;
-    return { metrics: { ...metrics, gsc: parseOwnerFunnelGsc(metrics.gsc) } };
+}): OwnerFunnelDeskPaint {
+  const normalized = normalizeOwnerFunnelDeskMetrics(result.data);
+  if (normalized) {
+    if (normalized.deskStatus === 'timeout') {
+      return { metrics: normalized, empty: true, error: 'timed out' };
+    }
+    // Live/old admin-action may return timeout as all-zeros. Do not paint that as traffic.
+    if (normalized.deskStatus !== 'empty' && !deskHasVisitorSignal(normalized)) {
+      return {
+        metrics: normalized,
+        empty: true,
+        error: isTimeoutError(result.error) ? 'timed out' : undefined,
+      };
+    }
+    return { metrics: normalized, empty: false };
   }
-  return { metrics: EMPTY_METRICS };
+  return {
+    metrics: EMPTY_METRICS,
+    empty: true,
+    error: isTimeoutError(result.error) ? 'timed out' : undefined,
+  };
 }
 
 function tile(
@@ -185,31 +313,53 @@ function feedLine(row: OwnerFunnelFeedRow): string {
 export function renderOwnerFunnelDeskView(
   container: HTMLElement,
   metrics: OwnerFunnelDeskMetrics,
-  _error?: string,
+  error?: string,
 ): void {
   container.classList.add('owner-funnel-desk');
 
-  const feedHtml = metrics.feed.length
-    ? metrics.feed.map(feedLine).join('')
-    : `<div class="text-sm text-zinc-500 py-2">No loop events in the last ${metrics.windowDays} days.</div>`;
+  const empty = error === 'honest-empty' || error === 'timed out';
+  const visits = empty ? '—' : metrics.visits;
+  const friendLandings = empty ? '—' : metrics.friendLandings;
+  const getLink = empty ? '—' : metrics.getLink;
+  const share = empty ? '—' : metrics.share;
+  const locked = empty ? '—' : metrics.locked;
+  const rate = empty ? '—' : metrics.getLinkRate;
+  const emptyNote =
+    error === 'timed out'
+      ? 'No numbers yet — desk timed out. Refresh to try again.'
+      : empty
+        ? 'No numbers yet.'
+        : `Last ${metrics.windowDays} days · owner IP, test codes, webdriver, and junk sources excluded.`;
 
-  const junkKept = metrics.junkVisits && metrics.junkVisits > 0
-    ? `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="1">${escapeHtml(String(metrics.junkVisits))} junk/test page views kept off these tiles. Search Console is separate.</p>`
-    : `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="0">Junk/test page views stay off these tiles. Search Console is separate.</p>`;
+  const feedHtml = empty
+    ? `<div class="text-sm text-zinc-500 py-2" data-owner-desk-empty-feed="1">No loop events yet.</div>`
+    : metrics.feed.length
+      ? metrics.feed.map(feedLine).join('')
+      : `<div class="text-sm text-zinc-500 py-2">No loop events in the last ${metrics.windowDays} days.</div>`;
+
+  const junkKept = empty
+    ? `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="0">Junk/test page views stay off these tiles. Search Console is separate.</p>`
+    : metrics.junkVisits && metrics.junkVisits > 0
+      ? `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="1">${escapeHtml(String(metrics.junkVisits))} junk/test page views kept off these tiles. Search Console is separate.</p>`
+      : `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="0">Junk/test page views stay off these tiles. Search Console is separate.</p>`;
 
   container.innerHTML = `
-    <div data-owner-funnel-desk="1" class="hq-desk space-y-4">
-      <p class="text-sm text-zinc-400">Last ${metrics.windowDays} days · owner IP, test codes, webdriver, and junk sources excluded.</p>
+    <div data-owner-funnel-desk="1" class="hq-desk space-y-4"${empty ? ' data-owner-desk-empty="1"' : ''}>
+      <p class="text-sm text-zinc-400" data-owner-desk-note>${escapeHtml(emptyNote)}</p>
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3" data-owner-desk-tiles>
-        ${tile('Visits', metrics.visits, 'Real page views — junk/test excluded', 'visits')}
-        ${tile('Friend landings', metrics.friendLandings, 'Unique people on /r/ or /a/', 'landings')}
-        ${tile('Get-link', metrics.getLink, 'Unique people who tapped Get my link', 'getlink')}
-        ${tile('Share', metrics.share, 'Verified send — not copy', 'share')}
-        ${tile('Locked', metrics.locked, 'Codes with a real friend credit', 'locked')}
+        ${tile('Visits', visits, empty ? 'Waiting on the server' : 'Real page views — junk/test excluded', 'visits')}
+        ${tile('Friend landings', friendLandings, 'Unique people on /r/ or /a/', 'landings')}
+        ${tile('Get-link', getLink, 'Unique people who tapped Get my link', 'getlink')}
+        ${tile('Share', share, 'Verified send — not copy', 'share')}
+        ${tile('Locked', locked, 'Codes with a real friend credit', 'locked')}
         ${tile(
           'Get-link rate',
-          metrics.getLinkRate,
-          metrics.friendLandings > 0 ? 'Get-link / Friend landings' : 'Get-link / Visits',
+          rate,
+          empty
+            ? 'Waiting on the server'
+            : metrics.friendLandings > 0
+              ? 'Get-link / Friend landings'
+              : 'Get-link / Visits',
           'rate',
         )}
       </div>
@@ -293,10 +443,11 @@ async function refreshOwnerFunnelDesk(
   }
   try {
     await renderOwnerFunnelDesk(container);
-    showToast('Funnel desk refreshed', 'success');
+    const empty = container.querySelector('[data-owner-desk-empty]');
+    showToast(empty ? 'No numbers yet' : 'Funnel desk refreshed', empty ? 'info' : 'success');
   } catch {
-    renderOwnerFunnelDeskView(container, EMPTY_METRICS);
-    showToast('Desk still here. Counts stay at zero until the server answers.', 'info');
+    renderOwnerFunnelDeskView(container, EMPTY_METRICS, 'honest-empty');
+    showToast('No numbers yet', 'info');
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -305,19 +456,35 @@ async function refreshOwnerFunnelDesk(
   }
 }
 
+export async function fetchOwnerFunnelDesk(): Promise<OwnerFunnelDeskPaint> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), OWNER_FUNNEL_DESK_TIMEOUT_MS);
+  try {
+    const result = await invokeAdminAction<OwnerFunnelDeskMetrics | Record<string, unknown>>(
+      'get_owner_funnel_desk',
+      {},
+      { signal: ctrl.signal, timeoutMs: OWNER_FUNNEL_DESK_TIMEOUT_MS },
+    );
+    return ownerFunnelDeskFromInvokeResult(result);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return ownerFunnelDeskFromInvokeResult({ success: false, error: msg });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function renderOwnerFunnelDesk(container: HTMLElement): Promise<void> {
   bindRefresh(container);
   container.innerHTML = SKELETON;
   try {
-    // Tiles come from get_owner_funnel_desk_counts (0052: exclusion must be true/false, never NULL).
-    const result = await invokeAdminAction<OwnerFunnelDeskMetrics>(
-      'get_owner_funnel_desk',
-      {},
-      { timeoutMs: 8_000 },
+    const loaded = await fetchOwnerFunnelDesk();
+    renderOwnerFunnelDeskView(
+      container,
+      loaded.metrics,
+      loaded.empty ? loaded.error || 'honest-empty' : undefined,
     );
-    const loaded = ownerFunnelDeskFromInvokeResult(result);
-    renderOwnerFunnelDeskView(container, loaded.metrics);
   } catch {
-    renderOwnerFunnelDeskView(container, EMPTY_METRICS);
+    renderOwnerFunnelDeskView(container, EMPTY_METRICS, 'honest-empty');
   }
 }

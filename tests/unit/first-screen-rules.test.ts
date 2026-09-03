@@ -22,6 +22,30 @@ function read(rel: string): string {
 }
 
 describe('first-screen Site Drops rules', () => {
+  it('first screen does not wait on HQ get_owner_funnel_desk', () => {
+    const supabase = read('src/lib/supabase.ts');
+    const app = read('src/app.ts');
+    const siteDrops = read('src/lib/site-drops-ui.ts');
+    expect(supabase).not.toMatch(/get_owner_funnel_desk/);
+    expect(app).not.toMatch(/get_owner_funnel_desk/);
+    expect(siteDrops).not.toMatch(/get_owner_funnel_desk/);
+    expect(read('index.html')).toContain('Site Drop');
+  });
+
+  it('first screen fail-fasts hung APIs at 2.5s and locks Site Drop English before network', () => {
+    const app = read('src/app.ts');
+    const init = app.slice(app.indexOf('export async function initApp'));
+    expect(app).toMatch(/INIT_FETCH_TIMEOUT_MS = 2_500/);
+    expect(app).not.toMatch(/INIT_FETCH_TIMEOUT_MS = 12_000/);
+    expect(init).toMatch(/lock844HomepageCopy\(\)/);
+    expect(init.indexOf('lock844HomepageCopy()')).toBeLessThan(init.indexOf('await Promise.all(['));
+    expect(init).toMatch(/withInitTimeout\(loadSiteContent/);
+    expect(init).toMatch(/withInitTimeout\(loadLeaderboard/);
+    expect(init).not.toMatch(/await withInitTimeout\(loadSiteContent/);
+    expect(init).not.toMatch(/await withInitTimeout\(loadLeaderboard/);
+    expect(read('index.html')).toContain('Site Drop');
+  });
+
   it('pins the Site Drops tree: title, hero, and funnel still say Site Drop', () => {
     const html = read('index.html');
     const title = html.match(/<title>([^<]+)<\/title>/)?.[1] ?? '';

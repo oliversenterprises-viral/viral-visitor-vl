@@ -248,13 +248,18 @@ describe('owner funnel GSC tracker', () => {
     expect(src).not.toMatch(/loadCompleteWindow: async \(\) => emptyFeed/);
     expect(src).not.toMatch(/get_owner_funnel_desk_counts/);
     expect(src).not.toMatch(/console\.(log|info|debug|error|warn)\([^)]*secret/i);
-    expect(src).toMatch(/data: \{ \.\.\.metrics, gsc \}/);
+    expect(src).toMatch(/data: \{ \.\.\.tilePack\.metrics, gsc \}/);
+    expect(src).toMatch(/gscPending/);
+    expect(src).toMatch(/pickOwnerFunnelDeskMetrics/);
+    expect(src).toMatch(/deskStatusForPaint/);
+    expect(src).toMatch(/OWNER_FUNNEL_DESK_LAST_N/);
     expect(src).not.toMatch(/vercel --prod/);
     expect(src).not.toMatch(/GSC_API_KEY/);
     const deskUi = readFileSync(resolve(root, 'src/admin/owner-funnel-desk.ts'), 'utf8');
-    expect(deskUi).toMatch(/timeoutMs:\s*8_000/);
+    expect(deskUi).toMatch(/OWNER_FUNNEL_DESK_TIMEOUT_MS = 8_000/);
+    expect(deskUi).toMatch(/timeoutMs: OWNER_FUNNEL_DESK_TIMEOUT_MS/);
     const client = readFileSync(resolve(root, 'src/lib/admin-action-client.ts'), 'utf8');
-    expect(client).toMatch(/if \(options\?\.timeoutMs\) return viaFetch/);
+    expect(client).toMatch(/if \(options\?\.timeoutMs \|\| options\?\.signal\) return viaFetch/);
   });
 
   it('times out a slow GSC resolve and returns timeout or last-ok cache', async () => {

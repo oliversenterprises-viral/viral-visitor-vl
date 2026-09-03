@@ -973,14 +973,24 @@ Deno.serve(async (req: Request) => {
       const {
         deskFromPublicSurfaces,
         deskHasVisitorSignal,
+        deskStatusForPaint,
         filterDeskReferrals,
+        OWNER_FUNNEL_DESK_LAST_N,
+        pickOwnerFunnelDeskMetrics,
         resolveOwnerFunnelDeskMetrics,
         stripOwnerFunnelPii,
       } = await import('../_shared/owner-funnel-desk.ts');
-      const { emptyOwnerFunnelGsc, resolveOwnerFunnelGscTimed, withTimeout } = await import(
+      const { emptyOwnerFunnelGsc, gscOnTimeout, resolveOwnerFunnelGscTimed, withTimeout } = await import(
         '../_shared/owner-funnel-gsc.ts'
       );
 
+      type Timed<T> = { value: T; timedOut: boolean };
+      const timed = <T>(promise: Promise<T>, ms: number, fallback: () => T): Promise<Timed<T>> =>
+        withTimeout(
+          promise.then((value) => ({ value, timedOut: false })),
+          ms,
+          () => ({ value: fallback(), timedOut: true }),
+        );
       const takeLast = async (
         table: string,
         columns: string,
@@ -999,100 +1009,148 @@ Deno.serve(async (req: Request) => {
         limit: number,
         ms: number,
         tweak?: (q: any) => any,
-      ) => withTimeout(takeLast(table, columns, limit, tweak), ms, () => [] as Record<string, unknown>[]);
+      ) => timed(takeLast(table, columns, limit, tweak), ms, () => [] as Record<string, unknown>[]);
       const timedRpc = (name: string, args: Record<string, unknown>, ms: number) =>
-        withTimeout(
+        timed(
           supabaseAdmin.rpc(name, args).then((res) => (res.error ? null : res.data)),
           ms,
           () => null,
         );
 
       try {
-        // Homepage RPCs are primary (index LIMIT). Skip get_owner_funnel_desk_counts.
+        // Homepage RPCs are primary (index LIMIT). Skip the unbounded counts RPC.
         // Same Deno.env.get path as ADMIN_ACTION_SECRET — do not log the JSON.
         const secret = String(Deno.env.get('GSC_SERVICE_ACCOUNT_JSON') || '').trim();
         const site = String(Deno.env.get('GSC_SITE_URL') || '').trim();
         const eventCols = 'event_name, visitor_id, ref_code, metadata, created_at';
-        const [landings, getLinks, shares, referrals, referrerLinks, dailyRows, ticker, linkStats, activity, gsc] =
-          await Promise.all([
-            timedLast('visitor_events', eventCols, 80, 2_000, (q) =>
-              q.eq('event_name', 'SiteLanding'),
-            ),
-            timedLast('visitor_events', eventCols, 80, 2_000, (q) =>
-              q.eq('event_name', 'GetReferralLink'),
-            ),
-            timedLast(
-              'shares',
-              'platform, referrer_code, referral_link, created_at, confirmed',
-              60,
-              1_500,
-            ),
-            timedLast(
-              'referrals',
-              'referrer_code, created_at, referred_ip, user_agent',
-              60,
-              1_500,
-            ),
-            timedLast(
-              'referrer_links',
-              'referrer_code, status, created_at, first_verified_share_at',
-              80,
-              1_500,
-              (q) => q.eq('status', 'active'),
-            ),
-            withTimeout(
-              supabaseAdmin
-                .from('landing_daily_counts')
-                .select('quality_hits, junk_hits')
-                .order('day', { ascending: false })
-                .limit(14)
-                .then((res) => (Array.isArray(res.data) ? res.data : [])),
-              1_200,
-              () => [] as { quality_hits?: unknown; junk_hits?: unknown }[],
-            ),
-            timedRpc('get_public_funnel_ticker', { p_limit: 40 }, 2_500),
-            timedRpc('get_public_get_link_stats', { p_hours: 168 }, 2_500),
-            timedRpc('get_public_recent_activity', { p_limit: 24 }, 2_500),
-            resolveOwnerFunnelGscTimed({ secret, site }).catch(() =>
-              emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.'),
-            ),
-          ]);
-
-        let visits = 0;
-        let junkVisits = 0;
-        for (const row of dailyRows) {
-          const q = Number(row.quality_hits);
-          const j = Number(row.junk_hits);
-          if (Number.isFinite(q) && q > 0) visits += q;
-          if (Number.isFinite(j) && j > 0) junkVisits += j;
-        }
-        const windowRes = {
-          events: [...landings, ...getLinks],
-          shares,
-          referrals: filterDeskReferrals(referrals).map((row) => stripOwnerFunnelPii(row)),
-          referrerLinks,
-          ...(visits > 0 || junkVisits > 0 ? { visits, junkVisits } : {}),
+        const lastN = OWNER_FUNNEL_DESK_LAST_N;
+        const deskStarted = Date.now();
+        // GSC must not block last-N tiles. Same secrets path — do not log the JSON.
+        const gscPending = resolveOwnerFunnelGscTimed({ secret, site }).catch(() =>
+          emptyOwnerFunnelGsc('error', 'Search Console numbers could not load.'),
+        );
+        const emptyTimeoutMetrics = {
+          windowDays: 7,
+          visits: 0,
+          junkVisits: 0,
+          friendLandings: 0,
+          landings: 0,
+          getLink: 0,
+          share: 0,
+          locked: 0,
+          getLinkRate: '0%',
+          feed: [] as [],
+          deskStatus: 'timeout' as const,
         };
-        const loadedWindow = async () => windowRes;
-        const tableMetrics = await resolveOwnerFunnelDeskMetrics({
-          rpcData: null,
-          loadFeedWindow: loadedWindow,
-          loadCompleteWindow: loadedWindow,
-        });
-        const publicMetrics = deskFromPublicSurfaces({
-          ticker,
-          linkStats,
-          activity,
-          visits,
-          junkVisits,
-        });
-        const metrics = deskHasVisitorSignal(tableMetrics) ? tableMetrics : publicMetrics;
-        return new Response(JSON.stringify({ success: true, data: { ...metrics, gsc } }), {
+        const tilePack = await withTimeout(
+          (async () => {
+            const [
+              landings,
+              getLinks,
+              shares,
+              referrals,
+              referrerLinks,
+              dailyRows,
+              ticker,
+              linkStats,
+              activity,
+            ] = await Promise.all([
+              timedLast('visitor_events', eventCols, lastN, 2_000, (q) =>
+                q.eq('event_name', 'SiteLanding'),
+              ),
+              timedLast('visitor_events', eventCols, lastN, 2_000, (q) =>
+                q.eq('event_name', 'GetReferralLink'),
+              ),
+              timedLast(
+                'shares',
+                'platform, referrer_code, referral_link, created_at, confirmed',
+                60,
+                1_500,
+              ),
+              timedLast(
+                'referrals',
+                'referrer_code, created_at, referred_ip, user_agent',
+                60,
+                1_500,
+              ),
+              timedLast(
+                'referrer_links',
+                'referrer_code, status, created_at, first_verified_share_at',
+                lastN,
+                1_500,
+                (q) => q.eq('status', 'active'),
+              ),
+              timed(
+                supabaseAdmin
+                  .from('landing_daily_counts')
+                  .select('quality_hits, junk_hits')
+                  .order('day', { ascending: false })
+                  .limit(14)
+                  .then((res) => (Array.isArray(res.data) ? res.data : [])),
+                1_200,
+                () => [] as { quality_hits?: unknown; junk_hits?: unknown }[],
+              ),
+              timedRpc('get_public_funnel_ticker', { p_limit: 40 }, 2_500),
+              timedRpc('get_public_get_link_stats', { p_hours: 168 }, 2_500),
+              timedRpc('get_public_recent_activity', { p_limit: 24 }, 2_500),
+            ]);
+
+            let visits = 0;
+            let junkVisits = 0;
+            for (const row of dailyRows.value) {
+              const q = Number(row.quality_hits);
+              const j = Number(row.junk_hits);
+              if (Number.isFinite(q) && q > 0) visits += q;
+              if (Number.isFinite(j) && j > 0) junkVisits += j;
+            }
+            const windowRes = {
+              events: [...landings.value, ...getLinks.value],
+              shares: shares.value,
+              referrals: filterDeskReferrals(referrals.value).map((row) => stripOwnerFunnelPii(row)),
+              referrerLinks: referrerLinks.value,
+              ...(visits > 0 || junkVisits > 0 ? { visits, junkVisits } : {}),
+            };
+            const loadedWindow = async () => windowRes;
+            const tableMetrics = await resolveOwnerFunnelDeskMetrics({
+              rpcData: null,
+              loadFeedWindow: loadedWindow,
+              loadCompleteWindow: loadedWindow,
+            });
+            const publicMetrics = deskFromPublicSurfaces({
+              ticker: ticker.value,
+              linkStats: linkStats.value,
+              activity: activity.value,
+              visits,
+              junkVisits,
+            });
+            const metrics = pickOwnerFunnelDeskMetrics(tableMetrics, publicMetrics);
+            const timedOut =
+              landings.timedOut ||
+              getLinks.timedOut ||
+              shares.timedOut ||
+              referrals.timedOut ||
+              referrerLinks.timedOut ||
+              dailyRows.timedOut ||
+              ticker.timedOut ||
+              linkStats.timedOut ||
+              activity.timedOut;
+            const deskStatus = deskStatusForPaint({
+              hasSignal: deskHasVisitorSignal(metrics),
+              timedOut,
+            });
+            return { metrics: { ...metrics, deskStatus } };
+          })(),
+          2_500,
+          () => ({ metrics: emptyTimeoutMetrics }),
+        );
+        const remainMs = Math.max(150, 3_200 - (Date.now() - deskStarted));
+        const gsc = await withTimeout(gscPending, remainMs, gscOnTimeout);
+        return new Response(JSON.stringify({ success: true, data: { ...tilePack.metrics, gsc } }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (deskErr) {
         console.error('[admin-action] get_owner_funnel_desk:', deskErr);
-        return new Response(JSON.stringify({ success: false, error: "can't load." }), {
+        return new Response(JSON.stringify({ success: false, error: 'timed out' }), {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
