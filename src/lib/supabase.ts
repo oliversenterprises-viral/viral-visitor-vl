@@ -4,6 +4,7 @@ import { createSupabaseStub } from './supabase-stub';
 import type { PublicActivityRow } from './public-activity';
 import {
   normalizeFunnelTickerRows,
+  withFunnelTickerFailFast,
   type FunnelTickerRow,
 } from './funnel-ticker';
 
@@ -214,13 +215,21 @@ export async function fetchPublicRecentActivity(limit = 8): Promise<{
 /**
  * Worldwide FOMO ticker via get_public_funnel_ticker RPC.
  * Returns [] when RPC not deployed yet (caller should fall back to public activity).
+ * Fail-fast ≤2s so a hung RPC cannot stall Get-my-link / first paint.
  */
 export async function fetchPublicFunnelTicker(limit = 24): Promise<FunnelTickerRow[]> {
   if (!isSupabaseConfigured) return [];
   try {
-    const { data, error } = await supabase.rpc('get_public_funnel_ticker', {
-      p_limit: Math.max(limit, 8),
+    const rpc = Promise.resolve(
+      supabase.rpc('get_public_funnel_ticker', {
+        p_limit: Math.max(limit, 8),
+      }),
+    );
+    const result = await withFunnelTickerFailFast(rpc, {
+      data: null,
+      error: { message: 'funnel-ticker-timeout' },
     });
+    const { data, error } = result as { data: unknown; error: unknown };
     if (error || data == null) return [];
     // RPC returns a JSON array directly
     if (Array.isArray(data)) return normalizeFunnelTickerRows(data);
