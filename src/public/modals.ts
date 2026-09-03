@@ -256,21 +256,22 @@ export const submitAdminPassword = async () => {
     verifyError = 'Owner verify failed — try again.';
   }
 
+  // Leave Verifying as soon as verifyOwnerPassword returns. Do not wait for HQ paint.
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = btnOrigHtml;
+  }
+
   if (authorized) {
     if (errorEl) errorEl.classList.add('hidden');
     revealOwnerTools();
     closeAdminPasswordModal();
-    await ViralRefer.openAdminPanel?.();
+    void Promise.resolve(ViralRefer.openAdminPanel?.()).catch(() => {});
   } else if (errorEl) {
     errorEl.classList.remove('hidden');
     if (verifyError && !/incorrect/i.test(verifyError)) {
       errorEl.textContent = verifyError;
     }
-  }
-
-  if (btn) {
-    btn.disabled = false;
-    btn.innerHTML = btnOrigHtml;
   }
 };
 registerGlobal('submitAdminPassword', submitAdminPassword);

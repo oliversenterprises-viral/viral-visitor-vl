@@ -17,6 +17,8 @@ import {
 } from '../../src/admin/owner-funnel-desk-helpers';
 import {
   isOwnerFunnelDeskActionMissing,
+  OWNER_FUNNEL_DESK_TIMEOUT_NOTE,
+  ownerFunnelDeskFromFetchResult,
   ownerFunnelDeskFromInvokeResult,
   renderOwnerFunnelDeskView,
 } from '../../src/admin/owner-funnel-desk';
@@ -531,6 +533,35 @@ describe('owner funnel desk metrics', () => {
     const src = readFileSync(resolve(import.meta.dirname, '../../src/admin/owner-funnel-desk.ts'), 'utf8');
     expect(src).toContain('renderOwnerFunnelDeskView(container, EMPTY_METRICS)');
     expect(src).not.toMatch(/showToast\('can.t load/);
+  });
+
+  it('Command desk fetch path is get_owner_funnel_desk via fetchAdminAction', () => {
+    const src = readFileSync(resolve(import.meta.dirname, '../../src/admin/owner-funnel-desk.ts'), 'utf8');
+    expect(src).toContain("fetchAdminAction('get_owner_funnel_desk'");
+    expect(src).toContain('sessionToken: getAdminSessionToken()');
+    expect(src).toMatch(/timeoutMs:\s*8_000/);
+    expect(src).not.toMatch(/invokeAdminAction<OwnerFunnelDeskMetrics>/);
+    expect(src).not.toMatch(/functions\.invoke/);
+  });
+
+  it('desk timeout paints six tiles plus an honest error', () => {
+    const loaded = ownerFunnelDeskFromFetchResult({
+      ok: false,
+      error: 'Request timed out — try again.',
+      timedOut: true,
+    });
+    expect(loaded.error).toMatch(/timed out/i);
+    expect(loaded.metrics.visits).toBe(0);
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, loaded.metrics, OWNER_FUNNEL_DESK_TIMEOUT_NOTE);
+    expect(el.textContent).toMatch(/timed out/i);
+    expect(el.textContent).not.toMatch(/can.t load/i);
+    expect(el.textContent).not.toMatch(/Verifying/);
+    expect(el.querySelector('[data-owner-desk-fetch-error]')?.textContent).toBe(
+      OWNER_FUNNEL_DESK_TIMEOUT_NOTE,
+    );
+    expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
+    expect(el.querySelector('[data-owner-desk-gsc]')).toBeTruthy();
   });
 
   it('reads visits from a new RPC and defaults visits to 0 on an old payload', () => {
