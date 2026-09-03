@@ -714,6 +714,29 @@ describe('owner funnel desk metrics', () => {
     expect(el.querySelector('[data-hq-tile="visits"]')?.textContent).toMatch(/\b0\b/);
   });
 
+  it('does not paint hung zeros when a live payload is all-zero without deskStatus', () => {
+    const loaded = ownerFunnelDeskFromInvokeResult({
+      success: true,
+      data: {
+        windowDays: 7,
+        visits: 0,
+        friendLandings: 0,
+        landings: 0,
+        getLink: 0,
+        share: 0,
+        locked: 0,
+        getLinkRate: '0%',
+        feed: [],
+      },
+    });
+    expect(loaded.empty).toBe(true);
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, loaded.metrics, loaded.error || 'honest-empty');
+    expect(el.querySelector('[data-owner-desk-empty]')).not.toBeNull();
+    expect(el.textContent).toMatch(/—/);
+    expect(el.textContent).toMatch(/No numbers yet/);
+  });
+
   it('rates get-link against visits when there are no friend landings', () => {
     const metrics = computeOwnerFunnelDeskMetrics({
       visits: 200,

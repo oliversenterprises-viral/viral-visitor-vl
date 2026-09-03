@@ -9,6 +9,7 @@ import { formatEventTimestampLabel } from '../lib/stats-helpers';
 import { showToast } from '../ui';
 import {
   deskGetLinkRate,
+  deskHasVisitorSignal,
   emptyOwnerFunnelGsc,
   formatGscCount,
   formatGscPosition,
@@ -190,6 +191,14 @@ export function ownerFunnelDeskFromInvokeResult(result: {
   if (normalized) {
     if (normalized.deskStatus === 'timeout') {
       return { metrics: normalized, empty: true, error: 'timed out' };
+    }
+    // Live/old admin-action may return timeout as all-zeros. Do not paint that as traffic.
+    if (normalized.deskStatus !== 'empty' && !deskHasVisitorSignal(normalized)) {
+      return {
+        metrics: normalized,
+        empty: true,
+        error: isTimeoutError(result.error) ? 'timed out' : undefined,
+      };
     }
     return { metrics: normalized, empty: false };
   }
