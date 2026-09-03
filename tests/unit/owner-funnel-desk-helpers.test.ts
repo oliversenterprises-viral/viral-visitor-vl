@@ -491,6 +491,38 @@ describe('owner funnel desk metrics', () => {
     expect(el.textContent).toMatch(/VIRAL-FRIEND1/);
   });
 
+  it('paints the live snake_case get_owner_funnel_desk_counts envelope, including extra junk_visits', () => {
+    const live = {
+      window_days: 7,
+      visits: 3,
+      junk_visits: 530,
+      friend_landings: 22,
+      landings: 22,
+      get_link: 17,
+      share: 4,
+      locked: 17,
+      get_link_rate: '77.3%',
+    };
+    const loaded = ownerFunnelDeskFromInvokeResult({ success: true, data: live });
+    expect(loaded.empty).toBe(false);
+    expect(loaded.metrics.visits).toBe(3);
+    expect(loaded.metrics.friendLandings).toBe(22);
+    expect(loaded.metrics.getLink).toBe(17);
+    expect(loaded.metrics.share).toBe(4);
+    expect(loaded.metrics.locked).toBe(17);
+    expect(loaded.metrics.getLinkRate).toBe('77.3%');
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, loaded.metrics);
+    const tiles = el.querySelector('[data-owner-desk-tiles]')?.textContent || '';
+    expect(tiles).toMatch(/\b3\b/);
+    expect(tiles).toMatch(/\b22\b/);
+    expect(tiles).toMatch(/\b17\b/);
+    expect(tiles).toMatch(/\b4\b/);
+    expect(tiles).toMatch(/77\.3%/);
+    expect(el.querySelector('[data-owner-desk-empty]')).toBeNull();
+    expect(tiles).not.toMatch(/junk/i);
+  });
+
   it('paints snake_case get_owner_funnel_desk tiles instead of zeros', () => {
     const snake = {
       window_days: 7,
