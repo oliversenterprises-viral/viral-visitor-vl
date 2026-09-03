@@ -1,10 +1,16 @@
 /**
  * Shared Cloudflare Turnstile helpers (referral recording + prize claim).
+ * Fail-fast: script load, API wait, and token must never hang.
  */
 
 const TURNSTILE_SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 const TURNSTILE_SITEKEY = import.meta.env.VITE_TURNSTILE_SITEKEY || '';
-const DEFAULT_TOKEN_TIMEOUT_MS = 30_000;
+
+/** Fail-fast window for script + API. Hidden-tab rAF must not be the clock. */
+export const TURNSTILE_READY_TIMEOUT_MS = 4_000;
+/** Fail-fast window for a rendered widget to produce a token. */
+export const DEFAULT_TOKEN_TIMEOUT_MS = 8_000;
+export const HUMAN_CHECK_STALL_MESSAGE = 'Human check stalled — try again';
 
 type TurnstileApi = {
   render: (el: HTMLElement, opts: Record<string, unknown>) => string;
@@ -28,54 +34,48 @@ export function getTurnstileSiteKey(): string {
   return TURNSTILE_SITEKEY;
 }
 
+export function isHumanCheckStallError(err: unknown): boolean {
+  return err instanceof Error && err.message === HUMAN_CHECK_STALL_MESSAGE;
+}
+
 function getTurnstileApi(): TurnstileApi | null {
   return (window as { turnstile?: TurnstileApi }).turnstile ?? null;
 }
 
-function waitForTurnstileApi(maxMs = 15_000): Promise<void> {
+function waitForTurnstileApi(maxMs = TURNSTILE_READY_TIMEOUT_MS): Promise<void> {
   if (getTurnstileApi()) return Promise.resolve();
 
-  return new Promise((resolve) => {
-    const started = Date.now();
-    const tick = () => {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      window.clearInterval(poll);
+      reject(new Error(HUMAN_CHECK_STALL_MESSAGE));
+    }, maxMs);
+    const poll = window.setInterval(() => {
       if (getTurnstileApi()) {
+        window.clearTimeout(timeout);
+        window.clearInterval(poll);
         resolve();
-        return;
       }
-      if (Date.now() - started >= maxMs) {
-        resolve();
-        return;
-      }
-      requestAnimationFrame(tick);
-    };
-    tick();
+    }, 25);
   });
 }
 
-/** Load Turnstile API script if not already present. */
-export async function ensureTurnstileReady(): Promise<void> {
+function injectTurnstileScript(): void {
+  if (document.querySelector('script[src*="turnstile"]')) return;
+  const script = document.createElement('script');
+  script.src = TURNSTILE_SCRIPT_URL;
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
+}
+
+/** Load Turnstile API script if not already present. Rejects if the human-check stalls. */
+export async function ensureTurnstileReady(
+  maxMs = TURNSTILE_READY_TIMEOUT_MS,
+): Promise<void> {
   if (getTurnstileApi()) return;
-
-  const existing = document.querySelector('script[src*="turnstile"]');
-  if (existing) {
-    await new Promise<void>((resolve) => {
-      existing.addEventListener('load', () => resolve(), { once: true });
-      setTimeout(resolve, 10_000);
-    });
-    await waitForTurnstileApi();
-    return;
-  }
-
-  await new Promise<void>((resolve) => {
-    const script = document.createElement('script');
-    script.src = TURNSTILE_SCRIPT_URL;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => resolve();
-    document.head.appendChild(script);
-  });
-  await waitForTurnstileApi();
+  injectTurnstileScript();
+  await waitForTurnstileApi(maxMs);
 }
 
 /** Remove a rendered widget before re-render (safe between retries). */
@@ -123,7 +123,7 @@ export function getTurnstileToken(
     const timer = window.setTimeout(() => {
       finish(() => {
         removeTurnstileWidget(widgetId);
-        reject(new Error('Turnstile timed out — please try again'));
+        reject(new Error(HUMAN_CHECK_STALL_MESSAGE));
       });
     }, timeoutMs);
 
@@ -149,7 +149,7 @@ export function getTurnstileToken(
       'timeout-callback': () =>
         finish(() => {
           removeTurnstileWidget(widgetId);
-          reject(new Error('Turnstile challenge timed out'));
+          reject(new Error(HUMAN_CHECK_STALL_MESSAGE));
         }),
     };
 
@@ -183,7 +183,8 @@ export function getTurnstileToken(
 }
 
 /**
- * Best-effort Turnstile token for referral hardening. Never blocks recording — returns null on failure/timeout.
+ * Best-effort Turnstile token for referral hardening. Never blocks recording —
+ * returns null on failure/timeout, including a stalled script load.
  */
 export async function tryOptionalTurnstileToken(timeoutMs = 2500): Promise<string | null> {
   if (!TURNSTILE_SITEKEY) return null;
@@ -195,12 +196,14 @@ export async function tryOptionalTurnstileToken(timeoutMs = 2500): Promise<strin
   document.body.appendChild(container);
 
   try {
-    await ensureTurnstileReady();
     const token = await Promise.race([
-      getTurnstileToken(container, TURNSTILE_SITEKEY, 'optional referral', {
-        invisible: true,
-        timeoutMs,
-      }),
+      (async () => {
+        await ensureTurnstileReady(timeoutMs);
+        return getTurnstileToken(container, TURNSTILE_SITEKEY, 'optional referral', {
+          invisible: true,
+          timeoutMs,
+        });
+      })(),
       new Promise<null>((resolve) => window.setTimeout(() => resolve(null), timeoutMs)),
     ]);
     return typeof token === 'string' && token ? token : null;

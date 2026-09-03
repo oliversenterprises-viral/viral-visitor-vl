@@ -21,7 +21,11 @@ export function getVisitorSlimSegment(loc: Location = location): VisitorSlimSegm
 
 export function hasReferralLinkInUI(): boolean {
   const input = document.getElementById('ref-link') as HTMLInputElement | null;
-  return !!input?.value?.trim();
+  if (input?.value?.trim() && /\/r\//i.test(input.value)) return true;
+  const painted = document.getElementById('post-link-url')?.textContent?.trim() || '';
+  if (painted && /\/r\//i.test(painted)) return true;
+  // Keep the post-link screen (ready / stall error) — do not wipe has-link.
+  return document.documentElement.hasAttribute('data-vr-post-link-one');
 }
 
 /** Sync html attrs used by visitor-slim CSS. */

@@ -79,6 +79,14 @@ describe('post-link-share', () => {
     expect((document.getElementById('post-link-copy') as HTMLButtonElement).hidden).toBe(true);
   });
 
+  it('error can paint a fail-fast human-check stall heading', () => {
+    showPostLinkError('Human check stalled — try again');
+    expect(document.getElementById('post-link-heading')?.textContent).toBe(
+      'Human check stalled — try again',
+    );
+    expect(document.getElementById('post-link-primary')?.textContent).toBe('Try again');
+  });
+
   it('missing code does not render share or copy', () => {
     showPostLinkReady('');
     expect(document.getElementById('post-link-share')?.hidden).toBe(true);
