@@ -218,8 +218,11 @@ describe('first-screen Site Drops rules', () => {
     expect(app).toContain('INIT_FETCH_TIMEOUT_MS');
     expect(app).toContain('withInitTimeout');
     expect(app).toContain('await withInitTimeout(loadSiteContent(), undefined)');
-    expect(app).toContain('await withInitTimeout(loadLeaderboard(), undefined)');
-    expect(app).toContain('await withInitTimeout(renderRecentActivity(), undefined)');
+    expect(app).toContain('void hydrateBelowFold(myReferralCode)');
+    expect(app).not.toMatch(/await withInitTimeout\(loadLeaderboard/);
+    expect(app).not.toMatch(/await withInitTimeout\(renderRecentActivity/);
+    expect(app).not.toMatch(/await withInitTimeout\(refreshWorldwideReferralTotals/);
+    expect(app).not.toMatch(/await hydrateBelowFold/);
     const client = read('src/lib/admin-action-client.ts');
     expect(client).toMatch(/OWNER_PASSWORD_VERIFY_TIMEOUT_MS = 8_000/);
     expect(client).toContain('Promise.race');
