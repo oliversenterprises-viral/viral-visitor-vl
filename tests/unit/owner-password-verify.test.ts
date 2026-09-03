@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('owner password gate button', () => {
@@ -38,5 +40,34 @@ describe('owner password gate button', () => {
     const err = document.getElementById('admin-owner-gate-error');
     expect(err?.classList.contains('hidden')).toBe(false);
     expect(err?.textContent).toMatch(/timed out/i);
+  });
+
+  it('leaves Verifying as soon as verify returns even if HQ desk never opens', async () => {
+    vi.resetModules();
+    vi.doMock('../../src/lib/admin-action-client', () => ({
+      verifyOwnerPassword: vi.fn().mockResolvedValue({
+        success: true,
+        sessionToken: 'hmac-session',
+      }),
+    }));
+    const { submitAdminPassword } = await import('../../src/public/modals');
+    const { ViralRefer } = await import('../../src/lib/global');
+    let opened = false;
+    ViralRefer.openAdminPanel = () =>
+      new Promise(() => {
+        opened = true;
+      });
+    const btn = document.getElementById('admin-owner-gate-submit') as HTMLButtonElement;
+    await expect(submitAdminPassword()).resolves.toBeUndefined();
+    expect(opened).toBe(true);
+    expect(btn.disabled).toBe(false);
+    expect(btn.innerHTML).not.toMatch(/Verifying/);
+    expect(btn.innerHTML).toMatch(/Continue/);
+  });
+
+  it('does not await openAdminPanel before restoring Continue', () => {
+    const src = readFileSync(resolve(__dirname, '../../src/public/modals.ts'), 'utf8');
+    expect(src).not.toMatch(/await ViralRefer\.openAdminPanel/);
+    expect(src).toContain('void Promise.resolve(ViralRefer.openAdminPanel?.())');
   });
 });
