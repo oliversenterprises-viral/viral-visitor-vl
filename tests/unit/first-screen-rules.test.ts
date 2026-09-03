@@ -106,6 +106,18 @@ describe('first-screen Site Drops rules', () => {
     expect(existsSync(resolve(root, 'public/google163d31ba24216edd.html'))).toBe(true);
   });
 
+  it('keeps first-screen init fail-fast so hung APIs cannot block paint', () => {
+    const app = read('src/app.ts');
+    expect(app).toMatch(/const INIT_FETCH_TIMEOUT_MS = 12_000/);
+    expect(app).toContain('async function withInitTimeout');
+    expect(app).toContain('await withInitTimeout(loadSiteContent(), undefined)');
+    expect(app).toContain('await withInitTimeout(refreshWorldwideReferralTotals(), undefined)');
+    expect(app).toContain('await withInitTimeout(loadLeaderboard(), undefined)');
+    expect(app).toContain('await withInitTimeout(renderRecentActivity(), undefined)');
+    expect(app).toMatch(/initApp partial failure/);
+    expect(read('index.html')).toContain('Site Drop');
+  });
+
   it('does not CSS-hide How, Board, or footer', () => {
     const css = read('src/style.css');
     expect(css).not.toMatch(/#how\s*\{[^}]*display:\s*none/);
