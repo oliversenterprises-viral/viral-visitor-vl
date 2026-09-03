@@ -6,8 +6,8 @@
 import { ViralRefer, registerGlobal } from '../lib/global';
 import { switchAdminTab, showOwnerFunnelDesk } from '../admin';
 import { initAdminSimple, setAdminMore } from '../lib/admin-simple';
-import { supabase } from '../lib/supabase';
-import { setAdminSessionToken, clearAdminSessionToken } from '../lib/admin-session';
+import { clearAdminSessionToken } from '../lib/admin-session';
+import { continueOwnerGate } from '../lib/owner-gate-continue';
 
 registerGlobal('closeAdminPanel', () => {
   clearAdminSessionToken();
@@ -231,36 +231,30 @@ const submitAdminPassword = async () => {
     btn.innerHTML = '<span>Verifying…</span>';
   }
 
-  let authorized = false;
-  try {
-    const { data, error } = await supabase.functions.invoke('admin-action', {
-      body: { action: 'verify_owner_password', payload: { password: val } },
-    });
-    const sessionToken =
-      typeof data?.session_token === 'string' ? data.session_token.trim() : '';
-    if (!error && data?.success === true && sessionToken) {
-      setAdminSessionToken(sessionToken);
-      authorized = true;
-    }
-  } catch {
-    /* edge unavailable */
-  }
-
-  if (authorized) {
-    if (errorEl) errorEl.classList.add('hidden');
-    revealOwnerTools();
-    closeAdminPasswordModal();
-    await ViralRefer.openAdminPanel?.();
-  } else {
-    if (errorEl) errorEl.classList.remove('hidden');
-    if (btn) {
-      btn.innerHTML = 'Incorrect — try again';
-      setTimeout(() => { if (btn) btn.innerHTML = btnOrigHtml; }, 1400);
-    }
-  }
-
-  if (btn) btn.disabled = false;
-  if (btn && authorized) btn.innerHTML = btnOrigHtml;
+  await continueOwnerGate({
+    password: val,
+    restoreContinue: () => {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = btnOrigHtml;
+      }
+    },
+    onSuccess: () => {
+      if (errorEl) errorEl.classList.add('hidden');
+      revealOwnerTools();
+      closeAdminPasswordModal();
+    },
+    onDenied: () => {
+      if (errorEl) errorEl.classList.remove('hidden');
+      if (btn) {
+        btn.innerHTML = 'Incorrect — try again';
+        setTimeout(() => {
+          if (btn) btn.innerHTML = btnOrigHtml;
+        }, 1400);
+      }
+    },
+    openAdminPanel: () => ViralRefer.openAdminPanel?.(),
+  });
 };
 registerGlobal('submitAdminPassword', submitAdminPassword);
 
