@@ -96,7 +96,7 @@ let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
 const INIT_FETCH_TIMEOUT_MS = 12_000;
-/** Homepage ticker RPC must not hang first paint. */
+/** Zip ticker bind — 2s cap; never await this on first-screen init. */
 const TICKER_TIMEOUT_MS = 2_000;
 /** Disk IO: slower poll + pause when tab hidden (was 45s always-on). */
 const PUBLIC_ACTIVITY_POLL_MS = 90_000;
@@ -109,10 +109,19 @@ async function withInitTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> 
 }
 
 async function withTickerTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), TICKER_TIMEOUT_MS)),
-  ]);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((resolve) => {
+        timer = setTimeout(() => resolve(fallback), TICKER_TIMEOUT_MS);
+      }),
+    ]);
+  } catch {
+    return fallback;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 function updateRealtimeStatus(status: string) {
@@ -415,7 +424,8 @@ export async function initApp() {
 
     if (myReferralCode) {
       applyExistingReferralLink(myReferralCode);
-      void withInitTimeout(refreshFunnelTicker(), undefined);
+      // Off first-screen path: zip ticker bind, 2s fail-fast, never await.
+      void refreshFunnelTicker();
     } else {
       syncMobileReferralCta();
       setFunnelTickerVisible(false);

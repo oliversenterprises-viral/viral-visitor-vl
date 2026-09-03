@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -12,6 +12,7 @@ import {
   renderFunnelTickerRows,
   shouldShowFunnelTicker,
 } from '../../src/lib/funnel-ticker';
+import { PUBLIC_TICKER_TIMEOUT_MS, withPublicTickerTimeout } from '../../src/lib/supabase';
 
 describe('funnel-ticker', () => {
   it('shouldShowFunnelTicker only for VIRAL- codes', () => {
@@ -164,5 +165,17 @@ describe('funnel-ticker', () => {
     expect(document.getElementById('vr-funnel-ticker-track')?.innerHTML).toContain(
       'Someone in US just got their referral link',
     );
+  });
+
+  it('ticker RPC fail-fast in 2s when PostgREST hangs (live first-screen lock)', async () => {
+    expect(PUBLIC_TICKER_TIMEOUT_MS).toBe(2_000);
+    vi.useFakeTimers();
+    const hung = new Promise<string>(() => {
+      /* never resolves */
+    });
+    const raced = withPublicTickerTimeout(hung, 'fallback');
+    vi.advanceTimersByTime(2_000);
+    await expect(raced).resolves.toBe('fallback');
+    vi.useRealTimers();
   });
 });

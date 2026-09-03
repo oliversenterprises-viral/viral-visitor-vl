@@ -19,6 +19,25 @@ const SUPABASE_ANON_KEY = envString(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
+/** Zip ticker RPC fail-fast — hung PostgREST must not pin first-screen work. */
+export const PUBLIC_TICKER_TIMEOUT_MS = 2_000;
+
+export async function withPublicTickerTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((resolve) => {
+        timer = setTimeout(() => resolve(fallback), PUBLIC_TICKER_TIMEOUT_MS);
+      }),
+    ]);
+  } catch {
+    return fallback;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 if (!isSupabaseConfigured) {
   console.warn(
     '[ViralRefer] Supabase env not configured — static/degraded mode. ' +
@@ -213,24 +232,29 @@ export async function fetchPublicRecentActivity(limit = 8): Promise<{
 
 /**
  * Worldwide FOMO ticker via get_public_funnel_ticker RPC.
- * Returns [] when RPC not deployed yet (caller should fall back to public activity).
+ * Zip code to match on live — 2s fail-fast so a hung RPC cannot block first paint.
+ * Returns [] when RPC is missing or times out (caller falls back to public activity).
  */
 export async function fetchPublicFunnelTicker(limit = 24): Promise<FunnelTickerRow[]> {
   if (!isSupabaseConfigured) return [];
-  try {
-    const { data, error } = await supabase.rpc('get_public_funnel_ticker', {
-      p_limit: Math.max(limit, 8),
-    });
-    if (error || data == null) return [];
-    // RPC returns a JSON array directly
-    if (Array.isArray(data)) return normalizeFunnelTickerRows(data);
-    if (typeof data === 'object' && Array.isArray((data as { rows?: unknown }).rows)) {
-      return normalizeFunnelTickerRows((data as { rows: unknown }).rows);
-    }
-    return normalizeFunnelTickerRows(data);
-  } catch {
-    return [];
-  }
+  return withPublicTickerTimeout(
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_public_funnel_ticker', {
+          p_limit: Math.max(limit, 8),
+        });
+        if (error || data == null) return [];
+        if (Array.isArray(data)) return normalizeFunnelTickerRows(data);
+        if (typeof data === 'object' && Array.isArray((data as { rows?: unknown }).rows)) {
+          return normalizeFunnelTickerRows((data as { rows: unknown }).rows);
+        }
+        return normalizeFunnelTickerRows(data);
+      } catch {
+        return [];
+      }
+    })(),
+    [],
+  );
 }
 
 export interface ReferrerPublicStats {

@@ -174,6 +174,7 @@ describe('first-screen Site Drops rules', () => {
     const app = read('src/app.ts');
     const css = read('src/style.css');
     const content = read('src/content.ts');
+    const supabase = read('src/lib/supabase.ts');
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(html).toContain('id="vr-funnel-ticker"');
     expect(html).toContain('id="vr-funnel-ticker-track"');
@@ -190,6 +191,12 @@ describe('first-screen Site Drops rules', () => {
     expect(app).toContain('lockFunnelJourneyBadge');
     expect(app).not.toContain('Last-night lock: no LIVE WORLDWIDE ticker over the hero.');
     expect(app).toMatch(/TICKER_TIMEOUT_MS\s*=\s*2_000/);
+    expect(app).not.toMatch(/await\s+refreshFunnelTicker\(/);
+    expect(app).toMatch(/void refreshFunnelTicker\(/);
+    expect(app).not.toContain('await withInitTimeout(refreshFunnelTicker()');
+    expect(supabase).toMatch(/PUBLIC_TICKER_TIMEOUT_MS\s*=\s*2_000/);
+    expect(supabase).toContain('withPublicTickerTimeout');
+    expect(supabase).toContain('get_public_funnel_ticker');
     expect(css).toMatch(
       /html\[data-vr-kid-simple\]:not\(\[data-vr-has-link\]\):not\(\[data-vr-kid-more\]\) #vr-funnel-ticker/,
     );
