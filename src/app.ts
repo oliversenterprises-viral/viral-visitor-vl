@@ -87,15 +87,21 @@ let siteContentChannel: ReturnType<typeof supabase.channel> | null = null;
 let publicActivityPollTimer: ReturnType<typeof setInterval> | null = null;
 let cachedLeaderboard: LeaderboardEntry[] = [];
 
-/** Fail-fast: hung PostgREST must not delay first-screen paint. */
+/** First screen must paint without waiting this long on APIs. */
 export const FIRST_SCREEN_FETCH_TIMEOUT_MS = 2_000;
+/** Background board/CMS can wait longer so a slow live RPC still lands. */
+export const ENHANCE_FETCH_TIMEOUT_MS = 12_000;
 /** Disk IO: slower poll + pause when tab hidden (was 45s always-on). */
 const PUBLIC_ACTIVITY_POLL_MS = 90_000;
 
-export async function withInitTimeout<T>(promise: Promise<T>, fallback: T): Promise<T> {
+export async function withInitTimeout<T>(
+  promise: Promise<T>,
+  fallback: T,
+  timeoutMs: number = ENHANCE_FETCH_TIMEOUT_MS,
+): Promise<T> {
   return Promise.race([
     promise,
-    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), FIRST_SCREEN_FETCH_TIMEOUT_MS)),
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), timeoutMs)),
   ]);
 }
 
@@ -392,14 +398,16 @@ export async function initApp() {
 /** Board / CMS / stats — fail-fast if PostgREST hangs. Never awaited by first paint. */
 async function enhanceAfterFirstPaint(myReferralCode: string | null): Promise<void> {
   try {
-    await withInitTimeout(loadSiteContent(), undefined);
+    await withInitTimeout(loadSiteContent(), undefined, ENHANCE_FETCH_TIMEOUT_MS);
     await Promise.all([
-      withInitTimeout(refreshWorldwideReferralTotals(), undefined),
-      withInitTimeout(loadPublicViralLoops(myReferralCode), undefined),
-      withInitTimeout(loadLeaderboard(), undefined),
-      withInitTimeout(renderRecentActivity(), undefined),
-      myReferralCode ? withInitTimeout(refreshFunnelTicker(), undefined) : Promise.resolve(),
-      withInitTimeout(renderMyStats(myReferralCode), undefined),
+      withInitTimeout(refreshWorldwideReferralTotals(), undefined, ENHANCE_FETCH_TIMEOUT_MS),
+      withInitTimeout(loadPublicViralLoops(myReferralCode), undefined, ENHANCE_FETCH_TIMEOUT_MS),
+      withInitTimeout(loadLeaderboard(), undefined, ENHANCE_FETCH_TIMEOUT_MS),
+      withInitTimeout(renderRecentActivity(), undefined, ENHANCE_FETCH_TIMEOUT_MS),
+      myReferralCode
+        ? withInitTimeout(refreshFunnelTicker(), undefined, ENHANCE_FETCH_TIMEOUT_MS)
+        : Promise.resolve(),
+      withInitTimeout(renderMyStats(myReferralCode), undefined, ENHANCE_FETCH_TIMEOUT_MS),
     ]);
     paintWorldwideReferralTotal();
   } catch (err) {

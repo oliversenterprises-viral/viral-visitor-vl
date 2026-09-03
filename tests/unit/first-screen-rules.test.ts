@@ -162,6 +162,7 @@ describe('first-screen Site Drops rules', () => {
       app.indexOf('async function enhanceAfterFirstPaint'),
     );
     expect(app).toMatch(/FIRST_SCREEN_FETCH_TIMEOUT_MS\s*=\s*2_?000/);
+    expect(app).toMatch(/ENHANCE_FETCH_TIMEOUT_MS\s*=\s*12_?000/);
     expect(initFn).toContain('void enhanceAfterFirstPaint');
     expect(initFn).toContain('lock844HomepageCopy()');
     expect(initFn).not.toContain('await withInitTimeout(loadSiteContent');
