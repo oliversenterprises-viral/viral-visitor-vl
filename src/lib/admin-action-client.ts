@@ -22,6 +22,13 @@ export type AdminActionResult<T> =
   | { success: true; data: T; envelope: Record<string, unknown> }
   | { success: false; error: string };
 
+export type InvokeAdminActionOptions = {
+  /** Abort the direct fetch. When set, skip the hanging functions.invoke fallback. */
+  signal?: AbortSignal;
+  /** Fail-fast AbortController budget. Desk uses ≤8000. */
+  timeoutMs?: number;
+};
+
 function supabaseUrlAndAnon(): { url: string; anon: string } | null {
   const url = String(import.meta.env.VITE_SUPABASE_URL || '').trim().replace(/\/$/, '');
   const anon = String(import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
@@ -29,16 +36,36 @@ function supabaseUrlAndAnon(): { url: string; anon: string } | null {
   return { url, anon };
 }
 
+function isAbortError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const name = String((err as { name?: unknown }).name || '');
+  const msg = String((err as { message?: unknown }).message || '').toLowerCase();
+  return name === 'AbortError' || msg.includes('aborted') || msg.includes('abort');
+}
+
 /** Direct fetch — reliable custom headers + body session when functions.invoke strips headers. */
 async function invokeAdminActionViaFetch<T>(
   action: string,
   payload: Record<string, unknown>,
   token: string,
+  options: InvokeAdminActionOptions = {},
 ): Promise<AdminActionResult<T>> {
   const cfg = supabaseUrlAndAnon();
   if (!cfg) {
     return { success: false, error: 'Supabase not configured' };
   }
+  const timeoutMs =
+    typeof options.timeoutMs === 'number' && options.timeoutMs > 0 ? options.timeoutMs : 0;
+  const ctrl = new AbortController();
+  const onOuterAbort = () => ctrl.abort();
+  if (options.signal) {
+    if (options.signal.aborted) ctrl.abort();
+    else options.signal.addEventListener('abort', onOuterAbort, { once: true });
+  }
+  const timer =
+    timeoutMs > 0 && !ctrl.signal.aborted
+      ? setTimeout(() => ctrl.abort(), timeoutMs)
+      : undefined;
   try {
     const res = await fetch(`${cfg.url}/functions/v1/admin-action`, {
       method: 'POST',
@@ -53,6 +80,7 @@ async function invokeAdminActionViaFetch<T>(
         payload,
         session_token: token,
       }),
+      signal: ctrl.signal,
     });
     const text = await res.text();
     let envelope: Record<string, unknown> = {};
@@ -76,16 +104,23 @@ async function invokeAdminActionViaFetch<T>(
       envelope,
     };
   } catch (err) {
+    if (isAbortError(err) || ctrl.signal.aborted) {
+      return { success: false, error: 'timed out' };
+    }
     return {
       success: false,
       error: err instanceof Error ? err.message : String(err),
     };
+  } finally {
+    if (timer) clearTimeout(timer);
+    options.signal?.removeEventListener('abort', onOuterAbort);
   }
 }
 
 export async function invokeAdminAction<T = unknown>(
   action: string,
   payload: Record<string, unknown> = {},
+  options: InvokeAdminActionOptions = {},
 ): Promise<AdminActionResult<T>> {
   const token = getAdminSessionToken();
   if (!isSupabaseConfigured || !token) {
@@ -96,8 +131,10 @@ export async function invokeAdminAction<T = unknown>(
   }
 
   // Prefer direct fetch first — more reliable for large admin stats + custom session headers
-  const viaFetch = await invokeAdminActionViaFetch<T>(action, payload, token);
+  const viaFetch = await invokeAdminActionViaFetch<T>(action, payload, token, options);
   if (viaFetch.success) return viaFetch;
+  // Abort/timeout must not fall through to functions.invoke (that path has no AbortController).
+  if (options.signal || options.timeoutMs) return viaFetch;
 
   // Fallback: supabase-js invoke
   try {

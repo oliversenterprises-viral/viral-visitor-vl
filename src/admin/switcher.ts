@@ -52,7 +52,7 @@ export async function showOwnerFunnelDesk() {
   try {
     await renderOwnerFunnelDesk(content);
   } catch {
-    /* renderOwnerFunnelDesk paints zeros — never "can't load" after login */
+    /* renderOwnerFunnelDesk paints tiles or honest-empty — never "can't load" after login */
   }
   if (isStale(requestId)) return;
 }

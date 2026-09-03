@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { computeFunnelTotals } from '../../src/admin/visitor-funnel-stats-helpers';
 import {
@@ -13,7 +15,9 @@ import {
   resolveOwnerFunnelVia,
 } from '../../src/admin/owner-funnel-desk-helpers';
 import {
+  OWNER_FUNNEL_DESK_TIMEOUT_MS,
   isOwnerFunnelDeskActionMissing,
+  normalizeOwnerFunnelDeskMetrics,
   ownerFunnelDeskFromInvokeResult,
   renderOwnerFunnelDeskView,
 } from '../../src/admin/owner-funnel-desk';
@@ -224,7 +228,7 @@ describe('owner funnel desk metrics', () => {
     expect(el.innerHTML).not.toMatch(/LOCAL/i);
   });
 
-  it('still paints six tiles when the server misses after login', () => {
+  it('paints honest-empty dashes when the server misses after login, not fake zeros', () => {
     const el = document.createElement('div');
     renderOwnerFunnelDeskView(
       el,
@@ -239,13 +243,18 @@ describe('owner funnel desk metrics', () => {
         getLinkRate: '0%',
         feed: [],
       },
-      "can't load.",
+      'honest-empty',
     );
     expect(el.textContent).toMatch(/Visits/);
     expect(el.textContent).toMatch(/Friend landings/);
     expect(el.textContent).toMatch(/Get-link/);
     expect(el.textContent).toMatch(/Share/);
     expect(el.textContent).toMatch(/Locked/);
+    expect(el.textContent).toMatch(/No numbers yet/);
+    expect(el.querySelector('[data-owner-desk-empty]')).not.toBeNull();
+    const tileText = el.querySelector('[data-owner-desk-tiles]')?.textContent || '';
+    expect(tileText).toMatch(/—/);
+    expect(tileText).not.toMatch(/\b0%\b/);
     expect(el.textContent).not.toMatch(/can.t load/i);
     expect(el.textContent).not.toMatch(/Died waiting|Promoters|Claims/);
     expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
@@ -394,50 +403,184 @@ describe('owner funnel desk metrics', () => {
     expect(metrics.getLinkRate).toBe('0%');
   });
 
-  it('still loads six tiles when the deployed function does not know get_owner_funnel_desk', () => {
+  it('honest-empties six tiles when the deployed function does not know get_owner_funnel_desk', () => {
     expect(isOwnerFunnelDeskActionMissing('Unknown action')).toBe(true);
     expect(isOwnerFunnelDeskActionMissing('permission denied')).toBe(false);
     const loaded = ownerFunnelDeskFromInvokeResult({
       success: false,
       error: 'Unknown action',
     });
+    expect(loaded.empty).toBe(true);
     expect(loaded.error).toBeUndefined();
-    expect(loaded.metrics.visits).toBe(0);
-    expect(loaded.metrics.landings).toBe(0);
-    expect(loaded.metrics.share).toBe(0);
     const el = document.createElement('div');
-    renderOwnerFunnelDeskView(el, loaded.metrics, loaded.error);
+    renderOwnerFunnelDeskView(el, loaded.metrics, 'honest-empty');
     expect(el.textContent).toMatch(/Visits/);
     expect(el.textContent).toMatch(/Friend landings/);
     expect(el.textContent).toMatch(/Get-link/);
     expect(el.textContent).toMatch(/Share/);
     expect(el.textContent).toMatch(/Locked/);
+    expect(el.textContent).toMatch(/No numbers yet/);
+    expect(el.querySelector('[data-owner-desk-empty]')).not.toBeNull();
     expect(el.textContent).not.toMatch(/can.t load/i);
     expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
   });
 
-  it('still paints six tiles when get_owner_funnel_desk or the RPC fails', () => {
+  it('honest-empties six tiles when get_owner_funnel_desk or the RPC fails', () => {
     for (const error of ["can't load.", 'Edge Function returned a non-2xx status code', 'function does not exist']) {
       const loaded = ownerFunnelDeskFromInvokeResult({
         success: false,
         error,
       });
+      expect(loaded.empty).toBe(true);
       expect(loaded.error).toBeUndefined();
-      expect(loaded.metrics.visits).toBe(0);
-      expect(loaded.metrics.landings).toBe(0);
-      expect(loaded.metrics.getLink).toBe(0);
-      expect(loaded.metrics.share).toBe(0);
-      expect(loaded.metrics.locked).toBe(0);
       const el = document.createElement('div');
-      renderOwnerFunnelDeskView(el, loaded.metrics, loaded.error);
+      renderOwnerFunnelDeskView(el, loaded.metrics, 'honest-empty');
       expect(el.textContent).toMatch(/Visits/);
       expect(el.textContent).toMatch(/Friend landings/);
       expect(el.textContent).toMatch(/Get-link/);
       expect(el.textContent).toMatch(/Share/);
       expect(el.textContent).toMatch(/Locked/);
+      expect(el.textContent).toMatch(/—/);
       expect(el.textContent).not.toMatch(/can.t load/i);
       expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
     }
+  });
+
+  it('paints camelCase get_owner_funnel_desk tiles instead of zeros', () => {
+    expect(OWNER_FUNNEL_DESK_TIMEOUT_MS).toBe(8000);
+    const loaded = ownerFunnelDeskFromInvokeResult({
+      success: true,
+      data: {
+        windowDays: 7,
+        visits: 22,
+        friendLandings: 22,
+        landings: 22,
+        getLink: 17,
+        share: 2,
+        locked: 1,
+        getLinkRate: '77.3%',
+        feed: [
+          {
+            kind: 'locked',
+            label: 'Locked',
+            at: '2026-08-16T12:30:00Z',
+            via: 'friend',
+            viaLabel: "friend's /r/",
+            code: 'VIRAL-REAL1',
+            friendCode: 'VIRAL-FRIEND1',
+          },
+        ],
+      },
+    });
+    expect(loaded.empty).toBe(false);
+    expect(loaded.metrics.visits).toBe(22);
+    expect(loaded.metrics.friendLandings).toBe(22);
+    expect(loaded.metrics.getLink).toBe(17);
+    expect(loaded.metrics.share).toBe(2);
+    expect(loaded.metrics.locked).toBe(1);
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, loaded.metrics);
+    const tiles = el.querySelector('[data-owner-desk-tiles]')?.textContent || '';
+    expect(tiles).toMatch(/22/);
+    expect(tiles).toMatch(/17/);
+    expect(tiles).toMatch(/\b2\b/);
+    expect(tiles).toMatch(/\b1\b/);
+    expect(tiles).toMatch(/77\.3%/);
+    expect(el.querySelector('[data-owner-desk-empty]')).toBeNull();
+    expect(el.textContent).toMatch(/VIRAL-REAL1/);
+    expect(el.textContent).toMatch(/VIRAL-FRIEND1/);
+  });
+
+  it('paints the live snake_case get_owner_funnel_desk_counts envelope, including extra junk_visits', () => {
+    const live = {
+      window_days: 7,
+      visits: 3,
+      junk_visits: 530,
+      friend_landings: 22,
+      landings: 22,
+      get_link: 17,
+      share: 4,
+      locked: 17,
+      get_link_rate: '77.3%',
+    };
+    const loaded = ownerFunnelDeskFromInvokeResult({ success: true, data: live });
+    expect(loaded.empty).toBe(false);
+    expect(loaded.metrics.visits).toBe(3);
+    expect(loaded.metrics.friendLandings).toBe(22);
+    expect(loaded.metrics.getLink).toBe(17);
+    expect(loaded.metrics.share).toBe(4);
+    expect(loaded.metrics.locked).toBe(17);
+    expect(loaded.metrics.getLinkRate).toBe('77.3%');
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, loaded.metrics);
+    const tiles = el.querySelector('[data-owner-desk-tiles]')?.textContent || '';
+    expect(tiles).toMatch(/\b3\b/);
+    expect(tiles).toMatch(/\b22\b/);
+    expect(tiles).toMatch(/\b17\b/);
+    expect(tiles).toMatch(/\b4\b/);
+    expect(tiles).toMatch(/77\.3%/);
+    expect(el.querySelector('[data-owner-desk-empty]')).toBeNull();
+    expect(tiles).not.toMatch(/junk/i);
+  });
+
+  it('paints snake_case get_owner_funnel_desk tiles instead of zeros', () => {
+    const snake = {
+      window_days: 7,
+      visits: 22,
+      friend_landings: 22,
+      landings: 22,
+      get_link: 17,
+      share: 2,
+      locked: 1,
+      get_link_rate: '77.3%',
+      feed: [
+        {
+          kind: 'locked',
+          label: 'Locked',
+          at: '2026-08-16T12:30:00Z',
+          via: 'friend',
+          via_label: "friend's /r/",
+          code: 'VIRAL-REAL1',
+          friend_code: 'VIRAL-FRIEND1',
+        },
+      ],
+    };
+    const normalized = normalizeOwnerFunnelDeskMetrics(snake);
+    expect(normalized).not.toBeNull();
+    expect(normalized!.visits).toBe(22);
+    expect(normalized!.friendLandings).toBe(22);
+    expect(normalized!.getLink).toBe(17);
+    expect(normalized!.share).toBe(2);
+    expect(normalized!.locked).toBe(1);
+    expect(normalized!.getLinkRate).toBe('77.3%');
+    expect(normalized!.feed[0]?.friendCode).toBe('VIRAL-FRIEND1');
+    expect(normalized!.feed[0]?.viaLabel).toBe("friend's /r/");
+
+    const wrapped = ownerFunnelDeskFromInvokeResult({
+      success: true,
+      data: { data: snake } as unknown as Record<string, unknown>,
+    });
+    expect(wrapped.empty).toBe(false);
+    expect(wrapped.metrics.getLink).toBe(17);
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, wrapped.metrics);
+    expect(el.querySelector('[data-owner-desk-tiles]')?.textContent).toMatch(/17/);
+    expect(el.textContent).toMatch(/VIRAL-FRIEND1/);
+  });
+
+  it('marks a timed-out get_owner_funnel_desk fetch as honest-empty', () => {
+    const loaded = ownerFunnelDeskFromInvokeResult({
+      success: false,
+      error: 'timed out',
+    });
+    expect(loaded.empty).toBe(true);
+    expect(loaded.error).toBe('timed out');
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(el, loaded.metrics, loaded.error);
+    expect(el.querySelector('[data-owner-desk-empty]')).not.toBeNull();
+    expect(el.textContent).toMatch(/timed out/i);
+    expect(el.textContent).toMatch(/—/);
+    expect(el.textContent).not.toMatch(/can.t load/i);
   });
 
   it('rates get-link against visits when there are no friend landings', () => {
@@ -449,6 +592,16 @@ describe('owner funnel desk metrics', () => {
     expect(metrics.friendLandings).toBe(0);
     expect(metrics.getLink).toBe(1);
     expect(metrics.getLinkRate).toBe('0.5%');
+  });
+
+  it('Command desk fetches get_owner_funnel_desk with AbortController ≤8s and leaves GSC/junk alone', () => {
+    const src = readFileSync(resolve(__dirname, '../../src/admin/owner-funnel-desk.ts'), 'utf8');
+    expect(src).toMatch(/AbortController/);
+    expect(src).toMatch(/OWNER_FUNNEL_DESK_TIMEOUT_MS = 8_000/);
+    expect(src).toMatch(/get_owner_funnel_desk/);
+    expect(src).toMatch(/timeoutMs: OWNER_FUNNEL_DESK_TIMEOUT_MS/);
+    expect(src).not.toMatch(/get_owner_funnel_desk_counts/);
+    expect(src).not.toMatch(/clear_junk|Clear junk|data-owner-desk-gsc|emptyOwnerFunnelGsc/);
   });
 
   it('reads visits from a new RPC and defaults visits to 0 on an old payload', () => {
