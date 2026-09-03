@@ -79,6 +79,7 @@ describe('referral recording (funnel-gated Step 1)', () => {
     delete (window as { turnstile?: unknown }).turnstile;
     document.body.innerHTML = '';
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
     resetReferralRecordingStateForTests();
   });
 
@@ -171,6 +172,30 @@ describe('referral recording (funnel-gated Step 1)', () => {
     expect(body.turnstileToken).toBe('test-turnstile-token');
     expect(isReferralCreditedThisSession()).toBe(true);
   });
+
+  it('Get my link stays ready when Turnstile never loads (no credit hang)', async () => {
+    vi.stubEnv('VITE_TURNSTILE_SITEKEY', 'funnel-site-key');
+    delete (window as { turnstile?: unknown }).turnstile;
+    invokeMock.mockResolvedValue({ data: { success: true }, error: null });
+    vi.stubGlobal('location', {
+      pathname: '/r/VIRAL-STALL',
+      search: '',
+      href: 'http://localhost/r/VIRAL-STALL',
+    } as Location);
+    detectAndStoreAttribution();
+    const started = Date.now();
+    await getMyReferralLinkInstant();
+    expect((document.getElementById('ref-link') as HTMLInputElement).value).toMatch(/\/r\/VIRAL-/i);
+    expect(Date.now() - started).toBeLessThan(2000);
+    await vi.waitFor(
+      () => {
+        expect(recordReferralCalls()).toHaveLength(0);
+        expect(toastText()).toMatch(/Couldn't credit referral/);
+      },
+      { timeout: 6_000 },
+    );
+    expect(Date.now() - started).toBeLessThan(6_000);
+  }, 8_000);
 
   it('does not POST a credit without a token when Turnstile fails', async () => {
     vi.stubEnv('VITE_TURNSTILE_SITEKEY', 'funnel-site-key');

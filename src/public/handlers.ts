@@ -44,6 +44,8 @@ import { onViralLoopShare } from '../lib/viral-loop-ui';
 import { trackDuelInviteShared } from '../lib/duel-invite';
 import { nudgeReceiptAfterShare } from '../lib/rank-receipt-card';
 import {
+  DEFAULT_TOKEN_TIMEOUT_MS,
+  HUMAN_CHECK_STALL_MESSAGE,
   ensureTurnstileReady,
   getTurnstileSiteKey,
   getTurnstileToken,
@@ -493,10 +495,18 @@ function openClaimModal(myCode: string): void {
   const turnstileContainer = document.getElementById('claim-turnstile-container');
   if (turnstileContainer && TURNSTILE_SITEKEY) {
     turnstileContainer.innerHTML = '';
-    ensureTurnstileReady().then(() => {
-      if (!turnstileContainer.isConnected) return;
-      getTurnstileToken(turnstileContainer, TURNSTILE_SITEKEY, 'claim').catch(() => {});
-    });
+    ensureTurnstileReady()
+      .then(() => {
+        if (!turnstileContainer.isConnected) return;
+        return getTurnstileToken(turnstileContainer, TURNSTILE_SITEKEY, 'claim', {
+          timeoutMs: DEFAULT_TOKEN_TIMEOUT_MS,
+        });
+      })
+      .catch((err: unknown) => {
+        if (!turnstileContainer.isConnected) return;
+        const msg = err instanceof Error ? err.message : HUMAN_CHECK_STALL_MESSAGE;
+        turnstileContainer.textContent = msg;
+      });
   }
 }
 registerGlobal('claimBanner', claimBanner);
@@ -532,7 +542,9 @@ export const submitPrizeClaim = async () => {
     const turnstileContainer = document.getElementById('claim-turnstile-container');
     let turnstileToken = 'dev-bypass-token';
     if (turnstileContainer && TURNSTILE_SITEKEY) {
-      turnstileToken = await getTurnstileToken(turnstileContainer, TURNSTILE_SITEKEY, 'claim');
+      turnstileToken = await getTurnstileToken(turnstileContainer, TURNSTILE_SITEKEY, 'claim', {
+        timeoutMs: DEFAULT_TOKEN_TIMEOUT_MS,
+      });
     }
 
     const { data: sessionData } = await supabase.auth.getSession();
