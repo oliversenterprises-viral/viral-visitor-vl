@@ -6,18 +6,17 @@
  */
 
 import { t, type MessageKey } from './i18n';
-import { EMPTY_BOARD_LINE } from './prize-slot';
 
 export function formatVerifiedReferralTotalLabel(total: number): string {
-  if (total === 1) return 'verified referral worldwide';
-  return 'verified referrals worldwide';
+  if (total === 1) return t('proof.verified_label_one' as MessageKey);
+  return t('proof.verified_label' as MessageKey);
 }
 
 /** Short live strip for hero global proof / compact surfaces. */
 export function formatVerifiedReferralTotalLive(total: number): string {
   if (total <= 0) return t('proof.live_default' as MessageKey);
-  if (total === 1) return '1 verified referral worldwide';
-  return `${total.toLocaleString()} verified referrals worldwide`;
+  if (total === 1) return t('proof.verified_live_one' as MessageKey);
+  return t('proof.verified_live_n' as MessageKey, { n: total.toLocaleString() });
 }
 
 /**
@@ -26,9 +25,9 @@ export function formatVerifiedReferralTotalLive(total: number): string {
  */
 export function formatPeopleGotLinkToday(uniquePeople: number): string {
   const n = Math.max(0, Math.floor(Number(uniquePeople) || 0));
-  if (n === 1) return '1 person got a link today';
-  if (n > 1) return `${n.toLocaleString()} people got a link today`;
-  return 'Be among the first to get a link today';
+  if (n === 1) return t('proof.got_link_one' as MessageKey);
+  if (n > 1) return t('proof.got_link_n' as MessageKey, { n: n.toLocaleString() });
+  return t('proof.got_link_first' as MessageKey);
 }
 
 /** Tertiary line: board competitors + #1 progress. */
@@ -38,23 +37,30 @@ export function formatVerifiedReferralTotalMeta(
 ): string {
   const parts: string[] = [];
   if (uniqueReferrers === 1) {
-    parts.push('1 person on the live board');
+    parts.push(t('proof.live_one' as MessageKey));
   } else if (uniqueReferrers > 1) {
-    parts.push(`${uniqueReferrers.toLocaleString()} people on the live board`);
+    parts.push(t('proof.meta_people_n' as MessageKey, { n: uniqueReferrers.toLocaleString() }));
   }
-  if (leaderCount > 0) {
-    const refLabel =
-      leaderCount === 1 ? '1 referral' : `${leaderCount.toLocaleString()} referrals`;
-    parts.push(`#1 has ${refLabel}`);
+  if (leaderCount === 1) {
+    parts.push(t('proof.leader_has_one' as MessageKey));
+  } else if (leaderCount > 0) {
+    parts.push(t('proof.leader_has_n' as MessageKey, { n: leaderCount.toLocaleString() }));
   }
-  if (!parts.length) return 'Verified credits · test traffic excluded';
-  return `${parts.join(' · ')} · verified credits only`;
+  if (!parts.length) return t('proof.credits_empty' as MessageKey);
+  return `${parts.join(' · ')} · ${t('proof.credits_only' as MessageKey)}`;
 }
 
 /**
  * Paint the verified total + get-link activity everywhere they appear.
  * Keeps #total-referrers as the primary numeric element (e2e + existing hooks).
  */
+let lastWorldwideInput = {
+  total: 0,
+  uniqueReferrers: 0,
+  leaderCount: 0,
+  peopleGotLinkToday: 0,
+};
+
 export function applyWorldwideReferralTotal(input: {
   total: number;
   uniqueReferrers?: number;
@@ -62,7 +68,13 @@ export function applyWorldwideReferralTotal(input: {
   /** Unique people who tapped Get my referral link in the last 24h */
   peopleGotLinkToday?: number;
 }): void {
-  const total = Math.max(0, Math.floor(Number(input.total) || 0));
+  lastWorldwideInput = {
+    total: Math.max(0, Math.floor(Number(input.total) || 0)),
+    uniqueReferrers: Math.max(0, Math.floor(Number(input.uniqueReferrers) || 0)),
+    leaderCount: Math.max(0, Math.floor(Number(input.leaderCount) || 0)),
+    peopleGotLinkToday: Math.max(0, Math.floor(Number(input.peopleGotLinkToday) || 0)),
+  };
+  const total = lastWorldwideInput.total;
   const unique = Math.max(0, Math.floor(Number(input.uniqueReferrers) || 0));
   const leader = Math.max(0, Math.floor(Number(input.leaderCount) || 0));
   const gotLink = Math.max(0, Math.floor(Number(input.peopleGotLinkToday) || 0));
@@ -75,7 +87,7 @@ export function applyWorldwideReferralTotal(input: {
       numEl.textContent = '';
       numEl.setAttribute('data-vr-total-verified', '0');
     }
-    if (labelEl) labelEl.textContent = EMPTY_BOARD_LINE;
+    if (labelEl) labelEl.textContent = t('proof.board_open_line' as MessageKey);
   } else {
     if (numEl) {
       numEl.textContent = numText;
@@ -114,12 +126,11 @@ export function applyWorldwideReferralTotal(input: {
   const lbLabel = document.getElementById('leaderboard-total-label');
   if (total <= 0 && unique <= 0) {
     if (lbTotal) lbTotal.textContent = '';
-    if (lbLabel) lbLabel.textContent = 'Board is open. #1 is winnable this week.';
+    if (lbLabel) lbLabel.textContent = t('proof.board_open_line' as MessageKey);
   } else {
     if (lbTotal) lbTotal.textContent = numText;
     if (lbLabel) {
-      lbLabel.textContent =
-        total === 1 ? 'verified referral worldwide' : 'verified referrals worldwide';
+      lbLabel.textContent = formatVerifiedReferralTotalLabel(total);
     }
   }
 
@@ -137,4 +148,8 @@ export function applyWorldwideReferralTotal(input: {
       `${numText} ${formatVerifiedReferralTotalLabel(total)}. ${formatPeopleGotLinkToday(gotLink)}`,
     );
   }
+}
+
+export function reapplyWorldwideReferralTotal(): void {
+  applyWorldwideReferralTotal(lastWorldwideInput);
 }

@@ -25,18 +25,21 @@ export function isLocale(raw: string | null | undefined): raw is Locale {
   return !!raw && (SUPPORTED_LOCALES as readonly string[]).includes(raw);
 }
 
+const RTL_LOCALES = new Set<string>(['ar']);
+
+function applyDocumentDir(locale: Locale): void {
+  try {
+    document.documentElement.dir = RTL_LOCALES.has(locale) ? 'rtl' : 'ltr';
+  } catch {
+    /* non-fatal */
+  }
+}
+
 /** Map navigator / Accept-Language tags → supported locale. */
 export function normalizeLocale(tag: string | null | undefined): Locale {
   if (!tag) return 'en';
   const base = tag.trim().toLowerCase().split(/[-_]/)[0] || 'en';
-  if (base === 'en') return 'en';
-  if (base === 'es') return 'es';
-  if (base === 'fr') return 'fr';
-  if (base === 'pt') return 'pt';
-  if (base === 'de') return 'de';
-  if (base === 'hi') return 'hi';
-  // Portuguese Brazil / European already covered by pt
-  // Chinese etc. → English until Phase 2
+  if (isLocale(base)) return base;
   return 'en';
 }
 
@@ -106,6 +109,7 @@ export function applyI18n(locale: Locale = current, root: ParentNode = document)
   try {
     document.documentElement.lang = locale === 'en' ? 'en' : locale;
     document.documentElement.setAttribute(ATTR, locale);
+    applyDocumentDir(locale);
   } catch {
     /* non-fatal */
   }
@@ -156,7 +160,14 @@ export function applyI18n(locale: Locale = current, root: ParentNode = document)
   // Sync any language pickers (nav + embed)
   document.querySelectorAll<HTMLSelectElement>('.vr-lang-select').forEach((select) => {
     if (select.value !== locale) select.value = locale;
+    select.setAttribute('aria-label', t('nav.lang', locale));
+    const wrap = select.closest('.vr-lang-picker');
+    if (wrap) wrap.setAttribute('title', t('lang.hint', locale));
+    const sr = wrap?.querySelector('.sr-only');
+    if (sr) sr.textContent = t('nav.lang', locale);
   });
+  const footerLabel = document.getElementById('vr-lang-footer-label');
+  if (footerLabel) footerLabel.textContent = LOCALE_LABELS[locale];
 
   applied = true;
 }
@@ -188,8 +199,8 @@ function createLangPickerWrap(selectId: string, extraClass = ''): HTMLLabelEleme
   wrap.className = `vr-lang-picker ${extraClass}`.trim();
   wrap.setAttribute('title', t('lang.hint'));
   wrap.innerHTML = `
-    <span class="sr-only">${t('nav.lang')}</span>
-    <select id="${selectId}" class="vr-lang-select" aria-label="${t('nav.lang')}">
+    <span class="sr-only" data-i18n="nav.lang">${t('nav.lang')}</span>
+    <select id="${selectId}" class="vr-lang-select" aria-label="${t('nav.lang')}" data-i18n-aria="nav.lang">
       ${SUPPORTED_LOCALES.map(
         (loc) => `<option value="${loc}">${LOCALE_LABELS[loc]}</option>`,
       ).join('')}

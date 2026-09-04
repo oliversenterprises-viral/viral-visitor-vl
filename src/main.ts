@@ -18,6 +18,7 @@ import { initPublicPolish } from './lib/public-polish';
 import { initEmbedMode } from './lib/embed-mode';
 import { initViralLoops } from './lib/viral-loops';
 import { initI18n } from './lib/i18n';
+import { lock844HomepageCopy } from './lib/hero-cta-variant';
 
 // Public layer (all onclick handlers, modals, debug, etc.)
 import { initPublic } from './public';
@@ -37,6 +38,19 @@ try {
   initI18n();
 } catch (err) {
   console.warn('[ViralRefer] i18n init skipped:', err);
+}
+try {
+  lock844HomepageCopy();
+} catch {
+  /* static HTML stays */
+}
+try {
+  window.addEventListener('vr:locale-change', ((ev: Event) => {
+    const locale = (ev as CustomEvent<{ locale?: string }>).detail?.locale;
+    if (locale === 'en') lock844HomepageCopy();
+  }) as EventListener);
+} catch {
+  /* non-fatal */
 }
 
 // console.log('%c[ViralRefer] main.ts module loaded', 'color:#64748b'); // silenced for prod (audit cleanup)

@@ -6,6 +6,7 @@
 import { formatSharePlatformLabel, type PublicActivityRow } from './public-activity';
 import { escapeHtml } from './escape-html';
 import { isEmbedMode } from './embed-mode';
+import { t } from './i18n';
 
 /** Important conversion steps (excludes passive SiteLanding). */
 export const TICKER_FUNNEL_STEPS = [
@@ -32,13 +33,14 @@ export interface FunnelTickerRow {
   previous_rank?: number | null;
 }
 
-const STEP_LABELS: Record<string, string> = {
-  GetReferralLink: 'just got their referral link',
-  CopyReferralLink: 'just copied their link',
-  ShareReferral: 'just shared their link',
-  OpenPrizeClaim: 'opened the #1 feature claim',
-  SubmitPrizeClaim: 'submitted a #1 feature claim',
-};
+function stepLabel(step: string): string {
+  if (step === 'GetReferralLink') return t('ticker.step_get');
+  if (step === 'CopyReferralLink') return t('ticker.step_copy');
+  if (step === 'ShareReferral') return t('ticker.step_share');
+  if (step === 'OpenPrizeClaim') return t('ticker.step_claim_open');
+  if (step === 'SubmitPrizeClaim') return t('ticker.step_claim_submit');
+  return t('ticker.took_step');
+}
 
 export function isTickerFunnelStep(step: string | undefined): step is TickerFunnelStep {
   return !!step && (TICKER_FUNNEL_STEPS as readonly string[]).includes(step);
@@ -55,34 +57,32 @@ function countryPhrase(country: string | null | undefined): string {
   const c = String(country || '')
     .trim()
     .toUpperCase();
-  if (!c || c.length !== 2 || c === 'XX' || c === 'ZZ') return 'Someone';
-  return `Someone in ${c}`;
+  if (!c || c.length !== 2 || c === 'XX' || c === 'ZZ') return t('ticker.someone');
+  return t('ticker.someone_in', { cc: c });
 }
 
 function shortCode(code: string | undefined): string {
   const c = String(code || '')
     .trim()
     .toUpperCase();
-  if (!c) return 'a participant';
+  if (!c) return t('ticker.participant');
   return c.length > 14 ? `${c.slice(0, 12)}…` : c;
 }
 
 /** Human FOMO line for one ticker row (no HTML). */
 export function formatFunnelTickerLabel(row: FunnelTickerRow): string {
   if (row.kind === 'funnel' && row.step) {
-    const action = STEP_LABELS[row.step] || 'took a big step';
-    return `${countryPhrase(row.country_code)} ${action}`;
+    return `${countryPhrase(row.country_code)} ${stepLabel(row.step)}`;
   }
   if (row.kind === 'share') {
     const platform = formatSharePlatformLabel(row.platform);
-    return `${shortCode(row.referrer_code)} shared on ${platform}`;
+    return t('ticker.shared_on', { code: shortCode(row.referrer_code), platform });
   }
   if (row.kind === 'rank_move' && row.new_rank != null) {
-    if (row.new_rank === 1) return `${shortCode(row.referrer_code)} just hit #1`;
-    return `${shortCode(row.referrer_code)} climbed to #${row.new_rank}`;
+    if (row.new_rank === 1) return t('ticker.hit_1', { code: shortCode(row.referrer_code) });
+    return t('ticker.climbed', { code: shortCode(row.referrer_code), rank: row.new_rank });
   }
-  // referral credited
-  return `New referral credited to ${shortCode(row.referrer_code)}`;
+  return t('ticker.credited', { code: shortCode(row.referrer_code) });
 }
 
 export function normalizeFunnelTickerRows(raw: unknown): FunnelTickerRow[] {
@@ -202,7 +202,7 @@ export function mergeFunnelTickerRows(
 /** Build marquee HTML (duplicated track for seamless loop). */
 export function buildFunnelTickerHtml(rows: readonly FunnelTickerRow[]): string {
   if (!rows.length) {
-    return `<span class="vr-funnel-ticker-item"><span class="vr-funnel-ticker-icon" aria-hidden="true">⚡</span>The worldwide board is live — share your link to climb</span>`;
+    return `<span class="vr-funnel-ticker-item"><span class="vr-funnel-ticker-icon" aria-hidden="true">⚡</span>${escapeHtml(t('ticker.empty'))}</span>`;
   }
   const items = rows
     .map((row) => {
@@ -232,11 +232,11 @@ export function ensureFunnelTickerDom(): HTMLElement | null {
   el.id = 'vr-funnel-ticker';
   el.className = 'vr-funnel-ticker hidden';
   el.setAttribute('role', 'region');
-  el.setAttribute('aria-label', 'Live worldwide activity');
+  el.setAttribute('aria-label', t('ticker.aria'));
   el.setAttribute('hidden', '');
   el.innerHTML = `
     <div class="vr-funnel-ticker-bar">
-      <span class="vr-funnel-ticker-live" aria-hidden="true"><i class="fa-solid fa-bolt"></i> LIVE WORLDWIDE</span>
+      <span class="vr-funnel-ticker-live" aria-hidden="true"><i class="fa-solid fa-bolt"></i> ${escapeHtml(t('ticker.live'))}</span>
       <div class="vr-funnel-ticker-viewport">
         <div class="vr-funnel-ticker-track" id="vr-funnel-ticker-track"></div>
       </div>
@@ -265,10 +265,23 @@ export function setFunnelTickerVisible(visible: boolean): void {
   }
 }
 
+let lastTickerRows: FunnelTickerRow[] = [];
+let tickerLocaleBound = false;
+
 export function renderFunnelTickerRows(rows: readonly FunnelTickerRow[]): void {
+  lastTickerRows = [...rows];
   const el = ensureFunnelTickerDom();
   if (!el) return;
+  const live = el.querySelector('.vr-funnel-ticker-live');
+  if (live) live.innerHTML = `<i class="fa-solid fa-bolt"></i> ${escapeHtml(t('ticker.live'))}`;
+  el.setAttribute('aria-label', t('ticker.aria'));
   const track = el.querySelector('#vr-funnel-ticker-track') as HTMLElement | null;
   if (!track) return;
   track.innerHTML = buildFunnelTickerHtml(rows);
+  if (!tickerLocaleBound && typeof window !== 'undefined') {
+    tickerLocaleBound = true;
+    window.addEventListener('vr:locale-change', () => {
+      renderFunnelTickerRows(lastTickerRows);
+    });
+  }
 }

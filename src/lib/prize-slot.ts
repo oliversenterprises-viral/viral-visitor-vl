@@ -12,7 +12,7 @@ export const EMPTY_BOARD_LINE = 'Board is open. #1 is winnable this week.';
 export const DAILY_CROWN_NOT_BANNER = 'Not the homepage banner.';
 
 export const LOCKED_SHARE_TEXT =
-  "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count. {link}";
+  "I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner for 7 days. Tap Get my link. Visiting does not count. {link}";
 
 export const LOCKED_OG_TITLE = 'Win the ViralRefer homepage — Site Drops + #1 banner';
 

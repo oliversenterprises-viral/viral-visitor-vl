@@ -39,6 +39,7 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+.wrangler
 .env*
 
 # Agent/session artifacts (not product source)

@@ -41,7 +41,10 @@ describe('first-screen Site Drops rules', () => {
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).toContain('id="hero-get-link-btn"');
     expect(hero).toContain(LOCKED_SITE_DROPS_CTA);
+    expect(hero).toContain('data-i18n="hero.cta_short">Get my link');
     expect((hero.match(/id="hero-get-link-btn"/g) || []).length).toBe(1);
+    const btn = hero.slice(hero.indexOf('id="hero-get-link-btn"'), hero.indexOf('</button>', hero.indexOf('id="hero-get-link-btn"')));
+    expect(btn.indexOf('hero.cta')).toBeLessThan(btn.indexOf('hero.cta_short'));
   });
 
   it('hides extra slot lines so the CTA fits 1280x800 and 390x844', () => {
@@ -53,6 +56,48 @@ describe('first-screen Site Drops rules', () => {
     expect(css).toMatch(/html:not\(\[data-vr-has-link\]\) #hero-week-clock/);
     expect(css).toMatch(/@media \(max-height: 820px\) and \(min-width: 1024px\)/);
     expect(css).toMatch(/@media \(max-width: 639px\)/);
+    expect(css).not.toMatch(/html:not\(\[data-vr-has-link\]\) #site-drop-rungs/);
+    expect(css).toMatch(/html:not\(\[data-vr-paid-landing\]\) #mobile-referral-cta/);
+    expect(css).toMatch(/html\[data-vr-funnel-expanded\] #vr-nav a\[href="\/tools\/"\]/);
+    expect(css).toMatch(/@media \(max-width: 639px\)[\s\S]{0,400}#vr-nav \.vr-wordmark/);
+    expect(css).toMatch(/#admin-btn\.hidden[\s\S]{0,60}display:\s*none\s*!important/);
+    expect(css).toMatch(
+      /html:not\(\[data-vr-funnel-expanded\]\):not\(\[data-vr-has-link\]\) \.vr-nav-links \.vr-lang-picker/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-funnel-expanded\]\):not\(\[data-vr-has-link\]\) \.vr-nav-links \.vr-nav-link/,
+    );
+    expect(css).toMatch(
+      /html\[data-vr-direct-landing\]\[data-vr-funnel-expanded\]:not\(\[data-vr-has-link\]\) a\.vr-nav-link\[href="#prize"\]/,
+    );
+    expect(css).toMatch(/#hero-get-link-btn \.hero-cta-short/);
+    expect(css).toMatch(/#hero-get-link-btn \.hero-cta-long/);
+  });
+
+  it('keeps compact Just entered / Rising / Challenger rungs on first paint', () => {
+    const html = read('index.html');
+    const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
+    expect(hero).toContain('id="site-drop-rungs"');
+    expect(hero).toContain('Just entered');
+    expect(hero).toContain('Rising');
+    expect(hero).toContain('Challenger');
+    expect(hero).toContain('drop.rung_open">open');
+    expect(hero.indexOf('id="site-drop-rungs"')).toBeLessThan(hero.indexOf('id="hero-get-link-btn"'));
+    expect(hero.indexOf('id="hero-banner-mock"')).toBeLessThan(hero.indexOf('id="site-drop-rungs"'));
+    const banner = html.slice(
+      html.indexOf('id="hero-banner-mock"'),
+      html.indexOf('id="site-drop-rungs"'),
+    );
+    expect(banner).not.toContain('id="site-drop-rung-entered"');
+    expect(html).toContain('Paste your site — 15 min');
+    expect(html).toContain('data-i18n="drop.submit_short">Paste site');
+    expect(html).toContain('placeholder="Paste yoursite.com"');
+    const share = html.slice(html.indexOf('id="post-link-share"'), html.indexOf('id="referral-turnstile-container"'));
+    expect(share).toContain('id="send-ladder-proof"');
+    expect(share.indexOf('id="send-ladder-proof"')).toBeGreaterThan(share.indexOf('id="post-link-primary"'));
+    expect(share).toContain('data-send-rung="entered"');
+    expect(share).toContain('data-send-rung="rising"');
+    expect(share).toContain('data-send-rung="challenger"');
   });
 
   it('keeps the wordmark readable at #f4f4f5', () => {
@@ -74,6 +119,15 @@ describe('first-screen Site Drops rules', () => {
     expect(css).not.toMatch(/#leaderboard\s*\{[^}]*display:\s*none/);
     expect(css).not.toMatch(/footer\s*\{[^}]*display:\s*none/);
     expect(css).toContain(':not(#how):not(#leaderboard)');
+    expect(css).toMatch(
+      /html:not\(\[data-vr-funnel-expanded\]\):not\(\[data-vr-has-link\]\) \[data-vr-below-fold\]\[id="how"\]/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-funnel-expanded\]\):not\(\[data-vr-has-link\]\) \.vr-page-shell/,
+    );
+    expect(css).toMatch(
+      /html:not\(\[data-vr-funnel-expanded\]\):not\(\[data-vr-has-link\]\) #funnel-expand-wrap/,
+    );
     const html = read('index.html');
     expect(html).toContain('id="site-drops"');
     expect(html).toMatch(/id="site-drops"[^>]*data-vr-below-fold/);
@@ -184,6 +238,152 @@ describe('first-screen Site Drops rules', () => {
     expect(read('src/lib/turnstile.ts')).not.toMatch(/size:\s*['"]invisible['"]/);
     expect(read('src/lib/turnstile.ts')).toContain('prefetchCreditTurnstileToken');
     expect(read('index.html')).toContain('id="friend-credit-turnstile"');
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-referred-landing\]:not\(\[data-vr-has-link\]\) \.friend-credit-turnstile/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #hero-prize-one/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #hero-subtitle/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-has-link\]:not\(\[data-vr-credit-status='pending'\]\):not\(\[data-vr-credit-status='failed'\]\) \.friend-credit-turnstile/,
+    );
+    expect(read('src/style.css')).toContain('post-link-site-drop__jump');
+    expect(read('index.html')).toContain('post-link-site-drop__jump');
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-post-link-one\] #post-link-url/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-post-link-one\] #post-link-tool/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-post-link-one\] #share-deadline-banner/,
+    );
+    expect(read('src/lib/site-drops-ui.ts')).toContain('prefetchSiteDropToken');
+    expect(read('src/lib/site-drops-ui.ts')).toContain('prefetchSiteDropScript');
+    expect(read('src/lib/site-drops-ui.ts')).toMatch(
+      /function prefetchSiteDropToken\(\)[\s\S]{0,280}normalizeWebsiteUrl\(readFormWebsite\(\)\)\) return/,
+    );
+    expect(read('src/lib/site-drops-ui.ts')).toMatch(
+      /export function revealSiteDropForm[\s\S]{0,900}prefetchSiteDropScript\(\)/,
+    );
+    expect(read('src/lib/post-link-share.ts')).toContain('prefetchSiteDropScript');
+    expect(read('src/style.css')).toContain('#post-link-site-drop-turnstile:not(:has(iframe))');
+    expect(read('src/lib/site-drops-ui.ts')).toContain(
+      'Send it — a friend tapping Get my link is the climb.',
+    );
+    expect(read('src/lib/site-drops-ui.ts')).toMatch(
+      /data-vr-did-paste[\s\S]{0,280}post-link-primary/,
+    );
+    expect(read('src/lib/share-abandon-rescue.ts')).toContain("getElementById('post-link-primary')");
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-post-link-one\] #share-confirm-banner/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-has-link\] #referral-attribution/,
+    );
+    expect(read('src/lib/post-link-share.ts')).toContain('focusSendReady');
+    expect(read('src/referral.ts')).not.toContain('maybeOfferSameGestureShare');
+    expect(read('src/style.css')).toMatch(/html\[data-vr-has-link\] #post-link-heading/);
+    expect(read('src/style.css')).toMatch(/html\[data-vr-has-link\] #post-link-sub/);
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-has-link\] #post-link-share\[data-state='loading'\] #post-link-site-drop/,
+    );
+    expect(read('src/style.css')).toMatch(/html\[data-vr-has-link\] \.vr-nav-link/);
+    expect(read('src/style.css')).toMatch(/html\[data-vr-has-link\] #post-link-site-drop-jump/);
+    expect(read('src/style.css')).toMatch(/html\[data-vr-has-link\] #post-link-copy/);
+    expect(read('src/lib/post-link-share.ts')).toContain("data-vr-did-send");
+    expect(read('src/lib/post-link-share.ts')).toContain('armPasteAfterSend');
+    expect(read('src/lib/post-link-share.ts')).not.toContain(', 700)');
+    expect(read('src/lib/post-link-share.ts')).toContain('saveSiteDropIfUrlReady');
+    expect(read('src/style.css')).toMatch(
+      /html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-micro\]\) #hero-title-accent/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-micro\]\) #hero-prize-one/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /#hero-prize-one,\s*html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-micro\]\) #hero-banner-mock,\s*html:not\(\[data-vr-has-link\]\):not\(\[data-vr-referred-micro\]\) #funnel-expand-wrap/,
+    );
+    expect(read('index.html').indexOf('id="site-footer"')).toBeLessThan(
+      read('index.html').indexOf('id="friend-credit-turnstile"'),
+    );
+    expect(read('src/style.css')).toContain('#friend-credit-turnstile:not(:has(iframe))');
+    expect(read('src/style.css')).toContain('html[data-vr-did-send] .post-link-site-drop__submit');
+    expect(read('src/style.css')).toMatch(/html\[data-vr-has-link\] \.vr-hero-panel/);
+    expect(read('src/style.css')).toMatch(/html\[data-vr-has-link\] #vr-funnel-ticker/);
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-has-link\] \.vr-page-shell[\s\S]{0,220}padding-top:\s*3\.25rem/,
+    );
+    expect(read('src/style.css')).toContain('padding-top: 3.4rem !important');
+    const shareHtml = read('index.html').slice(
+      read('index.html').indexOf('id="post-link-share"'),
+      read('index.html').indexOf('id="referral-turnstile-container"'),
+    );
+    expect(shareHtml.indexOf('id="post-link-primary"')).toBeGreaterThan(-1);
+    expect(shareHtml.indexOf('id="post-link-site-drop"')).toBeGreaterThan(
+      shareHtml.indexOf('id="post-link-primary"'),
+    );
+    expect(shareHtml.indexOf('id="post-link-site-drop-turnstile"')).toBeGreaterThan(
+      shareHtml.indexOf('id="post-link-site-drop-submit"'),
+    );
+    expect(shareHtml.indexOf('id="site-entered-ticker"')).toBeGreaterThan(
+      shareHtml.indexOf('id="post-link-site-drop"'),
+    );
+    expect(shareHtml.indexOf('id="post-link-copy"')).toBeGreaterThan(
+      shareHtml.indexOf('id="site-entered-ticker"'),
+    );
+    expect(read('src/lib/site-drops-ui.ts')).toContain('keydown');
+    expect(read('src/lib/site-drops-ui.ts')).toContain('data-vr-did-paste');
+    expect(read('src/lib/site-drops-ui.ts')).toContain('paintOwnSiteDropChip');
+    expect(read('src/lib/site-drops-ui.ts')).toContain('site-entered-ticker__empty');
+    expect(read('src/style.css')).toContain('html[data-vr-did-paste] .post-link-site-drop__submit');
+    expect(read('src/style.css')).toContain('html:not([data-vr-did-paste]) #send-ladder-proof');
+    expect(read('src/style.css')).toContain('html[data-vr-did-paste] #send-ladder-proof');
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-did-paste\] #site-entered-ticker/,
+    );
+    expect(read('src/style.css')).toContain('#site-drop-status:empty');
+    expect(read('src/style.css')).toContain('#site-entered-chips:empty');
+    expect(read('src/style.css')).toMatch(/html\[data-vr-did-paste\] #post-link-site-drop \{/);
+    expect(read('src/lib/site-drops-ui.ts')).toContain('data-send-rung');
+    expect(read('src/lib/site-drops-ui.ts')).toContain('vrFromPaste');
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-did-send\]:not\(\[data-vr-did-paste\]\) #post-link-site-drop/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-did-send\]:not\(\[data-vr-did-paste\]\) \.post-link-site-drop__title/,
+    );
+    expect(read('src/style.css')).toMatch(/html\[data-vr-did-send\] \.drop-submit-short/);
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-has-link\] \.post-link-site-drop[\s\S]{0,180}width:\s*100%/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-did-send\]:not\(\[data-vr-did-paste\]\) #post-link-primary/,
+    );
+    expect(read('src/style.css')).toMatch(/html\[data-vr-did-paste\] #post-link-primary/);
+    expect(read('src/style.css')).toMatch(/html\[data-vr-did-send\] \.vr-share-abandon/);
+    expect(read('src/style.css')).toMatch(/html\[data-vr-has-link\] #site-entered-chips/);
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-did-send\]:not\(\[data-vr-did-paste\]\) #site-entered-ticker/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /#post-link-share:not\(\.hidden\)[\s\S]{0,80}display:\s*flex/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /\.post-link-site-drop__submit[\s\S]{0,360}linear-gradient\(90deg, #6d28d9/,
+    );
+    expect(read('src/style.css')).not.toMatch(
+      /html\[data-vr-has-link\] \.post-link-site-drop__title,\s*html\[data-vr-post-link-one\] \.post-link-site-drop__title,/,
+    );
+    expect(read('index.html')).toMatch(/id="post-link-site-drop-url"[^>]*type="text"/);
+    expect(read('index.html')).toMatch(/id="post-link-site-drop-url"[^>]*aria-label="Your website"/);
+    expect(read('supabase/functions/_shared/record-referral-handler.ts')).toContain(
+      'tryClimbSiteDrop',
+    );
+    expect(read('src/lib/site-drops-ui.ts')).toContain('submitInFlight');
     expect(read('vercel.json')).toContain('https://*.challenges.cloudflare.com');
     expect(read('src/public/modals.ts')).toMatch(/z-\[990\]/);
     expect(read('src/public/modals.ts')).toMatch(/dismissShareAbandonOverlay\(\)/);

@@ -5,6 +5,7 @@
  */
 
 import { DAILY_SHARE_QUEST_GOAL } from './daily-share-quest';
+import { t } from './i18n';
 
 export type GrowthNextActionKind =
   | 'get_link'
@@ -40,14 +41,16 @@ export interface GrowthNextAction {
   ctaLabel: string;
 }
 
-const CREDIT_SUB = 'A friend must tap Get my link to credit you.';
+function creditSub(): string {
+  return t('growth.credit_sub');
+}
 
 function shareKind(native: boolean): 'native_share' | 'whatsapp_boost' {
   return native ? 'native_share' : 'whatsapp_boost';
 }
 
 function shareCta(native: boolean): string {
-  return native ? 'Share now' : 'Share on WhatsApp';
+  return native ? t('growth.cta_native') : t('growth.cta_whatsapp');
 }
 
 function shareIcon(native: boolean): string {
@@ -59,11 +62,11 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
   if (!input.hasLink) {
     return {
       kind: 'get_link',
-      headline: 'Start the viral loop',
-      subline: 'Get your free link in ~30 seconds - no signup.',
+      headline: t('growth.get_headline'),
+      subline: t('growth.get_sub'),
       urgency: 'high',
       icon: 'fa-gift',
-      ctaLabel: 'Get my referral link',
+      ctaLabel: t('hero.cta'),
     };
   }
 
@@ -71,12 +74,13 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
   const kind = shareKind(native);
   const ctaLabel = shareCta(native);
   const icon = shareIcon(native);
+  const subline = creditSub();
 
   if (input.gapToNext === 1 && input.rank != null && input.rank > 1) {
     return {
       kind,
-      headline: 'One referral from overtaking!',
-      subline: CREDIT_SUB,
+      headline: t('growth.overtake'),
+      subline,
       urgency: 'critical',
       icon,
       ctaLabel,
@@ -86,8 +90,8 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
   if (input.rank === 1) {
     return {
       kind,
-      headline: 'Defend your #1 throne',
-      subline: CREDIT_SUB,
+      headline: t('growth.defend'),
+      subline,
       urgency: 'high',
       icon,
       ctaLabel,
@@ -97,8 +101,8 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
   if (input.referrals === 0 && input.shareStreak === 0) {
     return {
       kind,
-      headline: "You're in. Send your link.",
-      subline: CREDIT_SUB,
+      headline: t('growth.in_send'),
+      subline,
       urgency: 'high',
       icon,
       ctaLabel,
@@ -109,8 +113,8 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
     const left = DAILY_SHARE_QUEST_GOAL - input.dailyShares;
     return {
       kind,
-      headline: `Daily boost: ${left} share${left === 1 ? '' : 's'} left`,
-      subline: CREDIT_SUB,
+      headline: t('growth.daily', { n: left, s: left === 1 ? '' : 's' }),
+      subline,
       urgency: 'high',
       icon,
       ctaLabel,
@@ -120,8 +124,8 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
   if (input.gapToNext != null && input.gapToNext > 1 && input.rank != null && input.rank > 1) {
     return {
       kind,
-      headline: `${input.gapToNext} referrals from rank #${input.rank - 1}`,
-      subline: CREDIT_SUB,
+      headline: t('growth.gap', { n: input.gapToNext, rank: input.rank - 1 }),
+      subline,
       urgency: 'high',
       icon,
       ctaLabel,
@@ -130,8 +134,8 @@ export function resolveGrowthNextAction(input: GrowthNextActionInput): GrowthNex
 
   return {
     kind,
-    headline: 'Send your link',
-    subline: CREDIT_SUB,
+    headline: t('growth.send'),
+    subline,
     urgency: 'normal',
     icon,
     ctaLabel,

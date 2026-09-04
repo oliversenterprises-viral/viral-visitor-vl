@@ -53,6 +53,8 @@ export interface ShareAbandonEligibility {
   isPaidTraffic?: boolean;
   /** Owner desk / ?owner=1 — never cover HQ Command. */
   owner?: boolean;
+  /** Already tapped Send — paste / send-more is the job, not this overlay. */
+  didSend?: boolean;
 }
 
 /** Dwell before share-abandon panel (paid traffic is faster). */
@@ -67,10 +69,10 @@ export function resolveShareAbandonDwellMs(opts: {
 }
 
 export function shouldShowShareAbandon(opts: ShareAbandonEligibility): boolean {
+  if (opts.didSend) return false;
   if (opts.owner || opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
   if (opts.alreadyMaxShows || opts.snoozed || opts.confirmFlowActive) return false;
-  // Poll is the softest path — never interrupt if they can already see Send
-  if (opts.reason === 'poll' && opts.shareStripInView) return false;
+  if (opts.shareStripInView) return false;
   const need = resolveShareAbandonDwellMs({
     isCoarsePointer: opts.isCoarsePointer,
     isPaidTraffic: opts.isPaidTraffic,
@@ -89,7 +91,9 @@ export function shouldArmBeforeUnload(opts: {
   sessionShows: number;
   dwellMs: number;
   owner?: boolean;
+  didSend?: boolean;
 }): boolean {
+  if (opts.didSend) return false;
   if (opts.owner || opts.embed || opts.locked || !opts.hasLink || !opts.sharePending) return false;
   if (opts.confirmFlowActive || opts.snoozed) return false;
   if (opts.sessionShows >= 1) return true;
@@ -164,12 +168,12 @@ function confirmFlowActive(): boolean {
 /** True when share-first / sticky send is largely in the viewport. */
 export function isShareStripInView(win: Window = window): boolean {
   const el =
+    win.document.getElementById('post-link-primary') ||
     win.document.getElementById('share-first-strip') ||
     win.document.getElementById('mobile-send-cta') ||
     win.document.getElementById('native-share-btn');
   if (!el) return false;
-  if (el.classList.contains('hidden')) {
-    // sticky may be the only visible path
+  if (el.classList.contains('hidden') || (el as HTMLElement).hidden) {
     const sticky = win.document.getElementById('mobile-send-cta');
     if (!sticky || sticky.classList.contains('hidden')) return false;
     return stickyInViewport(sticky, win);
@@ -241,10 +245,11 @@ function showAbandonPanel(reason: string): void {
       isCoarsePointer: false,
       embed: isEmbedMode(),
       confirmFlowActive: confirmFlowActive(),
-      shareStripInView: reason === 'poll' ? isShareStripInView() : false,
+      shareStripInView: isShareStripInView(),
       reason,
       isPaidTraffic: document.documentElement.getAttribute('data-vr-paid-landing') === '1',
       owner: isOwnerHqContext(),
+      didSend: document.documentElement.hasAttribute('data-vr-did-send'),
     })
   ) {
     return;
@@ -342,10 +347,11 @@ function tryShow(reason: string, startedAt: number, coarse: boolean): void {
       isCoarsePointer: coarse,
       embed: isEmbedMode(),
       confirmFlowActive: confirmFlowActive(),
-      shareStripInView: reason === 'poll' ? isShareStripInView() : false,
+      shareStripInView: isShareStripInView(),
       reason,
       isPaidTraffic: document.documentElement.getAttribute('data-vr-paid-landing') === '1',
       owner: isOwnerHqContext(),
+      didSend: document.documentElement.hasAttribute('data-vr-did-send'),
     })
   ) {
     return;
@@ -367,6 +373,7 @@ function makeBeforeUnloadHandler(startedAt: number) {
         sessionShows: sessionShows(),
         dwellMs: Date.now() - startedAt,
         owner: isOwnerHqContext(),
+        didSend: document.documentElement.hasAttribute('data-vr-did-send'),
       })
     ) {
       return;
@@ -428,7 +435,12 @@ export function initShareAbandonRescue(win: Window = window): void {
 
   // Periodic re-surface only if they scrolled away from send UI
   win.setInterval(() => {
-    if (!hasLink() || isLocked() || !isSharePendingLocal()) {
+    if (
+      !hasLink() ||
+      isLocked() ||
+      !isSharePendingLocal() ||
+      win.document.documentElement.hasAttribute('data-vr-did-send')
+    ) {
       removePanel();
       return;
     }
@@ -442,7 +454,9 @@ export function initShareAbandonRescue(win: Window = window): void {
       dismissShareAbandonOverlay(win.document);
       return;
     }
-    if (isLocked() || !isSharePendingLocal()) removePanel();
+    if (isLocked() || !isSharePendingLocal() || win.document.documentElement.hasAttribute('data-vr-did-send')) {
+      removePanel();
+    }
     const desk = win.document.getElementById('admin-modal');
     const gate = win.document.getElementById('admin-owner-gate-modal');
     if ((desk && !desk.classList.contains('hidden')) || (gate && !gate.classList.contains('hidden'))) {
@@ -455,6 +469,7 @@ export function initShareAbandonRescue(win: Window = window): void {
       'data-vr-share-locked',
       'data-vr-share-pending',
       'data-vr-has-link',
+      'data-vr-did-send',
       'data-vr-owner-hq',
     ],
   });

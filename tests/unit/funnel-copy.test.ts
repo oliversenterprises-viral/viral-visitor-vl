@@ -16,8 +16,14 @@ describe('funnel-copy CMS overrides', () => {
     expect(getFunnelCopy('funnel_step2_label')).toBe('2. Copy link');
   });
 
-  it('getFunnelGuideCopy prefers CMS override', () => {
+  it('getFunnelGuideCopy prefers a safe CMS override', () => {
+    initFunnelCopyFromContent({ funnel_guide_step2: 'Send it now. Copying does not lock.' });
+    expect(getFunnelGuideCopy(2).message).toBe('Send it now. Copying does not lock.');
+  });
+
+  it('rejects CMS guide copy that teaches COPY as the scoring step', () => {
     initFunnelCopyFromContent({ funnel_guide_step2: 'Admin says: hit COPY now' });
-    expect(getFunnelGuideCopy(2).message).toBe('Admin says: hit COPY now');
+    expect(getFunnelGuideCopy(2).message).toMatch(/send it to a friend/i);
+    expect(getFunnelGuideCopy(2).message).not.toMatch(/hit COPY/i);
   });
 });

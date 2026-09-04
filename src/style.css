@@ -435,8 +435,56 @@ html:not([data-vr-has-link]) #nav-get-link-btn {
   display: none !important;
 }
 
+/* Organic first screen: one Get my referral link. No second sticky bar. */
+html:not([data-vr-paid-landing]) #mobile-referral-cta,
+html[data-vr-has-link] #mobile-referral-cta,
+html[data-vr-post-link-one] #mobile-referral-cta {
+  display: none !important;
+}
+
 #vr-nav a[href="/tools/"] {
   display: none !important;
+}
+#admin-btn.hidden {
+  display: none !important;
+}
+#admin-btn:not(.hidden) {
+  display: inline-flex !important;
+}
+html[data-vr-funnel-expanded] #vr-nav a[href="/tools/"],
+html[data-vr-has-link] #vr-nav a[href="/tools/"] {
+  display: inline !important;
+}
+
+/* Phone nav: V mark + How/Board (Feature after expand). Tools stays in the footer. */
+@media (max-width: 639px) {
+  #vr-nav .vr-wordmark {
+    display: none;
+  }
+  #vr-nav .vr-nav-links {
+    gap: 0.55rem;
+  }
+  #vr-nav .vr-nav-link {
+    font-size: 0.78rem;
+  }
+  html[data-vr-funnel-expanded] #vr-nav a[href="/tools/"],
+  html[data-vr-has-link] #vr-nav a[href="/tools/"] {
+    display: none !important;
+  }
+  .vr-lang-select {
+    max-width: 5.75rem;
+    font-size: 0.68rem;
+    min-height: 32px;
+    padding: 0.28rem 1.35rem 0.28rem 0.5rem;
+  }
+  html:not([data-vr-funnel-expanded]):not([data-vr-has-link]) .vr-nav-links .vr-lang-picker,
+  html:not([data-vr-funnel-expanded]):not([data-vr-has-link]) .vr-nav-links .vr-nav-link {
+    display: none !important;
+  }
+  html:not([data-vr-funnel-expanded]):not([data-vr-has-link]) #vr-nav > div {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+  }
 }
 
 #vr-verified-total:not(.vr-verified-total--ready) {
@@ -444,7 +492,8 @@ html:not([data-vr-has-link]) #nav-get-link-btn {
 }
 
 
-/* Extra slot lines stay off the first view so Get my referral link fits */
+/* Extra slot lines stay off the first view so Get my referral link fits.
+   #site-drop-rungs stays: compact Just entered / Rising / Challenger proof. */
 html:not([data-vr-has-link]) #hero-ad-inventory,
 html:not([data-vr-has-link]) #hero-ad-race,
 html:not([data-vr-has-link]) #hero-slot-preview,
@@ -454,6 +503,48 @@ html:not([data-vr-has-link]) #hero-slot-thumb,
 html:not([data-vr-has-link]) #site-challenger-strip,
 html:not([data-vr-has-link]) #site-entered-ticker {
   display: none !important;
+}
+
+html[data-vr-has-link] #site-drop-rungs,
+html[data-vr-post-link-one] #site-drop-rungs {
+  display: none !important;
+}
+
+/* Phone CTA uses the loop words. Desktop keeps the locked long label. */
+#hero-get-link-btn .hero-cta-short {
+  display: none;
+}
+@media (max-width: 639px) {
+  #hero-get-link-btn .hero-cta-long {
+    display: none;
+  }
+  #hero-get-link-btn .hero-cta-short {
+    display: inline;
+  }
+  #hero-get-link-btn > i[aria-hidden="true"] {
+    display: none;
+  }
+  #hero-get-link-btn.hero-primary-cta {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+    font-size: 1.05rem;
+  }
+  html:not([data-vr-has-link]) .site-drop-rungs {
+    padding: 0.18rem 0 0.2rem;
+    gap: 0.2rem;
+    margin: 0.1rem 0 0.2rem;
+    border-top: 0;
+  }
+  html:not([data-vr-has-link]) .vr-hero-panel {
+    padding: 0.7rem 0.9rem 0.85rem !important;
+  }
+  html:not([data-vr-has-link]) #hero-title {
+    margin-bottom: 0.28rem !important;
+  }
+  html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-title {
+    font-size: 1.28rem !important;
+    line-height: 1.15 !important;
+  }
 }
 
 /* Copy must stay tappable — overlays cannot swallow it */
@@ -518,6 +609,19 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #prize 
 html[data-vr-has-link] #referral-section,
 html[data-vr-post-link-one] #referral-section {
   display: block !important;
+  order: -1;
+  margin-top: 0 !important;
+}
+html[data-vr-has-link] .vr-page-shell,
+html[data-vr-post-link-one] .vr-page-shell {
+  display: flex;
+  flex-direction: column;
+  padding-top: 3.25rem;
+}
+html[data-vr-has-link] #vr-nav > div,
+html[data-vr-post-link-one] #vr-nav > div {
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
 }
 
 html[data-vr-kid-simple]:not([data-vr-kid-more]) #vr-funnel-ticker {
@@ -686,6 +790,9 @@ html[data-vr-direct-landing]:not([data-vr-has-link]) #hero-leaderboard-link {
 html[data-vr-direct-landing]:not([data-vr-has-link]) .vr-nav-link:not([href="#how"]):not([href="#leaderboard"]) {
   display: none !important;
 }
+html[data-vr-direct-landing][data-vr-funnel-expanded]:not([data-vr-has-link]) a.vr-nav-link[href="#prize"] {
+  display: inline !important;
+}
 html[data-vr-direct-landing]:not([data-vr-has-link]) #admin-btn {
   opacity: 0.55;
   transform: scale(0.92);
@@ -766,6 +873,7 @@ html[data-vr-referred-micro]:not([data-vr-has-link]) #prize,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #faq,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-banner-mock,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-title-accent,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-title br,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-badge,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-trust-line,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-lock-rule,
@@ -773,6 +881,9 @@ html[data-vr-referred-micro]:not([data-vr-has-link]) #referral-attribution,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-expand-wrap,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #funnel-credit-gate,
 html[data-vr-referred-micro]:not([data-vr-has-link]) .vr-nav-link[href="#prize"],
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-prize-one,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-subtitle,
+html[data-vr-referred-micro]:not([data-vr-has-link]) #vr-funnel-ticker,
 html[data-vr-referred-landing] #nav-get-link-btn,
 html[data-vr-referred-micro] #nav-get-link-btn {
   display: none !important;
@@ -790,11 +901,6 @@ html[data-vr-referred-micro]:not([data-vr-has-link]) #attribution-get-link-btn {
 html[data-vr-referred-micro]:not([data-vr-has-link]) .hero-gradient {
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
-}
-html[data-vr-referred-micro]:not([data-vr-has-link]) #hero-subtitle {
-  max-width: 28rem;
-  margin-left: auto;
-  margin-right: auto;
 }
 html[data-vr-referred-micro]:not([data-vr-has-link]) #winning-link-title,
 html[data-vr-referred-micro]:not([data-vr-has-link]) #winning-link-description,
@@ -2359,6 +2465,23 @@ html:not([data-vr-funnel-expanded]) [data-vr-below-fold]:not(#how):not(#leaderbo
   display: none !important;
 }
 
+/* First screen is hero + rungs + Get my link. How/Board wait for See how it works. */
+html:not([data-vr-funnel-expanded]):not([data-vr-has-link]) [data-vr-below-fold][id="how"],
+html:not([data-vr-funnel-expanded]):not([data-vr-has-link]) [data-vr-below-fold][id="leaderboard"] {
+  display: none !important;
+}
+
+/* Tall phones: keep the footer below the first view after How/Board collapse. */
+html:not([data-vr-funnel-expanded]):not([data-vr-has-link]) .vr-page-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+html:not([data-vr-funnel-expanded]):not([data-vr-has-link]) #funnel-expand-wrap {
+  margin-top: auto;
+  padding-bottom: 0.75rem;
+}
+
 html[data-vr-referred-landing]:not([data-vr-funnel-expanded]) [data-vr-below-fold]:not(#how):not(#leaderboard) {
   display: none !important;
 }
@@ -2514,6 +2637,7 @@ html[data-vr-has-link] .funnel-step-active {
 }
 
 html[data-vr-owner-hq] .vr-share-abandon,
+html[data-vr-did-send] .vr-share-abandon,
 html:has(#admin-modal:not(.hidden)) .vr-share-abandon,
 html:has(#admin-owner-gate-modal:not(.hidden)) .vr-share-abandon {
   display: none !important;
@@ -3764,6 +3888,34 @@ html[data-vr-touch] .share-btn {
   }
 }
 
+#admin-owner-gate-modal {
+  z-index: 10050 !important;
+  background: rgba(3, 3, 7, 0.94) !important;
+  backdrop-filter: blur(16px);
+}
+#admin-owner-gate-modal [data-vr-owner-gate-panel] {
+  position: relative;
+  z-index: 1;
+  background: #18181b !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+  backdrop-filter: none;
+  transform: none !important;
+}
+#admin-owner-gate-modal [data-vr-owner-gate-panel]:hover {
+  transform: none !important;
+}
+#admin-owner-gate-modal .flex.gap-3 {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+#admin-owner-gate-submit,
+#admin-owner-gate-modal button[data-vr-owner-gate-close] {
+  min-height: 48px;
+}
+
 #admin-modal {
   z-index: 980;
   background:
@@ -4370,8 +4522,9 @@ html[data-vr-has-link] #referral-section .glass {
   outline: none;
 }
 .post-link-site-drop {
-  margin-top: 1rem;
-  padding-top: 0.85rem;
+  max-width: 400px;
+  margin: 1rem auto 0;
+  padding: 0.85rem 1.25rem 0;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 .post-link-site-drop__title {
@@ -4396,11 +4549,60 @@ html[data-vr-has-link] #referral-section .glass {
   width: 100%;
   min-height: 48px;
   border-radius: 0.75rem;
-  border: 1px solid rgba(167, 139, 250, 0.4);
-  background: transparent;
-  color: #ede9fe;
-  font-weight: 600;
+  border: 0;
+  background: linear-gradient(90deg, #6d28d9, #7c3aed);
+  color: #fff;
+  font-weight: 700;
   font-size: 0.875rem;
+  box-shadow: 0 10px 24px rgba(109, 40, 217, 0.28);
+}
+html[data-vr-did-send] .post-link-site-drop__submit {
+  background: linear-gradient(90deg, #059669, #7c3aed);
+  box-shadow: 0 10px 28px rgba(16, 185, 129, 0.22);
+}
+.drop-submit-short {
+  display: none;
+}
+html[data-vr-did-send] .drop-submit-long {
+  display: none;
+}
+html[data-vr-did-send] .drop-submit-short {
+  display: inline;
+}
+html[data-vr-did-paste] .post-link-site-drop__status {
+  color: #6ee7b7;
+  font-weight: 650;
+}
+html[data-vr-did-paste] .post-link-site-drop__title,
+html[data-vr-did-paste] .post-link-site-drop__url,
+html[data-vr-did-paste] .post-link-site-drop__submit,
+html[data-vr-did-paste] #post-link-site-drop-turnstile,
+html[data-vr-did-paste] .post-link-site-drop label,
+html[data-vr-did-paste] #post-link-site-drop {
+  display: none !important;
+}
+#site-drop-status:empty,
+#site-entered-chips:empty {
+  display: none !important;
+}
+html:not([data-vr-did-paste]) #send-ladder-proof {
+  display: none !important;
+}
+html[data-vr-did-paste] #send-ladder-proof {
+  display: grid !important;
+  width: 100%;
+  margin: 0 0 0.45rem;
+  padding: 0.3rem 0;
+}
+html[data-vr-did-paste] .site-entered-ticker__heading,
+html[data-vr-did-paste] .site-entered-ticker__empty {
+  display: none !important;
+}
+.site-entered-ticker__empty {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #ddd6fe;
 }
 .referral-credit-turnstile {
   min-height: 65px;
@@ -4416,12 +4618,39 @@ html[data-vr-has-link] #referral-section .glass {
   min-width: 160px;
   margin: 0.65rem auto 0;
 }
-html[data-vr-referred-landing] .friend-credit-turnstile,
-html[data-vr-referred-micro] .friend-credit-turnstile,
-html[data-vr-has-link] .friend-credit-turnstile,
+html[data-vr-referred-landing]:not([data-vr-has-link]) .friend-credit-turnstile,
+html[data-vr-referred-micro]:not([data-vr-has-link]) .friend-credit-turnstile,
 html[data-vr-credit-status='pending'] .friend-credit-turnstile,
 html[data-vr-credit-status='failed'] .friend-credit-turnstile {
   display: flex !important;
+}
+html[data-vr-has-link]:not([data-vr-credit-status='pending']):not([data-vr-credit-status='failed']) .friend-credit-turnstile,
+html[data-vr-has-link]:not([data-vr-credit-status='pending']):not([data-vr-credit-status='failed']) #referral-turnstile-container {
+  display: none !important;
+}
+.post-link-site-drop__jump {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.25rem;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: #a1a1aa;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.post-link-site-drop__jump:hover {
+  color: #e4e4e7;
+}
+.post-link-site-drop--need-url,
+#site-drop-url.post-link-site-drop--need-url {
+  border-color: rgba(251, 113, 133, 0.7) !important;
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.25);
 }
 html[data-vr-credit-status='pending'] .referral-credit-turnstile,
 html[data-vr-credit-status='failed'] .referral-credit-turnstile {
@@ -4601,8 +4830,43 @@ html[data-vr-post-link-one] #post-share-return-hub,
 html[data-vr-has-link] [data-vr-declutter-post-link] {
   display: none !important;
 }
-html[data-vr-post-link-one] #post-link-share:not(.hidden) {
-  display: block;
+html[data-vr-post-link-one] #post-link-share:not(.hidden),
+html[data-vr-has-link] #post-link-share:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+}
+html[data-vr-has-link] #post-link-url,
+html[data-vr-post-link-one] #post-link-url,
+html[data-vr-has-link] #post-link-tool,
+html[data-vr-post-link-one] #post-link-tool,
+html[data-vr-has-link] #share-deadline-banner,
+html[data-vr-post-link-one] #share-deadline-banner,
+html[data-vr-has-link] #post-link-clock,
+html[data-vr-post-link-one] #post-link-clock,
+html[data-vr-has-link] #share-confirm-banner,
+html[data-vr-post-link-one] #share-confirm-banner,
+html[data-vr-has-link] #referral-attribution,
+html[data-vr-post-link-one] #referral-attribution {
+  display: none !important;
+}
+.post-link-share .post-link-site-drop {
+  padding-left: 0;
+  padding-right: 0;
+}
+#post-link-site-drop-turnstile:empty,
+#site-drop-turnstile:empty,
+#friend-credit-turnstile:empty,
+#post-link-site-drop-turnstile:not(:has(iframe)),
+#site-drop-turnstile:not(:has(iframe)),
+#friend-credit-turnstile:not(:has(iframe)) {
+  min-height: 0;
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+#post-link-site-drop-turnstile:has(iframe) {
+  margin-top: 0.5rem;
+  height: auto;
 }
 html:not([data-vr-has-link]) #post-link-site-drop {
   display: none !important;
@@ -4624,21 +4888,181 @@ html[data-vr-has-link] #hero-trust-line,
 html[data-vr-has-link] #hero-lock-rule,
 html[data-vr-has-link] #hero-global-proof,
 html[data-vr-has-link] #funnel-expand-wrap,
-html[data-vr-has-link] [data-vr-below-fold]:not(#how):not(#leaderboard) {
+html[data-vr-has-link] [data-vr-below-fold]:not(#how):not(#leaderboard),
+html[data-vr-has-link] #hero-banner-mock,
+html[data-vr-post-link-one] #hero-banner-mock,
+html[data-vr-has-link] #post-link-heading,
+html[data-vr-post-link-one] #post-link-heading,
+html[data-vr-has-link] #post-link-sub,
+html[data-vr-post-link-one] #post-link-sub,
+html[data-vr-has-link] .vr-nav-link,
+html[data-vr-post-link-one] .vr-nav-link,
+html[data-vr-has-link] #post-link-site-drop-jump,
+html[data-vr-post-link-one] #post-link-site-drop-jump,
+html[data-vr-has-link] #post-link-copy,
+html[data-vr-post-link-one] #post-link-copy,
+html[data-vr-did-send]:not([data-vr-did-paste]) #post-link-primary {
   display: none !important;
 }
-
-/* Keep the prize slot visible after Get my link. Yellow prize/clock lines are homepage-only. */
-html[data-vr-has-link] #hero-banner-mock,
-html[data-vr-post-link-one] #hero-banner-mock {
-  display: block !important;
+html[data-vr-did-paste] #post-link-primary {
+  display: flex !important;
 }
+html[data-vr-has-link] #site-entered-chips,
+html[data-vr-post-link-one] #site-entered-chips {
+  display: none !important;
+}
+html[data-vr-has-link] .post-link-share,
+html[data-vr-post-link-one] .post-link-share {
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.25rem;
+  padding-bottom: 0.75rem;
+}
+html[data-vr-did-send]:not([data-vr-did-paste]) #post-link-site-drop {
+  order: -2;
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 0;
+}
+html[data-vr-did-send]:not([data-vr-did-paste]) .post-link-site-drop__title {
+  display: none !important;
+}
+html[data-vr-did-send]:not([data-vr-did-paste]) #site-entered-ticker {
+  display: none !important;
+}
+html[data-vr-has-link] #post-link-share[data-state='loading'] #post-link-site-drop,
+html[data-vr-post-link-one] #post-link-share[data-state='loading'] #post-link-site-drop,
+html[data-vr-has-link] #post-link-share[data-state='error'] #post-link-site-drop,
+html[data-vr-post-link-one] #post-link-share[data-state='error'] #post-link-site-drop,
+html[data-vr-has-link] #post-link-share[data-state='loading'] #site-entered-ticker,
+html[data-vr-post-link-one] #post-link-share[data-state='loading'] #site-entered-ticker,
+html[data-vr-has-link] #post-link-share[data-state='error'] #site-entered-ticker,
+html[data-vr-post-link-one] #post-link-share[data-state='error'] #site-entered-ticker {
+  display: none !important;
+}
+html[data-vr-has-link] .vr-hero-panel,
+html[data-vr-post-link-one] .vr-hero-panel,
+html[data-vr-has-link] .hero-gradient,
+html[data-vr-post-link-one] .hero-gradient {
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+html[data-vr-has-link] .hero-gradient::before,
+html[data-vr-post-link-one] .hero-gradient::before,
+html[data-vr-has-link] #vr-funnel-ticker,
+html[data-vr-post-link-one] #vr-funnel-ticker,
+html[data-vr-has-link] .vr-lang-picker,
+html[data-vr-post-link-one] .vr-lang-picker {
+  display: none !important;
+}
+html[data-vr-has-link] .vr-page-shell,
+html[data-vr-post-link-one] .vr-page-shell {
+  padding-bottom: 1rem;
+}
+html[data-vr-has-link] .post-link-site-drop,
+html[data-vr-post-link-one] .post-link-site-drop {
+  width: 100%;
+  max-width: none;
+  margin-top: 0.5rem;
+  margin-left: 0;
+  margin-right: 0;
+  padding-top: 0.5rem;
+  box-sizing: border-box;
+}
+html[data-vr-has-link] .post-link-site-drop__title,
+html[data-vr-post-link-one] .post-link-site-drop__title {
+  font-size: 0.75rem;
+  margin: 0 0 0.3rem;
+}
+html[data-vr-has-link] .post-link-site-drop__url,
+html[data-vr-post-link-one] .post-link-site-drop__url,
+html[data-vr-has-link] .post-link-site-drop__submit,
+html[data-vr-post-link-one] .post-link-site-drop__submit {
+  width: 100%;
+  margin-top: 0.5rem;
+  box-sizing: border-box;
+}
+html[data-vr-has-link] .post-link-site-drop__url,
+html[data-vr-post-link-one] .post-link-site-drop__url {
+  margin-top: 0;
+}
+html[data-vr-has-link] #site-entered-ticker,
+html[data-vr-post-link-one] #site-entered-ticker {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.65rem;
+}
+html[data-vr-did-paste] .post-link-site-drop {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+html[data-vr-did-paste] #site-entered-ticker {
+  order: -1;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 0.35rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+}
+html[data-vr-did-paste] #post-link-copy {
+  margin-top: 0.25rem;
+}
+
+/* Yellow prize/clock lines stay homepage-only after Get my link. */
 html[data-vr-has-link] #hero-prize-one,
 html[data-vr-post-link-one] #hero-prize-one,
 html[data-vr-has-link] #hero-week-clock,
-html[data-vr-post-link-one] #hero-week-clock {
+html[data-vr-post-link-one] #hero-week-clock,
+html[data-vr-has-link] #vr-verified-total,
+html[data-vr-post-link-one] #vr-verified-total,
+html[data-vr-has-link] #hero-global-regions,
+html[data-vr-post-link-one] #hero-global-regions,
+html[data-vr-has-link] #hero-referred-social-proof,
+html[data-vr-post-link-one] #hero-referred-social-proof,
+html[data-vr-has-link] #hero-referred-trust-pack,
+html[data-vr-post-link-one] #hero-referred-trust-pack,
+html[data-vr-has-link] #hero-security-trust,
+html[data-vr-post-link-one] #hero-security-trust,
+html[data-vr-has-link] #hero-prize-fomo,
+html[data-vr-post-link-one] #hero-prize-fomo,
+html[data-vr-has-link] #hero-ad-inventory,
+html[data-vr-post-link-one] #hero-ad-inventory,
+html[data-vr-has-link] #hero-ad-note,
+html[data-vr-post-link-one] #hero-ad-note,
+html[data-vr-has-link] #hero-ad-race,
+html[data-vr-post-link-one] #hero-ad-race,
+html[data-vr-has-link] .funnel-coach-chat,
+html[data-vr-post-link-one] .funnel-coach-chat,
+html[data-vr-has-link] .funnel-coach-restore,
+html[data-vr-post-link-one] .funnel-coach-restore {
   display: none !important;
 }
+
+html[data-vr-has-link][data-vr-funnel-expanded] #site-drops,
+html[data-vr-post-link-one][data-vr-funnel-expanded] #site-drops {
+  display: block !important;
+}
+
+html[data-vr-has-link]:not([data-vr-funnel-expanded]) [data-vr-below-fold][id="how"],
+html[data-vr-post-link-one]:not([data-vr-funnel-expanded]) [data-vr-below-fold][id="how"],
+html[data-vr-has-link]:not([data-vr-funnel-expanded]) [data-vr-below-fold][id="leaderboard"],
+html[data-vr-post-link-one]:not([data-vr-funnel-expanded]) [data-vr-below-fold][id="leaderboard"] {
+  display: none !important;
+}
+
+html[data-vr-has-link][data-vr-funnel-expanded] [data-vr-below-fold][id="how"],
+html[data-vr-post-link-one][data-vr-funnel-expanded] [data-vr-below-fold][id="how"],
+html[data-vr-has-link][data-vr-funnel-expanded] [data-vr-below-fold][id="leaderboard"],
+html[data-vr-post-link-one][data-vr-funnel-expanded] [data-vr-below-fold][id="leaderboard"] {
+  display: block !important;
+}
+
+
 
 .hero-ad-site-preview {
   display: block;
@@ -4827,8 +5251,12 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
 /* Short phones / small laptops: title + ad + prize + CTA stay in the first view */
 @media (max-width: 639px) {
   .vr-page-shell {
-    padding-top: 4.25rem !important;
+    padding-top: 3.4rem !important;
     padding-bottom: 2rem !important;
+  }
+  html[data-vr-has-link] .vr-page-shell,
+  html[data-vr-post-link-one] .vr-page-shell {
+    padding-top: 3.1rem !important;
   }
 
   .vr-hero-panel {
@@ -4855,6 +5283,16 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
   #hero-prize-one {
     font-size: 0.875rem !important;
     margin-bottom: 0.7rem !important;
+  }
+
+  html:not([data-vr-has-link]):not([data-vr-referred-micro]) #hero-title-accent,
+  html:not([data-vr-has-link]):not([data-vr-referred-micro]) #hero-title br,
+  html:not([data-vr-has-link]):not([data-vr-referred-micro]) #hero-subtitle,
+  html:not([data-vr-has-link]):not([data-vr-referred-micro]) #hero-ad-note,
+  html:not([data-vr-has-link]):not([data-vr-referred-micro]) #hero-prize-one,
+  html:not([data-vr-has-link]):not([data-vr-referred-micro]) #hero-banner-mock,
+  html:not([data-vr-has-link]):not([data-vr-referred-micro]) #funnel-expand-wrap {
+    display: none !important;
   }
 
   .hero-ad-site {
@@ -5039,7 +5477,63 @@ html[data-vr-post-link-status='waiting'] #share-deadline-countdown {
   }
 }
 
+/* Short laptops (1366×633): hide the subtitle so rungs + Get my link stay in view */
+@media (max-height: 700px) {
+  html:not([data-vr-has-link]) #hero-subtitle {
+    display: none !important;
+  }
+}
+
 html[data-vr-tiny] #hero-subtitle,
 html[data-vr-short]:not([data-vr-has-link]) #hero-subtitle {
-  display: block;
+  display: none !important;
+}
+
+.site-drop-rungs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.3rem;
+  margin: 0.15rem 0 0;
+  padding: 0.35rem 0.45rem 0.45rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.site-drop-rung {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0.22rem 0.32rem;
+  border-radius: 0.45rem;
+  background: rgba(255, 255, 255, 0.045);
+  text-align: left;
+}
+
+.site-drop-rung__name {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6ee7b7;
+  line-height: 1.2;
+}
+
+.site-drop-rung[data-rung="rising"] .site-drop-rung__name {
+  color: #c4b5fd;
+}
+
+.site-drop-rung[data-rung="challenger"] .site-drop-rung__name {
+  color: #fcd34d;
+}
+
+.site-drop-rung__live {
+  font-size: 0.68rem;
+  color: #d4d4d8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.site-drop-rung[data-live="1"] {
+  background: rgba(16, 185, 129, 0.12);
 }

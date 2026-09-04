@@ -63,11 +63,7 @@ function tr(key: string, vars?: Record<string, string | number>): string {
 
 export function getCoachGreeting(ctx: CoachChatContext): CoachChatMessage {
   if (ctx.step === 'complete') {
-    return coachMsg(
-      'greet-complete',
-      'You shared — nice work! Every click through your link climbs the live leaderboard. Want to check your rank?',
-      quickActions(ctx),
-    );
+    return coachMsg('greet-complete', tr('coach.greet_complete'), quickActions(ctx));
   }
 
   if (ctx.isReferred && ctx.referrerCode) {
@@ -88,7 +84,7 @@ export function getCoachStepNudge(ctx: CoachChatContext): CoachChatMessage | nul
   const guide = getFunnelGuideCopy(ctx.step);
   const prefix =
     ctx.step === 1 && ctx.isReferred && ctx.creditStatus !== 'credited'
-      ? 'Step 1 unlocks your referral credit. '
+      ? tr('coach.nudge_credit')
       : '';
   return coachMsg(`nudge-${ctx.step}`, `${prefix}${guide.message}`, quickActions(ctx));
 }
@@ -118,7 +114,7 @@ export function quickActions(ctx: CoachChatContext): CoachChatAction[] {
 export function resolveCoachReply(input: string, ctx: CoachChatContext): CoachChatMessage {
   const q = input.trim().toLowerCase();
   if (!q) {
-    return coachMsg('empty', "Type a question or tap a button — I'm here to guide you.", quickActions(ctx));
+    return coachMsg('empty', tr('coach.empty'), quickActions(ctx));
   }
 
   if (/^(hi|hello|hey|help|start)/.test(q)) {
@@ -142,21 +138,21 @@ export function resolveCoachReply(input: string, ctx: CoachChatContext): CoachCh
 
   if (/get link|referral link|my link|step 1/.test(q)) {
     return coachMsg('get-link', getFunnelGuideCopy(1).message, [
-      { id: 'act-get-link', label: 'Get my link', kind: 'get-link' },
+      { id: 'act-get-link', label: tr('coach.act_get_link'), kind: 'get-link' },
       ...quickActions(ctx).filter((a) => a.kind !== 'get-link'),
     ]);
   }
 
   if (/copy|step 2|clipboard/.test(q)) {
     return coachMsg('copy', getFunnelGuideCopy(2).message, [
-      { id: 'act-copy', label: 'Copy my link', kind: 'copy-link' },
+      { id: 'act-copy', label: tr('coach.act_copy'), kind: 'copy-link' },
       ...quickActions(ctx).filter((a) => a.kind !== 'copy-link'),
     ]);
   }
 
   if (/share|whatsapp|step 3|send/.test(q)) {
     return coachMsg('share', getFunnelGuideCopy(3).message, [
-      { id: 'act-share', label: 'Share now', kind: 'share' },
+      { id: 'act-share', label: tr('coach.act_share'), kind: 'share' },
       ...quickActions(ctx).filter((a) => a.kind !== 'share'),
     ]);
   }
@@ -164,8 +160,8 @@ export function resolveCoachReply(input: string, ctx: CoachChatContext): CoachCh
   if (/credit|referred|count/.test(q) && ctx.isReferred) {
     const status =
       ctx.creditStatus === 'credited'
-        ? 'Your visit is credited — keep going with copy and share.'
-        : 'Just visiting does not credit your referrer. Step 1 (Get my link) is required.';
+        ? tr('coach.credit_ok_visit')
+        : tr('coach.credit_need_visit');
     return coachMsg('credit', status, quickActions(ctx));
   }
 
@@ -173,7 +169,7 @@ export function resolveCoachReply(input: string, ctx: CoachChatContext): CoachCh
   if (nudge) {
     return coachMsg(
       'fallback-step',
-      `I'm not sure on that one — here's your next move: ${nudge.text}`,
+      tr('coach.unsure', { next: nudge.text }),
       quickActions(ctx),
     );
   }
@@ -182,17 +178,13 @@ export function resolveCoachReply(input: string, ctx: CoachChatContext): CoachCh
 }
 
 function describeStepStatus(ctx: CoachChatContext): string {
-  if (ctx.step === 'complete') {
-    return "You're on the final stretch — share complete! Check the leaderboard to see your rank.";
-  }
+  if (ctx.step === 'complete') return tr('coach.status_complete');
   if (ctx.step === 1) {
-    return ctx.isReferred
-      ? 'Step 1 of 3: Get my referral link (required to credit your visit).'
-      : 'Step 1 of 3: Get my referral link.';
+    return ctx.isReferred ? tr('coach.status_1_referred') : tr('coach.status_1');
   }
-  if (ctx.step === 2) return 'Step 2 of 3: Copy your link to the clipboard.';
-  if (ctx.step === 3) return 'Step 3 of 3: Share on WhatsApp or any platform below.';
-  return 'Step 1 of 3: Get my referral link to begin.';
+  if (ctx.step === 2) return tr('coach.status_2');
+  if (ctx.step === 3) return tr('coach.status_3');
+  return tr('coach.status_begin');
 }
 
 function coachMsg(id: string, text: string, actions?: CoachChatAction[]): CoachChatMessage {

@@ -5,6 +5,7 @@
 
 import { registerGlobal } from './global';
 import { hidePostLinkStatus } from './post-link-status';
+import { t } from './i18n';
 import { LOCKED_SHARE_TEXT } from './prize-slot';
 import { SEND_NOW_LABEL } from './referred-race';
 import { buildNativeShareData } from './share-power';
@@ -53,7 +54,9 @@ export type PostLinkState = 'hidden' | 'loading' | 'ready' | 'error';
 
 export function buildPostLinkShareText(link: string): string {
   const trimmed = link.trim();
-  return POST_LINK_SHARE_TEXT.replace(/\{link\}/g, trimmed);
+  const template = t('share.default');
+  const raw = template.includes('{link}') ? template : POST_LINK_SHARE_TEXT;
+  return raw.replace(/\{link\}/g, trimmed);
 }
 
 export function buildWhatsAppShareHref(link: string): string {
@@ -106,13 +109,18 @@ function paintPrimaryForDetection(link: string): void {
   const payload = buildNativeShareData(text, link);
   const native = canUseNativeShare(payload);
   btn.dataset.mode = native ? 'native' : 'whatsapp';
-  setPrimaryLabel(SEND_NOW_LABEL);
+  setPrimaryLabel(t('post_link.send') || SEND_NOW_LABEL);
   btn.classList.remove('hidden');
   btn.hidden = false;
   btn.disabled = false;
 }
 
-function focusHeading(): void {
+function focusSendReady(): void {
+  const btn = el<HTMLButtonElement>(IDS.primary);
+  if (btn && !btn.hidden && !btn.disabled) {
+    btn.focus({ preventScroll: true });
+    return;
+  }
   const heading = el(IDS.heading);
   if (!heading) return;
   if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
@@ -134,8 +142,9 @@ export function showPostLinkLoading(): void {
   }
   const primary = el<HTMLButtonElement>(IDS.primary);
   if (primary) {
-    primary.classList.add('hidden');
-    primary.hidden = true;
+    setPrimaryLabel('Getting your link…');
+    primary.classList.remove('hidden');
+    primary.hidden = false;
     primary.disabled = true;
   }
   const copy = el<HTMLButtonElement>(IDS.copy);
@@ -143,6 +152,9 @@ export function showPostLinkLoading(): void {
     copy.classList.add('hidden');
     copy.hidden = true;
   }
+  void import('./site-drops-ui')
+    .then((m) => m.prefetchSiteDropScript())
+    .catch(() => {});
 }
 
 export function showPostLinkError(): void {
@@ -190,9 +202,9 @@ export function showPostLinkReady(link: string): void {
   wireOnce();
   setState('ready');
   const heading = el(IDS.heading);
-  if (heading) heading.textContent = POST_LINK_HEADING_READY;
+  if (heading) heading.textContent = t('post_link.heading') || POST_LINK_HEADING_READY;
   const sub = document.getElementById('post-link-sub');
-  if (sub) sub.textContent = POST_LINK_SUB_READY;
+  if (sub) sub.textContent = t('post_link.sub') || POST_LINK_SUB_READY;
   const clock = document.getElementById('post-link-clock');
   if (clock) {
     clock.textContent = '';
@@ -209,13 +221,13 @@ export function showPostLinkReady(link: string): void {
   paintPrimaryForDetection(trimmed);
   const tool = document.getElementById('post-link-tool');
   if (tool) {
-    tool.textContent = 'This is your public link. Paste it in any bio, story, or text.';
+    tool.textContent = t('post_link.tool') || 'This is your public link. Paste it in any bio, story, or text.';
     tool.removeAttribute('hidden');
   }
   const copy = el<HTMLButtonElement>(IDS.copy);
   if (copy) {
-    copy.textContent = 'Copy link';
-    copy.setAttribute('aria-label', 'Copy link');
+    copy.textContent = t('post_link.copy') || 'Copy link';
+    copy.setAttribute('aria-label', t('post_link.copy') || 'Copy link');
     copy.classList.remove('hidden');
     copy.hidden = false;
   }
@@ -231,8 +243,8 @@ export function showPostLinkReady(link: string): void {
     whisper.classList.add('hidden');
     whisper.hidden = true;
   }
+  focusSendReady();
   requestAnimationFrame(() => {
-    focusHeading();
     document.getElementById('referral-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 }
@@ -280,6 +292,34 @@ function selectLinkText(): void {
   url.focus();
 }
 
+function focusPasteIfEmpty(): void {
+  if (!document.documentElement.hasAttribute('data-vr-did-send')) return;
+  const input = document.getElementById('post-link-site-drop-url') as HTMLInputElement | null;
+  if (!input || input.value.trim()) return;
+  input.focus({ preventScroll: false });
+}
+
+function saveSiteDropIfUrlReady(): void {
+  if (document.documentElement.hasAttribute('data-vr-did-paste')) return;
+  const raw = String(
+    (document.getElementById('post-link-site-drop-url') as HTMLInputElement | null)?.value ||
+      (document.getElementById('site-drop-url') as HTMLInputElement | null)?.value ||
+      '',
+  ).trim();
+  if (!raw) return;
+  void import('./site-drops-ui')
+    .then((m) => m.submitSiteDrop('entered'))
+    .catch(() => {});
+}
+
+function armPasteAfterSend(): void {
+  if (document.documentElement.dataset.vrPasteAfterSend === '1') return;
+  document.documentElement.dataset.vrPasteAfterSend = '1';
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') focusPasteIfEmpty();
+  });
+}
+
 function fireShareEvent(platform: string, link: string): void {
   const code = link.match(/\/r\/([^/?#]+)/i)?.[1] || '';
   if (code) {
@@ -300,6 +340,9 @@ export function onPostLinkPrimaryTap(event?: Event): void {
 
   const link = readReadyLink();
   if (!link) return;
+  document.documentElement.setAttribute('data-vr-did-send', '1');
+  armPasteAfterSend();
+  saveSiteDropIfUrlReady();
 
   const text = buildPostLinkShareText(link);
   const payload = buildNativeShareData(text, link);
@@ -307,23 +350,27 @@ export function onPostLinkPrimaryTap(event?: Event): void {
   if (canUseNativeShare(payload)) {
     const sharePromise = navigator.share(payload);
     fireShareEvent('native', link);
-    void sharePromise.catch((err: unknown) => {
-      const name = (err as Error)?.name || '';
-      if (name === 'AbortError' || name === 'NotAllowedError') return;
-      if (!openWhatsApp(link)) {
-        void onPostLinkCopyTap();
-      } else {
-        fireShareEvent('whatsapp', link);
-      }
-    });
+    void sharePromise
+      .catch((err: unknown) => {
+        const name = (err as Error)?.name || '';
+        if (name === 'AbortError' || name === 'NotAllowedError') return;
+        if (!openWhatsApp(link)) {
+          void onPostLinkCopyTap();
+        } else {
+          fireShareEvent('whatsapp', link);
+        }
+      })
+      .finally(() => focusPasteIfEmpty());
     return;
   }
 
   if (openWhatsApp(link)) {
     fireShareEvent('whatsapp', link);
+    focusPasteIfEmpty();
     return;
   }
   void onPostLinkCopyTap();
+  focusPasteIfEmpty();
 }
 
 export async function onPostLinkCopyTap(): Promise<void> {

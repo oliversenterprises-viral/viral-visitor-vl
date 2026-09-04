@@ -64,9 +64,10 @@ describe('share-abandon-rescue', () => {
     expect(shouldShowShareAbandon({ ...base, confirmFlowActive: true })).toBe(false);
     expect(shouldShowShareAbandon({ ...base, dwellMs: 1000 })).toBe(false);
     expect(shouldShowShareAbandon({ ...base, owner: true })).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, didSend: true })).toBe(false);
   });
 
-  it('poll skips when share strip already in view (fatigue mitigation)', () => {
+  it('skips when Send is already on screen (dwell, return, or poll)', () => {
     const base = {
       hasLink: true,
       sharePending: true,
@@ -77,10 +78,12 @@ describe('share-abandon-rescue', () => {
       isCoarsePointer: false,
       embed: false,
       confirmFlowActive: false,
-      reason: 'poll',
+      reason: 'return',
       shareStripInView: true,
     };
     expect(shouldShowShareAbandon(base)).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, reason: 'dwell' })).toBe(false);
+    expect(shouldShowShareAbandon({ ...base, reason: 'poll' })).toBe(false);
     expect(shouldShowShareAbandon({ ...base, shareStripInView: false })).toBe(true);
   });
 
@@ -126,6 +129,7 @@ describe('share-abandon-rescue', () => {
     expect(shouldArmBeforeUnload({ ...base, sessionShows: 1, snoozed: true })).toBe(false);
     expect(shouldArmBeforeUnload({ ...base, sessionShows: 1, locked: true })).toBe(false);
     expect(shouldArmBeforeUnload({ ...base, sessionShows: 1, owner: true })).toBe(false);
+    expect(shouldArmBeforeUnload({ ...base, sessionShows: 1, didSend: true })).toBe(false);
   });
 
   it('forceShareAbandonForTest does not mount when owner=1', () => {

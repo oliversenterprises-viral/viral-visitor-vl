@@ -5,6 +5,7 @@
 import { getStoredLandingRef } from './referral-url';
 import { getViralLoopsConfig } from './viral-loops-config';
 import { trackViralLoopEvent } from './visitor-tracking';
+import { t } from './i18n';
 
 function hasReferralLink(): boolean {
   const input = document.getElementById('ref-link') as HTMLInputElement | null;
@@ -25,15 +26,13 @@ export function shouldShowDuelInviteStrip(): boolean {
 }
 
 export function duelInviteHeadline(rivalCode: string | null): string {
-  if (!rivalCode) return 'Challenge a friend to beat you';
-  return `Challenge ${rivalCode} — share your duel link`;
+  if (!rivalCode) return t('duel.headline');
+  return t('duel.headline_rival', { code: rivalCode });
 }
 
 export function duelInviteSubline(rivalCode: string | null): string {
-  if (!rivalCode) {
-    return 'One-tap WhatsApp duel — friends race your live rank. Highest viral loop.';
-  }
-  return `Opens with your stats vs theirs. One tap to WhatsApp — fastest viral loop.`;
+  if (!rivalCode) return t('duel.sub');
+  return t('duel.sub_rival');
 }
 
 let momentTracked = false;
@@ -76,6 +75,12 @@ export function syncDuelInviteStrip(): void {
 
   strip.classList.remove('hidden');
   document.documentElement.setAttribute('data-vr-duel-invite', '1');
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('vr:locale-change', () => {
+    syncDuelInviteStrip();
+  });
 }
 
 export function trackDuelInviteShared(platform: string): void {

@@ -2,6 +2,8 @@
  * Personal viral coefficient (K) — referrals per share, gamified for referrers.
  */
 
+import { t } from './i18n';
+
 export interface PersonalKScore {
   /** Estimated K = referrals / shares (0 if no shares yet). */
   k: number;
@@ -18,8 +20,8 @@ export function computePersonalKScore(referrals: number, totalShares: number): P
     return {
       k: 0,
       display: '—',
-      label: 'K pending',
-      tip: 'Share once to unlock your viral coefficient.',
+      label: t('k.pending'),
+      tip: t('k.tip_pending'),
     };
   }
 
@@ -30,31 +32,31 @@ export function computePersonalKScore(referrals: number, totalShares: number): P
     return {
       k,
       display,
-      label: 'Viral K',
-      tip: 'K ≥ 1 — each share brings a referral on average. Elite loop.',
+      label: t('k.label'),
+      tip: t('k.tip_elite'),
     };
   }
   if (k >= 0.5) {
     return {
       k,
       display,
-      label: 'Viral K',
-      tip: 'Strong coefficient — a few more shares could 2× your referrals.',
+      label: t('k.label'),
+      tip: t('k.tip_strong'),
     };
   }
   if (k > 0) {
     return {
       k,
       display,
-      label: 'Viral K',
-      tip: 'Shares are working — stack more to push K above 1.',
+      label: t('k.label'),
+      tip: t('k.tip_working'),
     };
   }
 
   return {
     k: 0,
     display: '0.00',
-    label: 'Viral K',
-    tip: 'No referrals yet from shares — try WhatsApp or copy message.',
+    label: t('k.label'),
+    tip: t('k.tip_zero'),
   };
 }

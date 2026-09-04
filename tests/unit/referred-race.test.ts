@@ -39,14 +39,14 @@ describe('referred-race (Helix Bet 3)', () => {
   });
 
   it('formats the same-race title with the code', () => {
-    expect(formatSameRaceTitle('viral-abc1')).toBe("You're in the same race as VIRAL-ABC1.");
-    expect(formatSameRaceTitle('')).toBe("You're in the same race.");
+    expect(formatSameRaceTitle('viral-abc1')).toBe('Same race as VIRAL-ABC1.');
+    expect(formatSameRaceTitle('')).toBe('Same race.');
   });
 
   it('paints first viewport copy and Get my link', () => {
     paintReferredRaceHero('VIRAL-FRIEND');
     expect(document.getElementById('hero-title-line1')?.textContent).toBe(
-      "You're in the same race as VIRAL-FRIEND.",
+      'Same race as VIRAL-FRIEND.',
     );
     expect(document.getElementById('hero-subtitle')?.textContent).toBe(SAME_RACE_SUB);
     expect(document.querySelector('#hero-get-link-btn span')?.textContent).toBe(SAME_RACE_CTA);
@@ -61,8 +61,8 @@ describe('referred-race (Helix Bet 3)', () => {
   it('applyReferredLandingOverrides uses Bet 3 copy', () => {
     vi.stubGlobal('location', { pathname: '/r/VIRAL-GATE01', search: '', hash: '' });
     applyReferredLandingOverrides();
-    expect(document.getElementById('hero-title-line1')?.textContent).toContain(
-      'same race as VIRAL-GATE01',
+    expect(document.getElementById('hero-title-line1')?.textContent).toMatch(
+      /same race as VIRAL-GATE01/i,
     );
     expect(document.getElementById('hero-subtitle')?.textContent).toBe(SAME_RACE_SUB);
   });
@@ -82,7 +82,7 @@ describe('referred-race (Helix Bet 3)', () => {
     expect(cssAt).toBeGreaterThan(referredAt);
     expect(head).toContain('data-vr-referred-micro');
     expect(head).toContain('ref=');
-    expect(html).toContain("You're in the same race as ");
+    expect(html).toContain('Same race as ');
     expect(html).not.toContain('id="become-promoter"');
 
     const css = readFileSync(resolve(ROOT, 'src/style.css'), 'utf8');
@@ -98,8 +98,23 @@ describe('referred-race (Helix Bet 3)', () => {
     expect(css).toMatch(
       /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #hero-banner-mock/,
     );
+    expect(css).not.toMatch(
+      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #site-drop-rungs/,
+    );
     expect(css).toMatch(
       /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #hero-security-trust/,
+    );
+    expect(css).toMatch(
+      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #hero-prize-one/,
+    );
+    expect(css).toMatch(
+      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #hero-subtitle/,
+    );
+    expect(css).toMatch(
+      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #hero-title br/,
+    );
+    expect(css).toMatch(
+      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #vr-funnel-ticker/,
     );
     expect(css).toMatch(/html\[data-vr-referred-micro\] #nav-get-link-btn/);
   });

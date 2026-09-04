@@ -26,7 +26,7 @@ describe('share-power', () => {
 
   it('first-screen WhatsApp/native/SMS copy is the locked homepage-race text', () => {
     const wa = buildShareMessage(LINK, { platform: 'whatsapp', trackUtm: false });
-    expect(wa).toContain('racing for the homepage this week');
+    expect(wa).toContain('Site Drops put my site on the homepage');
     expect(wa).toContain('Tap Get my link');
     expect(wa).toContain('Visiting does not count');
     expect(wa).toContain(LINK);
@@ -185,7 +185,7 @@ describe('share-power', () => {
 
   it('buildNativeShareData never includes a url field', () => {
     const data = buildNativeShareData(
-      "I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count. " +
+      "I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner for 7 days. Tap Get my link. Visiting does not count. " +
         LINK,
       LINK,
     );

@@ -172,7 +172,7 @@ describe('prize-slot (Helix Bet 2)', () => {
       template: stale,
       trackUtm: false,
     });
-    expect(copy).toContain('racing for the homepage this week');
+    expect(copy).toContain('Site Drops put my site on the homepage');
     expect(copy).toContain('Tap Get my link');
   });
 

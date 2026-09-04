@@ -47,9 +47,9 @@ export function applyHeroStatsSubtext(uniqueReferrers: number, leaderCount: numb
     const fomo = formatHeroStatsSubtext(uniqueReferrers, leaderCount);
     const board =
       uniqueReferrers === 1
-        ? '1 person on the live board'
+        ? t('proof.live_one' as MessageKey)
         : uniqueReferrers > 1
-          ? `${uniqueReferrers.toLocaleString()} people on the live board`
+          ? t('proof.meta_people_n' as MessageKey, { n: uniqueReferrers.toLocaleString() })
           : '';
     metaEl.textContent = [board, fomo].filter(Boolean).join(' · ') || fomo;
     return;
@@ -169,8 +169,9 @@ export function initPublicClarity(): void {
       Number(totalEl?.getAttribute('data-vr-total-verified')) ||
       Number(String(totalEl?.textContent || '').replace(/[^\d]/g, '')) ||
       0;
-    void import('./worldwide-referral-total').then(({ applyWorldwideReferralTotal }) => {
-      applyWorldwideReferralTotal({ total, uniqueReferrers: 0, leaderCount: 0 });
+    void import('./worldwide-referral-total').then(({ reapplyWorldwideReferralTotal, applyWorldwideReferralTotal }) => {
+      if (typeof reapplyWorldwideReferralTotal === 'function') reapplyWorldwideReferralTotal();
+      else applyWorldwideReferralTotal({ total, uniqueReferrers: 0, leaderCount: 0 });
     });
   });
 }

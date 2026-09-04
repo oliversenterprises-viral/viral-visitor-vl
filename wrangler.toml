@@ -1,0 +1,21 @@
+# viralrefer.app — Cloudflare Workers + static assets.
+# Homepage/JS/CSS are CDN static (unlimited). Worker runs only on
+# /r/, /join/r/, /api/, /relay so a spike does not bill every page view.
+# Do not attach www.viralrefer.app until a preview on workers.dev is green.
+
+name = "viralrefer"
+main = "workers/viralrefer.ts"
+compatibility_date = "2026-09-03"
+workers_dev = true
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+html_handling = "auto-trailing-slash"
+run_worker_first = ["/api/*", "/r/*", "/join/r/*", "/relay", "/relay/"]
+
+# Daily optimizer ping (same job as Vercel /api/cron-optimizer).
+# No-ops until OPTIMIZER_CRON_SECRET is set as a Worker secret.
+[triggers]
+crons = ["0 6 * * *"]

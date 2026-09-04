@@ -41,7 +41,6 @@ import {
 } from './lib/share-deadline';
 import {
   activatePostLinkShare,
-  maybeOfferSameGestureShare,
   showPostLinkError,
   showPostLinkLoading,
 } from './lib/post-link-share';
@@ -336,16 +335,22 @@ export function applyExistingReferralLink(code: string): void {
   }
 }
 
-/** Sticky mobile CTA — hidden once #ref-link has a value. */
+/** Sticky mobile Get-link bar — organic first screen keeps one CTA. Never unhide here. */
 export function syncMobileReferralCta(): void {
   const bar = document.getElementById('mobile-referral-cta');
-  const input = document.getElementById('ref-link') as HTMLInputElement | null;
   if (!bar) return;
-  if (input?.value?.trim()) {
+  const input = document.getElementById('ref-link') as HTMLInputElement | null;
+  const hasLink =
+    !!input?.value?.trim() || document.documentElement.hasAttribute('data-vr-has-link');
+  if (hasLink) {
     bar.classList.add('hidden');
     return;
   }
-  bar.classList.remove('hidden');
+  // Cold organic land: hero button is the only Get my link. Paid traffic may
+  // reveal this bar via forceMobileGetLinkBar after data-vr-paid-landing.
+  if (!document.documentElement.hasAttribute('data-vr-paid-landing')) {
+    bar.classList.add('hidden');
+  }
 }
 
 /**
@@ -400,9 +405,6 @@ export async function getMyReferralLinkInstant(): Promise<void> {
     // Ensure sticky get-link bar is gone before send UI mounts (no double bottom bars)
     document.getElementById('mobile-referral-cta')?.classList.add('hidden');
     activatePostLinkShare(link);
-    if (pendingReferrerCode) {
-      maybeOfferSameGestureShare(link);
-    }
 
     if (pendingReferrerCode && !referralRecordedThisSession) {
       void runFunnelReferralRecording();

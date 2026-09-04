@@ -19,7 +19,7 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await expect(page.locator('#hero-title-line1')).toContainText(/same race as DEMO1234/i, {
       timeout: 5000,
     });
-    await expect(page.locator('#hero-subtitle')).toContainText(/Get my link/);
+    await expect(page.locator('#hero-subtitle')).toBeHidden();
     await expect(page.locator('#hero-get-link-btn')).toBeVisible();
     await expect(page.locator('#hero-get-link-btn')).toContainText(/Get my link/i);
     await expect(page.locator('#how')).toBeHidden();
@@ -36,7 +36,7 @@ test.describe('ViralRefer - Core Referral & Virality Flows', () => {
     await expect(page.locator('#hero-title-line1')).toContainText(/same race as VIRAL-DEMOCODE/i, {
       timeout: 8000,
     });
-    await expect(page.locator('#hero-subtitle')).toContainText(/beat them/i);
+    await expect(page.locator('#hero-subtitle')).toBeHidden();
     await expect(page.locator('#hero-get-link-btn')).toBeVisible();
     await expect(page.locator('#how')).toBeHidden();
     await expect(page.locator('#faq')).toBeHidden();

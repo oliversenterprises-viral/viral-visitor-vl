@@ -24,6 +24,9 @@ export {
   publicRisingDrops,
   publicChallengerDrops,
   publicPendingEntered,
+  rememberDropSite,
+  siteForCode,
+  applySiteDropClimb,
 } from '../../supabase/functions/_shared/site-drops';
 
 export type {
@@ -31,4 +34,5 @@ export type {
   PendingEntered,
   SiteDrop,
   SiteDropsState,
+  RememberedSite,
 } from '../../supabase/functions/_shared/site-drops';

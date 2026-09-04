@@ -11,6 +11,7 @@ import {
   onPostLinkCopyTap,
   POST_LINK_ATTR,
 } from '../../src/lib/post-link-share';
+import { setLocale } from '../../src/lib/i18n';
 
 const LINK = 'https://viralrefer.app/r/VIRAL-TEST01';
 
@@ -36,6 +37,8 @@ describe('post-link-share', () => {
     localStorage.clear();
     document.documentElement.removeAttribute(POST_LINK_ATTR);
     document.documentElement.removeAttribute('data-vr-has-link');
+    document.documentElement.removeAttribute('data-vr-did-send');
+    document.documentElement.removeAttribute('data-vr-paste-after-send');
     document.documentElement.removeAttribute('data-vr-share-pending');
     document.documentElement.removeAttribute('data-vr-share-locked');
     mount();
@@ -49,10 +52,21 @@ describe('post-link-share', () => {
   it('builds Lumina payload with the raw /r/ link', () => {
     const text = buildPostLinkShareText(LINK);
     expect(text).toBe(
-      `I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count. ${LINK}`,
+      `I'm racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner for 7 days. Tap Get my link. Visiting does not count. ${LINK}`,
     );
     expect(buildWhatsAppShareHref(LINK)).toContain('wa.me');
     expect(decodeURIComponent(buildWhatsAppShareHref(LINK))).toContain(LINK);
+  });
+
+  it('Spanish send caption uses Obtener mi enlace and visiting does not count', () => {
+    setLocale('es');
+    const text = buildPostLinkShareText(LINK);
+    expect(text).toContain('Site Drops');
+    expect(text).toMatch(/Obtener mi enlace/);
+    expect(text).toMatch(/Visitar no cuenta/);
+    expect(text).toContain(LINK);
+    expect(text).not.toMatch(/Tap Get my link/);
+    setLocale('en');
   });
 
   it('ready state is one primary + quiet copy, no second door', () => {
@@ -70,16 +84,19 @@ describe('post-link-share', () => {
     const primary = document.getElementById('post-link-primary') as HTMLButtonElement;
     expect(primary.hidden).toBe(false);
     expect(primary.textContent).toBe('Send it now');
+    expect(document.activeElement).toBe(primary);
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
     expect(document.getElementById('post-link-helper')?.textContent).toBe('');
     expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(2);
   });
 
-  it('loading hides the share button', () => {
+  it('loading keeps Send visible as Getting your link', () => {
     showPostLinkLoading();
     const primary = document.getElementById('post-link-primary') as HTMLButtonElement;
     expect(document.getElementById('post-link-heading')?.textContent).toMatch(/Getting your link/);
-    expect(primary.hidden).toBe(true);
+    expect(primary.hidden).toBe(false);
+    expect(primary.disabled).toBe(true);
+    expect(primary.textContent).toMatch(/Getting your link/);
   });
 
   it('error turns primary into Try again and hides copy', () => {
@@ -104,6 +121,7 @@ describe('post-link-share', () => {
     onPostLinkPrimaryTap();
     expect(open).toHaveBeenCalled();
     expect(String(open.mock.calls[0]?.[0])).toContain('wa.me');
+    expect(document.documentElement.getAttribute('data-vr-did-send')).toBe('1');
   });
 
   it('copy writes the URL only, not the share sentence', async () => {

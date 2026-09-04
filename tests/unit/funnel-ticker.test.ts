@@ -111,7 +111,7 @@ describe('funnel-ticker', () => {
     ]);
     expect(html).toContain('vr-funnel-ticker-seq');
     expect((html.match(/vr-funnel-ticker-seq/g) || []).length).toBe(2);
-    expect(html).toContain('Someone in DE just shared');
+    expect(html).toContain('Someone in DE just sent their link');
   });
 
   it('publicActivityToTickerRows maps activity kinds', () => {

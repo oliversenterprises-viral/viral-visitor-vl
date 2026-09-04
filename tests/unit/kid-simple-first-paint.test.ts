@@ -39,6 +39,8 @@ describe('kid-simple first paint', () => {
       'Paste your website in the slot. 1 friend → Rising drop. 2 → text line. #1 (not the owner) with 3+ friends → 7-day banner.',
     );
     expect(hero).toContain('id="hero-banner-mock"');
+    expect(hero).toContain('id="site-drop-rungs"');
+    expect(hero).toContain('Just entered');
     expect(hero).toContain('Your site here');
     expect(hero).toContain('Your site here · 7 days');
     expect(hero).toContain('Empty right now. #1 this week puts their site here.');

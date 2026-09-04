@@ -2,6 +2,7 @@
 
 import type { FunnelStep } from './funnel-conversion';
 import { getFunnelCopy } from './funnel-copy';
+import { t } from './i18n';
 
 export type FunnelArrowState = 'idle' | 'flow' | 'done';
 
@@ -22,36 +23,41 @@ export function resolveFunnelGuideTargetId(
   return 'share-first-strip';
 }
 
-const DEFAULT_GUIDE: Record<FunnelStep, FunnelGuideCopy> = {
-  1: {
-    message: 'Step 1: tap Get my link. You get a free link in a few seconds. No sign-up.',
-    icon: 'up',
-  },
-  2: {
-    message:
-      'Step 2: your link is ready. You can copy it if you want — but you still need to send it to friends.',
-    icon: 'down',
-  },
-  3: {
-    message:
-      'Step 3: share your link. It locks when a friend opens it and taps Get my link. That is how you climb!',
-    icon: 'down',
-  },
+const DEFAULT_GUIDE_ICON: Record<FunnelStep, FunnelGuideCopy['icon']> = {
+  1: 'up',
+  2: 'down',
+  3: 'down',
 };
+
+function cmsGuideIsSafe(raw: string, step: FunnelStep): boolean {
+  const lower = raw.toLowerCase();
+  if (/copy\s*→\s*share|hit copy|copy now|every click counts|visits?\s+count/i.test(raw)) {
+    return false;
+  }
+  if (step === 2 && /\bcopy\b/i.test(lower) && !/\bsend\b|\block\b|get my link/i.test(lower)) {
+    return false;
+  }
+  return true;
+}
 
 export function getFunnelGuideCopy(step: FunnelStep): FunnelGuideCopy {
   const cmsKey =
     step === 1 ? 'funnel_guide_step1' : step === 2 ? 'funnel_guide_step2' : 'funnel_guide_step3';
   const override = getFunnelCopy(cmsKey);
-  const base = DEFAULT_GUIDE[step] ?? { message: '', icon: 'down' as const };
-  return override ? { ...base, message: override } : base;
+  const key = step === 1 ? 'funnel.guide_1' : step === 2 ? 'funnel.guide_2' : 'funnel.guide_3';
+  const base: FunnelGuideCopy = {
+    message: t(key),
+    icon: DEFAULT_GUIDE_ICON[step] ?? 'down',
+  };
+  if (override && cmsGuideIsSafe(override, step)) {
+    return { ...base, message: override };
+  }
+  return base;
 }
 
 export function getFunnelShareCompleteCopy(): FunnelGuideCopy {
   return {
-    message:
-      getFunnelCopy('funnel_guide_complete') ??
-      'Nice! Keep sharing. Your link locks when a friend gets their free link through you — then you climb the board.',
+    message: getFunnelCopy('funnel_guide_complete') ?? t('funnel.guide_complete'),
     icon: 'check',
   };
 }

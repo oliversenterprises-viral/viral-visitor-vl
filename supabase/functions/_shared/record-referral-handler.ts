@@ -59,6 +59,15 @@ function jsonResponse(body: unknown, status: number): Response {
   });
 }
 
+async function tryClimbSiteDrop(supabaseAdmin: RecordReferralDeps['supabaseAdmin'], referrerCode: string): Promise<void> {
+  try {
+    const { advanceSiteDropOnVerifiedCredit } = await import('./site-drops-store.ts');
+    await advanceSiteDropOnVerifiedCredit(supabaseAdmin as never, referrerCode);
+  } catch (dropErr) {
+    console.warn('[record-referral] site-drop climb skipped:', dropErr);
+  }
+}
+
 /** Full record-referral request flow (same path as production index.ts). */
 export async function handleRecordReferral(req: Request, deps: RecordReferralDeps): Promise<Response> {
   if (req.method === 'OPTIONS') {
@@ -268,6 +277,7 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
         503,
       );
     } else if (existing) {
+      await tryClimbSiteDrop(deps.supabaseAdmin, referrerCode);
       return jsonResponse(
         {
           success: true,
@@ -316,6 +326,7 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
       } catch {
         /* non-fatal */
       }
+      await tryClimbSiteDrop(deps.supabaseAdmin, referrerCode);
       return jsonResponse(
         { success: true, message: 'Referral already recorded', duplicate: true },
         200,
@@ -336,6 +347,8 @@ export async function handleRecordReferral(req: Request, deps: RecordReferralDep
   } catch (lockErr) {
     console.warn('[record-referral] lock-on-referral failed (non-fatal):', lockErr);
   }
+
+  await tryClimbSiteDrop(deps.supabaseAdmin, referrerCode);
 
   return jsonResponse(
     {

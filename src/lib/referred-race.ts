@@ -13,14 +13,14 @@ export function formatSameRaceTitle(code: string): string {
   const clean = String(code || '')
     .trim()
     .toUpperCase();
-  return clean ? `You're in the same race as ${clean}.` : "You're in the same race.";
+  return clean ? `Same race as ${clean}.` : 'Same race.';
 }
 
 export function formatSameRaceHeadline(code: string): string {
   const clean = String(code || '')
     .trim()
     .toUpperCase();
-  return clean ? `You're in the same race as ${clean}` : "You're in the same race";
+  return clean ? `Same race as ${clean}` : 'Same race';
 }
 
 /** Paint the referred first viewport. Hero is the only job. */
@@ -39,8 +39,9 @@ export function paintReferredRaceHero(code: string): void {
   const subtitle = document.getElementById('hero-subtitle');
   if (subtitle) subtitle.textContent = SAME_RACE_SUB;
 
-  const ctaSpan = document.querySelector('#hero-get-link-btn span');
-  if (ctaSpan) ctaSpan.textContent = SAME_RACE_CTA;
+  document.querySelectorAll('#hero-get-link-btn span').forEach((ctaSpan) => {
+    ctaSpan.textContent = SAME_RACE_CTA;
+  });
 
   const navCta = document.getElementById('nav-get-link-btn');
   if (navCta) {

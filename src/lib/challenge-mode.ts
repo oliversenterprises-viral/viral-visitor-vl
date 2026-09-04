@@ -6,6 +6,7 @@ import { buildCleanReferralLink, parseRefFromLocation } from './referral-url';
 import { fetchReferrerPublicStats, type ReferrerPublicStats } from './supabase';
 import { getViralLoopsConfig } from './viral-loops-config';
 import { trackViralLoopEvent } from './visitor-tracking';
+import { t } from './i18n';
 
 const CHALLENGE_SESSION_KEY = 'vr_challenge_mode';
 
@@ -55,18 +56,19 @@ export function buildChallengeReferralLink(code: string, baseUrl?: string): stri
 export function formatRivalDuelLine(stats: ReferrerPublicStats): string {
   const code = stats.referrer_code || 'RIVAL';
   const count = stats.referral_count ?? 0;
+  const s = count === 1 ? '' : 's';
   if (stats.rank && stats.rank > 0) {
-    return `${code} has ${count} referral${count === 1 ? '' : 's'} (#${stats.rank}) — beat them!`;
+    return t('challenge.duel_ranked', { code, n: count, s, rank: stats.rank });
   }
   if (count > 0) {
-    return `${code} has ${count} referral${count === 1 ? '' : 's'} — beat them!`;
+    return t('challenge.duel_count', { code, n: count, s });
   }
-  return `${code} invited you — join the same contest and climb past them!`;
+  return t('challenge.duel_invite', { code });
 }
 
 export function formatChallengeSharePrefix(rivalCode: string | null): string {
   if (!rivalCode || !getViralLoopsConfig().challenge_enabled) return '';
-  return `Think you can beat ${rivalCode}? `;
+  return t('challenge.share_prefix', { code: rivalCode });
 }
 
 function escapeHtml(text: string): string {
@@ -86,9 +88,9 @@ function renderDuelBanner(ref: string, stats: ReferrerPublicStats): void {
       <div class="flex items-start gap-3">
         <div class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-300 flex items-center justify-center shrink-0 font-bold text-sm">VS</div>
         <div>
-          <div class="text-xs font-bold uppercase tracking-wider text-rose-300/90">Challenge mode</div>
+          <div class="text-xs font-bold uppercase tracking-wider text-rose-300/90">${escapeHtml(t('challenge.mode'))}</div>
           <p class="text-sm text-zinc-100 mt-0.5 leading-relaxed">${escapeHtml(line)}</p>
-          <p class="text-[11px] text-zinc-400 mt-1">Get your link, share with <span class="font-mono text-rose-200/90">${escapeHtml(ref)}</span> in mind.</p>
+          <p class="text-[11px] text-zinc-400 mt-1">${escapeHtml(t('challenge.hint', { code: ref }))}</p>
         </div>
       </div>
     </div>`;
@@ -99,10 +101,14 @@ function renderDuelBanner(ref: string, stats: ReferrerPublicStats): void {
 function tuneChallengeHero(ref: string, stats: ReferrerPublicStats): void {
   const subtitle = document.getElementById('hero-subtitle');
   if (subtitle) {
-    subtitle.textContent = `Challenge from ${ref}: ${stats.referral_count ?? 0} referrals${stats.rank ? ` (#${stats.rank})` : ''}. Tap Get my link — then share to beat them.`;
+    subtitle.textContent = t('challenge.hero', {
+      code: ref,
+      n: stats.referral_count ?? 0,
+      rank: stats.rank ? ` (#${stats.rank})` : '',
+    });
   }
   const badge = document.getElementById('hero-badge');
-  if (badge) badge.textContent = 'DUEL MODE • STEP 1 REQUIRED';
+  if (badge) badge.textContent = t('challenge.badge');
 }
 
 let duelInflight: Promise<void> | null = null;

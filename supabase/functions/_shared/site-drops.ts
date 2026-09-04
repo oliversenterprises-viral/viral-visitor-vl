@@ -15,6 +15,8 @@ export const MAX_LIVE_RISING = 3;
 export const MAX_PENDING = 24;
 export const SITE_DROP_RISING_MIN_LOCKS = 1;
 export const CHALLENGER_RANKS = [2, 3] as const;
+/** Remembered websites survive the 15-minute Just entered TTL so a later friend credit can still climb. */
+export const MAX_REMEMBERED_SITES = 400;
 
 export type SiteDropKind = 'entered' | 'rising' | 'challenger';
 
@@ -36,9 +38,18 @@ export type SiteDrop = {
   hidden?: boolean;
 };
 
+export type RememberedSite = {
+  code: string;
+  url: string;
+  label: string;
+  updated_at: string;
+};
+
 export type SiteDropsState = {
   drops: SiteDrop[];
   pending_entered: PendingEntered[];
+  /** Per-code website. Not shown on the homepage. Survives live-drop expiry. */
+  sites?: RememberedSite[];
 };
 
 export function utcWeekId(now: Date = new Date()): string {
@@ -89,7 +100,15 @@ export function isStalePending(row: PendingEntered, now: Date = new Date()): boo
 }
 
 function emptyState(): SiteDropsState {
-  return { drops: [], pending_entered: [] };
+  return { drops: [], pending_entered: [], sites: [] };
+}
+
+function sitesOf(state: SiteDropsState): RememberedSite[] {
+  return Array.isArray(state.sites) ? state.sites : [];
+}
+
+function withSites(drops: SiteDrop[], pending_entered: PendingEntered[], sites: RememberedSite[]): SiteDropsState {
+  return { drops, pending_entered, sites };
 }
 
 function normalizeCode(raw: unknown): string | null {
@@ -158,19 +177,73 @@ export function parseSiteDrops(raw: unknown): SiteDropsState {
     });
   }
 
-  return { drops, pending_entered };
+  const sites: RememberedSite[] = [];
+  const siteRows = Array.isArray(source.sites) ? source.sites : [];
+  for (const row of siteRows) {
+    if (!row || typeof row !== 'object') continue;
+    const rec = row as Record<string, unknown>;
+    const code = normalizeCode(rec.code || rec.referrer_code);
+    const url = normalizeWebsiteUrl(rec.url || rec.website || rec.href);
+    if (!code || isTestReferrerCode(code) || !url) continue;
+    sites.push({
+      code,
+      url,
+      label: labelFromUrl(rec.label || rec.name, url),
+      updated_at: String(rec.updated_at || rec.updatedAt || new Date().toISOString()),
+    });
+  }
+
+  return { drops, pending_entered, sites };
 }
 
-/** Expire live drops and drop stale pending. Never promote expired pending into drops. */
+export function rememberDropSite(
+  state: SiteDropsState,
+  input: { code: string; url: string; label?: string },
+  now: Date = new Date(),
+): SiteDropsState {
+  const code = normalizeCode(input.code);
+  const url = normalizeWebsiteUrl(input.url);
+  if (!code || !url || isTestReferrerCode(code)) return state;
+  const row: RememberedSite = {
+    code,
+    url,
+    label: labelFromUrl(input.label, url),
+    updated_at: now.toISOString(),
+  };
+  const rest = sitesOf(state).filter((site) => site.code !== code);
+  rest.push(row);
+  rest.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  return withSites(state.drops, state.pending_entered, rest.slice(0, MAX_REMEMBERED_SITES));
+}
+
+export function siteForCode(state: SiteDropsState, codeRaw: string): RememberedSite | null {
+  const code = normalizeCode(codeRaw);
+  if (!code) return null;
+  const remembered = sitesOf(state).find((site) => site.code === code);
+  if (remembered) return remembered;
+  const live = [...state.drops]
+    .filter((drop) => drop.code === code && drop.url)
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
+  if (!live) return null;
+  return {
+    code: live.code,
+    url: live.url,
+    label: live.label,
+    updated_at: live.updated_at,
+  };
+}
+
+/** Expire live drops and drop stale pending. Remembered websites stay. */
 export function expireSiteDrops(state: SiteDropsState, now: Date = new Date()): SiteDropsState {
   const week = utcWeekId(now);
-  return {
-    drops: state.drops.filter(
+  return withSites(
+    state.drops.filter(
       (drop) =>
         !isExpiredDrop(drop, now) && !(drop.kind === 'challenger' && drop.week !== week),
     ),
-    pending_entered: state.pending_entered.filter((row) => !isStalePending(row, now)),
-  };
+    state.pending_entered.filter((row) => !isStalePending(row, now)),
+    sitesOf(state),
+  );
 }
 
 export function enqueuePendingEntered(
@@ -193,10 +266,19 @@ export function enqueuePendingEntered(
 function upsertDrop(state: SiteDropsState, drop: SiteDrop): SiteDropsState {
   const without = state.drops.filter((row) => !(row.kind === drop.kind && row.code === drop.code));
   without.push(drop);
-  return {
-    drops: without,
-    pending_entered: state.pending_entered.filter((row) => row.code !== drop.code),
-  };
+  return withSites(
+    without,
+    state.pending_entered.filter((row) => row.code !== drop.code),
+    sitesOf(state),
+  );
+}
+
+function removeKindForCode(state: SiteDropsState, code: string, kind: SiteDropKind): SiteDropsState {
+  return withSites(
+    state.drops.filter((row) => !(row.code === code && row.kind === kind)),
+    state.pending_entered,
+    sitesOf(state),
+  );
 }
 
 export function promoteEnteredDrop(
@@ -208,7 +290,8 @@ export function promoteEnteredDrop(
   const code = normalizeCode(input.code);
   const url = normalizeWebsiteUrl(input.url);
   if (!code || !url || isTestReferrerCode(code)) return next;
-  const updated = upsertDrop(next, {
+  const remembered = rememberDropSite(next, { code, url, label: input.label }, now);
+  const updated = upsertDrop(remembered, {
     kind: 'entered',
     code,
     url,
@@ -223,10 +306,11 @@ export function promoteEnteredDrop(
     .filter((d) => d.kind === 'entered')
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, MAX_LIVE_ENTERED);
-  return {
-    drops: [...updated.drops.filter((d) => d.kind !== 'entered'), ...entered],
-    pending_entered: updated.pending_entered,
-  };
+  return withSites(
+    [...updated.drops.filter((d) => d.kind !== 'entered'), ...entered],
+    updated.pending_entered,
+    sitesOf(updated),
+  );
 }
 
 export function promoteRisingDrop(
@@ -239,7 +323,15 @@ export function promoteRisingDrop(
   const url = normalizeWebsiteUrl(input.url);
   if (!code || !url || isTestReferrerCode(code)) return next;
   if (input.locks < SITE_DROP_RISING_MIN_LOCKS) return next;
-  const updated = upsertDrop(next, {
+  const remembered = rememberDropSite(next, { code, url, label: input.label }, now);
+  const existing = remembered.drops.find(
+    (drop) => drop.kind === 'rising' && drop.code === code && !isExpiredDrop(drop, now),
+  );
+  const expires_at =
+    existing && input.locks <= existing.locks
+      ? existing.expires_at
+      : new Date(now.getTime() + RISING_TTL_MS).toISOString();
+  const updated = upsertDrop(remembered, {
     kind: 'rising',
     code,
     url,
@@ -247,17 +339,18 @@ export function promoteRisingDrop(
     locks: input.locks,
     rank: null,
     week: utcWeekId(now),
-    expires_at: new Date(now.getTime() + RISING_TTL_MS).toISOString(),
+    expires_at,
     updated_at: now.toISOString(),
   });
   const rising = updated.drops
     .filter((d) => d.kind === 'rising')
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, MAX_LIVE_RISING);
-  return {
-    drops: [...updated.drops.filter((d) => d.kind !== 'rising'), ...rising],
-    pending_entered: updated.pending_entered,
-  };
+  return withSites(
+    [...updated.drops.filter((d) => d.kind !== 'rising'), ...rising],
+    updated.pending_entered,
+    sitesOf(updated),
+  );
 }
 
 export function promoteChallengerDrop(
@@ -271,12 +364,16 @@ export function promoteChallengerDrop(
   const rank = Math.floor(Number(input.rank) || 0);
   if (!code || !url || isTestReferrerCode(code)) return next;
   if (!CHALLENGER_RANKS.includes(rank as 2 | 3)) return next;
+  const remembered = rememberDropSite(next, { code, url, label: input.label }, now);
   const week = utcWeekId(now);
-  const withoutRank = next.drops.filter(
+  const existing = remembered.drops.find(
+    (d) => d.kind === 'challenger' && d.code === code && d.week === week && d.rank === rank,
+  );
+  const withoutRank = remembered.drops.filter(
     (d) => !(d.kind === 'challenger' && d.week === week && d.rank === rank),
   );
   return upsertDrop(
-    { drops: withoutRank, pending_entered: next.pending_entered },
+    withSites(withoutRank, remembered.pending_entered, sitesOf(remembered)),
     {
       kind: 'challenger',
       code,
@@ -285,10 +382,40 @@ export function promoteChallengerDrop(
       locks: Math.max(0, Math.floor(Number(input.locks) || 0)),
       rank,
       week,
-      expires_at: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      expires_at: existing?.expires_at || new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       updated_at: now.toISOString(),
     },
   );
+}
+
+/**
+ * Paste or friend-credit climb: 0 friends → Just entered, 1+ → Rising,
+ * board #2/#3 → Challenger. Needs a remembered URL. No URL = no chip.
+ */
+export function applySiteDropClimb(
+  state: SiteDropsState,
+  input: { code: string; url: string; label?: string; locks: number; rank?: number | null },
+  now: Date = new Date(),
+): SiteDropsState {
+  const code = normalizeCode(input.code);
+  const url = normalizeWebsiteUrl(input.url);
+  if (!code || !url || isTestReferrerCode(code)) return expireSiteDrops(state, now);
+
+  const locks = Math.max(0, Math.floor(Number(input.locks) || 0));
+  const rank = Math.floor(Number(input.rank) || 0);
+  let next = rememberDropSite(state, { code, url, label: input.label }, now);
+
+  if (locks >= SITE_DROP_RISING_MIN_LOCKS) {
+    next = promoteRisingDrop(next, { code, url, label: input.label, locks }, now);
+    next = removeKindForCode(next, code, 'entered');
+  } else {
+    next = promoteEnteredDrop(next, { code, url, label: input.label }, now);
+  }
+
+  if (CHALLENGER_RANKS.includes(rank as 2 | 3)) {
+    next = promoteChallengerDrop(next, { code, url, label: input.label, rank, locks }, now);
+  }
+  return next;
 }
 
 export function publicEnteredDrops(state: SiteDropsState, now: Date = new Date()): SiteDrop[] {

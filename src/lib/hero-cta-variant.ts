@@ -6,6 +6,12 @@
 import { isReferredLanding } from './funnel-conversion';
 import { getHeroCtaVariant, type HeroCtaVariant } from './optimizer-flags';
 import {
+  LOCKED_LIVE_FUNNEL_BADGE,
+  LOCKED_LIVE_HOW_BADGE,
+  LOCKED_LIVE_HOW_STEP1_DESC,
+  LOCKED_LIVE_HOW_STEP2_DESC,
+  LOCKED_LIVE_HOW_STEP3,
+  LOCKED_LIVE_HOW_SUBTITLE,
   LOCKED_SITE_DROPS_CTA,
   LOCKED_SITE_DROPS_H1_ACCENT,
   LOCKED_SITE_DROPS_H1_LINE1,
@@ -25,7 +31,7 @@ export interface HeroCtaCopy {
 /** Tight conversion copy — one action, worldwide, no cash spam. */
 export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
   control: {
-    badge: 'WORLDWIDE • FREE • NO SIGNUP',
+    badge: 'THIS WEEK • FREE • NO SIGNUP',
     titleLine1: LOCKED_SITE_DROPS_H1_LINE1,
     titleAccent: LOCKED_SITE_DROPS_H1_ACCENT,
     subtitle: LOCKED_SITE_DROPS_SUB,
@@ -33,7 +39,7 @@ export const HERO_CTA_COPY: Record<HeroCtaVariant, HeroCtaCopy> = {
     buttonLabel: LOCKED_SITE_DROPS_CTA,
   },
   prize: {
-    badge: 'WORLDWIDE • FREE • NO SIGNUP',
+    badge: 'THIS WEEK • FREE • NO SIGNUP',
     titleLine1: LOCKED_SITE_DROPS_H1_LINE1,
     titleAccent: LOCKED_SITE_DROPS_H1_ACCENT,
     subtitle: LOCKED_SITE_DROPS_SUB,
@@ -67,7 +73,16 @@ export function applyHeroCopyToDom(copy: HeroCtaCopy): void {
 export function lock844HomepageCopy(): void {
   if (isReferredLanding()) return;
   applyHeroCopyToDom(HERO_CTA_COPY.control);
+  const badgeText = document.querySelector('#hero-badge [data-i18n-text]');
+  if (badgeText) badgeText.textContent = 'THIS WEEK • FREE • NO SIGNUP';
   setText('hero-prize-one', LOCKED_SITE_DROPS_RULE);
+  setText('funnel-journey-badge', LOCKED_LIVE_FUNNEL_BADGE);
+  setText('how-it-works-badge', LOCKED_LIVE_HOW_BADGE);
+  setText('how-it-works-subtitle', LOCKED_LIVE_HOW_SUBTITLE);
+  setText('how-step1-desc', LOCKED_LIVE_HOW_STEP1_DESC);
+  setText('how-it-works-step3', LOCKED_LIVE_HOW_STEP3);
+  const howStep2 = document.getElementById('how-step2-desc');
+  if (howStep2) howStep2.textContent = LOCKED_LIVE_HOW_STEP2_DESC;
   // Owner lock: large Site Drop board title stays Recent Activity.
   const boardTitle = document.getElementById('leaderboard-title');
   const painted = (boardTitle?.textContent || '').trim();

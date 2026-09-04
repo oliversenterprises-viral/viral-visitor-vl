@@ -1,5 +1,5 @@
 /**
- * Floating funnel coach chat — guides visitors through get-link → copy → share.
+ * Floating funnel coach chat — get a link, send it, a friend taps Get my link.
  */
 
 import type { CoachChatAction, CoachChatMessage } from './funnel-coach-chat-helpers';
@@ -15,6 +15,7 @@ import {
   isFunnelCoachSiteEnabled,
   setFunnelCoachVisitorEnabled,
 } from './funnel-coach-prefs';
+import { t } from './i18n';
 
 const ROOT_ID = 'funnel-coach-chat';
 const RESTORE_ID = 'funnel-coach-restore';
@@ -145,10 +146,10 @@ function buildRestorePill(): void {
   btn.type = 'button';
   btn.className = 'funnel-coach-restore hidden';
   btn.setAttribute('data-vr-zone', 'funnel-coach-restore');
-  btn.title = 'Show Viral Coach';
-  btn.setAttribute('aria-label', 'Show Viral Coach');
+  btn.title = t('coach.restore');
+  btn.setAttribute('aria-label', t('coach.restore'));
   btn.innerHTML =
-    '<i class="fa-solid fa-robot" aria-hidden="true"></i><span class="funnel-coach-restore-label">Coach</span>';
+    `<i class="fa-solid fa-robot" aria-hidden="true"></i><span class="funnel-coach-restore-label">${escapeHtml(t('coach.restore'))}</span>`;
   btn.addEventListener('click', () => {
     setFunnelCoachVisitorEnabled(true);
     applyFunnelCoachVisibility();
@@ -186,30 +187,56 @@ function buildShell(): void {
   root.className = 'funnel-coach-chat';
   root.setAttribute('data-vr-zone', 'funnel-coach');
   root.innerHTML = `
-    <button type="button" id="funnel-coach-chat-toggle" class="funnel-coach-chat-toggle" aria-expanded="false" aria-controls="funnel-coach-chat-panel" title="Funnel coach">
+    <button type="button" id="funnel-coach-chat-toggle" class="funnel-coach-chat-toggle" aria-expanded="false" aria-controls="funnel-coach-chat-panel" title="">
       <i class="fa-solid fa-robot" aria-hidden="true"></i>
-      <span class="sr-only">Open funnel coach</span>
+      <span class="sr-only" data-i18n="coach.chrome_open">Open coach</span>
       <span id="funnel-coach-chat-badge" class="funnel-coach-chat-badge hidden" aria-hidden="true">1</span>
     </button>
     <div id="funnel-coach-chat-panel" class="funnel-coach-chat-panel hidden" role="dialog" aria-labelledby="funnel-coach-chat-title">
       <header class="funnel-coach-chat-header">
         <div>
-          <div id="funnel-coach-chat-title" class="funnel-coach-chat-title">Viral Coach</div>
-          <div class="funnel-coach-chat-sub">Guides you: link → copy → share</div>
+          <div id="funnel-coach-chat-title" class="funnel-coach-chat-title" data-i18n="coach.chrome_title">Viral Coach</div>
+          <div id="funnel-coach-chat-sub" class="funnel-coach-chat-sub" data-i18n="coach.chrome_sub">Get a link. Send it. A friend taps Get my link.</div>
         </div>
         <div class="funnel-coach-chat-header-actions">
-          <button type="button" id="funnel-coach-chat-hide" class="funnel-coach-chat-hide" title="Hide Viral Coach">Hide</button>
+          <button type="button" id="funnel-coach-chat-hide" class="funnel-coach-chat-hide" data-i18n="coach.chrome_hide">Hide</button>
           <button type="button" id="funnel-coach-chat-close" class="funnel-coach-chat-close" aria-label="Close coach">✕</button>
         </div>
       </header>
       <div id="funnel-coach-chat-messages" class="funnel-coach-chat-messages" aria-live="polite"></div>
       <div id="funnel-coach-chat-actions" class="funnel-coach-chat-actions"></div>
       <form id="funnel-coach-chat-form" class="funnel-coach-chat-form">
-        <input type="text" id="funnel-coach-chat-input" class="funnel-coach-chat-input" placeholder="Ask about your link, share, or homepage feature…" autocomplete="off" maxlength="200" />
+        <input type="text" id="funnel-coach-chat-input" class="funnel-coach-chat-input" data-i18n-placeholder="coach.chrome_placeholder" placeholder="Ask about your link, sending, or the homepage banner…" autocomplete="off" maxlength="200" />
         <button type="submit" class="funnel-coach-chat-send" aria-label="Send">↑</button>
       </form>
     </div>`;
   document.body.appendChild(root);
+  paintCoachChrome();
+}
+
+function paintCoachChrome(): void {
+  const title = document.getElementById('funnel-coach-chat-title');
+  if (title) title.textContent = t('coach.chrome_title');
+  const sub = document.getElementById('funnel-coach-chat-sub');
+  if (sub) sub.textContent = t('coach.chrome_sub');
+  const hide = document.getElementById('funnel-coach-chat-hide');
+  if (hide) {
+    hide.textContent = t('coach.chrome_hide');
+    hide.setAttribute('title', t('coach.chrome_hide'));
+  }
+  const openLabel = document.querySelector('#funnel-coach-chat-toggle .sr-only');
+  if (openLabel) openLabel.textContent = t('coach.chrome_open');
+  const toggle = document.getElementById('funnel-coach-chat-toggle');
+  toggle?.setAttribute('title', t('coach.chrome_open'));
+  const input = document.getElementById('funnel-coach-chat-input') as HTMLInputElement | null;
+  if (input) input.placeholder = t('coach.chrome_placeholder');
+  const restore = document.getElementById(RESTORE_ID);
+  if (restore) {
+    restore.setAttribute('title', t('coach.restore'));
+    restore.setAttribute('aria-label', t('coach.restore'));
+    const label = restore.querySelector('.funnel-coach-restore-label');
+    if (label) label.textContent = t('coach.restore');
+  }
 }
 
 /** Idempotent bootstrap — observes funnel step attributes for proactive nudges. */
@@ -326,6 +353,10 @@ export function initFunnelCoachChat(): void {
   });
 
   lastNudgeStep = readCoachChatContext().step === null ? 'none' : String(readCoachChatContext().step);
+
+  window.addEventListener('vr:locale-change', () => {
+    paintCoachChrome();
+  });
 
   // Soft pulse on the closed FAB so help is discoverable without opening the panel
   window.setTimeout(() => {

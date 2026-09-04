@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
-import { getMyReferralLinkInstant, resetReferralRecordingStateForTests } from '../../src/referral';
+import {
+  getMyReferralLinkInstant,
+  resetReferralRecordingStateForTests,
+  syncMobileReferralCta,
+} from '../../src/referral';
 import {
   POST_LINK_ATTR,
   POST_LINK_HEADING_READY,
@@ -252,6 +256,15 @@ describe('Get my link reveal (last-night lock)', () => {
     expect((document.getElementById('ref-link') as HTMLInputElement).value).toMatch(/\/r\/VIRAL-/i);
     expect(document.documentElement.getAttribute('data-vr-has-link')).toBe('1');
     expect(document.getElementById('referral-section')?.hidden).toBe(false);
+  });
+
+  it('organic first paint does not unhide the sticky Get my link bar', () => {
+    document.body.innerHTML = `
+      <div id="mobile-referral-cta" class="hidden"><span>Step 1: Get my link</span></div>
+      <input id="ref-link" value="" />
+    `;
+    syncMobileReferralCta();
+    expect(document.getElementById('mobile-referral-cta')?.classList.contains('hidden')).toBe(true);
   });
 
   it('paid Reddit landings do not spawn interstitial popups', () => {

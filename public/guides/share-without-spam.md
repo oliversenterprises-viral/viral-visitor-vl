@@ -6,7 +6,7 @@ Updated: 2026-08-25
 **Direct answer:** Send one honest sentence to people who already talk to you, plus your unique /r/ URL. ViralRefer credits a friend tap on Get my link, not a group blast. Do not promise cash.
 
 ## The sentence
-I’m racing for the ViralRefer homepage — #1 gets a banner for their site. Get a free link and try to beat me.
+I’m racing on ViralRefer — Site Drops put my site on the homepage as I climb. #1 gets the banner. Get a free link and try to beat me.
 
 ## Where
 WhatsApp, Texts, Telegram, or the phone share sheet. Not twenty groups in an hour. Not visit-for-visit exchanges.

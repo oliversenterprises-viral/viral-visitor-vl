@@ -26,8 +26,9 @@ describe('funnel-guide-helpers', () => {
 
   it('getFunnelGuideCopy returns step-specific coach text', () => {
     expect(getFunnelGuideCopy(1).message).toMatch(/Step 1/i);
-    expect(getFunnelGuideCopy(2).message).toMatch(/link is ready|copy/i);
-    expect(getFunnelGuideCopy(3).message).toMatch(/friend|lock|share/i);
+    expect(getFunnelGuideCopy(2).message).toMatch(/link is ready|send/i);
+    expect(getFunnelGuideCopy(2).message).not.toMatch(/copy → share/i);
+    expect(getFunnelGuideCopy(3).message).toMatch(/friend|lock|Get my link/i);
     expect(getFunnelShareCompleteCopy().icon).toBe('check');
     expect(getFunnelShareCompleteCopy().message).toMatch(/friend|lock/i);
   });

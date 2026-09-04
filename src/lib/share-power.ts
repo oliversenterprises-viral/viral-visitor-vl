@@ -48,30 +48,12 @@ export const CLIPBOARD_SHARE_PLATFORMS: ReadonlySet<SharePlatform> = new Set([
 ]);
 
 function defaultShareTemplate(): string {
-  return t('share.default');
+  const localized = t('share.default');
+  return localized.includes('{link}') ? localized : LOCKED_SHARE_TEXT;
 }
 
-/** First-screen share copy (native + WhatsApp + SMS). Link stays in the text. */
+/** English lock for tests and CMS fallback. Runtime send uses t('share.default'). */
 export const FIRST_SCREEN_SHARE_TEXT = LOCKED_SHARE_TEXT;
-
-/** Status + near-win share copy — locked homepage race sentence only. */
-const PLATFORM_MESSAGE_OVERRIDES: Partial<Record<SharePlatform, string>> = {
-  whatsapp: FIRST_SCREEN_SHARE_TEXT,
-  native: FIRST_SCREEN_SHARE_TEXT,
-  sms: FIRST_SCREEN_SHARE_TEXT,
-  boost: FIRST_SCREEN_SHARE_TEXT,
-  reddit: FIRST_SCREEN_SHARE_TEXT,
-  bluesky: FIRST_SCREEN_SHARE_TEXT,
-  email: FIRST_SCREEN_SHARE_TEXT,
-  linkedin: FIRST_SCREEN_SHARE_TEXT,
-  telegram: FIRST_SCREEN_SHARE_TEXT,
-  threads: FIRST_SCREEN_SHARE_TEXT,
-  pinterest: FIRST_SCREEN_SHARE_TEXT,
-  discord: FIRST_SCREEN_SHARE_TEXT,
-  x: FIRST_SCREEN_SHARE_TEXT,
-  tiktok: FIRST_SCREEN_SHARE_TEXT,
-  snapchat: FIRST_SCREEN_SHARE_TEXT,
-};
 
 
 /** X blocks viralrefer.app URLs - never put a raw product URL in tweet copy. */
@@ -171,10 +153,9 @@ export function buildShareMessage(
   let raw =
     (acceptAdmin ? adminTemplate : undefined) ||
     (lockedScreen ? undefined : abTemplate) ||
-    PLATFORM_MESSAGE_OVERRIDES[platform] ||
     defaultShareTemplate();
-  if (acceptAdmin && adminTemplate && PLATFORM_MESSAGE_OVERRIDES[platform] && !adminTemplate.includes('{link}')) {
-    raw = PLATFORM_MESSAGE_OVERRIDES[platform]!;
+  if (acceptAdmin && adminTemplate && !adminTemplate.includes('{link}')) {
+    raw = defaultShareTemplate();
   }
 
   const rendered = applySharePlaceholders(raw, linkTrimmed, {

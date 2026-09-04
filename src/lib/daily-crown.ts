@@ -12,6 +12,7 @@ import {
   downloadDailyCrownCard,
   type DailyCrownCardSpec,
 } from './daily-crown-card';
+import { t } from './i18n';
 
 export interface DailyCrownPerson {
   referrer_code: string;
@@ -78,10 +79,15 @@ export function formatDailyCrownRaceLine(status: DailyCrownStatus | null | undef
   if (!status) return '';
   const leader = status.current_leader;
   if (!leader?.referrer_code) {
-    return `Daily Crown open — first verified referral today (UTC) takes the lead · resets in ${formatCountdown(status.seconds_remaining)}`;
+    return t('crown.open', { until: formatCountdown(status.seconds_remaining) });
   }
   const n = leader.referral_count;
-  return `Daily Crown race: ${leader.referrer_code} leads with ${n} referral${n === 1 ? '' : 's'} today · ${formatCountdown(status.seconds_remaining)} left (UTC)`;
+  return t('crown.race', {
+    code: leader.referrer_code,
+    n,
+    s: n === 1 ? '' : 's',
+    until: formatCountdown(status.seconds_remaining),
+  });
 }
 
 export function parseDailyCrownStatus(raw: unknown): DailyCrownStatus | null {
@@ -219,19 +225,24 @@ function paintChampionStrip(status: DailyCrownStatus): void {
       <div class="flex items-center gap-3 min-w-0">
         <span class="daily-champion-strip__crown text-2xl" aria-hidden="true">👑</span>
         <div class="min-w-0">
-          <div class="text-[10px] font-bold uppercase tracking-wider text-amber-300/90">Daily Champion · 24h crown</div>
+          <div class="text-[10px] font-bold uppercase tracking-wider text-amber-300/90">${escapeHtml(t('crown.badge'))}</div>
           <div class="font-mono text-lg sm:text-xl font-bold text-amber-100 truncate">${escapeHtml(champ.referrer_code)}</div>
           <div class="text-xs text-zinc-400">
-            Won ${escapeHtml(formatCrownDay(champ.day_utc))} with ${champ.referral_count} referral${champ.referral_count === 1 ? '' : 's'}
-            · recognition only · not the overall homepage feature
+            ${escapeHtml(
+              t('crown.won', {
+                day: formatCrownDay(champ.day_utc),
+                n: champ.referral_count,
+                s: champ.referral_count === 1 ? '' : 's',
+              }),
+            )}
           </div>
         </div>
       </div>
       <div class="flex flex-col items-end gap-1 shrink-0">
-        <span class="text-[11px] text-amber-200/80 tabular-nums">Crown until UTC midnight · ${until}</span>
+        <span class="text-[11px] text-amber-200/80 tabular-nums">${escapeHtml(t('crown.until', { until }))}</span>
         <button type="button" data-daily-crown-share="champion"
           class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-amber-400/40 bg-amber-500/15 text-amber-100 hover:bg-amber-500/25 transition-colors">
-          Share crown card
+          ${escapeHtml(t('crown.share'))}
         </button>
       </div>
     </div>`;

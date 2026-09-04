@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import {
   COMMUNITY_NEAR_UNLOCK_PCT,
   activitySkeletonHtml,
   communityUnlockPctLabel,
   communityUnlockStatusText,
+  initPublicPolish,
   leaderboardSkeletonHtml,
   statsSkeletonHtml,
 } from '../../src/lib/public-polish';
@@ -31,5 +32,37 @@ describe('public-polish', () => {
     expect(leaderboardSkeletonHtml()).toContain('skeleton');
     expect(activitySkeletonHtml(2)).toContain('public-skeleton-stack');
     expect(statsSkeletonHtml()).toContain('grid');
+  });
+});
+
+describe('public-polish How/Board anchors', () => {
+  beforeEach(() => {
+    document.documentElement.removeAttribute('data-vr-funnel-expanded');
+    document.documentElement.removeAttribute('data-vr-smooth-anchors');
+    document.body.innerHTML = `
+      <a href="#how">How</a>
+      <button id="funnel-expand-btn">See how it works</button>
+      <div id="how"></div>
+      <div id="leaderboard"></div>
+    `;
+  });
+
+  afterEach(() => {
+    document.documentElement.removeAttribute('data-vr-funnel-expanded');
+    document.documentElement.removeAttribute('data-vr-smooth-anchors');
+    document.body.innerHTML = '';
+  });
+
+  it('clicking How expands below-fold so the section is visible', () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
+    });
+    const how = document.getElementById('how') as HTMLElement;
+    how.scrollIntoView = () => {};
+    initPublicPolish();
+    document.querySelector('a[href="#how"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(document.documentElement.getAttribute('data-vr-funnel-expanded')).toBe('1');
+    expect(document.getElementById('funnel-expand-btn')?.classList.contains('hidden')).toBe(true);
   });
 });

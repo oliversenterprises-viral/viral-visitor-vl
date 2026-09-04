@@ -6,13 +6,10 @@ import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 import { isAutomationUserAgent, isTestReferrerCode } from '../_shared/test-referral.ts';
 import {
+  applySiteDropClimb,
   expireSiteDrops,
   normalizeWebsiteUrl,
-  promoteChallengerDrop,
-  promoteEnteredDrop,
-  promoteRisingDrop,
   type SiteDropKind,
-  type SiteDropsState,
 } from '../_shared/site-drops.ts';
 import { loadSiteDropsState, saveSiteDropsState } from '../_shared/site-drops-store.ts';
 
@@ -83,7 +80,6 @@ Deno.serve(async (req: Request) => {
   const website = normalizeWebsiteUrl(payload.website || payload.url);
   const label = String(payload.label || '').trim();
   const turnstileToken = String(payload.turnstileToken || payload.token || '').trim();
-  const locks = Math.max(0, Math.floor(Number(payload.locks ?? payload.referral_count) || 0));
   const rank = Math.floor(Number(payload.rank) || 0);
 
   if (!kind) {
@@ -125,17 +121,14 @@ Deno.serve(async (req: Request) => {
     const now = new Date();
     const current = expireSiteDrops(await loadSiteDropsState(supabaseAdmin), now);
 
-    let verifiedLocks = 0;
-    if (kind === 'rising' || kind === 'challenger') {
-      const { count, error: countErr } = await supabaseAdmin
-        .from('referrals')
-        .select('*', { count: 'exact', head: true })
-        .eq('referrer_code', referrerCode);
-      if (countErr) {
-        return jsonResponse({ success: false, error: 'Temporarily unavailable. Please try again.' }, 503);
-      }
-      verifiedLocks = count ?? 0;
+    const { count, error: countErr } = await supabaseAdmin
+      .from('referrals')
+      .select('*', { count: 'exact', head: true })
+      .eq('referrer_code', referrerCode);
+    if (countErr) {
+      return jsonResponse({ success: false, error: 'Temporarily unavailable. Please try again.' }, 503);
     }
+    const verifiedLocks = count ?? 0;
 
     if (kind === 'rising' && verifiedLocks < 1) {
       return jsonResponse(
@@ -144,30 +137,48 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    let next: SiteDropsState = current;
-    if (kind === 'entered') {
-      next = promoteEnteredDrop(current, { code: referrerCode, url: website, label }, now);
-    } else if (kind === 'rising') {
-      next = promoteRisingDrop(
-        current,
-        { code: referrerCode, url: website, label, locks: verifiedLocks },
-        now,
-      );
-    } else {
-      next = promoteChallengerDrop(
-        current,
-        { code: referrerCode, url: website, label, rank: rank || 2, locks: verifiedLocks || locks },
-        now,
-      );
+    let boardRank = rank;
+    if (!boardRank) {
+      try {
+        const { data: board } = await supabaseAdmin.rpc('get_leaderboard', { min_referrals: 1 });
+        if (Array.isArray(board)) {
+          const row = board.find(
+            (entry: { referrer_code?: string; rank?: number }) =>
+              String(entry?.referrer_code || '').toUpperCase() === referrerCode,
+          ) as { rank?: number } | undefined;
+          boardRank = Math.floor(Number(row?.rank) || 0);
+        }
+      } catch {
+        boardRank = 0;
+      }
     }
 
+    const next = applySiteDropClimb(
+      current,
+      {
+        code: referrerCode,
+        url: website,
+        label,
+        locks: verifiedLocks,
+        rank: boardRank || null,
+      },
+      now,
+    );
+
     await saveSiteDropsState(supabaseAdmin, next);
+
+    const mine = next.drops.filter((drop) => drop.code === referrerCode);
+    const rung = mine.some((drop) => drop.kind === 'challenger')
+      ? 'challenger'
+      : mine.some((drop) => drop.kind === 'rising')
+        ? 'rising'
+        : 'entered';
 
     return jsonResponse({
       success: true,
       data: {
         state: next,
-        kind,
+        kind: rung,
         code: referrerCode,
       },
     });

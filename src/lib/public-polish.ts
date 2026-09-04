@@ -108,7 +108,7 @@ function wireNavScrollElevate(): void {
   window.addEventListener('scroll', onScroll, { passive: true });
 }
 
-const SMOOTH_ANCHORS = ['#how', '#prize', '#leaderboard'] as const;
+const SMOOTH_ANCHORS = ['#how', '#prize', '#leaderboard', '#site-drops'] as const;
 
 function wireSmoothAnchors(): void {
   if (document.documentElement.dataset.vrSmoothAnchors === '1') return;
@@ -122,6 +122,10 @@ function wireSmoothAnchors(): void {
     const target = document.querySelector(href);
     if (!target) return;
     e.preventDefault();
+    if (href === '#how' || href === '#prize' || href === '#leaderboard' || href === '#site-drops') {
+      document.documentElement.setAttribute('data-vr-funnel-expanded', '1');
+      document.getElementById('funnel-expand-btn')?.classList.add('hidden');
+    }
     target.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
     history.replaceState(null, '', href);
   });

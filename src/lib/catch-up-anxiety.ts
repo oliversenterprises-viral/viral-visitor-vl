@@ -5,6 +5,7 @@
 import type { LeaderboardEntry } from './types';
 import { getViralLoopsConfig } from './viral-loops-config';
 import { trackViralLoopEvent } from './visitor-tracking';
+import { t } from './i18n';
 
 const RANK_SNAPSHOT_KEY = 'vr_anxiety_last_rank';
 const NOTIFY_OPT_IN_KEY = 'vr_anxiety_notify_opt_in';
@@ -22,11 +23,11 @@ export function referralsBehindLeader(
 export function formatAnxietyBarLine(gap: number | null, leaderCount: number): string {
   if (gap == null || gap < 1) {
     return leaderCount > 0
-      ? `You're tied with #1 at ${leaderCount} referral${leaderCount === 1 ? '' : 's'}`
-      : 'Be first on the board this week';
+      ? t('anxiety.tied', { n: leaderCount, s: leaderCount === 1 ? '' : 's' })
+      : t('anxiety.first');
   }
-  if (gap === 1) return '1 referral behind #1 — one push could take the crown';
-  return `${gap} referrals behind #1 — close the gap before someone else does`;
+  if (gap === 1) return t('anxiety.one');
+  return t('anxiety.n', { n: gap });
 }
 
 export function isAnxietyNotifyOptedIn(): boolean {

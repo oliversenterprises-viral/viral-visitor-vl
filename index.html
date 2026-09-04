@@ -158,7 +158,7 @@
             <div class="vr-hero-inner max-w-[400px] sm:max-w-3xl mx-auto">
                 <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-xs font-medium px-4 py-2 rounded-3xl mb-5 sm:mb-6 border border-white/20" style="color: var(--text-hero-badge, #e0e7ff)" data-i18n="hero.badge">
                     <i class="fa-solid fa-globe text-emerald-300/90" aria-hidden="true"></i>
-                    <span data-i18n-text>WORLDWIDE &bull; FREE &bull; NO SIGNUP</span>
+                    <span data-i18n-text>THIS WEEK &bull; FREE &bull; NO SIGNUP</span>
                 </div>
                
                 <div class="vr-hero-copy">
@@ -193,6 +193,20 @@
                         <p id="hero-ad-inventory" class="px-4 pb-3 text-[11px] text-zinc-500 leading-snug"></p>
                         <p id="hero-ad-race" class="hidden px-4 pb-3 text-[11px] text-amber-200/80 leading-snug" hidden></p>
                     </div>
+                </div>
+                <div id="site-drop-rungs" class="site-drop-rungs" aria-label="Site Drop ladder">
+                    <span class="site-drop-rung" data-rung="entered">
+                        <span class="site-drop-rung__name" data-i18n="drop.entered_short">Just entered</span>
+                        <span class="site-drop-rung__live" id="site-drop-rung-entered" data-i18n="drop.rung_open">open</span>
+                    </span>
+                    <span class="site-drop-rung" data-rung="rising">
+                        <span class="site-drop-rung__name" data-i18n="drop.rising_short">Rising</span>
+                        <span class="site-drop-rung__live" id="site-drop-rung-rising" data-i18n="drop.rung_open">open</span>
+                    </span>
+                    <span class="site-drop-rung" data-rung="challenger">
+                        <span class="site-drop-rung__name" data-i18n="drop.challenger_short">Challenger</span>
+                        <span class="site-drop-rung__live" id="site-drop-rung-challenger" data-i18n="drop.rung_open">open</span>
+                    </span>
                 </div>
                 <div class="vr-hero-action">
                 <p id="hero-prize-one" class="mb-3 text-sm sm:text-base font-semibold text-amber-100/95 max-w-lg mx-auto leading-snug" data-i18n="hero.prize_one">
@@ -244,10 +258,10 @@
                     <button id="hero-get-link-btn" data-vr-zone="hero-get-link" onclick="getMyReferralLinkInstant()" 
                             class="btn-primary hero-primary-cta w-full px-8 py-4 sm:px-12 sm:py-5 text-lg sm:text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/40 min-h-[52px]">
                         <i class="fa-solid fa-link" aria-hidden="true"></i>
-                        <span>Get my referral link</span>
+                        <span class="hero-cta-long" data-i18n="hero.cta">Get my referral link</span>
+                        <span class="hero-cta-short" data-i18n="hero.cta_short">Get my link</span>
                     </button>
                 </div>
-                <div id="friend-credit-turnstile" class="friend-credit-turnstile referral-credit-turnstile" aria-label="Confirm you are human"></div>
                 </div>
                 <script>
                 (function () {
@@ -265,11 +279,12 @@
                   }
                   if (!code) return;
                   var line = document.getElementById('hero-title-line1');
-                  if (line) line.textContent = "You're in the same race as " + code + ".";
+                  if (line) line.textContent = 'Same race as ' + code + '.';
                   var sub = document.getElementById('hero-subtitle');
                   if (sub) sub.textContent = 'Tap Get my link so they get credit — then send yours and try to beat them.';
-                  var cta = document.querySelector('#hero-get-link-btn span');
-                  if (cta) cta.textContent = 'Get my link';
+                  document.querySelectorAll('#hero-get-link-btn span').forEach(function (cta) {
+                    cta.textContent = 'Get my link';
+                  });
                 })();
                 </script>
 
@@ -375,7 +390,7 @@
         <div id="funnel-expand-wrap" class="text-center mt-6">
             <button type="button" id="funnel-expand-btn" data-vr-zone="funnel-expand"
                     class="text-sm text-violet-300 hover:text-violet-200 underline underline-offset-4 decoration-violet-500/50">
-                See how it works &darr;
+                <span data-i18n="funnel.expand">See how it works</span> &darr;
             </button>
         </div>
 
@@ -383,29 +398,44 @@
         <div id="referral-section" class="mt-6" data-vr-zone="referral-section" data-vr-post-link-stack>
             <input id="ref-link" type="text" readonly hidden class="sr-only" aria-hidden="true" tabindex="-1" value="" />
             <div id="post-link-share" class="hidden post-link-share" hidden data-state="hidden" role="region" aria-label="Your referral link">
-                <h2 id="post-link-heading" class="post-link-share__heading" tabindex="-1">You're racing.</h2>
-                <p id="post-link-sub" class="post-link-share__sub">Send it now. A friend must tap Get my link — that's how you climb.</p>
+                <h2 id="post-link-heading" class="post-link-share__heading" tabindex="-1" data-i18n="post_link.heading">You're racing.</h2>
+                <p id="post-link-sub" class="post-link-share__sub" data-i18n="post_link.sub">Send it now. A friend must tap Get my link — that's how you climb.</p>
                 <p id="post-link-clock" class="post-link-share__clock" hidden></p>
                 <p id="post-link-url" class="post-link-share__url" hidden></p>
-                <button type="button" id="post-link-primary" class="post-link-share__primary" hidden>Send it now</button>
-                <button type="button" id="post-link-copy" class="post-link-share__copy">Copy link</button>
-                <p id="post-link-tool" class="post-link-share__tool">This is your public link. Paste it in any bio, story, or text.</p>
-            </div>
+                <button type="button" id="post-link-primary" class="post-link-share__primary" hidden data-i18n="post_link.send">Send it now</button>
                 <div id="post-link-site-drop" class="post-link-site-drop hidden" hidden>
-                    <p class="post-link-site-drop__title">Site Drop &middot; Just entered</p>
-                    <label class="sr-only" for="post-link-site-drop-url">Your website</label>
-                    <input id="post-link-site-drop-url" type="url" required maxlength="400" inputmode="url" autocomplete="url" placeholder="https://yoursite.com" class="post-link-site-drop__url" />
-                    <div id="post-link-site-drop-turnstile" class="mt-2"></div>
-                    <button type="button" id="post-link-site-drop-submit" class="post-link-site-drop__submit">Put my site on the homepage (15 min)</button>
-                    <button type="button" id="post-link-site-drop-jump" class="mt-2 w-full min-h-[44px] rounded-xl border border-white/15 font-semibold text-violet-100 text-sm hover:bg-white/5" data-i18n="drop.jump">See live Site Drops</button>
+                    <p class="post-link-site-drop__title" data-i18n="drop.inline_title">Site Drop &middot; Just entered</p>
+                    <input id="post-link-site-drop-url" type="text" maxlength="400" inputmode="url" autocomplete="url" placeholder="Paste yoursite.com" class="post-link-site-drop__url" aria-label="Your website" />
+                    <button type="button" id="post-link-site-drop-submit" class="post-link-site-drop__submit" aria-label="Paste your site — 15 min">
+                        <span class="drop-submit-long" data-i18n="drop.submit">Paste your site — 15 min</span>
+                        <span class="drop-submit-short" data-i18n="drop.submit_short">Paste site</span>
+                    </button>
+                    <div id="post-link-site-drop-turnstile"></div>
+                    <button type="button" id="post-link-site-drop-jump" class="post-link-site-drop__jump" data-i18n="drop.jump">See live Site Drops</button>
                     <p id="site-drop-status" class="post-link-site-drop__status"></p>
                 </div>
-                <div id="referral-turnstile-container" class="referral-credit-turnstile"></div>
+                <div id="site-entered-ticker" class="site-entered-ticker hidden" hidden aria-label="Live Site Drops">
+                    <p class="site-entered-ticker__heading">Live on this homepage</p>
+                    <div id="send-ladder-proof" class="site-drop-rungs" aria-label="Your Site Drop ladder">
+                        <span class="site-drop-rung" data-rung="entered">
+                            <span class="site-drop-rung__name" data-i18n="drop.entered_short">Just entered</span>
+                            <span class="site-drop-rung__live" data-send-rung="entered" data-i18n="drop.rung_open">open</span>
+                        </span>
+                        <span class="site-drop-rung" data-rung="rising">
+                            <span class="site-drop-rung__name" data-i18n="drop.rising_short">Rising</span>
+                            <span class="site-drop-rung__live" data-send-rung="rising" data-i18n="drop.rung_open">open</span>
+                        </span>
+                        <span class="site-drop-rung" data-rung="challenger">
+                            <span class="site-drop-rung__name" data-i18n="drop.challenger_short">Challenger</span>
+                            <span class="site-drop-rung__live" data-send-rung="challenger" data-i18n="drop.rung_open">open</span>
+                        </span>
                     </div>
-
-        <div id="site-entered-ticker" class="site-entered-ticker hidden" hidden aria-label="Live Site Drops">
-            <p class="site-entered-ticker__heading">Live on this homepage</p>
-            <div id="site-entered-chips" class="site-entered-ticker__chips"></div>
+                    <div id="site-entered-chips" class="site-entered-ticker__chips"></div>
+                </div>
+                <button type="button" id="post-link-copy" class="post-link-share__copy" data-i18n="post_link.copy">Copy link</button>
+                <p id="post-link-tool" class="post-link-share__tool" data-i18n="post_link.tool">This is your public link. Paste it in any bio, story, or text.</p>
+            </div>
+            <div id="referral-turnstile-container" class="referral-credit-turnstile"></div>
         </div>
 
         <!-- MY STATS -->
@@ -521,10 +551,10 @@
                 <p id="site-drops-challenger-empty" class="mt-2 text-sm text-zinc-500" data-i18n="drop.challenger_empty">No challengers yet. Hit board #2 or #3 with your site on file.</p>
             </div>
 
-            <p id="site-drop-hint" class="mt-6 text-sm text-zinc-400" data-i18n="drop.hint">Get your referral link first, then add your website for a Site Drop.</p>
+            <p id="site-drop-hint" class="mt-6 text-sm text-zinc-400" data-i18n="drop.hint">Paste your website. Rising and Challenger go live automatically when a friend taps Get my link.</p>
             <form id="site-drop-form" class="hidden mt-5 grid gap-3 max-w-md" hidden>
                 <label class="block text-xs text-zinc-400"><span data-i18n="drop.website">Your website</span>
-                    <input id="site-drop-url" type="url" required maxlength="400" placeholder="https://yoursite.com"
+                    <input id="site-drop-url" type="text" maxlength="400" inputmode="url" autocomplete="url" placeholder="Paste yoursite.com"
                         class="mt-1 w-full min-h-[44px] rounded-xl bg-zinc-900 border border-white/10 px-3 text-sm text-white" />
                 </label>
                 <label class="block text-xs text-zinc-400"><span data-i18n="drop.name_optional">Short name (optional)</span>
@@ -534,7 +564,7 @@
                 <div id="site-drop-turnstile" class="min-h-[8px]"></div>
                 <div class="flex flex-wrap gap-2">
                     <button id="site-drop-entered-btn" type="submit" class="min-h-[48px] px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold text-white" data-i18n="drop.form_entered">Just entered (15 min)</button>
-                    <button id="site-drop-rising-btn" type="button" class="min-h-[48px] px-4 rounded-xl bg-violet-600 hover:bg-violet-500 font-semibold text-white opacity-50" disabled data-i18n="drop.form_rising">Rising drop (1 hour)</button>
+                    <button id="site-drop-rising-btn" type="button" class="hidden min-h-[48px] px-4 rounded-xl bg-violet-600 hover:bg-violet-500 font-semibold text-white" hidden data-i18n="drop.form_rising">Rising drop (1 hour)</button>
                     <button id="site-drop-challenger-btn" type="button" class="hidden min-h-[48px] px-4 rounded-xl bg-amber-600 hover:bg-amber-500 font-semibold text-black" hidden data-i18n="drop.form_challenger">Claim Challenger</button>
                 </div>
             </form>
@@ -916,6 +946,7 @@ Full rules: https://www.viralrefer.app/rules/
         </div>
     </div>
 
+    <div id="friend-credit-turnstile" class="friend-credit-turnstile referral-credit-turnstile" aria-label="Confirm you are human"></div>
     <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

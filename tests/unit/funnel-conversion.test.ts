@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   applyReferredLandingOverrides,
+  expandFunnelBelowFold,
   funnelStepStates,
+  initDirectLandingConversionBoost,
   initFunnelConversion,
   isReferredLanding,
   onReferralCredited,
@@ -17,6 +19,7 @@ describe('funnel-conversion helpers', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     document.documentElement.removeAttribute('data-vr-referred-landing');
+    document.documentElement.removeAttribute('data-vr-funnel-expanded');
     document.documentElement.removeAttribute('data-vr-credit-pending');
     document.documentElement.removeAttribute('data-vr-credit-status');
     vi.unstubAllGlobals();
@@ -35,6 +38,28 @@ describe('funnel-conversion helpers', () => {
 
   it('isReferredLanding is false on plain homepage', () => {
     expect(isReferredLanding()).toBe(false);
+  });
+
+  it('See how it works expands below-fold and scrolls to How', () => {
+    document.body.innerHTML = `
+      <button id="funnel-expand-btn">See how it works</button>
+      <div id="how"></div>
+      <div id="prize"></div>
+    `;
+    const how = document.getElementById('how') as HTMLElement;
+    how.scrollIntoView = vi.fn();
+    initDirectLandingConversionBoost();
+    document.getElementById('funnel-expand-btn')?.click();
+    expect(document.documentElement.getAttribute('data-vr-funnel-expanded')).toBe('1');
+    expect(document.getElementById('funnel-expand-btn')?.classList.contains('hidden')).toBe(true);
+    expect(how.scrollIntoView).toHaveBeenCalled();
+  });
+
+  it('expandFunnelBelowFold is idempotent', () => {
+    document.body.innerHTML = '<button id="funnel-expand-btn">See how it works</button>';
+    expandFunnelBelowFold();
+    expandFunnelBelowFold();
+    expect(document.documentElement.getAttribute('data-vr-funnel-expanded')).toBe('1');
   });
 
   it('funnelStepStates marks step 2 active after link ready', () => {
@@ -71,8 +96,8 @@ describe('funnel-conversion helpers', () => {
     expect(document.documentElement.getAttribute('data-vr-credit-pending')).toBe('1');
     expect(document.getElementById('funnel-credit-gate')?.classList.contains('hidden')).toBe(false);
     expect(document.getElementById('funnel-gate-ref')?.textContent).toBe('VIRAL-GATE01');
-    expect(document.getElementById('hero-title-line1')?.textContent).toContain(
-      'same race as VIRAL-GATE01',
+    expect(document.getElementById('hero-title-line1')?.textContent).toMatch(
+      /same race as VIRAL-GATE01/i,
     );
     expect(document.getElementById('hero-subtitle')?.textContent).toMatch(/Get my link/);
     expect(document.getElementById('hero-subtitle')?.textContent).toMatch(/beat them/);

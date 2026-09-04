@@ -7,6 +7,7 @@ import { triggerDuelInviteMoment } from './duel-invite';
 import { initFunnelCoachChat } from './funnel-coach-chat';
 import { initFunnelGuide, syncFunnelGuide } from './funnel-guide';
 import { paintReferredRaceHero } from './referred-race';
+import { t } from './i18n';
 
 export type FunnelStep = 1 | 2 | 3;
 
@@ -34,14 +35,21 @@ export function funnelStepStates(active: FunnelStep): {
   }));
 }
 
+export function expandFunnelBelowFold(): void {
+  document.documentElement.setAttribute('data-vr-funnel-expanded', '1');
+  document.getElementById('funnel-expand-btn')?.classList.add('hidden');
+}
+
 function wireExpandToggle(): void {
   const btn = document.getElementById('funnel-expand-btn');
   if (!btn || btn.dataset.vrExpandBound === '1') return;
   btn.dataset.vrExpandBound = '1';
   btn.addEventListener('click', () => {
-    document.documentElement.setAttribute('data-vr-funnel-expanded', '1');
-    btn.classList.add('hidden');
-    const target = document.getElementById('prize') || document.getElementById('leaderboard');
+    expandFunnelBelowFold();
+    const target =
+      document.getElementById('how') ||
+      document.getElementById('site-drops') ||
+      document.getElementById('prize');
     target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 }
@@ -148,7 +156,7 @@ export function onReferralCreditPending(): void {
   document.documentElement.setAttribute('data-vr-credit-status', 'pending');
   updateCreditGate(
     'pending',
-    'Crediting your visit… stay on this page for a few seconds.',
+    t('credit.pending'),
   );
 }
 
@@ -158,12 +166,12 @@ export function onReferralCredited(): void {
   document.documentElement.removeAttribute('data-vr-credit-pending');
 
   const title = document.getElementById('funnel-credit-gate-title');
-  if (title) title.textContent = 'Referral credited — you counted!';
+  if (title) title.textContent = t('credit.ok_title');
 
   const ref = resolveLandingReferrerCode();
   const creditMsg = ref
-    ? `You counted for ${ref}. Next: Share now (any app) so you can climb too.`
-    : 'Step 1 complete. Next: Share now (any app) — copy alone does not lock your link.';
+    ? t('credit.ok_ref', { code: ref })
+    : t('credit.ok');
 
   updateCreditGate('credited', creditMsg);
   triggerDuelInviteMoment(ref);
@@ -189,7 +197,7 @@ export function onReferralCreditFailed(): void {
   document.documentElement.setAttribute('data-vr-credit-status', 'failed');
   updateCreditGate(
     'failed',
-    'Could not credit — tap Get my link again or refresh the page.',
+    t('credit.fail'),
   );
 }
 
@@ -199,7 +207,7 @@ export function onReferralSelfReferralBlocked(): void {
   document.documentElement.removeAttribute('data-vr-credit-pending');
   updateCreditGate(
     'failed',
-    'You cannot credit a visit to your own link. Share with someone else or use a fresh browser.',
+    t('credit.self'),
   );
 }
 
@@ -222,7 +230,7 @@ export function onReferralLinkCopied(): void {
     hint.classList.remove('hidden');
     hint.dataset.vrSharePrompted = '1';
     hint.textContent =
-      'Copied — now Share now (any app). Clipboard alone does not lock your link.';
+      t('credit.copied');
   }
 
   // Keep progressive share reminders in sync (toast/banner after copy)
@@ -246,8 +254,7 @@ function highlightCopyButton(): void {
   if (hint) {
     hint.classList.remove('hidden');
     if (!hint.dataset.vrSharePrompted) {
-      hint.textContent =
-        'Next: tap Share now (pick any app). Copy alone does not lock your link.';
+      hint.textContent = t('credit.ok');
     }
   }
 

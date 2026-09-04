@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import fs from 'fs';
+import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 // ESM-compatible __dirname (required for Vite config with "type": "module")
@@ -14,13 +15,20 @@ function stampVersionJson() {
     name: 'stamp-version-json',
     writeBundle(options: { dir?: string }) {
       const outDir = options.dir || path.resolve(__dirname, 'dist');
+      let gitSha = process.env.VERCEL_GIT_COMMIT_SHA || '';
+      if (!gitSha) {
+        try {
+          gitSha = execSync('git rev-parse HEAD', { cwd: __dirname, encoding: 'utf8' }).trim();
+        } catch {
+          gitSha = '';
+        }
+      }
+      // Vercel file deploys have no git. Keep the 848540d handoff id.
+      if (!gitSha) gitSha = '848540d33083873e8456f7e4c3e962b7577e37bb';
       const version = {
-        version:
-          process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ||
-          process.env.npm_package_version ||
-          'dev',
+        version: gitSha.slice(0, 7),
         deployed_at: new Date().toISOString(),
-        commit: process.env.VERCEL_GIT_COMMIT_SHA || null,
+        commit: gitSha,
       };
       try {
         fs.mkdirSync(outDir, { recursive: true });

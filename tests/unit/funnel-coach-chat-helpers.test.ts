@@ -40,7 +40,8 @@ describe('funnel-coach-chat-helpers', () => {
       referrerCode: null,
       creditStatus: null,
     });
-    expect(nudge?.text).toMatch(/COPY/i);
+    expect(nudge?.text).toMatch(/send/i);
+    expect(nudge?.text).not.toMatch(/copy → share/i);
   });
 
   it('resolveCoachReply handles prize and status intents', () => {
