@@ -17,6 +17,7 @@ import {
 } from '../_shared/admin-stats-test.ts';
 import {
   getFunnelNotifyChannel,
+  getOwnerDeskTelegramStatus,
   isFunnelNotifyImportantOnly,
   isFunnelOffsiteNotifyEnabled,
 } from '../_shared/funnel-notify.ts';
@@ -1184,9 +1185,13 @@ Deno.serve(async (req: Request) => {
           junkVisits,
         });
         const metrics = deskHasVisitorSignal(tableMetrics) ? tableMetrics : publicMetrics;
-        return new Response(JSON.stringify({ success: true, data: { ...metrics, gsc } }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: { ...metrics, gsc, telegram: getOwnerDeskTelegramStatus() },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
       } catch (deskErr) {
         console.error('[admin-action] get_owner_funnel_desk:', deskErr);
         return new Response(JSON.stringify({ success: false, error: "can't load." }), {

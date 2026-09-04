@@ -5,9 +5,17 @@ import {
   buildFunnelNotifyText,
   buildTelegramNotifyRequest,
   getFunnelNotifyChannel,
+  getOwnerDeskTelegramStatus,
   dispatchBroadcastClickNotify,
+  dispatchOutboundSiteClickNotify,
+  dispatchSiteAddedNotify,
   isBroadcastClickNotifyEnabled,
   isBroadcastClickZone,
+  isOutboundSiteClickNotifyEnabled,
+  isOutboundSiteClickZone,
+  isAddedSiteUrl,
+  buildOutboundSiteClickNotifyText,
+  buildSiteAddedNotifyText,
   buildPromoterSignupNotifyText,
   isFunnelOffsiteNotifyEnabled,
   isImportantFunnelNotifyStep,
@@ -20,6 +28,7 @@ describe('funnel-notify', () => {
   const prevChat = process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID;
   const prevImportant = process.env.FUNNEL_NOTIFY_IMPORTANT_ONLY;
   const prevBc = process.env.FUNNEL_NOTIFY_BROADCAST_CLICKS;
+  const prevSite = process.env.FUNNEL_NOTIFY_SITE_CLICKS;
 
   beforeEach(() => {
     delete process.env.FUNNEL_NOTIFY_WEBHOOK_URL;
@@ -27,6 +36,7 @@ describe('funnel-notify', () => {
     delete process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID;
     delete process.env.FUNNEL_NOTIFY_IMPORTANT_ONLY;
     delete process.env.FUNNEL_NOTIFY_BROADCAST_CLICKS;
+    delete process.env.FUNNEL_NOTIFY_SITE_CLICKS;
   });
 
   afterEach(() => {
@@ -40,6 +50,8 @@ describe('funnel-notify', () => {
     else process.env.FUNNEL_NOTIFY_IMPORTANT_ONLY = prevImportant;
     if (prevBc === undefined) delete process.env.FUNNEL_NOTIFY_BROADCAST_CLICKS;
     else process.env.FUNNEL_NOTIFY_BROADCAST_CLICKS = prevBc;
+    if (prevSite === undefined) delete process.env.FUNNEL_NOTIFY_SITE_CLICKS;
+    else process.env.FUNNEL_NOTIFY_SITE_CLICKS = prevSite;
   });
 
   it('isImportantFunnelNotifyStep excludes landings', () => {
@@ -208,5 +220,91 @@ describe('funnel-notify', () => {
     expect(text).toContain('https://example.com/offer');
     expect(text).toContain('Partner');
     expect(text).toContain('id:rules-v1');
+  });
+
+  it('isOutboundSiteClickZone matches homepage site/banner zones only', () => {
+    expect(isOutboundSiteClickZone('prize-banner')).toBe(true);
+    expect(isOutboundSiteClickZone('site-drop')).toBe(true);
+    expect(isOutboundSiteClickZone('race-text-spot')).toBe(true);
+    expect(isOutboundSiteClickZone('owner-featured')).toBe(true);
+    expect(isOutboundSiteClickZone('hero-get-link')).toBe(false);
+    expect(isOutboundSiteClickZone('owner-broadcast-link')).toBe(false);
+  });
+
+  it('isOutboundSiteClickNotifyEnabled uses same Telegram secrets', () => {
+    expect(isOutboundSiteClickNotifyEnabled()).toBe(false);
+    process.env.FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN = '123:abc';
+    process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID = '999';
+    expect(isOutboundSiteClickNotifyEnabled()).toBe(true);
+    process.env.FUNNEL_NOTIFY_SITE_CLICKS = 'false';
+    expect(isOutboundSiteClickNotifyEnabled()).toBe(false);
+  });
+
+  it('skips outbound site Telegram without http href or for agents', async () => {
+    process.env.FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN = '123:abc';
+    process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID = '999';
+    const noHref = await dispatchOutboundSiteClickNotify({
+      zone_id: 'prize-banner',
+      user_agent: 'Mozilla/5.0',
+    });
+    expect(noHref.skipped).toBe('no_href');
+    const agent = await dispatchOutboundSiteClickNotify({
+      zone_id: 'site-drop',
+      href: 'https://example.com',
+      user_agent: 'Mozilla/5.0 HeadlessChrome/131',
+    });
+    expect(agent.skipped).toBe('agent');
+  });
+
+  it('buildSiteAddedNotifyText names the slot, code, and url', () => {
+    const text = buildSiteAddedNotifyText({
+      kind: 'entered',
+      code: 'VIRAL-SITE1',
+      url: 'https://northwind.test',
+      label: 'Northwind',
+    });
+    expect(text).toContain('Site added. Just entered (15 min).');
+    expect(text).toContain('VIRAL-SITE1');
+    expect(text).toContain('https://northwind.test');
+    expect(text).toContain('Northwind');
+    expect(
+      buildSiteAddedNotifyText({
+        kind: 'banner',
+        code: 'VIRAL-WIN',
+        url: 'https://winner.test',
+      }),
+    ).toContain('7-day prize banner');
+  });
+
+  it('dispatchSiteAddedNotify skips placeholder /r/ race pages', async () => {
+    process.env.FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN = '123:abc';
+    process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID = '999';
+    expect(isAddedSiteUrl('https://www.viralrefer.app/r/VIRAL-SITE1')).toBe(false);
+    expect(isAddedSiteUrl('https://northwind.test')).toBe(true);
+    const skipped = await dispatchSiteAddedNotify({
+      kind: 'entered',
+      code: 'VIRAL-SITE1',
+      url: 'https://www.viralrefer.app/r/VIRAL-SITE1',
+    });
+    expect(skipped.skipped).toBe('not_a_site');
+  });
+
+  it('buildOutboundSiteClickNotifyText names the surface and href', () => {
+    const text = buildOutboundSiteClickNotifyText({
+      zone_id: 'prize-banner',
+      href: 'https://northwind.test',
+      label: 'Northwind',
+    });
+    expect(text).toContain('Site click. Prize banner.');
+    expect(text).toContain('https://northwind.test');
+    expect(text).toContain('Northwind');
+  });
+
+  it('HQ telegram status never includes secrets', () => {
+    process.env.FUNNEL_NOTIFY_TELEGRAM_BOT_TOKEN = '123:abc';
+    process.env.FUNNEL_NOTIFY_TELEGRAM_CHAT_ID = '999';
+    const status = getOwnerDeskTelegramStatus();
+    expect(status).toEqual({ connected: true, importantOnly: true });
+    expect(JSON.stringify(status)).not.toMatch(/123:abc|999/);
   });
 });

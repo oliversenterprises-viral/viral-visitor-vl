@@ -31,6 +31,11 @@ export type OwnerFunnelFeedRow = {
   friendCode?: string;
 };
 
+export type OwnerFunnelTelegramStatus = {
+  connected: boolean;
+  importantOnly: boolean;
+};
+
 export type OwnerFunnelDeskMetrics = {
   windowDays: number;
   visits: number;
@@ -43,6 +48,7 @@ export type OwnerFunnelDeskMetrics = {
   getLinkRate: string;
   feed: OwnerFunnelFeedRow[];
   gsc?: OwnerFunnelGscMetrics;
+  telegram?: OwnerFunnelTelegramStatus;
 };
 
 export type OwnerFunnelEvent = Record<string, unknown>;

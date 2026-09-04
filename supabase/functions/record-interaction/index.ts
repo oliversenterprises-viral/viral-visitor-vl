@@ -4,7 +4,10 @@ import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 import {
   dispatchBroadcastClickNotify,
+  dispatchOutboundSiteClickNotify,
+  edgeWaitUntil,
   isBroadcastClickZone,
+  isOutboundSiteClickZone,
 } from '../_shared/funnel-notify.ts';
 
 const corsHeaders = {
@@ -96,10 +99,10 @@ Deno.serve(async (req: Request) => {
     const { error } = await supabaseAdmin.from('interaction_events').insert(row);
     if (error) throw error;
 
-    // Owner broadcaster clicks → same Telegram bot as funnel alerts (non-blocking)
+    let notifyTask: Promise<unknown> = Promise.resolve();
     if (eventType === 'click' && isBroadcastClickZone(zoneId)) {
       const meta = clientMetadata as Record<string, unknown>;
-      dispatchBroadcastClickNotify({
+      notifyTask = dispatchBroadcastClickNotify({
         zone_id: zoneId,
         href: meta.href != null ? String(meta.href) : null,
         kind: meta.kind != null ? String(meta.kind) : null,
@@ -111,7 +114,21 @@ Deno.serve(async (req: Request) => {
       }).catch((notifyErr) => {
         console.error('[record-interaction] broadcast telegram notify:', notifyErr);
       });
+    } else if (eventType === 'click' && isOutboundSiteClickZone(zoneId)) {
+      const meta = clientMetadata as Record<string, unknown>;
+      notifyTask = dispatchOutboundSiteClickNotify({
+        zone_id: zoneId,
+        href: meta.href != null ? String(meta.href) : null,
+        label: meta.label != null ? String(meta.label) : null,
+        path: row.path,
+        user_agent: userAgent,
+        metadata: clientMetadata,
+      }).catch((notifyErr) => {
+        console.error('[record-interaction] site-click telegram notify:', notifyErr);
+      });
     }
+    edgeWaitUntil(notifyTask);
+    await notifyTask;
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

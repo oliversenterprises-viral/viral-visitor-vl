@@ -10,7 +10,7 @@ import { getStoredLandingRef, parseRefFromLocation } from './referral-url';
 import { getStoredUtmAttribution } from './utm-attribution';
 import { supabase } from './supabase';
 import { getVisitorSessionId, getVisitorId } from './visitor-tracking';
-import { resolveViralZoneFromTarget, type ViralZoneId } from './viral-zones';
+import { isOutboundSiteClickZone, resolveViralZoneFromTarget, type ViralZoneId } from './viral-zones';
 import { getClientAutomationMetadata } from './test-referral';
 import { shouldDropNoiseWrites } from './platform-guard';
 
@@ -143,16 +143,39 @@ export function trackBroadcastLinkClick(opts: {
   });
 }
 
+function outboundClickMeta(target: EventTarget | null): Record<string, unknown> {
+  if (!target || !(target instanceof Element)) return {};
+  const zoned = target.closest('[data-vr-zone]') as HTMLElement | null;
+  if (!zoned) return {};
+  const anchor = (zoned instanceof HTMLAnchorElement ? zoned : zoned.closest('a')) as
+    | HTMLAnchorElement
+    | null;
+  const href = String(zoned.getAttribute('data-vr-href') || anchor?.href || '')
+    .trim()
+    .slice(0, 2000);
+  const label = String(zoned.getAttribute('data-vr-label') || anchor?.textContent || '')
+    .trim()
+    .slice(0, 120);
+  const meta: Record<string, unknown> = { source: 'outbound_site' };
+  if (href) meta.href = href;
+  if (label) meta.label = label;
+  return meta;
+}
+
 function onDocumentClick(e: MouseEvent): void {
   const zone = resolveViralZoneFromTarget(e.target);
   if (!zone) return;
-  recordInteraction('click', zone, {
+  const extra: Record<string, unknown> = {
     x: Math.round(e.clientX),
     y: Math.round(e.clientY),
     viewport_w: window.innerWidth,
     viewport_h: window.innerHeight,
     scroll_y: Math.round(window.scrollY),
-  });
+  };
+  if (isOutboundSiteClickZone(zone)) {
+    extra.metadata = outboundClickMeta(e.target);
+  }
+  recordInteraction('click', zone, extra);
 }
 
 function onScroll(): void {

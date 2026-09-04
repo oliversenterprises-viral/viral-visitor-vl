@@ -73,7 +73,7 @@ function chipHtml(drop: SiteDrop, kicker: string, now: Date): string {
   const host = hostnameFromSafeUrl(drop.url) || '';
   const href = escapeHtml(drop.url);
   const label = escapeHtml(drop.label);
-  return `<a class="site-drop-chip" href="${href}" target="_blank" rel="noopener noreferrer" data-vr-zone="site-drop">
+  return `<a class="site-drop-chip" href="${href}" target="_blank" rel="noopener noreferrer" data-vr-zone="site-drop" data-vr-href="${href}" data-vr-label="${label}">
     <span class="site-drop-chip__label">${label}</span>
     <span class="site-drop-chip__meta">${escapeHtml(kicker)} · ${escapeHtml(remainLabel(drop.expires_at, now))}</span>
     <span class="site-drop-chip__host">${escapeHtml(host)}</span>

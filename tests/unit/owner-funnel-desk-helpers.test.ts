@@ -225,8 +225,38 @@ describe('owner funnel desk metrics', () => {
     expect(el.textContent).toMatch(/VIRAL-FRIEND1/);
     expect(el.textContent).toMatch(/friend's \/r\//);
     expect(el.querySelector('[data-owner-desk-tiles]')?.textContent).not.toMatch(/Died waiting|Promoters|Claims|Hero conversion|banner CTR/i);
+    expect(el.querySelector('[data-owner-desk-telegram]')?.textContent).toMatch(/Telegram is not connected yet/);
     expect(el.innerHTML).not.toContain('8.8.8.8');
     expect(el.innerHTML).not.toMatch(/LOCAL/i);
+  });
+
+  it('HQ first screen names what Telegram pings when connected', () => {
+    const el = document.createElement('div');
+    renderOwnerFunnelDeskView(
+      el,
+      {
+        windowDays: 7,
+        visits: 1,
+        friendLandings: 1,
+        landings: 1,
+        getLink: 1,
+        share: 0,
+        locked: 0,
+        getLinkRate: '100.0%',
+        feed: [],
+        telegram: { connected: true, importantOnly: true },
+      },
+    );
+    const line = el.querySelector('[data-owner-desk-telegram]')?.textContent || '';
+    expect(line).toMatch(/Get-link/);
+    expect(line).toMatch(/Copy/);
+    expect(line).toMatch(/Send/);
+    expect(line).toMatch(/Claim/);
+    expect(line).toMatch(/site added/);
+    expect(line).toMatch(/site\/banner clicks/);
+    expect(line).toMatch(/Landings do not/);
+    expect(line).not.toMatch(/GetReferralLink|ShareReferral/);
+    expect(el.textContent).not.toMatch(/\bPrize\b|\bWebsite\b|\bPromoters\b|\bClaims\b/);
   });
 
   it('still paints six tiles when the server misses after login', () => {

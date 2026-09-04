@@ -30,6 +30,7 @@ import {
   type OwnerFunnelDeskMetrics,
   type OwnerFunnelFeedRow,
   type OwnerFunnelGscMetrics,
+  type OwnerFunnelTelegramStatus,
 } from './owner-funnel-desk-helpers';
 import {
   emptyPlatformGuardSnapshot,
@@ -329,6 +330,21 @@ export function applyHqDeskFilter(container: HTMLElement, raw: string): void {
   }
 }
 
+export function renderOwnerTelegramStripHtml(
+  telegram: OwnerFunnelTelegramStatus | undefined,
+): string {
+  const connected = telegram?.connected === true;
+  const line = !connected
+    ? 'Telegram is not connected yet.'
+    : telegram?.importantOnly === false
+      ? 'Telegram · every recorded step pings your chat, including landings.'
+      : 'Telegram · Get-link, Copy, Send, Claim, a site added, and site/banner clicks ping your chat. Landings do not.';
+  const body = connected
+    ? `<span class="text-emerald-300">Telegram</span>${escapeHtml(line.slice('Telegram'.length))}`
+    : escapeHtml(line);
+  return `<p data-owner-desk-telegram class="block max-w-full text-[11px] leading-snug text-zinc-400">${body}</p>`;
+}
+
 export function renderOwnerFunnelDeskView(
   container: HTMLElement,
   metrics: OwnerFunnelDeskMetrics,
@@ -363,6 +379,7 @@ export function renderOwnerFunnelDeskView(
         <span class="hq-desk-updated" data-hq-desk-updated>Updated just now</span>
         <span class="hq-desk-keyhint">R refreshes · 1–4 log · 0 all</span>
       </p>
+      ${renderOwnerTelegramStripHtml(viewMetrics.telegram)}
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3" data-owner-desk-tiles>
         ${tile('Visits', viewMetrics.visits, 'Real page views — junk/test excluded', 'visits')}
         ${tile('Friend landings', viewMetrics.friendLandings, 'Unique people on /r/ or /a/', 'landings')}

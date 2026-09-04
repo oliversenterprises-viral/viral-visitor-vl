@@ -25,7 +25,23 @@ export const VIRAL_ZONE_IDS = [
   'owner-broadcast-link',
   'owner-broadcast-sponsor',
   'owner-broadcast-sponsor-img',
+  'prize-banner',
+  'site-drop',
+  'race-text-spot',
+  'owner-featured',
 ] as const;
+
+/** Homepage outbound racer-site / prize-banner / featured links. Telegram-notified on click. */
+export const OUTBOUND_SITE_CLICK_ZONE_IDS = [
+  'prize-banner',
+  'site-drop',
+  'race-text-spot',
+  'owner-featured',
+] as const;
+
+export function isOutboundSiteClickZone(value: string): boolean {
+  return (OUTBOUND_SITE_CLICK_ZONE_IDS as readonly string[]).includes(value);
+}
 
 export type ViralZoneId = (typeof VIRAL_ZONE_IDS)[number];
 
@@ -51,6 +67,10 @@ export const VIRAL_ZONE_LABELS: Record<ViralZoneId, string> = {
   'owner-broadcast-link': 'Broadcaster — body link',
   'owner-broadcast-sponsor': 'Broadcaster — sponsor CTA',
   'owner-broadcast-sponsor-img': 'Broadcaster — sponsor image',
+  'prize-banner': 'Prize / #1 banner visit',
+  'site-drop': 'Site Drop visit',
+  'race-text-spot': 'Week text-line visit',
+  'owner-featured': 'Owner featured site visit',
 };
 
 /** Funnel step each zone most directly supports. */
@@ -76,6 +96,10 @@ export const VIRAL_ZONE_FUNNEL_STEP: Record<ViralZoneId, string> = {
   'owner-broadcast-link': 'BroadcastClick',
   'owner-broadcast-sponsor': 'BroadcastClick',
   'owner-broadcast-sponsor-img': 'BroadcastClick',
+  'prize-banner': 'OutboundSiteClick',
+  'site-drop': 'OutboundSiteClick',
+  'race-text-spot': 'OutboundSiteClick',
+  'owner-featured': 'OutboundSiteClick',
 };
 
 export function isViralZoneId(value: string): value is ViralZoneId {

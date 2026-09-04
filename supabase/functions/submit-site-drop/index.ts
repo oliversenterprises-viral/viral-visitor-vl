@@ -12,6 +12,7 @@ import {
   type SiteDropKind,
 } from '../_shared/site-drops.ts';
 import { loadSiteDropsState, saveSiteDropsState } from '../_shared/site-drops-store.ts';
+import { dispatchSiteAddedNotify, edgeWaitUntil } from '../_shared/funnel-notify.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -173,6 +174,18 @@ Deno.serve(async (req: Request) => {
       : mine.some((drop) => drop.kind === 'rising')
         ? 'rising'
         : 'entered';
+
+    const notifyTask = dispatchSiteAddedNotify({
+      kind: rung,
+      code: referrerCode,
+      url: website,
+      label,
+    }).catch((notifyErr) => {
+      console.error('[submit-site-drop] telegram notify:', notifyErr);
+      return { ok: false as const };
+    });
+    edgeWaitUntil(notifyTask);
+    await notifyTask;
 
     return jsonResponse({
       success: true,

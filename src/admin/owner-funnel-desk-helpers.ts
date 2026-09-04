@@ -32,6 +32,7 @@ export {
   uniqueVisitorsForEvent,
   type OwnerFunnelDeskMetrics,
   type OwnerFunnelFeedRow,
+  type OwnerFunnelTelegramStatus,
   type OwnerFunnelVia,
 } from '../../supabase/functions/_shared/owner-funnel-desk';
 

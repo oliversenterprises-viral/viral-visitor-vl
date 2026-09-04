@@ -73,6 +73,43 @@ export function isFunnelOffsiteNotifyEnabled(): boolean {
   return !!getFunnelNotifyChannel();
 }
 
+/** Public Command / admin status. Never include token or chat id. */
+export type FunnelNotifyStatus = {
+  enabled: boolean;
+  importantOnly: boolean;
+  channel: FunnelNotifyChannel | null;
+};
+
+export function getFunnelNotifyStatus(): FunnelNotifyStatus {
+  return {
+    enabled: isFunnelOffsiteNotifyEnabled(),
+    importantOnly: isFunnelNotifyImportantOnly(),
+    channel: getFunnelNotifyChannel(),
+  };
+}
+
+/** Command Desk field. Telegram only — webhook-only is not connected. */
+export function getOwnerDeskTelegramStatus(): {
+  connected: boolean;
+  importantOnly: boolean;
+} {
+  const status = getFunnelNotifyStatus();
+  return {
+    connected: status.channel === 'telegram',
+    importantOnly: status.importantOnly,
+  };
+}
+
+/** Keep a promise alive after the HTTP response on Supabase Edge (Deno). */
+export function edgeWaitUntil(task: Promise<unknown>): void {
+  const g = globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } };
+  if (typeof g.EdgeRuntime?.waitUntil === 'function') {
+    g.EdgeRuntime.waitUntil(task);
+    return;
+  }
+  void task;
+}
+
 export function normalizeFunnelNotifyStep(step: string | undefined): string {
   return String(step || '').trim().toLowerCase();
 }
@@ -384,5 +421,232 @@ export async function dispatchBroadcastClickNotify(
     headers = { 'Content-Type': 'application/json' };
   }
   const ok = await postNotify(url, body, headers);
+  return { ok, channel: 'webhook' };
+}
+
+export type SiteAddedKind = 'entered' | 'rising' | 'challenger' | 'text' | 'banner';
+
+export type SiteAddedNotifyRow = {
+  kind: SiteAddedKind;
+  code: string;
+  url: string;
+  label?: string | null;
+};
+
+/** Real submitted website — not the placeholder /r/ race page. */
+export function isAddedSiteUrl(url: string | undefined | null): boolean {
+  const href = String(url || '').trim();
+  try {
+    const parsed = new URL(href);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+    const host = parsed.hostname.replace(/^www\./i, '').toLowerCase();
+    if (host === 'viralrefer.app' && /^\/r\//i.test(parsed.pathname)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function buildSiteAddedNotifyText(row: SiteAddedNotifyRow): string {
+  const code = String(row.code || '').trim() || '—';
+  const url = String(row.url || '').trim() || '—';
+  const label = String(row.label || '').trim();
+  const slot =
+    row.kind === 'entered'
+      ? 'Just entered (15 min)'
+      : row.kind === 'rising'
+        ? 'Rising drop (1 hour)'
+        : row.kind === 'challenger'
+          ? 'Challenger strip'
+          : row.kind === 'text'
+            ? 'Week text line'
+            : '7-day prize banner';
+  const lines = [`Site added. ${slot}.`, code];
+  if (label) lines.push(label.slice(0, 80));
+  lines.push(url.slice(0, 180));
+  return lines.join('\n');
+}
+
+/** Telegram/webhook when a racer puts their website on the homepage. */
+export async function dispatchSiteAddedNotify(
+  row: SiteAddedNotifyRow,
+): Promise<{ ok: boolean; skipped?: string; channel?: FunnelNotifyChannel }> {
+  if (!isFunnelOffsiteNotifyEnabled()) {
+    return { ok: false, skipped: 'disabled' };
+  }
+  if (!isAddedSiteUrl(row.url)) {
+    return { ok: false, skipped: 'not_a_site' };
+  }
+  const channel = getFunnelNotifyChannel();
+  if (!channel) return { ok: false, skipped: 'disabled' };
+
+  const text = buildSiteAddedNotifyText(row);
+
+  if (channel === 'telegram') {
+    const botToken = getFunnelNotifyTelegramBotToken()!;
+    const chatId = getFunnelNotifyTelegramChatId()!;
+    const ok = await postNotify(
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
+      JSON.stringify({
+        chat_id: chatId,
+        text,
+        disable_web_page_preview: true,
+      }),
+      { 'Content-Type': 'application/json' },
+    );
+    return { ok, channel: 'telegram' };
+  }
+
+  const hook = getFunnelNotifyWebhookUrl()!;
+  let body: string;
+  let headers: Record<string, string>;
+  if (hook.includes('discord.com/api/webhooks')) {
+    body = JSON.stringify({ content: text });
+    headers = { 'Content-Type': 'application/json' };
+  } else if (hook.includes('ntfy.sh')) {
+    body = text;
+    headers = {
+      'Content-Type': 'text/plain; charset=utf-8',
+      Title: 'ViralRefer site added',
+      Tags: 'globe_with_meridians',
+    };
+  } else {
+    body = JSON.stringify({
+      text,
+      title: 'ViralRefer site added',
+      kind: row.kind,
+      code: row.code,
+      url: row.url,
+      label: row.label ?? null,
+      at: new Date().toISOString(),
+    });
+    headers = { 'Content-Type': 'application/json' };
+  }
+  const ok = await postNotify(hook, body, headers);
+  return { ok, channel: 'webhook' };
+}
+
+/** Homepage prize banner, Site Drops, week text line, owner featured. Must match client viral-zones. */
+export const OUTBOUND_SITE_CLICK_ZONES = new Set([
+  'prize-banner',
+  'site-drop',
+  'race-text-spot',
+  'owner-featured',
+]);
+
+export function isOutboundSiteClickZone(zoneId: string | undefined): boolean {
+  return OUTBOUND_SITE_CLICK_ZONES.has(String(zoneId || '').trim());
+}
+
+/**
+ * Site/banner visit alerts use the same Telegram/webhook as funnel alerts.
+ * Independent of FUNNEL_NOTIFY_IMPORTANT_ONLY.
+ * Disable with FUNNEL_NOTIFY_SITE_CLICKS=false.
+ */
+export function isOutboundSiteClickNotifyEnabled(): boolean {
+  if (!isFunnelOffsiteNotifyEnabled()) return false;
+  const flag = String(readEnv('FUNNEL_NOTIFY_SITE_CLICKS') || 'true')
+    .trim()
+    .toLowerCase();
+  return flag !== 'false' && flag !== '0' && flag !== 'off';
+}
+
+export type OutboundSiteClickNotifyRow = {
+  zone_id: string;
+  href?: string | null;
+  label?: string | null;
+  path?: string | null;
+  user_agent?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
+
+export function buildOutboundSiteClickNotifyText(row: OutboundSiteClickNotifyRow): string {
+  const zone = String(row.zone_id || '').trim();
+  const kindLabel =
+    zone === 'prize-banner'
+      ? 'Prize banner'
+      : zone === 'site-drop'
+        ? 'Site Drop'
+        : zone === 'race-text-spot'
+          ? 'Week text line'
+          : zone === 'owner-featured'
+            ? 'Featured site'
+            : 'Site';
+  const href = String(row.href || '').trim();
+  const label = String(row.label || '').trim();
+  const parts = [`Site click. ${kindLabel}.`];
+  if (label) parts.push(`“${label.slice(0, 60)}”`);
+  if (href) parts.push(href.slice(0, 180));
+  return parts.join('\n');
+}
+
+function httpHref(raw: string | null | undefined): string {
+  const href = String(raw || '').trim();
+  if (!/^https?:\/\//i.test(href)) return '';
+  return href;
+}
+
+/** Fire-and-forget Telegram/webhook when a visitor taps a homepage site or banner. */
+export async function dispatchOutboundSiteClickNotify(
+  row: OutboundSiteClickNotifyRow,
+): Promise<{ ok: boolean; skipped?: string; channel?: FunnelNotifyChannel }> {
+  if (!isOutboundSiteClickNotifyEnabled()) {
+    return { ok: false, skipped: 'disabled' };
+  }
+  if (!isOutboundSiteClickZone(row.zone_id)) {
+    return { ok: false, skipped: 'not_outbound' };
+  }
+  const href = httpHref(row.href);
+  if (!href) return { ok: false, skipped: 'no_href' };
+  const ua = String(row.user_agent || '').trim();
+  if (!ua || isAutomationUserAgent(ua) || isAgentAutomationMetadata(row.metadata)) {
+    return { ok: false, skipped: 'agent' };
+  }
+
+  const channel = getFunnelNotifyChannel();
+  if (!channel) return { ok: false, skipped: 'disabled' };
+
+  const text = buildOutboundSiteClickNotifyText({ ...row, href });
+
+  if (channel === 'telegram') {
+    const botToken = getFunnelNotifyTelegramBotToken()!;
+    const chatId = getFunnelNotifyTelegramChatId()!;
+    const ok = await postNotify(
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
+      JSON.stringify({
+        chat_id: chatId,
+        text,
+        disable_web_page_preview: true,
+      }),
+      { 'Content-Type': 'application/json' },
+    );
+    return { ok, channel: 'telegram' };
+  }
+
+  const hook = getFunnelNotifyWebhookUrl()!;
+  let body: string;
+  let headers: Record<string, string>;
+  if (hook.includes('discord.com/api/webhooks')) {
+    body = JSON.stringify({ content: text });
+    headers = { 'Content-Type': 'application/json' };
+  } else if (hook.includes('ntfy.sh')) {
+    body = text;
+    headers = {
+      'Content-Type': 'text/plain; charset=utf-8',
+      Title: 'ViralRefer site click',
+      Tags: 'round_pushpin',
+    };
+  } else {
+    body = JSON.stringify({
+      text,
+      title: 'ViralRefer site click',
+      zone_id: row.zone_id,
+      href,
+      label: row.label ?? null,
+      at: new Date().toISOString(),
+    });
+    headers = { 'Content-Type': 'application/json' };
+  }
+  const ok = await postNotify(hook, body, headers);
   return { ok, channel: 'webhook' };
 }
