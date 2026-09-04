@@ -145,7 +145,8 @@ describe('Get my link reveal (last-night lock)', () => {
     expect(document.getElementById('post-link-primary')?.textContent).toBe(SEND_NOW_LABEL);
     expect(document.getElementById('post-link-primary')?.textContent).toBe('Send it now');
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
-    expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(2);
+    expect((document.getElementById('post-link-copy') as HTMLButtonElement).hidden).toBe(true);
+    expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(1);
     expect(document.getElementById('referral-section')?.textContent).not.toContain('Your link is ready');
     expect(document.getElementById('referral-section')?.textContent).not.toContain('Send to a friend now');
     expect(document.getElementById('post-link-status')).toBeNull();

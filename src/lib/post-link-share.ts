@@ -22,10 +22,39 @@ export const POST_LINK_SUB_READY =
 export const POST_LINK_SHARE_TEXT = LOCKED_SHARE_TEXT;
 
 /** Un-hide the send screen after Get my link. Missing #ref-link must not keep it display:none. */
+const STEP_SEND_KEY = 'vr_did_send';
+const STEP_PASTE_KEY = 'vr_did_paste';
+
+export function persistFunnelStep(step: 'send' | 'paste'): void {
+  try {
+    sessionStorage.setItem(STEP_SEND_KEY, '1');
+    if (step === 'paste') sessionStorage.setItem(STEP_PASTE_KEY, '1');
+  } catch {
+    /* private mode */
+  }
+}
+
+/** Same-tab refresh keeps Send → paste instead of jumping back to Send. */
+export function restoreFunnelStep(): void {
+  try {
+    if (sessionStorage.getItem(STEP_PASTE_KEY) === '1') {
+      document.documentElement.setAttribute('data-vr-did-send', '1');
+      document.documentElement.setAttribute('data-vr-did-paste', '1');
+      return;
+    }
+    if (sessionStorage.getItem(STEP_SEND_KEY) === '1') {
+      document.documentElement.setAttribute('data-vr-did-send', '1');
+    }
+  } catch {
+    /* private mode */
+  }
+}
+
 export function revealReferralSection(): void {
   const root = document.documentElement;
   root.setAttribute(POST_LINK_ATTR, '1');
   root.setAttribute('data-vr-has-link', '1');
+  restoreFunnelStep();
   const section = document.getElementById('referral-section');
   if (section) {
     section.hidden = false;
@@ -228,8 +257,8 @@ export function showPostLinkReady(link: string): void {
   if (copy) {
     copy.textContent = t('post_link.copy') || 'Copy link';
     copy.setAttribute('aria-label', t('post_link.copy') || 'Copy link');
-    copy.classList.remove('hidden');
-    copy.hidden = false;
+    copy.classList.add('hidden');
+    copy.hidden = true;
   }
   const helper = el(IDS.helper);
   if (helper) {
@@ -244,17 +273,18 @@ export function showPostLinkReady(link: string): void {
     whisper.hidden = true;
   }
   focusSendReady();
-  requestAnimationFrame(() => {
-    document.getElementById('referral-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
 }
 
 export function activatePostLinkShare(link: string): void {
   showPostLinkReady(link);
+  restoreFunnelStep();
   void import('./site-drops-ui')
     .then((m) => {
       m.revealSiteDropForm();
       m.initSiteDropForm();
+      if (document.documentElement.hasAttribute('data-vr-did-send')) {
+        m.armSiteDropChallenge();
+      }
     })
     .catch(() => {});
 }
@@ -296,7 +326,7 @@ function focusPasteIfEmpty(): void {
   if (!document.documentElement.hasAttribute('data-vr-did-send')) return;
   const input = document.getElementById('post-link-site-drop-url') as HTMLInputElement | null;
   if (!input || input.value.trim()) return;
-  input.focus({ preventScroll: false });
+  input.focus({ preventScroll: true });
 }
 
 function saveSiteDropIfUrlReady(): void {
@@ -341,7 +371,11 @@ export function onPostLinkPrimaryTap(event?: Event): void {
   const link = readReadyLink();
   if (!link) return;
   document.documentElement.setAttribute('data-vr-did-send', '1');
+  persistFunnelStep('send');
   armPasteAfterSend();
+  void import('./site-drops-ui')
+    .then((m) => m.armSiteDropChallenge())
+    .catch(() => {});
   saveSiteDropIfUrlReady();
 
   const text = buildPostLinkShareText(link);
@@ -392,6 +426,24 @@ export async function onPostLinkCopyTap(): Promise<void> {
   }
 }
 
+function prefetchTurnstileOnGetLinkIntent(): void {
+  void import('./site-drops-ui')
+    .then((m) => m.prefetchSiteDropScript())
+    .catch(() => {});
+}
+
+function armGetLinkTurnstilePrefetch(): void {
+  const root = document.documentElement;
+  if (root.dataset.vrTsPrefetchArm === '1') return;
+  root.dataset.vrTsPrefetchArm = '1';
+  const ids = ['hero-get-link-btn', 'nav-get-link-btn', 'attribution-get-link-btn', 'mobile-referral-cta'];
+  for (const id of ids) {
+    const node = document.getElementById(id);
+    if (!node) continue;
+    node.addEventListener('pointerdown', prefetchTurnstileOnGetLinkIntent, { once: true, passive: true });
+  }
+}
+
 function wireOnce(): void {
   const root = el(IDS.root);
   if (!root || root.dataset.wired === '1') return;
@@ -404,6 +456,7 @@ function wireOnce(): void {
 
 export function initPostLinkShare(): void {
   wireOnce();
+  armGetLinkTurnstilePrefetch();
 }
 
 registerGlobal('onPostLinkPrimaryTap', onPostLinkPrimaryTap);

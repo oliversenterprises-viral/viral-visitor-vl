@@ -238,6 +238,7 @@ export function resetReferralRecordingStateForTests(): void {
   referralSuccessToastShown = false;
   referralFailureToastShown = false;
   getLinkInFlight = false;
+  populateUiGen += 1;
   resetCreditTurnstileStateForTests();
 }
 
@@ -266,35 +267,39 @@ function ensureRefLinkInput(): HTMLInputElement {
   return input;
 }
 
-/** Populate #ref-link, QR, stats — synchronous so the visitor sees value immediately. */
+let populateUiGen = 0;
+
+/** Populate #ref-link immediately. Hidden share chrome waits a tick so Send paints first. */
 function populateReferralLinkUI(code: string, link: string): void {
   const refInput = ensureRefLinkInput();
   refInput.value = link;
+  const gen = ++populateUiGen;
 
-  const qrImg = document.getElementById('qr-code') as HTMLImageElement | null;
-  if (qrImg) {
-    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(link)}`;
-  }
-
-  if (typeof ViralRefer.renderMyStats === 'function') {
-    void ViralRefer.renderMyStats(code);
-  }
-
-  const sharePanel = document.getElementById('share-buttons-panel');
-  if (sharePanel) sharePanel.classList.add('share-ready');
-
-  syncSharePowerUI(link);
-  initShareRemindersOnLinkReady();
-  onReferralLinkReady();
-  refreshPublicClarityState();
-  // Start / refresh 48h first-friend lock clock (server-backed when available)
-  void registerReferrerLinkDeadline(code).then((state) => {
-    if (state?.status === 'expired') {
-      enforceLocalShareDeadlineExpiry(code);
-      return;
+  const extras = () => {
+    if (gen !== populateUiGen) return;
+    if (!document.getElementById('ref-link')) return;
+    if (typeof ViralRefer.renderMyStats === 'function') {
+      void ViralRefer.renderMyStats(code);
     }
-    renderShareDeadlineBanner();
-  });
+    document.getElementById('share-buttons-panel')?.classList.add('share-ready');
+    syncSharePowerUI(link);
+    initShareRemindersOnLinkReady();
+    onReferralLinkReady();
+    refreshPublicClarityState();
+    void registerReferrerLinkDeadline(code).then((state) => {
+      if (state?.status === 'expired') {
+        enforceLocalShareDeadlineExpiry(code);
+        return;
+      }
+      renderShareDeadlineBanner();
+    });
+  };
+
+  const ric = (
+    window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number }
+  ).requestIdleCallback;
+  if (typeof ric === 'function') ric(extras, { timeout: 800 });
+  else window.setTimeout(extras, 0);
 }
 
 /** Current value in #ref-link (empty until generated). */

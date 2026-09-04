@@ -269,18 +269,40 @@ describe('first-screen Site Drops rules', () => {
     expect(read('src/lib/site-drops-ui.ts')).toContain('prefetchSiteDropToken');
     expect(read('src/lib/site-drops-ui.ts')).toContain('prefetchSiteDropScript');
     expect(read('src/lib/site-drops-ui.ts')).toMatch(
-      /function prefetchSiteDropToken\(\)[\s\S]{0,280}normalizeWebsiteUrl\(readFormWebsite\(\)\)\) return/,
+      /function prefetchSiteDropToken\(\)[\s\S]{0,320}normalizeWebsiteUrl\(readFormWebsite\(\)\)\) return/,
+    );
+    expect(read('src/lib/site-drops-ui.ts')).toContain('armSiteDropChallenge');
+    expect(read('src/lib/site-drops-ui.ts')).toContain("appearance: 'always'");
+    expect(read('src/lib/post-link-share.ts')).toContain('restoreFunnelStep');
+    expect(read('src/lib/post-link-share.ts')).toContain('persistFunnelStep');
+    expect(read('index.html')).toContain('rel="preconnect" href="https://challenges.cloudflare.com"');
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-did-send\]:not\(\[data-vr-did-paste\]\) #post-link-site-drop-turnstile/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-referred-micro\]:not\(\[data-vr-has-link\]\) #friend-credit-turnstile/,
     );
     expect(read('src/lib/site-drops-ui.ts')).toMatch(
       /export function revealSiteDropForm[\s\S]{0,900}prefetchSiteDropScript\(\)/,
     );
     expect(read('src/lib/post-link-share.ts')).toContain('prefetchSiteDropScript');
+    expect(read('src/lib/post-link-share.ts')).toContain('pointerdown');
+    expect(read('src/lib/post-link-share.ts')).not.toContain('scrollIntoView');
+    expect(read('src/referral.ts')).not.toMatch(/getElementById\('qr-code'\)/);
+    expect(read('src/lib/site-drops-ui.ts')).toContain("const DROP_BUSY_LABEL = 'Saving…'");
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-has-link\]:not\(\[data-vr-did-send\]\) #post-link-site-drop/,
+    );
+    expect(read('src/style.css')).toMatch(
+      /html\[data-vr-has-link\]:not\(\[data-vr-did-paste\]\) #site-entered-ticker/,
+    );
+    expect(read('src/style.css')).toContain(".post-link-site-drop__submit[aria-busy='true']");
     expect(read('src/style.css')).toContain('#post-link-site-drop-turnstile:not(:has(iframe))');
     expect(read('src/lib/site-drops-ui.ts')).toContain(
       'Send it — a friend tapping Get my link is the climb.',
     );
     expect(read('src/lib/site-drops-ui.ts')).toMatch(
-      /data-vr-did-paste[\s\S]{0,280}post-link-primary/,
+      /data-vr-did-paste[\s\S]{0,520}post-link-primary/,
     );
     expect(read('src/lib/share-abandon-rescue.ts')).toContain("getElementById('post-link-primary')");
     expect(read('src/style.css')).toMatch(

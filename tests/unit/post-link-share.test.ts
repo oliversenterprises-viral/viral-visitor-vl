@@ -9,6 +9,8 @@ import {
   activatePostLinkShare,
   onPostLinkPrimaryTap,
   onPostLinkCopyTap,
+  persistFunnelStep,
+  restoreFunnelStep,
   POST_LINK_ATTR,
 } from '../../src/lib/post-link-share';
 import { setLocale } from '../../src/lib/i18n';
@@ -35,9 +37,11 @@ function mount() {
 describe('post-link-share', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     document.documentElement.removeAttribute(POST_LINK_ATTR);
     document.documentElement.removeAttribute('data-vr-has-link');
     document.documentElement.removeAttribute('data-vr-did-send');
+    document.documentElement.removeAttribute('data-vr-did-paste');
     document.documentElement.removeAttribute('data-vr-paste-after-send');
     document.documentElement.removeAttribute('data-vr-share-pending');
     document.documentElement.removeAttribute('data-vr-share-locked');
@@ -86,8 +90,19 @@ describe('post-link-share', () => {
     expect(primary.textContent).toBe('Send it now');
     expect(document.activeElement).toBe(primary);
     expect(document.getElementById('post-link-copy')?.textContent).toBe('Copy link');
+    expect((document.getElementById('post-link-copy') as HTMLButtonElement).hidden).toBe(true);
     expect(document.getElementById('post-link-helper')?.textContent).toBe('');
-    expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(2);
+    expect(document.querySelectorAll('#post-link-share button:not([hidden])').length).toBe(1);
+  });
+
+  it('ready state does not scroll the send screen', () => {
+    const section = document.createElement('div');
+    section.id = 'referral-section';
+    const scroll = vi.fn();
+    section.scrollIntoView = scroll;
+    document.body.appendChild(section);
+    showPostLinkReady(LINK);
+    expect(scroll).not.toHaveBeenCalled();
   });
 
   it('loading keeps Send visible as Getting your link', () => {
@@ -122,6 +137,17 @@ describe('post-link-share', () => {
     expect(open).toHaveBeenCalled();
     expect(String(open.mock.calls[0]?.[0])).toContain('wa.me');
     expect(document.documentElement.getAttribute('data-vr-did-send')).toBe('1');
+    expect(sessionStorage.getItem('vr_did_send')).toBe('1');
+  });
+
+  it('session restore reapplies send then paste', () => {
+    persistFunnelStep('send');
+    restoreFunnelStep();
+    expect(document.documentElement.getAttribute('data-vr-did-send')).toBe('1');
+    expect(document.documentElement.hasAttribute('data-vr-did-paste')).toBe(false);
+    persistFunnelStep('paste');
+    restoreFunnelStep();
+    expect(document.documentElement.getAttribute('data-vr-did-paste')).toBe('1');
   });
 
   it('copy writes the URL only, not the share sentence', async () => {

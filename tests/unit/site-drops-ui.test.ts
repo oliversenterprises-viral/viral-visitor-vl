@@ -140,6 +140,30 @@ describe('site-drops-ui paint', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect((document.getElementById('site-drop-url') as HTMLInputElement).value).toBe('own.example');
     expect(document.getElementById('site-drop-status')?.textContent).toBe('Get your referral link first.');
+    expect(document.getElementById('post-link-site-drop-submit')?.textContent).toBe(
+      'Put my site on the homepage (15 min)',
+    );
+    document.documentElement.removeAttribute('data-vr-has-link');
+  });
+
+  it('keeps the two-span Paste site labels after a failed save', () => {
+    document.body.innerHTML = `
+      <p id="site-drop-status"></p>
+      <div id="post-link-site-drop">
+        <input id="post-link-site-drop-url" />
+        <button type="button" id="post-link-site-drop-submit">
+          <span class="drop-submit-long">Paste your site — 15 min</span>
+          <span class="drop-submit-short">Paste site</span>
+        </button>
+      </div>
+    `;
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    initSiteDropForm();
+    document.getElementById('post-link-site-drop-submit')?.click();
+    const btn = document.getElementById('post-link-site-drop-submit');
+    expect(btn?.querySelector('.drop-submit-long')?.textContent).toBe('Paste your site — 15 min');
+    expect(btn?.querySelector('.drop-submit-short')?.textContent).toBe('Paste site');
+    expect(btn?.getAttribute('aria-busy')).toBe('false');
     document.documentElement.removeAttribute('data-vr-has-link');
   });
 });

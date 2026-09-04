@@ -260,6 +260,7 @@ async function renderSiteDropToken(): Promise<string> {
   return getTurnstileToken(host, siteKey, 'site-drop', {
     action: 'site-drop',
     size: 'compact',
+    appearance: 'always',
     timeoutMs: 30_000,
   });
 }
@@ -288,10 +289,17 @@ export function prefetchSiteDropScript(): void {
   void ensureTurnstileReady().catch(() => {});
 }
 
+/** After Send: load script + compact widget so paste is not waiting on Turnstile. */
+export function armSiteDropChallenge(): void {
+  prefetchSiteDropScript();
+  prefetchSiteDropToken();
+}
+
 function prefetchSiteDropToken(): void {
   if (cachedDropToken || dropTokenWait) return;
   if (document.documentElement.hasAttribute('data-vr-did-paste')) return;
-  if (!normalizeWebsiteUrl(readFormWebsite())) return;
+  const sent = document.documentElement.hasAttribute('data-vr-did-send');
+  if (!sent && !normalizeWebsiteUrl(readFormWebsite())) return;
   dropTokenWait = renderSiteDropToken()
     .then((token) => {
       cachedDropToken = token;
@@ -305,12 +313,34 @@ function prefetchSiteDropToken(): void {
 
 let submitInFlight = false;
 
+const DROP_BUSY_LABEL = 'Saving…';
+
 function setDropSubmitBusy(busy: boolean): void {
   for (const id of ['post-link-site-drop-submit', 'site-drop-entered-btn'] as const) {
     const btn = document.getElementById(id) as HTMLButtonElement | null;
     if (!btn) continue;
     btn.disabled = busy;
     btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+    const spans = btn.querySelectorAll<HTMLElement>('.drop-submit-long, .drop-submit-short');
+    if (spans.length) {
+      for (const span of spans) {
+        if (busy) {
+          if (span.dataset.idleLabel == null) span.dataset.idleLabel = span.textContent || '';
+          span.textContent = DROP_BUSY_LABEL;
+        } else if (span.dataset.idleLabel != null) {
+          span.textContent = span.dataset.idleLabel;
+          delete span.dataset.idleLabel;
+        }
+      }
+      continue;
+    }
+    if (busy) {
+      if (btn.dataset.idleLabel == null) btn.dataset.idleLabel = btn.textContent || '';
+      btn.textContent = DROP_BUSY_LABEL;
+    } else if (btn.dataset.idleLabel != null) {
+      btn.textContent = btn.dataset.idleLabel;
+      delete btn.dataset.idleLabel;
+    }
   }
 }
 
@@ -386,6 +416,18 @@ export async function submitSiteDrop(kind: 'entered' | 'rising' | 'challenger' =
             : 'Just entered 15 min. Send it — a friend tapping Get my link is the climb.';
     if (status) status.textContent = ok;
     document.documentElement.setAttribute('data-vr-did-paste', '1');
+    try {
+      sessionStorage.setItem('vr_did_send', '1');
+      sessionStorage.setItem('vr_did_paste', '1');
+    } catch {
+      /* private mode */
+    }
+    const ticker = document.getElementById('site-entered-ticker');
+    if (ticker) {
+      ticker.hidden = false;
+      ticker.removeAttribute('hidden');
+      ticker.classList.remove('hidden');
+    }
     const send = document.getElementById('post-link-primary');
     if (send instanceof HTMLButtonElement && !send.hidden) send.focus();
     return true;
@@ -411,6 +453,15 @@ export function revealSiteDropForm(): void {
   }
   prefetchSiteDropScript();
   prefetchSiteDropToken();
+  if (document.documentElement.hasAttribute('data-vr-did-paste')) {
+    const ticker = document.getElementById('site-entered-ticker');
+    if (ticker) {
+      ticker.hidden = false;
+      ticker.removeAttribute('hidden');
+      ticker.classList.remove('hidden');
+    }
+    return;
+  }
   const chips = document.getElementById('site-entered-chips');
   if (chips?.querySelector('.site-drop-chip')) {
     const ticker = document.getElementById('site-entered-ticker');
