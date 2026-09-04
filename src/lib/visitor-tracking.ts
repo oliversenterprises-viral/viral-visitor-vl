@@ -11,6 +11,7 @@ import { supabase } from './supabase';
 import { eventName, groupBy, latestEvents } from './stats-helpers';
 import { getClientAutomationMetadata } from './test-referral';
 import { getStoredAffiliateCode } from './affiliate';
+import { loadPublicPlatformGuard } from './platform-guard-client';
 
 const VISITOR_EVENTS_KEY = 'viralrefer_visitor_events';
 const VISITOR_ID_KEY = 'vr_visitor_id';
@@ -273,6 +274,7 @@ export function trackViralLoopEvent(
 
 /** Call once at bootstrap after UTM capture — logs every landing. */
 export function initVisitorTracking(): void {
+  void loadPublicPlatformGuard();
   trackVisitorFunnel('SiteLanding', { path: location.pathname });
 }
 

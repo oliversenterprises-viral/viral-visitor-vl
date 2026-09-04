@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { bumpPlatformGuardInvoke } from '../_shared/platform-guard.ts';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 import {
@@ -46,6 +47,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { persistSession: false } },
     );
+    bumpPlatformGuardInvoke(supabaseAdmin);
 
     const body = await req.json();
     const eventType = String(body.event_type || body.eventType || '').trim();

@@ -11,6 +11,7 @@ import {
   isVerifiedSharePlatform,
   normalizeSharePlatform,
 } from '../_shared/referrer-share-deadline.ts';
+import { bumpPlatformGuardInvoke } from '../_shared/platform-guard.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 import { isAutomationUserAgent, isTestReferrerCode } from '../_shared/test-referral.ts';
 
@@ -71,6 +72,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { persistSession: false } },
     );
+    bumpPlatformGuardInvoke(supabaseAdmin);
 
     const clientIp = getTrustedClientIp(req);
     if (isShareRateLimited(clientIp)) {

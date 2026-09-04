@@ -200,6 +200,7 @@ describe('first-screen Site Drops rules', () => {
     expect(css).toMatch(/\.hq-loop/);
     expect(css).toMatch(/\.hq-feed-filter/);
     expect(css).toMatch(/\.hq-order-evidence/);
+    expect(css).toMatch(/\.hq-guard/);
     const hero = html.slice(html.indexOf('id="hero-title"'), html.indexOf('id="funnel-journey"'));
     expect(hero).not.toContain('HQ Command');
     expect(hero).toContain(LOCKED_SITE_DROPS_CTA);

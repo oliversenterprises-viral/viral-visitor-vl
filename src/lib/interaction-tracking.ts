@@ -12,6 +12,7 @@ import { supabase } from './supabase';
 import { getVisitorSessionId, getVisitorId } from './visitor-tracking';
 import { resolveViralZoneFromTarget, type ViralZoneId } from './viral-zones';
 import { getClientAutomationMetadata } from './test-referral';
+import { shouldDropNoiseWrites } from './platform-guard';
 
 const LOCAL_KEY = 'viralrefer_interaction_events';
 /** Disk IO: fewer scroll writes (was 25/50/75/100). */
@@ -48,6 +49,7 @@ function pushLocal(entry: Record<string, unknown>): void {
 }
 
 function logInteractionServer(payload: Record<string, unknown>): void {
+  if (shouldDropNoiseWrites()) return;
   const utm = getStoredUtmAttribution();
   const {
     metadata: metaFromPayload,

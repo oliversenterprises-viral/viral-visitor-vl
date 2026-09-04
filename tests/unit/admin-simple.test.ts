@@ -89,6 +89,7 @@ describe('admin one-loop desk', () => {
     expect(content.querySelector('[data-hq-loop]')).not.toBeNull();
     expect(content.querySelectorAll('[data-hq-loop-step]').length).toBe(5);
     expect(content.querySelectorAll('[data-hq-feed-filter]').length).toBe(5);
+    expect(content.querySelector('[data-hq-platform-guard]')).not.toBeNull();
     expect(content.querySelector('[data-owner-desk-gsc]')).not.toBeNull();
     expect(content.textContent).toMatch(/Google Search · tools & pages/);
     expect(content.textContent).toMatch(

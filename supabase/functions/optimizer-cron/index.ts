@@ -62,6 +62,14 @@ Deno.serve(async (req: Request) => {
       // empty body ok
     }
 
+    if (!dryRun) {
+      try {
+        await supabase.rpc('refresh_platform_guard_state');
+      } catch (guardErr) {
+        console.warn('[optimizer-cron] platform guard refresh skipped:', guardErr);
+      }
+    }
+
     const expiredLinks = dryRun ? 0 : await expireStalePendingLinks(supabase);
     let expiredSiteDrops = 0;
     if (!dryRun) {

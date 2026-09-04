@@ -436,6 +436,7 @@ describe('HQ Command first-paint chrome', () => {
     expect(modal).toMatch(/data-hq-command-order="gsc-blind"/);
     expect(modal).toMatch(/data-hq-loop/);
     expect(modal).toMatch(/data-hq-feed-filter="all"/);
+    expect(modal).toMatch(/data-hq-platform-guard/);
     expect(modal).toMatch(/Search lists/);
     expect(modal).toMatch(/Six numbers\. One hole\. Server only\./);
     expect(modal).not.toMatch(/What's happening now/);

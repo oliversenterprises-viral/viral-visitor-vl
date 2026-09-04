@@ -31,6 +31,13 @@ import {
   type OwnerFunnelFeedRow,
   type OwnerFunnelGscMetrics,
 } from './owner-funnel-desk-helpers';
+import {
+  emptyPlatformGuardSnapshot,
+  evaluatePlatformGuard,
+  parsePlatformGuardSnapshot,
+  rememberPublicPlatformGuard,
+  type PlatformGuardSnapshot,
+} from '../lib/platform-guard';
 
 const SKELETON = `
   <div class="space-y-4 py-1" data-owner-funnel-desk="1">
@@ -198,6 +205,27 @@ function renderCommandOrder(metrics: OwnerFunnelDeskMetrics): string {
     </section>`;
 }
 
+function renderPlatformGuardCard(snap: PlatformGuardSnapshot): string {
+  const view = evaluatePlatformGuard(snap);
+  const meters = view.meters
+    .map(
+      (meter) => `
+      <article class="hq-guard-meter hq-guard-meter--${escapeHtml(meter.status)}" data-hq-guard-meter="${escapeHtml(meter.id)}">
+        <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">${escapeHtml(meter.label)}</div>
+        <div class="text-xl font-bold text-white tabular-nums mt-1">${escapeHtml(meter.value)}</div>
+        <div class="text-[11px] text-zinc-400 mt-1">${escapeHtml(meter.note)}</div>
+      </article>`,
+    )
+    .join('');
+  return `
+    <section class="hq-guard hq-guard--${escapeHtml(view.severity)}" data-hq-platform-guard="${escapeHtml(view.severity)}" role="status">
+      <div class="hq-order-kicker">Guard</div>
+      <div class="hq-order-title">${escapeHtml(view.title)}</div>
+      <p class="hq-order-detail">${escapeHtml(view.detail)}</p>
+      <div class="hq-guard-meters">${meters}</div>
+    </section>`;
+}
+
 function renderLoopStrip(metrics: OwnerFunnelDeskMetrics): string {
   const steps = hqLoopSteps(metrics);
   const body = steps
@@ -302,6 +330,7 @@ export function renderOwnerFunnelDeskView(
   container: HTMLElement,
   metrics: OwnerFunnelDeskMetrics,
   _error?: string,
+  guard?: PlatformGuardSnapshot,
 ): void {
   container.classList.add('owner-funnel-desk');
   const gsc = parseOwnerFunnelGsc(metrics.gsc);
@@ -345,6 +374,7 @@ export function renderOwnerFunnelDeskView(
         )}
       </div>
       ${junkKept}
+      ${renderPlatformGuardCard(guard || emptyPlatformGuardSnapshot())}
       ${renderGscCard(gsc)}
       <section class="hq-desk-feed rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3">
         <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-2">
@@ -466,13 +496,22 @@ export async function renderOwnerFunnelDesk(container: HTMLElement): Promise<voi
   container.innerHTML = SKELETON;
   try {
     // Tiles come from get_owner_funnel_desk (homepage ticker RPCs + last-N events).
-    const result = await invokeAdminAction<OwnerFunnelDeskMetrics>(
-      'get_owner_funnel_desk',
-      {},
-      { timeoutMs: 8_000 },
-    );
+    const [result, guardResult] = await Promise.all([
+      invokeAdminAction<OwnerFunnelDeskMetrics>(
+        'get_owner_funnel_desk',
+        {},
+        { timeoutMs: 8_000 },
+      ),
+      invokeAdminAction<PlatformGuardSnapshot>('get_platform_guard', {}, { timeoutMs: 4_000 }).catch(
+        () => ({ success: false as const, error: 'guard' }),
+      ),
+    ]);
     const loaded = ownerFunnelDeskFromInvokeResult(result);
-    renderOwnerFunnelDeskView(container, loaded.metrics);
+    const guard = guardResult.success
+      ? parsePlatformGuardSnapshot(guardResult.data)
+      : emptyPlatformGuardSnapshot();
+    rememberPublicPlatformGuard(guard);
+    renderOwnerFunnelDeskView(container, loaded.metrics, undefined, guard);
   } catch {
     renderOwnerFunnelDeskView(container, EMPTY_METRICS);
   }

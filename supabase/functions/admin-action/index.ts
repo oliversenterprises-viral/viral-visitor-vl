@@ -969,6 +969,32 @@ Deno.serve(async (req: Request) => {
     }
 
 
+    if (action === 'get_platform_guard') {
+      const { data, error } = await supabaseAdmin.rpc('refresh_platform_guard_state');
+      if (error) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              diskBytes: 0,
+              diskLimitBytes: 524288000,
+              visitorEventRows: 0,
+              interactionEventRows: 0,
+              edgeInvokesMonth: 0,
+              edgeLimit: 500000,
+              dbActivity: 0,
+              dropNoise: false,
+              skipRealtime: false,
+            },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+      return new Response(JSON.stringify({ success: true, data: data || {} }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'get_owner_funnel_desk') {
       const {
         deskFromPublicSurfaces,

@@ -3,6 +3,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { registerReferrerLink } from '../_shared/referrer-share-deadline.ts';
+import { bumpPlatformGuardInvoke } from '../_shared/platform-guard.ts';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 import { isAutomationUserAgent, isTestReferrerCode } from '../_shared/test-referral.ts';
@@ -59,6 +60,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { persistSession: false } },
     );
+    bumpPlatformGuardInvoke(supabaseAdmin);
 
     const clientIp = getClientIp(req);
     if (isBlockedActivityIp(clientIp)) {

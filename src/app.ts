@@ -61,6 +61,8 @@ import {
   staggerReveal,
 } from './lib/public-polish';
 import { celebrateMilestonesIfAny } from './lib/referral-milestones';
+import { loadPublicPlatformGuard } from './lib/platform-guard-client';
+import { shouldSkipRealtimeSockets } from './lib/platform-guard';
 
 import { initGrowthCommandCenter } from './lib/growth-command-center';
 import { initPostLinkShare } from './lib/post-link-share';
@@ -161,8 +163,18 @@ async function renderRecentActivity(options: { pulse?: boolean } = {}) {
   }
 }
 
+function stopSiteContentRealtime() {
+  if (!siteContentChannel) return;
+  supabase.removeChannel(siteContentChannel);
+  siteContentChannel = null;
+}
+
 function initSiteContentRealtime() {
   if (siteContentChannel || !isSupabaseConfigured) return;
+  if (shouldSkipRealtimeSockets()) {
+    updateRealtimeStatus('CLOSED');
+    return;
+  }
 
   siteContentChannel = supabase
     .channel('public-site-content-live')
@@ -173,7 +185,12 @@ function initSiteContentRealtime() {
     }, () => {
       void loadSiteContent();
     })
-    .subscribe();
+    .subscribe((status) => {
+      updateRealtimeStatus(status);
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        stopSiteContentRealtime();
+      }
+    });
 }
 
 /** Refresh verified total + get-link-today + unique board size (cheap RPCs; called on poll). */
@@ -232,11 +249,34 @@ function startPublicActivityPolling() {
 
 function initRealtimeSubscriptions() {
   if (referralsChannel) return;
-
-  initSiteContentRealtime();
   referralsChannel = { unsubscribe: () => {} };
-  updateRealtimeStatus('SUBSCRIBED');
   startPublicActivityPolling();
+  void loadPublicPlatformGuard().then(() => {
+    if (shouldSkipRealtimeSockets()) {
+      updateRealtimeStatus('CLOSED');
+      return;
+    }
+    initSiteContentRealtime();
+    if (siteContentChannel) updateRealtimeStatus('SUBSCRIBED');
+  });
+  if (typeof document !== 'undefined' && !document.documentElement.dataset.vrLiveVisBound) {
+    document.documentElement.dataset.vrLiveVisBound = '1';
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopSiteContentRealtime();
+        updateRealtimeStatus('CLOSED');
+        return;
+      }
+      void loadPublicPlatformGuard().then(() => {
+        if (shouldSkipRealtimeSockets()) {
+          updateRealtimeStatus('CLOSED');
+          return;
+        }
+        initSiteContentRealtime();
+        if (siteContentChannel) updateRealtimeStatus('SUBSCRIBED');
+      });
+    });
+  }
 }
 
 function cleanupRealtimeSubscriptions() {
@@ -246,7 +286,7 @@ function cleanupRealtimeSubscriptions() {
   }
   referralsChannel = null;
   if (siteContentChannel) {
-    supabase.removeChannel(siteContentChannel);
+    stopSiteContentRealtime();
     siteContentChannel = null;
   }
 }

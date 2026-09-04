@@ -3,6 +3,7 @@ import { dispatchFunnelOffsiteNotify } from '../_shared/funnel-notify.ts';
 import { settleGetLinkAdCredit } from '../_shared/affiliate-ads-credit.ts';
 import { isTestVisitorFunnelEvent } from '../_shared/visitor-funnel-test.ts';
 import { blockedActivityResponse, isBlockedActivityIp } from '../_shared/blocked-ips.ts';
+import { bumpPlatformGuardInvoke } from '../_shared/platform-guard.ts';
 import { getTrustedClientIp } from '../_shared/trusted-ip.ts';
 import {
   shouldIncrementJunkLandingVisit,
@@ -86,6 +87,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { persistSession: false } },
     );
+    bumpPlatformGuardInvoke(supabaseAdmin);
 
     const body = await req.json();
     const eventName = String(body.eventName || body.event_name || '').trim();
