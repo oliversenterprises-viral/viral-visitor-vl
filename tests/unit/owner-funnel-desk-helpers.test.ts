@@ -571,6 +571,7 @@ describe('owner funnel desk metrics', () => {
     expect(el.textContent).toMatch(/900 junk\/test page views kept off these tiles/);
     expect(el.textContent).toMatch(/Search Console is separate/);
     expect(el.querySelector('[data-owner-desk-clear-junk]')).toBeTruthy();
+    expect(el.querySelector('[data-owner-desk-clear-grok]')).toBeTruthy();
     expect(el.querySelector('[data-owner-desk-gsc]')).toBeTruthy();
   });
 
@@ -581,8 +582,12 @@ describe('owner funnel desk metrics', () => {
       'utf8',
     );
     expect(desk).toContain('clear_junk_visits');
+    expect(desk).toContain('clear_grok_test_hits');
     expect(desk).toContain('Google Search Console and the verify file stay');
+    expect(desk).toContain('Delete Grok Build test hits from HQ only');
     expect(action).toContain("action === 'clear_junk_visits'");
+    expect(action).toContain("action === 'clear_grok_test_hits'");
+    expect(action).toContain('shouldClearGrokBuildVisitorEvent');
     expect(action).toContain('shouldClearJunkVisitorEvent');
     expect(action).toContain("gsc: 'untouched'");
     expect(action).toContain('clear_junk_landing_counts');
@@ -594,6 +599,7 @@ describe('owner funnel desk metrics', () => {
     const html = readFileSync(resolve(import.meta.dirname, '../../index.html'), 'utf8');
     expect(html).toContain('data-owner-desk-junk-note');
     expect(html).toContain('data-owner-desk-clear-junk');
+    expect(html).toContain('data-owner-desk-clear-grok');
     expect(html).toContain('junk/test excluded');
     expect(html).not.toMatch(/cheap counter/i);
     expect(html).toContain('data-owner-desk-gsc-note="missing_credentials"');

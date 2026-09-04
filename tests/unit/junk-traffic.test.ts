@@ -8,7 +8,10 @@ import {
   shouldIncrementQualityLandingVisit,
   shouldSkipServerLandingWrite,
 } from '../../src/lib/junk-traffic';
-import { shouldClearJunkVisitorEvent } from '../../supabase/functions/_shared/visitor-funnel-test';
+import {
+  shouldClearGrokBuildVisitorEvent,
+  shouldClearJunkVisitorEvent,
+} from '../../supabase/functions/_shared/visitor-funnel-test';
 
 describe('junk-traffic (Disk IO guard)', () => {
   it('flags rotator / exchange sources', () => {
@@ -110,6 +113,41 @@ describe('junk-traffic (Disk IO guard)', () => {
     expect(shouldDeleteJunkUtmVisitorEvent({ event_name: 'SiteLanding', utm_source: 'reddit' })).toBe(
       false,
     );
+  });
+
+  it('Clear Grok hits deletes agent rows and keeps real Chrome Get-link', () => {
+    expect(
+      shouldClearGrokBuildVisitorEvent({
+        event_name: 'SiteLanding',
+        metadata: { grok_build: true, user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(true);
+    expect(
+      shouldClearGrokBuildVisitorEvent({
+        event_name: 'GetReferralLink',
+        metadata: { webdriver: true, user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(true);
+    expect(
+      shouldClearGrokBuildVisitorEvent({
+        event_name: 'SiteLanding',
+        metadata: { user_agent: 'Mozilla/5.0 HeadlessChrome/131' },
+      }),
+    ).toBe(true);
+    expect(
+      shouldClearGrokBuildVisitorEvent({
+        event_name: 'GetReferralLink',
+        ref_code: 'VIRAL-97UWEGZ',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(false);
+    expect(
+      shouldClearGrokBuildVisitorEvent({
+        event_name: 'SiteLanding',
+        utm_source: 'pagerankcafe',
+        metadata: { user_agent: 'Mozilla/5.0 Chrome' },
+      }),
+    ).toBe(false);
   });
 
   it('HQ Clear keeps pagerankcafe GetReferralLink credits and drops test/scout landings', () => {

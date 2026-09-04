@@ -72,6 +72,9 @@ const EMPTY_METRICS: OwnerFunnelDeskMetrics = {
 export const JUNK_CLEAR_CONFIRM =
   'Clear junk and test visits only? Google Search Console and the verify file stay. Real quality visits stay.';
 
+export const GROK_HITS_CLEAR_CONFIRM =
+  'Delete Grok Build test hits from HQ only? Real visits, Google Search, and the verify file stay.';
+
 /** Deployed admin-action may not know get_owner_funnel_desk yet. */
 export function isOwnerFunnelDeskActionMissing(error: string | undefined | null): boolean {
   const msg = String(error || '').toLowerCase();
@@ -387,6 +390,7 @@ export function renderOwnerFunnelDeskView(
       <div class="flex flex-wrap items-center gap-2">
         <button type="button" data-owner-desk-refresh class="hq-desk-refresh text-xs px-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100" title="Refresh (R)" aria-label="Refresh HQ desk">↻ Refresh</button>
         <button type="button" data-owner-desk-clear-junk class="hq-desk-clear-junk text-xs px-3 py-1.5 rounded-2xl bg-amber-600/80 hover:bg-amber-600 text-white" title="Deletes junk/test visitor rows and zeros junk_hits only. Does not touch Google Search Console or the verify file.">Clear junk visits</button>
+        <button type="button" data-owner-desk-clear-grok class="hq-desk-clear-grok text-xs px-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100" title="Deletes Grok Build / agent browser hits only. Real visits, Google Search, and the verify file stay.">Clear Grok hits</button>
         <span class="text-[10px] text-zinc-500">Server only · GSC untouched</span>
       </div>
 
@@ -416,6 +420,12 @@ function bindDeskInteractions(container: HTMLElement): void {
     if (clearBtn && container.contains(clearBtn)) {
       event.preventDefault();
       void clearJunkDeskVisits(container, clearBtn as HTMLButtonElement);
+      return;
+    }
+    const grokBtn = target.closest('[data-owner-desk-clear-grok]');
+    if (grokBtn && container.contains(grokBtn)) {
+      event.preventDefault();
+      void clearGrokDeskHits(container, grokBtn as HTMLButtonElement);
       return;
     }
     const chip = target.closest('button[data-hq-feed-filter]');
@@ -460,6 +470,43 @@ async function clearJunkDeskVisits(
     await renderOwnerFunnelDesk(container);
   } catch {
     showToast('Junk clear failed. Search Console was not touched.', 'info');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+}
+
+async function clearGrokDeskHits(
+  container: HTMLElement,
+  btn?: HTMLButtonElement,
+): Promise<void> {
+  if (typeof window !== 'undefined' && !window.confirm(GROK_HITS_CLEAR_CONFIRM)) return;
+  const original = btn?.textContent || 'Clear Grok hits';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Clearing Grok hits…';
+  }
+  try {
+    const result = await invokeAdminAction<{
+      deleted?: number;
+      deleted_interactions?: number;
+      gsc?: string;
+    }>('clear_grok_test_hits');
+    if (!result.success) {
+      showToast(result.error || 'Grok hit clear failed', 'info');
+      return;
+    }
+    const deleted = result.data?.deleted ?? 0;
+    const clicks = result.data?.deleted_interactions ?? 0;
+    showToast(
+      `Cleared ${deleted} Grok test hits${clicks ? ` and ${clicks} click rows` : ''}. Search Console unchanged.`,
+      'success',
+    );
+    await renderOwnerFunnelDesk(container);
+  } catch {
+    showToast('Grok hit clear failed. Search Console was not touched.', 'info');
   } finally {
     if (btn) {
       btn.disabled = false;

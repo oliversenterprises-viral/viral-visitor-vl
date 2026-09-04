@@ -12,6 +12,7 @@ import {
   groupVisitorEventsByIp,
   isTestBannerEvent,
   isTestVisitorFunnelEvent,
+  shouldClearGrokBuildVisitorEvent,
   shouldClearJunkVisitorEvent,
 } from '../_shared/admin-stats-test.ts';
 import {
@@ -652,6 +653,76 @@ Deno.serve(async (req: Request) => {
           data: {
             deleted: idsToDelete.length,
             junk_hits_cleared: junkHitsCleared,
+            quality_hits_untouched: true,
+            gsc: 'untouched',
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (action === 'clear_grok_test_hits') {
+      // Grok Build / agent browser rows only. Never GSC. Never quality_hits. Never credits of real people.
+      const pageSize = 1000;
+      const visitorRows: Record<string, unknown>[] = [];
+      let start = 0;
+      while (true) {
+        const { data, error } = await supabaseAdmin
+          .from('visitor_events')
+          .select('id, event_name, ref_code, ip_hash, metadata, utm_source, created_at')
+          .order('created_at', { ascending: true })
+          .range(start, start + pageSize - 1);
+        if (error) throw error;
+        const batch = data || [];
+        visitorRows.push(...batch);
+        if (batch.length < pageSize) break;
+        start += pageSize;
+      }
+      const visitorIds = visitorRows
+        .filter((row) => shouldClearGrokBuildVisitorEvent(row))
+        .map((row) => String(row.id))
+        .filter(Boolean);
+
+      const interactionRows: Record<string, unknown>[] = [];
+      start = 0;
+      while (true) {
+        const { data, error } = await supabaseAdmin
+          .from('interaction_events')
+          .select('id, metadata, created_at')
+          .order('created_at', { ascending: true })
+          .range(start, start + pageSize - 1);
+        if (error) break;
+        const batch = data || [];
+        interactionRows.push(...batch);
+        if (batch.length < pageSize) break;
+        start += pageSize;
+      }
+      const interactionIds = interactionRows
+        .filter((row) => shouldClearGrokBuildVisitorEvent(row))
+        .map((row) => String(row.id))
+        .filter(Boolean);
+
+      const chunk = 200;
+      for (let i = 0; i < visitorIds.length; i += chunk) {
+        const slice = visitorIds.slice(i, i + chunk);
+        const { error: delErr } = await supabaseAdmin.from('visitor_events').delete().in('id', slice);
+        if (delErr) throw delErr;
+      }
+      for (let i = 0; i < interactionIds.length; i += chunk) {
+        const slice = interactionIds.slice(i, i + chunk);
+        const { error: delErr } = await supabaseAdmin
+          .from('interaction_events')
+          .delete()
+          .in('id', slice);
+        if (delErr) throw delErr;
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            deleted: visitorIds.length,
+            deleted_interactions: interactionIds.length,
             quality_hits_untouched: true,
             gsc: 'untouched',
           },

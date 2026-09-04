@@ -5,6 +5,7 @@ import {
   ADMIN_FUNNEL_EXCLUDED_IPS as OWNER_FUNNEL_IPS,
   isAgentAutomationMetadata,
   isAutomationUserAgent,
+  isGrokBuildHit,
   isTestReferrerCode,
 } from './test-referral.ts';
 
@@ -75,6 +76,7 @@ export function isTestVisitorFunnelEvent(
   if (isTestVisitorFunnelRefCode(String(event.ref_code || event.refCode || ''))) return true;
 
   const meta = metadataRecord(event);
+  if (isGrokBuildVisitorEvent(event)) return true;
   if (isAgentAutomationMetadata(meta)) return true;
 
   const ua = String(meta.user_agent || event.user_agent || event.userAgent || '');
@@ -91,6 +93,19 @@ export function isTestVisitorFunnelEvent(
   }
 
   return false;
+}
+
+/** Grok Build / agent browser row — HQ can delete these without touching junk UTM converters. */
+export function isGrokBuildVisitorEvent(event: Record<string, unknown>): boolean {
+  const meta = metadataRecord(event);
+  return isGrokBuildHit({
+    userAgent: String(meta.user_agent || event.user_agent || event.userAgent || ''),
+    metadata: meta,
+  });
+}
+
+export function shouldClearGrokBuildVisitorEvent(event: Record<string, unknown>): boolean {
+  return isGrokBuildVisitorEvent(event);
 }
 
 /** Get-link / share / claim — never delete these as “junk UTM” or Azure smoke profile. */

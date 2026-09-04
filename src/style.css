@@ -4330,7 +4330,8 @@ button.hq-loop-step,
   color: #6ee7b7;
 }
 
-.hq-desk-refresh {
+.hq-desk-refresh,
+.hq-desk-clear-grok {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.08);
 }

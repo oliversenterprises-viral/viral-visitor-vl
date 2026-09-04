@@ -32,11 +32,49 @@ export function isTestReferrerCode(code: string | null | undefined): boolean {
   return false;
 }
 
+export function isGrokBuildUserAgent(ua: string | null | undefined): boolean {
+  const s = String(ua || '').trim();
+  if (!s) return false;
+  if (/NovaVerify/i.test(s)) return true;
+  if (/grok[\s_-]?build/i.test(s)) return true;
+  if (/\bgrok\b/i.test(s)) return true;
+  if (/HeadlessChrome/i.test(s)) return true;
+  if (/\b(playwright|puppeteer|cypress)\b/i.test(s)) return true;
+  return false;
+}
+
+export function isGrokBuildMetadata(meta: Record<string, unknown> | null | undefined): boolean {
+  if (!meta || typeof meta !== 'object') return false;
+  return (
+    meta.grok_build === true ||
+    meta.grokBuild === true ||
+    meta.vr_grok === true ||
+    meta.webdriver === true ||
+    meta.automation === true ||
+    meta.vr_test === true
+  );
+}
+
+/** Grok Build / agent browser hit — not a person on a phone. */
+export function isGrokBuildHit(input: {
+  userAgent?: string | null;
+  metadata?: Record<string, unknown> | null;
+}): boolean {
+  if (isGrokBuildMetadata(input.metadata)) return true;
+  const ua = String(
+    input.userAgent ||
+      input.metadata?.user_agent ||
+      input.metadata?.userAgent ||
+      '',
+  );
+  return isGrokBuildUserAgent(ua);
+}
+
 export function isAutomationUserAgent(ua: string | null | undefined): boolean {
   const s = String(ua || '').trim();
   if (!s) return false;
   if (s === 'node') return true;
-  if (/NovaVerify/i.test(s)) return true;
+  if (isGrokBuildUserAgent(s)) return true;
   if (/HeadlessChrome/i.test(s)) return true;
   if (
     /\b(vitest|playwright|puppeteer|cypress|selenium|phantomjs|headless|automation)\b/i.test(s)
@@ -55,7 +93,7 @@ export function isAutomationUserAgent(ua: string | null | undefined): boolean {
 /** Client/server flag that this request came from an agent, not a person. */
 export function isAgentAutomationMetadata(meta: Record<string, unknown> | null | undefined): boolean {
   if (!meta || typeof meta !== 'object') return false;
-  return meta.webdriver === true || meta.automation === true || meta.vr_test === true;
+  return isGrokBuildMetadata(meta);
 }
 
 export function isOwnerReferralIp(ip: string | null | undefined): boolean {

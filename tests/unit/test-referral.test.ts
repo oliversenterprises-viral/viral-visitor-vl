@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   isAgentAutomationMetadata,
   isAutomationUserAgent,
+  isGrokBuildHit,
+  isGrokBuildUserAgent,
   isTestReferralRecord,
   isTestReferrerCode,
   shouldSkipReferralCrediting,
@@ -25,9 +27,19 @@ describe('test-referral guards', () => {
     expect(isAgentAutomationMetadata({ webdriver: true })).toBe(true);
     expect(isAgentAutomationMetadata({})).toBe(false);
     Object.defineProperty(navigator, 'webdriver', { configurable: true, get: () => true });
-    expect(getClientAutomationMetadata()).toEqual({ webdriver: true });
+    expect(getClientAutomationMetadata()).toEqual({ webdriver: true, grok_build: true });
     Object.defineProperty(navigator, 'webdriver', { configurable: true, get: () => false });
     expect(getClientAutomationMetadata()).toEqual({});
+  });
+
+  it('flags Grok Build hits and keeps real Chrome', () => {
+    expect(isGrokBuildUserAgent('Mozilla/5.0 GrokBuild Chrome/131')).toBe(true);
+    expect(isGrokBuildUserAgent('Mozilla/5.0 grok-build')).toBe(true);
+    expect(isGrokBuildHit({ metadata: { grok_build: true } })).toBe(true);
+    expect(isGrokBuildHit({ metadata: { webdriver: true } })).toBe(true);
+    expect(isGrokBuildHit({ userAgent: 'Mozilla/5.0 HeadlessChrome/131' })).toBe(true);
+    expect(isGrokBuildHit({ userAgent: 'Mozilla/5.0 Chrome' })).toBe(false);
+    expect(isGrokBuildHit({ metadata: {}, userAgent: 'Mozilla/5.0 Chrome' })).toBe(false);
   });
 
   it('flags smoke referrer codes', () => {

@@ -13,6 +13,8 @@ export {
   getVisitorEventIp,
   groupVisitorEventsByIp,
   isTestVisitorFunnelEvent,
+  isGrokBuildVisitorEvent,
+  shouldClearGrokBuildVisitorEvent,
   shouldClearJunkVisitorEvent,
   filterTestVisitorFunnelEvents,
   countTestVisitorFunnelEvents,
