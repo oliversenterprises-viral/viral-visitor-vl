@@ -1,12 +1,23 @@
 /**
  * First screen after the owner password: six numbers + one feed.
  * Server only. No Claims / Promoters / Died-waiting tiles.
+ * Command order names the hole. Loop strip is not extra tiles.
  */
 
 import { invokeAdminAction } from '../lib/admin-action-client';
 import { escapeHtml } from '../lib/escape-html';
 import { formatEventTimestampLabel } from '../lib/stats-helpers';
 import { showToast } from '../ui';
+import {
+  hqCommandOrder,
+  hqDefaultFeedFilter,
+  hqFeedFilterLabel,
+  hqFeedKindForLoopStep,
+  hqLoopStepForFeedFilter,
+  hqLoopSteps,
+  hqNormalizeFeedFilter,
+  type HqFeedFilter,
+} from './owner-funnel-command';
 import {
   emptyOwnerFunnelGsc,
   formatGscCount,
@@ -23,6 +34,8 @@ import {
 
 const SKELETON = `
   <div class="space-y-4 py-1" data-owner-funnel-desk="1">
+    <div class="h-20 skeleton rounded-2xl"></div>
+    <div class="h-16 skeleton rounded-2xl"></div>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
       <div class="h-24 skeleton rounded-2xl"></div>
       <div class="h-24 skeleton rounded-2xl"></div>
@@ -154,13 +167,82 @@ function renderGscCard(gsc: OwnerFunnelGscMetrics): string {
           ? `<p class="text-[12px] text-amber-200/90 mb-3" data-owner-desk-gsc-note="${escapeHtml(status)}">${escapeHtml(note)}</p>`
           : ''
       }
-      <div class="grid md:grid-cols-2 gap-3">
-        ${gscList('Tool pages', gsc.toolPages, 'tools')}
-        ${gscList('Top searches', gsc.topSearches, 'searches')}
-        ${gscList('Other pages', gsc.otherPages, 'pages')}
-        ${gscList('Search countries', gsc.countries, 'countries')}
-      </div>
+      <details class="hq-gsc-lists" data-hq-gsc-lists="${escapeHtml(status)}" ${status === 'ok' || status === 'ok-cached' ? '' : 'open'}>
+        <summary class="hq-gsc-lists-summary">Search lists</summary>
+        <div class="grid md:grid-cols-2 gap-3 mt-2">
+          ${gscList('Tool pages', gsc.toolPages, 'tools')}
+          ${gscList('Top searches', gsc.topSearches, 'searches')}
+          ${gscList('Other pages', gsc.otherPages, 'pages')}
+          ${gscList('Search countries', gsc.countries, 'countries')}
+        </div>
+      </details>
     </section>`;
+}
+
+function renderCommandOrder(metrics: OwnerFunnelDeskMetrics): string {
+  const order = hqCommandOrder(metrics);
+  const evidence = order.evidence
+    ? `<p class="hq-order-evidence" data-hq-order-evidence>${escapeHtml(order.evidence)}</p>`
+    : '';
+  return `
+    <section
+      class="hq-order hq-order--${escapeHtml(order.severity)}"
+      data-hq-command-order="${escapeHtml(order.id)}"
+      role="status"
+      aria-live="polite"
+    >
+      <div class="hq-order-kicker">Order</div>
+      <div class="hq-order-title">${escapeHtml(order.title)}</div>
+      <p class="hq-order-detail">${escapeHtml(order.detail)}</p>
+      ${evidence}
+    </section>`;
+}
+
+function renderLoopStrip(metrics: OwnerFunnelDeskMetrics): string {
+  const steps = hqLoopSteps(metrics);
+  const body = steps
+    .map((step, i) => {
+      const hole = step.hole ? ' data-hq-loop-hole="1"' : '';
+      const join = i === 0 ? '' : `<div class="hq-loop-join" aria-hidden="true"></div>`;
+      const holeLabel = step.hole ? ', this is the hole' : '';
+      const drop = step.drop > 0 ? `<div class="hq-loop-drop tabular-nums">−${step.drop}</div>` : '';
+      return `${join}
+        <button type="button" class="hq-loop-step${step.hole ? ' hq-loop-step--hole' : ''}" data-hq-loop-step="${escapeHtml(step.id)}"${hole} aria-pressed="false" aria-label="${escapeHtml(step.label)} ${escapeHtml(String(step.value))}${escapeHtml(holeLabel)}">
+          <div class="hq-loop-value tabular-nums">${escapeHtml(String(step.value))}</div>
+          <div class="hq-loop-label">${escapeHtml(step.label)}</div>
+          ${
+            step.rate
+              ? `<div class="hq-loop-rate tabular-nums">${escapeHtml(step.rate)}</div>`
+              : `<div class="hq-loop-rate hq-loop-rate--empty">&nbsp;</div>`
+          }
+          ${drop}
+        </button>`;
+    })
+    .join('');
+  return `
+    <nav class="hq-loop" data-hq-loop aria-label="Loop last ${metrics.windowDays} days. Tap a step to filter the log.">
+      ${body}
+    </nav>`;
+}
+
+function renderFeedFilters(): string {
+  const chips: Array<{ id: HqFeedFilter; label: string }> = [
+    { id: 'all', label: 'All' },
+    { id: 'landed', label: 'Landed' },
+    { id: 'got_link', label: 'Got a link' },
+    { id: 'shared', label: 'Shared' },
+    { id: 'locked', label: 'Locked' },
+  ];
+  const buttons = chips
+    .map(
+      (chip) => `
+      <button type="button" class="hq-feed-filter" data-hq-feed-filter="${chip.id}" aria-pressed="false">${escapeHtml(chip.label)}</button>`,
+    )
+    .join('');
+  return `
+    <div class="hq-feed-filters" data-hq-feed-filters>
+      ${buttons}
+    </div>`;
 }
 
 function feedLine(row: OwnerFunnelFeedRow): string {
@@ -174,12 +256,46 @@ function feedLine(row: OwnerFunnelFeedRow): string {
         : `<span class="text-violet-200 font-semibold">${escapeHtml(row.code)}</span>`
       : '';
   return `
-    <div class="hq-desk-feed-row hq-desk-feed-row--${row.kind} flex flex-wrap items-baseline gap-x-2 gap-y-0.5 py-1.5 border-b border-white/5 last:border-0">
+    <div class="hq-desk-feed-row hq-desk-feed-row--${row.kind} flex flex-wrap items-baseline gap-x-2 gap-y-0.5 py-1.5 border-b border-white/5 last:border-0" data-hq-feed-kind="${escapeHtml(row.kind)}">
       <span class="text-[10px] text-zinc-500 tabular-nums">${escapeHtml(when)}</span>
-      <span class="text-sm text-white font-semibold">${escapeHtml(row.label)}</span>
+      <span class="hq-desk-feed-kind hq-desk-feed-kind--${escapeHtml(row.kind)}">${escapeHtml(row.label)}</span>
       ${codes}
       <span class="text-[11px] text-zinc-500">Via ${escapeHtml(row.viaLabel)}</span>
     </div>`;
+}
+
+export function applyHqDeskFilter(container: HTMLElement, raw: string): void {
+  const filter = hqNormalizeFeedFilter(raw);
+  container.dataset.hqDeskFilter = filter;
+  const rows = container.querySelectorAll<HTMLElement>('[data-hq-feed-kind]');
+  let visible = 0;
+  for (const row of rows) {
+    const show = filter === 'all' || row.getAttribute('data-hq-feed-kind') === filter;
+    row.hidden = !show;
+    if (show) visible += 1;
+  }
+  const empty = container.querySelector<HTMLElement>('[data-hq-feed-empty]');
+  if (empty) {
+    if (rows.length === 0) {
+      empty.hidden = false;
+    } else if (visible === 0) {
+      empty.hidden = false;
+      empty.textContent = `No ${hqFeedFilterLabel(filter)} events in this log.`;
+    } else {
+      empty.hidden = true;
+    }
+  }
+  const loopOn = hqLoopStepForFeedFilter(filter);
+  for (const step of container.querySelectorAll<HTMLElement>('[data-hq-loop-step]')) {
+    const on = loopOn !== 'all' && step.getAttribute('data-hq-loop-step') === loopOn;
+    step.classList.toggle('hq-loop-step--on', on);
+    step.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  for (const chip of container.querySelectorAll<HTMLElement>('[data-hq-feed-filter]')) {
+    const on = chip.getAttribute('data-hq-feed-filter') === filter;
+    chip.classList.toggle('hq-feed-filter--on', on);
+    chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
 }
 
 export function renderOwnerFunnelDeskView(
@@ -188,54 +304,78 @@ export function renderOwnerFunnelDeskView(
   _error?: string,
 ): void {
   container.classList.add('owner-funnel-desk');
+  const gsc = parseOwnerFunnelGsc(metrics.gsc);
+  const viewMetrics: OwnerFunnelDeskMetrics = {
+    ...metrics,
+    gsc,
+  };
 
-  const feedHtml = metrics.feed.length
-    ? metrics.feed.map(feedLine).join('')
-    : `<div class="text-sm text-zinc-500 py-2">No loop events in the last ${metrics.windowDays} days.</div>`;
+  const feedHtml = viewMetrics.feed.length
+    ? viewMetrics.feed.map(feedLine).join('')
+    : '';
+  const emptyFeed =
+    viewMetrics.feed.length === 0
+      ? `No loop events in the last ${viewMetrics.windowDays} days.`
+      : '';
 
-  const junkKept = metrics.junkVisits && metrics.junkVisits > 0
-    ? `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="1">${escapeHtml(String(metrics.junkVisits))} junk/test page views kept off these tiles. Search Console is separate.</p>`
+  const junkKept = viewMetrics.junkVisits && viewMetrics.junkVisits > 0
+    ? `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="1">${escapeHtml(String(viewMetrics.junkVisits))} junk/test page views kept off these tiles. Search Console is separate.</p>`
     : `<p class="text-[11px] text-zinc-500" data-owner-desk-junk-note="0">Junk/test page views stay off these tiles. Search Console is separate.</p>`;
 
   container.innerHTML = `
     <div data-owner-funnel-desk="1" class="hq-desk space-y-4">
-      <p class="text-sm text-zinc-400">Last ${metrics.windowDays} days · owner IP, test codes, webdriver, and junk sources excluded.</p>
+      ${renderCommandOrder(viewMetrics)}
+      ${renderLoopStrip(viewMetrics)}
+      <p class="text-sm text-zinc-400" data-hq-desk-meta>
+        Last ${viewMetrics.windowDays} days · owner IP, test codes, webdriver, and junk sources excluded.
+        <span class="hq-desk-updated" data-hq-desk-updated>Updated just now</span>
+        <span class="hq-desk-keyhint">R refreshes · 1–4 log · 0 all</span>
+      </p>
       <div class="grid grid-cols-2 md:grid-cols-3 gap-3" data-owner-desk-tiles>
-        ${tile('Visits', metrics.visits, 'Real page views — junk/test excluded', 'visits')}
-        ${tile('Friend landings', metrics.friendLandings, 'Unique people on /r/ or /a/', 'landings')}
-        ${tile('Get-link', metrics.getLink, 'Unique people who tapped Get my link', 'getlink')}
-        ${tile('Share', metrics.share, 'Verified send — not copy', 'share')}
-        ${tile('Locked', metrics.locked, 'Codes with a real friend credit', 'locked')}
+        ${tile('Visits', viewMetrics.visits, 'Real page views — junk/test excluded', 'visits')}
+        ${tile('Friend landings', viewMetrics.friendLandings, 'Unique people on /r/ or /a/', 'landings')}
+        ${tile('Get-link', viewMetrics.getLink, 'Unique people who tapped Get my link', 'getlink')}
+        ${tile('Share', viewMetrics.share, 'Verified send — not copy', 'share')}
+        ${tile('Locked', viewMetrics.locked, 'Codes with a real friend credit', 'locked')}
         ${tile(
           'Get-link rate',
-          metrics.getLinkRate,
-          metrics.friendLandings > 0 ? 'Get-link / Friend landings' : 'Get-link / Visits',
+          viewMetrics.getLinkRate,
+          viewMetrics.friendLandings > 0 ? 'Get-link / Friend landings' : 'Get-link / Visits',
           'rate',
         )}
       </div>
       ${junkKept}
-      ${renderGscCard(parseOwnerFunnelGsc(metrics.gsc))}
+      ${renderGscCard(gsc)}
       <section class="hq-desk-feed rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3">
         <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-2">
           Landed · Got a link · Shared · Locked
         </div>
+        ${renderFeedFilters()}
         <div data-owner-desk-feed class="max-h-80 overflow-y-auto">${feedHtml}</div>
+        <div class="text-sm text-zinc-500 py-2" data-hq-feed-empty ${emptyFeed ? '' : 'hidden'}>${escapeHtml(emptyFeed)}</div>
       </section>
       <div class="flex flex-wrap items-center gap-2">
-        <button type="button" data-owner-desk-refresh class="hq-desk-refresh text-xs px-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100">↻ Refresh</button>
+        <button type="button" data-owner-desk-refresh class="hq-desk-refresh text-xs px-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100" title="Refresh (R)" aria-label="Refresh HQ desk">↻ Refresh</button>
         <button type="button" data-owner-desk-clear-junk class="hq-desk-clear-junk text-xs px-3 py-1.5 rounded-2xl bg-amber-600/80 hover:bg-amber-600 text-white" title="Deletes junk/test visitor rows and zeros junk_hits only. Does not touch Google Search Console or the verify file.">Clear junk visits</button>
         <span class="text-[10px] text-zinc-500">Server only · GSC untouched</span>
       </div>
 
     </div>
   `;
+
+  const nextFilter = hqNormalizeFeedFilter(
+    container.dataset.hqDeskFilter || hqDefaultFeedFilter(viewMetrics),
+  );
+  applyHqDeskFilter(container, nextFilter);
+  bindDeskInteractions(container);
 }
 
-function bindRefresh(container: HTMLElement): void {
+function bindDeskInteractions(container: HTMLElement): void {
   if (container.dataset.ownerDeskBound === '1') return;
   container.dataset.ownerDeskBound = '1';
   container.addEventListener('click', (event) => {
-    const target = event.target as HTMLElement;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
     const btn = target.closest('[data-owner-desk-refresh]');
     if (btn && container.contains(btn)) {
       event.preventDefault();
@@ -243,9 +383,25 @@ function bindRefresh(container: HTMLElement): void {
       return;
     }
     const clearBtn = target.closest('[data-owner-desk-clear-junk]');
-    if (!clearBtn || !container.contains(clearBtn)) return;
-    event.preventDefault();
-    void clearJunkDeskVisits(container, clearBtn as HTMLButtonElement);
+    if (clearBtn && container.contains(clearBtn)) {
+      event.preventDefault();
+      void clearJunkDeskVisits(container, clearBtn as HTMLButtonElement);
+      return;
+    }
+    const chip = target.closest('button[data-hq-feed-filter]');
+    if (chip && container.contains(chip)) {
+      event.preventDefault();
+      applyHqDeskFilter(container, chip.getAttribute('data-hq-feed-filter') || 'all');
+      return;
+    }
+    const step = target.closest('button[data-hq-loop-step]');
+    if (step && container.contains(step)) {
+      event.preventDefault();
+      const id = step.getAttribute('data-hq-loop-step') || 'all';
+      const kind = hqFeedKindForLoopStep(id);
+      const current = hqNormalizeFeedFilter(container.dataset.hqDeskFilter);
+      applyHqDeskFilter(container, kind === current ? 'all' : kind);
+    }
   });
 }
 
@@ -306,10 +462,10 @@ async function refreshOwnerFunnelDesk(
 }
 
 export async function renderOwnerFunnelDesk(container: HTMLElement): Promise<void> {
-  bindRefresh(container);
+  bindDeskInteractions(container);
   container.innerHTML = SKELETON;
   try {
-    // Tiles come from get_owner_funnel_desk_counts (0052: exclusion must be true/false, never NULL).
+    // Tiles come from get_owner_funnel_desk (homepage ticker RPCs + last-N events).
     const result = await invokeAdminAction<OwnerFunnelDeskMetrics>(
       'get_owner_funnel_desk',
       {},

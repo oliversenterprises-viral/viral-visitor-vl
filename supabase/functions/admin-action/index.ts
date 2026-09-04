@@ -1008,7 +1008,7 @@ Deno.serve(async (req: Request) => {
         );
 
       try {
-        // Homepage RPCs are primary (index LIMIT). Skip get_owner_funnel_desk_counts.
+        // Homepage RPCs are primary (index LIMIT). Skip the old COUNT DISTINCT RPC.
         // Same Deno.env.get path as ADMIN_ACTION_SECRET — do not log the JSON.
         const secret = String(Deno.env.get('GSC_SERVICE_ACCOUNT_JSON') || '').trim();
         const site = String(Deno.env.get('GSC_SITE_URL') || '').trim();

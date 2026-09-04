@@ -715,21 +715,57 @@
     <!-- Admin Dashboard Modal -->
     <div id="admin-modal" onclick="closeAdminPanel()" class="hidden fixed inset-0 bg-black/90 z-[980] flex items-center justify-center vr-modal-overlay">
         <div onclick="event.stopImmediatePropagation()" class="hq-command vr-modal-panel border border-white/10 rounded-3xl w-full max-w-6xl mx-4 max-h-[90vh] overflow-hidden flex flex-col bg-zinc-950">
-            <div class="hq-command-head px-8 py-6 border-b border-white/10 flex items-center justify-between">
+            <div class="hq-command-head px-4 py-4 sm:px-8 sm:py-6 border-b border-white/10 flex items-center justify-between gap-3">
                 <div>
                     <div class="hq-command-kicker">HQ Command</div>
-                    <div class="font-bold text-2xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-rose-400"></i> Run the funnel</div>
-                    <p class="text-sm text-zinc-400 mt-1">One loop desk. Server numbers only.</p>
+                    <div class="font-bold text-xl sm:text-2xl flex items-center gap-3"><i class="fa-solid fa-shield-halved text-rose-400"></i> Run the funnel</div>
+                    <p class="text-sm text-zinc-400 mt-1">Six numbers. One hole. Server only.</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button type="button" id="admin-more-tools-btn" class="hq-command-more px-3 py-2 text-xs font-semibold rounded-2xl border border-white/15 text-zinc-300 hover:text-white whitespace-nowrap" aria-expanded="false">More</button>
-                    <button onclick="closeAdminPanel()" class="hq-command-close text-3xl text-zinc-400 hover:text-white">✕</button>
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <button type="button" id="admin-more-tools-btn" class="hq-command-more px-3 py-2 text-xs font-semibold rounded-2xl border border-white/15 text-zinc-300 hover:text-white whitespace-nowrap" aria-expanded="false" aria-label="More HQ tools">More</button>
+                    <button type="button" onclick="closeAdminPanel()" class="hq-command-close text-3xl text-zinc-400 hover:text-white" aria-label="Close HQ Command">✕</button>
                 </div>
             </div>
 
             <div id="admin-more-tools-host"></div>
-            <div class="p-8 overflow-auto flex-1" id="admin-content">
+            <div class="p-4 sm:p-8 overflow-auto flex-1" id="admin-content">
                 <div data-owner-funnel-desk="1" class="hq-desk space-y-4">
+                    <section class="hq-order hq-order--blind" data-hq-command-order="gsc-blind" role="status">
+                        <div class="hq-order-kicker">Order</div>
+                        <div class="hq-order-title">Search Console is not on this desk.</div>
+                        <p class="hq-order-detail">Numbers load from the server GSC_SERVICE_ACCOUNT_JSON secret. Tiles stay at zero until that secret is set.</p>
+                    </section>
+                    <nav class="hq-loop" data-hq-loop aria-label="Loop last 7 days. Tap a step to filter the log.">
+                        <button type="button" class="hq-loop-step hq-loop-step--hole" data-hq-loop-step="visits" data-hq-loop-hole="1" aria-pressed="false" aria-label="Visits 0, this is the hole">
+                            <div class="hq-loop-value tabular-nums">0</div>
+                            <div class="hq-loop-label">Visits</div>
+                            <div class="hq-loop-rate hq-loop-rate--empty">&nbsp;</div>
+                        </button>
+                        <div class="hq-loop-join" aria-hidden="true"></div>
+                        <button type="button" class="hq-loop-step" data-hq-loop-step="landings" aria-pressed="false" aria-label="Landings 0">
+                            <div class="hq-loop-value tabular-nums">0</div>
+                            <div class="hq-loop-label">Landings</div>
+                            <div class="hq-loop-rate tabular-nums">—</div>
+                        </button>
+                        <div class="hq-loop-join" aria-hidden="true"></div>
+                        <button type="button" class="hq-loop-step" data-hq-loop-step="getlink" aria-pressed="false" aria-label="Get-link 0">
+                            <div class="hq-loop-value tabular-nums">0</div>
+                            <div class="hq-loop-label">Get-link</div>
+                            <div class="hq-loop-rate tabular-nums">—</div>
+                        </button>
+                        <div class="hq-loop-join" aria-hidden="true"></div>
+                        <button type="button" class="hq-loop-step" data-hq-loop-step="share" aria-pressed="false" aria-label="Share 0">
+                            <div class="hq-loop-value tabular-nums">0</div>
+                            <div class="hq-loop-label">Share</div>
+                            <div class="hq-loop-rate tabular-nums">—</div>
+                        </button>
+                        <div class="hq-loop-join" aria-hidden="true"></div>
+                        <button type="button" class="hq-loop-step" data-hq-loop-step="locked" aria-pressed="false" aria-label="Locked 0">
+                            <div class="hq-loop-value tabular-nums">0</div>
+                            <div class="hq-loop-label">Locked</div>
+                            <div class="hq-loop-rate tabular-nums">—</div>
+                        </button>
+                    </nav>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3" data-owner-desk-tiles>
                         <article class="hq-desk-tile hq-desk-tile--visits rounded-2xl border border-white/10 bg-zinc-900/50 px-3 py-3" data-hq-tile="visits">
                             <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold">Visits</div>
@@ -789,23 +825,33 @@
                             </article>
                         </div>
                         <p class="text-[12px] text-amber-200/90 mb-3" data-owner-desk-gsc-note="missing_credentials">Search Console is verified. Numbers load from the server GSC_SERVICE_ACCOUNT_JSON secret.</p>
-                        <div class="grid md:grid-cols-2 gap-3">
-                            <div class="hq-gsc-list" data-owner-desk-gsc-list="tools">
-                                <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-1">Tool pages</div>
+                        <details class="hq-gsc-lists" data-hq-gsc-lists="missing_credentials" open>
+                            <summary class="hq-gsc-lists-summary">Search lists</summary>
+                            <div class="grid md:grid-cols-2 gap-3 mt-2">
+                                <div class="hq-gsc-list" data-owner-desk-gsc-list="tools">
+                                    <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-1">Tool pages</div>
+                                </div>
+                                <div class="hq-gsc-list" data-owner-desk-gsc-list="searches">
+                                    <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-1">Top searches</div>
+                                </div>
+                                <div class="hq-gsc-list" data-owner-desk-gsc-list="pages">
+                                    <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-1">Other pages</div>
+                                </div>
+                                <div class="hq-gsc-list" data-owner-desk-gsc-list="countries">
+                                    <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-1">Search countries</div>
+                                </div>
                             </div>
-                            <div class="hq-gsc-list" data-owner-desk-gsc-list="searches">
-                                <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-1">Top searches</div>
-                            </div>
-                            <div class="hq-gsc-list" data-owner-desk-gsc-list="pages">
-                                <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-1">Other pages</div>
-                            </div>
-                            <div class="hq-gsc-list" data-owner-desk-gsc-list="countries">
-                                <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-1">Search countries</div>
-                            </div>
-                        </div>
+                        </details>
                     </section>
                     <section class="hq-desk-feed rounded-2xl border border-white/10 bg-zinc-950/40 px-4 py-3">
                         <div class="text-[10px] uppercase tracking-wide text-zinc-500 font-semibold mb-2">Landed · Got a link · Shared · Locked</div>
+                        <div class="hq-feed-filters" data-hq-feed-filters>
+                            <button type="button" class="hq-feed-filter hq-feed-filter--on" data-hq-feed-filter="all" aria-pressed="true">All</button>
+                            <button type="button" class="hq-feed-filter" data-hq-feed-filter="landed" aria-pressed="false">Landed</button>
+                            <button type="button" class="hq-feed-filter" data-hq-feed-filter="got_link" aria-pressed="false">Got a link</button>
+                            <button type="button" class="hq-feed-filter" data-hq-feed-filter="shared" aria-pressed="false">Shared</button>
+                            <button type="button" class="hq-feed-filter" data-hq-feed-filter="locked" aria-pressed="false">Locked</button>
+                        </div>
                     </section>
                     <div class="flex flex-wrap items-center gap-2">
                         <button type="button" data-owner-desk-refresh class="hq-desk-refresh text-xs px-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 text-zinc-100">↻ Refresh</button>

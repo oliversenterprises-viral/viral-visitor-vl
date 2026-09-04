@@ -209,6 +209,8 @@ describe('owner funnel desk metrics', () => {
     });
     renderOwnerFunnelDeskView(el, metrics);
     expect(el.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
+    expect(el.querySelector('[data-hq-command-order]')).not.toBeNull();
+    expect(el.querySelectorAll('[data-hq-loop-step]').length).toBe(5);
     expect(el.textContent).toMatch(/Visits/);
     expect(el.textContent).toMatch(/Friend landings/);
     expect(el.textContent).toMatch(/Get-link/);

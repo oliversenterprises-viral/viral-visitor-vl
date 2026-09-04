@@ -85,6 +85,10 @@ describe('admin one-loop desk', () => {
     expect(first).toMatch(/Locked/);
     expect(first).toMatch(/Get-link rate/);
     expect(content.querySelectorAll('[data-owner-desk-tiles] article').length).toBe(6);
+    expect(content.querySelector('[data-hq-command-order]')).not.toBeNull();
+    expect(content.querySelector('[data-hq-loop]')).not.toBeNull();
+    expect(content.querySelectorAll('[data-hq-loop-step]').length).toBe(5);
+    expect(content.querySelectorAll('[data-hq-feed-filter]').length).toBe(5);
     expect(content.querySelector('[data-owner-desk-gsc]')).not.toBeNull();
     expect(content.textContent).toMatch(/Google Search · tools & pages/);
     expect(content.textContent).toMatch(

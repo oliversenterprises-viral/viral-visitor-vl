@@ -63,6 +63,54 @@ function wireAdminMoreButton(): void {
   });
 }
 
+function hqCommandModalOpen(): boolean {
+  const modal = document.getElementById('admin-modal');
+  if (!modal) return false;
+  return !modal.classList.contains('hidden');
+}
+
+function onHqCommandKey(event: KeyboardEvent): void {
+  if (!hqCommandModalOpen()) return;
+  if (event.metaKey || event.ctrlKey || event.altKey) return;
+  const target = event.target;
+  if (
+    target instanceof HTMLElement &&
+    target.closest('input, textarea, select, [contenteditable="true"]')
+  ) {
+    return;
+  }
+  if (isAdminMoreOpen()) return;
+  if (event.key === 'r' || event.key === 'R') {
+    const refresh = document.querySelector<HTMLButtonElement>('[data-owner-desk-refresh]');
+    if (!refresh || refresh.disabled) return;
+    event.preventDefault();
+    refresh.click();
+    return;
+  }
+  const feedKey: Record<string, string> = {
+    '0': 'all',
+    '1': 'landed',
+    '2': 'got_link',
+    '3': 'shared',
+    '4': 'locked',
+  };
+  const filter = feedKey[event.key];
+  if (!filter) return;
+  const chip = document.querySelector<HTMLButtonElement>(
+    `button[data-hq-feed-filter="${filter}"]`,
+  );
+  if (!chip) return;
+  event.preventDefault();
+  chip.click();
+}
+
+function wireHqCommandKeys(): void {
+  const rootEl = document.documentElement;
+  if (rootEl.dataset.vrHqKeys === '1') return;
+  rootEl.dataset.vrHqKeys = '1';
+  document.addEventListener('keydown', onHqCommandKey);
+}
+
 export function initAdminDesk(): void {
   const rootEl = document.documentElement;
   rootEl.setAttribute(ATTR, '1');
@@ -70,6 +118,7 @@ export function initAdminDesk(): void {
   rootEl.removeAttribute('data-vr-admin-stats-more');
   rootEl.removeAttribute(MORE_ATTR);
   wireAdminMoreButton();
+  wireHqCommandKeys();
   setAdminMore(false);
   const more = document.getElementById(MORE_BTN_ID);
   if (more) more.removeAttribute('hidden');
