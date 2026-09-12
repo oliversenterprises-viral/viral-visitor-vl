@@ -111,6 +111,7 @@ body {
 .site-card.hot { box-shadow: 0 0 0 1px rgba(255, 61, 138, 0.35); }
 .og-card .brag { color: var(--ink); font-weight: 700; margin: 8px 0; }
 .celebrate-card .brag { color: var(--muted); font-size: 14px; }
+.celebrate-card .btn { width: 100%; }
 .celebrate-card .btn.ghost { margin-top: 8px; }
 .kit-near { color: var(--hot); font-weight: 800; margin: 0 0 10px; }
 .btn.volt { background: var(--volt); color: #071000; }
@@ -215,7 +216,7 @@ body {
 .foot { margin-top: 36px; color: var(--muted); font-size: 13px; line-height: 1.6; }
 
 .toast {
-  position: fixed; left: 50%; bottom: calc(18px + var(--safe)); transform: translateX(-50%);
+  position: fixed; left: 50%; bottom: calc(108px + var(--safe)); transform: translateX(-50%);
   background: var(--ink); color: #111; padding: 10px 14px; border-radius: 999px; font-weight: 700;
   z-index: 40; opacity: 0; pointer-events: none; transition: opacity 0.2s;
 }
