@@ -42,6 +42,12 @@ describe('Phase 1 i18n (CF sibling)', () => {
       expect(MESSAGES[loc]['how.step2_desc_drop'].toLowerCase()).not.toMatch(/every visit can count|cada visita puede contar/);
     }
   });
+
+  it('keeps the CF hero title as win-the-homepage, not the old banner line', () => {
+    expect(MESSAGES.en['hero.title_line1']).toBe('Win the homepage.');
+    expect(MESSAGES.es['hero.title_line1']).toBe('Gana la portada.');
+    expect(MESSAGES.fr['hero.title_line1']).toMatch(/page d.accueil/i);
+  });
 });
 
 describe('TE / embed edge i18n', () => {
