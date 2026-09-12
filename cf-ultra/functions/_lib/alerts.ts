@@ -1,3 +1,4 @@
+import { shouldSkipStats } from './exclude';
 import { kvBound, type UltraEnv } from './store';
 
 export const ALERT_KINDS = [
@@ -53,6 +54,8 @@ export type InboxItem = {
   count: number;
   adminPath: string;
   delivered: 'inbox' | 'telegram' | 'webhook' | 'email' | 'both' | 'skipped_quiet';
+  /** Plain-language reason this row exists — shown in HQ. */
+  why: string;
 };
 
 export type AlertPayload = {
@@ -64,6 +67,7 @@ export type AlertPayload = {
   adminPath?: string;
   /** When set, overrides the default batch vs immediate rule. */
   immediate?: boolean;
+  why?: string;
 };
 
 const PREFS_KEY = 'ultra:alert-prefs';
@@ -76,17 +80,35 @@ const BATCH_FLUSH_MS = 90_000;
 const BATCH_SIZE = 8;
 const INBOX_PUT_MS = 20_000;
 
+/** High-signal only. Track pageviews / lands / shares never flip these on. */
 const DEFAULT_EVENTS: Record<AlertKind, boolean> = {
-  race_started: true,
-  first_share: true,
-  friend_land: true,
+  race_started: false,
+  first_share: false,
+  friend_land: false,
   credit: true,
   rung_rising: true,
   rung_challenger: true,
   rung_banner: true,
-  spike: true,
+  spike: false,
   digest: false,
 };
+
+export function alertWhy(kind: AlertKind, extra: { host?: string; count?: number } = {}): string {
+  const host = extra.host ? ` · ${extra.host}` : '';
+  const n = extra.count && extra.count > 1 ? ` ×${extra.count}` : '';
+  const reasons: Record<AlertKind, string> = {
+    credit: `Verified unique friend Get-my-link credit (join write)${n}${host}.`,
+    rung_rising: `Rung unlock on a real credit — Rising${host}.`,
+    rung_challenger: `Rung unlock on a real credit — Challenger${host}.`,
+    rung_banner: `Rung unlock on a real credit — #1 banner${host}.`,
+    race_started: `New site pasted (join write). Off by default${host}.`,
+    first_share: `Share click. Off by default — /api/track no longer fires this${host}.`,
+    friend_land: `Share-link open. Off by default — /api/track no longer fires this${host}.`,
+    spike: `Rate-limit / abuse flag. Off by default${host}.`,
+    digest: 'Scheduled funnel digest. Off unless you set hourly/daily — never auto-enabled.',
+  };
+  return reasons[kind];
+}
 
 export function defaultAlertPrefs(): AlertPrefs {
   return {
@@ -242,7 +264,6 @@ export function parseAlertPrefsBody(body: unknown, current: AlertPrefs): AlertPr
     next.webhookUrl = current.webhookUrl;
   }
   if (typeof incoming.telegram === 'boolean') next.telegram = incoming.telegram;
-  if (next.digest !== 'off') next.events.digest = true;
   return next;
 }
 
@@ -355,7 +376,7 @@ async function ensureInbox(env: UltraEnv): Promise<InboxItem[]> {
   if (kvBound(env)) {
     try {
       const raw = await env.BOARD!.get(INBOX_KEY, 'json');
-      m.inbox = Array.isArray(raw) ? (raw as InboxItem[]) : [];
+      m.inbox = Array.isArray(raw) ? (raw as InboxItem[]).map(hydrateInboxItem) : [];
     } catch {
       m.inbox = [];
     }
@@ -537,6 +558,13 @@ function deliverLater(
   })();
 }
 
+function hydrateInboxItem(raw: InboxItem): InboxItem {
+  return {
+    ...raw,
+    why: raw.why || alertWhy(raw.kind, { host: raw.host, count: raw.count }),
+  };
+}
+
 async function commitItem(
   env: UltraEnv,
   origin: string,
@@ -558,6 +586,7 @@ async function commitItem(
     count,
     adminPath,
     delivered: 'inbox',
+    why: payload.why || alertWhy(payload.kind, { host: payload.host, count }),
   };
   const inbox = await ensureInbox(env);
   inbox.unshift(item);
@@ -624,9 +653,13 @@ export async function emitAlert(
   env: UltraEnv,
   origin: string,
   payload: AlertPayload,
-  opts: { force?: boolean } = {},
+  opts: { force?: boolean; request?: Request } = {},
 ): Promise<InboxItem | null> {
   rememberAlertOrigin(origin);
+  if (!opts.force && opts.request) {
+    const gate = await shouldSkipStats(env, opts.request);
+    if (gate.skip) return null;
+  }
   const prefs = await loadAlertPrefs(env);
   if (!opts.force && payload.kind === 'digest' && prefs.digest === 'off') return null;
   if (!opts.force && payload.kind !== 'digest' && !prefs.events[payload.kind]) return null;
@@ -671,8 +704,13 @@ export async function emitJoinAlerts(args: {
   creditHost?: string;
   previousRung: string;
   nextRung: string;
+  request?: Request;
 }): Promise<void> {
-  const { env, origin, host } = args;
+  const { env, origin, host, request } = args;
+  if (request) {
+    const gate = await shouldSkipStats(env, request);
+    if (gate.skip) return;
+  }
   if (args.isNewSite) {
     await emitAlert(env, origin, {
       kind: 'race_started',
@@ -680,7 +718,7 @@ export async function emitJoinAlerts(args: {
       body: `${host} just entered the weekly race.`,
       host,
       count: 1,
-    });
+    }, { request });
   }
   const creditHost = args.creditHost || host;
   if (args.credited && args.creditN > 0) {
@@ -699,7 +737,7 @@ export async function emitJoinAlerts(args: {
       host: creditHost,
       count: args.creditN <= 3 ? args.creditN : 1,
       immediate: args.creditN <= 3,
-    });
+    }, { request });
   }
   if (args.previousRung !== args.nextRung) {
     if (args.nextRung === 'rising') {
@@ -708,32 +746,32 @@ export async function emitJoinAlerts(args: {
         title: 'Rising unlocked',
         body: `${creditHost} earned a unique credit inside the first hour.`,
         host: creditHost,
-      });
+      }, { request });
     } else if (args.nextRung === 'challenger') {
       await emitAlert(env, origin, {
         kind: 'rung_challenger',
         title: 'Challenger',
         body: `${creditHost} is #2 or #3 this week.`,
         host: creditHost,
-      });
+      }, { request });
     } else if (args.nextRung === 'banner') {
       await emitAlert(env, origin, {
         kind: 'rung_banner',
         title: '#1 banner claim',
         body: `${creditHost} is the weekly lead.`,
         host: creditHost,
-      });
+      }, { request });
     }
   }
 }
 
-export async function emitSpikeAlert(env: UltraEnv, origin: string, reason: string, ip?: string): Promise<void> {
+export async function emitSpikeAlert(env: UltraEnv, origin: string, reason: string, ip?: string, request?: Request): Promise<void> {
   await emitAlert(env, origin, {
     kind: 'spike',
     title: 'Spike / abuse flag',
     body: `${reason}${ip ? ` · ${ip}` : ''}`,
     count: 1,
-  });
+  }, { request });
 }
 
 export async function emitDigest(
@@ -800,6 +838,7 @@ export async function testAlert(env: UltraEnv, origin: string): Promise<InboxIte
       count: 1,
       adminPath: '/admin/?focus=test',
       immediate: true,
+      why: 'Owner HQ Test ping — you clicked Test ping. Not a visitor event.',
     },
     { forceWebhook: true },
   );

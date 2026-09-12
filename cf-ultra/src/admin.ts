@@ -50,21 +50,22 @@ type Dash = {
       count: number;
       adminPath: string;
       delivered: string;
+      why?: string;
     }[];
   };
   health: { kv: boolean; degraded: boolean; cache: string; players: number; sites: number; credits: number; writePolicy: string; assumedPlan: string };
 };
 
 const ALERT_LABELS: Record<string, string> = {
-  race_started: 'New site / race started',
-  first_share: 'First share click for a site',
-  friend_land: 'Friend land via referral (batched)',
-  credit: 'Get my link / verified credit (1st–3rd instant)',
-  rung_rising: 'Rising unlocked',
-  rung_challenger: 'Challenger',
-  rung_banner: '#1 banner claim',
-  spike: 'Spike / abuse flags (batched)',
-  digest: 'Write digest into the inbox',
+  credit: 'Verified unique credit (default on)',
+  rung_rising: 'Rising unlocked (default on)',
+  rung_challenger: 'Challenger (default on)',
+  rung_banner: '#1 banner claim (default on)',
+  race_started: 'New site pasted (default off)',
+  first_share: 'First share click (default off — track never fires)',
+  friend_land: 'Friend land (default off — track never fires)',
+  spike: 'Spike / abuse (default off)',
+  digest: 'Write digest into the inbox (never auto-enabled)',
 };
 
 const root = document.querySelector<HTMLElement>('#hq')!;
@@ -252,7 +253,7 @@ function render(d: Dash): void {
     <div class="hq-grid two" data-alerts>
       <section class="lane" id="alerts-inbox">
         <h3>Owner alerts inbox</h3>
-        <p class="note">High-signal conversions only — not pageviews. Telegram is the default owner ping when secrets are set. Demo / missing secrets still log here. Bursts batch (e.g. “12 credits in 5m”).</p>
+        <p class="note">High-signal only by default (credit + rung climbs). Pageviews, lands, and share clicks from <code>/api/track</code> never enqueue. Owner HQ sessions and excluded IPs never enqueue. Each row shows <strong>why</strong> it fired.</p>
         <ol class="activity inbox">${
           (d.alerts?.inbox || []).length
             ? d.alerts.inbox
@@ -260,10 +261,11 @@ function render(d: Dash): void {
                   const focus = new URLSearchParams(location.search).get('focus');
                   const focusHost = new URLSearchParams(location.search).get('host');
                   const on = (focus && e.kind === focus) || (focusHost && e.host === focusHost);
-                  return `<li class="${on ? 'focus' : ''}"><span><strong>${esc(e.title)}</strong> · ${esc(e.body)}${e.host ? ` · ${esc(e.host)}` : ''} <small>${esc(e.delivered)}</small></span><a href="${esc(e.adminPath)}">${new Date(e.at).toLocaleString()}</a></li>`;
+                  const why = e.why || '';
+                  return `<li class="${on ? 'focus' : ''}"><span><strong>${esc(e.title)}</strong> · ${esc(e.body)}${e.host ? ` · ${esc(e.host)}` : ''} <small>${esc(e.delivered)}</small>${why ? `<small class="why">Why: ${esc(why)}</small>` : ''}</span><a href="${esc(e.adminPath)}">${new Date(e.at).toLocaleString()}</a></li>`;
                 })
                 .join('')
-            : '<li><span>No owner alerts yet. Paste a site or hit Test ping.</span></li>'
+            : '<li><span>No owner alerts. A unique friend credit or rung unlock will land here — or hit Test ping.</span></li>'
         }</ol>
       </section>
       <section class="lane">

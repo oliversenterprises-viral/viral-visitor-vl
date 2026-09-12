@@ -24,10 +24,13 @@ import {
   telegramConfigured,
   testAlert,
 } from '../functions/_lib/alerts';
+import { HQ_COOKIE, issueSession } from '../functions/_lib/admin-auth';
+import { addExcludeIp, resetExcludeRuntime } from '../functions/_lib/exclude';
 import type { UltraEnv } from '../functions/_lib/store';
 
 afterEach(() => {
   resetAlertRuntime();
+  resetExcludeRuntime();
 });
 
 const emptyEnv: UltraEnv = {};
@@ -35,10 +38,14 @@ const emptyEnv: UltraEnv = {};
 describe('alert prefs', () => {
   it('defaults high-signal events on and digest off', () => {
     const p = defaultAlertPrefs();
-    expect(p.events.race_started).toBe(true);
     expect(p.events.credit).toBe(true);
+    expect(p.events.rung_rising).toBe(true);
+    expect(p.events.rung_challenger).toBe(true);
     expect(p.events.rung_banner).toBe(true);
-    expect(p.events.spike).toBe(true);
+    expect(p.events.race_started).toBe(false);
+    expect(p.events.first_share).toBe(false);
+    expect(p.events.friend_land).toBe(false);
+    expect(p.events.spike).toBe(false);
     expect(p.digest).toBe('off');
     expect(p.events.digest).toBe(false);
     expect(p.telegram).toBe(true);
@@ -47,9 +54,15 @@ describe('alert prefs', () => {
   it('normalizes junk without inventing a webhook', () => {
     const p = normalizeAlertPrefs({ events: { credit: false, nope: true }, webhookUrl: 'ftp://x', digest: 'weekly' });
     expect(p.events.credit).toBe(false);
-    expect(p.events.race_started).toBe(true);
+    expect(p.events.race_started).toBe(false);
     expect(p.webhookUrl).toBe('');
     expect(p.digest).toBe('off');
+  });
+
+  it('does not auto-enable digest when HQ picks hourly', () => {
+    const next = parseAlertPrefsBody({ digest: 'hourly' }, defaultAlertPrefs());
+    expect(next.digest).toBe('hourly');
+    expect(next.events.digest).toBe(false);
   });
 
   it('keeps the stored webhook when the admin posts a masked value', () => {
@@ -101,7 +114,7 @@ describe('webhook helpers', () => {
 });
 
 describe('inbox + batching (no webhook)', () => {
-  it('logs a new race to the inbox without a webhook secret', async () => {
+  it('does not inbox a new site paste (race_started is off by default)', async () => {
     await emitJoinAlerts({
       env: emptyEnv,
       origin: 'http://localhost:8788',
@@ -112,10 +125,7 @@ describe('inbox + batching (no webhook)', () => {
       previousRung: 'entered',
       nextRung: 'entered',
     });
-    const inbox = await readAlertInbox(emptyEnv);
-    expect(inbox[0]?.kind).toBe('race_started');
-    expect(inbox[0]?.adminPath).toContain('/admin/?focus=race_started');
-    expect(inbox[0]?.delivered).toBe('inbox');
+    expect(await readAlertInbox(emptyEnv)).toEqual([]);
   });
 
   it('clears the inbox and the KV key', async () => {
@@ -136,11 +146,12 @@ describe('inbox + batching (no webhook)', () => {
       env,
       origin: 'http://localhost:8788',
       host: 'wipe-inbox.test',
-      isNewSite: true,
-      credited: false,
-      creditN: 0,
+      isNewSite: false,
+      credited: true,
+      creditN: 1,
+      creditHost: 'wipe-inbox.test',
       previousRung: 'entered',
-      nextRung: 'entered',
+      nextRung: 'rising',
     });
     expect((await readAlertInbox(env)).length).toBeGreaterThan(0);
     const result = await clearAlertInbox(env);
@@ -149,7 +160,7 @@ describe('inbox + batching (no webhook)', () => {
     expect(JSON.parse(store.get('ultra:alert-inbox') || 'null')).toEqual([]);
   });
 
-  it('batches friend lands until flush', async () => {
+  it('ignores friend_land by default (track must not refill the inbox)', async () => {
     for (let i = 0; i < 3; i++) {
       await emitAlert(emptyEnv, 'http://localhost:8788', {
         kind: 'friend_land',
@@ -159,19 +170,14 @@ describe('inbox + batching (no webhook)', () => {
         count: 1,
       });
     }
-    expect(pendingBatchCount()).toBe(1);
+    expect(pendingBatchCount()).toBe(0);
     expect(await readAlertInbox(emptyEnv)).toHaveLength(0);
-    await flushAlertBatches(emptyEnv, 'http://localhost:8788', true);
-    const inbox = await readAlertInbox(emptyEnv);
-    expect(inbox[0]?.count).toBe(3);
-    expect(inbox[0]?.title).toMatch(/×3/);
   });
 
-  it('dedupes first share per host', async () => {
+  it('does not inbox first-share clicks by default', async () => {
     await maybeFirstShareAlert(emptyEnv, 'http://localhost:8788', 'once.com');
     await maybeFirstShareAlert(emptyEnv, 'http://localhost:8788', 'once.com');
-    const inbox = await readAlertInbox(emptyEnv);
-    expect(inbox.filter((i) => i.kind === 'first_share')).toHaveLength(1);
+    expect(await readAlertInbox(emptyEnv)).toEqual([]);
   });
 
   it('pings 1st credit immediately and batches later credits', async () => {
@@ -189,6 +195,7 @@ describe('inbox + batching (no webhook)', () => {
     let inbox = await readAlertInbox(emptyEnv);
     expect(inbox.some((i) => i.kind === 'credit' && i.title === 'Credit #1')).toBe(true);
     expect(inbox.some((i) => i.kind === 'rung_rising')).toBe(true);
+    expect(inbox.find((i) => i.kind === 'credit')?.why).toMatch(/Verified unique friend/);
 
     await emitJoinAlerts({
       env: emptyEnv,
@@ -204,6 +211,50 @@ describe('inbox + batching (no webhook)', () => {
     expect(pendingBatchCount()).toBe(1);
     inbox = await readAlertInbox(emptyEnv);
     expect(inbox.filter((i) => i.kind === 'credit')).toHaveLength(1);
+  });
+});
+
+describe('skip owner / excluded IPs', () => {
+  it('does not enqueue when an Owner HQ cookie is present', async () => {
+    const env: UltraEnv = { ADMIN_OWNER_PASSWORD: 'owner-secret-test' };
+    const token = await issueSession(env, new Request('https://example.test/admin'));
+    const request = new Request('https://example.test/api/join', {
+      headers: { cookie: `${HQ_COOKIE}=${token}`, 'cf-connecting-ip': '198.51.100.9' },
+    });
+    await emitJoinAlerts({
+      env,
+      origin: 'https://example.test',
+      host: 'owner-browse.test',
+      isNewSite: false,
+      credited: true,
+      creditN: 1,
+      creditHost: 'owner-browse.test',
+      previousRung: 'entered',
+      nextRung: 'rising',
+      request,
+    });
+    expect(await readAlertInbox(env)).toEqual([]);
+  });
+
+  it('does not enqueue when the client IP is excluded', async () => {
+    const env: UltraEnv = {};
+    await addExcludeIp(env, '203.0.113.77');
+    const request = new Request('https://example.test/api/join', {
+      headers: { 'cf-connecting-ip': '203.0.113.77' },
+    });
+    await emitJoinAlerts({
+      env,
+      origin: 'https://example.test',
+      host: 'excluded.test',
+      isNewSite: false,
+      credited: true,
+      creditN: 1,
+      creditHost: 'excluded.test',
+      previousRung: 'entered',
+      nextRung: 'rising',
+      request,
+    });
+    expect(await readAlertInbox(env)).toEqual([]);
   });
 });
 

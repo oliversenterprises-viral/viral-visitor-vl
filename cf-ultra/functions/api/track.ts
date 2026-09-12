@@ -1,4 +1,3 @@
-import { emitAlert, emitSpikeAlert, flushAlertBatches, maybeFirstShareAlert, rememberAlertOrigin } from '../_lib/alerts';
 import { recordAnalytics, samplePageview } from '../_lib/analytics';
 import { shouldSkipStats } from '../_lib/exclude';
 import { actorFromRequest, json, originFromRequest, readJson, tooMany, withActor } from '../_lib/http';
@@ -29,13 +28,11 @@ type Body = {
   te?: boolean;
 };
 
-export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, waitUntil }) => {
+/** Pageview / land / share sampling only. Never enqueue owner alerts. */
+export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) => {
   const { actorId, setCookie } = actorFromRequest(request);
-  const origin = originFromRequest(request);
-  rememberAlertOrigin(origin);
   const limited = hitLimit(`track:${actorId}`, 40, 60_000);
   if (!limited.ok) {
-    waitUntil(emitSpikeAlert(env, origin, 'Track burst / 429'));
     return withActor(tooMany('Track rate limited', limited.retryAfterSec), actorId, setCookie);
   }
   const skip = await shouldSkipStats(env, request);
@@ -63,22 +60,9 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
     hints,
     flushNow: kind !== 'pageview' && kind !== 'land',
     text: host || undefined,
-    origin,
+    origin: originFromRequest(request),
     request,
     ip: skip.ip,
   });
-  if (kind === 'share' && host) {
-    waitUntil(maybeFirstShareAlert(env, origin, host).then(() => flushAlertBatches(env, origin)));
-  } else if (kind === 'friend_land') {
-    waitUntil(
-      emitAlert(env, origin, {
-        kind: 'friend_land',
-        title: 'Friend land',
-        body: host ? `${host} via a referral link` : 'Someone opened a referral link',
-        host: host || undefined,
-        count: 1,
-      }).then(() => flushAlertBatches(env, origin)),
-    );
-  }
   return withActor(json({ ok: true, sampled: true }), actorId, setCookie);
 };

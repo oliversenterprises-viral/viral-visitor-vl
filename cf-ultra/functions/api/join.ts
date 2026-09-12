@@ -28,7 +28,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
         flushNow: false,
         request,
         ip,
-      }).then(() => emitSpikeAlert(env, origin, kind === 'burst_ip' ? 'Join burst / 429' : 'Join blocked', ip)),
+      }).then(() => emitSpikeAlert(env, origin, kind === 'burst_ip' ? 'Join burst / 429' : 'Join blocked', ip, request)),
     );
     return withActor(
       tooMany('Slow down — unique friend taps only. Try again in a moment.', limited.retryAfterSec),
@@ -47,7 +47,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
     const hints = hintsFromRequest(request);
     waitUntil(
       recordAnalytics(env, { kind: 'blocked', actorId, hints, flushNow: true, text: 'Banned code or site', request, ip }).then(() =>
-        emitSpikeAlert(env, origin, 'Banned code or site', ip),
+        emitSpikeAlert(env, origin, 'Banned code or site', ip, request),
       ),
     );
     return withActor(json({ ok: false, error: 'That link or site is paused by the owner.' }, { status: 403 }), actorId, setCookie);
@@ -115,6 +115,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
       creditHost,
       previousRung,
       nextRung,
+      request,
     }),
   );
   const shareUrl = buildCleanReferralLink(result.player.code, origin);

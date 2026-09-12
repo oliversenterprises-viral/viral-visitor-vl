@@ -243,7 +243,7 @@ First-class analytics console at **`/admin/`**. Not a leftover stub.
 - **Reset stats** lists and deletes every `stats:*` key (works with BOARD KV bound). It does not wipe `ultra:state` / the live board.
 - **Clear inbox** empties `ultra:alert-inbox` (authenticated). Alert prefs stay.
 
-**Owner alerts (live):** after a real conversion write (new site, first share, friend land, verified credit, rung climb, spike), Functions log an **Alerts inbox** row in HQ and ping **Telegram** when `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are set. Optional webhook / Resend email still work. Pageviews never notify. Bursts batch (e.g. 12 friend-lands in a few minutes → one ping). Demo / no-secret mode still fills the inbox so the feature is visible.
+**Owner alerts (live):** defaults are **credit + rung climbs only** (`race_started`, `first_share`, `friend_land`, `spike`, `digest` off). `/api/track` never enqueues alerts. Excluded IPs and Owner HQ sessions never enqueue. Each inbox row shows **why** it fired. **Clear inbox** empties `ultra:alert-inbox`. Telegram still pings when `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are set. Digest is never auto-enabled.
 
 See `ARCHITECTURE.md` for rollup keys and write budget.
 
