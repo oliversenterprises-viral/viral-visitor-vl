@@ -6,6 +6,7 @@ import {
   prefersReducedMotion,
   type BurstTier,
 } from './game';
+import { t } from './lib/i18n';
 import type { UnlockMoment } from './types';
 
 let canvas: HTMLCanvasElement | null = null;
@@ -149,8 +150,8 @@ export function celebrateHit(opts: {
       <h2>${escapeMini(title)}</h2>
       <p>${escapeMini(celebrationLine(opts.credits, opts.host, opts.unlock.title))}</p>
       <p class="brag">${escapeMini(opts.unlock.shareText)}</p>
-      <button type="button" class="btn volt" data-close-celebrate>Share this moment</button>
-      <button type="button" class="btn ghost" data-dismiss-celebrate>Close</button>
+      <button type="button" class="btn volt" data-close-celebrate>${escapeMini(t('celeb.share'))}</button>
+      <button type="button" class="btn ghost" data-dismiss-celebrate>${escapeMini(t('celeb.close'))}</button>
     </div>`;
   document.body.appendChild(el);
   const share = () => {

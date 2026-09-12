@@ -1,8 +1,15 @@
 import { RUNG_COPY, shareMessage, type Rung } from '../functions/_lib/engine';
+import { t } from './lib/i18n';
 import { renderSVG } from 'uqr';
 
+function localizedShare(shareUrl: string, host: string, rung: Rung): string {
+  const localized = t('share.default', { link: shareUrl });
+  if (localized && localized !== 'share.default') return localized;
+  return shareMessage(host, shareUrl, rung);
+}
+
 export function intents(shareUrl: string, host: string, rung: Rung) {
-  const text = shareMessage(host, shareUrl, rung);
+  const text = localizedShare(shareUrl, host, rung);
   const e = encodeURIComponent;
   return {
     text,
@@ -38,7 +45,7 @@ export async function copyText(value: string): Promise<boolean> {
 export async function nativeShare(shareUrl: string, host: string, rung: Rung): Promise<boolean> {
   if (!navigator.share) return false;
   try {
-    await navigator.share({ title: host, text: shareMessage(host, shareUrl, rung), url: shareUrl });
+    await navigator.share({ title: host, text: localizedShare(shareUrl, host, rung), url: shareUrl });
     return true;
   } catch {
     return false;
