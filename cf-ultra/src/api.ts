@@ -4,7 +4,7 @@ import type { BoardState, HealthOk, JoinOk, MeOk } from './types';
 export type Transport = 'live' | 'demo';
 
 let transport: Transport = 'demo';
-let healthNote = 'Starting in local demo until /api/health answers.';
+let healthNote = 'Connecting to the ViralRefer board…';
 let degraded = false;
 
 export function isDegraded(): boolean {
@@ -36,7 +36,7 @@ export async function probeHealth(): Promise<HealthOk | null> {
     return data;
   } catch {
     transport = 'demo';
-    healthNote = 'Functions not reachable — local board until wrangler pages dev --kv BOARD.';
+    healthNote = 'Functions not reachable — board stays local until wrangler pages dev --kv BOARD.';
     return null;
   }
 }

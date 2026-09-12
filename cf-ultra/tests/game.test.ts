@@ -10,6 +10,7 @@ import {
   ghostCount,
   microGoal,
   newestActivityText,
+  nextClimbStep,
   normalizeStreak,
   progressPct,
   raceGap,
@@ -18,6 +19,7 @@ import {
   utcWeekEndMs,
   weekClockLabel,
   weekRaceClock,
+  yourClimbStep,
 } from '../src/game';
 
 const noon = Date.parse('2026-09-12T12:00:00.000Z');
@@ -98,6 +100,15 @@ describe('progress + race + hooks', () => {
     expect(
       climbHeatPct({ entered: 1, rising: 1, textLine: false, challenger: 0, banner: false }),
     ).toBe(40);
+    expect(yourClimbStep({ hasSite: false, credits: 0, weekly: 0, rung: 'entered' })).toBe(0);
+    expect(yourClimbStep({ hasSite: true, credits: 0, weekly: 0, rung: 'entered' })).toBe(1);
+    expect(yourClimbStep({ hasSite: true, credits: 1, weekly: 1, rung: 'rising' })).toBe(2);
+    expect(yourClimbStep({ hasSite: true, credits: 2, weekly: 2, rung: 'rising' })).toBe(3);
+    expect(yourClimbStep({ hasSite: true, credits: 2, weekly: 2, rung: 'challenger' })).toBe(4);
+    expect(yourClimbStep({ hasSite: true, credits: 3, weekly: 3, rung: 'banner' })).toBe(5);
+    expect(nextClimbStep(0)).toBe(1);
+    expect(nextClimbStep(4)).toBe(5);
+    expect(nextClimbStep(5)).toBeNull();
     expect(
       raceGap({
         host: 'beta.test',

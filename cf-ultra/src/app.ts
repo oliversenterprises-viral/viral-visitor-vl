@@ -14,6 +14,7 @@ import {
   bumpShareStreak,
   climbHeatPct,
   newestActivityText,
+  nextClimbStep,
   prefersReducedMotion,
   raceGap,
   risingHook,
@@ -21,6 +22,7 @@ import {
   soundEnabled,
   weekClockLabel,
   weekRaceClock,
+  yourClimbStep,
 } from './game';
 import { getMyReferralCode, setMyReferralCode } from './my-code';
 import { copyText, intents, nativeShare, qrSvg } from './share';
@@ -53,11 +55,12 @@ function toast(message: string, hot = false): void {
   }, 2400);
 }
 
-function chipHtml(site: BoardSite, kicker: string, hot = false): string {
+function chipHtml(site: BoardSite, kicker: string, hot = false, yours = false): string {
   const href = escapeHtml(site.url || `https://${site.host}`);
-  return `<a class="site-drop-chip${hot ? ' site-drop-chip--hot' : ''}" href="${href}" target="_blank" rel="noopener noreferrer">
+  const cls = ['site-drop-chip', hot ? 'site-drop-chip--hot' : '', yours ? 'site-drop-chip--you' : ''].filter(Boolean).join(' ');
+  return `<a class="${cls}" href="${href}" target="_blank" rel="noopener noreferrer">
     <span class="site-drop-chip__label">${escapeHtml(site.label)}</span>
-    <span class="site-drop-chip__meta">${escapeHtml(kicker)}</span>
+    <span class="site-drop-chip__meta">${escapeHtml(kicker)}${yours ? ' · you' : ''}</span>
     <span class="site-drop-chip__host">${escapeHtml(site.host)}</span>
   </a>`;
 }
@@ -282,27 +285,39 @@ export function boot(_root?: HTMLElement): void {
       next.challenger.length > 0,
       Boolean(next.banner),
     ];
+    const mine = yourClimbStep({
+      hasSite: Boolean(siteHost),
+      credits: me?.credits ?? 0,
+      weekly: me?.weeklyCredits ?? 0,
+      rung,
+    });
+    const nextStep = nextClimbStep(mine);
     document.querySelectorAll<HTMLElement>('.site-drop-climb__ladder li').forEach((li, i) => {
+      const step = i + 1;
       if (climbLit[i]) li.setAttribute('data-lit', '1');
       else li.removeAttribute('data-lit');
+      if (mine > 0 && step === mine) li.setAttribute('data-yours', '1');
+      else li.removeAttribute('data-yours');
+      if (nextStep && step === nextStep) li.setAttribute('data-next', '1');
+      else li.removeAttribute('data-next');
     });
 
     paintList(
       'site-drops-entered-list',
       'site-drops-entered-empty',
-      next.entered.map((s) => `<li>${chipHtml(s, 'Just entered')}</li>`).join(''),
+      next.entered.map((s) => `<li>${chipHtml(s, 'Just entered', false, s.host === siteHost)}</li>`).join(''),
     );
     const risingLane = document.getElementById('site-drops-rising-list')?.closest('.site-drops-lane');
     risingLane?.classList.toggle('is-hot', next.rising.length > 0);
     paintList(
       'site-drops-rising-list',
       'site-drops-rising-empty',
-      next.rising.map((s) => `<li>${chipHtml(s, `Rising · ${s.weeklyCredits} friend${s.weeklyCredits === 1 ? '' : 's'}`, true)}</li>`).join(''),
+      next.rising.map((s) => `<li>${chipHtml(s, `Rising · ${s.weeklyCredits} friend${s.weeklyCredits === 1 ? '' : 's'}`, true, s.host === siteHost)}</li>`).join(''),
     );
     paintList(
       'site-drops-challenger-list',
       'site-drops-challenger-empty',
-      next.challenger.map((s) => `<li>${chipHtml(s, `Challenger · ${s.rung}`)}</li>`).join(''),
+      next.challenger.map((s) => `<li>${chipHtml(s, `Challenger · ${s.rung}`, false, s.host === siteHost)}</li>`).join(''),
     );
 
     const ticker = document.getElementById('site-entered-ticker');
@@ -511,7 +526,11 @@ export function boot(_root?: HTMLElement): void {
   });
 
   void (async () => {
-    await probeHealth();
+    const health = await probeHealth();
+    if (health) {
+      document.documentElement.setAttribute('data-vr-board', health.kv ? 'live' : 'memory');
+      document.documentElement.removeAttribute('data-vr-demo');
+    }
     const landHost = qs('url') ? previewHost(qs('url')!) : qs('helped') || siteHost;
     track(startRef ? 'friend_land' : 'land', { host: landHost || undefined, src: attr.src, camp: attr.camp, te: attr.te });
     try {

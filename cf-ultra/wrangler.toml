@@ -23,7 +23,7 @@ TELEGRAM_CHAT_ID = "1274269043"
 # Local: `npm run dev` / `npm run preview` pass `--kv BOARD`.
 # Production: Pages → Settings → Bindings → KV → BOARD.
 #
-# If BOARD is missing, Pages Functions run isolate memory demo mode.
+# If BOARD is missing, Pages Functions keep the board in isolate memory until recycle.
 #
 # Scale (1k–10k+ daily visitors): assume Workers Paid + this KV bind.
 # Free KV (~1k writes/day) cannot host a real join volume.

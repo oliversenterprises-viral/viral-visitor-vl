@@ -241,3 +241,27 @@ export function shareStreakLabel(streak: ShareStreak): string {
   if (streak.lastDay) return `${base} · saved`;
   return base;
 }
+
+/**
+ * Your place on the live 5-rung Site Drop climb (0 = no site yet).
+ * 1 Just entered · 2 Rising · 3 Text line · 4 Challenger · 5 Banner
+ */
+export function yourClimbStep(opts: {
+  hasSite: boolean;
+  credits: number;
+  weekly: number;
+  rung: Rung;
+}): number {
+  if (!opts.hasSite) return 0;
+  if (opts.rung === 'banner') return 5;
+  if (opts.rung === 'challenger') return 4;
+  if (opts.weekly >= 2) return 3;
+  if (opts.credits >= 1 || opts.rung === 'rising') return 2;
+  return 1;
+}
+
+export function nextClimbStep(current: number): number | null {
+  if (current < 1) return 1;
+  if (current >= 5) return null;
+  return current + 1;
+}

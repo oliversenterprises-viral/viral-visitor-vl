@@ -416,6 +416,17 @@ html[data-vr-kid-simple]:not([data-vr-has-link]) #hero-week-clock {
   color: #a1a1aa;
 }
 .site-drops-lane.is-hot .site-drops-lane__label { color: #ddd6fe; }
+.site-drop-climb__ladder li[data-yours='1'] {
+  outline: 2px solid rgba(52, 211, 153, 0.7);
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.22), 0 12px 28px rgba(16, 185, 129, 0.2);
+}
+.site-drop-climb__ladder li[data-next='1'] {
+  border-color: rgba(251, 191, 36, 0.62);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.22), 0 10px 24px rgba(251, 191, 36, 0.16);
+}
+.site-drop-chip--you {
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.5);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .site-drop-rung:not([data-live]) .site-drop-rung__live,
