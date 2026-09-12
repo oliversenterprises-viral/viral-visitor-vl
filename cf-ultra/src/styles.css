@@ -216,9 +216,10 @@ html[data-vr-kid-simple]:not([data-vr-has-link]) #hero-week-clock {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.3rem;
-  margin: 0.15rem 0 0.85rem;
-  padding: 0.35rem 0.45rem 0.45rem;
+  gap: 0.45rem;
+  margin: 0.25rem auto 0.95rem;
+  max-width: 28rem;
+  padding: 0.45rem 0.15rem 0.55rem;
 }
 .site-drop-rung {
   text-align: left;
@@ -248,8 +249,8 @@ html[data-vr-kid-simple]:not([data-vr-has-link]) #hero-week-clock {
   overflow: hidden;
 }
 .site-drop-rung:not([data-live]) {
-  background: rgba(16, 185, 129, 0.07);
-  border: 1px dashed rgba(110, 231, 183, 0.32);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px dashed rgba(110, 231, 183, 0.48);
 }
 .site-drop-rung:not([data-live]) .site-drop-rung__live {
   color: #6ee7b7;

@@ -480,7 +480,8 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-s
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-title-line2,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-prize-one,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-global-proof,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-ad-race {
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-ad-race,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #site-entered-ticker {
   display: none !important;
 }
 
