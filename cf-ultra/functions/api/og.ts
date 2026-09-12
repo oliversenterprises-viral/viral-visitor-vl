@@ -11,21 +11,34 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
   try {
     const [loaded, read] = await Promise.all([loadState(env), getBoard(env)]);
     const player = loaded.state.players[code];
-    if (!player) return text('unknown link', 404);
-    const site = loaded.state.sites[player.siteHost];
+    const site = player ? loaded.state.sites[player.siteHost] : undefined;
     const row = [read.board.banner, ...read.board.challenger, ...read.board.rising, ...read.board.entered, ...read.board.race].find(
-      (s) => s && s.host === player.siteHost,
+      (s) => s && (s.ownerCode === code || s.host === player?.siteHost),
     );
+    const rankIdx = row ? read.board.race.findIndex((s) => s.host === row.host) : -1;
     return svg(
       ogImageSvg({
-        host: site?.host ?? 'site',
+        code,
+        host: site?.host ?? 'ViralRefer',
         rung: row?.rung ?? 'entered',
         credits: site?.creditTimes.length ?? row?.credits ?? 0,
         weekly: row?.weeklyCredits ?? 0,
+        rank: rankIdx >= 0 ? rankIdx + 1 : null,
         demoMode: loaded.demoMode,
+        origin: new URL(request.url).origin,
       }),
     );
   } catch {
-    return svg(ogImageSvg({ host: 'viralrefer ultra', rung: 'entered', credits: 0, weekly: 0, demoMode: false }));
+    return svg(
+      ogImageSvg({
+        code,
+        host: 'ViralRefer',
+        rung: 'entered',
+        credits: 0,
+        weekly: 0,
+        demoMode: false,
+        origin: new URL(request.url).origin,
+      }),
+    );
   }
 };

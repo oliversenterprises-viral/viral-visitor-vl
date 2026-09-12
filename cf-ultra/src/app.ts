@@ -1,4 +1,10 @@
 import { nextActionFor, type BoardSite, type Rung } from '../functions/_lib/engine';
+import {
+  buildAffiliateStyleLink,
+  buildCleanReferralLink,
+  buildRefQueryLink,
+  parseRefFromLocation,
+} from '../functions/_lib/referral-url';
 import { fetchBoard, fetchMe, joinSite, probeHealth } from './api';
 import { persistAttribution, previewHost, rememberCredits, rememberKitOpen, shouldRestoreKit, syncAttributionToUrl } from './attr';
 import { celebrateHit, celebrateUnlock } from './celebrate';
@@ -11,6 +17,7 @@ import {
   soundEnabled,
   weekClockLabel,
 } from './game';
+import { getMyReferralCode, setMyReferralCode } from './my-code';
 import { copyText, intents, nativeShare, qrSvg } from './share';
 import { track } from './track';
 import type { BoardState, JoinOk, PublicPlayer } from './types';
@@ -68,10 +75,14 @@ export function boot(_root?: HTMLElement): void {
   let rung: Rung = 'entered';
   let siteHost = '';
 
-  const attr = persistAttribution(qs('ref'), qs('url'), qs('src') || qs('utm_source'), qs('camp') || qs('c'));
+  const mineAtBoot = getMyReferralCode();
+  const landedRef = parseRefFromLocation(location);
+  const friendRef = landedRef && landedRef !== mineAtBoot ? landedRef : '';
+  const attr = persistAttribution(friendRef || undefined, qs('url'), qs('src') || qs('utm_source'), qs('camp') || qs('c'));
   syncAttributionToUrl(attr);
-  const startRef = (qs('ref') || attr.ref || '').toUpperCase();
+  const startRef = (friendRef || attr.ref || '').toUpperCase();
   const startUrl = qs('url') || attr.url || '';
+  let myCode = mineAtBoot || '';
 
   const heroBtn = document.getElementById('hero-get-link-btn') as HTMLButtonElement | null;
   const navBtn = document.getElementById('nav-get-link-btn') as HTMLButtonElement | null;
@@ -82,8 +93,12 @@ export function boot(_root?: HTMLElement): void {
   const shareBox = document.getElementById('post-link-share');
   const siteDropBox = document.getElementById('post-link-site-drop');
   const copyBtn = document.getElementById('post-link-copy') as HTMLButtonElement | null;
+  const copyCodeBtn = document.getElementById('post-link-copy-code') as HTMLButtonElement | null;
   const sendBtn = document.getElementById('post-link-primary') as HTMLButtonElement | null;
   const urlEl = document.getElementById('post-link-url');
+  const codeEl = document.getElementById('post-link-code');
+  const aliasEl = document.getElementById('post-link-aliases');
+  const refLinkInput = document.getElementById('ref-link') as HTMLInputElement | null;
   const hud = document.getElementById('race-hud');
 
   if (siteInput && startUrl) siteInput.value = startUrl;
@@ -91,8 +106,10 @@ export function boot(_root?: HTMLElement): void {
   if (startRef) {
     const banner = document.getElementById('referral-attribution');
     show(banner);
-    const codeEl = document.getElementById('referrer-code-inline');
-    if (codeEl) codeEl.textContent = startRef;
+    const inline = document.getElementById('referrer-code-inline');
+    const display = document.getElementById('referrer-code-display');
+    if (inline) inline.textContent = startRef;
+    if (display) display.textContent = startRef;
     const line = document.getElementById('hero-title-line1');
     if (line) line.textContent = `You're in the same race as ${startRef}.`;
     const sub = document.getElementById('hero-subtitle');
@@ -129,13 +146,28 @@ export function boot(_root?: HTMLElement): void {
       <p>Banner still open · ${escapeHtml(weekClockLabel())}</p>`;
   }
 
-  function revealKit(): void {
+  function revealKit(opts: { fresh?: boolean } = {}): void {
     document.documentElement.setAttribute('data-vr-has-link', '1');
     show(shareBox);
     show(siteDropBox);
+    const code = myCode || shareUrl.split('/').pop() || '';
+    if (code) {
+      setMyReferralCode(code);
+      myCode = code;
+      shareUrl = buildCleanReferralLink(code, location.origin);
+    }
     if (urlEl) {
       urlEl.hidden = false;
       urlEl.textContent = shareUrl;
+    }
+    if (codeEl && code) {
+      codeEl.textContent = code;
+      codeEl.classList.toggle('is-new', Boolean(opts.fresh));
+    }
+    if (refLinkInput) refLinkInput.value = shareUrl;
+    if (aliasEl && code) {
+      aliasEl.hidden = false;
+      aliasEl.textContent = `${buildAffiliateStyleLink(code, location.origin)} · ${buildRefQueryLink(code, location.origin)}`;
     }
     if (sendBtn) {
       const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
@@ -273,13 +305,15 @@ export function boot(_root?: HTMLElement): void {
 
   async function afterJoin(data: JoinOk): Promise<void> {
     me = data.player;
-    shareUrl = data.shareUrl;
+    myCode = setMyReferralCode(data.player.code) || data.player.code;
+    shareUrl = buildCleanReferralLink(myCode, location.origin);
     rung = data.rung;
     siteHost = data.site?.host || data.player.siteHost || '';
     rememberCredits(data.player.credits);
     persistAttribution(startRef || qs('ref'), data.site?.url || siteInput?.value || '', attr.src, attr.camp);
     paintBoard(data.board);
-    revealKit();
+    revealKit({ fresh: true });
+    await copyText(shareUrl);
     const heading = document.getElementById('post-link-heading');
     if (heading) heading.textContent = data.site ? `You're racing — ${data.site.host}` : "You're racing.";
     if (data.selfJoin) toast('Your own tap does not count');
@@ -288,8 +322,11 @@ export function boot(_root?: HTMLElement): void {
     else if (data.credited) {
       toast('Unique friend lock counted');
       celebrateHit({ host: data.site?.host || data.player.code, credits: data.player.credits });
+    } else if (!data.site) {
+      toast(`${myCode} ready — /r/ link copied. A friend must tap Get my link.`);
+      celebrateHit({ host: data.player.code, credits: 0 });
     } else if (data.player.credits === 0) {
-      celebrateHit({ host: data.site?.host || data.player.code, credits: 0 });
+      celebrateHit({ host: data.site.host, credits: 0 });
     }
     if (data.unlock) {
       celebrateUnlock(data.unlock, () => {
@@ -350,7 +387,13 @@ export function boot(_root?: HTMLElement): void {
     if (!shareUrl) return;
     await copyText(shareUrl);
     bumpShareStreak();
-    toast('Link copied. Send it — visits do not count.');
+    toast('Link copied. A friend still has to tap Get my link.');
+  });
+  copyCodeBtn?.addEventListener('click', async () => {
+    if (!myCode) return;
+    await copyText(myCode);
+    bumpShareStreak();
+    toast(`${myCode} copied. Send the /r/ link so they can tap Get my link.`);
   });
   sendBtn?.addEventListener('click', async () => {
     if (!shareUrl) return;
@@ -378,9 +421,13 @@ export function boot(_root?: HTMLElement): void {
       const mine = await fetchMe();
       if (mine.player) {
         me = mine.player;
-        shareUrl = mine.shareUrl || `${location.origin}/r/${mine.player.code}`;
+        myCode = setMyReferralCode(mine.player.code) || mine.player.code;
+        shareUrl = buildCleanReferralLink(myCode, location.origin);
         rung = mine.rung || 'entered';
         siteHost = mine.site?.host || mine.player.siteHost || '';
+        if (!startRef && (shouldRestoreKit() || qs('kit') || myCode)) revealKit();
+      } else if (!startRef && myCode) {
+        shareUrl = buildCleanReferralLink(myCode, location.origin);
         if (shouldRestoreKit() || qs('kit')) revealKit();
       }
     } catch {

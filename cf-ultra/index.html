@@ -165,6 +165,8 @@
                     <div id="referrer-invite-headline" class="text-sm font-semibold text-emerald-400">You're in the same contest</div>
                     <p id="referrer-invite-hint" class="text-xs text-zinc-300 mt-1 leading-relaxed">Get YOUR link in one tap — same leaderboard, ~30 seconds. Opening this page does not count.</p>
                     <div class="text-[11px] text-zinc-500 mt-2">You landed via <span id="referrer-code-inline" class="font-mono text-emerald-400/90"></span></div>
+                    <div class="text-[11px] text-zinc-500 mt-0.5">Referred by</div>
+                    <div id="referrer-code-display" class="font-mono text-lg font-semibold text-white"></div>
                 </div>
                 <button id="attribution-get-link-btn" type="button"
                         class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-2xl text-sm shrink-0 w-full sm:w-auto">
@@ -174,16 +176,21 @@
         </div>
 
         <div id="referral-section" class="mt-6">
+            <input id="ref-link" type="text" readonly hidden class="sr-only" aria-hidden="true" tabindex="-1" value="" />
             <div id="post-link-share" class="hidden post-link-share" hidden data-state="hidden" role="region" aria-label="Your referral link">
                 <h2 id="post-link-heading" class="post-link-share__heading">You're racing.</h2>
                 <p id="post-link-sub" class="post-link-share__sub">Send it now. A friend must tap Get my link — that's how you climb.</p>
                 <p id="post-link-clock" class="post-link-share__clock" hidden></p>
+                <p class="post-link-share__code-kicker">Your referral code</p>
+                <p id="post-link-code" class="post-link-share__code" aria-live="polite"></p>
+                <button type="button" id="post-link-copy-code" class="post-link-share__copy-code">Copy code</button>
                 <p id="post-link-url" class="post-link-share__url" hidden></p>
                 <button type="button" id="post-link-primary" class="post-link-share__primary" hidden>Send it now</button>
-                <button type="button" id="post-link-copy" class="post-link-share__copy">Copy link</button>
-                <p id="post-link-tool" class="post-link-share__tool">This is your public link. Also works as /a/VIRAL-… and ?ref=.</p>
+                <button type="button" id="post-link-copy" class="post-link-share__copy">Copy /r/ link</button>
+                <p id="post-link-tool" class="post-link-share__tool">Same code as viralrefer.app. Also works as /a/VIRAL-… and ?ref=.</p>
+                <p id="post-link-aliases" class="post-link-share__aliases" hidden></p>
                 <div id="post-link-intents" class="grid grid-cols-2 gap-2 mt-3"></div>
-                <div id="post-link-qr" class="flex justify-center mt-3"></div>
+                <div id="post-link-qr" class="flex justify-center mt-3 post-link-share__qr"></div>
                 <div id="race-hud" class="hud-slim hidden" hidden></div>
             </div>
             <div id="post-link-site-drop" class="post-link-site-drop hidden" hidden>

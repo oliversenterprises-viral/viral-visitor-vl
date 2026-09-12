@@ -1,6 +1,7 @@
 import { requireAdmin } from '../../_lib/admin-auth';
 import { alertPublicView, loadAlertPrefs, readAlertInbox } from '../../_lib/alerts';
 import { isolateBucket, liveVisitors, readAllTime, readDays, readFeed, readRungs } from '../../_lib/analytics';
+import { weeklyCredits } from '../../_lib/engine';
 import { json } from '../../_lib/http';
 import { loadOps } from '../../_lib/ops';
 import { daysBack, funnelRates, mergeBuckets, topMap, type HourBucket } from '../../_lib/stats';
@@ -51,6 +52,18 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
     .map((s) => ({ host: s.host, credits: s.creditTimes.length, owner: s.ownerCode }))
     .sort((a, b) => b.credits - a.credits)
     .slice(0, 12);
+  const now = Date.now();
+  const codes = players
+    .map((p) => ({
+      code: p.code,
+      host: p.siteHost || '',
+      credits: p.creditTimes.length,
+      weekly: weeklyCredits(p.creditTimes, now),
+      referredBy: p.referredBy,
+      createdAt: p.createdAt,
+    }))
+    .sort((a, b) => b.credits - a.credits || b.createdAt - a.createdAt)
+    .slice(0, 40);
 
   const funnel = funnelRates(window as HourBucket);
 
@@ -77,6 +90,7 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
     board: boardRead.board,
     topSharers,
     topSites,
+    codes,
     ops,
     camps: topMap(window.camps || {}, 8),
     te: {

@@ -17,7 +17,7 @@ export const onRequest: PagesFunction = async (context) => {
     headers.delete('x-frame-options');
     const csp = headers.get('content-security-policy') || "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'";
     if (!/frame-ancestors/.test(csp)) headers.set('content-security-policy', `${csp}; frame-ancestors *`);
-  } else if (path === '/' || path === '/index.html') {
+  } else if (path === '/' || path === '/index.html' || /^\/(?:r|a)\/[A-Za-z0-9_-]+\/?$/i.test(path)) {
     headers.set('x-frame-options', 'SAMEORIGIN');
   }
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });

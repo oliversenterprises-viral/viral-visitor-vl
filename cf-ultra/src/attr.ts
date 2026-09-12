@@ -1,5 +1,6 @@
 import { parseCampaign } from '../functions/_lib/campaign';
 import { hostnameFromUrl, normalizeReferralCode, normalizeWebsiteUrl } from '../functions/_lib/engine';
+import { parseRefFromPathname } from '../functions/_lib/referral-url';
 
 const ATTR_KEY = 'vr-ultra-attr-v1';
 const KIT_KEY = 'vr-ultra-kit-open-v1';
@@ -43,7 +44,8 @@ export function persistAttribution(
 export function syncAttributionToUrl(attr: Attribution): void {
   const u = new URL(location.href);
   let dirty = false;
-  if (attr.ref && u.searchParams.get('ref')?.toUpperCase() !== attr.ref) {
+  const pathRef = parseRefFromPathname(u.pathname);
+  if (attr.ref && !pathRef && u.searchParams.get('ref')?.toUpperCase() !== attr.ref) {
     u.searchParams.set('ref', attr.ref);
     dirty = true;
   }

@@ -6,12 +6,12 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ env }) => {
   return jsonPublic(
     {
       ok: true,
-      app: 'viralrefer-ultra',
+      app: 'viralrefer',
       kv,
       demoMode: !kv,
       note: kv
-        ? 'KV bound — unique locks persist. Board snapshots cached ~3s.'
-        : 'TODO: bind BOARD KV. Running isolate memory demo mode.',
+        ? 'BOARD KV bound — VIRAL- codes, credits, and the board persist.'
+        : 'BOARD KV not bound on this isolate — codes stay in memory until recycle.',
       scale: {
         target: '1k–10k+ daily visitors',
         assumedPlan: 'Cloudflare Workers Paid (or Pages with paid Workers) + one KV namespace BOARD',

@@ -1,11 +1,6 @@
-import { isReferralCode } from '../_lib/engine';
+import { serveReferralPath, type ReferralEnv } from '../_lib/referral-path';
 
-/** Attribution alias: /a/VIRAL-XXXXXXX → /?ref=VIRAL-XXXXXXX (never drop campaign tags). */
-export const onRequestGet: PagesFunction = async ({ params, request }) => {
-  const incoming = new URL(request.url);
-  const dest = new URL('/', incoming);
-  for (const [k, v] of incoming.searchParams) dest.searchParams.set(k, v);
-  const code = String(params.code || '').toUpperCase();
-  if (isReferralCode(code)) dest.searchParams.set('ref', code);
-  return Response.redirect(dest.toString(), 302);
+/** Same VIRAL- identity as /r/CODE — humans get the Site Drops homepage, crawlers get OG. */
+export const onRequestGet: PagesFunction<ReferralEnv> = async ({ params, request, env }) => {
+  return serveReferralPath(request, env, String(params.code || ''), 'a');
 };

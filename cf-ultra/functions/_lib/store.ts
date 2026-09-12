@@ -1,6 +1,7 @@
 import { buildBoard, createEmptyState, emptyBoard, type BoardState, type UltraState } from './engine';
 
 export interface UltraEnv {
+  ASSETS?: { fetch: (request: Request) => Promise<Response> };
   BOARD?: KVNamespace;
   ADMIN_OWNER_PASSWORD?: string;
   ADMIN_ACTION_SECRET?: string;

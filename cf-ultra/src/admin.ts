@@ -22,6 +22,7 @@ type Dash = {
   board: { banner?: { label: string }; entered: unknown[]; rising: unknown[]; challenger: unknown[] };
   topSharers: { code: string; host: string; credits: number; streak: number }[];
   topSites: { host: string; credits: number; owner: string }[];
+  codes: { code: string; host: string; credits: number; weekly: number; referredBy: string | null; createdAt: number }[];
   ops: { bannedCodes: string[]; bannedSites: string[]; mutedCodes: string[]; hero: string; lead: string; teCreditsCount?: boolean };
   camps: { key: string; n: number }[];
   te: { lands: number; joins: number; ignored: number; toJoin: number; quality: number; teCreditsCount: boolean };
@@ -140,7 +141,7 @@ function render(d: Dash): void {
     <header class="hq-top">
       <div>
         <div class="word"><span class="mark">V</span> ViralRefer <span class="badge">HQ</span></div>
-        <p class="tag">LIVE COUNTERS · NO FAKE MRR · ${d.kv ? 'KV BOUND' : 'ISOLATE DEMO'}</p>
+        <p class="tag">LIVE COUNTERS · NO FAKE MRR · ${d.kv ? 'KV BOUND' : 'ISOLATE · NO KV'}</p>
       </div>
       <div class="pills">
         <span class="pill live"><span class="live-dot"></span>${d.liveVisitors} live</span>
@@ -208,6 +209,21 @@ function render(d: Dash): void {
         <p class="note">Banner now: ${esc(d.board?.banner?.label || 'open')} · entered ${d.board?.entered?.length ?? 0} · rising ${d.board?.rising?.length ?? 0} · challenger ${d.board?.challenger?.length ?? 0}</p>
       </section>
     </div>
+    <section class="lane">
+      <h3>Referral codes</h3>
+      <p class="note">Same VIRAL- identity as live. Credits are unique friend Get-my-link taps — visits never count.</p>
+      <table class="hq-table"><thead><tr><th>Code</th><th>Site</th><th>Credits</th><th>Week</th><th>Referred by</th></tr></thead>
+      <tbody>${
+        (d.codes || []).length
+          ? d.codes
+              .map(
+                (c) =>
+                  `<tr><td>${esc(c.code)}</td><td>${esc(c.host || '—')}</td><td>${c.credits}</td><td>${c.weekly}</td><td>${esc(c.referredBy || '—')}</td></tr>`,
+              )
+              .join('')
+          : '<tr><td colspan="5">No VIRAL- codes yet. First Get my link mints one.</td></tr>'
+      }</tbody></table>
+    </section>
     <div class="hq-grid two">
       <section class="lane">
         <h3>Rung timeline</h3>
@@ -284,7 +300,7 @@ function render(d: Dash): void {
     </div>
     <section class="lane">
       <h3>Traffic exchange</h3>
-      <p class="note">Splash impressions on <code>/te</code> are not written (edge-cheap). These counts are people who opened through to Site Drops with <code>src=te</code>. TE Get-my-link does <strong>not</strong> count as a verified credit unless you flip the switch (default off — #1 banner stays honest).</p>
+      <p class="note">Splash impressions on <code>/te</code> are not written (edge-cheap). TE still uses the same VIRAL- codes — <code>/te?src=te&amp;ref=VIRAL-XXXXXXX</code>. TE Get-my-link does <strong>not</strong> count as a verified credit unless you flip the switch (default off — #1 banner stays honest).</p>
       <div class="kpis" style="grid-template-columns:1fr 1fr 1fr 1fr">
         <div class="kpi"><b>${d.te?.lands ?? 0}</b><small>TE visits</small></div>
         <div class="kpi"><b>${d.te?.joins ?? 0}</b><small>TE → Get my link</small></div>
@@ -379,16 +395,26 @@ function render(d: Dash): void {
   });
   root.querySelector('[data-te-copy]')?.addEventListener('click', async () => {
     const camp = (root.querySelector('[data-te-camp]') as HTMLInputElement)?.value.trim() || 'hq';
-    const url = `${location.origin}/te?src=te&camp=${encodeURIComponent(camp)}`;
+    const code = (root.querySelector('[data-code]') as HTMLInputElement)?.value.trim().toUpperCase() || '';
+    const url = new URL('/te', location.origin);
+    url.searchParams.set('src', 'te');
+    url.searchParams.set('camp', camp);
+    if (/^VIRAL-[A-Z0-9]{4,12}$/.test(code) || /^VR-[A-HJ-NP-Z2-9]{6}$/.test(code)) url.searchParams.set('ref', code);
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(url.toString());
     } catch {
       /* ignore */
     }
   });
   root.querySelector('[data-te-iframe]')?.addEventListener('click', async () => {
     const camp = (root.querySelector('[data-te-camp]') as HTMLInputElement)?.value.trim() || 'hq';
-    const snip = `<iframe src="${location.origin}/te?src=te&camp=${encodeURIComponent(camp)}&size=468x60" width="468" height="60" style="border:0;overflow:hidden;max-width:100%" loading="lazy" title="ViralRefer Site Drops"></iframe>`;
+    const code = (root.querySelector('[data-code]') as HTMLInputElement)?.value.trim().toUpperCase() || '';
+    const dest = new URL('/te', location.origin);
+    dest.searchParams.set('src', 'te');
+    dest.searchParams.set('camp', camp);
+    dest.searchParams.set('size', '468x60');
+    if (/^VIRAL-[A-Z0-9]{4,12}$/.test(code) || /^VR-[A-HJ-NP-Z2-9]{6}$/.test(code)) dest.searchParams.set('ref', code);
+    const snip = `<iframe src="${dest.toString()}" width="468" height="60" style="border:0;overflow:hidden;max-width:100%" loading="lazy" title="ViralRefer Site Drops"></iframe>`;
     try {
       await navigator.clipboard.writeText(snip);
     } catch {

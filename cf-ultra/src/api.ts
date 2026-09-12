@@ -36,7 +36,7 @@ export async function probeHealth(): Promise<HealthOk | null> {
     return data;
   } catch {
     transport = 'demo';
-    healthNote = 'Functions not reachable — client demo mode (localStorage). TODO: wrangler pages dev --kv BOARD';
+    healthNote = 'Functions not reachable — local board until wrangler pages dev --kv BOARD.';
     return null;
   }
 }

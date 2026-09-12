@@ -1,5 +1,6 @@
 /api/* /api/:splat 200
 /r/* /r/:splat 200
+/a/* /a/:splat 200
 /e/* /e/:splat 200
 /embed.js /embed.js 200
 /* /index.html 200
