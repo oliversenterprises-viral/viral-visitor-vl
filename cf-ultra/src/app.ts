@@ -1,4 +1,4 @@
-import { teDestination } from '../functions/_lib/campaign';
+import { teDestination, teIframeSnippet } from '../functions/_lib/campaign';
 import { RUNG_COPY, RUNG_ORDER, faviconForHost, nextActionFor, type BoardSite, type Rung } from '../functions/_lib/engine';
 import {
   currentHealthNote,
@@ -195,6 +195,7 @@ export function boot(root: HTMLElement): void {
       <div data-meter></div>
       <p class="fine" data-kit-note></p>
       <button class="btn ghost" type="button" data-te-copy>Promote on traffic exchanges</button>
+      <button class="btn ghost" type="button" data-te-iframe>Copy TE iframe</button>
       <button class="btn ice" type="button" hidden data-simulate>Simulate a unique friend (demo)</button>
     </aside>
   `;
@@ -469,6 +470,10 @@ export function boot(root: HTMLElement): void {
     const dest = teDestination(location.origin, { ref: me?.code || startRef, camp: attr.camp || 'share-kit' });
     await copyText(dest);
     toast('TE destination copied');
+  });
+  kit.querySelector('[data-te-iframe]')?.addEventListener('click', async () => {
+    await copyText(teIframeSnippet(location.origin, { ref: me?.code || startRef, camp: attr.camp || 'share-kit' }));
+    toast('TE iframe snippet copied');
   });
   kit.querySelector('[data-copy]')?.addEventListener('click', async () => {
     track('share', { platform: 'copy', host: siteHost });

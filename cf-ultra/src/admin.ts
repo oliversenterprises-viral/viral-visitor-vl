@@ -279,6 +279,7 @@ function render(d: Dash): void {
       <div class="ops-row">
         <input data-te-camp placeholder="campaign (optional)" />
         <button class="btn volt" type="button" data-te-copy>Copy TE destination</button>
+        <button class="btn ghost" type="button" data-te-iframe>Copy iframe snippet</button>
       </div>
       <label class="toggle"><input type="checkbox" data-te-count ${d.te?.teCreditsCount || d.ops.teCreditsCount ? 'checked' : ''}/> Allow TE-attributed credits on the weekly race / #1 banner (not recommended)</label>
       <button class="btn ghost" data-op="save_te" type="button">Save TE integrity</button>
@@ -363,6 +364,15 @@ function render(d: Dash): void {
     const url = `${location.origin}/te?src=te&camp=${encodeURIComponent(camp)}`;
     try {
       await navigator.clipboard.writeText(url);
+    } catch {
+      /* ignore */
+    }
+  });
+  root.querySelector('[data-te-iframe]')?.addEventListener('click', async () => {
+    const camp = (root.querySelector('[data-te-camp]') as HTMLInputElement)?.value.trim() || 'hq';
+    const snip = `<iframe src="${location.origin}/te?src=te&camp=${encodeURIComponent(camp)}&size=468x60" width="468" height="60" style="border:0;overflow:hidden;max-width:100%" loading="lazy" title="ViralRefer Ultra"></iframe>`;
+    try {
+      await navigator.clipboard.writeText(snip);
     } catch {
       /* ignore */
     }

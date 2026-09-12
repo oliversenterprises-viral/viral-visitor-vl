@@ -66,7 +66,7 @@ Do this on a phone-width viewport and a second browser profile.
 
 ## Traffic exchange
 
-TE / rotators are a **distribution path**, not a funnel step. Use `/te?src=te&camp=…`. Impressions do not write KV. `src=te` Get-my-link does not count as Credit. See README “Traffic exchanges”.
+TE / rotators are a **distribution path**, not a funnel step. Iframe the splash (`/te?src=te&camp=…&size=468x60`), not `/`. Impressions do not write KV. `src=te` Get-my-link does not count as Credit. See README “Traffic exchanges”.
 
 ## Notifications
 

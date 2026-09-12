@@ -5,6 +5,7 @@ export const onRequest: PagesFunction = async (context) => {
   const headers = new Headers(res.headers);
   const te =
     path === '/te' ||
+    path === '/te.html' ||
     path === '/go' ||
     path.startsWith('/embed/te') ||
     path.startsWith('/e/') ||

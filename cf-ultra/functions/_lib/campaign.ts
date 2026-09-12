@@ -73,3 +73,17 @@ export function breakoutUrl(origin: string, camp: Campaign, ref?: string | null)
   if (ref) u.searchParams.set('ref', ref);
   return u.toString();
 }
+
+export function teIframeSnippet(
+  origin: string,
+  opts: { ref?: string | null; camp?: string | null; width?: number; height?: number } = {},
+): string {
+  const w = opts.width || 468;
+  const h = opts.height || 60;
+  const dest = teDestination(origin, {
+    ref: opts.ref,
+    camp: opts.camp,
+    extra: { size: `${w}x${h}` },
+  });
+  return `<iframe src="${dest}" width="${w}" height="${h}" style="border:0;overflow:hidden;max-width:100%" loading="lazy" title="ViralRefer Ultra"></iframe>`;
+}

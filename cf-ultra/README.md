@@ -31,9 +31,18 @@ Splash CTA uses `target="_top"` so a third-party iframe can break out. Cookies/s
 
 **HQ:** TE visits, TE→Get my link conversion, credits-per-TE-visit (should stay ~0), campaign list, copy-TE-link.
 
-**Promo kit:** `/promo/te/` — titles, blurbs, 728×90 / 468×60 / 300×250 SVG, iframe snippet. Share kit and HQ have **Promote on traffic exchanges**.
+**Promo kit:** `/promo/te/` — live iframe previews, titles, blurbs, SVG banners, copy-paste `<iframe>`. Share kit and HQ copy both the rotator URL and the iframe snippet.
 
-Framing policy: `/te`, `/go`, `/embed/te`, `/e/*`, `/promo/te/*` allow iframes. `/admin` is `DENY`. Homepage is `SAMEORIGIN` (use `/te` inside rotators, not `/`).
+**Framing policy (path-scoped)**
+
+| Path | Third-party iframe |
+| --- | --- |
+| `/te`, `/go`, `/embed/te`, `/e/*`, `/promo/te/*` | Allowed (`frame-ancestors *`, no `X-Frame-Options`) |
+| `/` homepage | `SAMEORIGIN` — do not put this in a rotator |
+| `/admin`, `/admin/*` | `DENY` / `frame-ancestors 'none'` |
+| `/r/VR-…` | Not a TE surface — use `/te?ref=VR-…` so breakout keeps tags |
+
+Inside a TE iframe: compact strip on 60–90px heights, 48px CTA, no login wall, no sticky header. The button is `<a href="/?src=te&camp=…&ref=…" target="_top">Open</a>`. If storage is blocked, the query string still carries the campaign. JS is optional.
 
 ## What ships
 
