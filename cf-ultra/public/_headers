@@ -9,8 +9,14 @@
 /favicon.svg
   Cache-Control: public, max-age=86400
 
-/
-  X-Frame-Options: SAMEORIGIN
+/promo/te/*
+  Cache-Control: public, max-age=86400
+  Content-Security-Policy: frame-ancestors *
 
-/e/*
-  Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'
+/admin
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
+
+/admin/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'

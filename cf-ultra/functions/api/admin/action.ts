@@ -23,6 +23,7 @@ type Body = {
   webhookUrl?: string | null;
   quietHours?: { enabled?: boolean; startHour?: number; endHour?: number; tzOffsetMinutes?: number };
   digest?: 'off' | 'hourly' | 'daily';
+  teCreditsCount?: boolean;
 };
 
 export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) => {
@@ -67,6 +68,8 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
   } else if (op === 'save_copy') {
     if (body.hero) ops.hero = body.hero.slice(0, 160);
     if (body.lead) ops.lead = body.lead.slice(0, 400);
+  } else if (op === 'save_te') {
+    ops.teCreditsCount = body.teCreditsCount === true;
   } else if (op === 'reset_demo') {
     await saveState(env, createEmptyState(), true);
     await resetAnalytics(env);

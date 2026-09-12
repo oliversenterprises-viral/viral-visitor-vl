@@ -98,6 +98,9 @@ export interface JoinInput {
   ref?: string | null;
   actorId: string;
   now?: number;
+  /** Tagged traffic-exchange visit. Default: no verified credit / no banner climb. */
+  trafficExchange?: boolean;
+  allowTeCredit?: boolean;
 }
 
 export interface JoinError {
@@ -123,6 +126,7 @@ export interface JoinResult {
   kingmaker: Kingmaker | null;
   alreadyCredited: boolean;
   selfJoin: boolean;
+  teIgnored: boolean;
 }
 
 export const RUNG_ORDER: Rung[] = ['entered', 'rising', 'challenger', 'banner'];
@@ -495,6 +499,7 @@ export function joinAndMaybeCredit(
   let credited = false;
   let alreadyCredited = false;
   let selfJoin = false;
+  let teIgnored = false;
   let unlock: UnlockMoment | null = null;
   let kingmaker: Kingmaker | null = null;
   let referrerCode: string | null = null;
@@ -509,6 +514,9 @@ export function joinAndMaybeCredit(
       const key = creditKey(ref, input.actorId);
       if (next.credits[key]) {
         alreadyCredited = true;
+      } else if (input.trafficExchange && !input.allowTeCredit) {
+        teIgnored = true;
+        referrerCode = ref;
       } else {
         const beforeBoard = buildBoard(next, now, false);
         const refSite = next.sites[referrer.siteHost];
@@ -597,6 +605,7 @@ export function joinAndMaybeCredit(
       kingmaker,
       alreadyCredited,
       selfJoin,
+      teIgnored,
     },
   };
 }

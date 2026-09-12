@@ -78,6 +78,15 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
     topSharers,
     topSites,
     ops,
+    camps: topMap(window.camps || {}, 8),
+    te: {
+      lands: window.teLands ?? 0,
+      joins: window.teJoins ?? 0,
+      ignored: window.teCreditsIgnored ?? 0,
+      toJoin: funnel.teToJoin ?? 0,
+      quality: funnel.teQuality ?? 0,
+      teCreditsCount: ops.teCreditsCount === true,
+    },
     alerts: alertPublicView(env, prefs, inbox),
     health: {
       kv: kvBound(env),

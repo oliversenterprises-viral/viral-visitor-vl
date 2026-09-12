@@ -26,6 +26,7 @@ Pageviews, share-link opens, board polls, embeds, and OG crawlers are **read-onl
 | Homepage / asset hit | No | Static on Pages CDN (`/assets/*` immutable) |
 | `GET /api/board` poll | No | `ultra:board` snapshot + 3s edge/isolate cache |
 | Open `/r/VR-XXXX` | No | Cached HTML ~20s. Visits do not count. |
+| Open `/te` / `/go` / `/embed/te` | No | Cached splash. TE impressions never `KV.put`. |
 | Embed `/e/:host` | No | Snapshot + 30s cache |
 | `POST /api/join` (Get my link) | Yes (2 keys) | `ultra:state` + `ultra:board` |
 | Unique friend credit | Yes | Same join path + stats flush |

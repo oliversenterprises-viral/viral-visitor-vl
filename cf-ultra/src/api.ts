@@ -61,15 +61,19 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-export async function joinSite(url: string, ref?: string | null): Promise<JoinOk> {
-  if (transport === 'demo') return demoJoin(url, ref);
+export async function joinSite(
+  url: string,
+  ref?: string | null,
+  camp?: { src?: string; camp?: string },
+): Promise<JoinOk> {
+  if (transport === 'demo') return demoJoin(url, ref, camp);
   let last = new Error('Could not get your link. Try again.');
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await fetch('/api/join', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ url, ref: ref || undefined }),
+        body: JSON.stringify({ url, ref: ref || undefined, src: camp?.src, camp: camp?.camp }),
       });
       const data = (await res.json()) as JoinOk & { error?: string };
       if (res.ok && data.ok) return data;

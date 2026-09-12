@@ -8,8 +8,14 @@ function sessionId(): string {
   return s;
 }
 
-export function track(kind: string, extra: { platform?: string; utm?: string; host?: string } = {}): void {
-  const utm = extra.utm || new URLSearchParams(location.search).get('utm_source') || undefined;
+export function track(
+  kind: string,
+  extra: { platform?: string; utm?: string; host?: string; src?: string; camp?: string; te?: boolean } = {},
+): void {
+  const q = new URLSearchParams(location.search);
+  const utm = extra.utm || q.get('utm_source') || undefined;
+  const src = extra.src || q.get('src') || undefined;
+  const camp = extra.camp || q.get('camp') || q.get('c') || undefined;
   void fetch('/api/track', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -18,6 +24,9 @@ export function track(kind: string, extra: { platform?: string; utm?: string; ho
       platform: extra.platform,
       utm,
       host: extra.host,
+      src,
+      camp,
+      te: extra.te || src === 'te',
       session: sessionId(),
       referrer: document.referrer,
     }),

@@ -1,3 +1,4 @@
+import { teDestination } from '../functions/_lib/campaign';
 import { RUNG_COPY, RUNG_ORDER, faviconForHost, nextActionFor, type BoardSite, type Rung } from '../functions/_lib/engine';
 import {
   currentHealthNote,
@@ -97,7 +98,7 @@ export function boot(root: HTMLElement): void {
   let siteHost = '';
   let kitOpen = false;
 
-  const attr = persistAttribution(qs('ref'), qs('url'));
+  const attr = persistAttribution(qs('ref'), qs('url'), qs('src') || qs('utm_source'), qs('camp') || qs('c'));
   syncAttributionToUrl(attr);
   const startUrl = qs('url') || attr.url || '';
   const startRef = (qs('ref') || attr.ref || '').toUpperCase();
@@ -193,6 +194,7 @@ export function boot(root: HTMLElement): void {
       </details>
       <div data-meter></div>
       <p class="fine" data-kit-note></p>
+      <button class="btn ghost" type="button" data-te-copy>Promote on traffic exchanges</button>
       <button class="btn ice" type="button" hidden data-simulate>Simulate a unique friend (demo)</button>
     </aside>
   `;
@@ -397,7 +399,7 @@ export function boot(root: HTMLElement): void {
   }
 
   async function afterJoin(data: JoinOk): Promise<void> {
-    persistAttribution(startRef || qs('ref'), data.site.url);
+    persistAttribution(startRef || qs('ref'), data.site.url, attr.src, attr.camp);
     renderBoard(data.board);
     setDemo(data.demoMode || currentTransport() === 'demo');
     openKit({
@@ -413,6 +415,9 @@ export function boot(root: HTMLElement): void {
     if (data.selfJoin) {
       status.textContent = 'Your own tap does not count. Send this link to someone else.';
       toast('Your own tap does not count');
+    } else if (data.teIgnored) {
+      status.textContent = 'TE / rotator traffic does not count as a unique credit. Your link is still live — send it to a real friend.';
+      toast('TE hit ignored — visits never climb the board');
     } else if (data.alreadyCredited) {
       status.textContent = 'That friend already counted. One unique Get my link per person.';
       toast('That friend already counted');
@@ -444,11 +449,11 @@ export function boot(root: HTMLElement): void {
     formErr.hidden = true;
     const host = previewHost(urlInput.value);
     track('paste', { host: host || undefined });
-    persistAttribution(startRef || qs('ref'), urlInput.value);
+    persistAttribution(startRef || qs('ref'), urlInput.value, attr.src, attr.camp);
     submit.disabled = true;
     submit.textContent = 'Getting your link…';
     try {
-      const data = await joinSite(urlInput.value, startRef || qs('ref') || attr.ref);
+      const data = await joinSite(urlInput.value, startRef || qs('ref') || attr.ref, { src: attr.src, camp: attr.camp });
       submit.textContent = 'Get my link';
       await afterJoin(data);
     } catch (err) {
@@ -460,6 +465,11 @@ export function boot(root: HTMLElement): void {
   });
 
   kit.querySelector('[data-close-kit]')?.addEventListener('click', closeKit);
+  kit.querySelector('[data-te-copy]')?.addEventListener('click', async () => {
+    const dest = teDestination(location.origin, { ref: me?.code || startRef, camp: attr.camp || 'share-kit' });
+    await copyText(dest);
+    toast('TE destination copied');
+  });
   kit.querySelector('[data-copy]')?.addEventListener('click', async () => {
     track('share', { platform: 'copy', host: siteHost });
     await copyText(shareUrl);
@@ -482,7 +492,12 @@ export function boot(root: HTMLElement): void {
   async function hydrate(): Promise<void> {
     const landHost = qs('url') ? hostOf(qs('url')!) : qs('helped') || siteHost;
     const alreadyInKit = Boolean(qs('kit') || qs('credited') || qs('already'));
-    track(startRef && !alreadyInKit ? 'friend_land' : 'land', { host: landHost || undefined });
+    track(startRef && !alreadyInKit ? 'friend_land' : 'land', {
+      host: landHost || undefined,
+      src: attr.src,
+      camp: attr.camp,
+      te: attr.te,
+    });
     void fetch('/api/content')
       .then((r) => r.json())
       .then((c: { hero?: string; lead?: string }) => {

@@ -64,6 +64,10 @@ Do this on a phone-width viewport and a second browser profile.
 - [ ] Simulate (demo only) climbs further without inventing public visitor counts.
 - [ ] Owner HQ funnel steps read: Land → Paste site → Get my link → Share → Friend land → Credit.
 
+## Traffic exchange
+
+TE / rotators are a **distribution path**, not a funnel step. Use `/te?src=te&camp=…`. Impressions do not write KV. `src=te` Get-my-link does not count as Credit. See README “Traffic exchanges”.
+
 ## Notifications
 
 Server-side only, after successful writes: new site, first share, friend land (batched), credit (1st–3rd instant), rung unlocks, spikes. See README Owner alerts.

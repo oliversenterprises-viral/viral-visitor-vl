@@ -27,6 +27,18 @@ describe('rollup merge', () => {
     expect(m.geo.US).toBe(4);
   });
 
+  it('counts TE lands and joins separately from credits', () => {
+    const b = emptyBucket('2026-09-12T15');
+    applyEvent(b, 'land', { ...hints, te: true, camp: 'rotator', utm: 'te' });
+    applyEvent(b, 'join', { ...hints, te: true, camp: 'rotator', utm: 'te' });
+    applyEvent(b, 'te_ignored', { ...hints, te: true, camp: 'rotator', utm: 'te' });
+    expect(b.teLands).toBe(1);
+    expect(b.teJoins).toBe(1);
+    expect(b.teCreditsIgnored).toBe(1);
+    expect(b.credits).toBe(0);
+    expect(funnelRates(b).teToJoin).toBe(100);
+  });
+
   it('computes funnel percents without inventing volume', () => {
     const b = emptyBucket('x');
     b.shares = 10;

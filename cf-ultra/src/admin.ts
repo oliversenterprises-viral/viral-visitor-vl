@@ -22,7 +22,9 @@ type Dash = {
   board: { banner?: { label: string }; entered: unknown[]; rising: unknown[]; challenger: unknown[] };
   topSharers: { code: string; host: string; credits: number; streak: number }[];
   topSites: { host: string; credits: number; owner: string }[];
-  ops: { bannedCodes: string[]; bannedSites: string[]; mutedCodes: string[]; hero: string; lead: string };
+  ops: { bannedCodes: string[]; bannedSites: string[]; mutedCodes: string[]; hero: string; lead: string; teCreditsCount?: boolean };
+  camps: { key: string; n: number }[];
+  te: { lands: number; joins: number; ignored: number; toJoin: number; quality: number; teCreditsCount: boolean };
   alerts: {
     events: Record<string, boolean>;
     digest: 'off' | 'hourly' | 'daily';
@@ -264,6 +266,24 @@ function render(d: Dash): void {
       </section>
     </div>
     <section class="lane">
+      <h3>Traffic exchange</h3>
+      <p class="note">Splash impressions on <code>/te</code> are not written (edge-cheap). These counts are people who opened through to Ultra with <code>src=te</code>. TE Get-my-link does <strong>not</strong> count as a verified credit unless you flip the switch (default off — #1 banner stays honest).</p>
+      <div class="kpis" style="grid-template-columns:1fr 1fr 1fr 1fr">
+        <div class="kpi"><b>${d.te?.lands ?? 0}</b><small>TE visits</small></div>
+        <div class="kpi"><b>${d.te?.joins ?? 0}</b><small>TE → Get my link</small></div>
+        <div class="kpi"><b>${d.te?.toJoin ?? 0}%</b><small>TE conversion</small></div>
+        <div class="kpi"><b>${d.te?.quality ?? 0}%</b><small>Credits / TE visit</small></div>
+      </div>
+      <p class="note">Credits ignored from TE: ${d.te?.ignored ?? 0}. Campaigns:</p>
+      ${bars(d.camps || [])}
+      <div class="ops-row">
+        <input data-te-camp placeholder="campaign (optional)" />
+        <button class="btn volt" type="button" data-te-copy>Copy TE destination</button>
+      </div>
+      <label class="toggle"><input type="checkbox" data-te-count ${d.te?.teCreditsCount || d.ops.teCreditsCount ? 'checked' : ''}/> Allow TE-attributed credits on the weekly race / #1 banner (not recommended)</label>
+      <button class="btn ghost" data-op="save_te" type="button">Save TE integrity</button>
+    </section>
+    <section class="lane">
       <h3>Ops</h3>
       <p class="note">Ban/mute is live. Copy edits hit <code>/api/content</code> (cached ~15s). Reset demo wipes board + rollups.</p>
       <div class="ops-row">
@@ -316,6 +336,9 @@ function render(d: Dash): void {
       body.site = (root.querySelector('[data-site]') as HTMLInputElement)?.value || '';
       body.hero = (root.querySelector('[data-hero]') as HTMLTextAreaElement)?.value || '';
       body.lead = (root.querySelector('[data-lead]') as HTMLTextAreaElement)?.value || '';
+      if (op === 'save_te') {
+        body.teCreditsCount = (root.querySelector('[data-te-count]') as HTMLInputElement)?.checked === true;
+      }
       if (op === 'save_alerts' || op === 'test_alert') {
         const events: Record<string, boolean> = {};
         root.querySelectorAll<HTMLInputElement>('[data-alert-ev]').forEach((el) => {
@@ -334,6 +357,15 @@ function render(d: Dash): void {
       await api('/api/admin/action', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       await paint();
     });
+  });
+  root.querySelector('[data-te-copy]')?.addEventListener('click', async () => {
+    const camp = (root.querySelector('[data-te-camp]') as HTMLInputElement)?.value.trim() || 'hq';
+    const url = `${location.origin}/te?src=te&camp=${encodeURIComponent(camp)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      /* ignore */
+    }
   });
   root.querySelectorAll('[data-export]').forEach((btn) => {
     btn.addEventListener('click', () => {

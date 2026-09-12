@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="250" viewBox="0 0 300 250">
+  <rect width="300" height="250" fill="#050508"/>
+  <circle cx="260" cy="20" r="70" fill="#d6ff3e" fill-opacity="0.12"/>
+  <text x="20" y="40" fill="#d6ff3e" font-family="ui-sans-serif,system-ui,sans-serif" font-size="11" font-weight="700" letter-spacing="2">VIRALREFER ULTRA</text>
+  <text x="20" y="100" fill="#f4f1ea" font-family="ui-sans-serif,system-ui,sans-serif" font-size="28" font-weight="800">Paste a site.</text>
+  <text x="20" y="136" fill="#d6ff3e" font-family="ui-sans-serif,system-ui,sans-serif" font-size="28" font-weight="800">Make it climb.</text>
+  <text x="20" y="170" fill="#9a9588" font-family="ui-sans-serif,system-ui,sans-serif" font-size="13">Unique friends only. No email.</text>
+  <rect x="20" y="190" width="260" height="42" rx="12" fill="#d6ff3e"/>
+  <text x="150" y="217" text-anchor="middle" fill="#071000" font-family="ui-sans-serif,system-ui,sans-serif" font-size="16" font-weight="800">GET MY LINK</text>
+</svg>

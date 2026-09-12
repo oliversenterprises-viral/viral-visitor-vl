@@ -13,7 +13,8 @@ export type TrackKind =
   | 'burst_ip'
   | 'embed_load'
   | 'embed_click'
-  | 'error';
+  | 'error'
+  | 'te_ignored';
 
 export type Platform = 'x' | 'whatsapp' | 'telegram' | 'reddit' | 'qr' | 'embed' | 'direct' | 'native' | 'copy' | 'other';
 
@@ -34,9 +35,13 @@ export interface HourBucket {
   embedLoads: number;
   embedClicks: number;
   errors: number;
+  teLands: number;
+  teJoins: number;
+  teCreditsIgnored: number;
   platforms: Record<string, number>;
   referrers: Record<string, number>;
   utm: Record<string, number>;
+  camps: Record<string, number>;
   geo: Record<string, number>;
   device: Record<string, number>;
   browser: Record<string, number>;
@@ -64,6 +69,9 @@ export interface VisitorHints {
   referrer: string;
   utm: string;
   platform?: Platform;
+  te?: boolean;
+  camp?: string;
+  src?: string;
 }
 
 const COUNTERS: (keyof HourBucket)[] = [
@@ -82,9 +90,12 @@ const COUNTERS: (keyof HourBucket)[] = [
   'embedLoads',
   'embedClicks',
   'errors',
+  'teLands',
+  'teJoins',
+  'teCreditsIgnored',
 ];
 
-const MAPS = ['platforms', 'referrers', 'utm', 'geo', 'device', 'browser'] as const;
+const MAPS = ['platforms', 'referrers', 'utm', 'camps', 'geo', 'device', 'browser'] as const;
 
 export function hourId(now: number = Date.now()): string {
   return new Date(now).toISOString().slice(0, 13);
@@ -112,9 +123,13 @@ export function emptyBucket(hour: string): HourBucket {
     embedLoads: 0,
     embedClicks: 0,
     errors: 0,
+    teLands: 0,
+    teJoins: 0,
+    teCreditsIgnored: 0,
     platforms: {},
     referrers: {},
     utm: {},
+    camps: {},
     geo: {},
     device: {},
     browser: {},
@@ -124,7 +139,7 @@ export function emptyBucket(hour: string): HourBucket {
 export function mergeBuckets(...parts: HourBucket[]): HourBucket {
   const out = emptyBucket(parts[0]?.hour || hourId());
   for (const b of parts) {
-    for (const k of COUNTERS) out[k] = (out[k] as number) + (b[k] as number);
+    for (const k of COUNTERS) out[k] = (Number(out[k]) || 0) + (Number(b[k]) || 0);
     for (const map of MAPS) {
       for (const [key, n] of Object.entries(b[map] || {})) {
         out[map][key] = (out[map][key] || 0) + n;
@@ -139,7 +154,10 @@ export function addCount(map: Record<string, number>, key: string, n = 1): void 
   map[k] = (map[k] || 0) + n;
 }
 
-export function hintsFromRequest(request: Request, body: { platform?: string; utm?: string; referrer?: string } = {}): VisitorHints {
+export function hintsFromRequest(
+  request: Request,
+  body: { platform?: string; utm?: string; referrer?: string; src?: string; camp?: string; te?: boolean } = {},
+): VisitorHints {
   const country = (request.headers.get('cf-ipcountry') || 'XX').toUpperCase();
   const ua = request.headers.get('user-agent') || '';
   const device = /Mobi|Android|iPhone|iPad/i.test(ua) ? 'mobile' : 'desktop';
@@ -156,7 +174,20 @@ export function hintsFromRequest(request: Request, body: { platform?: string; ut
     referrer = 'direct';
   }
   const platform = normalizePlatform(body.platform);
-  return { country, device, browser, referrer, utm: (body.utm || 'none').slice(0, 32), platform };
+  const src = String(body.src || body.utm || '').toLowerCase();
+  const camp = String(body.camp || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
+  const te = body.te === true || src === 'te' || src === 'traffic_exchange';
+  return {
+    country,
+    device,
+    browser,
+    referrer,
+    utm: (body.utm || (te ? 'te' : 'none')).slice(0, 32),
+    platform,
+    te,
+    camp,
+    src: te ? 'te' : src.slice(0, 32),
+  };
 }
 
 export function normalizePlatform(raw?: string): Platform | undefined {
@@ -173,7 +204,10 @@ export function applyEvent(bucket: HourBucket, kind: TrackKind, hints: VisitorHi
   addCount(bucket.browser, hints.browser);
   addCount(bucket.referrers, hints.referrer);
   addCount(bucket.utm, hints.utm);
+  if (hints.camp) addCount(bucket.camps, hints.camp);
   if (hints.platform) addCount(bucket.platforms, hints.platform);
+  if (hints.te && (kind === 'land' || kind === 'friend_land')) bucket.teLands += 1;
+  if (hints.te && kind === 'join') bucket.teJoins += 1;
 
   switch (kind) {
     case 'pageview':
@@ -216,6 +250,9 @@ export function applyEvent(bucket: HourBucket, kind: TrackKind, hints: VisitorHi
     case 'error':
       bucket.errors += 1;
       break;
+    case 'te_ignored':
+      bucket.teCreditsIgnored += 1;
+      break;
   }
 }
 
@@ -229,6 +266,8 @@ export function funnelRates(b: HourBucket) {
     friendToCredit: pct(b.credits, b.friendLands),
     shareToCredit: pct(b.credits, b.shares),
     bounce: pct(Math.max(0, (b.lands || b.pageviews) - b.joins), b.lands || b.pageviews),
+    teToJoin: pct(b.teJoins, b.teLands),
+    teQuality: pct(b.credits, b.teLands),
   };
 }
 
@@ -263,6 +302,7 @@ export function eventText(kind: TrackKind, extra = ''): string {
     embed_load: 'Embed loaded',
     embed_click: 'Embed click',
     error: 'Error',
+    te_ignored: 'TE credit ignored',
   };
   return extra ? `${labels[kind]} · ${extra}` : labels[kind];
 }

@@ -6,6 +6,8 @@ export interface OpsState {
   mutedCodes: string[];
   hero: string;
   lead: string;
+  /** Default false: TE-tagged Get-my-link never writes a verified credit. */
+  teCreditsCount: boolean;
 }
 
 export const DEFAULT_OPS: OpsState = {
@@ -14,6 +16,7 @@ export const DEFAULT_OPS: OpsState = {
   mutedCodes: [],
   hero: 'Paste a site.\nMake it feel viral.',
   lead: 'Instant personal share link. Friends tap Get my link. The site climbs Just entered → Rising → Challenger → #1. Visits never count.',
+  teCreditsCount: false,
 };
 
 const MEM = '__ULTRA_OPS__';
@@ -35,6 +38,7 @@ export async function loadOps(env: UltraEnv): Promise<OpsState> {
       mutedCodes: raw.mutedCodes ?? [],
       hero: raw.hero || DEFAULT_OPS.hero,
       lead: raw.lead || DEFAULT_OPS.lead,
+      teCreditsCount: raw.teCreditsCount === true,
     };
   } catch {
     return { ...DEFAULT_OPS };

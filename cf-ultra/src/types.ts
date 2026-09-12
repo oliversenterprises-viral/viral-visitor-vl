@@ -37,6 +37,7 @@ export interface JoinOk {
   alreadyCredited: boolean;
   selfJoin: boolean;
   referrerCode: string | null;
+  teIgnored?: boolean;
   unlock: UnlockMoment | null;
   kingmaker: Kingmaker | null;
   board: BoardState;

@@ -1,5 +1,6 @@
 import { emitJoinAlerts, emitSpikeAlert, rememberAlertOrigin } from '../_lib/alerts';
 import { recordAnalytics } from '../_lib/analytics';
+import { parseCampaign } from '../_lib/campaign';
 import { CODE_RE, buildBoard, hostnameFromUrl, joinAndMaybeCredit, normalizeWebsiteUrl, publicPlayer, publicSite, rungForSite } from '../_lib/engine';
 import { edgeBust } from '../_lib/edge-cache';
 import { actorFromRequest, clientIp, json, originFromRequest, readJson, tooMany, withActor } from '../_lib/http';
@@ -8,7 +9,7 @@ import { isBanned, loadOps } from '../_lib/ops';
 import { hintsFromRequest } from '../_lib/stats';
 import { loadState, saveState, type UltraEnv } from '../_lib/store';
 
-type JoinBody = { url?: string; ref?: string };
+type JoinBody = { url?: string; ref?: string; src?: string; camp?: string; utm?: string };
 
 export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, waitUntil }) => {
   const { actorId, setCookie } = actorFromRequest(request);
@@ -48,10 +49,13 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
     );
     return withActor(json({ ok: false, error: 'That link or site is paused by the owner.' }, { status: 403 }), actorId, setCookie);
   }
+  const camp = parseCampaign({ src: body.src, camp: body.camp, utm: body.utm });
   const outcome = joinAndMaybeCredit(loaded.state, {
     url: body.url ?? '',
     ref,
     actorId,
+    trafficExchange: camp.te,
+    allowTeCredit: ops.teCreditsCount === true,
   });
 
   if (!('result' in outcome)) {
@@ -62,7 +66,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
   const result = outcome.result;
   const save = await saveState(env, state, loaded.demoMode);
   void edgeBust(request, ['/api/board', '/api/activity', '/api/challenge']);
-  const hints = hintsFromRequest(request);
+  const hints = hintsFromRequest(request, { src: camp.src, camp: camp.camp, utm: camp.te ? 'te' : body.utm, te: camp.te });
   await recordAnalytics(env, {
     kind: 'join',
     actorId,
@@ -83,6 +87,8 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
     });
   } else if (result.selfJoin) {
     await recordAnalytics(env, { kind: 'self_ref', actorId, hints, flushNow: true, origin });
+  } else if (result.teIgnored) {
+    await recordAnalytics(env, { kind: 'te_ignored', actorId, hints, flushNow: true, origin, text: result.site.host });
   }
 
   const now = Date.now();
@@ -122,6 +128,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
       alreadyCredited: result.alreadyCredited,
       selfJoin: result.selfJoin,
       referrerCode: result.referrerCode,
+      teIgnored: result.teIgnored,
       unlock: result.unlock,
       kingmaker: result.kingmaker,
       board: buildBoard(state, now, loaded.demoMode),

@@ -63,6 +63,7 @@ function packJoin(state: UltraState, code: string, extras: Partial<JoinOk> = {})
     alreadyCredited: false,
     selfJoin: false,
     referrerCode: null,
+    teIgnored: false,
     unlock: null,
     kingmaker: null,
     board: buildBoard(state, now, true),
@@ -70,11 +71,13 @@ function packJoin(state: UltraState, code: string, extras: Partial<JoinOk> = {})
   };
 }
 
-export function demoJoin(url: string, ref?: string | null): JoinOk {
+export function demoJoin(url: string, ref?: string | null, camp?: { src?: string; camp?: string }): JoinOk {
+  const te = camp?.src === 'te' || camp?.src === 'traffic_exchange';
   const outcome = joinAndMaybeCredit(loadState(), {
     url,
     ref: ref && CODE_RE.test(ref) ? ref : null,
     actorId: demoActorId(),
+    trafficExchange: te,
   });
   if (!('result' in outcome)) throw new Error(outcome.error);
   saveState(outcome.state);
@@ -84,6 +87,7 @@ export function demoJoin(url: string, ref?: string | null): JoinOk {
     alreadyCredited: result.alreadyCredited,
     selfJoin: result.selfJoin,
     referrerCode: result.referrerCode,
+    teIgnored: result.teIgnored,
     unlock: result.unlock,
     kingmaker: result.kingmaker,
   });

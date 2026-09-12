@@ -6,6 +6,35 @@ This folder is a standalone Pages + Functions + KV app. It does **not** replace 
 
 The **product core** is the eight-step loop in [`FUNNEL.md`](./FUNNEL.md). If anything conflicts, funnel perfection wins over duel/embed polish.
 
+## Traffic exchanges (TE / rotators)
+
+Owners can buy or run hit-exchange traffic **to Ultra** (and to a race link) without paid TE integrations and without bots climbing #1.
+
+**Destinations (put these in the rotator)**
+
+| URL | Role |
+| --- | --- |
+| `/te?src=te&camp=YOURCAMP` | Fast splash, iframe-safe, **no write per impression** |
+| `/go?src=te&camp=YOURCAMP` | Same splash |
+| `/embed/te?src=te&camp=YOURCAMP` | Compact 300×250 iframe |
+| `/join?src=te&camp=YOURCAMP` | 302 into the real funnel |
+| `/a/VR-XXXXXX?src=te` | Race attribution + TE tag |
+| `/?src=te&camp=YOURCAMP` | Homepage after a real click |
+
+Splash CTA uses `target="_top"` so a third-party iframe can break out. Cookies/storage are optional — tags live on the query string.
+
+**Integrity (default)**
+
+- Opening `/te` never credits anyone.
+- A Get-my-link tagged `src=te` / `traffic_exchange` still issues a **share kit**, but **does not** write a verified credit toward Rising / Challenger / #1.
+- HQ can flip “Allow TE-attributed credits” (off by default). Leave it off.
+
+**HQ:** TE visits, TE→Get my link conversion, credits-per-TE-visit (should stay ~0), campaign list, copy-TE-link.
+
+**Promo kit:** `/promo/te/` — titles, blurbs, 728×90 / 468×60 / 300×250 SVG, iframe snippet. Share kit and HQ have **Promote on traffic exchanges**.
+
+Framing policy: `/te`, `/go`, `/embed/te`, `/e/*`, `/promo/te/*` allow iframes. `/admin` is `DENY`. Homepage is `SAMEORIGIN` (use `/te` inside rotators, not `/`).
+
 ## What ships
 
 1. Paste any site URL (no email).
@@ -124,7 +153,7 @@ PNGs from the local Pages preview (`wrangler pages dev dist --kv BOARD` on :8788
 | Admin HQ | `previews/06-admin-dashboard.png` |
 | Admin HQ mobile | `previews/06b-admin-mobile.png` |
 
-Stub routes: `/admin` (partial HQ desk), `/te` (publisher iframe splash).
+Live HQ: `/admin/`. TE splash: `/te`, `/go`, `/embed/te`. Promo kit: `/promo/te/`.
 
 ## Project layout
 

@@ -94,6 +94,30 @@ describe('join + unique credit climb', () => {
     expect(state.sites['alpha.test'].creditTimes).toHaveLength(1);
   });
 
+  it('does not let TE-tagged Get-my-link write a verified credit', () => {
+    let state = createEmptyState();
+    const a = mustJoin(state, { url: 'https://alpha.test', actorId: actor('aa'), now });
+    state = a.state;
+    const te = mustJoin(state, {
+      url: 'https://bot.test',
+      ref: a.result.player.code,
+      actorId: actor('cc'),
+      now: now + 4000,
+      trafficExchange: true,
+    });
+    expect(te.result.teIgnored).toBe(true);
+    expect(te.result.credited).toBe(false);
+    expect(te.state.sites['alpha.test'].creditTimes).toHaveLength(0);
+    const real = mustJoin(te.state, {
+      url: 'https://human.test',
+      ref: a.result.player.code,
+      actorId: actor('dd'),
+      now: now + 5000,
+    });
+    expect(real.result.credited).toBe(true);
+    expect(real.state.sites['alpha.test'].creditTimes).toHaveLength(1);
+  });
+
   it('promotes challenger then banner and records a kingmaker', () => {
     let state = createEmptyState();
     const owner = mustJoin(state, { url: 'https://champ.test', actorId: actor('aa'), now });

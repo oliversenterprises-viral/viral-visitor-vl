@@ -16,7 +16,17 @@ const KINDS = new Set<TrackKind>([
   'error',
 ]);
 
-type Body = { kind?: string; platform?: string; utm?: string; referrer?: string; session?: string; host?: string };
+type Body = {
+  kind?: string;
+  platform?: string;
+  utm?: string;
+  referrer?: string;
+  session?: string;
+  host?: string;
+  src?: string;
+  camp?: string;
+  te?: boolean;
+};
 
 export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, waitUntil }) => {
   const { actorId, setCookie } = actorFromRequest(request);
@@ -32,7 +42,14 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
   if (kind === 'pageview' && !samplePageview(actorId)) {
     return withActor(json({ ok: true, sampled: false }), actorId, setCookie);
   }
-  const hints = hintsFromRequest(request, body);
+  const hints = hintsFromRequest(request, {
+    platform: body.platform,
+    utm: body.utm,
+    referrer: body.referrer,
+    src: body.src,
+    camp: body.camp,
+    te: body.te,
+  });
   const host = typeof body.host === 'string' ? body.host.replace(/^www\./, '').slice(0, 120) : '';
   await recordAnalytics(env, {
     kind,
