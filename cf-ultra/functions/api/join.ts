@@ -26,6 +26,8 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
         actorId,
         hints: hintsFromRequest(request),
         flushNow: false,
+        request,
+        ip,
       }).then(() => emitSpikeAlert(env, origin, kind === 'burst_ip' ? 'Join burst / 429' : 'Join blocked', ip)),
     );
     return withActor(
@@ -44,7 +46,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
   if (isBanned(ops, ref, host) || (ref && ops.bannedCodes.includes(ref))) {
     const hints = hintsFromRequest(request);
     waitUntil(
-      recordAnalytics(env, { kind: 'blocked', actorId, hints, flushNow: true, text: 'Banned code or site' }).then(() =>
+      recordAnalytics(env, { kind: 'blocked', actorId, hints, flushNow: true, text: 'Banned code or site', request, ip }).then(() =>
         emitSpikeAlert(env, origin, 'Banned code or site', ip),
       ),
     );
@@ -75,6 +77,8 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
     flushNow: true,
     text: result.site?.host || result.player.code,
     origin,
+    request,
+    ip,
   });
   if (result.credited) {
     await recordAnalytics(env, {
@@ -84,12 +88,14 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
       flushNow: true,
       text: result.site?.host || result.player.code,
       origin,
+      request,
+      ip,
       rung: result.unlock ? { at: Date.now(), host: result.unlock.host, rung: result.unlock.rung } : undefined,
     });
   } else if (result.selfJoin) {
-    await recordAnalytics(env, { kind: 'self_ref', actorId, hints, flushNow: true, origin });
+    await recordAnalytics(env, { kind: 'self_ref', actorId, hints, flushNow: true, origin, request, ip });
   } else if (result.teIgnored) {
-    await recordAnalytics(env, { kind: 'te_ignored', actorId, hints, flushNow: true, origin, text: result.site?.host || result.player.code });
+    await recordAnalytics(env, { kind: 'te_ignored', actorId, hints, flushNow: true, origin, request, ip, text: result.site?.host || result.player.code });
   }
 
   const now = Date.now();

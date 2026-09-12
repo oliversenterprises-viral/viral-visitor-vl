@@ -1,5 +1,6 @@
 import { emitAlert, emitSpikeAlert, flushAlertBatches, maybeFirstShareAlert, rememberAlertOrigin } from '../_lib/alerts';
 import { recordAnalytics, samplePageview } from '../_lib/analytics';
+import { shouldSkipStats } from '../_lib/exclude';
 import { actorFromRequest, json, originFromRequest, readJson, tooMany, withActor } from '../_lib/http';
 import { hitLimit } from '../_lib/limit';
 import { hintsFromRequest, type TrackKind } from '../_lib/stats';
@@ -37,6 +38,10 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
     waitUntil(emitSpikeAlert(env, origin, 'Track burst / 429'));
     return withActor(tooMany('Track rate limited', limited.retryAfterSec), actorId, setCookie);
   }
+  const skip = await shouldSkipStats(env, request);
+  if (skip.skip) {
+    return withActor(json({ ok: true, sampled: false, skipped: true, reason: skip.reason }), actorId, setCookie);
+  }
   const body = (await readJson<Body>(request)) ?? {};
   const kind = KINDS.has(body.kind as TrackKind) ? (body.kind as TrackKind) : 'pageview';
   if (kind === 'pageview' && !samplePageview(actorId)) {
@@ -59,6 +64,8 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
     flushNow: kind !== 'pageview' && kind !== 'land',
     text: host || undefined,
     origin,
+    request,
+    ip: skip.ip,
   });
   if (kind === 'share' && host) {
     waitUntil(maybeFirstShareAlert(env, origin, host).then(() => flushAlertBatches(env, origin)));

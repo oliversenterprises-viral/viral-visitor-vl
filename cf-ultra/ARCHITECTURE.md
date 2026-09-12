@@ -93,9 +93,11 @@ Free-tier write math fails around the first ~500 joins/day (2 writes each + no r
 
 Gated by **HMAC session cookie** signed with `ADMIN_OWNER_PASSWORD` or `ADMIN_ACTION_SECRET` (Pages/Wrangler secrets — **never** `VITE_`). Cloudflare Access (`Cf-Access-Authenticated-User-Email`) also passes. Local wrangler without CF-Ray and without a secret accepts `ultra-local-only` so you can demo HQ; that fallback is **off on the real edge**.
 
-Dashboard reads `stats:day:*` + `stats:all` + live isolate + board. Cached by not recomputing from raw pageviews. Ops: ban/mute codes or sites, edit hero/lead, CSV export, reset demo. Owner alerts: inbox + webhook prefs (`ultra:alert-inbox`, `ultra:alert-prefs`).
+Dashboard reads `stats:day:*` + `stats:all` + live isolate + board. Cached by not recomputing from raw pageviews. Ops: ban/mute codes or sites, edit hero/lead, CSV export, excluded IPs, reset stats (`stats:*` only), wipe board. Owner alerts: inbox + webhook prefs (`ultra:alert-inbox`, `ultra:alert-prefs`).
 
-Analytics keys: `stats:hour:*` (8-day TTL), `stats:day:*` (120-day TTL), `stats:all`, `stats:feed`, `stats:rungs`, `ultra:ops`, `ultra:alert-prefs`, `ultra:alert-inbox`, `ultra:alert-first-share`.
+Analytics keys: `stats:hour:*` (8-day TTL), `stats:day:*` (120-day TTL), `stats:all`, `stats:feed`, `stats:rungs`, `ultra:ops`, `ultra:exclude-ips`, `ultra:alert-prefs`, `ultra:alert-inbox`, `ultra:alert-first-share`.
+
+Stats writes are skipped when the client IP is on `ultra:exclude-ips` (`CF-Connecting-IP` / first `X-Forwarded-For` hop) or when an Owner HQ HMAC / CF Access session is present. Product joins still succeed.
 
 ## What we did not add (on purpose)
 
@@ -112,9 +114,10 @@ functions/_lib/limit.ts       memory rate limits (no KV)
 functions/_lib/edge-cache.ts  Cache API get/put/bust
 functions/_lib/store.ts       state + board snapshot, isolate TTL
 functions/_lib/admin-auth.ts  HMAC / CF Access (no client secret)
+functions/_lib/exclude.ts     durable exclude-IP list + owner-session skip
 functions/_lib/analytics.ts   isolate buffer + KV rollups
 functions/_lib/alerts.ts      owner notify (inbox, batch, Telegram, webhook)
-functions/api/admin/*         HQ APIs
+functions/api/admin/*         HQ APIs (exclude IPs, reset stats, ops)
 functions/api/board.ts        public cached snapshot
 functions/api/join.ts         hot write path
 src/admin.ts                  Owner HQ UI

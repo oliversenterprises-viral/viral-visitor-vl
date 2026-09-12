@@ -12,6 +12,7 @@ import {
   type VisitorHints,
 } from './stats';
 import { alertOrigin, emitDigest, funnelDigestLine, rememberAlertOrigin } from './alerts';
+import { normalizeIp, shouldSkipStats, statsIp } from './exclude';
 import { kvBound, type UltraEnv } from './store';
 
 const FLUSH_MS = 15_000;
@@ -104,13 +105,20 @@ export async function recordAnalytics(
     flushNow?: boolean;
     rung?: RungMark;
     origin?: string;
+    request?: Request;
+    ip?: string;
   },
-): Promise<void> {
+): Promise<{ skipped: boolean; reason?: string }> {
+  if (input.request) {
+    const gate = await shouldSkipStats(env, input.request);
+    if (gate.skip) return { skipped: true, reason: gate.reason };
+  }
   if (input.origin) rememberAlertOrigin(input.origin);
   const now = Date.now();
   rollHour(now);
   const b = buf();
   applyEvent(b.bucket, input.kind, input.hints);
+  const ip = input.ip || (input.request ? statsIp(input.request) : undefined);
   if (input.actorId) {
     if (b.actors.size < UNIQUE_CAP) b.actors.add(input.actorId);
     b.live.set(input.actorId, now);
@@ -133,6 +141,7 @@ export async function recordAnalytics(
         text: input.text || eventText(input.kind),
         platform: input.hints.platform,
         country: input.hints.country,
+        ip,
       },
       ...b.feed,
     ].slice(0, MAX_FEED);
@@ -146,6 +155,7 @@ export async function recordAnalytics(
     now - b.lastFlush > FLUSH_MS ||
     b.pageviewsSinceFlush >= FLUSH_PAGEVIEWS;
   if (shouldFlush) await flushAnalytics(env);
+  return { skipped: false };
 }
 
 export async function flushAnalytics(env: UltraEnv): Promise<void> {
@@ -240,16 +250,60 @@ export async function readRungs(env: UltraEnv): Promise<RungMark[]> {
   }
 }
 
-export async function resetAnalytics(env: UltraEnv): Promise<void> {
+/** Wipe isolate + every `stats:*` KV key. Does not touch the live referral board. */
+export async function resetAnalytics(env: UltraEnv): Promise<{ deleted: number }> {
   g.__ULTRA_ANALYTICS__ = undefined;
-  if (!kvBound(env)) return;
-  const today = new Date().toISOString().slice(0, 10);
-  await Promise.all([
-    env.BOARD!.delete('stats:all'),
-    env.BOARD!.delete('stats:feed'),
-    env.BOARD!.delete('stats:rungs'),
-    env.BOARD!.delete(`stats:day:${today}`),
-  ]);
+  if (!kvBound(env)) return { deleted: 0 };
+  let deleted = 0;
+  try {
+    let cursor: string | undefined;
+    do {
+      const page = await env.BOARD!.list({ prefix: 'stats:', limit: 1000, cursor });
+      await Promise.all(page.keys.map((k) => env.BOARD!.delete(k.name)));
+      deleted += page.keys.length;
+      cursor = page.list_complete ? undefined : page.cursor;
+    } while (cursor);
+  } catch {
+    deleted += await deleteKnownStatsKeys(env);
+  }
+  return { deleted };
+}
+
+async function deleteKnownStatsKeys(env: UltraEnv): Promise<number> {
+  const keys = ['stats:all', 'stats:feed', 'stats:rungs'];
+  const now = Date.now();
+  for (let i = 0; i < 120; i++) {
+    keys.push(`stats:day:${new Date(now - i * 86_400_000).toISOString().slice(0, 10)}`);
+  }
+  for (let i = 0; i < 8 * 24; i++) {
+    keys.push(`stats:hour:${new Date(now - i * 3_600_000).toISOString().slice(0, 13)}`);
+  }
+  await Promise.all(keys.map((k) => env.BOARD!.delete(k)));
+  return keys.length;
+}
+
+/** Drop HQ feed rows recorded for an excluded IP. Rollup counters stay (sampled history). */
+export async function purgeFeedByIp(env: UltraEnv, rawIp: string): Promise<number> {
+  const want = normalizeIp(rawIp);
+  if (!want) return 0;
+  let n = 0;
+  const b = g.__ULTRA_ANALYTICS__;
+  if (b) {
+    const before = b.feed.length;
+    b.feed = b.feed.filter((e) => e.ip !== want);
+    n += before - b.feed.length;
+  }
+  if (!kvBound(env)) return n;
+  try {
+    const stored = (await env.BOARD!.get('stats:feed', 'json')) as AdminEvent[] | null;
+    if (!Array.isArray(stored)) return n;
+    const next = stored.filter((e) => e.ip !== want);
+    n += stored.length - next.length;
+    if (next.length !== stored.length) await env.BOARD!.put('stats:feed', JSON.stringify(next));
+  } catch {
+    /* keep isolate-only purge */
+  }
+  return n;
 }
 
 export function samplePageview(actorId: string): boolean {

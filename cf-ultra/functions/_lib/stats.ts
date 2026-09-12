@@ -54,6 +54,8 @@ export interface AdminEvent {
   text: string;
   platform?: string;
   country?: string;
+  /** Client IP when recorded — used to purge excluded-IP feed rows. */
+  ip?: string;
 }
 
 export interface RungMark {

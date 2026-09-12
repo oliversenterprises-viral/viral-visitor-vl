@@ -1,6 +1,7 @@
 import { requireAdmin } from '../../_lib/admin-auth';
 import { alertPublicView, loadAlertPrefs, readAlertInbox } from '../../_lib/alerts';
 import { isolateBucket, liveVisitors, readAllTime, readDays, readFeed, readRungs } from '../../_lib/analytics';
+import { loadExcludeIps } from '../../_lib/exclude';
 import { weeklyCredits } from '../../_lib/engine';
 import { json } from '../../_lib/http';
 import { loadOps } from '../../_lib/ops';
@@ -13,7 +14,7 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
 
   const range = new URL(request.url).searchParams.get('range') || '7d';
   const days = daysBack(range);
-  const [dayRows, all, feed, rungs, boardRead, loaded, ops, prefs, inbox] = await Promise.all([
+  const [dayRows, all, feed, rungs, boardRead, loaded, ops, prefs, inbox, excludeIps] = await Promise.all([
     readDays(env, days),
     readAllTime(env),
     readFeed(env),
@@ -23,6 +24,7 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
     loadOps(env),
     loadAlertPrefs(env),
     readAlertInbox(env),
+    loadExcludeIps(env),
   ]);
 
   const window = range === 'all' ? all : mergeBuckets(...dayRows.map((d) => ({ ...d, hour: d.hour })));
@@ -92,6 +94,7 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
     topSites,
     codes,
     ops,
+    excludeIps,
     camps: topMap(window.camps || {}, 8),
     te: {
       lands: window.teLands ?? 0,
@@ -110,7 +113,7 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
       sites: sites.length,
       credits: Object.keys(loaded.state.credits).length,
       assumedPlan: 'Workers Paid + BOARD KV',
-      writePolicy: 'Pageviews sampled + buffered. Joins/credits flush immediately. No write-per-pageview.',
+      writePolicy: 'Pageviews sampled + buffered. Joins/credits flush immediately. No write-per-pageview. Excluded IPs and Owner HQ sessions never increment counters.',
     },
   });
 };

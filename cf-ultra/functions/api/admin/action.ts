@@ -7,7 +7,8 @@ import {
   saveAlertPrefs,
   testAlert,
 } from '../../_lib/alerts';
-import { resetAnalytics } from '../../_lib/analytics';
+import { purgeFeedByIp, resetAnalytics } from '../../_lib/analytics';
+import { addExcludeIp, loadExcludeIps, removeExcludeIp } from '../../_lib/exclude';
 import { createEmptyState } from '../../_lib/engine';
 import { json, originFromRequest, readJson } from '../../_lib/http';
 import { DEFAULT_OPS, loadOps, saveOps } from '../../_lib/ops';
@@ -19,6 +20,8 @@ type Body = {
   site?: string;
   hero?: string;
   lead?: string;
+  ip?: string;
+  purge?: boolean;
   events?: Record<string, boolean>;
   webhookUrl?: string | null;
   telegram?: boolean;
@@ -50,6 +53,21 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
     return json({ ok: true, op, item, alerts: alertPublicView(env, prefs, inbox) });
   }
 
+  if (op === 'exclude_ip_add') {
+    const result = await addExcludeIp(env, body.ip || '');
+    if (result.error) return json({ ok: false, error: result.error, excludeIps: result.ips }, { status: 400 });
+    const purged = body.purge && result.added ? await purgeFeedByIp(env, result.added) : 0;
+    return json({ ok: true, op, excludeIps: result.ips, added: result.added, purged });
+  }
+  if (op === 'exclude_ip_remove') {
+    const result = await removeExcludeIp(env, body.ip || '');
+    return json({ ok: true, op, excludeIps: result.ips, removed: result.removed });
+  }
+  if (op === 'reset_stats') {
+    const result = await resetAnalytics(env);
+    return json({ ok: true, op, reset: 'stats', deleted: result.deleted, kv: true });
+  }
+
   if (op === 'ban_code' && body.code) {
     const c = body.code.toUpperCase();
     if (!ops.bannedCodes.includes(c)) ops.bannedCodes.push(c);
@@ -73,9 +91,9 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
     ops.teCreditsCount = body.teCreditsCount === true;
   } else if (op === 'reset_demo') {
     await saveState(env, createEmptyState(), true);
-    await resetAnalytics(env);
     await saveOps(env, { ...DEFAULT_OPS });
-    return json({ ok: true, op, reset: true });
+    const excludeIps = await loadExcludeIps(env);
+    return json({ ok: true, op, reset: 'board', excludeIps });
   } else {
     return json({ ok: false, error: 'Unknown op.' }, { status: 400 });
   }

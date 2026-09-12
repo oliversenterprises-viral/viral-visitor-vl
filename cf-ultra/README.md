@@ -231,7 +231,16 @@ First-class analytics console at **`/admin/`**. Not a leftover stub.
 | Geo country | `CF-IPCountry` (shows `XX` on local preview) |
 | Fake testimonials / MRR / inflated counts | **Never** |
 
-**Ops (live):** ban/mute codes or sites, edit public hero/lead (`/api/content`), CSV export, reset demo data, KV health line.
+**Ops (live):** ban/mute codes or sites, edit public hero/lead (`/api/content`), CSV export, **excluded IPs** (durable KV — never increment stats), **reset stats** (analytics / activity / funnel rollups only; board stays), wipe live referral board, KV health line.
+
+**Excluded IPs + owner browsing**
+
+- HQ can add/remove IPs stored at `ultra:exclude-ips` on BOARD KV.
+- Before any stats write (`POST /api/track`, join/credit/share rollups, activity feed), Functions check `CF-Connecting-IP`, else the first `X-Forwarded-For` hop.
+- An authenticated Owner HQ session (`vr_ultra_hq` HMAC cookie, or Cloudflare Access) also skips stats so logged-in admin browsing does not inflate counters.
+- Get my link and other product actions still work; only analytics increment is skipped.
+- Optional: **Add + purge matching feed** drops HQ feed rows that already stored that IP.
+- **Reset stats** lists and deletes every `stats:*` key (works with BOARD KV bound). It does not wipe `ultra:state` / the live board.
 
 **Owner alerts (live):** after a real conversion write (new site, first share, friend land, verified credit, rung climb, spike), Functions log an **Alerts inbox** row in HQ and ping **Telegram** when `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are set. Optional webhook / Resend email still work. Pageviews never notify. Bursts batch (e.g. 12 friend-lands in a few minutes → one ping). Demo / no-secret mode still fills the inbox so the feature is visible.
 

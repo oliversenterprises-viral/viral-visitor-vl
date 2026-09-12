@@ -24,6 +24,7 @@ type Dash = {
   topSites: { host: string; credits: number; owner: string }[];
   codes: { code: string; host: string; credits: number; weekly: number; referredBy: string | null; createdAt: number }[];
   ops: { bannedCodes: string[]; bannedSites: string[]; mutedCodes: string[]; hero: string; lead: string; teCreditsCount?: boolean };
+  excludeIps: string[];
   camps: { key: string; n: number }[];
   te: { lands: number; joins: number; ignored: number; toJoin: number; quality: number; teCreditsCount: boolean };
   alerts: {
@@ -318,8 +319,25 @@ function render(d: Dash): void {
       <button class="btn ghost" data-op="save_te" type="button">Save TE integrity</button>
     </section>
     <section class="lane">
+      <h3>Excluded IPs</h3>
+      <p class="note">Durable KV list. These IPs never increment pageviews, uniques, sessions, funnel lands, activity feed, or share analytics. Checked via <code>CF-Connecting-IP</code> (else first <code>X-Forwarded-For</code> hop) before any stats write. Get my link still works. Logged-in Owner HQ (HMAC cookie) is skipped automatically.</p>
+      <table class="hq-table"><thead><tr><th>IP</th><th></th></tr></thead>
+      <tbody>${
+        (d.excludeIps || []).length
+          ? d.excludeIps
+              .map((ip) => `<tr><td>${esc(ip)}</td><td><button class="btn ghost" data-op="exclude_ip_remove" data-ip="${esc(ip)}" type="button">Remove</button></td></tr>`)
+              .join('')
+          : '<tr><td colspan="2">None yet — add your office / home IP so HQ browsing stays out of the counters.</td></tr>'
+      }</tbody></table>
+      <div class="ops-row">
+        <input data-exclude-ip placeholder="203.0.113.10 or IPv6" autocomplete="off" />
+        <button class="btn volt" data-op="exclude_ip_add" type="button">Add IP</button>
+        <button class="btn ghost" data-op="exclude_ip_add_purge" type="button">Add + purge matching feed</button>
+      </div>
+    </section>
+    <section class="lane">
       <h3>Ops</h3>
-      <p class="note">Ban/mute is live. Copy edits hit <code>/api/content</code> (cached ~15s). Reset demo wipes board + rollups.</p>
+      <p class="note">Ban/mute is live. Copy edits hit <code>/api/content</code> (cached ~15s). <strong>Reset stats</strong> clears analytics / activity / funnel rollups only. <strong>Wipe live referral board</strong> is a separate action and does not touch excluded IPs.</p>
       <div class="ops-row">
         <input data-code placeholder="VIRAL-XXXXXXX" />
         <button class="btn hot" data-op="ban_code" type="button">Ban code</button>
@@ -342,7 +360,8 @@ function render(d: Dash): void {
         <button class="btn ghost" data-export="funnel" type="button">CSV funnel</button>
         <button class="btn ghost" data-export="sites" type="button">CSV sites</button>
         <button class="btn ghost" data-export="sharers" type="button">CSV sharers</button>
-        <button class="btn hot" data-op="reset_demo" type="button">Reset demo data</button>
+        <button class="btn hot" data-op="reset_stats" type="button">Reset stats</button>
+        <button class="btn ghost" data-op="reset_demo" type="button">Wipe live referral board</button>
       </div>
     </section>
     <section class="lane">
@@ -364,12 +383,22 @@ function render(d: Dash): void {
   root.querySelectorAll('[data-op]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const op = (btn as HTMLElement).dataset.op!;
-      if (op === 'reset_demo' && !confirm('Wipe board + analytics rollups?')) return;
+      if (op === 'reset_stats' && !confirm('Clear analytics, activity feed, and funnel rollups? The live referral board (codes, credits, rungs) stays.')) return;
+      if (op === 'reset_demo' && !confirm('Wipe the live referral board (codes, credits, rungs)? Analytics stay. Excluded IPs stay.')) return;
+      if (op === 'exclude_ip_add_purge' && !confirm('Add this IP and drop matching activity-feed rows? Already-written rollup counters stay; future hits from this IP will not increment stats.')) return;
       const body: Record<string, unknown> = { op };
       body.code = (root.querySelector('[data-code]') as HTMLInputElement)?.value || '';
       body.site = (root.querySelector('[data-site]') as HTMLInputElement)?.value || '';
       body.hero = (root.querySelector('[data-hero]') as HTMLTextAreaElement)?.value || '';
       body.lead = (root.querySelector('[data-lead]') as HTMLTextAreaElement)?.value || '';
+      if (op === 'exclude_ip_add' || op === 'exclude_ip_add_purge') {
+        body.op = 'exclude_ip_add';
+        body.ip = (root.querySelector('[data-exclude-ip]') as HTMLInputElement)?.value || '';
+        body.purge = op === 'exclude_ip_add_purge';
+      }
+      if (op === 'exclude_ip_remove') {
+        body.ip = (btn as HTMLElement).dataset.ip || '';
+      }
       if (op === 'save_te') {
         body.teCreditsCount = (root.querySelector('[data-te-count]') as HTMLInputElement)?.checked === true;
       }
@@ -389,8 +418,12 @@ function render(d: Dash): void {
           tzOffsetMinutes: Number((root.querySelector('[data-quiet-tz]') as HTMLInputElement)?.value || 0),
         };
       }
-      await api('/api/admin/action', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-      await paint();
+      try {
+        await api('/api/admin/action', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+        await paint();
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : 'Action failed');
+      }
     });
   });
   root.querySelector('[data-te-copy]')?.addEventListener('click', async () => {
