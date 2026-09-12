@@ -46,7 +46,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
     demoMode: loaded.demoMode,
     simulated: true,
     player: publicPlayer(state.players[code], now),
-    site: publicSite(state.sites[player.siteHost], now),
+    site: state.sites[player.siteHost] ? publicSite(state.sites[player.siteHost], now) : null,
     shareUrl: `${originFromRequest(request)}/r/${code}`,
     rung: rungForSite(state, player.siteHost, now),
     credited: result.credited,

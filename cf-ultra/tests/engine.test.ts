@@ -70,6 +70,32 @@ describe('normalizeWebsiteUrl', () => {
   });
 });
 
+describe('join without a site (live Get my link)', () => {
+  it('mints a VIRAL- code with no URL, then attaches a site later', () => {
+    const minted = mustJoin(createEmptyState(), { url: '', actorId: actor('aa'), now });
+    expect(minted.result.player.code).toMatch(CODE_RE);
+    expect(minted.result.site).toBeNull();
+    expect(Object.keys(minted.state.sites)).toHaveLength(0);
+
+    const friend = mustJoin(minted.state, {
+      url: '',
+      ref: minted.result.player.code,
+      actorId: actor('bb'),
+      now: now + 1000,
+    });
+    expect(friend.result.credited).toBe(true);
+    expect(friend.result.player.code).toMatch(CODE_RE);
+
+    const attached = mustJoin(minted.state, {
+      url: 'https://later.test',
+      actorId: actor('aa'),
+      now: now + 2000,
+    });
+    expect(attached.result.site?.host).toBe('later.test');
+    expect(attached.state.sites['later.test'].ownerCode).toBe(minted.result.player.code);
+  });
+});
+
 describe('join + unique credit climb', () => {
   it('does not count visits or self taps, only unique friend joins', () => {
     let state = createEmptyState();

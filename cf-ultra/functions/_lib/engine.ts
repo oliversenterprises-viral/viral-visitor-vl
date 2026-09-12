@@ -130,7 +130,7 @@ export interface UnlockMoment {
 export interface JoinResult {
   ok: true;
   player: Player;
-  site: Site;
+  site: Site | null;
   sharePath: string;
   credited: boolean;
   referrerCode: string | null;
@@ -449,24 +449,24 @@ export function joinAndMaybeCredit(
   random = Math.random,
 ): { state: UltraState; result: JoinResult } | JoinError {
   const now = input.now ?? Date.now();
-  const url = normalizeWebsiteUrl(input.url);
-  if (!url) return { ok: false, error: 'Paste a real http(s) website URL.' };
-  const host = hostnameFromUrl(url);
-  if (!host) return { ok: false, error: 'Could not read that hostname.' };
   if (!ACTOR_RE.test(input.actorId)) return { ok: false, error: 'Missing actor cookie.' };
+  const rawUrl = String(input.url || '').trim();
+  const url = rawUrl ? normalizeWebsiteUrl(rawUrl) : null;
+  if (rawUrl && !url) return { ok: false, error: 'Paste a real http(s) website URL.' };
+  const host = url ? hostnameFromUrl(url) || '' : '';
+  if (url && !host) return { ok: false, error: 'Could not read that hostname.' };
 
   const ref = normalizeReferralCode(input.ref);
   const next = cloneState(state);
 
-  let player = next.actorToCode[input.actorId] ? next.players[next.actorToCode[input.actorId]] : undefined;
-  const isNew = !player;
-
-  if (!player) {
+  const existing = next.actorToCode[input.actorId] ? next.players[next.actorToCode[input.actorId]] : undefined;
+  let player: Player;
+  if (!existing) {
     const code = newCode(new Set(Object.keys(next.players)), random);
     player = {
       code,
       siteHost: host,
-      siteUrl: url,
+      siteUrl: url || '',
       createdAt: now,
       referredBy: ref && ref !== code ? ref : null,
       creditTimes: [],
@@ -477,34 +477,42 @@ export function joinAndMaybeCredit(
     next.players[code] = player;
     next.actorToCode[input.actorId] = code;
   } else {
-    player.siteHost = host;
-    player.siteUrl = url;
-    next.players[player.code] = player;
+    player = existing;
+    if (url && host) {
+      player.siteHost = host;
+      player.siteUrl = url;
+      next.players[player.code] = player;
+    }
   }
 
-  let site = next.sites[host];
-  if (!site) {
-    site = {
-      host,
-      url,
-      label: labelFromHost(host),
-      ownerCode: player.code,
-      createdAt: now,
-      creditTimes: [],
-    };
-    next.sites[host] = site;
-  } else if (site.ownerCode === player.code) {
-    site.url = url;
-    site.label = labelFromHost(host);
+  let site: Site | null = host ? next.sites[host] ?? null : player.siteHost ? next.sites[player.siteHost] ?? null : null;
+  let isNewSite = false;
+  if (url && host) {
+    site = next.sites[host];
+    if (!site) {
+      isNewSite = true;
+      site = {
+        host,
+        url,
+        label: labelFromHost(host),
+        ownerCode: player.code,
+        createdAt: now,
+        creditTimes: [],
+      };
+      next.sites[host] = site;
+    } else if (site.ownerCode === player.code) {
+      site.url = url;
+      site.label = labelFromHost(host);
+    }
   }
 
-  if (isNew) {
+  if (isNewSite && site) {
     pushActivity(next, {
       id: newEventId(now, random),
       at: now,
       type: 'join',
       text: `${site.label} just entered the board`,
-      host,
+      host: site.host,
     });
   }
 
@@ -609,7 +617,7 @@ export function joinAndMaybeCredit(
     result: {
       ok: true,
       player,
-      site: next.sites[host],
+      site,
       sharePath: `/r/${player.code}`,
       credited,
       referrerCode,

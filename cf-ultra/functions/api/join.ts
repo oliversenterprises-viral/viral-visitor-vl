@@ -72,7 +72,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
     actorId,
     hints,
     flushNow: true,
-    text: result.site.host,
+    text: result.site?.host || result.player.code,
     origin,
   });
   if (result.credited) {
@@ -81,18 +81,18 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
       actorId,
       hints,
       flushNow: true,
-      text: result.site.host,
+      text: result.site?.host || result.player.code,
       origin,
       rung: result.unlock ? { at: Date.now(), host: result.unlock.host, rung: result.unlock.rung } : undefined,
     });
   } else if (result.selfJoin) {
     await recordAnalytics(env, { kind: 'self_ref', actorId, hints, flushNow: true, origin });
   } else if (result.teIgnored) {
-    await recordAnalytics(env, { kind: 'te_ignored', actorId, hints, flushNow: true, origin, text: result.site.host });
+    await recordAnalytics(env, { kind: 'te_ignored', actorId, hints, flushNow: true, origin, text: result.site?.host || result.player.code });
   }
 
   const now = Date.now();
-  const isNewSite = Boolean(host && !loaded.state.sites[host]);
+  const isNewSite = Boolean(host && result.site && !loaded.state.sites[host]);
   const creditHost = result.referrerCode ? state.players[result.referrerCode]?.siteHost : undefined;
   const previousRung = creditHost ? rungForSite(loaded.state, creditHost, now) : 'entered';
   const nextRung = result.unlock?.rung || (creditHost ? rungForSite(state, creditHost, now) : 'entered');
@@ -101,7 +101,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
     emitJoinAlerts({
       env,
       origin,
-      host: result.site.host,
+      host: result.site?.host || result.player.code,
       isNewSite,
       credited: result.credited,
       creditN,
@@ -111,7 +111,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
     }),
   );
   const shareUrl = `${origin}${result.sharePath}`;
-  const rung = rungForSite(state, result.site.host, now);
+  const rung = result.site ? rungForSite(state, result.site.host, now) : 'entered';
 
   return withActor(
     json({
@@ -120,7 +120,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
       persisted: save.persisted,
       degraded: save.degraded,
       player: publicPlayer(result.player, now),
-      site: publicSite(result.site, now),
+      site: result.site ? publicSite(result.site, now) : null,
       shareUrl,
       sharePath: result.sharePath,
       rung,

@@ -29,7 +29,7 @@ export interface JoinOk {
   ok: true;
   demoMode: boolean;
   player: PublicPlayer;
-  site: PublicSite;
+  site: PublicSite | null;
   shareUrl: string;
   sharePath: string;
   rung: Rung;

@@ -50,16 +50,16 @@ export function demoActorId(): string {
 function packJoin(state: UltraState, code: string, extras: Partial<JoinOk> = {}): JoinOk {
   const now = Date.now();
   const player = state.players[code];
-  const site = state.sites[player.siteHost];
+  const site = player.siteHost ? state.sites[player.siteHost] : undefined;
   const origin = location.origin;
   return {
     ok: true,
     demoMode: true,
     player: publicPlayer(player, now),
-    site: publicSite(site, now),
+    site: site ? publicSite(site, now) : null,
     shareUrl: `${origin}/r/${player.code}`,
     sharePath: `/r/${player.code}`,
-    rung: rungForSite(state, site.host, now),
+    rung: site ? rungForSite(state, site.host, now) : 'entered',
     credited: false,
     alreadyCredited: false,
     selfJoin: false,

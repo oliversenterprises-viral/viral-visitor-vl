@@ -1,50 +1,19 @@
-import { teDestination, teIframeSnippet } from '../functions/_lib/campaign';
-import { RUNG_COPY, RUNG_ORDER, faviconForHost, nextActionFor, type BoardSite, type Rung } from '../functions/_lib/engine';
-import {
-  currentHealthNote,
-  currentTransport,
-  fetchBoard,
-  fetchEmbed,
-  fetchMe,
-  isDegraded,
-  joinSite,
-  probeHealth,
-  simulateFriend,
-} from './api';
-import {
-  lastKnownCredits,
-  persistAttribution,
-  previewHost,
-  rememberCredits,
-  rememberKitOpen,
-  shouldRestoreKit,
-  syncAttributionToUrl,
-} from './attr';
+import { nextActionFor, type BoardSite, type Rung } from '../functions/_lib/engine';
+import { fetchBoard, fetchMe, joinSite, probeHealth } from './api';
+import { persistAttribution, previewHost, rememberCredits, rememberKitOpen, shouldRestoreKit, syncAttributionToUrl } from './attr';
 import { celebrateHit, celebrateUnlock } from './celebrate';
 import {
   bumpShareStreak,
-  ghostCount,
-  microGoal,
   prefersReducedMotion,
-  progressPct,
   raceGap,
-  readShareStreak,
   risingHook,
   setSoundEnabled,
-  shareStreakLabel,
   soundEnabled,
   weekClockLabel,
 } from './game';
 import { copyText, intents, nativeShare, qrSvg } from './share';
 import { track } from './track';
-import type { BoardState, JoinOk, PublicPlayer, UnlockMoment } from './types';
-
-const RUNG_HINT: Record<Rung, string> = {
-  entered: 'Just entered · 15 min chip after you paste a site',
-  rising: 'Rising Site Drop · 1 unique friend tap · 1 hour',
-  challenger: 'Challenger strip · 2 unique friends this week',
-  banner: '#1 banner · 3 unique friends this week · 7 days on this page',
-};
+import type { BoardState, JoinOk, PublicPlayer } from './types';
 
 function qs(name: string): string | null {
   return new URLSearchParams(location.search).get(name);
@@ -52,14 +21,6 @@ function qs(name: string): string | null {
 
 function escapeHtml(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function hostOf(url: string): string {
-  try {
-    return new URL(url.startsWith('http') ? url : `https://${url}`).hostname.replace(/^www\./, '');
-  } catch {
-    return url;
-  }
 }
 
 function toast(message: string): void {
@@ -71,771 +32,360 @@ function toast(message: string): void {
   }
   el.textContent = message;
   el.classList.add('on');
-  setTimeout(() => el?.classList.remove('on'), 2200);
+  setTimeout(() => el.classList.remove('on'), 2200);
 }
 
-function siteCard(site: BoardSite, mineHost: string): string {
-  const you = Boolean(mineHost && site.host === mineHost);
-  const hook = you && site.rung === 'rising' ? risingHook(site.expiresAt) : null;
-  return `<article class="site-card drop-${site.rung}${you ? ' you' : ''}${you && site.heat ? ' hot' : ''}">
-    <span class="drop-chip drop-chip-${site.rung}">${escapeHtml(RUNG_COPY[site.rung].title)}</span>
-    ${you ? '<span class="you-chip">Your site is live on this page</span>' : ''}
-    <b>${escapeHtml(site.label)}</b>
-    <div class="stats">
-      <span>${site.weeklyCredits} this week</span>
-      <span>${site.credits} unique</span>
-      ${site.heat ? `<span class="heat">${site.heat} heat</span>` : ''}
-      ${you && site.streak ? `<span class="streak-flame">${site.streak}d credit streak</span>` : ''}
-    </div>
-    ${hook ? `<p class="rising-left">${escapeHtml(hook)}</p>` : ''}
-  </article>`;
+function chipHtml(site: BoardSite, kicker: string): string {
+  const href = escapeHtml(site.url || `https://${site.host}`);
+  return `<a class="site-drop-chip" href="${href}" target="_blank" rel="noopener noreferrer">
+    <span class="site-drop-chip__label">${escapeHtml(site.label)}</span>
+    <span class="site-drop-chip__meta">${escapeHtml(kicker)}</span>
+    <span class="site-drop-chip__host">${escapeHtml(site.host)}</span>
+  </a>`;
 }
 
-function lane(title: string, sub: string, sites: BoardSite[], empty: string, mineHost: string, kind: Rung): string {
-  return `<section class="lane lane-${kind}">
-    <h3><span class="lane-chip lane-chip-${kind}">${title}</span></h3>
-    <div class="sub">${sub}</div>
-    ${sites.length ? `<div class="row">${sites.map((s) => siteCard(s, mineHost)).join('')}</div>` : `<p class="empty-lane">${empty}</p>`}
-  </section>`;
+function paintList(listId: string, emptyId: string, html: string): void {
+  const list = document.getElementById(listId);
+  const empty = document.getElementById(emptyId);
+  if (list) list.innerHTML = html;
+  if (empty) {
+    const has = Boolean(html);
+    empty.hidden = has;
+    empty.classList.toggle('hidden', has);
+  }
 }
 
-function rungMeter(current: Rung): string {
-  return `<div class="rungs">${RUNG_ORDER.map((rung) => {
-    const on = RUNG_ORDER.indexOf(current) >= RUNG_ORDER.indexOf(rung);
-    const now = current === rung;
-    return `<div class="rung${on ? ' on' : ''}${now ? ' now' : ''}"><span>${RUNG_COPY[rung].title}</span><span>${RUNG_HINT[rung]}</span></div>`;
-  }).join('')}</div>`;
+function show(el: HTMLElement | null): void {
+  if (!el) return;
+  el.hidden = false;
+  el.classList.remove('hidden');
 }
 
-export function boot(root: HTMLElement): void {
+export function boot(_root?: HTMLElement): void {
   let board: BoardState | null = null;
   let me: PublicPlayer | null = null;
   let shareUrl = '';
   let rung: Rung = 'entered';
   let siteHost = '';
-  let kitOpen = false;
 
   const attr = persistAttribution(qs('ref'), qs('url'), qs('src') || qs('utm_source'), qs('camp') || qs('c'));
   syncAttributionToUrl(attr);
-  const startUrl = qs('url') || attr.url || '';
   const startRef = (qs('ref') || attr.ref || '').toUpperCase();
-  const startKit = (qs('kit') || '').toUpperCase();
+  const startUrl = qs('url') || attr.url || '';
 
-  root.innerHTML = `
-    <header class="top">
-      <div class="word"><span class="mark">V</span> ViralRefer <span class="badge">enhanced</span></div>
-      <div class="pills">
-        <a class="pill" href="#how">How</a>
-        <a class="pill" href="#board">Board</a>
-        <span class="pill live" data-live>LIVE</span>
-        <span class="pill warn" hidden data-demo>DEMO</span>
-        <button type="button" class="pill sound" data-sound aria-pressed="false">Sound muted</button>
-      </div>
-    </header>
-    <section class="hero">
-      <p class="hero-badge">WORLDWIDE · FREE · NO SIGNUP</p>
-      <h1>Win the homepage.<br>#1 puts their site on <em>this page.</em></h1>
-      <p class="lead">Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, week text line, then the banner. Visits and copies never count.</p>
-      <section class="banner-stage empty" data-banner></section>
-      <div class="ladder-chips" aria-label="Site Drop ladder">
-        <span class="drop-chip drop-chip-entered" data-ladder-entered>Just entered · open</span>
-        <span class="drop-chip drop-chip-rising" data-ladder-rising>Rising · open</span>
-        <span class="drop-chip drop-chip-challenger" data-ladder-challenger>Challenger · open</span>
-      </div>
-      <p class="prize-line">This week’s #1 (not the owner) with 3 friends gets the 7-day banner. Recognition only — no cash prize.</p>
-      <div class="ref-banner" data-ref-banner hidden></div>
-      <form class="paste" data-form>
-        <button class="btn volt primary-cta" type="submit" data-submit>Get my referral link</button>
-        <div class="paste-box">
-          <p class="site-drop-title">Site Drop · paste your website after Get my link</p>
-          <input data-url type="url" inputmode="url" autocomplete="url" required placeholder="https://yoursite.com" value="${escapeHtml(startUrl)}"/>
-        </div>
-        <div class="url-preview" data-preview hidden>
-          <img data-favicon alt="" width="24" height="24"/>
-          <div>
-            <strong data-preview-host></strong>
-            <span>Looks ready. Opening a page does not count — only a friend’s Get my link.</span>
-          </div>
-        </div>
-        <p class="form-err" data-form-err hidden role="alert"></p>
-        <p class="next-action" data-next hidden></p>
-        <p class="proof">Open worldwide · 18+ · No email · Live free leaderboard<br><span>Americas · Europe · Asia · Africa · Anywhere</span></p>
-        <p class="fine" data-health>Your link counts when a friend taps Get my link. Not a bank or wallet. #1 is a homepage banner — recognition only.</p>
-      </form>
-      <div class="funnel-row" aria-label="Site Drop ladder">
-        <span class="funnel-step on">1. Get link</span>
-        <span class="funnel-step">2. Send it</span>
-        <span class="funnel-step">3. Site goes live</span>
-      </div>
-    </section>
-    <aside class="hud" data-hud aria-label="Race HUD">
-      <p class="hook-banner" data-hook hidden role="status"></p>
-      <div class="hud-grid">
-        <div class="ring-wrap" aria-hidden="true">
-          <svg viewBox="0 0 36 36" class="ring">
-            <path class="ring-bg" pathLength="100" d="M18 2.5a15.5 15.5 0 1 1 0 31 15.5 15.5 0 1 1 0-31"/>
-            <path class="ring-fg" data-ring-fg pathLength="100" stroke-dasharray="0, 100" d="M18 2.5a15.5 15.5 0 1 1 0 31 15.5 15.5 0 1 1 0-31"/>
-          </svg>
-          <span data-ring-pct>0%</span>
-        </div>
-        <div class="hud-copy">
-          <p class="near-miss" data-near-miss>Paste a site — claim a chip</p>
-          <p class="share-streak" data-share-streak></p>
-          <p class="week-clock" data-week-clock></p>
-          <p class="race-gap" data-race-gap hidden></p>
-        </div>
-      </div>
-      <p class="live-ticker" data-ticker hidden></p>
-      <p class="ghost-count" data-ghost hidden></p>
-      <p class="micro-goal" data-micro></p>
-    </aside>
-    <div class="lanes" id="board" data-lanes></div>
-    <div class="grid-2">
-      <section class="lane">
-        <h3>This week’s text line</h3>
-        <div class="sub" data-week-sub>UTC week. Unique friend taps only — not raw visits.</div>
-        <div data-duel></div>
-        <ol class="race-row" data-race></ol>
-      </section>
-      <section class="lane">
-        <h3>Recent activity</h3>
-        <div class="sub">LIVE · verified Get my link events only · no fake counts</div>
-        <ol class="activity" data-activity></ol>
-      </section>
-    </div>
-    <section class="lane">
-      <h3>Kingmakers</h3>
-      <div class="sub">Non-cash. If someone you referred hits #1, you get the intro.</div>
-      <div data-kings></div>
-    </section>
-    <details class="lane embed">
-      <summary>Free embed — Help us go viral</summary>
-      <p class="sub">Secondary. The loop above is the product: paste → Get my link → share → friend Get my link.</p>
-      <pre data-embed>&lt;script async src="/embed.js" data-site="yoursite.com"&gt;&lt;/script&gt;</pre>
-      <button class="btn ghost" type="button" data-copy-embed>Copy snippet</button>
-    </details>
-    <section class="lane faq" id="how">
-      <h3>How ViralRefer works</h3>
-      <p class="sub">Get a link. Send it. A friend tapping Get my link puts your site on this page.</p>
-      <details open><summary>What counts?</summary><p>A unique friend opening your <code>/r/VIRAL-…</code> or <code>/a/VIRAL-…</code> link and tapping Get my link. Refreshing, copying, or visiting does not count.</p></details>
-      <details><summary>Is it free / are there cash prizes?</summary><p>Yes. No payment. No email. No cash prize. #1 may claim a 7-day homepage banner after verification — recognition only.</p></details>
-      <details><summary>How does the board work?</summary><p>1 verified friend → 1-hour Rising Site Drop. 2 friends → week text line. Board #2/#3 → Challenger strip. This week’s #1 with 3 friends claims the 7-day banner.</p></details>
-    </section>
-    <footer class="foot">
-      Cloudflare Pages sibling of <a href="https://www.viralrefer.app">viralrefer.app</a> Site Drops — same referral codes, stronger kit. It does <strong>not</strong> replace the live Vercel site. No cutover.
-      <a href="/admin/">Owner HQ</a>
-    </footer>
-    <aside class="kit" data-kit>
-      <div class="kit-head">
-        <div>
-          <p class="kicker">YOUR REFERRAL LINK</p>
-          <h2 style="margin:4px 0 0;font-family:var(--display)">You’re racing.</h2>
-        </div>
-        <button class="btn ghost" type="button" data-close-kit>Close</button>
-      </div>
-      <p class="kit-status" data-kit-status hidden></p>
-      <div class="og-card" data-og></div>
-      <p class="next-action kit-next" data-kit-next></p>
-      <p class="near-miss kit-near" data-kit-near></p>
-      <div class="share-link">
-        <input data-share-url readonly aria-label="Your share link"/>
-        <button class="btn volt primary-cta" type="button" data-copy>Copy link</button>
-      </div>
-      <button class="btn volt primary-cta native-share" type="button" hidden data-native>Share</button>
-      <button class="btn ghost" type="button" data-save>Save my link</button>
-      <details class="more-share">
-        <summary>More ways to send</summary>
-        <div class="intents" data-intents></div>
-        <div class="qr-wrap" data-qr></div>
-      </details>
-      <div data-meter></div>
-      <p class="fine" data-kit-note></p>
-      <button class="btn ghost" type="button" data-te-copy>Promote on traffic exchanges</button>
-      <button class="btn ghost" type="button" data-te-iframe>Copy TE iframe</button>
-      <button class="btn ice" type="button" hidden data-simulate>Simulate a unique friend (demo)</button>
-    </aside>
-  `;
+  const heroBtn = document.getElementById('hero-get-link-btn') as HTMLButtonElement | null;
+  const navBtn = document.getElementById('nav-get-link-btn') as HTMLButtonElement | null;
+  const attrBtn = document.getElementById('attribution-get-link-btn') as HTMLButtonElement | null;
+  const siteInput = document.getElementById('post-link-site-drop-url') as HTMLInputElement | null;
+  const siteSubmit = document.getElementById('post-link-site-drop-submit') as HTMLButtonElement | null;
+  const siteStatus = document.getElementById('site-drop-status');
+  const shareBox = document.getElementById('post-link-share');
+  const siteDropBox = document.getElementById('post-link-site-drop');
+  const copyBtn = document.getElementById('post-link-copy') as HTMLButtonElement | null;
+  const sendBtn = document.getElementById('post-link-primary') as HTMLButtonElement | null;
+  const urlEl = document.getElementById('post-link-url');
+  const hud = document.getElementById('race-hud');
 
-  const form = root.querySelector('[data-form]') as HTMLFormElement;
-  const urlInput = root.querySelector('[data-url]') as HTMLInputElement;
-  const submit = root.querySelector('[data-submit]') as HTMLButtonElement;
-  const demoPill = root.querySelector('[data-demo]') as HTMLElement;
-  const healthEl = root.querySelector('[data-health]') as HTMLElement;
-  const refBanner = root.querySelector('[data-ref-banner]') as HTMLElement;
-  const bannerEl = root.querySelector('[data-banner]') as HTMLElement;
-  const lanesEl = root.querySelector('[data-lanes]') as HTMLElement;
-  const duelEl = root.querySelector('[data-duel]') as HTMLElement;
-  const raceEl = root.querySelector('[data-race]') as HTMLElement;
-  const activityEl = root.querySelector('[data-activity]') as HTMLElement;
-  const kingsEl = root.querySelector('[data-kings]') as HTMLElement;
-  const embedEl = root.querySelector('[data-embed]') as HTMLElement;
-  const kit = root.querySelector('[data-kit]') as HTMLElement;
-  const previewEl = root.querySelector('[data-preview]') as HTMLElement;
-  const previewHostEl = root.querySelector('[data-preview-host]') as HTMLElement;
-  const faviconEl = root.querySelector('[data-favicon]') as HTMLImageElement;
-  const formErr = root.querySelector('[data-form-err]') as HTMLElement;
-  const nextEl = root.querySelector('[data-next]') as HTMLElement;
-  const hookEl = root.querySelector('[data-hook]') as HTMLElement;
-  const ringFg = root.querySelector('[data-ring-fg]') as SVGPathElement;
-  const ringPct = root.querySelector('[data-ring-pct]') as HTMLElement;
-  const nearEl = root.querySelector('[data-near-miss]') as HTMLElement;
-  const streakEl = root.querySelector('[data-share-streak]') as HTMLElement;
-  const weekEl = root.querySelector('[data-week-clock]') as HTMLElement;
-  const gapEl = root.querySelector('[data-race-gap]') as HTMLElement;
-  const tickerEl = root.querySelector('[data-ticker]') as HTMLElement;
-  const ghostEl = root.querySelector('[data-ghost]') as HTMLElement;
-  const microEl = root.querySelector('[data-micro]') as HTMLElement;
-  const weekSub = root.querySelector('[data-week-sub]') as HTMLElement;
-  const soundBtn = root.querySelector('[data-sound]') as HTMLButtonElement;
-  let lastActivityId = '';
-  let lastRaceSig = '';
-  let bragText = '';
-
-  function paintSound(): void {
-    const on = soundEnabled();
-    soundBtn.textContent = on ? 'Sound on' : 'Sound muted';
-    soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-  }
-  paintSound();
-
-  function afterShare(): void {
-    const next = bumpShareStreak();
-    paintHud();
-    toast(
-      next.dying
-        ? `Share streak ${next.days}d — dies in ${Math.max(1, Math.round(next.diesInMs / 3600_000))}h. Saved.`
-        : next.days === 1
-          ? 'Share streak started. Come back tomorrow.'
-          : `Share streak ${next.days}d. Keep it alive.`,
-    );
-  }
-
-  function paintHud(): void {
-    const current = me ? rung : 'entered';
-    const action = me
-      ? nextActionFor({ credits: me.credits, weeklyCredits: me.weeklyCredits, rung: current })
-      : { friendsNeeded: 1, label: 'Paste a site to enter the race', nextRung: 'rising' as const, nearMiss: 'Claim a Just entered chip' };
-    const pct = me ? progressPct(me.weeklyCredits, me.credits, current) : 0;
-    ringFg.setAttribute('stroke-dasharray', `${pct}, 100`);
-    ringPct.textContent = `${pct}%`;
-    nearEl.textContent = action.nearMiss;
-    const share = readShareStreak();
-    streakEl.textContent = shareStreakLabel(share);
-    streakEl.classList.toggle('dying', share.dying);
-    streakEl.classList.toggle('on', share.days > 0);
-    const clock = weekClockLabel();
-    weekEl.textContent = clock;
-    weekSub.textContent = `${clock}. Unique friend taps only — not raw visits.`;
-    const mine = me?.siteHost || siteHost;
-    const gap = board && mine ? raceGap({ host: mine, race: board.race, bannerWeekly: board.banner?.weeklyCredits }) : null;
-    gapEl.hidden = !gap;
-    if (gap) gapEl.textContent = gap;
-    const you = board ? [board.banner, ...board.rising, ...board.challenger, ...board.entered].find((s) => s && s.host === mine) : undefined;
-    const hook = risingHook(you?.expiresAt);
-    hookEl.hidden = !hook;
-    if (hook) hookEl.textContent = hook;
-    const ghost = board ? ghostCount(board.liveSites, board.livePlayers) : null;
-    ghostEl.hidden = !ghost;
-    if (ghost) ghostEl.textContent = ghost;
-    microEl.textContent = microGoal({
-      credits: me?.credits ?? 0,
-      weekly: me?.weeklyCredits ?? 0,
-      kitOpen,
-      rung: current,
-      joined: Boolean(me),
-    });
-    const kitNear = kit.querySelector('[data-kit-near]') as HTMLElement | null;
-    if (kitNear) kitNear.textContent = me ? action.nearMiss : '';
-  }
+  if (siteInput && startUrl) siteInput.value = startUrl;
 
   if (startRef) {
-    const helped = qs('helped');
-    refBanner.hidden = false;
-    refBanner.innerHTML = helped
-      ? `<strong>You’re in the same contest</strong>A friend sent you to help ${escapeHtml(helped)}. Get YOUR link in one tap — same leaderboard. Opening this page does not count.`
-      : `<strong>You’re in the same contest</strong>You landed via <span class="font-mono">${escapeHtml(startRef)}</span>. Get YOUR link so they get credit — then send yours. Opening this page does not count.`;
+    const banner = document.getElementById('referral-attribution');
+    show(banner);
+    const codeEl = document.getElementById('referrer-code-inline');
+    if (codeEl) codeEl.textContent = startRef;
+    const line = document.getElementById('hero-title-line1');
+    if (line) line.textContent = `You're in the same race as ${startRef}.`;
+    const sub = document.getElementById('hero-subtitle');
+    if (sub) sub.textContent = 'Tap Get my link so they get credit — then send yours and try to beat them.';
+    const cta = heroBtn?.querySelector('span');
+    if (cta) cta.textContent = 'Get my link';
   }
 
-  function setDemo(on: boolean): void {
-    demoPill.hidden = !on;
-    healthEl.textContent = currentHealthNote();
-    const sim = kit.querySelector('[data-simulate]') as HTMLButtonElement;
-    sim.hidden = !on || !me;
+  function paintWeekClock(): void {
+    const el = document.getElementById('hero-week-clock');
+    if (el) el.textContent = `${weekClockLabel()}. Send now.`;
+    const sub = document.getElementById('week-text-sub');
+    if (sub) sub.textContent = `${weekClockLabel()}. Unique friend taps only — not raw visits.`;
   }
+  paintWeekClock();
+  window.setInterval(paintWeekClock, 30_000);
 
-  function renderBoard(next: BoardState): void {
-    board = next;
-    const mineHost = me?.siteHost || siteHost;
-    if (next.banner) {
-      const you = mineHost && next.banner.host === mineHost;
-      bannerEl.classList.remove('empty');
-      bannerEl.innerHTML = `<div class="banner-kicker"><span>${you ? 'You hold #1' : 'This homepage'}</span><span>ViralRefer</span><span>7 days</span></div>
-        <div class="inner">
-          <h2>${escapeHtml(next.banner.label)}</h2>
-          <div class="meta">
-            <span>${next.banner.weeklyCredits} unique friends this week</span>
-            <span>${next.banner.credits} all-time locks</span>
-            ${next.banner.heat ? `<span class="heat">${next.banner.heat} heat / 24h</span>` : ''}
-          </div>
-        </div>`;
-    } else {
-      bannerEl.classList.add('empty');
-      bannerEl.innerHTML = `<div class="banner-kicker"><span>This homepage</span><span>ViralRefer</span><span>7 days</span></div>
-        <div class="inner"><h2>Your site here</h2><p class="lead" style="margin:0">Empty right now. #1 this week puts their site here. Recognition only.</p></div>`;
-    }
-
-    const enteredEl = root.querySelector('[data-ladder-entered]') as HTMLElement | null;
-    const risingEl = root.querySelector('[data-ladder-rising]') as HTMLElement | null;
-    const challengerEl = root.querySelector('[data-ladder-challenger]') as HTMLElement | null;
-    if (enteredEl) enteredEl.textContent = next.entered.length ? `Just entered · ${next.entered.length}` : 'Just entered · open';
-    if (risingEl) risingEl.textContent = next.rising.length ? `Rising · ${next.rising.length}` : 'Rising · open';
-    if (challengerEl) challengerEl.textContent = next.challenger.length ? `Challenger · ${next.challenger.length}` : 'Challenger · open';
-
-    lanesEl.innerHTML =
-      lane('Just entered · 15 min', 'Paste a site after Get my link. No friend tap yet. Time-boxed chip.', next.entered, 'No one just entered. Get a link, add your site, and take a chip.', mineHost, 'entered') +
-      lane('Rising Site Drops · 1 hour', '1 unique friend Get-my-link. Holds 1 hour after the last lock — not the week text line.', next.rising, 'Rising slots are open. One verified friend who taps Get my link unlocks a 1-hour drop here.', mineHost, 'rising') +
-      lane(
-        'Challenger strip · #2 / #3',
-        next.challenger.length
-          ? `${next.challenger.length} site${next.challenger.length === 1 ? '' : 's'} on the strip. 2 unique locks this week gets you here.`
-          : 'Not #1. Board #2 / #3 this week with 2+ unique locks.',
-        next.challenger,
-        'No challengers yet. Hit board #2 or #3 with your site on file.',
-        mineHost,
-        'challenger',
-      );
-
-    if (next.duel) {
-      duelEl.innerHTML = `<div class="duel">
-        <div><strong>${escapeHtml(next.duel.a.label)}</strong><small>${next.duel.a.weeklyCredits} this week</small></div>
-        <div class="vs">VS</div>
-        <div style="text-align:right"><strong>${escapeHtml(next.duel.b.label)}</strong><small>${next.duel.gap} behind</small></div>
-      </div>`;
-    } else {
-      duelEl.innerHTML = `<p class="empty-lane">Need two sites in the weekly race to spark a duel.</p>`;
-    }
-
-    const raceSig = next.race.map((s) => s.host).join(',');
-    raceEl.innerHTML = next.race.length
-      ? next.race
-          .map((s, i) => {
-            const you = mineHost && s.host === mineHost;
-            return `<li class="${you ? 'you' : ''}"><span>#${i + 1} ${escapeHtml(s.label)}${you ? ' · you’re here' : ''}</span><span>${s.weeklyCredits} · ${s.rung}</span></li>`;
-          })
-          .join('')
-      : `<li><span>Board is empty and honest.</span><span>0</span></li>`;
-    if (lastRaceSig && lastRaceSig !== raceSig && !prefersReducedMotion()) {
-      raceEl.classList.remove('twitch');
-      void raceEl.offsetWidth;
-      raceEl.classList.add('twitch');
-    }
-    lastRaceSig = raceSig;
-
-    const latest = next.activity[0];
-    if (latest) {
-      tickerEl.hidden = false;
-      tickerEl.textContent = latest.text;
-      if (lastActivityId && lastActivityId !== latest.id && !prefersReducedMotion()) {
-        tickerEl.classList.remove('twitch');
-        void tickerEl.offsetWidth;
-        tickerEl.classList.add('twitch');
-        if (latest.type === 'credit' || latest.type === 'rung' || latest.type === 'banner') {
-          toast(latest.text);
-        }
-      }
-      lastActivityId = latest.id;
-    } else {
-      tickerEl.hidden = true;
-    }
-
-    activityEl.innerHTML = next.activity.length
-      ? next.activity
-          .slice(0, 8)
-          .map((e, i) => `<li class="${i === 0 ? 'fresh' : ''}"><span>${escapeHtml(e.text)}</span><span>${new Date(e.at).toLocaleTimeString()}</span></li>`)
-          .join('')
-      : `<li><span>No live events yet. First unique tap writes the feed.</span><span></span></li>`;
-
-    paintHud();
-
-    kingsEl.innerHTML = next.kingmakers.length
-      ? `<ol class="activity">${next.kingmakers
-          .map((k) => `<li><span>${escapeHtml(k.host)} introduced #1 ${escapeHtml(k.winnerLabel)}</span><span>Kingmaker</span></li>`)
-          .join('')}</ol>`
-      : `<p class="empty-lane">Kingmaker unlocks when a person you referred hits the banner.</p>`;
-  }
-
-  function paintNext(player: PublicPlayer, current: Rung): void {
-    const action = nextActionFor({ credits: player.credits, weeklyCredits: player.weeklyCredits, rung: current });
-    nextEl.hidden = false;
-    nextEl.textContent = action.label;
-    const kitNext = kit.querySelector('[data-kit-next]') as HTMLElement;
-    kitNext.textContent = action.label;
-    const kitNear = kit.querySelector('[data-kit-near]') as HTMLElement;
-    kitNear.textContent = action.nearMiss;
-  }
-
-  function openKit(data: {
-    player: PublicPlayer;
-    shareUrl: string;
-    rung: Rung;
-    siteHost: string;
-    demoMode: boolean;
-    brag?: string;
-  }): void {
-    me = data.player;
-    shareUrl = data.shareUrl;
-    rung = data.rung;
-    siteHost = data.siteHost;
-    kitOpen = true;
-    rememberKitOpen(true);
-    rememberCredits(data.player.credits);
-    kit.classList.add('open');
-    const links = intents(shareUrl, siteHost, rung);
-    const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
-    const nativeBtn = kit.querySelector('[data-native]') as HTMLButtonElement;
-    nativeBtn.hidden = !canShare;
-    const copyBtn = kit.querySelector('[data-copy]') as HTMLButtonElement;
-    copyBtn.classList.toggle('volt', !canShare);
-    copyBtn.classList.toggle('ghost', canShare);
-    (kit.querySelector('[data-share-url]') as HTMLInputElement).value = shareUrl;
-    bragText = data.brag || RUNG_COPY[rung].share;
-    (kit.querySelector('[data-og]') as HTMLElement).innerHTML = `
-      <p class="kicker">${escapeHtml(RUNG_COPY[rung].title)}</p>
-      <div class="og-row">
-        <img src="${escapeHtml(faviconForHost(siteHost))}" alt="" width="36" height="36"/>
-        <div class="host">${escapeHtml(siteHost)}</div>
-      </div>
-      <p class="brag">${escapeHtml(bragText)}</p>
-      <p>${data.player.credits} unique friend locks · ${data.player.weeklyCredits} this week · ${data.player.streakDays}d streak</p>`;
-    paintNext(data.player, rung);
-    paintHud();
-    (kit.querySelector('[data-intents]') as HTMLElement).innerHTML = `
-      <a class="btn" href="${links.whatsapp}" target="_blank" rel="noopener">WhatsApp</a>
-      <a class="btn" href="${links.x}" target="_blank" rel="noopener">X</a>
-      <a class="btn" href="${links.telegram}" target="_blank" rel="noopener">Telegram</a>
-      <a class="btn" href="${links.reddit}" target="_blank" rel="noopener">Reddit</a>
-      <button class="btn ghost" type="button" data-copy-msg>Copy message</button>`;
-    (kit.querySelector('[data-qr]') as HTMLElement).innerHTML = qrSvg(shareUrl);
-    (kit.querySelector('[data-meter]') as HTMLElement).innerHTML = rungMeter(rung);
-    (kit.querySelector('[data-kit-note]') as HTMLElement).textContent =
-      data.demoMode
-        ? 'Demo: simulate a unique friend or open this link in another browser. Visits still do not count.'
-        : 'Send the link. Only a unique friend’s Get my link credits you.';
-    const sim = kit.querySelector('[data-simulate]') as HTMLButtonElement;
-    sim.hidden = !data.demoMode;
-    nativeBtn.onclick = async () => {
-      track('share', { platform: 'native', host: siteHost });
-      const ok = await nativeShare(shareUrl, siteHost, rung);
-      if (!ok) toast('Copy the link instead');
-      else afterShare();
-    };
-    kit.querySelector('[data-copy-msg]')?.addEventListener('click', async () => {
-      track('share', { platform: 'copy', host: siteHost });
-      await copyText(links.text);
-      afterShare();
-    });
-    kit.querySelectorAll('a.btn').forEach((a) => {
-      a.addEventListener('click', () => {
-        const href = (a as HTMLAnchorElement).href;
-        const platform = href.includes('wa.me')
-          ? 'whatsapp'
-          : href.includes('twitter')
-            ? 'x'
-            : href.includes('t.me')
-              ? 'telegram'
-              : href.includes('reddit')
-                ? 'reddit'
-                : 'other';
-        track('share', { platform, host: siteHost });
-        afterShare();
-      });
-    });
-    kit.querySelector('[data-qr]')?.addEventListener('click', () => track('share', { platform: 'qr', host: siteHost }));
-  }
-
-  function closeKit(): void {
-    kitOpen = false;
-    rememberKitOpen(false);
-    kit.classList.remove('open');
-    paintHud();
-  }
-
-  function dropShareKit(unlock?: UnlockMoment | null): void {
-    if (!me || !shareUrl) return;
-    openKit({
-      player: me,
-      shareUrl,
-      rung: unlock?.rung || rung,
-      siteHost: unlock?.host || siteHost,
-      demoMode: Boolean(board?.demoMode) || currentTransport() === 'demo',
-      brag: unlock?.shareText || RUNG_COPY[unlock?.rung || rung].share,
-    });
-  }
-
-  async function refreshEmbed(host: string): Promise<void> {
-    try {
-      const snip = await fetchEmbed(host);
-      embedEl.textContent = snip.script;
-    } catch {
-      /* keep default */
-    }
-  }
-
-  function showFormError(message: string): void {
-    formErr.hidden = false;
-    formErr.textContent = message;
-  }
-
-  function paintPreview(raw: string): void {
-    const host = previewHost(raw);
-    if (!host) {
-      previewEl.hidden = true;
+  function paintHud(): void {
+    if (!hud) return;
+    if (!me) {
+      hud.hidden = true;
+      hud.classList.add('hidden');
       return;
     }
-    previewEl.hidden = false;
-    previewHostEl.textContent = host;
-    faviconEl.src = faviconForHost(host);
-    faviconEl.alt = host;
+    const action = nextActionFor({ credits: me.credits, weeklyCredits: me.weeklyCredits, rung });
+    const gap = board && siteHost ? raceGap({ host: siteHost, race: board.race, bannerWeekly: board.banner?.weeklyCredits }) : null;
+    const hook = risingHook(board?.rising.find((s) => s.host === siteHost)?.expiresAt);
+    hud.hidden = false;
+    hud.classList.remove('hidden');
+    hud.innerHTML = `<p class="near-miss">${escapeHtml(action.nearMiss)}</p>
+      <p>${escapeHtml(action.label)}</p>
+      ${gap ? `<p>${escapeHtml(gap)}</p>` : ''}
+      ${hook ? `<p>${escapeHtml(hook)}</p>` : ''}
+      <p>Banner still open · ${escapeHtml(weekClockLabel())}</p>`;
+  }
+
+  function revealKit(): void {
+    document.documentElement.setAttribute('data-vr-has-link', '1');
+    show(shareBox);
+    show(siteDropBox);
+    if (urlEl) {
+      urlEl.hidden = false;
+      urlEl.textContent = shareUrl;
+    }
+    if (sendBtn) {
+      const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+      sendBtn.hidden = !canShare;
+    }
+    const intentsEl = document.getElementById('post-link-intents');
+    if (intentsEl && shareUrl) {
+      const links = intents(shareUrl, siteHost || 'your site', rung);
+      intentsEl.innerHTML = `
+        <a class="btn ghost" href="${links.whatsapp}" target="_blank" rel="noopener">WhatsApp</a>
+        <a class="btn ghost" href="${links.x}" target="_blank" rel="noopener">X</a>
+        <a class="btn ghost" href="${links.telegram}" target="_blank" rel="noopener">Telegram</a>
+        <a class="btn ghost" href="${links.reddit}" target="_blank" rel="noopener">Reddit</a>`;
+    }
+    const qr = document.getElementById('post-link-qr');
+    if (qr && shareUrl) qr.innerHTML = qrSvg(shareUrl);
+    rememberKitOpen(true);
+    paintHud();
+  }
+
+  function paintBoard(next: BoardState): void {
+    board = next;
+    const entered = document.getElementById('ladder-entered');
+    const rising = document.getElementById('ladder-rising');
+    const chall = document.getElementById('ladder-challenger');
+    if (entered) entered.textContent = next.entered.length ? `Just entered · ${next.entered.length}` : 'Just entered · open';
+    if (rising) rising.textContent = next.rising.length ? `Rising · ${next.rising.length}` : 'Rising · open';
+    if (chall) chall.textContent = next.challenger.length ? `Challenger · ${next.challenger.length}` : 'Challenger · open';
+
+    const slot = document.getElementById('hero-banner-mock');
+    const siteEl = document.getElementById('hero-slot-site');
+    const metaEl = document.getElementById('hero-slot-meta');
+    const noteEl = document.getElementById('hero-ad-note');
+    const prizeSite = document.getElementById('prize-slot-site');
+    const prizeMeta = document.getElementById('prize-slot-meta');
+    if (next.banner) {
+      slot?.setAttribute('data-vr-prize-slot', 'held');
+      slot?.classList.remove('banner-open-glow');
+      if (siteEl) siteEl.textContent = next.banner.label;
+      if (metaEl) metaEl.textContent = `${next.banner.weeklyCredits} unique friends this week · 7 days`;
+      if (noteEl) noteEl.textContent = `${next.banner.credits} all-time locks`;
+      if (prizeSite) prizeSite.textContent = next.banner.label;
+      if (prizeMeta) prizeMeta.textContent = `${next.banner.label} · 7 days`;
+    } else {
+      slot?.setAttribute('data-vr-prize-slot', 'empty');
+      slot?.classList.add('banner-open-glow');
+      if (siteEl) siteEl.textContent = 'Your site here';
+      if (metaEl) metaEl.textContent = 'still open · 7 days';
+      if (noteEl) noteEl.textContent = 'Empty right now. #1 this week puts their site here.';
+      if (prizeSite) prizeSite.textContent = 'Your site here';
+      if (prizeMeta) prizeMeta.textContent = 'Banner still open · 7 days';
+    }
+
+    paintList(
+      'site-drops-entered-list',
+      'site-drops-entered-empty',
+      next.entered.map((s) => `<li>${chipHtml(s, 'Just entered')}</li>`).join(''),
+    );
+    paintList(
+      'site-drops-rising-list',
+      'site-drops-rising-empty',
+      next.rising.map((s) => `<li>${chipHtml(s, `Rising · ${s.weeklyCredits} friend${s.weeklyCredits === 1 ? '' : 's'}`)}</li>`).join(''),
+    );
+    paintList(
+      'site-drops-challenger-list',
+      'site-drops-challenger-empty',
+      next.challenger.map((s) => `<li>${chipHtml(s, `Challenger · ${s.rung}`)}</li>`).join(''),
+    );
+
+    const ticker = document.getElementById('site-entered-ticker');
+    const chips = document.getElementById('site-entered-chips');
+    const live = [...next.entered, ...next.rising];
+    if (ticker && chips) {
+      if (live.length) {
+        show(ticker);
+        chips.innerHTML = live.slice(0, 4).map((s) => chipHtml(s, s.rung === 'rising' ? 'Rising' : 'Just entered')).join('');
+      } else {
+        ticker.hidden = true;
+        ticker.classList.add('hidden');
+      }
+    }
+
+    const weekLine = document.getElementById('week-text-line');
+    if (weekLine) {
+      weekLine.innerHTML = next.race.length
+        ? next.race
+            .slice(0, 8)
+            .map((s, i) => `<div class="leaderboard-row flex justify-between items-center px-5 py-3 rounded-2xl ${i === 0 ? 'leaderboard-row--gold bg-gradient-to-r from-amber-500/15 to-yellow-500/5 border border-amber-400/35' : 'bg-zinc-900/70 border border-white/10'}"><span>#${i + 1} ${escapeHtml(s.label)}</span><span>${s.weeklyCredits} this week</span></div>`)
+            .join('')
+        : `<p class="text-zinc-400">Need two sites in the weekly race to spark a text line.</p>`;
+    }
+
+    const activity = document.getElementById('recent-activity');
+    if (activity) {
+      activity.innerHTML = next.activity.length
+        ? next.activity
+            .slice(0, 8)
+            .map((e, i) => `<div class="flex justify-between gap-3 px-4 py-3 rounded-2xl bg-zinc-900/70 border ${i === 0 ? 'border-emerald-400/40' : 'border-white/10'}"><span>${escapeHtml(e.text)}</span><span class="text-zinc-500 text-xs">${new Date(e.at).toLocaleTimeString()}</span></div>`)
+            .join('')
+        : `<p class="text-zinc-400">No live events yet. First unique tap writes the feed.</p>`;
+    }
+
+    const lb = document.getElementById('leaderboard-container');
+    if (lb) {
+      if (!next.race.length) {
+        lb.innerHTML = `<div class="text-center py-8 text-zinc-400"><p class="font-medium text-zinc-300 mb-1">The board is wide open</p><p class="text-sm">Be the first referrer on the live leaderboard.</p></div>`;
+      } else {
+        lb.innerHTML = `<div class="space-y-2">${next.race
+          .slice(0, 12)
+          .map((s, i) => {
+            const you = siteHost && s.host === siteHost;
+            return `<div class="leaderboard-row flex justify-between items-center px-5 py-3 rounded-2xl ${i === 0 ? 'leaderboard-row--gold bg-gradient-to-r from-amber-500/15 to-yellow-500/5 border border-amber-400/35' : 'bg-zinc-900/70 border border-white/10'}${you ? ' ring-2 ring-emerald-400/40' : ''}" data-code="${escapeHtml(s.ownerCode)}">
+              <div class="flex items-center gap-3"><div class="w-7 h-7 rounded-full ${i === 0 ? 'bg-amber-400 text-zinc-900' : 'bg-violet-600 text-white'} flex items-center justify-center text-xs font-bold">${i === 0 ? '👑' : i + 1}</div><div class="font-mono ${i === 0 ? 'text-amber-200' : 'text-emerald-400'}">${escapeHtml(s.ownerCode)}${you ? ' <span class="text-[10px] text-emerald-300/80">(you)</span>' : ''}</div></div>
+              <div class="font-semibold ${i === 0 ? 'text-amber-300' : 'text-emerald-400'}">${s.weeklyCredits} <span class="text-xs text-zinc-400">refs</span></div>
+            </div>`;
+          })
+          .join('')}</div>`;
+      }
+    }
+
+    const liveN = document.getElementById('total-referrers');
+    const suffix = document.getElementById('hero-stats-suffix');
+    if (liveN) liveN.textContent = String(next.livePlayers || '');
+    if (suffix) suffix.textContent = next.livePlayers ? 'people racing' : 'Board is open';
+    const coach = document.getElementById('funnel-guide-coach-text');
+    if (coach) {
+      coach.textContent = me
+        ? siteHost
+          ? nextActionFor({ credits: me.credits, weeklyCredits: me.weeklyCredits, rung }).label
+          : 'Paste your website in the Site Drop slot for a 15-minute chip.'
+        : 'Step 1: tap Get my referral link.';
+    }
+    paintHud();
   }
 
   async function afterJoin(data: JoinOk): Promise<void> {
-    persistAttribution(startRef || qs('ref'), data.site.url, attr.src, attr.camp);
-    renderBoard(data.board);
-    setDemo(data.demoMode || currentTransport() === 'demo');
-    openKit({
-      player: data.player,
-      shareUrl: data.shareUrl,
-      rung: data.rung,
-      siteHost: data.site.host,
-      demoMode: data.demoMode || currentTransport() === 'demo',
-    });
-    await refreshEmbed(data.site.host);
-    const status = kit.querySelector('[data-kit-status]') as HTMLElement;
-    status.hidden = false;
-    if (data.selfJoin) {
-      status.textContent = 'Your own tap does not count. Send this link to someone else.';
-      toast('Your own tap does not count');
-    } else if (data.teIgnored) {
-      status.textContent = 'TE / rotator traffic does not count as a unique credit. Your link is still live — send it to a real friend.';
-      toast('TE hit ignored — visits never climb the board');
-    } else if (data.alreadyCredited) {
-      status.textContent = 'That friend already counted. One unique Get my link per person.';
-      toast('That friend already counted');
-    } else if (data.credited) {
-      const helped = qs('helped') || data.referrerCode || 'your friend';
-      status.textContent = `You credited ${helped}. Here’s your kit — send it next.`;
+    me = data.player;
+    shareUrl = data.shareUrl;
+    rung = data.rung;
+    siteHost = data.site?.host || data.player.siteHost || '';
+    rememberCredits(data.player.credits);
+    persistAttribution(startRef || qs('ref'), data.site?.url || siteInput?.value || '', attr.src, attr.camp);
+    paintBoard(data.board);
+    revealKit();
+    const heading = document.getElementById('post-link-heading');
+    if (heading) heading.textContent = data.site ? `You're racing — ${data.site.host}` : "You're racing.";
+    if (data.selfJoin) toast('Your own tap does not count');
+    else if (data.teIgnored) toast('TE hit ignored — visits never climb the board');
+    else if (data.alreadyCredited) toast('That friend already counted');
+    else if (data.credited) {
       toast('Unique friend lock counted');
-      celebrateHit({ host: data.site.host, credits: data.player.credits });
-    } else {
-      status.textContent = 'Your link is live. Send it — visits do not count.';
+      celebrateHit({ host: data.site?.host || data.player.code, credits: data.player.credits });
+    } else if (data.player.credits === 0) {
+      celebrateHit({ host: data.site?.host || data.player.code, credits: 0 });
     }
     if (data.unlock) {
-      celebrateUnlock(data.unlock, () => dropShareKit(data.unlock));
-      dropShareKit(data.unlock);
-    } else if (data.player.credits === 0 && !data.selfJoin && !data.alreadyCredited) {
-      celebrateHit({ host: data.site.host, credits: 0 });
+      celebrateUnlock(data.unlock, () => {
+        shareBox?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' });
+      });
     }
     if (data.kingmaker) toast(`Kingmaker: introduced ${data.kingmaker.winnerLabel}`);
     if (data.degraded) toast('Saved in this session — board sync is catching up');
   }
 
-  urlInput.addEventListener('input', () => {
-    formErr.hidden = true;
-    paintPreview(urlInput.value);
-  });
-  paintPreview(urlInput.value);
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    formErr.hidden = true;
-    const host = previewHost(urlInput.value);
-    track('paste', { host: host || undefined });
-    persistAttribution(startRef || qs('ref'), urlInput.value, attr.src, attr.camp);
-    submit.disabled = true;
-    submit.textContent = 'Getting your referral link…';
+  async function getMyLink(): Promise<void> {
+    if (heroBtn) {
+      heroBtn.disabled = true;
+      const label = heroBtn.querySelector('span');
+      if (label) label.textContent = 'Getting your referral link…';
+    }
+    track('join', { host: previewHost(siteInput?.value || '') || undefined, src: attr.src, camp: attr.camp });
     try {
-      const data = await joinSite(urlInput.value, startRef || qs('ref') || attr.ref, { src: attr.src, camp: attr.camp });
-      submit.textContent = 'Get my referral link';
+      const data = await joinSite(siteInput?.value || '', startRef || qs('ref') || attr.ref, { src: attr.src, camp: attr.camp });
       await afterJoin(data);
+      shareBox?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' });
     } catch (err) {
-      submit.textContent = 'Try again — Get my referral link';
-      showFormError(err instanceof Error ? err.message : 'Could not get your link. Try again.');
+      toast(err instanceof Error ? err.message : 'Could not get your link. Try again.');
     } finally {
-      submit.disabled = false;
-    }
-  });
-
-  kit.querySelector('[data-close-kit]')?.addEventListener('click', closeKit);
-  kit.querySelector('[data-te-copy]')?.addEventListener('click', async () => {
-    const dest = teDestination(location.origin, { ref: me?.code || startRef, camp: attr.camp || 'share-kit' });
-    await copyText(dest);
-    toast('TE destination copied');
-  });
-  kit.querySelector('[data-te-iframe]')?.addEventListener('click', async () => {
-    await copyText(teIframeSnippet(location.origin, { ref: me?.code || startRef, camp: attr.camp || 'share-kit' }));
-    toast('TE iframe snippet copied');
-  });
-  kit.querySelector('[data-copy]')?.addEventListener('click', async () => {
-    track('share', { platform: 'copy', host: siteHost });
-    await copyText(shareUrl);
-    afterShare();
-  });
-  kit.querySelector('[data-save]')?.addEventListener('click', async () => {
-    track('share', { platform: 'save', host: siteHost });
-    await copyText(shareUrl);
-    afterShare();
-    const btn = kit.querySelector('[data-save]') as HTMLButtonElement;
-    const prev = btn.textContent;
-    btn.textContent = 'Saved';
-    setTimeout(() => {
-      btn.textContent = prev;
-    }, 1600);
-  });
-  soundBtn.addEventListener('click', () => {
-    setSoundEnabled(!soundEnabled());
-    paintSound();
-  });
-  kit.querySelector('[data-simulate]')?.addEventListener('click', async () => {
-    if (!me) return;
-    try {
-      const data = await simulateFriend(me.code);
-      await afterJoin(data);
-    } catch (err) {
-      toast(err instanceof Error ? err.message : 'Simulate failed');
-    }
-  });
-  root.querySelector('[data-copy-embed]')?.addEventListener('click', async () => {
-    await copyText(embedEl.textContent || '');
-    toast('Embed copied');
-  });
-
-  async function hydrate(): Promise<void> {
-    const landHost = qs('url') ? hostOf(qs('url')!) : qs('helped') || siteHost;
-    const alreadyInKit = Boolean(qs('kit') || qs('credited') || qs('already'));
-    track(startRef && !alreadyInKit ? 'friend_land' : 'land', {
-      host: landHost || undefined,
-      src: attr.src,
-      camp: attr.camp,
-      te: attr.te,
-    });
-    void fetch('/api/content')
-      .then((r) => r.json())
-      .then((c: { hero?: string; lead?: string }) => {
-        if (c.hero) {
-          const h = root.querySelector('.hero h1');
-          if (h) h.innerHTML = escapeHtml(c.hero).replace(/\n/g, '<br>');
-        }
-        if (c.lead) {
-          const p = root.querySelector('.hero .lead');
-          if (p) p.textContent = c.lead;
-        }
-      })
-      .catch(() => {});
-    const health = await probeHealth();
-    setDemo(!health || health.demoMode || currentTransport() === 'demo');
-    try {
-      const mine = await fetchMe();
-      renderBoard(mine.board);
-      setDemo(mine.demoMode || currentTransport() === 'demo');
-      if (mine.player && mine.shareUrl && mine.site && mine.rung) {
-        me = mine.player;
-        rememberCredits(mine.player.credits);
-        paintNext(mine.player, mine.rung);
-        if (startKit || qs('credited') || qs('unlock') || qs('already') || qs('self') || shouldRestoreKit()) {
-          openKit({
-            player: mine.player,
-            shareUrl: mine.shareUrl,
-            rung: mine.rung,
-            siteHost: mine.site.host,
-            demoMode: mine.demoMode,
-          });
-        }
-        await refreshEmbed(mine.site.host);
-        if (qs('credited') && qs('helped')) {
-          const status = kit.querySelector('[data-kit-status]') as HTMLElement;
-          status.hidden = false;
-          status.textContent = `You credited ${qs('helped')}. Here’s your kit — send it next.`;
-        }
-        if (qs('already')) toast('That friend already counted');
-        if (qs('self')) toast('Your own tap does not count');
-      } else {
-        renderBoard(await fetchBoard());
+      if (heroBtn) {
+        heroBtn.disabled = false;
+        const label = heroBtn.querySelector('span');
+        if (label) label.textContent = startRef ? 'Get my link' : 'Get my referral link';
       }
-    } catch {
-      renderBoard({
-        weekId: '',
-        banner: null,
-        entered: [],
-        rising: [],
-        challenger: [],
-        race: [],
-        duel: null,
-        kingmakers: [],
-        activity: [],
-        demoMode: true,
-        livePlayers: 0,
-        liveSites: 0,
-      });
     }
-    const unlock = qs('unlock') as Rung | null;
-    if (unlock && RUNG_ORDER.includes(unlock) && siteHost) {
-      const moment = { rung: unlock, title: RUNG_COPY[unlock].title, shareText: RUNG_COPY[unlock].share, host: siteHost };
-      celebrateUnlock(moment, () => dropShareKit(moment));
-      dropShareKit(moment);
-    }
-    paintHud();
   }
 
-  void hydrate();
-
-  let pollMs = 8000;
-  const tickBoard = async (): Promise<void> => {
-    if (!document.hidden) {
-      try {
-        const next = await fetchBoard();
-        const prevBanner = board?.banner?.host;
-        renderBoard(next);
-        if (me) {
-          const row = [next.banner, ...next.challenger, ...next.rising, ...next.entered, ...next.race].find(
-            (s) => s && (s.ownerCode === me!.code || s.host === me!.siteHost),
-          );
-          if (row) {
-            paintNext({ ...me, weeklyCredits: row.weeklyCredits, credits: row.credits }, row.rung);
-            if (kitOpen) (kit.querySelector('[data-meter]') as HTMLElement).innerHTML = rungMeter(row.rung);
-            const prev = lastKnownCredits();
-            if (prev !== null && row.credits > prev) {
-              rememberCredits(row.credits);
-              celebrateHit({ host: row.host, credits: row.credits });
-              toast(`${row.label} just got a unique friend lock`);
-            } else {
-              rememberCredits(row.credits);
-            }
-          }
-        }
-        if (next.banner?.host && next.banner.host !== prevBanner && prevBanner !== undefined) {
-          const mine = Boolean(me && (next.banner.host === me.siteHost || next.banner.ownerCode === me.code));
-          if (mine) {
-            const moment = {
-              rung: 'banner' as const,
-              title: RUNG_COPY.banner.title,
-              shareText: RUNG_COPY.banner.share,
-              host: next.banner.host,
-            };
-            celebrateUnlock(moment, () => dropShareKit(moment));
-            dropShareKit(moment);
-          } else {
-            celebrateHit({ host: next.banner.host, credits: next.banner.credits });
-          }
-          toast(`${next.banner.label} took #1`);
-        }
-        pollMs = isDegraded() ? 16_000 : 8_000;
-      } catch {
-        pollMs = Math.min(30_000, pollMs + 4_000);
-      }
+  async function attachSite(): Promise<void> {
+    const raw = siteInput?.value || '';
+    if (!previewHost(raw)) {
+      if (siteStatus) siteStatus.textContent = 'Paste your website.';
+      toast('Paste your website.');
+      return;
     }
-    window.setTimeout(tickBoard, pollMs);
-  };
-  window.setTimeout(tickBoard, pollMs);
-  window.setInterval(paintHud, 40_000);
-  paintHud();
+    if (siteStatus) siteStatus.textContent = 'Saving…';
+    try {
+      const data = await joinSite(raw, startRef || qs('ref') || attr.ref, { src: attr.src, camp: attr.camp });
+      await afterJoin(data);
+      if (siteStatus) siteStatus.textContent = 'Just entered — your site is on this homepage for 15 minutes.';
+      toast('Just entered — 15 minutes on this homepage.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not save';
+      if (siteStatus) siteStatus.textContent = msg;
+      toast(msg);
+    }
+  }
+
+  heroBtn?.addEventListener('click', () => void getMyLink());
+  navBtn?.addEventListener('click', () => void getMyLink());
+  attrBtn?.addEventListener('click', () => void getMyLink());
+  siteSubmit?.addEventListener('click', () => void attachSite());
+  copyBtn?.addEventListener('click', async () => {
+    if (!shareUrl) return;
+    await copyText(shareUrl);
+    bumpShareStreak();
+    toast('Link copied. Send it — visits do not count.');
+  });
+  sendBtn?.addEventListener('click', async () => {
+    if (!shareUrl) return;
+    const ok = await nativeShare(shareUrl, siteHost || 'ViralRefer', rung);
+    if (ok) bumpShareStreak();
+    else toast('Copy the link instead');
+  });
+
+  document.getElementById('post-link-intents')?.addEventListener('click', (e) => {
+    const a = (e.target as HTMLElement).closest('a');
+    if (a) bumpShareStreak();
+  });
+
+  void (async () => {
+    await probeHealth();
+    const landHost = qs('url') ? previewHost(qs('url')!) : qs('helped') || siteHost;
+    track(startRef ? 'friend_land' : 'land', { host: landHost || undefined, src: attr.src, camp: attr.camp, te: attr.te });
+    try {
+      const next = await fetchBoard();
+      paintBoard(next);
+    } catch {
+      /* board hydrates on join */
+    }
+    try {
+      const mine = await fetchMe();
+      if (mine.player) {
+        me = mine.player;
+        shareUrl = mine.shareUrl || `${location.origin}/r/${mine.player.code}`;
+        rung = mine.rung || 'entered';
+        siteHost = mine.site?.host || mine.player.siteHost || '';
+        if (shouldRestoreKit() || qs('kit')) revealKit();
+      }
+    } catch {
+      /* first land */
+    }
+    if (!soundEnabled()) setSoundEnabled(false);
+  })();
 }

@@ -1,5 +1,6 @@
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -19,6 +20,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    tailwindcss(),
     {
       name: 'admin-pretty-url',
       closeBundle() {
