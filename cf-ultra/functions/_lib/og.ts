@@ -2,6 +2,8 @@ import {
   RUNG_COPY,
   escapeHtml,
   escapeXml,
+  faviconForHost,
+  nextActionFor,
   type BoardSite,
   type Player,
   type Rung,
@@ -55,9 +57,10 @@ export function landingHtml(opts: {
   const desc = `Tap Get my link to credit ${label}. Visits do not count. No email. No cash prize.`;
   const shareUrl = `${opts.origin}/r/${opts.code}`;
   const og = `${opts.origin}/api/og?code=${encodeURIComponent(opts.code)}`;
-  const prefill = escapeHtml(opts.site?.url ?? '');
   const credits = opts.site?.creditTimes.length ?? 0;
   const weekly = opts.boardSite?.weeklyCredits ?? 0;
+  const next = nextActionFor({ credits, weeklyCredits: weekly, rung });
+  const fav = opts.site?.host ? faviconForHost(opts.site.host) : '';
   const demo = opts.demoMode
     ? `<p class="demo">Demo mode — KV is not bound. Unique locks still work in this isolate.</p>`
     : '';
@@ -66,7 +69,7 @@ export function landingHtml(opts: {
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(desc)}"/>
   <meta property="og:type" content="website"/>
@@ -83,14 +86,22 @@ export function landingHtml(opts: {
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: Outfit, ui-sans-serif, system-ui, sans-serif; background: #050508; color: #f4f1ea; }
-    .wrap { min-height: 100vh; padding: 28px 18px 48px; max-width: 560px; margin: 0 auto; }
+    .wrap { min-height: 100dvh; padding: 28px 18px calc(48px + env(safe-area-inset-bottom, 0px)); max-width: 560px; margin: 0 auto; }
     .kicker { color: #d6ff3e; letter-spacing: .18em; font-size: 12px; font-weight: 700; }
     h1 { font-family: Syne, Outfit, sans-serif; font-size: clamp(28px, 8vw, 44px); line-height: 1.05; margin: 12px 0 8px; }
-    .card { background: #10131c; border: 1px solid #2a2d3a; border-radius: 22px; padding: 20px; margin: 22px 0; }
+    .who { display: flex; gap: 12px; align-items: center; background: #10131c; border: 1px solid #2a2d3a; border-radius: 22px; padding: 16px; margin: 18px 0; }
+    .who img { width: 40px; height: 40px; border-radius: 12px; background: #050508; }
     .rung { color: #3ee8ff; font-weight: 700; }
+    .next { margin: 0 0 16px; padding: 12px 14px; border-radius: 16px; background: rgba(214,255,62,.08); border: 1px solid rgba(214,255,62,.28); font-weight: 700; }
     label { display: block; font-size: 13px; color: #9a9588; margin-bottom: 8px; }
-    input { width: 100%; padding: 14px 16px; border-radius: 14px; border: 1px solid #2a2d3a; background: #050508; color: #f4f1ea; font-size: 16px; }
-    button { width: 100%; margin-top: 12px; padding: 16px; border: 0; border-radius: 14px; background: #d6ff3e; color: #050508; font-weight: 800; font-size: 16px; }
+    input { width: 100%; min-height: 52px; padding: 14px 16px; border-radius: 14px; border: 1px solid #2a2d3a; background: #050508; color: #f4f1ea; font-size: 16px; }
+    button { width: 100%; min-height: 52px; margin-top: 12px; padding: 16px; border: 0; border-radius: 14px; background: #d6ff3e; color: #050508; font-weight: 800; font-size: 17px; }
+    button:disabled { opacity: .55; }
+    .preview { display: none; align-items: center; gap: 10px; margin-top: 10px; color: #9a9588; font-size: 13px; }
+    .preview.on { display: flex; }
+    .preview img { width: 22px; height: 22px; border-radius: 6px; }
+    .err { display: none; color: #ff3d8a; font-size: 14px; font-weight: 700; margin-top: 10px; }
+    .err.on { display: block; }
     .fine { color: #9a9588; font-size: 13px; line-height: 1.5; }
     .demo { color: #ffc857; font-size: 13px; }
     a { color: #3ee8ff; }
@@ -98,48 +109,84 @@ export function landingHtml(opts: {
 </head>
 <body>
   <main class="wrap">
-    <div class="kicker">VIRALREFER ULTRA</div>
-    <h1>Help ${label} go viral</h1>
-    <p class="fine">You landed on a personal share link. Tapping <strong>Get my link</strong> is the action that counts. Opening this page does not.</p>
-    <section class="card">
-      <div class="rung">${escapeHtml(RUNG_COPY[rung].title)}</div>
-      <p>${credits} unique friend locks · ${weekly} this week</p>
-      <p class="fine">${escapeHtml(RUNG_COPY[rung].next)}</p>
-      ${demo}
+    <div class="kicker">A FRIEND SENT YOU</div>
+    <h1>Help ${label} climb</h1>
+    <p class="fine"><strong>Opening this page does not count.</strong> Paste <em>your</em> website and tap <strong>Get my link</strong> — that one tap credits ${label}. Visits and copies never count. No email.</p>
+    <section class="who">
+      ${fav ? `<img src="${escapeHtml(fav)}" alt="" width="40" height="40"/>` : ''}
+      <div>
+        <div class="rung">${escapeHtml(RUNG_COPY[rung].title)}</div>
+        <strong>${label}</strong>
+        <p class="fine" style="margin:4px 0 0">${credits} unique friend locks · ${weekly} this week</p>
+      </div>
     </section>
+    <p class="next">${escapeHtml(next.label)}</p>
+    ${demo}
     <form id="join">
-      <label for="url">Your website — same race, your own link</label>
-      <input id="url" name="url" type="url" inputmode="url" autocomplete="url" required value="${prefill}" placeholder="https://yoursite.com"/>
-      <button type="submit">Get my link</button>
+      <label for="url">Your website — you get your own share kit</label>
+      <input id="url" name="url" type="url" inputmode="url" autocomplete="url" required placeholder="https://yoursite.com"/>
+      <div class="preview" id="preview"><img id="pfav" alt=""/><span id="phost"></span></div>
+      <button type="submit" id="go">Get my link</button>
+      <p class="err" id="err" role="alert"></p>
     </form>
-    <p class="fine">Free · no email · no cash prize · unique friend taps only. <a href="/">Live board</a></p>
+    <p class="fine">Free · no cash prize · unique friend taps only.</p>
   </main>
   <script>
-    fetch('/api/track',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'friend_land'})}).catch(()=>{});
-    const form = document.getElementById('join');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const url = document.getElementById('url').value;
-      const btn = form.querySelector('button');
-      btn.disabled = true;
-      btn.textContent = 'Locking your link…';
+    try { sessionStorage.setItem('vr-ultra-attr-v1', JSON.stringify({ ref: ${JSON.stringify(opts.code)}, url: '' })); } catch (e) {}
+    fetch('/api/track',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'friend_land',host:${JSON.stringify(opts.site?.host || '')}})}).catch(()=>{});
+    const input = document.getElementById('url');
+    const preview = document.getElementById('preview');
+    const phost = document.getElementById('phost');
+    const pfav = document.getElementById('pfav');
+    const err = document.getElementById('err');
+    const btn = document.getElementById('go');
+    function hostOf(raw) {
       try {
-        const res = await fetch('/api/join', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ url, ref: ${JSON.stringify(opts.code)} })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) throw new Error(data.error || 'Join failed');
-        const q = new URLSearchParams({ kit: data.player.code });
-        if (data.credited) q.set('credited', '1');
-        if (data.unlock) q.set('unlock', data.unlock.rung);
-        location.href = '/?' + q.toString();
-      } catch (err) {
-        btn.disabled = false;
-        btn.textContent = 'Get my link';
-        alert(err.message || 'Could not join');
+        const u = new URL(raw.indexOf('://') >= 0 ? raw : 'https://' + raw);
+        return u.hostname.replace(/^www\\./, '');
+      } catch (e) { return ''; }
+    }
+    input.addEventListener('input', () => {
+      const h = hostOf(input.value.trim());
+      if (!h || h.indexOf('.') < 0) { preview.className = 'preview'; return; }
+      phost.textContent = h + ' — looks ready';
+      pfav.src = 'https://icons.duckduckgo.com/ip3/' + encodeURIComponent(h) + '.ico';
+      preview.className = 'preview on';
+    });
+    document.getElementById('join').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.className = 'err';
+      const url = input.value;
+      btn.disabled = true;
+      btn.textContent = 'Getting your link…';
+      let last = 'Could not get your link. Try again.';
+      for (let i = 0; i < 3; i++) {
+        try {
+          const res = await fetch('/api/join', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ url, ref: ${JSON.stringify(opts.code)} })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.error || 'Join failed');
+          const q = new URLSearchParams({ kit: data.player.code, ref: ${JSON.stringify(opts.code)} });
+          if (data.credited) q.set('credited', '1');
+          if (data.alreadyCredited) q.set('already', '1');
+          if (data.selfJoin) q.set('self', '1');
+          if (data.unlock) q.set('unlock', data.unlock.rung);
+          if (${JSON.stringify(opts.site?.host || '')}) q.set('helped', ${JSON.stringify(opts.site?.host || '')});
+          location.href = '/?' + q.toString();
+          return;
+        } catch (ex) {
+          last = (ex && ex.message) || last;
+          if (last.indexOf('Paste a real') >= 0 || last.indexOf('paused') >= 0) break;
+          await new Promise((r) => setTimeout(r, 350 * (i + 1)));
+        }
       }
+      btn.disabled = false;
+      btn.textContent = 'Try again — Get my link';
+      err.textContent = last;
+      err.className = 'err on';
     });
   </script>
 </body>

@@ -5,6 +5,7 @@ import {
   createEmptyState,
   joinAndMaybeCredit,
   newActorId,
+  nextActionFor,
   normalizeWebsiteUrl,
   utcWeekId,
 } from '../functions/_lib/engine';
@@ -21,6 +22,23 @@ function mustJoin(...args: Parameters<typeof joinAndMaybeCredit>) {
   if (!('result' in outcome)) throw new Error(outcome.error);
   return outcome;
 }
+
+describe('nextActionFor', () => {
+  it('always names the next unlock in friend-count language', () => {
+    expect(nextActionFor({ credits: 0, weeklyCredits: 0, rung: 'entered' }).label).toBe(
+      'Send to 1 friend to unlock Rising',
+    );
+    expect(nextActionFor({ credits: 1, weeklyCredits: 1, rung: 'rising' }).label).toBe(
+      'Send to 1 more friend this week to unlock Challenger',
+    );
+    expect(nextActionFor({ credits: 2, weeklyCredits: 2, rung: 'challenger' }).label).toBe(
+      'Send to 1 more friend this week to unlock the #1 banner',
+    );
+    expect(nextActionFor({ credits: 3, weeklyCredits: 3, rung: 'banner' }).label).toBe(
+      'Hold #1 this week. Keep sharing.',
+    );
+  });
+});
 
 describe('normalizeWebsiteUrl', () => {
   it('accepts bare hosts and https', () => {

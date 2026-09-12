@@ -1,4 +1,4 @@
-import { RUNG_COPY, RUNG_ORDER, type BoardSite, type Rung } from '../functions/_lib/engine';
+import { RUNG_COPY, RUNG_ORDER, faviconForHost, nextActionFor, type BoardSite, type Rung } from '../functions/_lib/engine';
 import {
   currentHealthNote,
   currentTransport,
@@ -10,6 +10,15 @@ import {
   probeHealth,
   simulateFriend,
 } from './api';
+import {
+  lastKnownCredits,
+  persistAttribution,
+  previewHost,
+  rememberCredits,
+  rememberKitOpen,
+  shouldRestoreKit,
+  syncAttributionToUrl,
+} from './attr';
 import { burst, celebrateUnlock } from './celebrate';
 import { copyText, intents, nativeShare, qrSvg } from './share';
 import { track } from './track';
@@ -50,8 +59,10 @@ function toast(message: string): void {
   setTimeout(() => el?.classList.remove('on'), 2200);
 }
 
-function siteCard(site: BoardSite): string {
-  return `<article class="site-card">
+function siteCard(site: BoardSite, mineHost: string): string {
+  const you = mineHost && site.host === mineHost;
+  return `<article class="site-card${you ? ' you' : ''}">
+    ${you ? '<span class="you-chip">You’re here</span>' : ''}
     <b>${escapeHtml(site.label)}</b>
     <div class="stats">
       <span>${site.weeklyCredits} this week</span>
@@ -62,11 +73,11 @@ function siteCard(site: BoardSite): string {
   </article>`;
 }
 
-function lane(title: string, sub: string, sites: BoardSite[], empty: string): string {
+function lane(title: string, sub: string, sites: BoardSite[], empty: string, mineHost: string): string {
   return `<section class="lane">
     <h3>${title}</h3>
     <div class="sub">${sub}</div>
-    ${sites.length ? `<div class="row">${sites.map(siteCard).join('')}</div>` : `<p class="empty-lane">${empty}</p>`}
+    ${sites.length ? `<div class="row">${sites.map((s) => siteCard(s, mineHost)).join('')}</div>` : `<p class="empty-lane">${empty}</p>`}
   </section>`;
 }
 
@@ -86,8 +97,10 @@ export function boot(root: HTMLElement): void {
   let siteHost = '';
   let kitOpen = false;
 
-  const startUrl = qs('url') || '';
-  const startRef = (qs('ref') || '').toUpperCase();
+  const attr = persistAttribution(qs('ref'), qs('url'));
+  syncAttributionToUrl(attr);
+  const startUrl = qs('url') || attr.url || '';
+  const startRef = (qs('ref') || attr.ref || '').toUpperCase();
   const startKit = (qs('kit') || '').toUpperCase();
 
   root.innerHTML = `
@@ -101,7 +114,7 @@ export function boot(root: HTMLElement): void {
     <section class="hero">
       <p class="kicker">CLOUDFLARE · ANY SITE · NO EMAIL</p>
       <h1>Paste a site.<br>Make it <em>feel</em> viral.</h1>
-      <p class="lead">Instant personal share link. Friends tap Get my link. The site climbs Just entered → Rising → Challenger → #1. Visits never count.</p>
+      <p class="lead">Paste any website. Get your link. A unique friend taps Get my link. The site climbs Just entered → Rising → Challenger → #1. Visits and copies never count.</p>
       <div class="ref-banner" data-ref-banner hidden></div>
     </section>
     <form class="paste" data-form>
@@ -109,6 +122,15 @@ export function boot(root: HTMLElement): void {
         <input data-url type="url" inputmode="url" autocomplete="url" required placeholder="https://yoursite.com" value="${escapeHtml(startUrl)}"/>
         <button class="btn volt" type="submit" data-submit>Get my link</button>
       </div>
+      <div class="url-preview" data-preview hidden>
+        <img data-favicon alt="" width="24" height="24"/>
+        <div>
+          <strong data-preview-host></strong>
+          <span>Looks ready. Opening a page does not count — only a friend’s Get my link.</span>
+        </div>
+      </div>
+      <p class="form-err" data-form-err hidden role="alert"></p>
+      <p class="next-action" data-next hidden></p>
       <p class="fine" data-health>Free core. No cash prizes. Unique friend actions only.</p>
     </form>
     <section class="banner-stage empty" data-banner></section>
@@ -131,12 +153,12 @@ export function boot(root: HTMLElement): void {
       <div class="sub">Non-cash. If someone you referred hits #1, you get the intro.</div>
       <div data-kings></div>
     </section>
-    <section class="lane embed">
-      <h3>Free embed — Help us go viral</h3>
-      <p class="sub">Drop this on any site. One tap opens the join path.</p>
+    <details class="lane embed">
+      <summary>Free embed — Help us go viral</summary>
+      <p class="sub">Secondary. The loop above is the product: paste → Get my link → share → friend Get my link.</p>
       <pre data-embed>&lt;script async src="/embed.js" data-site="yoursite.com"&gt;&lt;/script&gt;</pre>
       <button class="btn ghost" type="button" data-copy-embed>Copy snippet</button>
-    </section>
+    </details>
     <section class="lane faq">
       <h3>How the loop works</h3>
       <details open><summary>What counts?</summary><p>A unique friend opening your link and tapping Get my link. Refreshing, copying, or visiting does not count.</p></details>
@@ -156,13 +178,19 @@ export function boot(root: HTMLElement): void {
         </div>
         <button class="btn ghost" type="button" data-close-kit>Close</button>
       </div>
+      <p class="kit-status" data-kit-status hidden></p>
       <div class="og-card" data-og></div>
+      <p class="next-action kit-next" data-kit-next></p>
       <div class="share-link">
-        <input data-share-url readonly />
-        <button class="btn volt" type="button" data-copy>Copy</button>
+        <input data-share-url readonly aria-label="Your share link"/>
+        <button class="btn volt primary-cta" type="button" data-copy>Copy link</button>
       </div>
-      <div class="intents" data-intents></div>
-      <div class="qr-wrap" data-qr></div>
+      <button class="btn volt primary-cta native-share" type="button" hidden data-native>Share</button>
+      <details class="more-share">
+        <summary>More ways to send</summary>
+        <div class="intents" data-intents></div>
+        <div class="qr-wrap" data-qr></div>
+      </details>
       <div data-meter></div>
       <p class="fine" data-kit-note></p>
       <button class="btn ice" type="button" hidden data-simulate>Simulate a unique friend (demo)</button>
@@ -183,10 +211,18 @@ export function boot(root: HTMLElement): void {
   const kingsEl = root.querySelector('[data-kings]') as HTMLElement;
   const embedEl = root.querySelector('[data-embed]') as HTMLElement;
   const kit = root.querySelector('[data-kit]') as HTMLElement;
+  const previewEl = root.querySelector('[data-preview]') as HTMLElement;
+  const previewHostEl = root.querySelector('[data-preview-host]') as HTMLElement;
+  const faviconEl = root.querySelector('[data-favicon]') as HTMLImageElement;
+  const formErr = root.querySelector('[data-form-err]') as HTMLElement;
+  const nextEl = root.querySelector('[data-next]') as HTMLElement;
 
   if (startRef) {
+    const helped = qs('helped');
     refBanner.hidden = false;
-    refBanner.textContent = `You landed via ${startRef}. Get your link to credit them — opening this page does not count.`;
+    refBanner.textContent = helped
+      ? `A friend sent you here to help ${helped}. Paste your site and tap Get my link — opening this page does not count.`
+      : `A friend sent you here (${startRef}). Paste your site and tap Get my link to credit them. Opening this page does not count.`;
   }
 
   function setDemo(on: boolean): void {
@@ -198,10 +234,12 @@ export function boot(root: HTMLElement): void {
 
   function renderBoard(next: BoardState): void {
     board = next;
+    const mineHost = me?.siteHost || siteHost;
     if (next.banner) {
+      const you = mineHost && next.banner.host === mineHost;
       bannerEl.classList.remove('empty');
       bannerEl.innerHTML = `<div class="pulse"></div>
-        <p class="kicker">#1 BANNER ENERGY</p>
+        <p class="kicker">${you ? 'YOU HOLD #1' : '#1 BANNER ENERGY'}</p>
         <h2>${escapeHtml(next.banner.label)}</h2>
         <div class="meta">
           <span>${next.banner.weeklyCredits} unique friends this week</span>
@@ -214,9 +252,9 @@ export function boot(root: HTMLElement): void {
     }
 
     lanesEl.innerHTML =
-      lane('Just entered', '15 minutes after a site is pasted. No friend tap yet.', next.entered, 'Open. Paste a site to take a chip.') +
-      lane('Rising', '1 unique friend Get-my-link. Holds 1 hour after the last lock.', next.rising, 'Waiting on a real unique friend tap.') +
-      lane('Challenger', '#2 / #3 this week with 2+ unique locks.', next.challenger, 'Race is open. Two weekly locks put you on the strip.');
+      lane('Just entered', '15 minutes after a site is pasted. No friend tap yet.', next.entered, 'Open. Paste a site to take a chip.', mineHost) +
+      lane('Rising', '1 unique friend Get-my-link. Holds 1 hour after the last lock.', next.rising, 'Waiting on a real unique friend tap.', mineHost) +
+      lane('Challenger', '#2 / #3 this week with 2+ unique locks.', next.challenger, 'Race is open. Two weekly locks put you on the strip.', mineHost);
 
     if (next.duel) {
       duelEl.innerHTML = `<div class="duel">
@@ -230,10 +268,10 @@ export function boot(root: HTMLElement): void {
 
     raceEl.innerHTML = next.race.length
       ? next.race
-          .map(
-            (s, i) =>
-              `<li><span>#${i + 1} ${escapeHtml(s.label)}</span><span>${s.weeklyCredits} · ${s.rung}</span></li>`,
-          )
+          .map((s, i) => {
+            const you = mineHost && s.host === mineHost;
+            return `<li class="${you ? 'you' : ''}"><span>#${i + 1} ${escapeHtml(s.label)}${you ? ' · you’re here' : ''}</span><span>${s.weeklyCredits} · ${s.rung}</span></li>`;
+          })
           .join('')
       : `<li><span>Board is empty and honest.</span><span>0</span></li>`;
 
@@ -251,22 +289,40 @@ export function boot(root: HTMLElement): void {
       : `<p class="empty-lane">Kingmaker unlocks when a person you referred hits the banner.</p>`;
   }
 
+  function paintNext(player: PublicPlayer, current: Rung): void {
+    const action = nextActionFor({ credits: player.credits, weeklyCredits: player.weeklyCredits, rung: current });
+    nextEl.hidden = false;
+    nextEl.textContent = action.label;
+    const kitNext = kit.querySelector('[data-kit-next]') as HTMLElement;
+    kitNext.textContent = action.label;
+  }
+
   function openKit(data: { player: PublicPlayer; shareUrl: string; rung: Rung; siteHost: string; demoMode: boolean }): void {
     me = data.player;
     shareUrl = data.shareUrl;
     rung = data.rung;
     siteHost = data.siteHost;
     kitOpen = true;
+    rememberKitOpen(true);
+    rememberCredits(data.player.credits);
     kit.classList.add('open');
     const links = intents(shareUrl, siteHost, rung);
+    const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+    const nativeBtn = kit.querySelector('[data-native]') as HTMLButtonElement;
+    nativeBtn.hidden = !canShare;
+    const copyBtn = kit.querySelector('[data-copy]') as HTMLButtonElement;
+    copyBtn.classList.toggle('volt', !canShare);
+    copyBtn.classList.toggle('ghost', canShare);
     (kit.querySelector('[data-share-url]') as HTMLInputElement).value = shareUrl;
     (kit.querySelector('[data-og]') as HTMLElement).innerHTML = `
       <p class="kicker">${escapeHtml(RUNG_COPY[rung].title)}</p>
-      <div class="host">${escapeHtml(siteHost)}</div>
-      <p>${data.player.credits} unique friend locks · ${data.player.weeklyCredits} this week · ${data.player.streakDays}d streak</p>
-      <p class="fine">${escapeHtml(RUNG_COPY[rung].next)}</p>`;
+      <div class="og-row">
+        <img src="${escapeHtml(faviconForHost(siteHost))}" alt="" width="36" height="36"/>
+        <div class="host">${escapeHtml(siteHost)}</div>
+      </div>
+      <p>${data.player.credits} unique friend locks · ${data.player.weeklyCredits} this week · ${data.player.streakDays}d streak</p>`;
+    paintNext(data.player, rung);
     (kit.querySelector('[data-intents]') as HTMLElement).innerHTML = `
-      <button class="btn" type="button" data-native>Device share</button>
       <a class="btn" href="${links.whatsapp}" target="_blank" rel="noopener">WhatsApp</a>
       <a class="btn" href="${links.x}" target="_blank" rel="noopener">X</a>
       <a class="btn" href="${links.telegram}" target="_blank" rel="noopener">Telegram</a>
@@ -276,15 +332,15 @@ export function boot(root: HTMLElement): void {
     (kit.querySelector('[data-meter]') as HTMLElement).innerHTML = rungMeter(rung);
     (kit.querySelector('[data-kit-note]') as HTMLElement).textContent =
       data.demoMode
-        ? 'Demo: simulate a unique friend or open this link in another browser profile.'
-        : 'Send the link. Only a unique Get my link credits you.';
+        ? 'Demo: simulate a unique friend or open this link in another browser. Visits still do not count.'
+        : 'Send the link. Only a unique friend’s Get my link credits you.';
     const sim = kit.querySelector('[data-simulate]') as HTMLButtonElement;
     sim.hidden = !data.demoMode;
-    kit.querySelector('[data-native]')?.addEventListener('click', async () => {
+    nativeBtn.onclick = async () => {
       track('share', { platform: 'native', host: siteHost });
       const ok = await nativeShare(shareUrl, siteHost, rung);
-      if (!ok) toast('Use a share button or copy the link');
-    });
+      if (!ok) toast('Copy the link instead');
+    };
     kit.querySelector('[data-copy-msg]')?.addEventListener('click', async () => {
       track('share', { platform: 'copy', host: siteHost });
       await copyText(links.text);
@@ -310,6 +366,7 @@ export function boot(root: HTMLElement): void {
 
   function closeKit(): void {
     kitOpen = false;
+    rememberKitOpen(false);
     kit.classList.remove('open');
   }
 
@@ -322,7 +379,25 @@ export function boot(root: HTMLElement): void {
     }
   }
 
+  function showFormError(message: string): void {
+    formErr.hidden = false;
+    formErr.textContent = message;
+  }
+
+  function paintPreview(raw: string): void {
+    const host = previewHost(raw);
+    if (!host) {
+      previewEl.hidden = true;
+      return;
+    }
+    previewEl.hidden = false;
+    previewHostEl.textContent = host;
+    faviconEl.src = faviconForHost(host);
+    faviconEl.alt = host;
+  }
+
   async function afterJoin(data: JoinOk): Promise<void> {
+    persistAttribution(startRef || qs('ref'), data.site.url);
     renderBoard(data.board);
     setDemo(data.demoMode || currentTransport() === 'demo');
     openKit({
@@ -333,26 +408,52 @@ export function boot(root: HTMLElement): void {
       demoMode: data.demoMode || currentTransport() === 'demo',
     });
     await refreshEmbed(data.site.host);
-    if (data.credited) toast('Unique friend lock counted');
-    if (data.selfJoin) toast('Your own tap does not count');
-    if (data.alreadyCredited) toast('That friend already counted');
+    const status = kit.querySelector('[data-kit-status]') as HTMLElement;
+    status.hidden = false;
+    if (data.selfJoin) {
+      status.textContent = 'Your own tap does not count. Send this link to someone else.';
+      toast('Your own tap does not count');
+    } else if (data.alreadyCredited) {
+      status.textContent = 'That friend already counted. One unique Get my link per person.';
+      toast('That friend already counted');
+    } else if (data.credited) {
+      const helped = qs('helped') || data.referrerCode || 'your friend';
+      status.textContent = `You credited ${helped}. Here’s your kit — send it next.`;
+      toast('Unique friend lock counted');
+      burst();
+    } else {
+      status.textContent = 'Your link is live. Send it — visits do not count.';
+    }
     if (data.unlock) {
       celebrateUnlock(data.unlock);
-    } else if (data.player.credits === 0) {
+    } else if (data.player.credits === 0 && !data.selfJoin && !data.alreadyCredited) {
       burst(innerWidth / 2, 180);
     }
     if (data.kingmaker) toast(`Kingmaker: introduced ${data.kingmaker.winnerLabel}`);
+    if (data.degraded) toast('Saved in this session — board sync is catching up');
   }
+
+  urlInput.addEventListener('input', () => {
+    formErr.hidden = true;
+    paintPreview(urlInput.value);
+  });
+  paintPreview(urlInput.value);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    track('paste');
+    formErr.hidden = true;
+    const host = previewHost(urlInput.value);
+    track('paste', { host: host || undefined });
+    persistAttribution(startRef || qs('ref'), urlInput.value);
     submit.disabled = true;
+    submit.textContent = 'Getting your link…';
     try {
-      const data = await joinSite(urlInput.value, startRef || qs('ref'));
+      const data = await joinSite(urlInput.value, startRef || qs('ref') || attr.ref);
+      submit.textContent = 'Get my link';
       await afterJoin(data);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Could not join');
+      submit.textContent = 'Try again — Get my link';
+      showFormError(err instanceof Error ? err.message : 'Could not get your link. Try again.');
     } finally {
       submit.disabled = false;
     }
@@ -379,8 +480,9 @@ export function boot(root: HTMLElement): void {
   });
 
   async function hydrate(): Promise<void> {
-    const landHost = qs('url') ? hostOf(qs('url')!) : siteHost;
-    track(startRef ? 'friend_land' : 'land', { host: landHost || undefined });
+    const landHost = qs('url') ? hostOf(qs('url')!) : qs('helped') || siteHost;
+    const alreadyInKit = Boolean(qs('kit') || qs('credited') || qs('already'));
+    track(startRef && !alreadyInKit ? 'friend_land' : 'land', { host: landHost || undefined });
     void fetch('/api/content')
       .then((r) => r.json())
       .then((c: { hero?: string; lead?: string }) => {
@@ -402,7 +504,9 @@ export function boot(root: HTMLElement): void {
       setDemo(mine.demoMode || currentTransport() === 'demo');
       if (mine.player && mine.shareUrl && mine.site && mine.rung) {
         me = mine.player;
-        if (startKit || qs('credited') || qs('unlock')) {
+        rememberCredits(mine.player.credits);
+        paintNext(mine.player, mine.rung);
+        if (startKit || qs('credited') || qs('unlock') || qs('already') || qs('self') || shouldRestoreKit()) {
           openKit({
             player: mine.player,
             shareUrl: mine.shareUrl,
@@ -412,6 +516,13 @@ export function boot(root: HTMLElement): void {
           });
         }
         await refreshEmbed(mine.site.host);
+        if (qs('credited') && qs('helped')) {
+          const status = kit.querySelector('[data-kit-status]') as HTMLElement;
+          status.hidden = false;
+          status.textContent = `You credited ${qs('helped')}. Here’s your kit — send it next.`;
+        }
+        if (qs('already')) toast('That friend already counted');
+        if (qs('self')) toast('Your own tap does not count');
       } else {
         renderBoard(await fetchBoard());
       }
@@ -446,12 +557,21 @@ export function boot(root: HTMLElement): void {
         const next = await fetchBoard();
         const prevBanner = board?.banner?.host;
         renderBoard(next);
-        if (kitOpen && me) {
+        if (me) {
           const row = [next.banner, ...next.challenger, ...next.rising, ...next.entered, ...next.race].find(
-            (s) => s && s.ownerCode === me!.code,
+            (s) => s && (s.ownerCode === me!.code || s.host === me!.siteHost),
           );
           if (row) {
-            (kit.querySelector('[data-meter]') as HTMLElement).innerHTML = rungMeter(row.rung);
+            paintNext({ ...me, weeklyCredits: row.weeklyCredits, credits: row.credits }, row.rung);
+            if (kitOpen) (kit.querySelector('[data-meter]') as HTMLElement).innerHTML = rungMeter(row.rung);
+            const prev = lastKnownCredits();
+            if (prev !== null && row.credits > prev) {
+              rememberCredits(row.credits);
+              burst();
+              toast(`${row.label} just got a unique friend lock`);
+            } else {
+              rememberCredits(row.credits);
+            }
           }
         }
         if (next.banner?.host && next.banner.host !== prevBanner && prevBanner !== undefined) {

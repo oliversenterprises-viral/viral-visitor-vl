@@ -70,11 +70,39 @@ body {
 }
 .paste input {
   width: 100%; border: 0; background: transparent; color: var(--ink);
-  padding: 12px 12px; outline: none; font-size: 16px;
+  padding: 14px 12px; outline: none; font-size: 16px; min-height: 48px;
 }
 .btn {
-  border: 0; border-radius: 12px; padding: 12px 16px; font-weight: 800; cursor: pointer;
-  color: var(--ink); background: #1a1d28;
+  border: 0; border-radius: 12px; padding: 14px 16px; font-weight: 800; cursor: pointer;
+  color: var(--ink); background: #1a1d28; min-height: 48px;
+}
+.primary-cta { width: 100%; font-size: 17px; }
+.url-preview {
+  display: flex; gap: 10px; align-items: center; margin: 10px 4px 0;
+  padding: 10px 12px; border-radius: 14px; background: var(--bg-2); border: 1px solid var(--line);
+}
+.url-preview img { width: 24px; height: 24px; border-radius: 6px; background: #fff; }
+.url-preview strong { display: block; }
+.url-preview span { color: var(--muted); font-size: 12px; }
+.form-err { color: var(--hot); font-weight: 700; font-size: 14px; margin: 8px 4px 0; }
+.next-action {
+  margin: 10px 4px 0; padding: 12px 14px; border-radius: 14px;
+  background: rgba(214, 255, 62, 0.08); border: 1px solid rgba(214, 255, 62, 0.28);
+  font-weight: 800;
+}
+.kit-status {
+  margin: 10px 0 0; padding: 10px 12px; border-radius: 12px;
+  background: rgba(62, 232, 255, 0.1); border: 1px solid rgba(62, 232, 255, 0.28); color: var(--ice); font-weight: 700;
+}
+.og-row { display: flex; gap: 10px; align-items: center; }
+.og-row img { width: 36px; height: 36px; border-radius: 10px; background: #fff; }
+.more-share { margin: 8px 0 12px; }
+.more-share summary { cursor: pointer; color: var(--muted); font-weight: 700; padding: 8px 0; }
+.native-share { margin: 0 0 10px; }
+.site-card.you, .race-row li.you { border-color: var(--volt); box-shadow: 0 0 0 1px var(--volt); }
+.you-chip {
+  display: inline-block; margin-bottom: 6px; font-size: 11px; font-weight: 800; letter-spacing: .06em;
+  color: #071000; background: var(--volt); border-radius: 999px; padding: 3px 8px;
 }
 .btn.volt { background: var(--volt); color: #071000; }
 .btn.ice { background: var(--ice); color: #021018; }

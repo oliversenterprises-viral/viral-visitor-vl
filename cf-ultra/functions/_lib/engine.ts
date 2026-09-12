@@ -632,6 +632,44 @@ export function shareMessage(host: string, shareUrl: string, rung: Rung): string
   return `${RUNG_COPY[rung].share}\n\n${host}\n${shareUrl}`;
 }
 
+export type NextAction = {
+  friendsNeeded: number;
+  label: string;
+  nextRung: Rung | null;
+};
+
+/** Always-visible “what to do next” copy. Friends = unique Get my link, never visits. */
+export function nextActionFor(input: { credits: number; weeklyCredits: number; rung: Rung }): NextAction {
+  const { credits, weeklyCredits, rung } = input;
+  if (rung === 'banner') {
+    return { friendsNeeded: 0, label: 'Hold #1 this week. Keep sharing.', nextRung: null };
+  }
+  if (weeklyCredits >= BANNER_MIN_WEEKLY) {
+    return { friendsNeeded: 0, label: 'You’re in range — keep sharing to take the #1 banner', nextRung: 'banner' };
+  }
+  if (weeklyCredits >= CHALLENGER_MIN_WEEKLY || rung === 'challenger') {
+    const n = Math.max(1, BANNER_MIN_WEEKLY - weeklyCredits);
+    return {
+      friendsNeeded: n,
+      label: n === 1 ? 'Send to 1 more friend this week to unlock the #1 banner' : `Send to ${n} more friends this week to unlock the #1 banner`,
+      nextRung: 'banner',
+    };
+  }
+  if (credits >= 1) {
+    const n = Math.max(1, CHALLENGER_MIN_WEEKLY - weeklyCredits);
+    return {
+      friendsNeeded: n,
+      label: n === 1 ? 'Send to 1 more friend this week to unlock Challenger' : `Send to ${n} more friends this week to unlock Challenger`,
+      nextRung: 'challenger',
+    };
+  }
+  return { friendsNeeded: 1, label: 'Send to 1 friend to unlock Rising', nextRung: 'rising' };
+}
+
+export function faviconForHost(host: string): string {
+  return `https://icons.duckduckgo.com/ip3/${encodeURIComponent(host)}.ico`;
+}
+
 export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')

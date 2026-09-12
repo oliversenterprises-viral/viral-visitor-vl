@@ -4,6 +4,8 @@ A **new** Cloudflare-native ViralRefer: paste any website, get an instant person
 
 This folder is a standalone Pages + Functions + KV app. It does **not** replace the live Vercel Site Drops product at [www.viralrefer.app](https://www.viralrefer.app). Do not point `www.viralrefer.app` or the production Vercel project at this build.
 
+The **product core** is the eight-step loop in [`FUNNEL.md`](./FUNNEL.md). If anything conflicts, funnel perfection wins over duel/embed polish.
+
 ## What ships
 
 1. Paste any site URL (no email).
@@ -134,6 +136,7 @@ cf-ultra/
     e/[host].ts        # embed widget
     embed.js.ts
     _lib/              # engine, store, memory rate limits, edge cache, OG HTML
+  FUNNEL.md            # Perfect loop + manual checklist (source of truth)
   ARCHITECTURE.md      # 1k–10k+/day Cloudflare scale story
   src/                 # Vite UI
   wrangler.toml

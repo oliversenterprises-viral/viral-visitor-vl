@@ -57,16 +57,33 @@ export async function fetchMe(): Promise<MeOk> {
   return getJson<MeOk>('/api/me');
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 export async function joinSite(url: string, ref?: string | null): Promise<JoinOk> {
   if (transport === 'demo') return demoJoin(url, ref);
-  const res = await fetch('/api/join', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ url, ref: ref || undefined }),
-  });
-  const data = (await res.json()) as JoinOk & { error?: string };
-  if (!res.ok || !data.ok) throw new Error(data.error || 'Join failed');
-  return data;
+  let last = new Error('Could not get your link. Try again.');
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch('/api/join', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ url, ref: ref || undefined }),
+      });
+      const data = (await res.json()) as JoinOk & { error?: string };
+      if (res.ok && data.ok) return data;
+      last = new Error(data.error || 'Join failed');
+      if (res.status >= 400 && res.status < 500 && res.status !== 429) throw last;
+    } catch (err) {
+      last = err instanceof Error ? err : last;
+      if (err instanceof Error && /Paste a real|Could not read|Missing actor|paused by the owner/.test(err.message)) {
+        throw err;
+      }
+    }
+    await sleep(350 * (attempt + 1));
+  }
+  throw last;
 }
 
 export async function simulateFriend(code: string): Promise<JoinOk> {

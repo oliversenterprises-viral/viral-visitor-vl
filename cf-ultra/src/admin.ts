@@ -150,18 +150,18 @@ function render(d: Dash): void {
     <div class="hq-grid two">
       <section class="lane">
         <h3>Funnel</h3>
-        <div class="sub">Land → paste → link → share → friend land → credit</div>
+        <div class="sub">Land → Paste site → Get my link → Share → Friend land → Credit</div>
         <div class="funnel">
           ${[
             ['Land', w.lands ?? 0],
             ['Paste site', w.pastes ?? 0],
             ['Get my link', w.joins ?? 0],
-            ['Share click', w.shares ?? 0],
+            ['Share', w.shares ?? 0],
             ['Friend land', w.friendLands ?? 0],
             ['Credit', w.credits ?? 0],
           ].map(([l, n]) => `<div class="step"><span>${l}</span><strong>${n}</strong></div>`).join('')}
         </div>
-        <p class="note">Drop-off: land→paste ${f.landToPaste}% · paste→join ${f.pasteToJoin}% · share→credit ${f.shareToCredit}%</p>
+        <p class="note">Same names as FUNNEL.md. Drop-off: land→paste ${f.landToPaste}% · paste→join ${f.pasteToJoin}% · share→credit ${f.shareToCredit}%</p>
       </section>
       <section class="lane">
         <h3>Share platforms</h3>
