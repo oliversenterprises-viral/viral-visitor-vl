@@ -1,0 +1,18 @@
+# Copy to .dev.vars (gitignored). NEVER use a VITE_ prefix — that ships in the JS bundle.
+ADMIN_OWNER_PASSWORD=change-me
+# Optional alias used as HMAC key if the password var is unset:
+# ADMIN_ACTION_SECRET=
+
+# Owner alerts — Telegram is the primary channel (never VITE_).
+# Chat id defaults to 1274269043 (this deploy). Put the bot token only here / Pages secrets.
+# TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=1274269043
+
+# Optional Discord/Slack incoming webhook or generic HTTPS (fallback).
+# Dashboard secret wins over the URL saved in HQ. Leave unset to use inbox-only demo.
+# NOTIFY_WEBHOOK_URL=https://discord.com/api/webhooks/...
+
+# Optional email (Resend). Both must be set or mail is skipped.
+# RESEND_API_KEY=re_...
+# NOTIFY_EMAIL_TO=you@example.com
+# NOTIFY_EMAIL_FROM=ViralRefer Site Drops <alerts@viralrefer.app>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TE promo kit — ViralRefer Site Drops</title>
+    <style>
+      body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #09090b; color: #f4f4f5; padding: 24px; max-width: 860px; }
+      a { color: #c4b5fd; }
+      code, textarea { background: #10131c; color: #c8d0c0; border-radius: 8px; }
+      textarea { width: 100%; min-height: 72px; border: 1px solid #2a2d3a; padding: 10px; font: 12px ui-monospace, monospace; }
+      .banner { margin: 16px 0; background: #10131c; padding: 12px; border-radius: 12px; overflow: auto; }
+      h2 { font-size: 16px; margin: 28px 0 8px; }
+      iframe { display: block; background: #050508; }
+    </style>
+  </head>
+  <body>
+    <p>Static TE kit. Rotators should iframe <code>/te</code>, not the homepage. See <a href="COPY.md">COPY.md</a>.</p>
+    <h2>Live iframe (468×60)</h2>
+    <div class="banner">
+      <iframe src="/te?src=te&amp;camp=preview468&amp;size=468x60" width="468" height="60" style="border:0;overflow:hidden" title="TE 468x60"></iframe>
+    </div>
+    <h2>Live iframe (728×90)</h2>
+    <div class="banner">
+      <iframe src="/te?src=te&amp;camp=preview728&amp;size=728x90" width="728" height="90" style="border:0;overflow:hidden" title="TE 728x90"></iframe>
+    </div>
+    <h2>Live iframe (300×250)</h2>
+    <div class="banner">
+      <iframe src="/embed/te?src=te&amp;camp=preview300&amp;size=300x250" width="300" height="250" style="border:0;overflow:hidden" title="TE 300x250"></iframe>
+    </div>
+    <h2>Snippet</h2>
+    <textarea readonly id="snip"></textarea>
+    <p><button type="button" id="copy">Copy iframe snippet</button></p>
+    <h2>Static banner art</h2>
+    <div class="banner"><img src="banner-728x90.svg" width="728" height="90" alt="728x90" /></div>
+    <div class="banner"><img src="banner-468x60.svg" width="468" height="60" alt="468x60" /></div>
+    <div class="banner"><img src="banner-300x250.svg" width="300" height="250" alt="300x250" /></div>
+    <script>
+      var origin = location.origin;
+      var snip = '<iframe src="' + origin + '/te?src=te&camp=rotator&size=468x60" width="468" height="60" style="border:0;overflow:hidden;max-width:100%" loading="lazy" title="ViralRefer Site Drops"></iframe>';
+      document.getElementById('snip').value = snip;
+      document.getElementById('copy').onclick = function () {
+        navigator.clipboard.writeText(snip).catch(function () {});
+      };
+    </script>
+  </body>
+</html>

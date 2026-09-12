@@ -1,0 +1,39 @@
+# ViralRefer Site Drops sibling — Cloudflare Pages
+# Create a SEPARATE Pages project with root directory `cf-ultra`.
+# Do not point this at www.viralrefer.app. No cutover.
+
+name = "viralrefer-ultra"
+compatibility_date = "2026-09-12"
+pages_build_output_dir = "dist"
+
+[vars]
+APP_NAME = "ViralRefer Site Drops"
+# Owner Telegram chat for this deploy (not a secret). Bot token stays a Pages secret.
+TELEGRAM_CHAT_ID = "1274269043"
+
+# TODO after `npx wrangler kv namespace create BOARD`
+# and `npx wrangler kv namespace create BOARD --preview`:
+# uncomment and paste the real IDs. Never put secrets here.
+#
+# [[kv_namespaces]]
+# binding = "BOARD"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+# preview_id = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+#
+# Local: `npm run dev` / `npm run preview` pass `--kv BOARD`.
+# Production: Pages → Settings → Bindings → KV → BOARD.
+#
+# If BOARD is missing, Pages Functions keep the board in isolate memory until recycle.
+#
+# Scale (1k–10k+ daily visitors): assume Workers Paid + this KV bind.
+# Free KV (~1k writes/day) cannot host a real join volume.
+# Writes only on POST /api/join (+ buffered stats flushes). Board polls use ultra:board + 3s cache.
+#
+# Admin HMAC: set ADMIN_OWNER_PASSWORD in the Pages dashboard or .dev.vars
+# (gitignored). NEVER a VITE_ variable. Local fallback password is
+# ultra-local-only and only when CF-Ray is absent.
+#
+# Owner alerts: Telegram is primary. TELEGRAM_CHAT_ID defaults to 1274269043
+# above. Set TELEGRAM_BOT_TOKEN as a Pages / wrangler secret (not [vars],
+# not VITE_). Optional fallback: NOTIFY_WEBHOOK_URL.
+# Optional Resend: RESEND_API_KEY + NOTIFY_EMAIL_TO. Inbox works with none.

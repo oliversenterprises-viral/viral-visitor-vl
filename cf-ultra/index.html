@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script>
+    (function () {
+      var q = location.search || '';
+      var p = location.pathname || '';
+      document.documentElement.setAttribute('data-vr-kid-simple', '1');
+      if (/\/r\/[A-Za-z0-9_-]+\/?$/i.test(p) || /\/a\/[A-Za-z0-9_-]+\/?$/i.test(p) || /(?:^|[?&])ref=/.test(q)) {
+        document.documentElement.setAttribute('data-vr-referred-landing', '1');
+        document.documentElement.setAttribute('data-vr-referred-micro', '1');
+      } else {
+        document.documentElement.setAttribute('data-vr-direct-landing', '1');
+      }
+    })();
+    </script>
+    <title>Win the ViralRefer homepage — Site Drops + #1 banner</title>
+    <meta name="description" content="I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ViralRefer">
+    <meta property="og:title" content="Win the homepage. #1 gets a banner — tap Get my link">
+    <meta property="og:description" content="I'm racing for the homepage this week. #1 puts their site on this page for 7 days. Tap Get my link. Visiting does not count.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Win the homepage. #1 gets a banner — tap Get my link">
+    <meta name="theme-color" content="#09090b">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="tail-container bg-zinc-950 text-zinc-100 min-h-screen">
+    <nav id="vr-nav" class="border-b border-white/10 bg-zinc-950/80 backdrop-blur-lg fixed w-full z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between gap-2">
+            <a href="/" class="flex items-center gap-2 sm:gap-3 min-w-0 shrink" aria-label="ViralRefer home">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-violet-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl logo-font shrink-0">V</div>
+                <span class="vr-wordmark text-xl sm:text-3xl font-semibold tracking-tighter logo-font truncate">ViralRefer</span>
+            </a>
+            <div class="vr-nav-links flex items-center gap-2 sm:gap-6 text-sm font-medium shrink-0">
+                <a href="#how" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">How</a>
+                <a href="#prize" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">Feature</a>
+                <a href="#leaderboard" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">Board</a>
+                <a href="#site-drops" class="vr-nav-link hidden sm:inline text-zinc-300 hover:text-violet-400 transition-colors">Promote</a>
+                <button type="button" id="nav-get-link-btn" class="sm:hidden px-3 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl text-xs font-semibold min-h-[44px]">Get link</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="vr-page-shell pt-20 sm:pt-24 pb-12 sm:pb-16 max-w-6xl mx-auto px-4 sm:px-6">
+        <div class="vr-hero-panel rounded-2xl sm:rounded-3xl p-6 sm:p-12 md:p-16 text-center hero-gradient shadow-2xl">
+            <div class="vr-hero-inner max-w-[400px] sm:max-w-3xl mx-auto">
+                <div id="hero-badge" class="inline-flex items-center gap-2 bg-white/10 text-xs font-medium px-4 py-2 rounded-3xl mb-5 sm:mb-6 border border-white/20" style="color: var(--text-hero-badge, #e0e7ff)">
+                    <i class="fa-solid fa-globe text-emerald-300/90" aria-hidden="true"></i>
+                    <span>WORLDWIDE • FREE • NO SIGNUP</span>
+                </div>
+                <div class="vr-hero-copy">
+                <h1 id="hero-title" class="vr-hero-title text-[2.25rem] sm:text-[52px] md:text-[64px] lg:text-[76px] font-bold tracking-[-0.05em] logo-font leading-[1.05] mb-3 sm:mb-4" style="color: var(--text-hero-title, #ffffff); text-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                    <span id="hero-title-line1">Win the homepage.</span>
+                    <span id="hero-title-line2" class="hero-title-subline">#1 puts their site on <span id="hero-title-accent" class="hero-title-this-page">this page.</span></span>
+                </h1>
+                <p id="hero-subtitle" class="text-base sm:text-lg md:text-xl text-zinc-200 max-w-xl mx-auto mb-5 sm:mb-6 leading-relaxed px-1">
+                    Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, text line, then the banner.
+                </p>
+                </div>
+
+                <div id="hero-banner-mock" class="vr-hero-ad hero-banner-mock hero-ad-slot mt-2 mb-5 mx-auto max-w-sm text-left banner-open-glow" aria-label="Homepage banner slot" data-vr-prize-slot="empty">
+                    <div class="hero-ad-slot-inner rounded-2xl border border-white/15 bg-black/40 overflow-hidden">
+                        <div class="hero-ad-slot-kicker flex items-center justify-between gap-2 px-3 py-1.5 bg-white/5 border-b border-white/10 text-[10px] uppercase tracking-wider font-semibold text-zinc-400">
+                            <span id="hero-ad-kicker-kind">This homepage</span>
+                            <span>viralrefer.app</span>
+                            <span id="hero-ad-kicker-days">7 days</span>
+                        </div>
+                        <div class="hero-ad-visit-row flex items-center gap-3 px-4 py-3.5">
+                            <div id="hero-ad-mark" class="hero-ad-mark-empty" aria-hidden="true">#</div>
+                            <div class="min-w-0 flex-1">
+                                <a id="hero-slot-site" class="font-semibold text-white leading-tight" aria-disabled="true">Your site here</a>
+                                <span id="hero-slot-open" class="hero-slot-open">open</span>
+                                <div id="hero-slot-meta" class="text-xs text-amber-200/80 font-medium truncate">still open</div>
+                            </div>
+                        </div>
+                        <p id="hero-ad-note" class="px-4 pb-3 text-[11px] text-zinc-400 leading-snug">Empty right now. #1 this week puts their site here.</p>
+                        <p id="hero-ad-race" class="hidden px-4 pb-3 text-[11px] text-amber-200/90 font-semibold leading-snug" hidden>Banner still open</p>
+                    </div>
+                </div>
+
+                <div id="site-drop-rungs" class="site-drop-rungs" aria-label="Site Drop ladder">
+                    <span class="site-drop-rung" data-rung="entered">
+                        <span class="site-drop-rung__name">Just entered</span>
+                        <span class="site-drop-rung__live" id="site-drop-rung-entered">open</span>
+                    </span>
+                    <span class="site-drop-rung" data-rung="rising">
+                        <span class="site-drop-rung__name">Rising</span>
+                        <span class="site-drop-rung__live" id="site-drop-rung-rising">open</span>
+                    </span>
+                    <span class="site-drop-rung" data-rung="challenger">
+                        <span class="site-drop-rung__name">Challenger</span>
+                        <span class="site-drop-rung__live" id="site-drop-rung-challenger">open</span>
+                    </span>
+                </div>
+
+                <div class="vr-hero-action">
+                <p id="hero-prize-one" class="mb-2 text-sm sm:text-base font-semibold text-amber-200 max-w-lg mx-auto leading-snug">
+                    This week's #1 (not the owner) with 3 friends gets the 7-day banner.
+                </p>
+                <p id="hero-week-clock" class="mb-5 text-sm sm:text-base font-semibold text-amber-300 max-w-lg mx-auto leading-snug" aria-live="polite"></p>
+                <p id="hero-board-proof" class="hero-board-proof" role="status">Board is open · #1 is open</p>
+
+                <div id="hero-global-proof" class="hero-global-proof mb-3 sm:mb-4" role="status">
+                    <span class="hero-global-proof-item">Open worldwide</span>
+                    <span class="hero-global-proof-sep" aria-hidden="true">·</span>
+                    <span class="hero-global-proof-item">18+</span>
+                    <span class="hero-global-proof-sep" aria-hidden="true">·</span>
+                    <span class="hero-global-proof-item">No email</span>
+                    <span class="hero-global-proof-sep" aria-hidden="true">·</span>
+                    <span class="hero-global-proof-item hero-global-proof-live">Live free leaderboard</span>
+                </div>
+                <p id="hero-global-regions" class="hero-global-regions mb-4 sm:mb-5">Americas · Europe · Asia · Africa · Anywhere</p>
+
+                <div class="hero-cta-stack flex flex-col items-stretch justify-center gap-2 w-full max-w-[400px] mx-auto">
+                    <button id="hero-get-link-btn" type="button"
+                            class="btn-primary hero-primary-cta w-full px-8 py-4 sm:px-12 sm:py-5 text-lg sm:text-xl flex items-center justify-center gap-3 shadow-2xl shadow-violet-500/40 min-h-[52px]">
+                        <i class="fa-solid fa-link" aria-hidden="true"></i>
+                        <span>Get my referral link</span>
+                    </button>
+                </div>
+                <div id="funnel-expand-wrap" class="text-center mt-5">
+                    <button type="button" id="funnel-expand-btn" class="funnel-expand-btn">
+                        See how it works ↓
+                    </button>
+                </div>
+                </div>
+
+                <p id="hero-trust-line" class="mt-3 text-sm text-zinc-300/95 tracking-wide max-w-lg mx-auto">
+                    Your link counts when a friend taps Get my link.
+                </p>
+                <p id="hero-lock-rule" class="mt-2 text-sm text-zinc-400 max-w-lg mx-auto">
+                    Visiting or copying does not count.
+                </p>
+                <p id="hero-security-trust" class="mt-1.5 text-[11px] sm:text-xs text-zinc-500 max-w-xl mx-auto leading-relaxed">
+                    Not a bank, wallet, or investment app. No account login required for the public board.
+                    #1 may claim a free homepage banner feature after verification — recognition only.
+                </p>
+                <p id="hero-prize-fomo" class="mt-2 text-xs sm:text-sm font-semibold text-amber-200/90 max-w-lg mx-auto leading-snug">
+                    Banner still open. Early ranks are open. #1 puts their website on this page.
+                </p>
+
+                <div id="vr-verified-total" class="vr-verified-total mt-4" role="status" aria-live="polite">
+                    <div class="vr-verified-total-inner">
+                        <span class="vr-verified-total-badge" aria-hidden="true">
+                            <span class="vr-verified-total-dot"></span>
+                            LIVE · WORLDWIDE
+                        </span>
+                        <div id="hero-stats-subtext" class="vr-verified-total-row">
+                            <span id="total-referrers" class="vr-verified-total-num"></span>
+                            <span id="hero-stats-suffix" class="vr-verified-total-label">Board is open</span>
+                        </div>
+                        <p id="hero-board-meta" class="vr-verified-total-meta">Verified credits · visits never count</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="funnel-journey" class="funnel-journey-card funnel-journey-quiet mt-6 max-w-3xl mx-auto">
+            <div class="funnel-journey-header">
+                <span class="funnel-journey-badge">SITE DROP LADDER</span>
+            </div>
+            <div id="funnel-steps" class="funnel-steps-row" aria-label="Site Drop steps">
+                <span class="funnel-step funnel-step-active"><span class="funnel-step-label">1. Get link</span><span class="funnel-step-required">required</span></span>
+                <span class="funnel-step-arrow" aria-hidden="true">→</span>
+                <span class="funnel-step funnel-step-pending"><span class="funnel-step-label">2. Send it</span></span>
+                <span class="funnel-step-arrow" aria-hidden="true">→</span>
+                <span class="funnel-step funnel-step-pending"><span class="funnel-step-label">3. Site goes live</span></span>
+            </div>
+            <div id="funnel-guide-coach" class="funnel-guide-coach" role="status">
+                <div class="funnel-guide-coach-inner">
+                    <span id="funnel-guide-coach-text" class="funnel-guide-coach-text">Step 1: tap Get my referral link.</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="referral-attribution" class="hidden mt-6 max-w-2xl mx-auto">
+            <div class="glass border border-emerald-500/30 bg-emerald-500/5 rounded-3xl px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <div id="referrer-invite-headline" class="text-sm font-semibold text-emerald-400">You're in the same contest</div>
+                    <p id="referrer-invite-hint" class="text-xs text-zinc-300 mt-1 leading-relaxed">Get YOUR link in one tap — same leaderboard, ~30 seconds. Opening this page does not count.</p>
+                    <div class="text-[11px] text-zinc-500 mt-2">You landed via <span id="referrer-code-inline" class="font-mono text-emerald-400/90"></span></div>
+                    <div class="text-[11px] text-zinc-500 mt-0.5">Referred by</div>
+                    <div id="referrer-code-display" class="font-mono text-lg font-semibold text-white"></div>
+                </div>
+                <button id="attribution-get-link-btn" type="button"
+                        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-2xl text-sm shrink-0 w-full sm:w-auto">
+                    Step 1: Get my link
+                </button>
+            </div>
+        </div>
+
+        <div id="referral-section" class="mt-6">
+            <input id="ref-link" type="text" readonly hidden class="sr-only" aria-hidden="true" tabindex="-1" value="" />
+            <div id="post-link-share" class="hidden post-link-share" hidden data-state="hidden" role="region" aria-label="Your referral link">
+                <h2 id="post-link-heading" class="post-link-share__heading">You're racing.</h2>
+                <p id="post-link-sub" class="post-link-share__sub">Send it now. A friend must tap Get my link — that's how you climb.</p>
+                <p id="post-link-clock" class="post-link-share__clock" hidden></p>
+                <p class="post-link-share__code-kicker">Your referral code</p>
+                <p id="post-link-code" class="post-link-share__code" aria-live="polite"></p>
+                <button type="button" id="post-link-copy-code" class="post-link-share__copy-code">Copy code</button>
+                <p id="post-link-url" class="post-link-share__url" hidden></p>
+                <button type="button" id="post-link-primary" class="post-link-share__primary" hidden>Send it now</button>
+                <button type="button" id="post-link-copy" class="post-link-share__copy">Copy /r/ link</button>
+                <p id="post-link-tool" class="post-link-share__tool">Same code as viralrefer.app. Also works as /a/VIRAL-… and ?ref=.</p>
+                <p id="post-link-aliases" class="post-link-share__aliases" hidden></p>
+                <div id="post-link-intents" class="grid grid-cols-2 gap-2 mt-3"></div>
+                <div id="post-link-qr" class="flex justify-center mt-3 post-link-share__qr"></div>
+                <div id="race-hud" class="hud-slim hidden" hidden></div>
+                <button type="button" id="sound-toggle" class="post-link-share__sound" aria-pressed="false">Sound off</button>
+            </div>
+            <div id="post-link-site-drop" class="post-link-site-drop hidden" hidden>
+                <p class="post-link-site-drop__title">Site Drop · paste your website after Get my link</p>
+                <label class="sr-only" for="post-link-site-drop-url">Your website</label>
+                <input id="post-link-site-drop-url" type="url" maxlength="400" inputmode="url" autocomplete="url" placeholder="https://yoursite.com" class="post-link-site-drop__url" />
+                <button type="button" id="post-link-site-drop-submit" class="post-link-site-drop__submit">Put my site on the homepage (15 min)</button>
+                <p id="site-drop-status" class="post-link-site-drop__status"></p>
+            </div>
+        </div>
+
+        <div id="site-entered-ticker" class="site-entered-ticker hidden" hidden aria-label="Live Site Drops">
+            <p class="site-entered-ticker__heading">Live on this homepage</p>
+            <div id="site-entered-chips" class="site-entered-ticker__chips"></div>
+        </div>
+
+        <section id="site-drops" class="site-drops-panel mt-12 glass border border-white/10 rounded-3xl p-8 md:p-10">
+            <p class="site-drops-kicker">Live climb · your site on this page</p>
+            <h2 id="site-drops-title" class="text-3xl sm:text-4xl font-bold tracking-tighter mt-2">Feel the ladder light up under your site.</h2>
+            <p id="site-drops-lead" class="text-zinc-300 mt-2 max-w-2xl">Paste your website in the slot after Get my link. No URL = no chip. 1 verified friend → 1-hour Rising. 2 friends → week text line. #2/#3 → Challenger. #1 → 7-day banner. Visits and copies do not count.</p>
+            <div id="site-drop-climb" class="site-drop-climb" aria-label="Site Drop climb">
+                <p class="site-drop-climb__rush">Watch the rungs catch fire as friends tap Get my link. The rush is your URL going live here.</p>
+                <div class="site-drop-climb__heat" aria-hidden="true"><i id="site-drop-climb-heat"></i></div>
+                <ol class="site-drop-climb__ladder">
+                    <li data-rung="1"><span class="site-drop-climb__rung" aria-hidden="true">1</span><strong>Just entered</strong><em class="site-drop-climb__prize">Reward: 15 minutes on this homepage.</em></li>
+                    <li data-rung="2"><span class="site-drop-climb__rung" aria-hidden="true">2</span><strong>Rising</strong><em class="site-drop-climb__prize">Reward: 1 hour as a Rising card.</em></li>
+                    <li data-rung="3"><span class="site-drop-climb__rung" aria-hidden="true">3</span><strong>Text line</strong><em class="site-drop-climb__prize">Reward: your site in this week’s text line.</em></li>
+                    <li data-rung="4"><span class="site-drop-climb__rung" aria-hidden="true">4</span><strong>Challenger</strong><em class="site-drop-climb__prize">Reward: #2/#3 strip under the banner.</em></li>
+                    <li data-rung="5"><span class="site-drop-climb__rung" aria-hidden="true">5</span><strong>Banner</strong><em class="site-drop-climb__prize">Reward: 7 days as #1 on this homepage.</em></li>
+                </ol>
+            </div>
+
+            <div class="site-drops-lanes">
+                <div class="site-drops-lane" data-lane="entered">
+                    <p class="site-drops-lane__label">Just entered · 15 min</p>
+                    <ul id="site-drops-entered-list"></ul>
+                    <p id="site-drops-entered-empty" class="site-drops-lane__empty">No one just entered. Get a link, add your site, and take a chip.</p>
+                </div>
+                <div class="site-drops-lane" data-lane="rising">
+                    <p class="site-drops-lane__label">Rising Site Drops · 1 hour · not the week text line</p>
+                    <ul id="site-drops-rising-list"></ul>
+                    <p id="site-drops-rising-empty" class="site-drops-lane__empty">Rising slots are open. One verified friend who taps Get my link unlocks a 1-hour drop here.</p>
+                </div>
+                <div class="site-drops-lane" data-lane="text">
+                    <p class="site-drops-lane__label">Week text line · 2 friends · not #1</p>
+                    <p class="site-drops-lane__sub" id="week-text-sub">UTC week. Unique friend taps only — not raw visits.</p>
+                    <div id="week-text-line"></div>
+                </div>
+                <div id="site-drops-challenger" class="site-drops-lane" data-lane="challenger">
+                    <p class="site-drops-lane__label">Challenger strip · #2 / #3 · not #1</p>
+                    <ul id="site-drops-challenger-list"></ul>
+                    <p id="site-drops-challenger-empty" class="site-drops-lane__empty">No challengers yet. Hit board #2 or #3 with your site on file.</p>
+                </div>
+                <p id="site-drop-hint" class="site-drops-hint">Paste your website. Rising and Challenger go live automatically when a friend taps Get my link.</p>
+            </div>
+        </section>
+
+        <div class="mt-8 glass border border-white/10 rounded-3xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 id="recent-activity-title" class="text-2xl font-semibold">Recent Activity</h2>
+                    <p id="recent-activity-description" class="text-sm text-zinc-400">Live referrals and shares from participants</p>
+                </div>
+                <div class="text-xs text-emerald-400 flex items-center gap-1.5 uppercase tracking-wide font-semibold">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    LIVE · Realtime
+                </div>
+            </div>
+            <div id="recent-activity" class="space-y-3 min-h-[120px]"></div>
+        </div>
+
+        <div id="how" class="mt-12">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">
+                    <span id="how-it-works-badge" style="color: var(--text-how-badge, #a5b4fc)">SITE DROP LADDER</span>
+                </div>
+                <h2 id="how-it-works-title" class="text-5xl font-bold tracking-tighter">How ViralRefer Works</h2>
+                <p id="how-it-works-subtitle" class="text-xl text-zinc-400 mt-2 max-w-md mx-auto">Get a link. Send it. A friend tapping Get my link puts your site on this page.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <div class="glass border border-white/10 rounded-3xl p-8 text-center">
+                    <div class="text-2xl font-semibold mb-2">1. Get your link</div>
+                    <p class="text-zinc-400 leading-relaxed">Tap Get my referral link (no email). Paste your website in the Site Drop slot for a 15-minute Just entered chip. Getting a link alone does not put you on this page.</p>
+                </div>
+                <div class="glass border border-white/10 rounded-3xl p-8 text-center">
+                    <div class="text-2xl font-semibold mb-2">2. Send your link</div>
+                    <p class="text-zinc-400 leading-relaxed">Send it in any app. A friend must open it and tap Get my link. That is the only action that counts.</p>
+                </div>
+                <div class="glass border border-white/10 rounded-3xl p-8 text-center">
+                    <div class="text-2xl font-semibold mb-2">3. Watch your site climb</div>
+                    <p class="text-zinc-400 leading-relaxed">1 verified friend → 1-hour Rising Site Drop on this page. 2 friends → week text line. Board #2/#3 → Challenger strip. This week’s #1 (not the owner) with 3 friends claims the 7-day banner.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="faq" class="mt-12 glass border border-white/10 rounded-3xl p-8 md:p-10">
+            <h2 class="text-3xl font-bold tracking-tight mb-6">FAQ</h2>
+            <div class="space-y-5 text-left text-zinc-300">
+                <div>
+                    <h3 class="font-semibold text-white">How do I get a ViralRefer referral link?</h3>
+                    <p class="text-zinc-400 mt-1">Tap Get my referral link. About 30 seconds. No signup. Codes look like VIRAL-XXXXXXX.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white">Is ViralRefer free?</h3>
+                    <p class="text-zinc-400 mt-1">Yes. No payment. No email. No cash prize.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white">What does #1 get?</h3>
+                    <p class="text-zinc-400 mt-1">This week's top racer (not the site owner) with 3 friends who tapped Get my link can claim a 7-day homepage banner. Recognition only.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-white">How does the board work?</h3>
+                    <p class="text-zinc-400 mt-1">A friend opens your /r/VIRAL-… or /a/VIRAL-… link and taps Get my link. Visiting or copying alone does not count.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="prize" class="mt-12 glass border border-white/10 rounded-3xl p-8 md:p-10">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 text-xs font-semibold px-4 py-1.5 rounded-3xl mb-3">HOMEPAGE FEATURE</div>
+                <h2 class="text-5xl font-bold tracking-tighter">The #1 banner</h2>
+                <p class="text-xl text-zinc-300 mt-2">Site Drops put your site on this page as you climb. This week’s #1 (not the owner) with 3 friends still gets the 7-day banner.</p>
+            </div>
+            <div id="prize-banner-visual" class="mt-6 max-w-md mx-auto" data-vr-prize-slot="empty">
+                <div class="glass border border-white/10 rounded-3xl p-6 text-left">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-2xl ring-1 ring-white/20">#1</div>
+                        <div>
+                            <a id="prize-slot-site" class="font-semibold text-white">Your site here</a>
+                            <div id="prize-slot-meta" class="text-sm text-emerald-400 font-mono">Banner still open · 7 days</div>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-sm text-zinc-200">This week's top racer with 3 friends who tapped Get my link can claim the banner.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="leaderboard" class="mt-12">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h2 id="leaderboard-title" class="text-5xl font-bold tracking-tighter">Live board</h2>
+                        <div class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-semibold rounded-3xl flex items-center gap-1.5">
+                            <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                            LIVE • Realtime
+                        </div>
+                    </div>
+                    <p id="leaderboard-description" class="mt-1 text-zinc-400">Rankings from verified referrals only · test traffic excluded</p>
+                    <p class="mt-2 text-sm text-emerald-300/95 font-medium" id="leaderboard-total-label">Board is open. #1 is winnable this week.</p>
+                </div>
+            </div>
+            <div id="leaderboard-container" class="min-h-[160px]"></div>
+        </div>
+    </div>
+
+    <footer class="bg-black py-12 border-t border-white/10 text-center text-xs text-zinc-500">
+        <div class="max-w-5xl mx-auto px-4 space-y-2">
+            <div>© 2026 ViralRefer. Skill-based referral contest. No purchase necessary. Open worldwide, 18+. No cash prizes. Unique Get my link credits only.</div>
+            <p class="cf-sibling-note">Enhanced ViralRefer Site Drops on Cloudflare. Same VIRAL- codes as <a class="underline hover:text-white" href="https://www.viralrefer.app">www.viralrefer.app</a>. Does not replace the live site. <a class="underline hover:text-white" href="/admin/">Owner HQ</a></p>
+        </div>
+    </footer>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

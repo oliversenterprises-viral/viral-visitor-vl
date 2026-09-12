@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ViralRefer — Get my link</title>
+    <style>
+      html, body { height: 100%; margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #09090b; color: #f4f4f5; }
+      .box { min-height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 16px; }
+      a { display: block; text-align: center; text-decoration: none; font-weight: 800; min-height: 48px; line-height: 48px; border-radius: 14px; background: linear-gradient(90deg, #059669, #7c3aed); color: #fff; }
+      p { color: #a1a1aa; }
+    </style>
+  </head>
+  <body>
+    <main class="box">
+      <p>Static fallback (Vite-only). Wrangler serves the live <code>/te</code> Function.</p>
+      <a id="go" href="/?src=te" target="_top">Get my link</a>
+    </main>
+    <script>
+      var q = new URLSearchParams(location.search);
+      if (!q.get('src')) q.set('src', 'te');
+      document.getElementById('go').href = '/?' + q.toString();
+    </script>
+  </body>
+</html>

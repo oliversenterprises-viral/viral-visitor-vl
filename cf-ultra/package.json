@@ -1,0 +1,30 @@
+{
+  "name": "viralrefer-ultra-cf",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev --kv BOARD -- npm run dev:vite",
+    "dev:vite": "vite --host --port 5174",
+    "dev:ui": "vite --host --port 5174",
+    "build": "tsc --noEmit && vite build",
+    "preview": "npm run build && wrangler pages dev dist --kv BOARD --ip 127.0.0.1 --port 8788",
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "uqr": "^0.1.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260911.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9.2",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.28.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
