@@ -5,14 +5,36 @@ export const ACTOR_COOKIE = 'vr_ultra_actor';
 export function json(data: unknown, init: ResponseInit = {}): Response {
   const headers = new Headers(init.headers);
   headers.set('content-type', 'application/json; charset=utf-8');
-  headers.set('cache-control', 'no-store');
+  if (!headers.has('cache-control')) headers.set('cache-control', 'no-store');
   return new Response(JSON.stringify(data), { ...init, headers });
+}
+
+/** Public JSON — CDN + browser may cache. Never use for /api/me or join. */
+export function jsonPublic(
+  data: unknown,
+  opts: { ttlSec?: number; staleSec?: number; degraded?: boolean; stale?: boolean } = {},
+): Response {
+  const ttl = opts.ttlSec ?? 3;
+  const stale = opts.staleSec ?? 15;
+  const headers = new Headers();
+  headers.set('content-type', 'application/json; charset=utf-8');
+  headers.set('cache-control', `public, max-age=${ttl}, s-maxage=${ttl}, stale-while-revalidate=${stale}`);
+  headers.set('x-ultra-degraded', opts.degraded ? '1' : '0');
+  headers.set('x-ultra-stale', opts.stale ? '1' : '0');
+  return new Response(JSON.stringify(data), { headers });
+}
+
+export function tooMany(message: string, retryAfterSec: number): Response {
+  return json(
+    { ok: false, error: message, retryAfterSec },
+    { status: 429, headers: { 'retry-after': String(retryAfterSec), 'cache-control': 'no-store' } },
+  );
 }
 
 export function html(body: string, init: ResponseInit = {}): Response {
   const headers = new Headers(init.headers);
   headers.set('content-type', 'text/html; charset=utf-8');
-  headers.set('cache-control', 'no-store');
+  if (!headers.has('cache-control')) headers.set('cache-control', 'no-store');
   return new Response(body, { ...init, headers });
 }
 

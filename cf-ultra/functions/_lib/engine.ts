@@ -379,6 +379,23 @@ export function buildBoard(state: UltraState, now: number, demoMode: boolean): B
   };
 }
 
+export function emptyBoard(demoMode: boolean, now: number = Date.now()): BoardState {
+  return {
+    weekId: utcWeekId(now),
+    banner: null,
+    entered: [],
+    rising: [],
+    challenger: [],
+    race: [],
+    duel: null,
+    kingmakers: [],
+    activity: [],
+    demoMode,
+    livePlayers: 0,
+    liveSites: 0,
+  };
+}
+
 function pushActivity(state: UltraState, event: ActivityEvent): void {
   state.activity = [event, ...state.activity].slice(0, MAX_ACTIVITY);
 }

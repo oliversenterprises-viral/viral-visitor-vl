@@ -132,13 +132,42 @@ cf-ultra/
     r/[code].ts        # OG + Get my link landing
     e/[host].ts        # embed widget
     embed.js.ts
-    _lib/              # engine (pure), KV/memory store, OG HTML
+    _lib/              # engine, store, memory rate limits, edge cache, OG HTML
+  ARCHITECTURE.md      # 1k–10k+/day Cloudflare scale story
   src/                 # Vite UI
   wrangler.toml
 ```
 
-State lives in one KV key (`ultra:state`) plus optional rate-limit keys. Simulate (`POST /api/simulate`) is **disabled** when KV is bound so production cannot mint fake locks.
+State lives in `ultra:state` (durable) plus `ultra:board` (public snapshot). Simulate (`POST /api/simulate`) is **disabled** when KV is bound so production cannot mint fake locks.
+
+Rate limits live in isolate memory — they never write KV.
+
+## Scale (1k–10k+ visitors/day)
+
+Designed so a busy day does not take the app down. Full write-up: [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
+**Assumed bindings / plan**
+
+- Cloudflare Pages project (root `cf-ultra`)
+- Workers **Paid** (or Pages billed with paid Workers)
+- One KV namespace bound as `BOARD`
+- No Durable Object, no D1, no Supabase required
+
+**Free KV is not this scale.** Free is ~1k writes/day. Each real Get-my-link writes two keys (`ultra:state`, `ultra:board`). A few hundred joins exhaust Free. Paid includes ~1M writes/day and ~10M reads/day.
+
+**How it stays up**
+
+| Rule | Implementation |
+| --- | --- |
+| Edge-first | Vite static assets on the Pages CDN (`/assets/*` immutable). Functions only for join + snapshots. |
+| Reads ≫ writes | Board / activity / challenge / embeds / `/r/*` never `KV.put`. |
+| Snapshot, don’t recompute | `GET /api/board` hits Cache API (~3s) → isolate (~2.5s) → `ultra:board`. |
+| No write-per-pageview | Opening a share link or polling the board does not count and does not write. |
+| Anti-abuse | 8 joins/IP/min, 5/actor/min, 120/10s/isolate. **429** on floods — no KV rate keys. |
+| Fail soft | Degrade poll interval (8s → 16–30s) and serve stale snapshots before dropping paste → share → credit. If KV put fails, the kit still returns (`degraded: true`). |
+
+`GET /api/health` includes a `scale` object with this same story.
 
 ## Stack
 
-Cloudflare Pages + Pages Functions + KV. Polling every 4s for live-enough heat (no Durable Object in v1). Static build via Vite.
+Cloudflare Pages + Pages Functions + KV. Healthy clients poll the board every **8s** (hidden tabs stop). No Durable Object in v1. Static build via Vite.

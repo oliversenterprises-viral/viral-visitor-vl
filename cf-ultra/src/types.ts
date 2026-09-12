@@ -41,6 +41,8 @@ export interface JoinOk {
   kingmaker: Kingmaker | null;
   board: BoardState;
   simulated?: boolean;
+  persisted?: boolean;
+  degraded?: boolean;
 }
 
 export interface MeOk {
@@ -58,4 +60,12 @@ export interface HealthOk {
   kv: boolean;
   demoMode: boolean;
   note: string;
+  scale?: {
+    target: string;
+    assumedPlan: string;
+    freeTierWarning: string;
+    writes: string;
+    reads: string;
+    degrade: string;
+  };
 }

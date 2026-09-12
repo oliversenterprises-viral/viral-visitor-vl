@@ -25,7 +25,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
   });
   if (!('result' in outcome)) return json(outcome, { status: 400 });
   const { state, result } = outcome;
-  await saveState(env, state);
+  await saveState(env, state, loaded.demoMode);
   const now = Date.now();
   return json({
     ok: true,

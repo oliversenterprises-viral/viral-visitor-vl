@@ -1,5 +1,15 @@
 import { RUNG_COPY, RUNG_ORDER, type BoardSite, type Rung } from '../functions/_lib/engine';
-import { currentHealthNote, currentTransport, fetchBoard, fetchEmbed, fetchMe, joinSite, probeHealth, simulateFriend } from './api';
+import {
+  currentHealthNote,
+  currentTransport,
+  fetchBoard,
+  fetchEmbed,
+  fetchMe,
+  isDegraded,
+  joinSite,
+  probeHealth,
+  simulateFriend,
+} from './api';
 import { burst, celebrateUnlock } from './celebrate';
 import { copyText, intents, nativeShare, qrSvg } from './share';
 import type { BoardState, JoinOk, PublicPlayer } from './types';
@@ -391,28 +401,34 @@ export function boot(root: HTMLElement): void {
   }
 
   void hydrate();
-  setInterval(async () => {
-    if (document.hidden) return;
-    try {
-      const next = await fetchBoard();
-      const prevBanner = board?.banner?.host;
-      renderBoard(next);
-      if (kitOpen && me) {
-        const row = [next.banner, ...next.challenger, ...next.rising, ...next.entered, ...next.race].find(
-          (s) => s && s.ownerCode === me!.code,
-        );
-        if (row) {
-          (kit.querySelector('[data-meter]') as HTMLElement).innerHTML = rungMeter(row.rung);
+
+  let pollMs = 8000;
+  const tickBoard = async (): Promise<void> => {
+    if (!document.hidden) {
+      try {
+        const next = await fetchBoard();
+        const prevBanner = board?.banner?.host;
+        renderBoard(next);
+        if (kitOpen && me) {
+          const row = [next.banner, ...next.challenger, ...next.rising, ...next.entered, ...next.race].find(
+            (s) => s && s.ownerCode === me!.code,
+          );
+          if (row) {
+            (kit.querySelector('[data-meter]') as HTMLElement).innerHTML = rungMeter(row.rung);
+          }
         }
+        if (next.banner?.host && next.banner.host !== prevBanner && prevBanner !== undefined) {
+          burst();
+          toast(`${next.banner.label} took #1`);
+        }
+        pollMs = isDegraded() ? 16_000 : 8_000;
+      } catch {
+        pollMs = Math.min(30_000, pollMs + 4_000);
       }
-      if (next.banner?.host && next.banner.host !== prevBanner && prevBanner !== undefined) {
-        burst();
-        toast(`${next.banner.label} took #1`);
-      }
-    } catch {
-      /* keep last board */
     }
-  }, 4000);
+    window.setTimeout(tickBoard, pollMs);
+  };
+  window.setTimeout(tickBoard, pollMs);
 
   void kitOpen;
 }

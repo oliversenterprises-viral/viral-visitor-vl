@@ -22,3 +22,7 @@ APP_NAME = "ViralRefer Ultra"
 # Production: Pages → Settings → Bindings → KV → BOARD.
 #
 # If BOARD is missing, Pages Functions run isolate memory demo mode.
+#
+# Scale (1k–10k+ daily visitors): assume Workers Paid + this KV bind.
+# Free KV (~1k writes/day) cannot host a real join volume.
+# Writes only on POST /api/join. Board polls use ultra:board + 3s cache.

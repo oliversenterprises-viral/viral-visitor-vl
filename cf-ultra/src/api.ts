@@ -5,6 +5,11 @@ export type Transport = 'live' | 'demo';
 
 let transport: Transport = 'demo';
 let healthNote = 'Starting in local demo until /api/health answers.';
+let degraded = false;
+
+export function isDegraded(): boolean {
+  return degraded;
+}
 
 export function currentTransport(): Transport {
   return transport;
@@ -25,7 +30,9 @@ export async function probeHealth(): Promise<HealthOk | null> {
   try {
     const data = await getJson<HealthOk>('/api/health');
     transport = 'live';
-    healthNote = data.note;
+    healthNote = data.scale
+      ? `${data.note} Target ${data.scale.target} on ${data.scale.assumedPlan}.`
+      : data.note;
     return data;
   } catch {
     transport = 'demo';
@@ -36,7 +43,12 @@ export async function probeHealth(): Promise<HealthOk | null> {
 
 export async function fetchBoard(): Promise<BoardState> {
   if (transport === 'demo') return demoMe().board;
-  const data = await getJson<{ ok: true; board: BoardState }>('/api/board');
+  const res = await fetch('/api/board', { headers: { accept: 'application/json' } });
+  degraded = res.headers.get('x-ultra-degraded') === '1' || res.status === 429;
+  if (res.status === 429) throw new Error('Board busy — backing off');
+  const data = (await res.json()) as { ok?: boolean; board?: BoardState; error?: string; degraded?: boolean };
+  if (!res.ok || data.ok === false || !data.board) throw new Error(data.error || 'Board failed');
+  if (data.degraded) degraded = true;
   return data.board;
 }
 
