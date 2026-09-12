@@ -3,6 +3,7 @@
  * Safe defaults: English fallback, never blocks render, admin untranslated.
  */
 
+import { LOCALE_ALIASES, LOCALE_SEARCH, isRtlLocale } from './locales';
 import {
   LOCALE_LABELS,
   MESSAGES,
@@ -13,7 +14,7 @@ import {
 } from './messages';
 
 export type { Locale, MessageKey };
-export { LOCALE_LABELS, SUPPORTED_LOCALES };
+export { LOCALE_LABELS, SUPPORTED_LOCALES, isRtlLocale };
 
 const STORAGE_KEY = 'vr_locale';
 const ATTR = 'data-vr-locale';
@@ -25,17 +26,26 @@ export function isLocale(raw: string | null | undefined): raw is Locale {
   return !!raw && (SUPPORTED_LOCALES as readonly string[]).includes(raw);
 }
 
+function canonTag(tag: string): string {
+  return tag.trim().toLowerCase().replace(/_/g, '-');
+}
+
+/** Map a single tag to a supported locale, or null if unknown. */
+export function matchLocale(tag: string | null | undefined): Locale | null {
+  if (!tag) return null;
+  const raw = canonTag(tag);
+  if (isLocale(raw)) return raw;
+  const aliased = LOCALE_ALIASES[raw];
+  if (aliased) return aliased;
+  const base = raw.split('-')[0] || '';
+  if (isLocale(base)) return base;
+  const baseAlias = LOCALE_ALIASES[base];
+  return baseAlias ?? null;
+}
+
 /** Map navigator / Accept-Language tags → supported locale. */
 export function normalizeLocale(tag: string | null | undefined): Locale {
-  if (!tag) return 'en';
-  const base = tag.trim().toLowerCase().split(/[-_]/)[0] || 'en';
-  if (base === 'en') return 'en';
-  if (base === 'es') return 'es';
-  if (base === 'fr') return 'fr';
-  if (base === 'pt') return 'pt';
-  if (base === 'de') return 'de';
-  if (base === 'hi') return 'hi';
-  return 'en';
+  return matchLocale(tag) ?? 'en';
 }
 
 export function detectBrowserLocale(
@@ -44,8 +54,31 @@ export function detectBrowserLocale(
     : {},
 ): Locale {
   const list = nav.languages?.length ? [...nav.languages] : nav.language ? [nav.language] : [];
-  if (!list.length) return 'en';
-  return normalizeLocale(list[0]);
+  for (const tag of list) {
+    const loc = matchLocale(tag);
+    if (loc) return loc;
+  }
+  return 'en';
+}
+
+/** Filter picker rows by native name, English tokens, or locale code. */
+export function filterLocales(query: string): Locale[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [...SUPPORTED_LOCALES];
+  return SUPPORTED_LOCALES.filter((loc) => {
+    const hay = `${loc} ${LOCALE_LABELS[loc]} ${LOCALE_SEARCH[loc]}`.toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+function applyDocumentLocale(locale: Locale): void {
+  try {
+    document.documentElement.lang = locale;
+    document.documentElement.dir = isRtlLocale(locale) ? 'rtl' : 'ltr';
+    document.documentElement.setAttribute(ATTR, locale);
+  } catch {
+    /* non-fatal */
+  }
 }
 
 export function getStoredLocale(): Locale | null {
@@ -100,12 +133,7 @@ export function t(
 export function applyI18n(locale: Locale = current, root: ParentNode = document): void {
   current = locale;
 
-  try {
-    document.documentElement.lang = locale === 'en' ? 'en' : locale;
-    document.documentElement.setAttribute(ATTR, locale);
-  } catch {
-    /* non-fatal */
-  }
+  applyDocumentLocale(locale);
 
   root.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
     const key = el.getAttribute('data-i18n') as MessageKey | null;
@@ -150,6 +178,14 @@ export function applyI18n(locale: Locale = current, root: ParentNode = document)
   document.querySelectorAll<HTMLSelectElement>('.vr-lang-select').forEach((select) => {
     if (select.value !== locale) select.value = locale;
   });
+  document.querySelectorAll<HTMLInputElement>('.vr-lang-search').forEach((input) => {
+    input.placeholder = t('lang.search', locale);
+    input.setAttribute('aria-label', t('lang.search', locale));
+  });
+  document.querySelectorAll<HTMLButtonElement>('.vr-lang-trigger').forEach((btn) => {
+    btn.setAttribute('aria-label', t('nav.lang', locale));
+  });
+  syncLangTriggers(locale);
 
   const footerLabel = document.getElementById('vr-lang-footer-label');
   if (footerLabel) footerLabel.textContent = LOCALE_LABELS[locale];
@@ -178,20 +214,142 @@ function wireLangSelect(select: HTMLSelectElement): void {
   });
 }
 
-function createLangPickerWrap(selectId: string, extraClass = ''): HTMLLabelElement {
-  const wrap = document.createElement('label');
+function optionHtml(): string {
+  return SUPPORTED_LOCALES.map(
+    (loc) => `<option value="${loc}">${LOCALE_LABELS[loc]}</option>`,
+  ).join('');
+}
+
+function listItemHtml(loc: Locale, selected: Locale): string {
+  const active = loc === selected ? ' aria-selected="true"' : '';
+  return `<li role="option" class="vr-lang-option${loc === selected ? ' is-active' : ''}" data-locale="${loc}"${active}><span class="vr-lang-option-native">${LOCALE_LABELS[loc]}</span><span class="vr-lang-option-code">${loc}</span></li>`;
+}
+
+function fillLangList(list: HTMLElement, query: string, selected: Locale): void {
+  const rows = filterLocales(query);
+  list.innerHTML = rows.length
+    ? rows.map((loc) => listItemHtml(loc, selected)).join('')
+    : `<li class="vr-lang-empty" role="presentation">${t('lang.search')}</li>`;
+}
+
+function syncLangTriggers(locale: Locale): void {
+  document.querySelectorAll<HTMLElement>('.vr-lang-trigger-label').forEach((el) => {
+    el.textContent = LOCALE_LABELS[locale];
+  });
+  document.querySelectorAll<HTMLElement>('.vr-lang-trigger-code').forEach((el) => {
+    el.textContent = locale.toUpperCase();
+  });
+  document.querySelectorAll<HTMLElement>('.vr-lang-option').forEach((el) => {
+    const on = el.getAttribute('data-locale') === locale;
+    el.classList.toggle('is-active', on);
+    if (on) el.setAttribute('aria-selected', 'true');
+    else el.removeAttribute('aria-selected');
+  });
+}
+
+function closeLangMenus(except?: HTMLElement | null): void {
+  document.querySelectorAll<HTMLElement>('.vr-lang-picker.is-open').forEach((picker) => {
+    if (except && picker === except) return;
+    picker.classList.remove('is-open');
+    const btn = picker.querySelector<HTMLButtonElement>('.vr-lang-trigger');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+    const panel = picker.querySelector<HTMLElement>('.vr-lang-panel');
+    if (panel) panel.hidden = true;
+  });
+}
+
+function wireSearchablePicker(wrap: HTMLElement): void {
+  if (wrap.dataset.vrLangBound === '1') return;
+  wrap.dataset.vrLangBound = '1';
+
+  const trigger = wrap.querySelector<HTMLButtonElement>('.vr-lang-trigger');
+  const panel = wrap.querySelector<HTMLElement>('.vr-lang-panel');
+  const search = wrap.querySelector<HTMLInputElement>('.vr-lang-search');
+  const list = wrap.querySelector<HTMLElement>('.vr-lang-list');
+  const select = wrap.querySelector<HTMLSelectElement>('.vr-lang-select');
+  if (!trigger || !panel || !search || !list) return;
+
+  if (select) wireLangSelect(select);
+  fillLangList(list, '', current);
+
+  const open = (): void => {
+    closeLangMenus(wrap);
+    wrap.classList.add('is-open');
+    trigger.setAttribute('aria-expanded', 'true');
+    panel.hidden = false;
+    fillLangList(list, search.value, current);
+    window.requestAnimationFrame(() => search.focus());
+  };
+
+  const close = (): void => {
+    wrap.classList.remove('is-open');
+    trigger.setAttribute('aria-expanded', 'false');
+    panel.hidden = true;
+    search.value = '';
+  };
+
+  trigger.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (wrap.classList.contains('is-open')) close();
+    else open();
+  });
+
+  search.addEventListener('input', () => fillLangList(list, search.value, current));
+  search.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') {
+      ev.preventDefault();
+      close();
+      trigger.focus();
+    }
+  });
+
+  list.addEventListener('click', (ev) => {
+    const item = (ev.target as HTMLElement).closest<HTMLElement>('[data-locale]');
+    if (!item) return;
+    const next = item.getAttribute('data-locale');
+    close();
+    setLocale(isLocale(next) ? next : 'en');
+  });
+
+  if (!document.documentElement.dataset.vrLangDocListen) {
+    document.documentElement.dataset.vrLangDocListen = '1';
+    document.addEventListener('click', (ev) => {
+      const target = ev.target as Node | null;
+      document.querySelectorAll<HTMLElement>('.vr-lang-picker.is-open').forEach((picker) => {
+        if (target && picker.contains(target)) return;
+        picker.classList.remove('is-open');
+        const btn = picker.querySelector<HTMLButtonElement>('.vr-lang-trigger');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+        const p = picker.querySelector<HTMLElement>('.vr-lang-panel');
+        if (p) p.hidden = true;
+      });
+    });
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') closeLangMenus();
+    });
+  }
+}
+
+function createLangPickerWrap(selectId: string, extraClass = ''): HTMLElement {
+  const wrap = document.createElement('div');
   wrap.className = `vr-lang-picker ${extraClass}`.trim();
   wrap.setAttribute('title', t('lang.hint'));
   wrap.innerHTML = `
     <span class="sr-only">${t('nav.lang')}</span>
-    <select id="${selectId}" class="vr-lang-select" aria-label="${t('nav.lang')}">
-      ${SUPPORTED_LOCALES.map(
-        (loc) => `<option value="${loc}">${LOCALE_LABELS[loc]}</option>`,
-      ).join('')}
+    <button type="button" class="vr-lang-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="${t('nav.lang')}">
+      <span class="vr-lang-trigger-code" aria-hidden="true">${current.toUpperCase()}</span>
+      <span class="vr-lang-trigger-label">${LOCALE_LABELS[current]}</span>
+    </button>
+    <div class="vr-lang-panel" hidden>
+      <input type="search" class="vr-lang-search" autocomplete="off" placeholder="${t('lang.search')}" aria-label="${t('lang.search')}" />
+      <ul class="vr-lang-list" role="listbox"></ul>
+    </div>
+    <select id="${selectId}" class="vr-lang-select vr-lang-select--sr" aria-hidden="true" tabindex="-1">
+      ${optionHtml()}
     </select>
   `;
-  const select = wrap.querySelector('select') as HTMLSelectElement;
-  wireLangSelect(select);
+  wireSearchablePicker(wrap);
   return wrap;
 }
 

@@ -48,7 +48,7 @@ export function teSplashHtml(opts: { origin: string; url: URL; compact?: boolean
     .sz-728x90 .kicker, .sz-468x60 .kicker { margin: 0 0 2px; }
     .sz-728x90 .cta, .sz-468x60 .cta { min-height: 40px; line-height: 40px; padding: 0 16px; flex: 0 0 auto; font-size: 14px; }
     .sz-300x250 .box { padding: 14px; }
-    .vr-lang-picker { position: absolute; top: 6px; right: 8px; margin: 0; }
+    .vr-lang-picker { position: absolute; top: 6px; inset-inline-end: 8px; margin: 0; }
     .vr-lang-select {
       appearance: none; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
       color: #e4e4e7; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 18px 3px 8px;
