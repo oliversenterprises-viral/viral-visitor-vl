@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   bannerScarcity,
+  boardProofLabel,
   burstTier,
   celebrationKicker,
   celebrationLine,
+  climbHeatPct,
   formatDiesIn,
   ghostCount,
   microGoal,
@@ -15,6 +17,7 @@ import {
   shareStreakLabel,
   utcWeekEndMs,
   weekClockLabel,
+  weekRaceClock,
 } from '../src/game';
 
 const noon = Date.parse('2026-09-12T12:00:00.000Z');
@@ -89,6 +92,12 @@ describe('progress + race + hooks', () => {
   it('names the weekly clock and rank gap from real race rows', () => {
     expect(utcWeekEndMs(noon)).toBe(Date.parse('2026-09-14T00:00:00.000Z'));
     expect(weekClockLabel(noon)).toMatch(/left this week/);
+    expect(weekRaceClock(noon)).toBe("This week's race ends in 1d 12h 0m. Send now.");
+    expect(boardProofLabel({ players: 14, leaderWeekly: 1 })).toBe('14 on the live board · #1 has 1 referral');
+    expect(boardProofLabel({ players: 0 })).toBe('0 on the live board · #1 is open');
+    expect(
+      climbHeatPct({ entered: 1, rising: 1, textLine: false, challenger: 0, banner: false }),
+    ).toBe(40);
     expect(
       raceGap({
         host: 'beta.test',

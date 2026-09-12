@@ -10,7 +10,9 @@ import { persistAttribution, previewHost, rememberCredits, rememberKitOpen, shou
 import { celebrateHit, celebrateUnlock, pulseKit } from './celebrate';
 import {
   bannerScarcity,
+  boardProofLabel,
   bumpShareStreak,
+  climbHeatPct,
   newestActivityText,
   prefersReducedMotion,
   raceGap,
@@ -18,6 +20,7 @@ import {
   setSoundEnabled,
   soundEnabled,
   weekClockLabel,
+  weekRaceClock,
 } from './game';
 import { getMyReferralCode, setMyReferralCode } from './my-code';
 import { copyText, intents, nativeShare, qrSvg } from './share';
@@ -129,7 +132,7 @@ export function boot(_root?: HTMLElement): void {
 
   function paintWeekClock(): void {
     const el = document.getElementById('hero-week-clock');
-    if (el) el.textContent = `${weekClockLabel()}. Send now.`;
+    if (el) el.textContent = weekRaceClock();
     const sub = document.getElementById('week-text-sub');
     if (sub) sub.textContent = `${weekClockLabel()}. Unique friend taps only — not raw visits.`;
   }
@@ -198,14 +201,21 @@ export function boot(_root?: HTMLElement): void {
     paintHud();
   }
 
+  function paintRungLive(id: string, count: number): void {
+    const el = document.getElementById(id);
+    const wrap = el?.closest('.site-drop-rung');
+    if (el) el.textContent = count > 0 ? String(count) : 'open';
+    if (wrap instanceof HTMLElement) {
+      if (count > 0) wrap.setAttribute('data-live', '1');
+      else wrap.removeAttribute('data-live');
+    }
+  }
+
   function paintBoard(next: BoardState): void {
     board = next;
-    const entered = document.getElementById('ladder-entered');
-    const rising = document.getElementById('ladder-rising');
-    const chall = document.getElementById('ladder-challenger');
-    if (entered) entered.textContent = next.entered.length ? `Just entered · ${next.entered.length}` : 'Just entered · open';
-    if (rising) rising.textContent = next.rising.length ? `Rising · ${next.rising.length}` : 'Rising · open';
-    if (chall) chall.textContent = next.challenger.length ? `Challenger · ${next.challenger.length}` : 'Challenger · open';
+    paintRungLive('site-drop-rung-entered', next.entered.length);
+    paintRungLive('site-drop-rung-rising', next.rising.length);
+    paintRungLive('site-drop-rung-challenger', next.challenger.length);
 
     const slot = document.getElementById('hero-banner-mock');
     const siteEl = document.getElementById('hero-slot-site');
@@ -237,10 +247,45 @@ export function boot(_root?: HTMLElement): void {
       if (prizeMeta) prizeMeta.textContent = scarcity;
     }
     if (raceEl) {
-      raceEl.hidden = false;
-      raceEl.classList.remove('hidden');
+      raceEl.hidden = true;
+      raceEl.classList.add('hidden');
       raceEl.textContent = scarcity;
     }
+
+    const proof = document.getElementById('hero-board-proof');
+    if (proof) {
+      proof.textContent = boardProofLabel({
+        players: next.livePlayers,
+        leaderWeekly: next.race[0]?.weeklyCredits,
+      });
+    }
+
+    const textLine = next.race.some((s) => s.weeklyCredits >= 2);
+    const heat = document.getElementById('site-drop-climb-heat');
+    if (heat) {
+      const pct = Math.max(
+        18,
+        climbHeatPct({
+          entered: next.entered.length,
+          rising: next.rising.length,
+          textLine,
+          challenger: next.challenger.length,
+          banner: Boolean(next.banner),
+        }),
+      );
+      heat.style.width = `${pct}%`;
+    }
+    const climbLit = [
+      next.entered.length > 0,
+      next.rising.length > 0,
+      textLine,
+      next.challenger.length > 0,
+      Boolean(next.banner),
+    ];
+    document.querySelectorAll<HTMLElement>('.site-drop-climb__ladder li').forEach((li, i) => {
+      if (climbLit[i]) li.setAttribute('data-lit', '1');
+      else li.removeAttribute('data-lit');
+    });
 
     paintList(
       'site-drops-entered-list',
@@ -413,6 +458,15 @@ export function boot(_root?: HTMLElement): void {
       toast(msg);
     }
   }
+
+  document.getElementById('funnel-expand-btn')?.addEventListener('click', () => {
+    document.documentElement.setAttribute('data-vr-kid-more', '1');
+    document.documentElement.setAttribute('data-vr-funnel-expanded', '1');
+    document.getElementById('site-drops')?.scrollIntoView({
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  });
 
   heroBtn?.addEventListener('click', () => void getMyLink());
   navBtn?.addEventListener('click', () => void getMyLink());

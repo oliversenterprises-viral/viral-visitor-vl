@@ -475,7 +475,12 @@ html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #daily-
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-campaign-badge,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #referral-section,
 html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #funnel-journey,
-html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #prize {
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #prize,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-subtitle,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-title-line2,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-prize-one,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-global-proof,
+html[data-vr-kid-simple]:not([data-vr-has-link]):not([data-vr-kid-more]) #hero-ad-race {
   display: none !important;
 }
 

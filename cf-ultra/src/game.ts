@@ -146,6 +146,41 @@ export function weekClockLabel(now = Date.now()): string {
   return `${h}h ${m}m left this week`;
 }
 
+/** Live Site Drops hero clock — same wording as viralrefer.app. */
+export function weekRaceClock(now = Date.now()): string {
+  const ms = Math.max(0, utcWeekEndMs(now) - now);
+  const days = Math.floor(ms / 86_400_000);
+  const hours = Math.floor((ms % 86_400_000) / 3_600_000);
+  const mins = Math.floor((ms % 3_600_000) / 60_000);
+  return `This week's race ends in ${days}d ${hours}h ${mins}m. Send now.`;
+}
+
+/** Social-proof pill under the hero CTA. */
+export function boardProofLabel(opts: { players: number; leaderWeekly?: number }): string {
+  const n = Math.max(0, Math.floor(opts.players));
+  const board = n === 1 ? '1 on the live board' : `${n} on the live board`;
+  const refs = Math.max(0, Math.floor(opts.leaderWeekly ?? 0));
+  if (refs <= 0) return `${board} · #1 is open`;
+  return `${board} · #1 has ${refs} referral${refs === 1 ? '' : 's'}`;
+}
+
+/** 0–100 heat for the five-rung Site Drop climb. */
+export function climbHeatPct(opts: {
+  entered: number;
+  rising: number;
+  textLine: boolean;
+  challenger: number;
+  banner: boolean;
+}): number {
+  const lit =
+    (opts.entered > 0 ? 1 : 0) +
+    (opts.rising > 0 ? 1 : 0) +
+    (opts.textLine ? 1 : 0) +
+    (opts.challenger > 0 ? 1 : 0) +
+    (opts.banner ? 1 : 0);
+  return Math.round((lit / 5) * 100);
+}
+
 export function progressPct(weekly: number, credits: number, rung: Rung): number {
   if (rung === 'banner') return 100;
   if (credits < 1) return Math.min(90, weekly * 40);
