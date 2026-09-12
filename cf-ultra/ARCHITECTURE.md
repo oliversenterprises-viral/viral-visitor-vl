@@ -32,8 +32,9 @@ Pageviews, share-link opens, board polls, embeds, and OG crawlers are **read-onl
 | Unique friend credit | Yes | Same join path + stats flush |
 | `POST /api/track` pageview | Buffered / sampled 1-in-5 | Isolate buffer → hourly/daily rollup |
 | Track join/share/credit | Flush now | Funnel stays accurate |
-| Owner alert (inbox) | Debounced (~20s) + isolate | High-signal conversions only; demo inbox works with no webhook |
-| Owner webhook POST | No KV | Capped 12 / 5 min / isolate; Discord/Slack/generic HTTPS |
+| Owner alert (inbox) | Debounced (~20s) + isolate | High-signal conversions only; demo inbox works with no Telegram secrets |
+| Owner Telegram sendMessage | No KV | Primary owner ping; token never in client; same 12 / 5 min outbound cap |
+| Owner webhook POST | No KV | Optional fallback; Discord/Slack/generic HTTPS |
 | Rate-limit check | **No** | In-isolate sliding window only |
 
 Two writes per successful join is intentional: one durable game state, one small public snapshot so thousands of polls never recompute or reread the blob.
@@ -112,7 +113,7 @@ functions/_lib/edge-cache.ts  Cache API get/put/bust
 functions/_lib/store.ts       state + board snapshot, isolate TTL
 functions/_lib/admin-auth.ts  HMAC / CF Access (no client secret)
 functions/_lib/analytics.ts   isolate buffer + KV rollups
-functions/_lib/alerts.ts      owner notify (inbox, batch, webhook)
+functions/_lib/alerts.ts      owner notify (inbox, batch, Telegram, webhook)
 functions/api/admin/*         HQ APIs
 functions/api/board.ts        public cached snapshot
 functions/api/join.ts         hot write path

@@ -17,6 +17,8 @@ export type AlertKind = (typeof ALERT_KINDS)[number];
 export type AlertPrefs = {
   events: Record<AlertKind, boolean>;
   webhookUrl: string;
+  /** Primary owner path. Secrets still required to actually send. */
+  telegram: boolean;
   quietHours: {
     enabled: boolean;
     startHour: number;
@@ -24,6 +26,21 @@ export type AlertPrefs = {
     tzOffsetMinutes: number;
   };
   digest: 'off' | 'hourly' | 'daily';
+};
+
+/** Documented owner chat for this ViralRefer Ultra deploy. Set TELEGRAM_CHAT_ID to this. Never a bot token. */
+export const OWNER_TELEGRAM_CHAT_ID = '1274269043';
+
+export const FUNNEL_STEP: Record<AlertKind, string> = {
+  race_started: 'Paste site',
+  first_share: 'Share',
+  friend_land: 'Friend land',
+  credit: 'Credit',
+  rung_rising: 'Climb',
+  rung_challenger: 'Climb',
+  rung_banner: 'Climb',
+  spike: 'Spike',
+  digest: 'Digest',
 };
 
 export type InboxItem = {
@@ -35,7 +52,7 @@ export type InboxItem = {
   host?: string;
   count: number;
   adminPath: string;
-  delivered: 'inbox' | 'webhook' | 'email' | 'both' | 'skipped_quiet';
+  delivered: 'inbox' | 'telegram' | 'webhook' | 'email' | 'both' | 'skipped_quiet';
 };
 
 export type AlertPayload = {
@@ -75,6 +92,7 @@ export function defaultAlertPrefs(): AlertPrefs {
   return {
     events: { ...DEFAULT_EVENTS },
     webhookUrl: '',
+    telegram: true,
     quietHours: { enabled: false, startHour: 22, endHour: 8, tzOffsetMinutes: 0 },
     digest: 'off',
   };
@@ -102,6 +120,7 @@ export function normalizeAlertPrefs(raw: unknown): AlertPrefs {
   return {
     events,
     webhookUrl: sanitizeWebhookUrl(typeof o.webhookUrl === 'string' ? o.webhookUrl : ''),
+    telegram: o.telegram === false ? false : true,
     quietHours: {
       enabled: q.enabled === true,
       startHour: clampHour(q.startHour),
@@ -172,6 +191,49 @@ export function buildAlertMessage(item: {
   return bits.join('\n');
 }
 
+export function escapeTelegramHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/** Short HTML for Telegram. No tokens, no visitor invention. */
+export function buildTelegramHtml(item: {
+  kind: AlertKind;
+  title: string;
+  body: string;
+  host?: string;
+  count: number;
+  adminUrl: string;
+}): string {
+  const step = FUNNEL_STEP[item.kind] || item.kind;
+  const lines = [
+    `<b>${escapeTelegramHtml(item.title)}</b>`,
+    escapeTelegramHtml(item.body),
+    `Site: ${escapeTelegramHtml(item.host || '—')}`,
+    `Step: ${escapeTelegramHtml(step)}${item.count > 1 ? ` · ×${item.count}` : ''}`,
+    `<a href="${escapeTelegramHtml(item.adminUrl)}">Open HQ</a>`,
+  ];
+  return lines.join('\n');
+}
+
+export function telegramToken(env: UltraEnv): string {
+  return String(env.TELEGRAM_BOT_TOKEN || '').trim();
+}
+
+export function telegramChatId(env: UltraEnv): string {
+  return String(env.TELEGRAM_CHAT_ID || '').trim();
+}
+
+export function telegramConfigured(env: UltraEnv): boolean {
+  return Boolean(telegramToken(env) && telegramChatId(env));
+}
+
+export function maskTelegramChatId(chatId: string): string {
+  const id = chatId.trim();
+  if (!id) return '';
+  if (id.length <= 4) return '…set';
+  return `…${id.slice(-3)}`;
+}
+
 export function parseAlertPrefsBody(body: unknown, current: AlertPrefs): AlertPrefs {
   const incoming = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
   const next = normalizeAlertPrefs({ ...current, ...incoming });
@@ -179,6 +241,7 @@ export function parseAlertPrefsBody(body: unknown, current: AlertPrefs): AlertPr
   if (typeof incoming.webhookUrl === 'string' && /…|\.\.\./.test(incoming.webhookUrl)) {
     next.webhookUrl = current.webhookUrl;
   }
+  if (typeof incoming.telegram === 'boolean') next.telegram = incoming.telegram;
   if (next.digest !== 'off') next.events.digest = true;
   return next;
 }
@@ -201,7 +264,7 @@ type AlertMem = {
 
 const g = globalThis as typeof globalThis & { __ULTRA_ALERTS__?: AlertMem };
 const batches = new Map<string, Batch>();
-const webhookHits: number[] = [];
+const outboundHits: number[] = [];
 let lastFlush = 0;
 
 function mem(): AlertMem {
@@ -226,7 +289,7 @@ function mem(): AlertMem {
 export function resetAlertRuntime(): void {
   g.__ULTRA_ALERTS__ = undefined;
   batches.clear();
-  webhookHits.length = 0;
+  outboundHits.length = 0;
   lastFlush = 0;
 }
 
@@ -275,6 +338,10 @@ export function resolveWebhookUrl(env: UltraEnv, prefs: AlertPrefs): string {
 
 export function emailConfigured(env: UltraEnv): boolean {
   return Boolean(env.RESEND_API_KEY && env.NOTIFY_EMAIL_TO);
+}
+
+export function telegramEnabled(env: UltraEnv, prefs: AlertPrefs): boolean {
+  return prefs.telegram !== false && telegramConfigured(env);
 }
 
 function adminUrl(origin: string, path: string): string {
@@ -331,16 +398,16 @@ async function ensureFirstShare(env: UltraEnv): Promise<Set<string>> {
   return m.firstShare;
 }
 
-function webhookAllowed(): boolean {
+function outboundAllowed(): boolean {
   const now = Date.now();
-  while (webhookHits.length && now - webhookHits[0] > WEBHOOK_WINDOW_MS) webhookHits.shift();
-  if (webhookHits.length >= WEBHOOK_CAP) return false;
-  webhookHits.push(now);
+  while (outboundHits.length && now - outboundHits[0] > WEBHOOK_WINDOW_MS) outboundHits.shift();
+  if (outboundHits.length >= WEBHOOK_CAP) return false;
+  outboundHits.push(now);
   return true;
 }
 
 async function deliverWebhook(url: string, text: string, item: InboxItem): Promise<boolean> {
-  if (!webhookAllowed()) return false;
+  if (!outboundAllowed()) return false;
   const body = {
     content: text,
     text,
@@ -360,6 +427,31 @@ async function deliverWebhook(url: string, text: string, item: InboxItem): Promi
     return res.ok || res.status === 204;
   } catch {
     return false;
+  }
+}
+
+export async function deliverTelegram(
+  env: UltraEnv,
+  html: string,
+): Promise<{ ok: boolean; reason?: string }> {
+  const token = telegramToken(env);
+  const chat = telegramChatId(env);
+  if (!token || !chat) return { ok: false, reason: 'missing' };
+  if (!outboundAllowed()) return { ok: false, reason: 'rate_limit' };
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chat,
+        text: html,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      }),
+    });
+    return { ok: res.ok, reason: res.ok ? undefined : `http_${res.status}` };
+  } catch {
+    return { ok: false, reason: 'network' };
   }
 }
 
@@ -385,8 +477,19 @@ async function deliverEmail(env: UltraEnv, text: string, item: InboxItem): Promi
   }
 }
 
-function patchDelivered(item: InboxItem, hooked: boolean, mailed: boolean, quiet: boolean): void {
-  item.delivered = quiet ? 'skipped_quiet' : hooked && mailed ? 'both' : hooked ? 'webhook' : mailed ? 'email' : 'inbox';
+function patchDelivered(
+  item: InboxItem,
+  hooked: boolean,
+  mailed: boolean,
+  telegram: boolean,
+  quiet: boolean,
+): void {
+  if (quiet) item.delivered = 'skipped_quiet';
+  else {
+    const outs = [telegram && 'telegram', hooked && 'webhook', mailed && 'email'].filter(Boolean);
+    item.delivered =
+      outs.length === 0 ? 'inbox' : outs.length === 1 ? (outs[0] as InboxItem['delivered']) : 'both';
+  }
   const m = mem();
   const idx = m.inbox.findIndex((x) => x.id === item.id);
   if (idx >= 0) m.inbox[idx] = item;
@@ -401,23 +504,36 @@ function deliverLater(
 ): void {
   const quiet = inQuietHours(prefs) && !opts.forceWebhook;
   if (quiet) {
-    patchDelivered(item, false, false, true);
+    patchDelivered(item, false, false, false, true);
     return;
   }
   const webhook = resolveWebhookUrl(env, prefs);
+  const hq = adminUrl(origin, item.adminPath);
   const text = buildAlertMessage({
     title: item.title,
     body: item.body,
     host: item.host,
     count: item.count,
-    adminUrl: adminUrl(origin, item.adminPath),
+    adminUrl: hq,
+  });
+  const html = buildTelegramHtml({
+    kind: item.kind,
+    title: item.title,
+    body: item.body,
+    host: item.host,
+    count: item.count,
+    adminUrl: hq,
   });
   void (async () => {
     let hooked = false;
     let mailed = false;
+    let telegram = false;
+    if (telegramEnabled(env, prefs)) {
+      telegram = (await deliverTelegram(env, html)).ok;
+    }
     if (webhook) hooked = await deliverWebhook(webhook, text, item);
     if (opts.allowEmail && emailConfigured(env)) mailed = await deliverEmail(env, text, item);
-    patchDelivered(item, hooked, mailed, false);
+    patchDelivered(item, hooked, mailed, telegram, false);
   })();
 }
 
@@ -660,7 +776,7 @@ export async function testAlert(env: UltraEnv, origin: string): Promise<InboxIte
     {
       kind: 'digest',
       title: 'Test notification',
-      body: 'Owner HQ test ping. If a webhook or email secret is set, this also left the building.',
+      body: 'Owner HQ test ping. Telegram is the default owner channel when TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID are set. Missing secrets stay in this inbox.',
       count: 1,
       adminPath: '/admin/?focus=test',
       immediate: true,
@@ -671,10 +787,17 @@ export async function testAlert(env: UltraEnv, origin: string): Promise<InboxIte
 
 export function alertPublicView(env: UltraEnv, prefs: AlertPrefs, inbox: InboxItem[]) {
   const envHook = Boolean(env.NOTIFY_WEBHOOK_URL);
+  const chat = telegramChatId(env);
+  const tokenOn = Boolean(telegramToken(env));
   return {
     events: prefs.events,
     digest: prefs.digest,
     quietHours: prefs.quietHours,
+    telegram: prefs.telegram !== false,
+    telegramConfigured: telegramConfigured(env),
+    telegramTokenConfigured: tokenOn,
+    telegramChatMasked: chat ? maskTelegramChatId(chat) : '',
+    telegramOwnerHint: OWNER_TELEGRAM_CHAT_ID,
     webhookUrl: maskWebhookUrl(resolveWebhookUrl(env, prefs)),
     webhookFromEnv: envHook,
     webhookConfigured: Boolean(resolveWebhookUrl(env, prefs)),

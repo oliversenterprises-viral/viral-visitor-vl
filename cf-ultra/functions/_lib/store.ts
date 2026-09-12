@@ -6,6 +6,10 @@ export interface UltraEnv {
   ADMIN_ACTION_SECRET?: string;
   /** Discord / Slack / generic HTTPS webhook. Pages secret — never VITE_. Overrides Admin-saved URL. */
   NOTIFY_WEBHOOK_URL?: string;
+  /** Telegram Bot API token. Pages / wrangler secret — never VITE_ and never commit. */
+  TELEGRAM_BOT_TOKEN?: string;
+  /** Telegram chat id (this deploy’s owner: 1274269043). Pages secret or env — never VITE_. */
+  TELEGRAM_CHAT_ID?: string;
   RESEND_API_KEY?: string;
   NOTIFY_EMAIL_TO?: string;
   NOTIFY_EMAIL_FROM?: string;

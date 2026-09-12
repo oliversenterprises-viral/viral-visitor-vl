@@ -3,7 +3,12 @@ ADMIN_OWNER_PASSWORD=change-me
 # Optional alias used as HMAC key if the password var is unset:
 # ADMIN_ACTION_SECRET=
 
-# Owner alerts — Discord/Slack incoming webhook or generic HTTPS.
+# Owner alerts — Telegram is the primary channel (never VITE_).
+# This deploy’s owner chat id is 1274269043. Put the bot token only here / Pages secrets.
+# TELEGRAM_BOT_TOKEN=
+# TELEGRAM_CHAT_ID=1274269043
+
+# Optional Discord/Slack incoming webhook or generic HTTPS (fallback).
 # Dashboard secret wins over the URL saved in HQ. Leave unset to use inbox-only demo.
 # NOTIFY_WEBHOOK_URL=https://discord.com/api/webhooks/...
 

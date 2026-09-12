@@ -4,7 +4,7 @@ This is the product. Secondary surfaces (duel, embed, kingmaker, TE later) never
 
 **Rule taught on every screen:** visits, refreshes, and copies do **not** count. Only a unique friend tapping **Get my link** credits you.
 
-Owner alerts (HQ inbox / webhook) fire on these conversion writes only — not pageviews.
+Owner alerts (HQ inbox + **Telegram** when secrets are set; optional webhook) fire on these conversion writes only — not pageviews.
 
 ## Happy path (exact names)
 
@@ -83,4 +83,4 @@ TE / rotators are a **distribution path**, not a funnel step. Iframe the splash 
 
 ## Notifications
 
-Server-side only, after successful writes: new site, first share, friend land (batched), credit (1st–3rd instant), rung unlocks, spikes. See README Owner alerts.
+Server-side only, after successful writes: new site, first share, friend land (batched), credit (1st–3rd instant), rung unlocks, spikes. Telegram is the default owner ping (`TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`). Missing secrets → HQ inbox only. See README Owner alerts.

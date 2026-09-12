@@ -21,6 +21,7 @@ type Body = {
   lead?: string;
   events?: Record<string, boolean>;
   webhookUrl?: string | null;
+  telegram?: boolean;
   quietHours?: { enabled?: boolean; startHour?: number; endHour?: number; tzOffsetMinutes?: number };
   digest?: 'off' | 'hourly' | 'daily';
   teCreditsCount?: boolean;

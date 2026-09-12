@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  OWNER_TELEGRAM_CHAT_ID,
   buildAlertMessage,
+  buildTelegramHtml,
   defaultAlertPrefs,
+  deliverTelegram,
   emitAlert,
   emitJoinAlerts,
   flushAlertBatches,
   inQuietHours,
+  maskTelegramChatId,
   maskWebhookUrl,
   maybeFirstShareAlert,
   normalizeAlertPrefs,
@@ -15,6 +19,8 @@ import {
   resetAlertRuntime,
   sanitizeWebhookUrl,
   shouldSendImmediate,
+  telegramConfigured,
+  testAlert,
 } from '../functions/_lib/alerts';
 import type { UltraEnv } from '../functions/_lib/store';
 
@@ -33,6 +39,7 @@ describe('alert prefs', () => {
     expect(p.events.spike).toBe(true);
     expect(p.digest).toBe('off');
     expect(p.events.digest).toBe(false);
+    expect(p.telegram).toBe(true);
   });
 
   it('normalizes junk without inventing a webhook', () => {
@@ -164,5 +171,81 @@ describe('inbox + batching (no webhook)', () => {
     expect(pendingBatchCount()).toBe(1);
     inbox = await readAlertInbox(emptyEnv);
     expect(inbox.filter((i) => i.kind === 'credit')).toHaveLength(1);
+  });
+});
+
+describe('Telegram owner channel', () => {
+  it('documents this deploy’s chat id and never treats it as a token', () => {
+    expect(OWNER_TELEGRAM_CHAT_ID).toBe('1274269043');
+    expect(maskTelegramChatId(OWNER_TELEGRAM_CHAT_ID)).toBe('…043');
+    expect(maskTelegramChatId(OWNER_TELEGRAM_CHAT_ID)).not.toContain('1274269043');
+    expect(telegramConfigured({})).toBe(false);
+    expect(telegramConfigured({ TELEGRAM_BOT_TOKEN: 'x:token', TELEGRAM_CHAT_ID: OWNER_TELEGRAM_CHAT_ID })).toBe(true);
+  });
+
+  it('builds a short HTML ping with funnel step + HQ link', () => {
+    const html = buildTelegramHtml({
+      kind: 'credit',
+      title: 'Credit #1',
+      body: 'climber.com: 1st verified credit — on the board.',
+      host: 'climber.com',
+      count: 1,
+      adminUrl: 'https://demo.example/admin/?focus=credit&host=climber.com',
+    });
+    expect(html).toContain('<b>Credit #1</b>');
+    expect(html).toContain('Step: Credit');
+    expect(html).toContain('Open HQ');
+    expect(html).toContain('https://demo.example/admin/?focus=credit&amp;host=climber.com');
+    expect(html).not.toContain('<script');
+    expect(buildTelegramHtml({
+      kind: 'rung_banner',
+      title: 'x <y>',
+      body: 'a&b',
+      count: 2,
+      adminUrl: 'https://x.test/admin/',
+    })).toContain('x &lt;y&gt;');
+  });
+
+  it('stays inbox-only when Telegram secrets are missing', async () => {
+    const item = await testAlert(emptyEnv, 'http://localhost:8788');
+    expect(item.delivered).toBe('inbox');
+    expect(item.body).toMatch(/inbox/i);
+  });
+
+  it('POSTs sendMessage to the configured chat and never uses VITE_', async () => {
+    const calls: { url: string; body: Record<string, unknown> }[] = [];
+    const orig = globalThis.fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      calls.push({ url, body: JSON.parse(String(init?.body || '{}')) });
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }) as typeof fetch;
+    try {
+      const env: UltraEnv = { TELEGRAM_BOT_TOKEN: '123456:TESTTOKEN', TELEGRAM_CHAT_ID: OWNER_TELEGRAM_CHAT_ID };
+      const sent = await deliverTelegram(
+        env,
+        buildTelegramHtml({
+          kind: 'rung_banner',
+          title: '#1 banner claim',
+          body: 'hud-demo.test is the weekly lead.',
+          host: 'hud-demo.test',
+          count: 1,
+          adminUrl: 'https://demo.example/admin/?focus=rung_banner',
+        }),
+      );
+      expect(sent.ok).toBe(true);
+      expect(calls).toHaveLength(1);
+      expect(calls[0].url).toBe('https://api.telegram.org/bot123456:TESTTOKEN/sendMessage');
+      expect(calls[0].url).not.toContain('VITE_');
+      expect(calls[0].body.chat_id).toBe('1274269043');
+      expect(calls[0].body.parse_mode).toBe('HTML');
+    } finally {
+      globalThis.fetch = orig;
+    }
+  });
+
+  it('can turn Telegram off from HQ prefs', () => {
+    const next = parseAlertPrefsBody({ telegram: false }, defaultAlertPrefs());
+    expect(next.telegram).toBe(false);
   });
 });

@@ -233,30 +233,48 @@ First-class analytics console at **`/admin/`**. Not a leftover stub.
 
 **Ops (live):** ban/mute codes or sites, edit public hero/lead (`/api/content`), CSV export, reset demo data, KV health line.
 
-**Owner alerts (live):** after a real conversion write (new site, first share, friend land, verified credit, rung climb, spike), Functions log an **Alerts inbox** row in HQ and optionally POST a webhook / send email. Pageviews never notify. Bursts batch (e.g. 12 friend-lands in a few minutes → one ping). Demo / no-secret mode still fills the inbox so the feature is visible.
+**Owner alerts (live):** after a real conversion write (new site, first share, friend land, verified credit, rung climb, spike), Functions log an **Alerts inbox** row in HQ and ping **Telegram** when `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are set. Optional webhook / Resend email still work. Pageviews never notify. Bursts batch (e.g. 12 friend-lands in a few minutes → one ping). Demo / no-secret mode still fills the inbox so the feature is visible.
 
 See `ARCHITECTURE.md` for rollup keys and write budget.
 
 ### Owner alert secrets (Pages dashboard or `.dev.vars`)
 
-Never prefix these with `VITE_` — that ships in the client bundle.
+Never prefix these with `VITE_` — that ships in the client bundle. **Do not paste the bot token into the repo, chat, or a PR.**
 
 | Secret | Required? | Purpose |
 | --- | --- | --- |
-| `NOTIFY_WEBHOOK_URL` | Recommended | Discord / Slack incoming webhook or any HTTPS URL. **Wins over** the URL saved in HQ. |
+| `TELEGRAM_BOT_TOKEN` | Primary | Bot API token from [@BotFather](https://t.me/BotFather). Server-side only. |
+| `TELEGRAM_CHAT_ID` | Primary | Chat that receives pings. **This deploy’s owner chat id is `1274269043`.** |
+| `NOTIFY_WEBHOOK_URL` | Optional fallback | Discord / Slack incoming webhook or any HTTPS URL. **Wins over** the URL saved in HQ. |
 | `RESEND_API_KEY` | Optional | Send email via [Resend](https://resend.com) for immediate high-signal events only. |
 | `NOTIFY_EMAIL_TO` | With Resend | Inbox that receives owner mail. |
 | `NOTIFY_EMAIL_FROM` | Optional | Defaults to `ViralRefer Ultra <alerts@viralrefer.app>` (must be a verified Resend from). |
 
-You can also paste a webhook URL in HQ → **Notify me** (authenticated `POST /api/admin/action` `save_alerts`). The Function stores it in KV (`ultra:alert-prefs`) and **never echoes the full URL** back to the browser. A dashboard secret still overrides that value.
+#### Telegram (BotFather)
 
-**Test:** HQ → Test notification. It always writes the inbox; it also hits the webhook/email if configured.
+1. In Telegram, message [@BotFather](https://t.me/BotFather) → `/newbot` → copy the token. Keep it off git.
+2. Message your new bot once (`/start`) so it can DM you.
+3. Confirm your chat id. For this ViralRefer Ultra owner deploy it is **`1274269043`**. To discover another id, call `getUpdates` **from your machine** (not the repo):  
+   `curl https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/getUpdates`  
+   and read `message.chat.id`.
+4. Set Pages / wrangler secrets (never `[vars]`, never `VITE_`):
 
-**Quiet hours:** optional. Inbox still records; outbound webhook/email is skipped until quiet hours end.
+```bash
+cd cf-ultra
+npx wrangler pages secret put TELEGRAM_BOT_TOKEN --project-name viralrefer-ultra
+npx wrangler pages secret put TELEGRAM_CHAT_ID --project-name viralrefer-ultra
+# when prompted for CHAT_ID, enter: 1274269043
+```
 
-**Email without Resend:** Mailchannels / Cloudflare Email Routing are not wired in v1. Leave Resend unset and use the webhook or inbox.
+Local Wrangler: copy `.dev.vars.example` → `.dev.vars` and fill `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID=1274269043`. `.dev.vars` is gitignored.
 
-**Write budget:** inbox persists to KV at most every ~20s (or on high-signal events). Webhooks are capped at 12 POSTs / 5 minutes per isolate. Friend-land and spike alerts always batch.
+HQ → **Notify me** shows `configured · chat …043` or `missing` (masked — never the token). Toggle Telegram on/off, keep the event checkboxes, then **Test ping**. If secrets are missing, the ping still lands in the Alerts inbox (demo path).
+
+Optional: paste a webhook URL in HQ (authenticated `POST /api/admin/action` `save_alerts`). The Function stores it in KV (`ultra:alert-prefs`) and **never echoes the full URL** back. A dashboard secret still overrides that value.
+
+**Quiet hours:** optional. Inbox still records; outbound Telegram / webhook / email is skipped until quiet hours end.
+
+**Write budget:** inbox persists to KV at most every ~20s (or on high-signal events). Outbound Telegram + webhooks share a cap of 12 POSTs / 5 minutes per isolate. Friend-land and spike alerts always batch so thousands of daily events do not spam the chat.
 
 ## Stack
 

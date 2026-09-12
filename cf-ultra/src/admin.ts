@@ -29,6 +29,11 @@ type Dash = {
     events: Record<string, boolean>;
     digest: 'off' | 'hourly' | 'daily';
     quietHours: { enabled: boolean; startHour: number; endHour: number; tzOffsetMinutes: number };
+    telegram?: boolean;
+    telegramConfigured?: boolean;
+    telegramTokenConfigured?: boolean;
+    telegramChatMasked?: string;
+    telegramOwnerHint?: string;
     webhookUrl: string;
     webhookFromEnv: boolean;
     webhookConfigured: boolean;
@@ -65,6 +70,16 @@ let range = '7d';
 
 function esc(v: unknown): string {
   return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function telegramStatus(a: Dash['alerts'] | undefined): string {
+  const hint = a?.telegramOwnerHint || '1274269043';
+  if (a?.telegramConfigured) {
+    return `Telegram: configured · chat ${esc(a.telegramChatMasked || '…set')}. Test ping hits that chat.`;
+  }
+  const token = a?.telegramTokenConfigured ? 'token set' : 'token missing';
+  const chat = a?.telegramChatMasked ? `chat ${esc(a.telegramChatMasked)}` : 'chat missing';
+  return `Telegram: missing — ${token}, ${chat}. Inbox still records. Set Pages secrets TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID=${esc(hint)}.`;
 }
 
 function bars(rows: { key: string; n: number }[], cls = ''): string {
@@ -216,7 +231,7 @@ function render(d: Dash): void {
     <div class="hq-grid two" data-alerts>
       <section class="lane" id="alerts-inbox">
         <h3>Owner alerts inbox</h3>
-        <p class="note">High-signal conversions only — not pageviews. Demo mode logs here even with no webhook, so you can see the feature without secrets. Bursts batch (e.g. “12 credits in 5m”).</p>
+        <p class="note">High-signal conversions only — not pageviews. Telegram is the default owner ping when secrets are set. Demo / missing secrets still log here. Bursts batch (e.g. “12 credits in 5m”).</p>
         <ol class="activity inbox">${
           (d.alerts?.inbox || []).length
             ? d.alerts.inbox
@@ -232,7 +247,9 @@ function render(d: Dash): void {
       </section>
       <section class="lane">
         <h3>Notify me</h3>
-        <p class="note">Webhook is a Pages/Worker secret or an HTTPS URL saved here (never a <code>VITE_</code> var). Env secret wins. Email via Resend only if <code>RESEND_API_KEY</code> + <code>NOTIFY_EMAIL_TO</code> are set${d.alerts?.emailConfigured ? ' — configured' : ' — optional, not set'}.</p>
+        <p class="note">${telegramStatus(d.alerts)} Never put the bot token in the client or a <code>VITE_</code> var.</p>
+        <label class="toggle"><input type="checkbox" data-telegram ${d.alerts?.telegram !== false ? 'checked' : ''}/> Telegram (primary owner channel)</label>
+        <p class="note">Optional webhook / email still fire if configured. Email via Resend ${d.alerts?.emailConfigured ? '— configured' : '— not set'}.</p>
         <div class="toggles">
           ${Object.entries(ALERT_LABELS)
             .map(
@@ -261,7 +278,7 @@ function render(d: Dash): void {
         </div>
         <div class="ops-row">
           <button class="btn volt" data-op="save_alerts" type="button">Save alert prefs</button>
-          <button class="btn ghost" data-op="test_alert" type="button">Test notification</button>
+          <button class="btn ghost" data-op="test_alert" type="button">Test ping</button>
         </div>
       </section>
     </div>
@@ -348,6 +365,7 @@ function render(d: Dash): void {
         body.events = events;
         body.digest = (root.querySelector('[data-digest]') as HTMLSelectElement)?.value || 'off';
         body.webhookUrl = (root.querySelector('[data-webhook]') as HTMLInputElement)?.value ?? '';
+        body.telegram = (root.querySelector('[data-telegram]') as HTMLInputElement)?.checked !== false;
         body.quietHours = {
           enabled: (root.querySelector('[data-quiet]') as HTMLInputElement)?.checked === true,
           startHour: Number((root.querySelector('[data-quiet-start]') as HTMLInputElement)?.value || 22),
