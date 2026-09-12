@@ -7,6 +7,7 @@ import { actorFromRequest, clientIp, json, originFromRequest, readJson, tooMany,
 import { allowJoin } from '../_lib/limit';
 import { isBanned, loadOps } from '../_lib/ops';
 import { hintsFromRequest } from '../_lib/stats';
+import { buildCleanReferralLink } from '../_lib/referral-url';
 import { loadState, saveState, type UltraEnv } from '../_lib/store';
 
 type JoinBody = { url?: string; ref?: string; src?: string; camp?: string; utm?: string };
@@ -110,7 +111,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
       nextRung,
     }),
   );
-  const shareUrl = `${origin}${result.sharePath}`;
+  const shareUrl = buildCleanReferralLink(result.player.code, origin);
   const rung = result.site ? rungForSite(state, result.site.host, now) : 'entered';
 
   return withActor(

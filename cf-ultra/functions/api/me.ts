@@ -1,5 +1,6 @@
 import { publicPlayer, publicSite, rungForSite } from '../_lib/engine';
 import { actorFromRequest, json, originFromRequest, withActor } from '../_lib/http';
+import { buildCleanReferralLink } from '../_lib/referral-url';
 import { getBoard, loadState, type UltraEnv } from '../_lib/store';
 
 export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) => {
@@ -17,7 +18,7 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
       degraded: read.degraded,
       player: player ? publicPlayer(player, now) : null,
       site: site ? publicSite(site, now) : null,
-      shareUrl: player ? `${origin}/r/${player.code}` : null,
+      shareUrl: player ? buildCleanReferralLink(player.code, origin) : null,
       rung: site ? rungForSite(state, site.host, now) : null,
       board: read.board,
     }),

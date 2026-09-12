@@ -4370,6 +4370,9 @@ html[data-vr-has-link] #hero-badge,
 html[data-vr-has-link] #hero-trust-line,
 html[data-vr-has-link] #hero-lock-rule,
 html[data-vr-has-link] #hero-global-proof,
+html[data-vr-has-link] #hero-global-regions,
+html[data-vr-has-link] #hero-security-trust,
+html[data-vr-has-link] #hero-prize-fomo,
 html[data-vr-has-link] #funnel-expand-wrap,
 html[data-vr-has-link] [data-vr-below-fold] {
   display: none !important;
