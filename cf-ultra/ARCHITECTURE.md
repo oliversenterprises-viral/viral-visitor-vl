@@ -28,7 +28,9 @@ Pageviews, share-link opens, board polls, embeds, and OG crawlers are **read-onl
 | Open `/r/VR-XXXX` | No | Cached HTML ~20s. Visits do not count. |
 | Embed `/e/:host` | No | Snapshot + 30s cache |
 | `POST /api/join` (Get my link) | Yes (2 keys) | `ultra:state` + `ultra:board` |
-| Unique friend credit | Yes | Same join path |
+| Unique friend credit | Yes | Same join path + stats flush |
+| `POST /api/track` pageview | Buffered / sampled 1-in-5 | Isolate buffer → hourly/daily rollup |
+| Track join/share/credit | Flush now | Funnel stays accurate |
 | Rate-limit check | **No** | In-isolate sliding window only |
 
 Two writes per successful join is intentional: one durable game state, one small public snapshot so thousands of polls never recompute or reread the blob.
@@ -83,11 +85,19 @@ Free-tier write math fails around the first ~500 joins/day (2 writes each + no r
 4. **Never** drop paste → Get my link → unique credit when KV still accepts a put
 5. If KV put fails: return the kit anyway, flag degraded
 
+## Owner HQ (admin)
+
+Gated by **HMAC session cookie** signed with `ADMIN_OWNER_PASSWORD` or `ADMIN_ACTION_SECRET` (Pages/Wrangler secrets — **never** `VITE_`). Cloudflare Access (`Cf-Access-Authenticated-User-Email`) also passes. Local wrangler without CF-Ray and without a secret accepts `ultra-local-only` so you can demo HQ; that fallback is **off on the real edge**.
+
+Dashboard reads `stats:day:*` + `stats:all` + live isolate + board. Cached by not recomputing from raw pageviews. Ops: ban/mute codes or sites, edit hero/lead, CSV export, reset demo.
+
+Analytics keys: `stats:hour:*` (8-day TTL), `stats:day:*` (120-day TTL), `stats:all`, `stats:feed`, `stats:rungs`, `ultra:ops`.
+
 ## What we did not add (on purpose)
 
 - Durable Objects / websocket fan-out — polling a 3s snapshot is enough at 10k/day
-- D1 — one KV blob + snapshot is simpler until state is huge
-- Write-per-pageview analytics — would burn the write budget
+- D1 — one KV blob + rollups is simpler until state is huge
+- Write-per-pageview rows — pageviews are sampled and buffered
 - Per-request Turnstile on every poll — keep challenge on the join POST later if abuse appears
 
 ## Layout
@@ -97,6 +107,10 @@ functions/_lib/engine.ts      pure loop (no CF imports)
 functions/_lib/limit.ts       memory rate limits (no KV)
 functions/_lib/edge-cache.ts  Cache API get/put/bust
 functions/_lib/store.ts       state + board snapshot, isolate TTL
+functions/_lib/admin-auth.ts  HMAC / CF Access (no client secret)
+functions/_lib/analytics.ts   isolate buffer + KV rollups
+functions/api/admin/*         HQ APIs
 functions/api/board.ts        public cached snapshot
-functions/api/join.ts         the only hot write path
+functions/api/join.ts         hot write path
+src/admin.ts                  Owner HQ UI
 ```

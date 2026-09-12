@@ -2,6 +2,8 @@ import { buildBoard, createEmptyState, emptyBoard, type BoardState, type UltraSt
 
 export interface UltraEnv {
   BOARD?: KVNamespace;
+  ADMIN_OWNER_PASSWORD?: string;
+  ADMIN_ACTION_SECRET?: string;
 }
 
 export type BoardRead = {

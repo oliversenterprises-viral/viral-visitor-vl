@@ -115,6 +115,7 @@ export function landingHtml(opts: {
     <p class="fine">Free · no email · no cash prize · unique friend taps only. <a href="/">Live board</a></p>
   </main>
   <script>
+    fetch('/api/track',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'friend_land'})}).catch(()=>{});
     const form = document.getElementById('join');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -170,13 +171,19 @@ export function embedWidgetHtml(opts: {
   </style>
 </head>
 <body>
-  <a href="${escapeHtml(join)}" target="_blank" rel="noopener">
+  <a href="${escapeHtml(join)}" target="_blank" rel="noopener" id="go">
     <div>
       <strong>Help ${label} go viral</strong>
       <small>${opts.credits} unique locks · ${escapeHtml(RUNG_COPY[opts.rung].title)}</small>
     </div>
     <span class="go">Get my link</span>
   </a>
+  <script>
+    fetch('/api/track',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'embed_load',platform:'embed'})}).catch(()=>{});
+    document.getElementById('go')?.addEventListener('click',()=>{
+      fetch('/api/track',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'embed_click',platform:'embed'})}).catch(()=>{});
+    });
+  </script>
 </body>
 </html>`;
 }

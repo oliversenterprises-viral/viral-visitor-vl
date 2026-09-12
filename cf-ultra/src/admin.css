@@ -1,0 +1,29 @@
+.hq { max-width: 1180px; margin: 0 auto; padding: 16px 16px 80px; }
+.hq-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.hq h1 { font-family: var(--display); font-size: clamp(28px, 6vw, 44px); margin: 8px 0 6px; }
+.ranges { display: flex; gap: 6px; flex-wrap: wrap; }
+.ranges button[aria-pressed='true'] { background: var(--volt); color: #071000; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0; }
+@media (max-width: 800px) { .kpis { grid-template-columns: 1fr 1fr; } }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+.kpi b { display: block; font-size: 26px; color: var(--volt); }
+.kpi small { color: var(--muted); }
+.hq-grid { display: grid; gap: 14px; }
+@media (min-width: 900px) { .hq-grid.two { grid-template-columns: 1.2fr 0.8fr; } }
+.bars { display: grid; gap: 8px; }
+.bar { display: grid; grid-template-columns: 110px 1fr 48px; gap: 8px; align-items: center; font-size: 13px; }
+.bar i { display: block; height: 8px; border-radius: 99px; background: var(--volt); }
+.bar.ice i { background: var(--ice); }
+.bar.hot i { background: var(--hot); }
+.funnel { display: grid; gap: 8px; }
+.funnel .step { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; }
+table.hq-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.hq-table th, table.hq-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+table.hq-table th { color: var(--muted); }
+.login { max-width: 420px; margin: 12vh auto; padding: 22px; }
+.login input { width: 100%; margin: 10px 0 14px; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.ops-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.ops-row input, .ops-row textarea { flex: 1; min-width: 160px; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--volt); display: inline-block; margin-right: 6px; animation: pulse 1.6s infinite; }
+.note { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.tag { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--gold); }

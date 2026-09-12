@@ -25,4 +25,8 @@ APP_NAME = "ViralRefer Ultra"
 #
 # Scale (1k–10k+ daily visitors): assume Workers Paid + this KV bind.
 # Free KV (~1k writes/day) cannot host a real join volume.
-# Writes only on POST /api/join. Board polls use ultra:board + 3s cache.
+# Writes only on POST /api/join (+ buffered stats flushes). Board polls use ultra:board + 3s cache.
+#
+# Admin HMAC: set ADMIN_OWNER_PASSWORD in the Pages dashboard or .dev.vars
+# (gitignored). NEVER a VITE_ variable. Local fallback password is
+# ultra-local-only and only when CF-Ray is absent.

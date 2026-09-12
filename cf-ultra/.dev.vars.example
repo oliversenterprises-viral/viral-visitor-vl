@@ -1,0 +1,4 @@
+# Copy to .dev.vars (gitignored). NEVER use a VITE_ prefix — that ships in the JS bundle.
+ADMIN_OWNER_PASSWORD=change-me
+# Optional alias used as HMAC key if the password var is unset:
+# ADMIN_ACTION_SECRET=

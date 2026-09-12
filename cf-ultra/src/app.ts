@@ -12,6 +12,7 @@ import {
 } from './api';
 import { burst, celebrateUnlock } from './celebrate';
 import { copyText, intents, nativeShare, qrSvg } from './share';
+import { track } from './track';
 import type { BoardState, JoinOk, PublicPlayer } from './types';
 
 const RUNG_HINT: Record<Rung, string> = {
@@ -121,7 +122,7 @@ export function boot(root: HTMLElement): void {
       </section>
       <section class="lane">
         <h3>Live heat</h3>
-        <div class="sub">Realtime-ish · polls every 4s · no fake counts</div>
+        <div class="sub">Realtime-ish · polls every 8s · no fake counts</div>
         <ol class="activity" data-activity></ol>
       </section>
     </div>
@@ -144,6 +145,7 @@ export function boot(root: HTMLElement): void {
     </section>
     <footer class="foot">
       ViralRefer Ultra is a Cloudflare Pages + KV demo in <code>cf-ultra/</code>. It does not replace the live Vercel Site Drops app.
+      <a href="/admin/">Owner HQ</a>
       Deploy only after you create a separate Pages project and bind <code>BOARD</code> KV. Production custom-domain cutover needs explicit approval.
     </footer>
     <aside class="kit" data-kit>
@@ -279,13 +281,31 @@ export function boot(root: HTMLElement): void {
     const sim = kit.querySelector('[data-simulate]') as HTMLButtonElement;
     sim.hidden = !data.demoMode;
     kit.querySelector('[data-native]')?.addEventListener('click', async () => {
+      track('share', { platform: 'native' });
       const ok = await nativeShare(shareUrl, siteHost, rung);
       if (!ok) toast('Use a share button or copy the link');
     });
     kit.querySelector('[data-copy-msg]')?.addEventListener('click', async () => {
+      track('share', { platform: 'copy' });
       await copyText(links.text);
       toast('Message copied');
     });
+    kit.querySelectorAll('a.btn').forEach((a) => {
+      a.addEventListener('click', () => {
+        const href = (a as HTMLAnchorElement).href;
+        const platform = href.includes('wa.me')
+          ? 'whatsapp'
+          : href.includes('twitter')
+            ? 'x'
+            : href.includes('t.me')
+              ? 'telegram'
+              : href.includes('reddit')
+                ? 'reddit'
+                : 'other';
+        track('share', { platform });
+      });
+    });
+    kit.querySelector('[data-qr]')?.addEventListener('click', () => track('share', { platform: 'qr' }));
   }
 
   function closeKit(): void {
@@ -326,6 +346,7 @@ export function boot(root: HTMLElement): void {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    track('paste');
     submit.disabled = true;
     try {
       const data = await joinSite(urlInput.value, startRef || qs('ref'));
@@ -339,6 +360,7 @@ export function boot(root: HTMLElement): void {
 
   kit.querySelector('[data-close-kit]')?.addEventListener('click', closeKit);
   kit.querySelector('[data-copy]')?.addEventListener('click', async () => {
+    track('share', { platform: 'copy' });
     await copyText(shareUrl);
     toast('Link copied');
   });
@@ -357,6 +379,20 @@ export function boot(root: HTMLElement): void {
   });
 
   async function hydrate(): Promise<void> {
+    track(startRef ? 'friend_land' : 'land');
+    void fetch('/api/content')
+      .then((r) => r.json())
+      .then((c: { hero?: string; lead?: string }) => {
+        if (c.hero) {
+          const h = root.querySelector('.hero h1');
+          if (h) h.innerHTML = escapeHtml(c.hero).replace(/\n/g, '<br>');
+        }
+        if (c.lead) {
+          const p = root.querySelector('.hero .lead');
+          if (p) p.textContent = c.lead;
+        }
+      })
+      .catch(() => {});
     const health = await probeHealth();
     setDemo(!health || health.demoMode || currentTransport() === 'demo');
     try {

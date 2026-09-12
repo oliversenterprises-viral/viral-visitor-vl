@@ -38,7 +38,7 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ params, request, e
     }),
     {
       headers: {
-        'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'",
+        'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src 'self'",
         'cache-control': 'public, max-age=30, s-maxage=30, stale-while-revalidate=120',
       },
     },

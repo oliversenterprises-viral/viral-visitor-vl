@@ -119,7 +119,7 @@ PNGs from the local Pages preview (`wrangler pages dev dist --kv BOARD` on :8788
 | Friend referral land | `previews/04-friend-referral-land.png` |
 | TE iframe splash | `previews/05-te-iframe-splash.png` |
 | Embed widget | `previews/05b-embed-widget.png` |
-| Admin stub | `previews/06-admin-dashboard.png` |
+| Admin HQ | `previews/06-admin-dashboard.png` (re-shoot after HQ rebuild) |
 
 Stub routes: `/admin` (partial HQ desk), `/te` (publisher iframe splash).
 
@@ -167,6 +167,31 @@ Designed so a busy day does not take the app down. Full write-up: [`ARCHITECTURE
 | Fail soft | Degrade poll interval (8s → 16–30s) and serve stale snapshots before dropping paste → share → credit. If KV put fails, the kit still returns (`degraded: true`). |
 
 `GET /api/health` includes a `scale` object with this same story.
+
+## Owner HQ (admin)
+
+First-class analytics console at **`/admin/`**. Not a leftover stub.
+
+**Auth (live)**
+
+- Pages Function checks `ADMIN_OWNER_PASSWORD` or `ADMIN_ACTION_SECRET` and sets an **HttpOnly HMAC cookie**. There is no owner password in the Vite bundle. Do not invent a `VITE_ADMIN_*` var.
+- Optional: put Cloudflare Access in front of `/admin` — `Cf-Access-Authenticated-User-Email` is treated as signed-in.
+- Copy `.dev.vars.example` → `.dev.vars` for local Wrangler (gitignored).
+- **Local-only fallback:** if no secret is set **and** the request has no `CF-Ray` (typical `wrangler pages dev`), the Function accepts `ultra-local-only`. This is **disabled on the real Cloudflare edge**.
+
+**Live vs demo/mock**
+
+| Surface | Source |
+| --- | --- |
+| Uniques / sessions / funnel / platforms / geo / device / UTM | Live rollups from `/api/track` + join/credit (sampled pageviews) |
+| Top sharers / climbing sites / board rungs | Live `ultra:state` + board snapshot |
+| Live visitors + event feed | Isolate last-seen + flushed `stats:feed` |
+| Geo country | `CF-IPCountry` (shows `XX` on local preview) |
+| Fake testimonials / MRR / inflated counts | **Never** |
+
+**Ops (live):** ban/mute codes or sites, edit public hero/lead (`/api/content`), CSV export, reset demo data, KV health line.
+
+See `ARCHITECTURE.md` for rollup keys and write budget.
 
 ## Stack
 
