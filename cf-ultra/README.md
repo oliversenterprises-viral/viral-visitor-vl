@@ -73,10 +73,13 @@ Rungs (UTC week, unique locks only):
 
 ## Languages (public Site Drops UI)
 
-Same Phase 1 i18n system as live ViralRefer (`en`, `es`, `fr`, `pt`, `de`, `hi`).
+Public Site Drops UI is translated for **26 locales**. Existing Phase 1 set plus a global pack:
 
-- Browser language is detected on first visit (`navigator.languages`).
-- The nav language picker (and a footer “Page language” note) lets visitors override it. The choice is stored in `localStorage` as `vr_locale`.
+`en`, `es`, `fr`, `pt`, `de`, `hi`, `ar`, `zh`, `ja`, `ko`, `ru`, `id`, `tr`, `it`, `nl`, `pl`, `vi`, `th`, `uk`, `bn`, `ur`, `ms`, `fil`, `sw`, `sv`, `ro`.
+
+- Browser language is detected on first visit (`navigator.languages`). Common tags map in (`zh-CN` → `zh`, `pt-BR` → `pt`, `tl` → `fil`, …).
+- The nav language picker is a compact searchable dropdown (26 languages without blowing up mobile nav). A footer “Page language” note shows the current choice. Stored in `localStorage` as `vr_locale`.
+- `ar` and `ur` set `dir="rtl"` on `<html>`.
 - TE splash / embed widgets reuse that same key so a later homepage visit stays in the chosen language.
 - Owner HQ (`/admin/`) stays English.
 
