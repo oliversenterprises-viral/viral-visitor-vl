@@ -1,9 +1,9 @@
 import { demoJoin, demoMe, demoSimulate } from './demo';
 import type { BoardState, HealthOk, JoinOk, MeOk } from './types';
 
-export type Transport = 'live' | 'demo';
+export type Transport = 'live' | 'local';
 
-let transport: Transport = 'demo';
+let transport: Transport = 'local';
 let healthNote = 'Connecting to the ViralRefer board…';
 let degraded = false;
 
@@ -35,14 +35,14 @@ export async function probeHealth(): Promise<HealthOk | null> {
       : data.note;
     return data;
   } catch {
-    transport = 'demo';
+    transport = 'local';
     healthNote = 'Functions not reachable — board stays local until wrangler pages dev --kv BOARD.';
     return null;
   }
 }
 
 export async function fetchBoard(): Promise<BoardState> {
-  if (transport === 'demo') return demoMe().board;
+  if (transport === 'local') return demoMe().board;
   const res = await fetch('/api/board', { headers: { accept: 'application/json' } });
   degraded = res.headers.get('x-ultra-degraded') === '1' || res.status === 429;
   if (res.status === 429) throw new Error('Board busy — backing off');
@@ -53,7 +53,7 @@ export async function fetchBoard(): Promise<BoardState> {
 }
 
 export async function fetchMe(): Promise<MeOk> {
-  if (transport === 'demo') return demoMe();
+  if (transport === 'local') return demoMe();
   return getJson<MeOk>('/api/me');
 }
 
@@ -66,7 +66,7 @@ export async function joinSite(
   ref?: string | null,
   camp?: { src?: string; camp?: string },
 ): Promise<JoinOk> {
-  if (transport === 'demo') return demoJoin(url, ref, camp);
+  if (transport === 'local') return demoJoin(url, ref, camp);
   let last = new Error('Could not get your link. Try again.');
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
@@ -91,7 +91,7 @@ export async function joinSite(
 }
 
 export async function simulateFriend(code: string): Promise<JoinOk> {
-  if (transport === 'demo') return demoSimulate(code);
+  if (transport === 'local') return demoSimulate(code);
   const res = await fetch('/api/simulate', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -103,7 +103,7 @@ export async function simulateFriend(code: string): Promise<JoinOk> {
 }
 
 export async function fetchEmbed(site: string): Promise<{ iframe: string; script: string }> {
-  if (transport === 'demo') {
+  if (transport === 'local') {
     const origin = location.origin;
     const host = site.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
     return {

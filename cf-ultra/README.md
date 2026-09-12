@@ -52,7 +52,7 @@ Inside a TE iframe: compact strip on 60–90px heights, 48px CTA, no login wall,
 4. Site climbs **Just entered → Rising Site Drop → week text line → Challenger strip → #1 banner (7 days)**.
 5. Each rung is a shareable moment. Weekly race + duel. Streaks / 24h heat from real locks. Kingmaker when someone you referred hits #1.
 6. Free embed snippet: “Help us go viral”.
-7. Demo mode when KV or Functions are missing (clearly labeled; no fake user counts, testimonials, or MRR).
+7. Real BOARD KV persistence for VIRAL- codes and credits. If KV or Functions are missing locally, the board stays in isolate/local memory — that fallback is never the public product identity.
 
 ### Honest rules
 
@@ -80,13 +80,13 @@ npm run build          # required gate — tsc + Vite
 npm test               # engine / anti-cheat tests
 ```
 
-### UI-only demo (no Wrangler)
+### UI-only local (no Wrangler)
 
 ```bash
 npm run dev:ui
 ```
 
-Opens Vite on http://localhost:5174. If `/api/health` is missing, the client uses **localStorage demo mode**. You can paste a URL, open the share kit, and **Simulate a unique friend**.
+Opens Vite on http://localhost:5174. If `/api/health` is missing, the client keeps a **local board** in localStorage so you can paste a URL and open the share kit. That is a local fallback, not the product.
 
 ### Pages Functions + local KV
 
@@ -104,11 +104,11 @@ npm run preview
 
 Builds `dist/` then serves it with `wrangler pages dev dist --kv BOARD` (default port **8788**).
 
-If Wrangler cannot bind KV, Functions still start in **isolate memory demo mode**. The health payload says so. Data resets when the isolate recycles.
+If Wrangler cannot bind KV, Functions keep the board in **isolate memory** until recycle. The health payload says `BOARD KV not bound` — never “demo app.”
 
 ## Bind KV and deploy (approval gate)
 
-**Do not deploy to production or attach a custom domain without explicit user approval.** This is a parallel demo, not a cutover.
+**Do not deploy to production or attach a custom domain without explicit user approval.** This is an enhanced ViralRefer sibling, not a cutover of www.viralrefer.app.
 
 1. Install / login Wrangler: `npx wrangler login` (on your machine; this agent will not publish for you).
 2. Create a **separate** Cloudflare Pages project (name suggestion: `viralrefer-ultra`).
@@ -144,7 +144,7 @@ If Wrangler cannot bind KV, Functions still start in **isolate memory demo mode*
 - [ ] Approve a non-production Pages deploy
 - [ ] Never put secrets in the Vite client bundle (`VITE_*` is public)
 
-No Supabase, no Vercel, no service-role keys are required for this v1 demo.
+No Supabase, no Vercel, no service-role keys are required for this Cloudflare sibling.
 
 ## Current look (previews)
 
@@ -221,7 +221,7 @@ First-class analytics console at **`/admin/`**. Not a leftover stub.
 - Copy `.dev.vars.example` → `.dev.vars` for local Wrangler (gitignored).
 - **Local-only fallback:** if no secret is set **and** the request has no `CF-Ray` (typical `wrangler pages dev`), the Function accepts `ultra-local-only`. This is **disabled on the real Cloudflare edge**.
 
-**Live vs demo/mock**
+**Live vs local fallback**
 
 | Surface | Source |
 | --- | --- |

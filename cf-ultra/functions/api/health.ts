@@ -7,10 +7,12 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ env }) => {
     {
       ok: true,
       app: 'viralrefer',
+      product: 'ViralRefer Site Drops',
       kv,
+      persisted: kv,
       demoMode: !kv,
       note: kv
-        ? 'BOARD KV bound — VIRAL- codes, credits, and the board persist.'
+        ? 'BOARD KV bound — real VIRAL- codes, credits, and the board persist.'
         : 'BOARD KV not bound on this isolate — codes stay in memory until recycle.',
       scale: {
         target: '1k–10k+ daily visitors',

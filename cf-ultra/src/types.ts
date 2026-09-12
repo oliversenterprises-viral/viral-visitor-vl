@@ -59,6 +59,8 @@ export interface MeOk {
 export interface HealthOk {
   ok: true;
   kv: boolean;
+  persisted?: boolean;
+  product?: string;
   demoMode: boolean;
   note: string;
   scale?: {

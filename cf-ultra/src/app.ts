@@ -378,6 +378,13 @@ export function boot(_root?: HTMLElement): void {
     const suffix = document.getElementById('hero-stats-suffix');
     if (liveN) liveN.textContent = String(next.livePlayers || '');
     if (suffix) suffix.textContent = next.livePlayers ? 'people racing' : 'Board is open';
+    const boardTotal = document.getElementById('leaderboard-total-label');
+    if (boardTotal) {
+      const n = next.livePlayers;
+      boardTotal.textContent = n
+        ? `${n} verified referral${n === 1 ? '' : 's'} worldwide`
+        : 'Board is open. #1 is winnable this week.';
+    }
     const fomo = document.getElementById('hero-prize-fomo');
     if (fomo) {
       const action = me
@@ -528,7 +535,7 @@ export function boot(_root?: HTMLElement): void {
   void (async () => {
     const health = await probeHealth();
     if (health) {
-      document.documentElement.setAttribute('data-vr-board', health.kv ? 'live' : 'memory');
+      document.documentElement.setAttribute('data-vr-board', health.persisted || health.kv ? 'live' : 'memory');
       document.documentElement.removeAttribute('data-vr-demo');
     }
     const landHost = qs('url') ? previewHost(qs('url')!) : qs('helped') || siteHost;
