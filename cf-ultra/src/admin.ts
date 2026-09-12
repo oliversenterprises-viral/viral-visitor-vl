@@ -300,6 +300,7 @@ function render(d: Dash): void {
         <div class="ops-row">
           <button class="btn volt" data-op="save_alerts" type="button">Save alert prefs</button>
           <button class="btn ghost" data-op="test_alert" type="button">Test ping</button>
+          <button class="btn hot" data-op="clear_inbox" type="button">Clear inbox</button>
         </div>
       </section>
     </div>
@@ -341,7 +342,7 @@ function render(d: Dash): void {
     </section>
     <section class="lane">
       <h3>Ops</h3>
-      <p class="note">Ban/mute is live. Copy edits hit <code>/api/content</code> (cached ~15s). <strong>Reset stats</strong> clears analytics / activity / funnel rollups only. <strong>Wipe live referral board</strong> is a separate action and does not touch excluded IPs.</p>
+      <p class="note">Ban/mute is live. Copy edits hit <code>/api/content</code> (cached ~15s). <strong>Reset stats</strong> clears analytics / activity / funnel rollups only. <strong>Clear inbox</strong> empties <code>ultra:alert-inbox</code>. <strong>Wipe live referral board</strong> is a separate action and does not touch excluded IPs.</p>
       <div class="ops-row">
         <input data-code placeholder="VIRAL-XXXXXXX" />
         <button class="btn hot" data-op="ban_code" type="button">Ban code</button>
@@ -365,6 +366,7 @@ function render(d: Dash): void {
         <button class="btn ghost" data-export="sites" type="button">CSV sites</button>
         <button class="btn ghost" data-export="sharers" type="button">CSV sharers</button>
         <button class="btn hot" data-op="reset_stats" type="button">Reset stats</button>
+        <button class="btn hot" data-op="clear_inbox" type="button">Clear inbox</button>
         <button class="btn ghost" data-op="reset_demo" type="button">Wipe live referral board</button>
       </div>
     </section>
@@ -388,6 +390,7 @@ function render(d: Dash): void {
     btn.addEventListener('click', async () => {
       const op = (btn as HTMLElement).dataset.op!;
       if (op === 'reset_stats' && !confirm('Clear analytics, activity feed, and funnel rollups? The live referral board (codes, credits, rungs) stays.')) return;
+      if (op === 'clear_inbox' && !confirm('Empty the owner alerts inbox? Telegram prefs stay. This only clears ultra:alert-inbox.')) return;
       if (op === 'reset_demo' && !confirm('Wipe the live referral board (codes, credits, rungs)? Analytics stay. Excluded IPs stay.')) return;
       if (op === 'exclude_ip_add_purge' && !confirm('Add this IP and drop matching activity-feed rows? Already-written rollup counters stay; future hits from this IP will not increment stats.')) return;
       const body: Record<string, unknown> = { op };

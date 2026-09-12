@@ -241,6 +241,7 @@ First-class analytics console at **`/admin/`**. Not a leftover stub.
 - Get my link and other product actions still work; only analytics increment is skipped.
 - Optional: **Add + purge matching feed** drops HQ feed rows that already stored that IP.
 - **Reset stats** lists and deletes every `stats:*` key (works with BOARD KV bound). It does not wipe `ultra:state` / the live board.
+- **Clear inbox** empties `ultra:alert-inbox` (authenticated). Alert prefs stay.
 
 **Owner alerts (live):** after a real conversion write (new site, first share, friend land, verified credit, rung climb, spike), Functions log an **Alerts inbox** row in HQ and ping **Telegram** when `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are set. Optional webhook / Resend email still work. Pageviews never notify. Bursts batch (e.g. 12 friend-lands in a few minutes → one ping). Demo / no-secret mode still fills the inbox so the feature is visible.
 

@@ -1,6 +1,7 @@
 import { requireAdmin } from '../../_lib/admin-auth';
 import {
   alertPublicView,
+  clearAlertInbox,
   loadAlertPrefs,
   parseAlertPrefsBody,
   readAlertInbox,
@@ -66,6 +67,12 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
   if (op === 'reset_stats') {
     const result = await resetAnalytics(env);
     return json({ ok: true, op, reset: 'stats', deleted: result.deleted, kv: true });
+  }
+  if (op === 'clear_inbox') {
+    const result = await clearAlertInbox(env);
+    const prefs = await loadAlertPrefs(env);
+    const inbox = await readAlertInbox(env);
+    return json({ ok: true, op, cleared: result.cleared, alerts: alertPublicView(env, prefs, inbox) });
   }
 
   if (op === 'ban_code' && body.code) {

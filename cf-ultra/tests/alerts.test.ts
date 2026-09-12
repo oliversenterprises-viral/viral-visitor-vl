@@ -6,6 +6,7 @@ import {
   defaultAlertPrefs,
   deliverTelegram,
   emitAlert,
+  clearAlertInbox,
   emitJoinAlerts,
   flushAlertBatches,
   inQuietHours,
@@ -115,6 +116,37 @@ describe('inbox + batching (no webhook)', () => {
     expect(inbox[0]?.kind).toBe('race_started');
     expect(inbox[0]?.adminPath).toContain('/admin/?focus=race_started');
     expect(inbox[0]?.delivered).toBe('inbox');
+  });
+
+  it('clears the inbox and the KV key', async () => {
+    const store = new Map<string, string>();
+    const env = {
+      BOARD: {
+        async get(key: string, type?: string) {
+          const v = store.get(key);
+          if (v == null) return null;
+          return type === 'json' ? JSON.parse(v) : v;
+        },
+        async put(key: string, value: string) {
+          store.set(key, value);
+        },
+      },
+    } as unknown as UltraEnv;
+    await emitJoinAlerts({
+      env,
+      origin: 'http://localhost:8788',
+      host: 'wipe-inbox.test',
+      isNewSite: true,
+      credited: false,
+      creditN: 0,
+      previousRung: 'entered',
+      nextRung: 'entered',
+    });
+    expect((await readAlertInbox(env)).length).toBeGreaterThan(0);
+    const result = await clearAlertInbox(env);
+    expect(result.cleared).toBeGreaterThan(0);
+    expect(await readAlertInbox(env)).toEqual([]);
+    expect(JSON.parse(store.get('ultra:alert-inbox') || 'null')).toEqual([]);
   });
 
   it('batches friend lands until flush', async () => {

@@ -769,6 +769,26 @@ export async function readAlertInbox(env: UltraEnv): Promise<InboxItem[]> {
   return ensureInbox(env);
 }
 
+/** Empty isolate + KV inbox. Batches are dropped so they cannot refill the list. */
+export async function clearAlertInbox(env: UltraEnv): Promise<{ cleared: number }> {
+  await ensureInbox(env);
+  const m = mem();
+  const cleared = m.inbox.length;
+  m.inbox = [];
+  m.inboxDirty = false;
+  batches.clear();
+  lastFlush = 0;
+  if (kvBound(env)) {
+    try {
+      await env.BOARD!.put(INBOX_KEY, JSON.stringify([]));
+      m.lastInboxPut = Date.now();
+    } catch {
+      m.inboxDirty = true;
+    }
+  }
+  return { cleared };
+}
+
 export async function testAlert(env: UltraEnv, origin: string): Promise<InboxItem> {
   return commitItem(
     env,
