@@ -11,6 +11,7 @@ import {
   type TrackKind,
   type VisitorHints,
 } from './stats';
+import { alertOrigin, emitDigest, funnelDigestLine, rememberAlertOrigin } from './alerts';
 import { kvBound, type UltraEnv } from './store';
 
 const FLUSH_MS = 15_000;
@@ -102,8 +103,10 @@ export async function recordAnalytics(
     text?: string;
     flushNow?: boolean;
     rung?: RungMark;
+    origin?: string;
   },
 ): Promise<void> {
+  if (input.origin) rememberAlertOrigin(input.origin);
   const now = Date.now();
   rollHour(now);
   const b = buf();
@@ -180,6 +183,9 @@ export async function flushAnalytics(env: UltraEnv): Promise<void> {
     b.bucket = emptyBucket(b.hour);
     b.actors.clear();
     b.sessions.clear();
+    const origin = alertOrigin();
+    void emitDigest(env, origin, 'hourly', mergedHour.hour, funnelDigestLine(mergedHour));
+    void emitDigest(env, origin, 'daily', day, funnelDigestLine(mergedDay));
   } catch {
     b.dirty = true;
   }

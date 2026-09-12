@@ -4,6 +4,11 @@ export interface UltraEnv {
   BOARD?: KVNamespace;
   ADMIN_OWNER_PASSWORD?: string;
   ADMIN_ACTION_SECRET?: string;
+  /** Discord / Slack / generic HTTPS webhook. Pages secret — never VITE_. Overrides Admin-saved URL. */
+  NOTIFY_WEBHOOK_URL?: string;
+  RESEND_API_KEY?: string;
+  NOTIFY_EMAIL_TO?: string;
+  NOTIFY_EMAIL_FROM?: string;
 }
 
 export type BoardRead = {

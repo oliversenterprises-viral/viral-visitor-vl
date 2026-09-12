@@ -31,6 +31,8 @@ Pageviews, share-link opens, board polls, embeds, and OG crawlers are **read-onl
 | Unique friend credit | Yes | Same join path + stats flush |
 | `POST /api/track` pageview | Buffered / sampled 1-in-5 | Isolate buffer → hourly/daily rollup |
 | Track join/share/credit | Flush now | Funnel stays accurate |
+| Owner alert (inbox) | Debounced (~20s) + isolate | High-signal conversions only; demo inbox works with no webhook |
+| Owner webhook POST | No KV | Capped 12 / 5 min / isolate; Discord/Slack/generic HTTPS |
 | Rate-limit check | **No** | In-isolate sliding window only |
 
 Two writes per successful join is intentional: one durable game state, one small public snapshot so thousands of polls never recompute or reread the blob.
@@ -89,9 +91,9 @@ Free-tier write math fails around the first ~500 joins/day (2 writes each + no r
 
 Gated by **HMAC session cookie** signed with `ADMIN_OWNER_PASSWORD` or `ADMIN_ACTION_SECRET` (Pages/Wrangler secrets — **never** `VITE_`). Cloudflare Access (`Cf-Access-Authenticated-User-Email`) also passes. Local wrangler without CF-Ray and without a secret accepts `ultra-local-only` so you can demo HQ; that fallback is **off on the real edge**.
 
-Dashboard reads `stats:day:*` + `stats:all` + live isolate + board. Cached by not recomputing from raw pageviews. Ops: ban/mute codes or sites, edit hero/lead, CSV export, reset demo.
+Dashboard reads `stats:day:*` + `stats:all` + live isolate + board. Cached by not recomputing from raw pageviews. Ops: ban/mute codes or sites, edit hero/lead, CSV export, reset demo. Owner alerts: inbox + webhook prefs (`ultra:alert-inbox`, `ultra:alert-prefs`).
 
-Analytics keys: `stats:hour:*` (8-day TTL), `stats:day:*` (120-day TTL), `stats:all`, `stats:feed`, `stats:rungs`, `ultra:ops`.
+Analytics keys: `stats:hour:*` (8-day TTL), `stats:day:*` (120-day TTL), `stats:all`, `stats:feed`, `stats:rungs`, `ultra:ops`, `ultra:alert-prefs`, `ultra:alert-inbox`, `ultra:alert-first-share`.
 
 ## What we did not add (on purpose)
 
@@ -109,6 +111,7 @@ functions/_lib/edge-cache.ts  Cache API get/put/bust
 functions/_lib/store.ts       state + board snapshot, isolate TTL
 functions/_lib/admin-auth.ts  HMAC / CF Access (no client secret)
 functions/_lib/analytics.ts   isolate buffer + KV rollups
+functions/_lib/alerts.ts      owner notify (inbox, batch, webhook)
 functions/api/admin/*         HQ APIs
 functions/api/board.ts        public cached snapshot
 functions/api/join.ts         hot write path

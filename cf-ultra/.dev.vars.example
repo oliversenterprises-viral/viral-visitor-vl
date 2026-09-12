@@ -2,3 +2,12 @@
 ADMIN_OWNER_PASSWORD=change-me
 # Optional alias used as HMAC key if the password var is unset:
 # ADMIN_ACTION_SECRET=
+
+# Owner alerts — Discord/Slack incoming webhook or generic HTTPS.
+# Dashboard secret wins over the URL saved in HQ. Leave unset to use inbox-only demo.
+# NOTIFY_WEBHOOK_URL=https://discord.com/api/webhooks/...
+
+# Optional email (Resend). Both must be set or mail is skipped.
+# RESEND_API_KEY=re_...
+# NOTIFY_EMAIL_TO=you@example.com
+# NOTIFY_EMAIL_FROM=ViralRefer Ultra <alerts@viralrefer.app>

@@ -23,7 +23,39 @@ type Dash = {
   topSharers: { code: string; host: string; credits: number; streak: number }[];
   topSites: { host: string; credits: number; owner: string }[];
   ops: { bannedCodes: string[]; bannedSites: string[]; mutedCodes: string[]; hero: string; lead: string };
+  alerts: {
+    events: Record<string, boolean>;
+    digest: 'off' | 'hourly' | 'daily';
+    quietHours: { enabled: boolean; startHour: number; endHour: number; tzOffsetMinutes: number };
+    webhookUrl: string;
+    webhookFromEnv: boolean;
+    webhookConfigured: boolean;
+    emailConfigured: boolean;
+    inbox: {
+      id: string;
+      at: string;
+      kind: string;
+      title: string;
+      body: string;
+      host?: string;
+      count: number;
+      adminPath: string;
+      delivered: string;
+    }[];
+  };
   health: { kv: boolean; degraded: boolean; cache: string; players: number; sites: number; credits: number; writePolicy: string; assumedPlan: string };
+};
+
+const ALERT_LABELS: Record<string, string> = {
+  race_started: 'New site / race started',
+  first_share: 'First share click for a site',
+  friend_land: 'Friend land via referral (batched)',
+  credit: 'Get my link / verified credit (1st–3rd instant)',
+  rung_rising: 'Rising unlocked',
+  rung_challenger: 'Challenger',
+  rung_banner: '#1 banner claim',
+  spike: 'Spike / abuse flags (batched)',
+  digest: 'Write digest into the inbox',
 };
 
 const root = document.querySelector<HTMLElement>('#hq')!;
@@ -179,6 +211,58 @@ function render(d: Dash): void {
       <h3>Live event feed</h3>
       <ol class="activity">${d.feed.length ? d.feed.map((e) => `<li><span>${esc(e.text)}${e.country ? ` · ${esc(e.country)}` : ''}</span><span>${new Date(e.at).toLocaleTimeString()}</span></li>`).join('') : '<li>Waiting on real events.</li>'}</ol>
     </section>
+    <div class="hq-grid two" data-alerts>
+      <section class="lane" id="alerts-inbox">
+        <h3>Owner alerts inbox</h3>
+        <p class="note">High-signal conversions only — not pageviews. Demo mode logs here even with no webhook, so you can see the feature without secrets. Bursts batch (e.g. “12 credits in 5m”).</p>
+        <ol class="activity inbox">${
+          (d.alerts?.inbox || []).length
+            ? d.alerts.inbox
+                .map((e) => {
+                  const focus = new URLSearchParams(location.search).get('focus');
+                  const focusHost = new URLSearchParams(location.search).get('host');
+                  const on = (focus && e.kind === focus) || (focusHost && e.host === focusHost);
+                  return `<li class="${on ? 'focus' : ''}"><span><strong>${esc(e.title)}</strong> · ${esc(e.body)}${e.host ? ` · ${esc(e.host)}` : ''} <small>${esc(e.delivered)}</small></span><a href="${esc(e.adminPath)}">${new Date(e.at).toLocaleString()}</a></li>`;
+                })
+                .join('')
+            : '<li><span>No owner alerts yet. Paste a site or hit Test ping.</span></li>'
+        }</ol>
+      </section>
+      <section class="lane">
+        <h3>Notify me</h3>
+        <p class="note">Webhook is a Pages/Worker secret or an HTTPS URL saved here (never a <code>VITE_</code> var). Env secret wins. Email via Resend only if <code>RESEND_API_KEY</code> + <code>NOTIFY_EMAIL_TO</code> are set${d.alerts?.emailConfigured ? ' — configured' : ' — optional, not set'}.</p>
+        <div class="toggles">
+          ${Object.entries(ALERT_LABELS)
+            .map(
+              ([k, label]) =>
+                `<label class="toggle"><input type="checkbox" data-alert-ev="${k}" ${d.alerts?.events?.[k] ? 'checked' : ''}/> ${esc(label)}</label>`,
+            )
+            .join('')}
+        </div>
+        <div class="ops-row">
+          <label class="note">Digest</label>
+          <select data-digest>
+            ${['off', 'hourly', 'daily']
+              .map((v) => `<option value="${v}" ${d.alerts?.digest === v ? 'selected' : ''}>${v}</option>`)
+              .join('')}
+          </select>
+        </div>
+        <div class="ops-row">
+          <input data-webhook type="url" placeholder="https://discord.com/api/webhooks/… or Slack incoming" value="${esc(d.alerts?.webhookUrl || '')}" ${d.alerts?.webhookFromEnv ? 'disabled' : ''} />
+        </div>
+        <p class="note">${d.alerts?.webhookFromEnv ? 'Webhook URL is set as NOTIFY_WEBHOOK_URL (dashboard secret).' : d.alerts?.webhookConfigured ? 'Webhook saved (masked). Clear the field to remove.' : 'No webhook yet — inbox still records alerts.'}</p>
+        <label class="toggle"><input type="checkbox" data-quiet ${d.alerts?.quietHours?.enabled ? 'checked' : ''}/> Quiet hours (UTC offset minutes)</label>
+        <div class="ops-row">
+          <input data-quiet-start type="number" min="0" max="23" title="Start hour" value="${d.alerts?.quietHours?.startHour ?? 22}" />
+          <input data-quiet-end type="number" min="0" max="23" title="End hour" value="${d.alerts?.quietHours?.endHour ?? 8}" />
+          <input data-quiet-tz type="number" min="-840" max="840" title="UTC offset minutes" value="${d.alerts?.quietHours?.tzOffsetMinutes ?? 0}" />
+        </div>
+        <div class="ops-row">
+          <button class="btn volt" data-op="save_alerts" type="button">Save alert prefs</button>
+          <button class="btn ghost" data-op="test_alert" type="button">Test notification</button>
+        </div>
+      </section>
+    </div>
     <section class="lane">
       <h3>Ops</h3>
       <p class="note">Ban/mute is live. Copy edits hit <code>/api/content</code> (cached ~15s). Reset demo wipes board + rollups.</p>
@@ -227,11 +311,26 @@ function render(d: Dash): void {
     btn.addEventListener('click', async () => {
       const op = (btn as HTMLElement).dataset.op!;
       if (op === 'reset_demo' && !confirm('Wipe board + analytics rollups?')) return;
-      const body: Record<string, string> = { op };
+      const body: Record<string, unknown> = { op };
       body.code = (root.querySelector('[data-code]') as HTMLInputElement)?.value || '';
       body.site = (root.querySelector('[data-site]') as HTMLInputElement)?.value || '';
       body.hero = (root.querySelector('[data-hero]') as HTMLTextAreaElement)?.value || '';
       body.lead = (root.querySelector('[data-lead]') as HTMLTextAreaElement)?.value || '';
+      if (op === 'save_alerts' || op === 'test_alert') {
+        const events: Record<string, boolean> = {};
+        root.querySelectorAll<HTMLInputElement>('[data-alert-ev]').forEach((el) => {
+          events[el.dataset.alertEv!] = el.checked;
+        });
+        body.events = events;
+        body.digest = (root.querySelector('[data-digest]') as HTMLSelectElement)?.value || 'off';
+        body.webhookUrl = (root.querySelector('[data-webhook]') as HTMLInputElement)?.value ?? '';
+        body.quietHours = {
+          enabled: (root.querySelector('[data-quiet]') as HTMLInputElement)?.checked === true,
+          startHour: Number((root.querySelector('[data-quiet-start]') as HTMLInputElement)?.value || 22),
+          endHour: Number((root.querySelector('[data-quiet-end]') as HTMLInputElement)?.value || 8),
+          tzOffsetMinutes: Number((root.querySelector('[data-quiet-tz]') as HTMLInputElement)?.value || 0),
+        };
+      }
       await api('/api/admin/action', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       await paint();
     });
@@ -260,5 +359,8 @@ async function paint(): Promise<void> {
 
 void paint();
 setInterval(() => {
-  if (!document.hidden) void paint();
+  if (document.hidden) return;
+  const box = root.querySelector('[data-alerts]');
+  if (box && document.activeElement && box.contains(document.activeElement)) return;
+  void paint();
 }, 12_000);

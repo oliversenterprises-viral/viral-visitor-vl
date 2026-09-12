@@ -1,3 +1,4 @@
+import { emitJoinAlerts, emitSpikeAlert, rememberAlertOrigin } from '../_lib/alerts';
 import { recordAnalytics } from '../_lib/analytics';
 import { CODE_RE, buildBoard, hostnameFromUrl, joinAndMaybeCredit, normalizeWebsiteUrl, publicPlayer, publicSite, rungForSite } from '../_lib/engine';
 import { edgeBust } from '../_lib/edge-cache';
@@ -9,17 +10,22 @@ import { loadState, saveState, type UltraEnv } from '../_lib/store';
 
 type JoinBody = { url?: string; ref?: string };
 
-export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) => {
+export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, waitUntil }) => {
   const { actorId, setCookie } = actorFromRequest(request);
   const ip = clientIp(request);
+  const origin = originFromRequest(request);
+  rememberAlertOrigin(origin);
   const limited = allowJoin(ip, actorId);
   if (!limited.ok) {
-    await recordAnalytics(env, {
-      kind: limited.reason === 'global_join_spike' || limited.reason === 'ip_join' ? 'burst_ip' : 'blocked',
-      actorId,
-      hints: hintsFromRequest(request),
-      flushNow: false,
-    });
+    const kind = limited.reason === 'global_join_spike' || limited.reason === 'ip_join' ? 'burst_ip' : 'blocked';
+    waitUntil(
+      recordAnalytics(env, {
+        kind,
+        actorId,
+        hints: hintsFromRequest(request),
+        flushNow: false,
+      }).then(() => emitSpikeAlert(env, origin, kind === 'burst_ip' ? 'Join burst / 429' : 'Join blocked', ip)),
+    );
     return withActor(
       tooMany('Slow down — unique friend taps only. Try again in a moment.', limited.retryAfterSec),
       actorId,
@@ -35,7 +41,11 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
   const ref = body.ref && CODE_RE.test(body.ref) ? body.ref : null;
   if (isBanned(ops, ref, host) || (ref && ops.bannedCodes.includes(ref))) {
     const hints = hintsFromRequest(request);
-    await recordAnalytics(env, { kind: 'blocked', actorId, hints, flushNow: true, text: 'Banned code or site' });
+    waitUntil(
+      recordAnalytics(env, { kind: 'blocked', actorId, hints, flushNow: true, text: 'Banned code or site' }).then(() =>
+        emitSpikeAlert(env, origin, 'Banned code or site', ip),
+      ),
+    );
     return withActor(json({ ok: false, error: 'That link or site is paused by the owner.' }, { status: 403 }), actorId, setCookie);
   }
   const outcome = joinAndMaybeCredit(loaded.state, {
@@ -59,6 +69,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
     hints,
     flushNow: true,
     text: result.site.host,
+    origin,
   });
   if (result.credited) {
     await recordAnalytics(env, {
@@ -67,14 +78,32 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
       hints,
       flushNow: true,
       text: result.site.host,
+      origin,
       rung: result.unlock ? { at: Date.now(), host: result.unlock.host, rung: result.unlock.rung } : undefined,
     });
   } else if (result.selfJoin) {
-    await recordAnalytics(env, { kind: 'self_ref', actorId, hints, flushNow: true });
+    await recordAnalytics(env, { kind: 'self_ref', actorId, hints, flushNow: true, origin });
   }
 
   const now = Date.now();
-  const origin = originFromRequest(request);
+  const isNewSite = Boolean(host && !loaded.state.sites[host]);
+  const creditHost = result.referrerCode ? state.players[result.referrerCode]?.siteHost : undefined;
+  const previousRung = creditHost ? rungForSite(loaded.state, creditHost, now) : 'entered';
+  const nextRung = result.unlock?.rung || (creditHost ? rungForSite(state, creditHost, now) : 'entered');
+  const creditN = result.referrerCode ? state.players[result.referrerCode]?.creditTimes.length || 0 : 0;
+  waitUntil(
+    emitJoinAlerts({
+      env,
+      origin,
+      host: result.site.host,
+      isNewSite,
+      credited: result.credited,
+      creditN,
+      creditHost,
+      previousRung,
+      nextRung,
+    }),
+  );
   const shareUrl = `${origin}${result.sharePath}`;
   const rung = rungForSite(state, result.site.host, now);
 

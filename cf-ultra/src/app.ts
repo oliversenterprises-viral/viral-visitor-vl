@@ -281,12 +281,12 @@ export function boot(root: HTMLElement): void {
     const sim = kit.querySelector('[data-simulate]') as HTMLButtonElement;
     sim.hidden = !data.demoMode;
     kit.querySelector('[data-native]')?.addEventListener('click', async () => {
-      track('share', { platform: 'native' });
+      track('share', { platform: 'native', host: siteHost });
       const ok = await nativeShare(shareUrl, siteHost, rung);
       if (!ok) toast('Use a share button or copy the link');
     });
     kit.querySelector('[data-copy-msg]')?.addEventListener('click', async () => {
-      track('share', { platform: 'copy' });
+      track('share', { platform: 'copy', host: siteHost });
       await copyText(links.text);
       toast('Message copied');
     });
@@ -302,10 +302,10 @@ export function boot(root: HTMLElement): void {
               : href.includes('reddit')
                 ? 'reddit'
                 : 'other';
-        track('share', { platform });
+        track('share', { platform, host: siteHost });
       });
     });
-    kit.querySelector('[data-qr]')?.addEventListener('click', () => track('share', { platform: 'qr' }));
+    kit.querySelector('[data-qr]')?.addEventListener('click', () => track('share', { platform: 'qr', host: siteHost }));
   }
 
   function closeKit(): void {
@@ -360,7 +360,7 @@ export function boot(root: HTMLElement): void {
 
   kit.querySelector('[data-close-kit]')?.addEventListener('click', closeKit);
   kit.querySelector('[data-copy]')?.addEventListener('click', async () => {
-    track('share', { platform: 'copy' });
+    track('share', { platform: 'copy', host: siteHost });
     await copyText(shareUrl);
     toast('Link copied');
   });
@@ -379,7 +379,8 @@ export function boot(root: HTMLElement): void {
   });
 
   async function hydrate(): Promise<void> {
-    track(startRef ? 'friend_land' : 'land');
+    const landHost = qs('url') ? hostOf(qs('url')!) : siteHost;
+    track(startRef ? 'friend_land' : 'land', { host: landHost || undefined });
     void fetch('/api/content')
       .then((r) => r.json())
       .then((c: { hero?: string; lead?: string }) => {

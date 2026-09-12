@@ -1,7 +1,15 @@
 import { requireAdmin } from '../../_lib/admin-auth';
+import {
+  alertPublicView,
+  loadAlertPrefs,
+  parseAlertPrefsBody,
+  readAlertInbox,
+  saveAlertPrefs,
+  testAlert,
+} from '../../_lib/alerts';
 import { resetAnalytics } from '../../_lib/analytics';
 import { createEmptyState } from '../../_lib/engine';
-import { json, readJson } from '../../_lib/http';
+import { json, originFromRequest, readJson } from '../../_lib/http';
 import { DEFAULT_OPS, loadOps, saveOps } from '../../_lib/ops';
 import { saveState, type UltraEnv } from '../../_lib/store';
 
@@ -11,6 +19,10 @@ type Body = {
   site?: string;
   hero?: string;
   lead?: string;
+  events?: Record<string, boolean>;
+  webhookUrl?: string | null;
+  quietHours?: { enabled?: boolean; startHour?: number; endHour?: number; tzOffsetMinutes?: number };
+  digest?: 'off' | 'hourly' | 'daily';
 };
 
 export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) => {
@@ -19,6 +31,22 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
   const body = (await readJson<Body>(request)) ?? {};
   const ops = await loadOps(env);
   const op = body.op || '';
+  const origin = originFromRequest(request);
+
+  if (op === 'save_alerts') {
+    const current = await loadAlertPrefs(env);
+    const next = parseAlertPrefsBody(body, current);
+    if (env.NOTIFY_WEBHOOK_URL) next.webhookUrl = current.webhookUrl;
+    const prefs = await saveAlertPrefs(env, next);
+    const inbox = await readAlertInbox(env);
+    return json({ ok: true, op, alerts: alertPublicView(env, prefs, inbox) });
+  }
+  if (op === 'test_alert') {
+    const item = await testAlert(env, origin);
+    const prefs = await loadAlertPrefs(env);
+    const inbox = await readAlertInbox(env);
+    return json({ ok: true, op, item, alerts: alertPublicView(env, prefs, inbox) });
+  }
 
   if (op === 'ban_code' && body.code) {
     const c = body.code.toUpperCase();

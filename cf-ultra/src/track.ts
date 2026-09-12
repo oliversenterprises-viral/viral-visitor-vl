@@ -8,12 +8,19 @@ function sessionId(): string {
   return s;
 }
 
-export function track(kind: string, extra: { platform?: string; utm?: string } = {}): void {
+export function track(kind: string, extra: { platform?: string; utm?: string; host?: string } = {}): void {
   const utm = extra.utm || new URLSearchParams(location.search).get('utm_source') || undefined;
   void fetch('/api/track', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ kind, platform: extra.platform, utm, session: sessionId(), referrer: document.referrer }),
+    body: JSON.stringify({
+      kind,
+      platform: extra.platform,
+      utm,
+      host: extra.host,
+      session: sessionId(),
+      referrer: document.referrer,
+    }),
     keepalive: true,
   }).catch(() => {});
 }

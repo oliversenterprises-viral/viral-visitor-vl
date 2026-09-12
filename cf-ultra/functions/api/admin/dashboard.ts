@@ -1,4 +1,5 @@
 import { requireAdmin } from '../../_lib/admin-auth';
+import { alertPublicView, loadAlertPrefs, readAlertInbox } from '../../_lib/alerts';
 import { isolateBucket, liveVisitors, readAllTime, readDays, readFeed, readRungs } from '../../_lib/analytics';
 import { json } from '../../_lib/http';
 import { loadOps } from '../../_lib/ops';
@@ -11,7 +12,7 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
 
   const range = new URL(request.url).searchParams.get('range') || '7d';
   const days = daysBack(range);
-  const [dayRows, all, feed, rungs, boardRead, loaded, ops] = await Promise.all([
+  const [dayRows, all, feed, rungs, boardRead, loaded, ops, prefs, inbox] = await Promise.all([
     readDays(env, days),
     readAllTime(env),
     readFeed(env),
@@ -19,6 +20,8 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
     getBoard(env),
     loadState(env),
     loadOps(env),
+    loadAlertPrefs(env),
+    readAlertInbox(env),
   ]);
 
   const window = range === 'all' ? all : mergeBuckets(...dayRows.map((d) => ({ ...d, hour: d.hour })));
@@ -75,6 +78,7 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
     topSharers,
     topSites,
     ops,
+    alerts: alertPublicView(env, prefs, inbox),
     health: {
       kv: kvBound(env),
       degraded: boardRead.degraded,

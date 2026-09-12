@@ -1,3 +1,4 @@
+import { emitJoinAlerts } from '../_lib/alerts';
 import { CODE_RE, buildBoard, joinAndMaybeCredit, newActorId, publicPlayer, publicSite, rungForSite } from '../_lib/engine';
 import { json, originFromRequest, readJson } from '../_lib/http';
 import { kvBound, loadState, saveState, type UltraEnv } from '../_lib/store';
@@ -27,6 +28,19 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
   const { state, result } = outcome;
   await saveState(env, state, loaded.demoMode);
   const now = Date.now();
+  const origin = originFromRequest(request);
+  const creditHost = player.siteHost;
+  void emitJoinAlerts({
+    env,
+    origin,
+    host: creditHost,
+    isNewSite: false,
+    credited: result.credited,
+    creditN: state.players[code]?.creditTimes.length || 0,
+    creditHost,
+    previousRung: rungForSite(loaded.state, creditHost, now),
+    nextRung: result.unlock?.rung || rungForSite(state, creditHost, now),
+  });
   return json({
     ok: true,
     demoMode: loaded.demoMode,

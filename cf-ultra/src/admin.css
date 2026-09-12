@@ -26,4 +26,8 @@ table.hq-table th { color: var(--muted); }
 .ops-row input, .ops-row textarea { flex: 1; min-width: 160px; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
 .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--volt); display: inline-block; margin-right: 6px; animation: pulse 1.6s infinite; }
 .note { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.toggles { display: grid; gap: 6px; margin: 10px 0; }
+.toggle { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink); }
+.inbox li.focus { outline: 1px solid var(--volt); border-radius: 10px; padding: 4px 6px; }
+.inbox small { color: var(--muted); }
 .tag { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--gold); }

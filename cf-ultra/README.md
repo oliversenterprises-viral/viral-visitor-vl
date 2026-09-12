@@ -119,7 +119,8 @@ PNGs from the local Pages preview (`wrangler pages dev dist --kv BOARD` on :8788
 | Friend referral land | `previews/04-friend-referral-land.png` |
 | TE iframe splash | `previews/05-te-iframe-splash.png` |
 | Embed widget | `previews/05b-embed-widget.png` |
-| Admin HQ | `previews/06-admin-dashboard.png` (re-shoot after HQ rebuild) |
+| Admin HQ | `previews/06-admin-dashboard.png` |
+| Admin HQ mobile | `previews/06b-admin-mobile.png` |
 
 Stub routes: `/admin` (partial HQ desk), `/te` (publisher iframe splash).
 
@@ -191,7 +192,30 @@ First-class analytics console at **`/admin/`**. Not a leftover stub.
 
 **Ops (live):** ban/mute codes or sites, edit public hero/lead (`/api/content`), CSV export, reset demo data, KV health line.
 
+**Owner alerts (live):** after a real conversion write (new site, first share, friend land, verified credit, rung climb, spike), Functions log an **Alerts inbox** row in HQ and optionally POST a webhook / send email. Pageviews never notify. Bursts batch (e.g. 12 friend-lands in a few minutes → one ping). Demo / no-secret mode still fills the inbox so the feature is visible.
+
 See `ARCHITECTURE.md` for rollup keys and write budget.
+
+### Owner alert secrets (Pages dashboard or `.dev.vars`)
+
+Never prefix these with `VITE_` — that ships in the client bundle.
+
+| Secret | Required? | Purpose |
+| --- | --- | --- |
+| `NOTIFY_WEBHOOK_URL` | Recommended | Discord / Slack incoming webhook or any HTTPS URL. **Wins over** the URL saved in HQ. |
+| `RESEND_API_KEY` | Optional | Send email via [Resend](https://resend.com) for immediate high-signal events only. |
+| `NOTIFY_EMAIL_TO` | With Resend | Inbox that receives owner mail. |
+| `NOTIFY_EMAIL_FROM` | Optional | Defaults to `ViralRefer Ultra <alerts@viralrefer.app>` (must be a verified Resend from). |
+
+You can also paste a webhook URL in HQ → **Notify me** (authenticated `POST /api/admin/action` `save_alerts`). The Function stores it in KV (`ultra:alert-prefs`) and **never echoes the full URL** back to the browser. A dashboard secret still overrides that value.
+
+**Test:** HQ → Test notification. It always writes the inbox; it also hits the webhook/email if configured.
+
+**Quiet hours:** optional. Inbox still records; outbound webhook/email is skipped until quiet hours end.
+
+**Email without Resend:** Mailchannels / Cloudflare Email Routing are not wired in v1. Leave Resend unset and use the webhook or inbox.
+
+**Write budget:** inbox persists to KV at most every ~20s (or on high-signal events). Webhooks are capped at 12 POSTs / 5 minutes per isolate. Friend-land and spike alerts always batch.
 
 ## Stack
 

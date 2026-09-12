@@ -30,3 +30,6 @@ APP_NAME = "ViralRefer Ultra"
 # Admin HMAC: set ADMIN_OWNER_PASSWORD in the Pages dashboard or .dev.vars
 # (gitignored). NEVER a VITE_ variable. Local fallback password is
 # ultra-local-only and only when CF-Ray is absent.
+#
+# Owner alerts: set NOTIFY_WEBHOOK_URL as a Pages secret (not [vars], not VITE_).
+# Optional Resend: RESEND_API_KEY + NOTIFY_EMAIL_TO. Inbox works with neither.
