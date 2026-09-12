@@ -94,12 +94,16 @@ function bars(rows: { key: string; n: number }[], cls = ''): string {
 
 function spark(series: Dash['series']): string {
   if (!series.length) return '';
-  const max = Math.max(1, ...series.map((s) => s.credits + s.joins + s.uniques));
+  const max = Math.max(1, ...series.map((s) => Math.max(s.credits, s.joins, s.uniques)));
   const w = 560;
   const h = 80;
   const step = w / Math.max(1, series.length - 1);
-      const pts = series.map((s, i) => `${i * step},${h - ((s.credits + s.joins) / max) * (h - 6)}`).join(' ');
-  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="80" aria-hidden="true"><polyline fill="none" stroke="#864cff" stroke-width="3" points="${pts}"/></svg>`;
+  const line = (pick: (s: Dash['series'][number]) => number) =>
+    series.map((s, i) => `${i * step},${h - (pick(s) / max) * (h - 6)}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="80" aria-hidden="true">
+    <polyline fill="none" stroke="#864cff" stroke-width="3" points="${line((s) => s.joins)}"/>
+    <polyline fill="none" stroke="#fbbf24" stroke-width="3" points="${line((s) => s.credits)}"/>
+  </svg>`;
 }
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -156,14 +160,14 @@ function render(d: Dash): void {
       ${['today', '7d', '30d', 'all'].map((r) => `<button class="btn ghost" type="button" data-range="${r}" aria-pressed="${r === range}">${r}</button>`).join('')}
     </div>
     <div class="kpis">
-      <div class="kpi"><b>${w.uniques ?? 0}</b><small>Unique visitors (${range})</small></div>
-      <div class="kpi"><b>${w.sessions ?? 0}</b><small>Sessions</small></div>
-      <div class="kpi"><b>${w.pageviews ?? 0}</b><small>Pageviews (sampled+lands)</small></div>
-      <div class="kpi"><b>${w.credits ?? 0}</b><small>Unique friend credits</small></div>
-      <div class="kpi"><b>${w.joins ?? 0}</b><small>Get my link</small></div>
-      <div class="kpi"><b>${w.shares ?? 0}</b><small>Share clicks</small></div>
-      <div class="kpi"><b>${f.shareToCredit ?? 0}%</b><small>Share → credit</small></div>
-      <div class="kpi"><b>${f.bounce ?? 0}%</b><small>Bounce / no-join</small></div>
+      <div class="kpi kpi--violet"><b>${w.uniques ?? 0}</b><small>Unique visitors (${range})</small></div>
+      <div class="kpi kpi--sky"><b>${w.sessions ?? 0}</b><small>Sessions</small></div>
+      <div class="kpi kpi--violet"><b>${w.pageviews ?? 0}</b><small>Pageviews (sampled+lands)</small></div>
+      <div class="kpi kpi--amber"><b>${w.credits ?? 0}</b><small>Unique friend credits</small></div>
+      <div class="kpi kpi--emerald"><b>${w.joins ?? 0}</b><small>Get my link</small></div>
+      <div class="kpi kpi--sky"><b>${w.shares ?? 0}</b><small>Share clicks</small></div>
+      <div class="kpi kpi--amber"><b>${f.shareToCredit ?? 0}%</b><small>Share → credit</small></div>
+      <div class="kpi kpi--rose"><b>${f.bounce ?? 0}%</b><small>Bounce / no-join</small></div>
     </div>
     <div class="lane">${spark(d.series)}<p class="note">Joins + credits over ${esc(range)}</p></div>
     <div class="hq-grid two">
@@ -233,10 +237,10 @@ function render(d: Dash): void {
       <section class="lane">
         <h3>Abuse flags</h3>
         <div class="kpis" style="grid-template-columns:1fr 1fr">
-          <div class="kpi"><b>${w.selfRef ?? 0}</b><small>Self-ref ignored</small></div>
-          <div class="kpi"><b>${w.burstIp ?? 0}</b><small>Burst IP / 429</small></div>
-          <div class="kpi"><b>${w.blockedCredits ?? 0}</b><small>Blocked / banned</small></div>
-          <div class="kpi"><b>${w.embedLoads ?? 0}</b><small>Embed loads</small></div>
+          <div class="kpi kpi--rose"><b>${w.selfRef ?? 0}</b><small>Self-ref ignored</small></div>
+          <div class="kpi kpi--amber"><b>${w.burstIp ?? 0}</b><small>Burst IP / 429</small></div>
+          <div class="kpi kpi--rose"><b>${w.blockedCredits ?? 0}</b><small>Blocked / banned</small></div>
+          <div class="kpi kpi--sky"><b>${w.embedLoads ?? 0}</b><small>Embed loads</small></div>
         </div>
         <p class="note">Embed clicks: ${w.embedClicks ?? 0}. Errors: ${w.errors ?? 0}.</p>
       </section>
@@ -303,10 +307,10 @@ function render(d: Dash): void {
       <h3>Traffic exchange</h3>
       <p class="note">Splash impressions on <code>/te</code> are not written (edge-cheap). TE still uses the same VIRAL- codes — <code>/te?src=te&amp;ref=VIRAL-XXXXXXX</code>. TE Get-my-link does <strong>not</strong> count as a verified credit unless you flip the switch (default off — #1 banner stays honest).</p>
       <div class="kpis" style="grid-template-columns:1fr 1fr 1fr 1fr">
-        <div class="kpi"><b>${d.te?.lands ?? 0}</b><small>TE visits</small></div>
-        <div class="kpi"><b>${d.te?.joins ?? 0}</b><small>TE → Get my link</small></div>
-        <div class="kpi"><b>${d.te?.toJoin ?? 0}%</b><small>TE conversion</small></div>
-        <div class="kpi"><b>${d.te?.quality ?? 0}%</b><small>Credits / TE visit</small></div>
+        <div class="kpi kpi--violet"><b>${d.te?.lands ?? 0}</b><small>TE visits</small></div>
+        <div class="kpi kpi--emerald"><b>${d.te?.joins ?? 0}</b><small>TE → Get my link</small></div>
+        <div class="kpi kpi--sky"><b>${d.te?.toJoin ?? 0}%</b><small>TE conversion</small></div>
+        <div class="kpi kpi--amber"><b>${d.te?.quality ?? 0}%</b><small>Credits / TE visit</small></div>
       </div>
       <p class="note">Credits ignored from TE: ${d.te?.ignored ?? 0}. Campaigns:</p>
       ${bars(d.camps || [])}
