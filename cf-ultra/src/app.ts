@@ -41,9 +41,9 @@ import type { BoardState, JoinOk, PublicPlayer, UnlockMoment } from './types';
 
 const RUNG_HINT: Record<Rung, string> = {
   entered: 'Just entered · 15 min chip after you paste a site',
-  rising: 'Rising · 1 unique friend tap',
-  challenger: 'Challenger · 2 unique friends this week',
-  banner: '#1 banner · 3 unique friends this week + top of the race',
+  rising: 'Rising Site Drop · 1 unique friend tap · 1 hour',
+  challenger: 'Challenger strip · 2 unique friends this week',
+  banner: '#1 banner · 3 unique friends this week · 7 days on this page',
 };
 
 function qs(name: string): string | null {
@@ -77,7 +77,8 @@ function toast(message: string): void {
 function siteCard(site: BoardSite, mineHost: string): string {
   const you = Boolean(mineHost && site.host === mineHost);
   const hook = you && site.rung === 'rising' ? risingHook(site.expiresAt) : null;
-  return `<article class="site-card${you ? ' you' : ''}${you && site.heat ? ' hot' : ''}">
+  return `<article class="site-card drop-${site.rung}${you ? ' you' : ''}${you && site.heat ? ' hot' : ''}">
+    <span class="drop-chip drop-chip-${site.rung}">${escapeHtml(RUNG_COPY[site.rung].title)}</span>
     ${you ? '<span class="you-chip">Your site is live on this page</span>' : ''}
     <b>${escapeHtml(site.label)}</b>
     <div class="stats">
@@ -90,9 +91,9 @@ function siteCard(site: BoardSite, mineHost: string): string {
   </article>`;
 }
 
-function lane(title: string, sub: string, sites: BoardSite[], empty: string, mineHost: string): string {
-  return `<section class="lane">
-    <h3>${title}</h3>
+function lane(title: string, sub: string, sites: BoardSite[], empty: string, mineHost: string, kind: Rung): string {
+  return `<section class="lane lane-${kind}">
+    <h3><span class="lane-chip lane-chip-${kind}">${title}</span></h3>
     <div class="sub">${sub}</div>
     ${sites.length ? `<div class="row">${sites.map((s) => siteCard(s, mineHost)).join('')}</div>` : `<p class="empty-lane">${empty}</p>`}
   </section>`;
@@ -122,35 +123,51 @@ export function boot(root: HTMLElement): void {
 
   root.innerHTML = `
     <header class="top">
-      <div class="word">ViralRefer <span>Ultra</span></div>
+      <div class="word"><span class="mark">V</span> ViralRefer <span class="badge">enhanced</span></div>
       <div class="pills">
+        <a class="pill" href="#how">How</a>
+        <a class="pill" href="#board">Board</a>
         <span class="pill live" data-live>LIVE</span>
         <span class="pill warn" hidden data-demo>DEMO</span>
         <button type="button" class="pill sound" data-sound aria-pressed="false">Sound muted</button>
       </div>
     </header>
     <section class="hero">
-      <p class="kicker">CLOUDFLARE · ANY SITE · NO EMAIL</p>
-      <h1>Paste a site.<br>Make it <em>feel</em> viral.</h1>
-      <p class="lead">Paste any website. Get your link. A unique friend taps Get my link. The site climbs Just entered → Rising → Challenger → #1. Visits and copies never count.</p>
+      <p class="hero-badge">WORLDWIDE · FREE · NO SIGNUP</p>
+      <h1>Win the homepage.<br>#1 puts their site on <em>this page.</em></h1>
+      <p class="lead">Get a link. Send it. When a friend taps Get my link, your site can go live here — Rising drop, week text line, then the banner. Visits and copies never count.</p>
+      <section class="banner-stage empty" data-banner></section>
+      <div class="ladder-chips" aria-label="Site Drop ladder">
+        <span class="drop-chip drop-chip-entered" data-ladder-entered>Just entered · open</span>
+        <span class="drop-chip drop-chip-rising" data-ladder-rising>Rising · open</span>
+        <span class="drop-chip drop-chip-challenger" data-ladder-challenger>Challenger · open</span>
+      </div>
+      <p class="prize-line">This week’s #1 (not the owner) with 3 friends gets the 7-day banner. Recognition only — no cash prize.</p>
       <div class="ref-banner" data-ref-banner hidden></div>
-    </section>
-    <form class="paste" data-form>
-      <div class="paste-box">
-        <input data-url type="url" inputmode="url" autocomplete="url" required placeholder="https://yoursite.com" value="${escapeHtml(startUrl)}"/>
-        <button class="btn volt" type="submit" data-submit>Get my link</button>
-      </div>
-      <div class="url-preview" data-preview hidden>
-        <img data-favicon alt="" width="24" height="24"/>
-        <div>
-          <strong data-preview-host></strong>
-          <span>Looks ready. Opening a page does not count — only a friend’s Get my link.</span>
+      <form class="paste" data-form>
+        <button class="btn volt primary-cta" type="submit" data-submit>Get my referral link</button>
+        <div class="paste-box">
+          <p class="site-drop-title">Site Drop · paste your website after Get my link</p>
+          <input data-url type="url" inputmode="url" autocomplete="url" required placeholder="https://yoursite.com" value="${escapeHtml(startUrl)}"/>
         </div>
+        <div class="url-preview" data-preview hidden>
+          <img data-favicon alt="" width="24" height="24"/>
+          <div>
+            <strong data-preview-host></strong>
+            <span>Looks ready. Opening a page does not count — only a friend’s Get my link.</span>
+          </div>
+        </div>
+        <p class="form-err" data-form-err hidden role="alert"></p>
+        <p class="next-action" data-next hidden></p>
+        <p class="proof">Open worldwide · 18+ · No email · Live free leaderboard<br><span>Americas · Europe · Asia · Africa · Anywhere</span></p>
+        <p class="fine" data-health>Your link counts when a friend taps Get my link. Not a bank or wallet. #1 is a homepage banner — recognition only.</p>
+      </form>
+      <div class="funnel-row" aria-label="Site Drop ladder">
+        <span class="funnel-step on">1. Get link</span>
+        <span class="funnel-step">2. Send it</span>
+        <span class="funnel-step">3. Site goes live</span>
       </div>
-      <p class="form-err" data-form-err hidden role="alert"></p>
-      <p class="next-action" data-next hidden></p>
-      <p class="fine" data-health>Free core. No cash prizes. Unique friend actions only.</p>
-    </form>
+    </section>
     <aside class="hud" data-hud aria-label="Race HUD">
       <p class="hook-banner" data-hook hidden role="status"></p>
       <div class="hud-grid">
@@ -172,18 +189,17 @@ export function boot(root: HTMLElement): void {
       <p class="ghost-count" data-ghost hidden></p>
       <p class="micro-goal" data-micro></p>
     </aside>
-    <section class="banner-stage empty" data-banner></section>
-    <div class="lanes" data-lanes></div>
+    <div class="lanes" id="board" data-lanes></div>
     <div class="grid-2">
       <section class="lane">
-        <h3>Weekly race</h3>
+        <h3>This week’s text line</h3>
         <div class="sub" data-week-sub>UTC week. Unique friend taps only — not raw visits.</div>
         <div data-duel></div>
         <ol class="race-row" data-race></ol>
       </section>
       <section class="lane">
-        <h3>Live heat</h3>
-        <div class="sub">Realtime-ish · polls every 8s · no fake counts</div>
+        <h3>Recent activity</h3>
+        <div class="sub">LIVE · verified Get my link events only · no fake counts</div>
         <ol class="activity" data-activity></ol>
       </section>
     </div>
@@ -198,22 +214,22 @@ export function boot(root: HTMLElement): void {
       <pre data-embed>&lt;script async src="/embed.js" data-site="yoursite.com"&gt;&lt;/script&gt;</pre>
       <button class="btn ghost" type="button" data-copy-embed>Copy snippet</button>
     </details>
-    <section class="lane faq">
-      <h3>How the loop works</h3>
-      <details open><summary>What counts?</summary><p>A unique friend opening your link and tapping Get my link. Refreshing, copying, or visiting does not count.</p></details>
-      <details><summary>Is it free / are there cash prizes?</summary><p>The core is free. Recognition only — #1 banner energy, rungs, streaks, kingmaker. No cash, no fake testimonials, no invented MRR.</p></details>
-      <details><summary>Do I need email?</summary><p>No. Public join is cookie + your site URL.</p></details>
+    <section class="lane faq" id="how">
+      <h3>How ViralRefer works</h3>
+      <p class="sub">Get a link. Send it. A friend tapping Get my link puts your site on this page.</p>
+      <details open><summary>What counts?</summary><p>A unique friend opening your <code>/r/VIRAL-…</code> or <code>/a/VIRAL-…</code> link and tapping Get my link. Refreshing, copying, or visiting does not count.</p></details>
+      <details><summary>Is it free / are there cash prizes?</summary><p>Yes. No payment. No email. No cash prize. #1 may claim a 7-day homepage banner after verification — recognition only.</p></details>
+      <details><summary>How does the board work?</summary><p>1 verified friend → 1-hour Rising Site Drop. 2 friends → week text line. Board #2/#3 → Challenger strip. This week’s #1 with 3 friends claims the 7-day banner.</p></details>
     </section>
     <footer class="foot">
-      ViralRefer Ultra is a Cloudflare Pages + KV demo in <code>cf-ultra/</code>. It does not replace the live Vercel Site Drops app.
+      Cloudflare Pages sibling of <a href="https://www.viralrefer.app">viralrefer.app</a> Site Drops — same referral codes, stronger kit. It does <strong>not</strong> replace the live Vercel site. No cutover.
       <a href="/admin/">Owner HQ</a>
-      Deploy only after you create a separate Pages project and bind <code>BOARD</code> KV. Production custom-domain cutover needs explicit approval.
     </footer>
     <aside class="kit" data-kit>
       <div class="kit-head">
         <div>
-          <p class="kicker">YOUR SHARE KIT</p>
-          <h2 style="margin:4px 0 0;font-family:var(--display)">One tap. Real climb.</h2>
+          <p class="kicker">YOUR REFERRAL LINK</p>
+          <h2 style="margin:4px 0 0;font-family:var(--display)">You’re racing.</h2>
         </div>
         <button class="btn ghost" type="button" data-close-kit>Close</button>
       </div>
@@ -335,9 +351,9 @@ export function boot(root: HTMLElement): void {
   if (startRef) {
     const helped = qs('helped');
     refBanner.hidden = false;
-    refBanner.textContent = helped
-      ? `A friend sent you here to help ${helped}. Paste your site and tap Get my link — opening this page does not count.`
-      : `A friend sent you here (${startRef}). Paste your site and tap Get my link to credit them. Opening this page does not count.`;
+    refBanner.innerHTML = helped
+      ? `<strong>You’re in the same contest</strong>A friend sent you to help ${escapeHtml(helped)}. Get YOUR link in one tap — same leaderboard. Opening this page does not count.`
+      : `<strong>You’re in the same contest</strong>You landed via <span class="font-mono">${escapeHtml(startRef)}</span>. Get YOUR link so they get credit — then send yours. Opening this page does not count.`;
   }
 
   function setDemo(on: boolean): void {
@@ -353,30 +369,40 @@ export function boot(root: HTMLElement): void {
     if (next.banner) {
       const you = mineHost && next.banner.host === mineHost;
       bannerEl.classList.remove('empty');
-      bannerEl.innerHTML = `<div class="pulse"></div>
-        <p class="kicker">${you ? 'YOU HOLD #1' : '#1 BANNER ENERGY'}</p>
-        <h2>${escapeHtml(next.banner.label)}</h2>
-        <div class="meta">
-          <span>${next.banner.weeklyCredits} unique friends this week</span>
-          <span>${next.banner.credits} all-time locks</span>
-          ${next.banner.heat ? `<span class="heat">${next.banner.heat} heat / 24h</span>` : ''}
+      bannerEl.innerHTML = `<div class="banner-kicker"><span>${you ? 'You hold #1' : 'This homepage'}</span><span>ViralRefer</span><span>7 days</span></div>
+        <div class="inner">
+          <h2>${escapeHtml(next.banner.label)}</h2>
+          <div class="meta">
+            <span>${next.banner.weeklyCredits} unique friends this week</span>
+            <span>${next.banner.credits} all-time locks</span>
+            ${next.banner.heat ? `<span class="heat">${next.banner.heat} heat / 24h</span>` : ''}
+          </div>
         </div>`;
     } else {
       bannerEl.classList.add('empty');
-      bannerEl.innerHTML = `<p class="kicker">BANNER OPEN</p><h2>Nobody owns #1 this week.</h2><p class="lead">3 unique friend taps + the weekly lead takes the banner. Recognition only.</p>`;
+      bannerEl.innerHTML = `<div class="banner-kicker"><span>This homepage</span><span>ViralRefer</span><span>7 days</span></div>
+        <div class="inner"><h2>Your site here</h2><p class="lead" style="margin:0">Empty right now. #1 this week puts their site here. Recognition only.</p></div>`;
     }
 
+    const enteredEl = root.querySelector('[data-ladder-entered]') as HTMLElement | null;
+    const risingEl = root.querySelector('[data-ladder-rising]') as HTMLElement | null;
+    const challengerEl = root.querySelector('[data-ladder-challenger]') as HTMLElement | null;
+    if (enteredEl) enteredEl.textContent = next.entered.length ? `Just entered · ${next.entered.length}` : 'Just entered · open';
+    if (risingEl) risingEl.textContent = next.rising.length ? `Rising · ${next.rising.length}` : 'Rising · open';
+    if (challengerEl) challengerEl.textContent = next.challenger.length ? `Challenger · ${next.challenger.length}` : 'Challenger · open';
+
     lanesEl.innerHTML =
-      lane('Just entered', '15 minutes after a site is pasted. No friend tap yet. Time-boxed chip.', next.entered, 'Open. Paste a site to take a chip.', mineHost) +
-      lane('Rising', '1 unique friend Get-my-link. Holds 1 hour after the last lock.', next.rising, 'Waiting on a real unique friend tap.', mineHost) +
+      lane('Just entered · 15 min', 'Paste a site after Get my link. No friend tap yet. Time-boxed chip.', next.entered, 'No one just entered. Get a link, add your site, and take a chip.', mineHost, 'entered') +
+      lane('Rising Site Drops · 1 hour', '1 unique friend Get-my-link. Holds 1 hour after the last lock — not the week text line.', next.rising, 'Rising slots are open. One verified friend who taps Get my link unlocks a 1-hour drop here.', mineHost, 'rising') +
       lane(
-        'Challenger',
+        'Challenger strip · #2 / #3',
         next.challenger.length
           ? `${next.challenger.length} site${next.challenger.length === 1 ? '' : 's'} on the strip. 2 unique locks this week gets you here.`
-          : '#2 / #3 this week with 2+ unique locks.',
+          : 'Not #1. Board #2 / #3 this week with 2+ unique locks.',
         next.challenger,
-        'Race is open. Two weekly locks put you on the strip.',
+        'No challengers yet. Hit board #2 or #3 with your site on file.',
         mineHost,
+        'challenger',
       );
 
     if (next.duel) {
@@ -626,13 +652,13 @@ export function boot(root: HTMLElement): void {
     track('paste', { host: host || undefined });
     persistAttribution(startRef || qs('ref'), urlInput.value, attr.src, attr.camp);
     submit.disabled = true;
-    submit.textContent = 'Getting your link…';
+    submit.textContent = 'Getting your referral link…';
     try {
       const data = await joinSite(urlInput.value, startRef || qs('ref') || attr.ref, { src: attr.src, camp: attr.camp });
-      submit.textContent = 'Get my link';
+      submit.textContent = 'Get my referral link';
       await afterJoin(data);
     } catch (err) {
-      submit.textContent = 'Try again — Get my link';
+      submit.textContent = 'Try again — Get my referral link';
       showFormError(err instanceof Error ? err.message : 'Could not get your link. Try again.');
     } finally {
       submit.disabled = false;

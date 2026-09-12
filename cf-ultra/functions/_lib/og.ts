@@ -24,21 +24,21 @@ export function ogImageSvg(opts: {
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#050508"/>
-      <stop offset="55%" stop-color="#10131c"/>
-      <stop offset="100%" stop-color="#1a1020"/>
+      <stop offset="0%" stop-color="#3b1d86"/>
+      <stop offset="55%" stop-color="#1b1038"/>
+      <stop offset="100%" stop-color="#09090b"/>
     </linearGradient>
   </defs>
   <rect width="1200" height="630" fill="url(#g)"/>
-  <circle cx="1080" cy="80" r="220" fill="#d6ff3e" fill-opacity="0.12"/>
-  <circle cx="80" cy="560" r="180" fill="#ff3d8a" fill-opacity="0.14"/>
-  <text x="72" y="92" fill="#d6ff3e" font-family="ui-sans-serif,system-ui,sans-serif" font-size="28" font-weight="700" letter-spacing="4">VIRALREFER ULTRA</text>
-  <text x="72" y="250" fill="#f4f1ea" font-family="ui-sans-serif,system-ui,sans-serif" font-size="68" font-weight="800">${host}</text>
-  <text x="72" y="330" fill="#3ee8ff" font-family="ui-sans-serif,system-ui,sans-serif" font-size="36" font-weight="700">${rung}</text>
-  <text x="72" y="420" fill="#f4f1ea" font-family="ui-sans-serif,system-ui,sans-serif" font-size="28">${opts.credits} unique friend locks · ${opts.weekly} this week</text>
-  <text x="72" y="560" fill="#9a9588" font-family="ui-sans-serif,system-ui,sans-serif" font-size="22">${demo}</text>
-  <rect x="820" y="470" width="300" height="72" rx="16" fill="#d6ff3e"/>
-  <text x="970" y="516" text-anchor="middle" fill="#050508" font-family="ui-sans-serif,system-ui,sans-serif" font-size="26" font-weight="800">GET MY LINK</text>
+  <circle cx="1080" cy="80" r="220" fill="#864cff" fill-opacity="0.28"/>
+  <circle cx="80" cy="560" r="180" fill="#fbbf24" fill-opacity="0.16"/>
+  <text x="72" y="92" fill="#c4b5fd" font-family="ui-sans-serif,system-ui,sans-serif" font-size="28" font-weight="700" letter-spacing="4">VIRALREFER · SITE DROPS</text>
+  <text x="72" y="250" fill="#f4f4f5" font-family="ui-sans-serif,system-ui,sans-serif" font-size="68" font-weight="800">${host}</text>
+  <text x="72" y="330" fill="#fde68a" font-family="ui-sans-serif,system-ui,sans-serif" font-size="36" font-weight="700">${rung}</text>
+  <text x="72" y="420" fill="#f4f4f5" font-family="ui-sans-serif,system-ui,sans-serif" font-size="28">${opts.credits} unique friend locks · ${opts.weekly} this week</text>
+  <text x="72" y="560" fill="#a1a1aa" font-family="ui-sans-serif,system-ui,sans-serif" font-size="22">${demo}</text>
+  <rect x="820" y="470" width="300" height="72" rx="16" fill="#864cff"/>
+  <text x="970" y="516" text-anchor="middle" fill="#ffffff" font-family="ui-sans-serif,system-ui,sans-serif" font-size="26" font-weight="800">GET MY LINK</text>
 </svg>`;
 }
 
@@ -53,8 +53,8 @@ export function landingHtml(opts: {
   const host = opts.site?.host ?? 'a site';
   const label = escapeHtml(opts.site?.label ?? host);
   const rung = opts.boardSite?.rung ?? 'entered';
-  const title = `${label} is racing on ViralRefer Ultra`;
-  const desc = `Tap Get my link to credit ${label}. Visits do not count. No email. No cash prize.`;
+  const title = `You’re in the same contest as ${label}`;
+  const desc = `Get YOUR link in one tap — same leaderboard. Tap Get my link to credit ${label}. Visits do not count.`;
   const shareUrl = `${opts.origin}/r/${opts.code}`;
   const og = `${opts.origin}/api/og?code=${encodeURIComponent(opts.code)}`;
   const credits = opts.site?.creditTimes.length ?? 0;
@@ -85,17 +85,17 @@ export function landingHtml(opts: {
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: Outfit, ui-sans-serif, system-ui, sans-serif; background: #050508; color: #f4f1ea; }
+    body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #09090b; color: #f4f4f5; }
     .wrap { min-height: 100dvh; padding: 28px 18px calc(48px + env(safe-area-inset-bottom, 0px)); max-width: 560px; margin: 0 auto; }
-    .kicker { color: #d6ff3e; letter-spacing: .18em; font-size: 12px; font-weight: 700; }
-    h1 { font-family: Syne, Outfit, sans-serif; font-size: clamp(28px, 8vw, 44px); line-height: 1.05; margin: 12px 0 8px; }
-    .who { display: flex; gap: 12px; align-items: center; background: #10131c; border: 1px solid #2a2d3a; border-radius: 22px; padding: 16px; margin: 18px 0; }
-    .who img { width: 40px; height: 40px; border-radius: 12px; background: #050508; }
-    .rung { color: #3ee8ff; font-weight: 700; }
-    .next { margin: 0 0 16px; padding: 12px 14px; border-radius: 16px; background: rgba(214,255,62,.08); border: 1px solid rgba(214,255,62,.28); font-weight: 700; }
-    label { display: block; font-size: 13px; color: #9a9588; margin-bottom: 8px; }
-    input { width: 100%; min-height: 52px; padding: 14px 16px; border-radius: 14px; border: 1px solid #2a2d3a; background: #050508; color: #f4f1ea; font-size: 16px; }
-    button { width: 100%; min-height: 52px; margin-top: 12px; padding: 16px; border: 0; border-radius: 14px; background: #d6ff3e; color: #050508; font-weight: 800; font-size: 17px; }
+    .kicker { color: #c4b5fd; letter-spacing: .14em; font-size: 12px; font-weight: 700; }
+    h1 { font-family: 'Space Grotesk', Inter, sans-serif; font-size: clamp(28px, 8vw, 44px); line-height: 1.05; margin: 12px 0 8px; }
+    .who { display: flex; gap: 12px; align-items: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 22px; padding: 16px; margin: 18px 0; }
+    .who img { width: 40px; height: 40px; border-radius: 12px; background: #09090b; }
+    .rung { color: #fde68a; font-weight: 700; }
+    .next { margin: 0 0 16px; padding: 12px 14px; border-radius: 16px; background: rgba(134,76,255,.14); border: 1px solid rgba(196,181,253,.35); font-weight: 700; }
+    label { display: block; font-size: 13px; color: #a1a1aa; margin-bottom: 8px; }
+    input { width: 100%; min-height: 52px; padding: 14px 16px; border-radius: 14px; border: 1px solid #27272a; background: #09090b; color: #f4f4f5; font-size: 16px; }
+    button { width: 100%; min-height: 52px; margin-top: 12px; padding: 16px; border: 0; border-radius: 16px; background: #864cff; color: #fff; font-weight: 800; font-size: 17px; }
     button:disabled { opacity: .55; }
     .preview { display: none; align-items: center; gap: 10px; margin-top: 10px; color: #9a9588; font-size: 13px; }
     .preview.on { display: flex; }
@@ -104,14 +104,14 @@ export function landingHtml(opts: {
     .err.on { display: block; }
     .fine { color: #9a9588; font-size: 13px; line-height: 1.5; }
     .demo { color: #ffc857; font-size: 13px; }
-    a { color: #3ee8ff; }
+    a { color: #c4b5fd; }
   </style>
 </head>
 <body>
   <main class="wrap">
-    <div class="kicker">A FRIEND SENT YOU</div>
-    <h1>Help ${label} climb</h1>
-    <p class="fine"><strong>Opening this page does not count.</strong> Paste <em>your</em> website and tap <strong>Get my link</strong> — that one tap credits ${label}. Visits and copies never count. No email.</p>
+    <div class="kicker">YOU’RE IN THE SAME CONTEST</div>
+    <h1>Get YOUR link in one tap</h1>
+    <p class="fine"><strong>Opening this page does not count.</strong> Paste <em>your</em> website and tap <strong>Get my link</strong> — that one tap credits ${label}. Same leaderboard. Visits and copies never count. No email.</p>
     <section class="who">
       ${fav ? `<img src="${escapeHtml(fav)}" alt="" width="40" height="40"/>` : ''}
       <div>
@@ -210,11 +210,11 @@ export function embedWidgetHtml(opts: {
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Help ${label} go viral</title>
   <style>
-    body { margin: 0; font-family: Outfit, ui-sans-serif, system-ui, sans-serif; background: #050508; color: #f4f1ea; }
-    a { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-decoration: none; color: inherit; padding: 14px 16px; border: 1px solid #2a2d3a; border-radius: 16px; background: #10131c; }
-    strong { color: #d6ff3e; }
-    small { color: #9a9588; }
-    .go { background: #d6ff3e; color: #050508; font-weight: 800; border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+    body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #09090b; color: #f4f4f5; }
+    a { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-decoration: none; color: inherit; padding: 14px 16px; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; background: rgba(255,255,255,.06); }
+    strong { color: #c4b5fd; }
+    small { color: #a1a1aa; }
+    .go { background: linear-gradient(90deg, #059669, #7c3aed); color: #fff; font-weight: 800; border-radius: 10px; padding: 8px 10px; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -241,7 +241,7 @@ export function embedScript(origin: string): string {
   var host=(s && s.getAttribute('data-site')) || '';
   var t=document.createElement('iframe');
   t.src=${JSON.stringify(origin)}+'/e/'+encodeURIComponent(host);
-  t.title='ViralRefer Ultra';
+  t.title='ViralRefer';
   t.style.cssText='width:100%;max-width:420px;height:88px;border:0;border-radius:16px;overflow:hidden;';
   t.loading='lazy';
   if(s&&s.parentNode)s.parentNode.insertBefore(t,s.nextSibling);

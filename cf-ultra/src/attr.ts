@@ -1,5 +1,5 @@
 import { parseCampaign } from '../functions/_lib/campaign';
-import { CODE_RE, hostnameFromUrl, normalizeWebsiteUrl } from '../functions/_lib/engine';
+import { hostnameFromUrl, normalizeReferralCode, normalizeWebsiteUrl } from '../functions/_lib/engine';
 
 const ATTR_KEY = 'vr-ultra-attr-v1';
 const KIT_KEY = 'vr-ultra-kit-open-v1';
@@ -12,7 +12,7 @@ function readStored(): Attribution {
     const raw = sessionStorage.getItem(ATTR_KEY);
     if (!raw) return { ref: '', url: '', src: '', camp: '', te: false };
     const parsed = JSON.parse(raw) as Partial<Attribution>;
-    const ref = typeof parsed.ref === 'string' && CODE_RE.test(parsed.ref.toUpperCase()) ? parsed.ref.toUpperCase() : '';
+    const ref = normalizeReferralCode(parsed.ref) || '';
     const url = typeof parsed.url === 'string' ? parsed.url : '';
     const camp = parseCampaign({ src: parsed.src, camp: parsed.camp });
     return { ref, url, src: camp.src, camp: camp.camp, te: camp.te || parsed.te === true };
@@ -28,7 +28,7 @@ export function persistAttribution(
   camp?: string | null,
 ): Attribution {
   const stored = readStored();
-  const nextRef = ref && CODE_RE.test(ref.toUpperCase()) ? ref.toUpperCase() : stored.ref;
+  const nextRef = normalizeReferralCode(ref) || stored.ref;
   const nextUrl = url && normalizeWebsiteUrl(url) ? normalizeWebsiteUrl(url)! : stored.url;
   const parsed = parseCampaign({ src: src || stored.src, camp: camp || stored.camp });
   const next: Attribution = { ref: nextRef, url: nextUrl, src: parsed.src, camp: parsed.camp, te: parsed.te };

@@ -9,7 +9,7 @@ export function intents(shareUrl: string, host: string, rung: Rung) {
     whatsapp: `https://wa.me/?text=${e(text)}`,
     x: `https://twitter.com/intent/tweet?text=${e(text)}`,
     telegram: `https://t.me/share/url?url=${e(shareUrl)}&text=${e(text)}`,
-    reddit: `https://www.reddit.com/submit?url=${e(shareUrl)}&title=${e(`${host} is ${RUNG_COPY[rung].title} on ViralRefer Ultra`)}`,
+    reddit: `https://www.reddit.com/submit?url=${e(shareUrl)}&title=${e(`${host} is ${RUNG_COPY[rung].title} on ViralRefer`)}`,
   };
 }
 

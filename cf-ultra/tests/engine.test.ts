@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   CODE_RE,
+  isReferralCode,
+  newCode,
   buildBoard,
   createEmptyState,
   joinAndMaybeCredit,
@@ -22,6 +24,17 @@ function mustJoin(...args: Parameters<typeof joinAndMaybeCredit>) {
   if (!('result' in outcome)) throw new Error(outcome.error);
   return outcome;
 }
+
+describe('referral codes', () => {
+  it('mints live VIRAL- codes and still accepts a legacy VR- leftover', () => {
+    const code = newCode(new Set());
+    expect(code).toMatch(CODE_RE);
+    expect(isReferralCode(code)).toBe(true);
+    expect(isReferralCode('VIRAL-JL8QR8M')).toBe(true);
+    expect(isReferralCode('VR-ABC234')).toBe(true);
+    expect(isReferralCode('NOPE')).toBe(false);
+  });
+});
 
 describe('nextActionFor', () => {
   it('always names the next unlock in friend-count language', () => {

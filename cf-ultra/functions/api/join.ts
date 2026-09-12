@@ -1,7 +1,7 @@
 import { emitJoinAlerts, emitSpikeAlert, rememberAlertOrigin } from '../_lib/alerts';
 import { recordAnalytics } from '../_lib/analytics';
 import { parseCampaign } from '../_lib/campaign';
-import { CODE_RE, buildBoard, hostnameFromUrl, joinAndMaybeCredit, normalizeWebsiteUrl, publicPlayer, publicSite, rungForSite } from '../_lib/engine';
+import { buildBoard, hostnameFromUrl, joinAndMaybeCredit, normalizeReferralCode, normalizeWebsiteUrl, publicPlayer, publicSite, rungForSite } from '../_lib/engine';
 import { edgeBust } from '../_lib/edge-cache';
 import { actorFromRequest, clientIp, json, originFromRequest, readJson, tooMany, withActor } from '../_lib/http';
 import { allowJoin } from '../_lib/limit';
@@ -39,7 +39,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
   const ops = await loadOps(env);
   const urlNorm = normalizeWebsiteUrl(body.url ?? '');
   const host = urlNorm ? hostnameFromUrl(urlNorm) : null;
-  const ref = body.ref && CODE_RE.test(body.ref) ? body.ref : null;
+  const ref = normalizeReferralCode(body.ref);
   if (isBanned(ops, ref, host) || (ref && ops.bannedCodes.includes(ref))) {
     const hints = hintsFromRequest(request);
     waitUntil(

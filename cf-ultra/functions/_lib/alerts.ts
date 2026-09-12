@@ -411,7 +411,7 @@ async function deliverWebhook(url: string, text: string, item: InboxItem): Promi
   const body = {
     content: text,
     text,
-    username: 'ViralRefer Ultra',
+    username: 'ViralRefer',
     kind: item.kind,
     title: item.title,
     host: item.host,
@@ -465,9 +465,9 @@ async function deliverEmail(env: UltraEnv, text: string, item: InboxItem): Promi
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        from: env.NOTIFY_EMAIL_FROM || 'ViralRefer Ultra <alerts@viralrefer.app>',
+        from: env.NOTIFY_EMAIL_FROM || 'ViralRefer Site Drops <alerts@viralrefer.app>',
         to: [env.NOTIFY_EMAIL_TO],
-        subject: `[Ultra] ${item.title}`,
+        subject: `[Site Drops] ${item.title}`,
         text,
       }),
     });

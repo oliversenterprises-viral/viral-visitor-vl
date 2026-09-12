@@ -1,14 +1,14 @@
-# ViralRefer Ultra (Cloudflare)
+# ViralRefer Site Drops (Cloudflare sibling)
 
-A **new** Cloudflare-native ViralRefer: paste any website, get an instant personal share link, and climb a live board when **unique friends tap Get my link**.
+An enhanced Cloudflare-native sibling of [www.viralrefer.app](https://www.viralrefer.app) Site Drops: same **VIRAL-** referral codes, `/r/…` + `/a/…` + `?ref=`, and Get my link credits — plus a stronger share kit, HQ, Telegram, and TE iframes.
 
-This folder is a standalone Pages + Functions + KV app. It does **not** replace the live Vercel Site Drops product at [www.viralrefer.app](https://www.viralrefer.app). Do not point `www.viralrefer.app` or the production Vercel project at this build.
+This folder is a standalone Pages + Functions + KV app. It does **not** replace the live Vercel Site Drops product. Do not point `www.viralrefer.app` or the production Vercel project at this build. No cutover.
 
 The **product core** is the eight-step loop in [`FUNNEL.md`](./FUNNEL.md). If anything conflicts, funnel perfection wins over duel/embed polish.
 
 ## Traffic exchanges (TE / rotators)
 
-Owners can buy or run hit-exchange traffic **to Ultra** (and to a race link) without paid TE integrations and without bots climbing #1.
+Owners can buy or run hit-exchange traffic **to this sibling** (and to a race link) without paid TE integrations and without bots climbing #1.
 
 **Destinations (put these in the rotator)**
 
@@ -18,7 +18,7 @@ Owners can buy or run hit-exchange traffic **to Ultra** (and to a race link) wit
 | `/go?src=te&camp=YOURCAMP` | Same splash |
 | `/embed/te?src=te&camp=YOURCAMP` | Compact 300×250 iframe |
 | `/join?src=te&camp=YOURCAMP` | 302 into the real funnel |
-| `/a/VR-XXXXXX?src=te` | Race attribution + TE tag |
+| `/a/VIRAL-XXXXXXX?src=te` | Race attribution + TE tag |
 | `/?src=te&camp=YOURCAMP` | Homepage after a real click |
 
 Splash CTA uses `target="_top"` so a third-party iframe can break out. Cookies/storage are optional — tags live on the query string.
@@ -40,16 +40,16 @@ Splash CTA uses `target="_top"` so a third-party iframe can break out. Cookies/s
 | `/te`, `/go`, `/embed/te`, `/e/*`, `/promo/te/*` | Allowed (`frame-ancestors *`, no `X-Frame-Options`) |
 | `/` homepage | `SAMEORIGIN` — do not put this in a rotator |
 | `/admin`, `/admin/*` | `DENY` / `frame-ancestors 'none'` |
-| `/r/VR-…` | Not a TE surface — use `/te?ref=VR-…` so breakout keeps tags |
+| `/r/VIRAL-…` | Not a TE surface — use `/te?ref=VIRAL-…` so breakout keeps tags |
 
 Inside a TE iframe: compact strip on 60–90px heights, 48px CTA, no login wall, no sticky header. The button is `<a href="/?src=te&camp=…&ref=…" target="_top">Open</a>`. If storage is blocked, the query string still carries the campaign. JS is optional.
 
 ## What ships
 
-1. Paste any site URL (no email).
-2. Instant share kit: OG landing at `/r/VR-XXXXXX`, copy link, WhatsApp / X / Telegram / Reddit, QR.
+1. Tap **Get my referral link** and paste a site (no email). Codes look like live: `VIRAL-XXXXXXX`.
+2. Instant share kit: OG landing at `/r/VIRAL-XXXXXXX` (also `/a/VIRAL-XXXXXXX` + `?ref=`), copy link, WhatsApp / X / Telegram / Reddit, QR.
 3. Friend opens the link and taps **Get my link** → unique credit (visits and self-taps do not count).
-4. Site climbs **Just entered → Rising → Challenger → #1 banner**.
+4. Site climbs **Just entered → Rising Site Drop → week text line → Challenger strip → #1 banner (7 days)**.
 5. Each rung is a shareable moment. Weekly race + duel. Streaks / 24h heat from real locks. Kingmaker when someone you referred hits #1.
 6. Free embed snippet: “Help us go viral”.
 7. Demo mode when KV or Functions are missing (clearly labeled; no fake user counts, testimonials, or MRR).
@@ -248,13 +248,13 @@ Never prefix these with `VITE_` — that ships in the client bundle. **Do not pa
 | `NOTIFY_WEBHOOK_URL` | Optional fallback | Discord / Slack incoming webhook or any HTTPS URL. **Wins over** the URL saved in HQ. |
 | `RESEND_API_KEY` | Optional | Send email via [Resend](https://resend.com) for immediate high-signal events only. |
 | `NOTIFY_EMAIL_TO` | With Resend | Inbox that receives owner mail. |
-| `NOTIFY_EMAIL_FROM` | Optional | Defaults to `ViralRefer Ultra <alerts@viralrefer.app>` (must be a verified Resend from). |
+| `NOTIFY_EMAIL_FROM` | Optional | Defaults to `ViralRefer Site Drops <alerts@viralrefer.app>` (must be a verified Resend from). |
 
 #### Telegram (BotFather)
 
 1. In Telegram, message [@BotFather](https://t.me/BotFather) → `/newbot` → copy the token. Keep it off git.
 2. Message your new bot once (`/start`) so it can DM you.
-3. Confirm your chat id. For this ViralRefer Ultra owner deploy it is **`1274269043`**. To discover another id, call `getUpdates` **from your machine** (not the repo):  
+3. Confirm your chat id. For this ViralRefer Site Drops owner deploy it is **`1274269043`**. To discover another id, call `getUpdates` **from your machine** (not the repo):  
    `curl https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/getUpdates`  
    and read `message.chat.id`.
 4. Set the **bot token** as a Pages / wrangler secret (never `[vars]`, never `VITE_`). Chat id is already `1274269043` for this deploy.

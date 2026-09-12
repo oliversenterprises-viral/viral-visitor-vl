@@ -1,4 +1,4 @@
-import { CODE_RE } from './engine';
+import { isReferralCode } from './engine';
 import { breakoutUrl, campaignFromSearch, type Campaign } from './campaign';
 
 export type TeSize = '728x90' | '468x60' | '300x250' | 'auto';
@@ -13,7 +13,7 @@ export function teSizeFromSearch(url: URL, compact?: boolean): TeSize {
 export function teSplashHtml(opts: { origin: string; url: URL; compact?: boolean }): string {
   const camp: Campaign = campaignFromSearch(opts.url.searchParams);
   const refRaw = (opts.url.searchParams.get('ref') || '').toUpperCase();
-  const ref = CODE_RE.test(refRaw) ? refRaw : '';
+  const ref = isReferralCode(refRaw) ? refRaw : '';
   const open = breakoutUrl(opts.origin, camp, ref || null);
   const size = teSizeFromSearch(opts.url, opts.compact);
   const strip = size === '728x90' || size === '468x60';
@@ -23,20 +23,20 @@ export function teSplashHtml(opts: { origin: string; url: URL; compact?: boolean
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>ViralRefer Ultra — Get my link</title>
+  <title>ViralRefer — Get my link</title>
   <meta name="robots" content="noindex"/>
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; overflow: hidden; font-family: ui-sans-serif, system-ui, sans-serif; background: #050508; color: #f4f1ea; }
+    html, body { height: 100%; margin: 0; overflow: hidden; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #09090b; color: #f4f4f5; }
     .box { height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 12px 14px; }
-    .kicker { color: #d6ff3e; letter-spacing: .14em; font-size: 10px; font-weight: 800; margin: 0 0 6px; }
+    .kicker { color: #c4b5fd; letter-spacing: .14em; font-size: 10px; font-weight: 800; margin: 0 0 6px; }
     h1 { font-size: clamp(18px, 6vw, 28px); line-height: 1.05; margin: 0 0 8px; }
-    .lead, .fine { color: #9a9588; font-size: 13px; line-height: 1.4; margin: 0 0 12px; }
+    .lead, .fine { color: #a1a1aa; font-size: 13px; line-height: 1.4; margin: 0 0 12px; }
     .fine { margin: 8px 0 0; font-size: 11px; }
     .cta {
       display: block; text-align: center; text-decoration: none; font-weight: 800;
-      min-height: 48px; line-height: 48px; border-radius: 12px; background: #d6ff3e; color: #071000; font-size: 16px;
+      min-height: 48px; line-height: 48px; border-radius: 12px; background: linear-gradient(90deg, #059669, #7c3aed); color: #fff; font-size: 16px;
     }
     .sz-728x90 .box, .sz-468x60 .box {
       flex-direction: row; align-items: center; gap: 10px; padding: 6px 10px;
@@ -58,7 +58,7 @@ export function teSplashHtml(opts: { origin: string; url: URL; compact?: boolean
 <body class="sz-${size}">
   <main class="box">
     <div class="copy">
-      <p class="kicker">VIRALREFER ULTRA${camp.camp ? ` · ${escapeText(camp.camp)}` : ''}</p>
+      <p class="kicker">VIRALREFER · SITE DROPS${camp.camp ? ` · ${escapeText(camp.camp)}` : ''}</p>
       <h1>${ref ? 'A friend sent you' : 'Paste a site. Climb.'}</h1>
       <p class="lead">Visits do not count. Open Get my link — no email. TE hits never take #1.</p>
     </div>

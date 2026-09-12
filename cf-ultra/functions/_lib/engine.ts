@@ -7,12 +7,24 @@ export const ENTERED_TTL_MS = 15 * 60 * 1000;
 export const RISING_TTL_MS = 60 * 60 * 1000;
 export const BANNER_MIN_WEEKLY = 3;
 export const CHALLENGER_MIN_WEEKLY = 2;
-export const CODE_RE = /^VR-[A-HJ-NP-Z2-9]{6}$/;
+/** Live Site Drops identity. Also accepts short CF demo leftovers (`VR-XXXXXX`). */
+export const CODE_RE = /^VIRAL-[A-Z0-9]{4,12}$/;
+export const LEGACY_CODE_RE = /^VR-[A-HJ-NP-Z2-9]{6}$/;
 export const ACTOR_RE = /^[a-f0-9]{32}$/;
 export const MAX_ACTIVITY = 40;
 export const MAX_KINGMAKERS = 12;
 export const MAX_CREDIT_TIMES = 400;
-export const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+export function isReferralCode(raw: unknown): raw is string {
+  const c = String(raw || '').trim().toUpperCase();
+  return CODE_RE.test(c) || LEGACY_CODE_RE.test(c);
+}
+
+export function normalizeReferralCode(raw: unknown): string | null {
+  const c = String(raw || '').trim().toUpperCase();
+  return isReferralCode(c) ? c : null;
+}
 
 export type Rung = 'entered' | 'rising' | 'challenger' | 'banner';
 
@@ -134,23 +146,23 @@ export const RUNG_ORDER: Rung[] = ['entered', 'rising', 'challenger', 'banner'];
 export const RUNG_COPY: Record<Rung, { title: string; next: string; share: string }> = {
   entered: {
     title: 'Just entered',
-    next: '1 unique friend tap → Rising',
-    share: 'I just dropped my site on ViralRefer Ultra. Tap Get my link — visits do not count.',
+    next: '1 unique friend tap → Rising Site Drop',
+    share: 'I just dropped my site on ViralRefer. Tap Get my link — visits do not count.',
   },
   rising: {
-    title: 'Rising',
-    next: '2 unique friends this week → Challenger',
-    share: 'We are Rising on ViralRefer Ultra. One more unique friend tap and we hit Challenger.',
+    title: 'Rising Site Drop',
+    next: '2 unique friends this week → week text line',
+    share: 'We are a Rising Site Drop on ViralRefer. One more unique friend tap and we hit the week text line.',
   },
   challenger: {
     title: 'Challenger',
-    next: '3 unique friends this week + #1 → Banner',
-    share: 'Challenger unlocked. Help us take the #1 banner — tap Get my link.',
+    next: '3 unique friends this week + #1 → 7-day banner',
+    share: 'Challenger unlocked. Help us take the #1 homepage banner — tap Get my link.',
   },
   banner: {
     title: '#1 Banner',
     next: 'Hold #1 this week. Keep sharing.',
-    share: 'We hit the #1 banner on ViralRefer Ultra. Tap Get my link and keep the heat on.',
+    share: 'We hit the #1 banner on ViralRefer. Tap Get my link and keep the heat on.',
   },
 };
 
@@ -192,11 +204,11 @@ export function newActorId(random = Math.random): string {
 export function newCode(existing: Set<string>, random = Math.random): string {
   for (let attempt = 0; attempt < 40; attempt++) {
     let body = '';
-    for (let i = 0; i < 6; i++) body += ALPHABET[(random() * ALPHABET.length) | 0];
-    const code = `VR-${body}`;
+    for (let i = 0; i < 7; i++) body += ALPHABET[(random() * ALPHABET.length) | 0];
+    const code = `VIRAL-${body}`;
     if (!existing.has(code)) return code;
   }
-  return `VR-${Date.now().toString(36).slice(-6).toUpperCase().padStart(6, 'X')}`;
+  return `VIRAL-${Date.now().toString(36).slice(-7).toUpperCase().padStart(7, 'X')}`;
 }
 
 export function newEventId(now: number, random = Math.random): string {
@@ -443,7 +455,7 @@ export function joinAndMaybeCredit(
   if (!host) return { ok: false, error: 'Could not read that hostname.' };
   if (!ACTOR_RE.test(input.actorId)) return { ok: false, error: 'Missing actor cookie.' };
 
-  const ref = input.ref && CODE_RE.test(input.ref) ? input.ref : null;
+  const ref = normalizeReferralCode(input.ref);
   const next = cloneState(state);
 
   let player = next.actorToCode[input.actorId] ? next.players[next.actorToCode[input.actorId]] : undefined;

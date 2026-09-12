@@ -1,4 +1,4 @@
-# TE promo copy (ViralRefer Ultra)
+# TE promo copy (ViralRefer Site Drops)
 
 No paid TE integration required. Destination must include `src=te` so credits stay honest.
 
@@ -10,7 +10,7 @@ No paid TE integration required. Destination must include `src=te` so credits st
 | Alias | `/go?src=te&camp=YOURCAMP` |
 | Compact iframe | `/embed/te?src=te&camp=YOURCAMP` |
 | Homepage (after click) | `/join?src=te&camp=YOURCAMP` or `/?src=te` |
-| Race link | `/te?src=te&ref=VR-XXXXXX&camp=YOURCAMP` or `/a/VR-XXXXXX?src=te` |
+| Race link | `/te?src=te&ref=VIRAL-XXXXXXX&camp=YOURCAMP` or `/a/VIRAL-XXXXXXX?src=te` |
 
 ## Ad titles
 
@@ -31,7 +31,7 @@ No paid TE integration required. Destination must include `src=te` so credits st
 The CTA is a real `<a target="_top">`. It works if cookies and JS are blocked. Tags stay on the URL.
 
 ```html
-<iframe src="https://YOUR-ORIGIN/te?src=te&camp=rotator&size=468x60" width="468" height="60" style="border:0;overflow:hidden;max-width:100%" loading="lazy" title="ViralRefer Ultra"></iframe>
+<iframe src="https://YOUR-ORIGIN/te?src=te&camp=rotator&size=468x60" width="468" height="60" style="border:0;overflow:hidden;max-width:100%" loading="lazy" title="ViralRefer Site Drops"></iframe>
 ```
 
 | Size | src | width × height |
@@ -40,7 +40,7 @@ The CTA is a real `<a target="_top">`. It works if cookies and JS are blocked. T
 | Rotator | `/te?src=te&camp=rotator&size=468x60` | 468 × 60 |
 | Box | `/embed/te?src=te&camp=box&size=300x250` | 300 × 250 |
 
-Do **not** iframe `/` or `/admin`. Do **not** iframe `/r/VR-…` (join needs a first-party page). Race traffic: `/te?src=te&ref=VR-XXXXXX`.
+Do **not** iframe `/` or `/admin`. Do **not** iframe `/r/VIRAL-…` (join needs a first-party page). Race traffic: `/te?src=te&ref=VIRAL-XXXXXXX`.
 
 ## Framing policy
 

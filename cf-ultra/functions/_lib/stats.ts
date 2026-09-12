@@ -290,7 +290,7 @@ export function daysBack(range: string, now = Date.now()): string[] {
 export function eventText(kind: TrackKind, extra = ''): string {
   const labels: Record<TrackKind, string> = {
     pageview: 'Pageview',
-    land: 'Landed on Ultra',
+    land: 'Landed on homepage',
     paste: 'Pasted a site',
     join: 'Got a link',
     share: 'Share click',

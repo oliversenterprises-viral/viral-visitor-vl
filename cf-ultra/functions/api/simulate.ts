@@ -1,5 +1,5 @@
 import { emitJoinAlerts } from '../_lib/alerts';
-import { CODE_RE, buildBoard, joinAndMaybeCredit, newActorId, publicPlayer, publicSite, rungForSite } from '../_lib/engine';
+import { isReferralCode, buildBoard, joinAndMaybeCredit, newActorId, publicPlayer, publicSite, rungForSite } from '../_lib/engine';
 import { json, originFromRequest, readJson } from '../_lib/http';
 import { kvBound, loadState, saveState, type UltraEnv } from '../_lib/store';
 
@@ -14,7 +14,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
     return json({ ok: false, error: 'Simulate is off when KV is bound. Use a real second browser.' }, { status: 403 });
   }
   const body = (await readJson<Body>(request)) ?? {};
-  const code = body.code && CODE_RE.test(body.code) ? body.code : '';
+  const code = isReferralCode(body.code) ? String(body.code).toUpperCase() : '';
   if (!code) return json({ ok: false, error: 'Need a live share code.' }, { status: 400 });
   const loaded = await loadState(env);
   const player = loaded.state.players[code];

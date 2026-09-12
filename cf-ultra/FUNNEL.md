@@ -1,4 +1,4 @@
-# ViralRefer Ultra — perfect funnel
+# ViralRefer (Cloudflare sibling) — perfect funnel
 
 This is the product. Secondary surfaces (duel, embed, kingmaker, TE later) never outrank this loop.
 
@@ -12,10 +12,10 @@ These names match the Owner HQ funnel chart.
 
 | # | Step | What the human does | What the system does |
 | --- | --- | --- | --- |
-| 1 | **Land** | Opens `/` or a referral URL (`/r/VR-XXXXXX`, `/a/VR-XXXXXX`, `/?ref=`) | Shows one job. Attribution is stored in the session and written back onto `?ref=` so refresh cannot drop it. |
+| 1 | **Land** | Opens `/` or a referral URL (`/r/VIRAL-XXXXXXX`, `/a/VIRAL-XXXXXXX`, `/?ref=`) | Shows one job. Attribution is stored in the session and written back onto `?ref=` so refresh cannot drop it. |
 | 2 | **Paste site** | Types any website | Live validate + normalize + favicon/host preview. Invalid URLs never submit. |
 | 3 | **Get my link** | Taps the only primary CTA (no email) | Instant kit. Network blips retry. Failure stays on the form with **Try again**. |
-| 4 | **Share** | Copies or sends `/r/VR-XXXXXX` | OG card, QR, platform intents. Primary CTA is Copy (or device Share on mobile). |
+| 4 | **Share** | Copies or sends `/r/VIRAL-XXXXXXX` | OG card, QR, platform intents. Primary CTA is Copy (or device Share on mobile). |
 | 5 | **Friend land** | Friend opens the referral URL | Crystal clear *who* sent them and *what* to do: paste **their** site, tap Get my link. Opening the page does not count. |
 | 6 | **Credit** | Friend taps Get my link | One unique lock (`referrer + actor`). Double-tap / refresh → `alreadyCredited`. Self-tap → `selfJoin`. Both sides celebrate when possible. |
 | 7 | **Climb** | Board updates | Just entered → Rising → Challenger → #1 banner. **You’re here** on the owner’s site. |
@@ -25,10 +25,10 @@ These names match the Owner HQ funnel chart.
 
 | URL | Restores |
 | --- | --- |
-| `/?ref=VR-XXXXXX` | Friend attribution + banner |
-| `/a/VR-XXXXXX` | 302 → `/?ref=VR-XXXXXX` (keeps extra query tags) |
-| `/r/VR-XXXXXX` | Friend landing (OG + one CTA) |
-| `/?kit=VR-XXXXXX` | Opens the share kit |
+| `/?ref=VIRAL-XXXXXXX` | Friend attribution + “You’re in the same contest” |
+| `/a/VIRAL-XXXXXXX` | 302 → `/?ref=VIRAL-XXXXXXX` (keeps extra query tags) |
+| `/r/VIRAL-XXXXXXX` | Friend landing (OG + Get YOUR link) |
+| `/?kit=VIRAL-XXXXXXX` | Opens the share kit |
 | `/?credited=1&helped=host` | Kit + “you credited them” |
 | `/?unlock=rising` | Unlock celebration |
 | Session `vr-ultra-kit-open-v1` | Reopens kit after refresh |
@@ -55,8 +55,8 @@ Do this on a phone-width viewport and a second browser profile.
 - [ ] **Get my link** — kit opens immediately; next-action line visible; no email field.
 - [ ] **Share** — Copy link works. WhatsApp / X / Telegram / Reddit open. QR renders.
 - [ ] Refresh with kit open — kit returns. `?ref=` (if present) still on the URL.
-- [ ] Open `/a/VR-XXXXXX` after you have a code — lands on `/?ref=` and the friend banner.
-- [ ] **Friend land** `/r/VR-XXXXXX` in another profile — who + next action clear; URL field empty (their site).
+- [ ] Open `/a/VIRAL-XXXXXXX` after you have a code — lands on `/?ref=` and the friend banner.
+- [ ] **Friend land** `/r/VIRAL-XXXXXXX` in another profile — who + next action clear; URL field empty (their site).
 - [ ] Friend pastes their site and taps Get my link — credit once; they get a kit; `credited=1`.
 - [ ] Friend taps again — already credited, board count unchanged.
 - [ ] Sharer board shows **You’re here** and the site moves Just entered → Rising on first unique credit.

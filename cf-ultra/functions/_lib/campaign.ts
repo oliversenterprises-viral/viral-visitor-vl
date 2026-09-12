@@ -85,5 +85,5 @@ export function teIframeSnippet(
     camp: opts.camp,
     extra: { size: `${w}x${h}` },
   });
-  return `<iframe src="${dest}" width="${w}" height="${h}" style="border:0;overflow:hidden;max-width:100%" loading="lazy" title="ViralRefer Ultra"></iframe>`;
+  return `<iframe src="${dest}" width="${w}" height="${h}" style="border:0;overflow:hidden;max-width:100%" loading="lazy" title="ViralRefer Site Drops"></iframe>`;
 }

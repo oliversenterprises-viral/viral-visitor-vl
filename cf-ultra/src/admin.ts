@@ -96,8 +96,8 @@ function spark(series: Dash['series']): string {
   const w = 560;
   const h = 80;
   const step = w / Math.max(1, series.length - 1);
-  const pts = series.map((s, i) => `${i * step},${h - ((s.credits + s.joins) / max) * (h - 6)}`).join(' ');
-  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="80" aria-hidden="true"><polyline fill="none" stroke="#d6ff3e" stroke-width="3" points="${pts}"/></svg>`;
+      const pts = series.map((s, i) => `${i * step},${h - ((s.credits + s.joins) / max) * (h - 6)}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="80" aria-hidden="true"><polyline fill="none" stroke="#864cff" stroke-width="3" points="${pts}"/></svg>`;
 }
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -110,7 +110,7 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 function loginView(note = ''): void {
   root.innerHTML = `
     <section class="lane login">
-      <p class="kicker">OWNER HQ</p>
+      <p class="kicker">OWNER HQ · SITE DROPS</p>
       <h1>Sign in on the edge</h1>
       <p class="note">Password is checked by a Pages Function (HMAC cookie). It is <strong>never</strong> a <code>VITE_</code> variable. Cloudflare Access email headers also pass.</p>
       ${note ? `<p class="note" style="color:var(--hot)">${esc(note)}</p>` : ''}
@@ -139,7 +139,7 @@ function render(d: Dash): void {
   root.innerHTML = `
     <header class="hq-top">
       <div>
-        <div class="word">ViralRefer <span>Ultra</span> · HQ</div>
+        <div class="word"><span class="mark">V</span> ViralRefer <span class="badge">HQ</span></div>
         <p class="tag">LIVE COUNTERS · NO FAKE MRR · ${d.kv ? 'KV BOUND' : 'ISOLATE DEMO'}</p>
       </div>
       <div class="pills">
@@ -284,7 +284,7 @@ function render(d: Dash): void {
     </div>
     <section class="lane">
       <h3>Traffic exchange</h3>
-      <p class="note">Splash impressions on <code>/te</code> are not written (edge-cheap). These counts are people who opened through to Ultra with <code>src=te</code>. TE Get-my-link does <strong>not</strong> count as a verified credit unless you flip the switch (default off — #1 banner stays honest).</p>
+      <p class="note">Splash impressions on <code>/te</code> are not written (edge-cheap). These counts are people who opened through to Site Drops with <code>src=te</code>. TE Get-my-link does <strong>not</strong> count as a verified credit unless you flip the switch (default off — #1 banner stays honest).</p>
       <div class="kpis" style="grid-template-columns:1fr 1fr 1fr 1fr">
         <div class="kpi"><b>${d.te?.lands ?? 0}</b><small>TE visits</small></div>
         <div class="kpi"><b>${d.te?.joins ?? 0}</b><small>TE → Get my link</small></div>
@@ -305,7 +305,7 @@ function render(d: Dash): void {
       <h3>Ops</h3>
       <p class="note">Ban/mute is live. Copy edits hit <code>/api/content</code> (cached ~15s). Reset demo wipes board + rollups.</p>
       <div class="ops-row">
-        <input data-code placeholder="VR-XXXXXX" />
+        <input data-code placeholder="VIRAL-XXXXXXX" />
         <button class="btn hot" data-op="ban_code" type="button">Ban code</button>
         <button class="btn ghost" data-op="mute_code" type="button">Mute</button>
         <button class="btn ghost" data-op="unban" type="button">Unban</button>
@@ -388,7 +388,7 @@ function render(d: Dash): void {
   });
   root.querySelector('[data-te-iframe]')?.addEventListener('click', async () => {
     const camp = (root.querySelector('[data-te-camp]') as HTMLInputElement)?.value.trim() || 'hq';
-    const snip = `<iframe src="${location.origin}/te?src=te&camp=${encodeURIComponent(camp)}&size=468x60" width="468" height="60" style="border:0;overflow:hidden;max-width:100%" loading="lazy" title="ViralRefer Ultra"></iframe>`;
+    const snip = `<iframe src="${location.origin}/te?src=te&camp=${encodeURIComponent(camp)}&size=468x60" width="468" height="60" style="border:0;overflow:hidden;max-width:100%" loading="lazy" title="ViralRefer Site Drops"></iframe>`;
     try {
       await navigator.clipboard.writeText(snip);
     } catch {

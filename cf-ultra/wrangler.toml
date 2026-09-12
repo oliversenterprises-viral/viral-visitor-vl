@@ -1,13 +1,13 @@
-# ViralRefer Ultra — Cloudflare Pages
+# ViralRefer Site Drops sibling — Cloudflare Pages
 # Create a SEPARATE Pages project with root directory `cf-ultra`.
-# Do not point this at www.viralrefer.app without explicit approval.
+# Do not point this at www.viralrefer.app. No cutover.
 
 name = "viralrefer-ultra"
 compatibility_date = "2026-09-12"
 pages_build_output_dir = "dist"
 
 [vars]
-APP_NAME = "ViralRefer Ultra"
+APP_NAME = "ViralRefer Site Drops"
 # Owner Telegram chat for this deploy (not a secret). Bot token stays a Pages secret.
 TELEGRAM_CHAT_ID = "1274269043"
 

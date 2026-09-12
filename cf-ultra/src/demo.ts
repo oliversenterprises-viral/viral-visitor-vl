@@ -1,9 +1,10 @@
 import {
-  CODE_RE,
   buildBoard,
   createEmptyState,
+  isReferralCode,
   joinAndMaybeCredit,
   newActorId,
+  normalizeReferralCode,
   publicPlayer,
   publicSite,
   rungForSite,
@@ -75,7 +76,7 @@ export function demoJoin(url: string, ref?: string | null, camp?: { src?: string
   const te = camp?.src === 'te' || camp?.src === 'traffic_exchange';
   const outcome = joinAndMaybeCredit(loadState(), {
     url,
-    ref: ref && CODE_RE.test(ref) ? ref : null,
+    ref: normalizeReferralCode(ref),
     actorId: demoActorId(),
     trafficExchange: te,
   });
@@ -111,7 +112,7 @@ export function demoMe(): MeOk {
 }
 
 export function demoSimulate(code: string): JoinOk {
-  if (!CODE_RE.test(code)) throw new Error('Need a live share code.');
+  if (!isReferralCode(code)) throw new Error('Need a live share code.');
   const loaded = loadState();
   const player = loaded.players[code];
   if (!player) throw new Error('Unknown share code.');

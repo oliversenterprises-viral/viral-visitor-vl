@@ -1,4 +1,4 @@
-import { CODE_RE, type BoardSite } from '../_lib/engine';
+import { isReferralCode, type BoardSite } from '../_lib/engine';
 import { edgeMatch, edgePut, publicCacheKey } from '../_lib/edge-cache';
 import { html, text } from '../_lib/http';
 import { landingHtml } from '../_lib/og';
@@ -6,7 +6,7 @@ import { getBoard, loadState, type UltraEnv } from '../_lib/store';
 
 export const onRequestGet: PagesFunction<UltraEnv> = async ({ params, request, env }) => {
   const code = String(params.code || '').toUpperCase();
-  if (!CODE_RE.test(code)) return text('Unknown share link', 404);
+  if (!isReferralCode(code)) return text('Unknown share link', 404);
 
   const key = publicCacheKey(request, `/r/${code}`);
   const hit = await edgeMatch(key);

@@ -10,26 +10,26 @@ describe('TE campaign tags', () => {
   });
 
   it('builds a TE destination that keeps src=te', () => {
-    const url = teDestination('https://demo.example', { ref: 'VR-ABC234', camp: 'box' });
+    const url = teDestination('https://demo.example', { ref: 'VIRAL-ABC2347', camp: 'box' });
     expect(url).toContain('/te?');
     expect(url).toContain('src=te');
     expect(url).toContain('camp=box');
-    expect(url).toContain('ref=VR-ABC234');
+    expect(url).toContain('ref=VIRAL-ABC2347');
   });
 
   it('iframe snippet and splash keep target=_top plus campaign tags without reading window.top', () => {
-    const snip = teIframeSnippet('https://demo.example', { ref: 'VR-ABC234', camp: 'box', width: 300, height: 250 });
+    const snip = teIframeSnippet('https://demo.example', { ref: 'VIRAL-ABC2347', camp: 'box', width: 300, height: 250 });
     expect(snip).toContain('iframe');
     expect(snip).toContain('src=te');
     expect(snip).toContain('width="300"');
     const html = teSplashHtml({
       origin: 'https://demo.example',
-      url: new URL('https://demo.example/te?src=te&camp=rotator&ref=VR-ABC234&size=468x60'),
+      url: new URL('https://demo.example/te?src=te&camp=rotator&ref=VIRAL-ABC2347&size=468x60'),
     });
     expect(html).toContain('target="_top"');
     expect(html).toContain('src=te');
     expect(html).toContain('camp=rotator');
-    expect(html).toContain('ref=VR-ABC234');
+    expect(html).toContain('ref=VIRAL-ABC2347');
     expect(html).toContain('>Open<');
     expect(html).not.toContain('window.top');
     expect(html).toContain('sz-468x60');

@@ -7,7 +7,7 @@ let raf = 0;
 
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string; r: number };
 
-const COLORS = ['#d6ff3e', '#ff3d8a', '#3ee8ff', '#ffc857', '#f4f1ea'];
+const COLORS = ['#864cff', '#c4b5fd', '#34d399', '#fbbf24', '#f4f4f5'];
 const particles: Particle[] = [];
 
 function ensureCanvas(): CanvasRenderingContext2D | null {

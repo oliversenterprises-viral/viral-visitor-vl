@@ -15,4 +15,4 @@ TELEGRAM_CHAT_ID=1274269043
 # Optional email (Resend). Both must be set or mail is skipped.
 # RESEND_API_KEY=re_...
 # NOTIFY_EMAIL_TO=you@example.com
-# NOTIFY_EMAIL_FROM=ViralRefer Ultra <alerts@viralrefer.app>
+# NOTIFY_EMAIL_FROM=ViralRefer Site Drops <alerts@viralrefer.app>
