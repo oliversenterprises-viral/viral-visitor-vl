@@ -53,12 +53,37 @@ export function burstTier(credits: number, unlocked: boolean): BurstTier {
 
 export function celebrationLine(credits: number, host: string, unlocked?: string): string {
   if (unlocked) return `${host} unlocked ${unlocked}. Share this rung while it is hot.`;
+  if (credits <= 0) return `${host} is live. Send the /r/ link — one friend tap unlocks Rising.`;
   const lines = [
     `${host} just locked a unique friend.`,
     `Heat spike — ${host} got a real Get my link.`,
     `One more unique tap landed for ${host}.`,
   ];
   return lines[Math.max(0, credits - 1) % lines.length];
+}
+
+/** Modal kicker — Site Drops rungs, not SPARK/BURST/STORM. */
+export function celebrationKicker(opts: { credits: number; unlock?: string | null }): string {
+  const u = (opts.unlock || '').toLowerCase();
+  if (u.includes('banner') || u.includes('#1')) return '#1 banner';
+  if (u.includes('challenger')) return 'Challenger';
+  if (u.includes('rising')) return 'Rising';
+  if (opts.credits >= 1) return 'Friend lock';
+  return 'Your link';
+}
+
+export function bannerScarcity(opts: { held: boolean; weekLabel: string; label?: string }): string {
+  if (opts.held) return `${opts.label || '#1'} holds this slot · ${opts.weekLabel}`;
+  return `Banner still open · ${opts.weekLabel}`;
+}
+
+export function newestActivityText(
+  prevId: string | null,
+  events: { id: string; text: string }[],
+): string | null {
+  const first = events[0];
+  if (!first || first.id === prevId) return null;
+  return first.text;
 }
 
 export type ShareStreak = { days: number; lastDay: string; lastAt: number; diesInMs: number; dying: boolean };

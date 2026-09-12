@@ -7,9 +7,11 @@ import {
 } from '../functions/_lib/referral-url';
 import { fetchBoard, fetchMe, joinSite, probeHealth } from './api';
 import { persistAttribution, previewHost, rememberCredits, rememberKitOpen, shouldRestoreKit, syncAttributionToUrl } from './attr';
-import { celebrateHit, celebrateUnlock } from './celebrate';
+import { celebrateHit, celebrateUnlock, pulseKit } from './celebrate';
 import {
+  bannerScarcity,
   bumpShareStreak,
+  newestActivityText,
   prefersReducedMotion,
   raceGap,
   risingHook,
@@ -30,21 +32,27 @@ function escapeHtml(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function toast(message: string): void {
-  let el = document.querySelector('.toast');
-  if (!el) {
-    el = document.createElement('div');
-    el.className = 'toast';
-    document.body.appendChild(el);
+function toast(message: string, hot = false): void {
+  let host = document.querySelector('.toast-stack');
+  if (!host) {
+    host = document.createElement('div');
+    host.className = 'toast-stack';
+    document.body.appendChild(host);
   }
+  const el = document.createElement('div');
+  el.className = hot ? 'toast hot on' : 'toast on';
   el.textContent = message;
-  el.classList.add('on');
-  setTimeout(() => el.classList.remove('on'), 2200);
+  host.appendChild(el);
+  while (host.children.length > 3) host.firstElementChild?.remove();
+  window.setTimeout(() => {
+    el.classList.remove('on');
+    window.setTimeout(() => el.remove(), 240);
+  }, 2400);
 }
 
-function chipHtml(site: BoardSite, kicker: string): string {
+function chipHtml(site: BoardSite, kicker: string, hot = false): string {
   const href = escapeHtml(site.url || `https://${site.host}`);
-  return `<a class="site-drop-chip" href="${href}" target="_blank" rel="noopener noreferrer">
+  return `<a class="site-drop-chip${hot ? ' site-drop-chip--hot' : ''}" href="${href}" target="_blank" rel="noopener noreferrer">
     <span class="site-drop-chip__label">${escapeHtml(site.label)}</span>
     <span class="site-drop-chip__meta">${escapeHtml(kicker)}</span>
     <span class="site-drop-chip__host">${escapeHtml(site.host)}</span>
@@ -74,6 +82,7 @@ export function boot(_root?: HTMLElement): void {
   let shareUrl = '';
   let rung: Rung = 'entered';
   let siteHost = '';
+  let lastActivityId: string | null = null;
 
   const mineAtBoot = getMyReferralCode();
   const landedRef = parseRefFromLocation(location);
@@ -185,6 +194,7 @@ export function boot(_root?: HTMLElement): void {
     const qr = document.getElementById('post-link-qr');
     if (qr && shareUrl) qr.innerHTML = qrSvg(shareUrl);
     rememberKitOpen(true);
+    if (opts.fresh) pulseKit();
     paintHud();
   }
 
@@ -201,8 +211,14 @@ export function boot(_root?: HTMLElement): void {
     const siteEl = document.getElementById('hero-slot-site');
     const metaEl = document.getElementById('hero-slot-meta');
     const noteEl = document.getElementById('hero-ad-note');
+    const raceEl = document.getElementById('hero-ad-race');
     const prizeSite = document.getElementById('prize-slot-site');
     const prizeMeta = document.getElementById('prize-slot-meta');
+    const scarcity = bannerScarcity({
+      held: Boolean(next.banner),
+      weekLabel: weekClockLabel(),
+      label: next.banner?.label,
+    });
     if (next.banner) {
       slot?.setAttribute('data-vr-prize-slot', 'held');
       slot?.classList.remove('banner-open-glow');
@@ -210,7 +226,7 @@ export function boot(_root?: HTMLElement): void {
       if (metaEl) metaEl.textContent = `${next.banner.weeklyCredits} unique friends this week · 7 days`;
       if (noteEl) noteEl.textContent = `${next.banner.credits} all-time locks`;
       if (prizeSite) prizeSite.textContent = next.banner.label;
-      if (prizeMeta) prizeMeta.textContent = `${next.banner.label} · 7 days`;
+      if (prizeMeta) prizeMeta.textContent = `${next.banner.label} · ${weekClockLabel()}`;
     } else {
       slot?.setAttribute('data-vr-prize-slot', 'empty');
       slot?.classList.add('banner-open-glow');
@@ -218,7 +234,12 @@ export function boot(_root?: HTMLElement): void {
       if (metaEl) metaEl.textContent = 'still open · 7 days';
       if (noteEl) noteEl.textContent = 'Empty right now. #1 this week puts their site here.';
       if (prizeSite) prizeSite.textContent = 'Your site here';
-      if (prizeMeta) prizeMeta.textContent = 'Banner still open · 7 days';
+      if (prizeMeta) prizeMeta.textContent = scarcity;
+    }
+    if (raceEl) {
+      raceEl.hidden = false;
+      raceEl.classList.remove('hidden');
+      raceEl.textContent = scarcity;
     }
 
     paintList(
@@ -226,10 +247,12 @@ export function boot(_root?: HTMLElement): void {
       'site-drops-entered-empty',
       next.entered.map((s) => `<li>${chipHtml(s, 'Just entered')}</li>`).join(''),
     );
+    const risingLane = document.getElementById('site-drops-rising-list')?.closest('.site-drops-lane');
+    risingLane?.classList.toggle('is-hot', next.rising.length > 0);
     paintList(
       'site-drops-rising-list',
       'site-drops-rising-empty',
-      next.rising.map((s) => `<li>${chipHtml(s, `Rising · ${s.weeklyCredits} friend${s.weeklyCredits === 1 ? '' : 's'}`)}</li>`).join(''),
+      next.rising.map((s) => `<li>${chipHtml(s, `Rising · ${s.weeklyCredits} friend${s.weeklyCredits === 1 ? '' : 's'}`, true)}</li>`).join(''),
     );
     paintList(
       'site-drops-challenger-list',
@@ -243,7 +266,10 @@ export function boot(_root?: HTMLElement): void {
     if (ticker && chips) {
       if (live.length) {
         show(ticker);
-        chips.innerHTML = live.slice(0, 4).map((s) => chipHtml(s, s.rung === 'rising' ? 'Rising' : 'Just entered')).join('');
+        chips.innerHTML = live
+          .slice(0, 4)
+          .map((s) => chipHtml(s, s.rung === 'rising' ? 'Rising' : 'Just entered', s.rung === 'rising'))
+          .join('');
       } else {
         ticker.hidden = true;
         ticker.classList.add('hidden');
@@ -265,7 +291,7 @@ export function boot(_root?: HTMLElement): void {
       activity.innerHTML = next.activity.length
         ? next.activity
             .slice(0, 8)
-            .map((e, i) => `<div class="flex justify-between gap-3 px-4 py-3 rounded-2xl bg-zinc-900/70 border ${i === 0 ? 'border-emerald-400/40' : 'border-white/10'}"><span>${escapeHtml(e.text)}</span><span class="text-zinc-500 text-xs">${new Date(e.at).toLocaleTimeString()}</span></div>`)
+            .map((e, i) => `<div class="activity-row flex justify-between gap-3 px-4 py-3 rounded-2xl bg-zinc-900/70 border ${i === 0 ? 'activity-row--hot border-emerald-400/40' : 'border-white/10'}"><span>${escapeHtml(e.text)}</span><span class="text-zinc-500 text-xs">${new Date(e.at).toLocaleTimeString()}</span></div>`)
             .join('')
         : `<p class="text-zinc-400">No live events yet. First unique tap writes the feed.</p>`;
     }
@@ -292,6 +318,15 @@ export function boot(_root?: HTMLElement): void {
     const suffix = document.getElementById('hero-stats-suffix');
     if (liveN) liveN.textContent = String(next.livePlayers || '');
     if (suffix) suffix.textContent = next.livePlayers ? 'people racing' : 'Board is open';
+    const fomo = document.getElementById('hero-prize-fomo');
+    if (fomo) {
+      const action = me
+        ? nextActionFor({ credits: me.credits, weeklyCredits: me.weeklyCredits, rung })
+        : null;
+      fomo.textContent = action
+        ? `${action.nearMiss}. ${weekClockLabel()}.`
+        : scarcity;
+    }
     const coach = document.getElementById('funnel-guide-coach-text');
     if (coach) {
       coach.textContent = me
@@ -320,10 +355,10 @@ export function boot(_root?: HTMLElement): void {
     else if (data.teIgnored) toast('TE hit ignored — visits never climb the board');
     else if (data.alreadyCredited) toast('That friend already counted');
     else if (data.credited) {
-      toast('Unique friend lock counted');
+      toast('Unique friend lock counted', true);
       celebrateHit({ host: data.site?.host || data.player.code, credits: data.player.credits });
     } else if (!data.site) {
-      toast(`${myCode} ready — /r/ link copied. A friend must tap Get my link.`);
+      toast(`${myCode} ready — /r/ link copied. A friend must tap Get my link.`, true);
       celebrateHit({ host: data.player.code, credits: 0 });
     } else if (data.player.credits === 0) {
       celebrateHit({ host: data.site.host, credits: 0 });
@@ -407,6 +442,20 @@ export function boot(_root?: HTMLElement): void {
     if (a) bumpShareStreak();
   });
 
+  const soundBtn = document.getElementById('sound-toggle');
+  function paintSound(): void {
+    if (!soundBtn) return;
+    const on = soundEnabled();
+    soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    soundBtn.textContent = on ? 'Sound on' : 'Sound off';
+  }
+  paintSound();
+  soundBtn?.addEventListener('click', () => {
+    setSoundEnabled(!soundEnabled());
+    paintSound();
+    toast(soundEnabled() ? 'Sound on — muted stays the default for everyone else.' : 'Sound off.');
+  });
+
   void (async () => {
     await probeHealth();
     const landHost = qs('url') ? previewHost(qs('url')!) : qs('helped') || siteHost;
@@ -414,6 +463,7 @@ export function boot(_root?: HTMLElement): void {
     try {
       const next = await fetchBoard();
       paintBoard(next);
+      lastActivityId = next.activity[0]?.id ?? lastActivityId;
     } catch {
       /* board hydrates on join */
     }
@@ -434,5 +484,19 @@ export function boot(_root?: HTMLElement): void {
       /* first land */
     }
     if (!soundEnabled()) setSoundEnabled(false);
+    paintSound();
+    window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void fetchBoard()
+        .then((next) => {
+          const fresh = newestActivityText(lastActivityId, next.activity);
+          if (fresh && lastActivityId) toast(fresh, true);
+          lastActivityId = next.activity[0]?.id || lastActivityId;
+          paintBoard(next);
+        })
+        .catch(() => {
+          /* keep last paint */
+        });
+    }, 10_000);
   })();
 }

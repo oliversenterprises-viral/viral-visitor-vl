@@ -10,6 +10,8 @@
       if (/\/r\/[A-Za-z0-9_-]+\/?$/i.test(p) || /\/a\/[A-Za-z0-9_-]+\/?$/i.test(p) || /(?:^|[?&])ref=/.test(q)) {
         document.documentElement.setAttribute('data-vr-referred-landing', '1');
         document.documentElement.setAttribute('data-vr-referred-micro', '1');
+      } else {
+        document.documentElement.setAttribute('data-vr-direct-landing', '1');
       }
     })();
     </script>
@@ -75,7 +77,7 @@
                             </div>
                         </div>
                         <p id="hero-ad-note" class="px-4 pb-3 text-[11px] text-zinc-400 leading-snug">Empty right now. #1 this week puts their site here.</p>
-                        <p id="hero-ad-race" class="hidden px-4 pb-3 text-[11px] text-amber-200/80 leading-snug" hidden></p>
+                        <p id="hero-ad-race" class="px-4 pb-3 text-[11px] text-amber-200/90 font-semibold leading-snug">Banner still open</p>
                     </div>
                 </div>
 
@@ -192,6 +194,7 @@
                 <div id="post-link-intents" class="grid grid-cols-2 gap-2 mt-3"></div>
                 <div id="post-link-qr" class="flex justify-center mt-3 post-link-share__qr"></div>
                 <div id="race-hud" class="hud-slim hidden" hidden></div>
+                <button type="button" id="sound-toggle" class="post-link-share__sound" aria-pressed="false">Sound off</button>
             </div>
             <div id="post-link-site-drop" class="post-link-site-drop hidden" hidden>
                 <p class="post-link-site-drop__title">Site Drop · paste your website after Get my link</p>

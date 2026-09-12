@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  bannerScarcity,
   burstTier,
+  celebrationKicker,
   celebrationLine,
   formatDiesIn,
   ghostCount,
   microGoal,
+  newestActivityText,
   normalizeStreak,
   progressPct,
   raceGap,
@@ -27,9 +30,34 @@ describe('burstTier + celebration lines', () => {
 
   it('rotates real-host lines and names unlocks', () => {
     expect(celebrationLine(1, 'alpha.test')).toContain('alpha.test');
+    expect(celebrationLine(0, 'VIRAL-ABC1234')).toContain('Rising');
     expect(celebrationLine(1, 'alpha.test', 'Rising')).toBe(
       'alpha.test unlocked Rising. Share this rung while it is hot.',
     );
+    expect(celebrationKicker({ credits: 0 })).toBe('Your link');
+    expect(celebrationKicker({ credits: 1, unlock: 'Rising Site Drop' })).toBe('Rising');
+    expect(celebrationKicker({ credits: 3, unlock: '#1 Banner' })).toBe('#1 banner');
+  });
+});
+
+describe('scarcity + live heat', () => {
+  it('names an open or held banner from the week clock', () => {
+    expect(bannerScarcity({ held: false, weekLabel: '1d 6h left this week' })).toBe(
+      'Banner still open · 1d 6h left this week',
+    );
+    expect(bannerScarcity({ held: true, weekLabel: '1d 6h left this week', label: 'alice.example' })).toBe(
+      'alice.example holds this slot · 1d 6h left this week',
+    );
+  });
+
+  it('toasts only a new activity id', () => {
+    const events = [
+      { id: 'b', text: 'Unique friend lock for alice.example' },
+      { id: 'a', text: 'older' },
+    ];
+    expect(newestActivityText(null, events)).toBe('Unique friend lock for alice.example');
+    expect(newestActivityText('b', events)).toBeNull();
+    expect(newestActivityText('a', events)).toBe('Unique friend lock for alice.example');
   });
 });
 
