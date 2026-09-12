@@ -6,6 +6,8 @@ The viral referral platform. Refer friends, climb the live leaderboard, and #1 c
 
 **Live Site**: https://www.viralrefer.app (Vercel project: `viralrefer-premium`, repo folder: `viral-visitor-vl`)
 
+**Cloudflare Ultra (parallel demo, not production):** a new Pages + Functions + KV rebuild lives in [`cf-ultra/`](./cf-ultra/README.md). It does not replace this Vercel Site Drops app. Do not attach `www.viralrefer.app` to it without explicit approval.
+
 ## Quick Start (5 minutes)
 
 ```bash

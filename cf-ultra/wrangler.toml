@@ -1,0 +1,24 @@
+# ViralRefer Ultra — Cloudflare Pages
+# Create a SEPARATE Pages project with root directory `cf-ultra`.
+# Do not point this at www.viralrefer.app without explicit approval.
+
+name = "viralrefer-ultra"
+compatibility_date = "2026-09-12"
+pages_build_output_dir = "dist"
+
+[vars]
+APP_NAME = "ViralRefer Ultra"
+
+# TODO after `npx wrangler kv namespace create BOARD`
+# and `npx wrangler kv namespace create BOARD --preview`:
+# uncomment and paste the real IDs. Never put secrets here.
+#
+# [[kv_namespaces]]
+# binding = "BOARD"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+# preview_id = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+#
+# Local: `npm run dev` / `npm run preview` pass `--kv BOARD`.
+# Production: Pages → Settings → Bindings → KV → BOARD.
+#
+# If BOARD is missing, Pages Functions run isolate memory demo mode.
