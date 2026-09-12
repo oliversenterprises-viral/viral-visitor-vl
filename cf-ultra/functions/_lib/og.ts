@@ -1,4 +1,5 @@
 import { RUNG_COPY, escapeHtml, escapeXml, type BoardSite, type Player, type Rung, type Site } from './engine';
+import { edgeI18nSnippet } from './i18n-edge';
 
 export function ogImageSvg(opts: {
   code: string;
@@ -153,10 +154,10 @@ export function embedWidgetHtml(opts: {
 <body>
   <a href="${escapeHtml(join)}" target="_blank" rel="noopener" id="go">
     <div>
-      <strong>Help ${label} go viral</strong>
+      <strong data-i18n="embed.help" data-i18n-label="${label}">Help ${label} go viral</strong>
       <small>${opts.credits} unique locks · ${escapeHtml(RUNG_COPY[opts.rung].title)}</small>
     </div>
-    <span class="go">Get my link</span>
+    <span class="go" data-i18n="embed.go">Get my link</span>
   </a>
   <script>
     fetch('/api/track',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'embed_load',platform:'embed'})}).catch(()=>{});
@@ -164,6 +165,7 @@ export function embedWidgetHtml(opts: {
       fetch('/api/track',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind:'embed_click',platform:'embed'})}).catch(()=>{});
     });
   </script>
+  ${edgeI18nSnippet()}
 </body>
 </html>`;
 }

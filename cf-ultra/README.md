@@ -71,6 +71,17 @@ Rungs (UTC week, unique locks only):
 - **Challenger** — weekly rank #2 / #3 with 2+ locks
 - **#1 banner** — weekly lead with 3+ locks (recognition only, no cash)
 
+## Languages (public Site Drops UI)
+
+Same Phase 1 i18n system as live ViralRefer (`en`, `es`, `fr`, `pt`, `de`, `hi`).
+
+- Browser language is detected on first visit (`navigator.languages`).
+- The nav language picker (and a footer “Page language” note) lets visitors override it. The choice is stored in `localStorage` as `vr_locale`.
+- TE splash / embed widgets reuse that same key so a later homepage visit stays in the chosen language.
+- Owner HQ (`/admin/`) stays English.
+
+See `src/lib/i18n/` (`data-i18n` attributes + `t()`).
+
 ## Run locally
 
 ```bash

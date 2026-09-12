@@ -1,4 +1,5 @@
 import { utcDayId, utcWeekId, type Rung } from '../functions/_lib/engine';
+import { t } from './lib/i18n';
 
 const SOUND_KEY = 'vr-ultra-sound-on';
 const STREAK_KEY = 'vr-ultra-share-streak-v1';
@@ -73,8 +74,8 @@ export function celebrationKicker(opts: { credits: number; unlock?: string | nul
 }
 
 export function bannerScarcity(opts: { held: boolean; weekLabel: string; label?: string }): string {
-  if (opts.held) return `${opts.label || '#1'} holds this slot · ${opts.weekLabel}`;
-  return `Banner still open · ${opts.weekLabel}`;
+  if (opts.held) return t('clock.banner_held', { label: opts.label || '#1', clock: opts.weekLabel });
+  return t('clock.banner_open', { clock: opts.weekLabel });
 }
 
 export function newestActivityText(
@@ -141,9 +142,9 @@ export function weekClockLabel(now = Date.now()): string {
   const ms = Math.max(0, utcWeekEndMs(now) - now);
   const h = Math.floor(ms / 3600_000);
   const d = Math.floor(h / 24);
-  if (d >= 1) return `${d}d ${h % 24}h left this week`;
+  if (d >= 1) return t('clock.week_days', { d, h: h % 24 });
   const m = Math.floor((ms % 3600_000) / 60_000);
-  return `${h}h ${m}m left this week`;
+  return t('clock.week_hours', { h, m });
 }
 
 /** Live Site Drops hero clock — same wording as viralrefer.app. */
@@ -152,16 +153,17 @@ export function weekRaceClock(now = Date.now()): string {
   const days = Math.floor(ms / 86_400_000);
   const hours = Math.floor((ms % 86_400_000) / 3_600_000);
   const mins = Math.floor((ms % 3_600_000) / 60_000);
-  return `This week's race ends in ${days}d ${hours}h ${mins}m. Send now.`;
+  return t('clock.race', { d: days, h: hours, m: mins });
 }
 
 /** Social-proof pill under the hero CTA. */
 export function boardProofLabel(opts: { players: number; leaderWeekly?: number }): string {
   const n = Math.max(0, Math.floor(opts.players));
-  const board = n === 1 ? '1 on the live board' : `${n} on the live board`;
+  const board = t('proof.board_n', { n });
   const refs = Math.max(0, Math.floor(opts.leaderWeekly ?? 0));
-  if (refs <= 0) return `${board} · #1 is open`;
-  return `${board} · #1 has ${refs} referral${refs === 1 ? '' : 's'}`;
+  if (refs <= 0) return t('proof.board_open', { board });
+  if (refs === 1) return t('proof.board_lead_one', { board });
+  return t('proof.board_lead', { board, n: refs });
 }
 
 /** 0–100 heat for the five-rung Site Drop climb. */
@@ -197,7 +199,7 @@ export function formatDiesIn(ms: number): string {
 export function risingHook(expiresAt?: number, now = Date.now()): string | null {
   if (!expiresAt || expiresAt <= now) return null;
   const m = Math.max(1, Math.round((expiresAt - now) / 60_000));
-  return m >= 60 ? `Your Rising expires in ${Math.round(m / 60)}h — send one more` : `Your Rising expires in ${m}m — send one more`;
+  return m >= 60 ? t('hud.rising_h', { n: Math.round(m / 60) }) : t('hud.rising_m', { n: m });
 }
 
 export function raceGap(opts: { host: string; race: { host: string; weeklyCredits: number; label: string }[]; bannerWeekly?: number }): string | null {
@@ -205,9 +207,9 @@ export function raceGap(opts: { host: string; race: { host: string; weeklyCredit
   if (idx < 0) return null;
   const rank = idx + 1;
   const lead = opts.race[0];
-  if (rank === 1) return `#1 this week · hold it`;
+  if (rank === 1) return t('hud.hold');
   const gap = Math.max(0, (lead?.weeklyCredits ?? 0) - (opts.race[idx]?.weeklyCredits ?? 0));
-  return `#${rank} · ${gap} behind ${lead?.label ?? '#1'}`;
+  return t('hud.behind', { rank, gap, label: lead?.label ?? '#1' });
 }
 
 export function microGoal(

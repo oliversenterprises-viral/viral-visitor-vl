@@ -1,5 +1,6 @@
 import { isReferralCode } from './engine';
 import { breakoutUrl, campaignFromSearch, type Campaign } from './campaign';
+import { edgeI18nSnippet } from './i18n-edge';
 
 export type TeSize = '728x90' | '468x60' | '300x250' | 'auto';
 
@@ -28,7 +29,7 @@ export function teSplashHtml(opts: { origin: string; url: URL; compact?: boolean
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; overflow: hidden; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #09090b; color: #f4f4f5; }
+    html, body { height: 100%; margin: 0; overflow: hidden; position: relative; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #09090b; color: #f4f4f5; }
     .box { height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 12px 14px; }
     .kicker { color: #c4b5fd; letter-spacing: .14em; font-size: 10px; font-weight: 800; margin: 0 0 6px; }
     h1 { font-size: clamp(18px, 6vw, 28px); line-height: 1.05; margin: 0 0 8px; }
@@ -47,8 +48,15 @@ export function teSplashHtml(opts: { origin: string; url: URL; compact?: boolean
     .sz-728x90 .kicker, .sz-468x60 .kicker { margin: 0 0 2px; }
     .sz-728x90 .cta, .sz-468x60 .cta { min-height: 40px; line-height: 40px; padding: 0 16px; flex: 0 0 auto; font-size: 14px; }
     .sz-300x250 .box { padding: 14px; }
+    .vr-lang-picker { position: absolute; top: 6px; right: 8px; margin: 0; }
+    .vr-lang-select {
+      appearance: none; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
+      color: #e4e4e7; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 18px 3px 8px;
+    }
+    .vr-lang-select option { background: #18181b; }
+    .sz-728x90 .vr-lang-picker, .sz-468x60 .vr-lang-picker { display: none; }
     @media (max-height: 80px) {
-      .lead, .fine { display: none !important; }
+      .lead, .fine, .vr-lang-picker { display: none !important; }
       .box { flex-direction: row; align-items: center; gap: 10px; padding: 6px 10px; }
       h1 { font-size: 15px; margin: 0; }
       .cta { min-height: 40px; line-height: 40px; padding: 0 14px; flex: 0 0 auto; }
@@ -56,14 +64,15 @@ export function teSplashHtml(opts: { origin: string; url: URL; compact?: boolean
   </style>
 </head>
 <body class="sz-${size}">
+  <div id="vr-embed-lang-slot"></div>
   <main class="box">
     <div class="copy">
-      <p class="kicker">VIRALREFER · SITE DROPS${camp.camp ? ` · ${escapeText(camp.camp)}` : ''}</p>
-      <h1>${ref ? 'A friend sent you' : 'Paste a site. Climb.'}</h1>
-      <p class="lead">Visits do not count. Open Get my link — no email. TE hits never take #1.</p>
+      <p class="kicker"><span data-i18n="te.kicker">VIRALREFER · SITE DROPS</span>${camp.camp ? ` · ${escapeText(camp.camp)}` : ''}</p>
+      <h1 data-i18n="${ref ? 'te.title_ref' : 'te.title_direct'}">${ref ? 'A friend sent you' : 'Paste a site. Climb.'}</h1>
+      <p class="lead" data-i18n="te.lead">Visits do not count. Open Get my link — no email. TE hits never take #1.</p>
     </div>
-    <a class="cta" id="go" href="${escapeText(open)}" target="_top" rel="noopener">${cta}</a>
-    <p class="fine">Tags stay on the URL if cookies are blocked.</p>
+    <a class="cta" id="go" href="${escapeText(open)}" target="_top" rel="noopener" data-i18n="${strip ? 'te.cta_open' : 'te.cta'}">${cta}</a>
+    <p class="fine" data-i18n="te.fine">Tags stay on the URL if cookies are blocked.</p>
   </main>
   <script>
     (function () {
@@ -79,6 +88,7 @@ export function teSplashHtml(opts: { origin: string; url: URL; compact?: boolean
       });
     })();
   </script>
+  ${edgeI18nSnippet({ picker: !strip })}
 </body>
 </html>`;
 }

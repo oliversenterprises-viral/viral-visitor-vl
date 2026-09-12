@@ -1062,6 +1062,13 @@ html[data-vr-embed] .vr-lang-picker--embed {
   }
 }
 
+.vr-lang-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 /* Conversion polish: global proof strip under hero subtitle */
 .hero-global-proof {
   display: flex;

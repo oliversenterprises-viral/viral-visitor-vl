@@ -1,0 +1,290 @@
+/**
+ * Phase 1 i18n — browser language + manual override.
+ * Safe defaults: English fallback, never blocks render, admin untranslated.
+ */
+
+import {
+  LOCALE_LABELS,
+  MESSAGES,
+  SUPPORTED_LOCALES,
+  type Locale,
+  type MessageKey,
+  en,
+} from './messages';
+
+export type { Locale, MessageKey };
+export { LOCALE_LABELS, SUPPORTED_LOCALES };
+
+const STORAGE_KEY = 'vr_locale';
+const ATTR = 'data-vr-locale';
+
+let current: Locale = 'en';
+let applied = false;
+
+export function isLocale(raw: string | null | undefined): raw is Locale {
+  return !!raw && (SUPPORTED_LOCALES as readonly string[]).includes(raw);
+}
+
+/** Map navigator / Accept-Language tags → supported locale. */
+export function normalizeLocale(tag: string | null | undefined): Locale {
+  if (!tag) return 'en';
+  const base = tag.trim().toLowerCase().split(/[-_]/)[0] || 'en';
+  if (base === 'en') return 'en';
+  if (base === 'es') return 'es';
+  if (base === 'fr') return 'fr';
+  if (base === 'pt') return 'pt';
+  if (base === 'de') return 'de';
+  if (base === 'hi') return 'hi';
+  return 'en';
+}
+
+export function detectBrowserLocale(
+  nav: { language?: string; languages?: readonly string[] } = typeof navigator !== 'undefined'
+    ? navigator
+    : {},
+): Locale {
+  const list = nav.languages?.length ? [...nav.languages] : nav.language ? [nav.language] : [];
+  if (!list.length) return 'en';
+  return normalizeLocale(list[0]);
+}
+
+export function getStoredLocale(): Locale | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return isLocale(raw) ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredLocale(locale: Locale): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, locale);
+  } catch {
+    /* non-fatal */
+  }
+}
+
+/** Resolved locale: user override → browser → en */
+export function resolveLocale(): Locale {
+  return getStoredLocale() ?? detectBrowserLocale();
+}
+
+export function getLocale(): Locale {
+  return current;
+}
+
+export function t(
+  key: MessageKey,
+  localeOrVars?: Locale | Record<string, string | number>,
+  maybeVars?: Record<string, string | number>,
+): string {
+  let locale: Locale = current;
+  let vars: Record<string, string | number> | undefined;
+  if (typeof localeOrVars === 'string' && isLocale(localeOrVars)) {
+    locale = localeOrVars;
+    vars = maybeVars;
+  } else if (localeOrVars && typeof localeOrVars === 'object') {
+    vars = localeOrVars;
+  }
+  let out = MESSAGES[locale]?.[key] ?? en[key] ?? key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      out = out.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
+    }
+  }
+  return out;
+}
+
+/** Apply all [data-i18n] / [data-i18n-placeholder] / [data-i18n-aria] under root. */
+export function applyI18n(locale: Locale = current, root: ParentNode = document): void {
+  current = locale;
+
+  try {
+    document.documentElement.lang = locale === 'en' ? 'en' : locale;
+    document.documentElement.setAttribute(ATTR, locale);
+  } catch {
+    /* non-fatal */
+  }
+
+  root.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
+    const key = el.getAttribute('data-i18n') as MessageKey | null;
+    if (!key || !(key in en)) return;
+    const icon = el.querySelector(':scope > i.fa-solid, :scope > i.fa-brands, :scope > i[class*="fa-"]');
+    if (icon && el.childNodes.length > 1) {
+      const textSpan = el.querySelector('[data-i18n-text]') as HTMLElement | null;
+      if (textSpan) {
+        textSpan.textContent = t(key, locale);
+      } else {
+        let replaced = false;
+        el.childNodes.forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+            node.textContent = ` ${t(key, locale)}`;
+            replaced = true;
+          }
+        });
+        if (!replaced) {
+          const span = document.createElement('span');
+          span.setAttribute('data-i18n-text', '');
+          span.textContent = t(key, locale);
+          el.appendChild(span);
+        }
+      }
+    } else {
+      el.textContent = t(key, locale);
+    }
+  });
+
+  root.querySelectorAll<HTMLElement>('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-placeholder') as MessageKey | null;
+    if (!key || !(key in en)) return;
+    if ('placeholder' in el) (el as HTMLInputElement).placeholder = t(key, locale);
+  });
+
+  root.querySelectorAll<HTMLElement>('[data-i18n-aria]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-aria') as MessageKey | null;
+    if (!key || !(key in en)) return;
+    el.setAttribute('aria-label', t(key, locale));
+  });
+
+  document.querySelectorAll<HTMLSelectElement>('.vr-lang-select').forEach((select) => {
+    if (select.value !== locale) select.value = locale;
+  });
+
+  const footerLabel = document.getElementById('vr-lang-footer-label');
+  if (footerLabel) footerLabel.textContent = LOCALE_LABELS[locale];
+
+  applied = true;
+}
+
+export function setLocale(locale: Locale): void {
+  if (!isLocale(locale)) locale = 'en';
+  setStoredLocale(locale);
+  applyI18n(locale);
+  try {
+    window.dispatchEvent(new CustomEvent('vr:locale-change', { detail: { locale } }));
+  } catch {
+    /* non-fatal */
+  }
+}
+
+function wireLangSelect(select: HTMLSelectElement): void {
+  if (select.dataset.vrLangBound === '1') return;
+  select.dataset.vrLangBound = '1';
+  select.value = current;
+  select.addEventListener('change', () => {
+    const next = select.value;
+    setLocale(isLocale(next) ? next : 'en');
+  });
+}
+
+function createLangPickerWrap(selectId: string, extraClass = ''): HTMLLabelElement {
+  const wrap = document.createElement('label');
+  wrap.className = `vr-lang-picker ${extraClass}`.trim();
+  wrap.setAttribute('title', t('lang.hint'));
+  wrap.innerHTML = `
+    <span class="sr-only">${t('nav.lang')}</span>
+    <select id="${selectId}" class="vr-lang-select" aria-label="${t('nav.lang')}">
+      ${SUPPORTED_LOCALES.map(
+        (loc) => `<option value="${loc}">${LOCALE_LABELS[loc]}</option>`,
+      ).join('')}
+    </select>
+  `;
+  const select = wrap.querySelector('select') as HTMLSelectElement;
+  wireLangSelect(select);
+  return wrap;
+}
+
+/** Compact language control for /embed traffic-exchange layout. */
+export function mountEmbedLangPicker(): void {
+  if (typeof document === 'undefined') return;
+  if (!document.documentElement.hasAttribute('data-vr-embed')) return;
+
+  const slot = document.getElementById('vr-embed-lang-slot');
+  if (!slot) return;
+  if (slot.querySelector('.vr-lang-select')) {
+    const existing = slot.querySelector('.vr-lang-select') as HTMLSelectElement;
+    wireLangSelect(existing);
+    existing.value = current;
+    return;
+  }
+
+  const wrap = createLangPickerWrap('vr-lang-select-embed', 'vr-lang-picker--embed');
+  slot.appendChild(wrap);
+}
+
+function buildLangPicker(): void {
+  if (document.documentElement.hasAttribute('data-vr-embed')) {
+    mountEmbedLangPicker();
+    if (!document.getElementById('vr-lang-select-embed')) {
+      window.setTimeout(() => mountEmbedLangPicker(), 80);
+      window.setTimeout(() => mountEmbedLangPicker(), 300);
+    }
+    return;
+  }
+
+  if (document.getElementById('vr-lang-select')) return;
+  const navLinks = document.querySelector('.vr-nav-links');
+  if (!navLinks) return;
+
+  const wrap = createLangPickerWrap('vr-lang-select');
+  const adminBtn = document.getElementById('admin-btn');
+  const getLink = document.getElementById('nav-get-link-btn');
+  if (adminBtn?.parentElement === navLinks) {
+    navLinks.insertBefore(wrap, adminBtn);
+  } else if (getLink?.parentElement === navLinks) {
+    navLinks.insertBefore(wrap, getLink);
+  } else {
+    navLinks.appendChild(wrap);
+  }
+}
+
+/** Footer language row (desktop-friendly secondary control). */
+function buildFooterLangNote(): void {
+  if (document.getElementById('vr-lang-footer')) return;
+  const rulesLink = document.getElementById('footer-link-rules');
+  const slot = document.getElementById('vr-lang-footer-slot');
+  const parent = slot || rulesLink?.parentElement || document.querySelector('footer .max-w-5xl');
+  if (!parent) return;
+
+  const note = document.createElement('div');
+  note.id = 'vr-lang-footer';
+  note.className = 'vr-lang-footer text-xs text-zinc-500 mt-2';
+  note.innerHTML = `<span data-i18n="lang.hint">${t('lang.hint')}</span>: <strong id="vr-lang-footer-label">${LOCALE_LABELS[current]}</strong>`;
+  parent.appendChild(note);
+}
+
+/** Idempotent bootstrap — call early in main.ts */
+export function initI18n(): void {
+  if (typeof document === 'undefined') return;
+  current = resolveLocale();
+  applyI18n(current);
+  buildLangPicker();
+  buildFooterLangNote();
+  applyI18n(current);
+
+  if (!document.documentElement.dataset.vrEmbedLangListen) {
+    document.documentElement.dataset.vrEmbedLangListen = '1';
+    window.addEventListener('vr:embed-chrome-ready', () => {
+      mountEmbedLangPicker();
+    });
+  }
+
+  applied = true;
+}
+
+/** Re-apply after CMS / hero paints English over static HTML. */
+export function reapplyI18n(): void {
+  if (!applied) {
+    initI18n();
+    return;
+  }
+  applyI18n(current);
+  mountEmbedLangPicker();
+  const footerLabel = document.getElementById('vr-lang-footer-label');
+  if (footerLabel) footerLabel.textContent = LOCALE_LABELS[current];
+}
+
+export function isI18nApplied(): boolean {
+  return applied;
+}
