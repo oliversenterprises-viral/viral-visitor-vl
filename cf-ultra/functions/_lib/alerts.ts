@@ -220,7 +220,7 @@ export function telegramToken(env: UltraEnv): string {
 }
 
 export function telegramChatId(env: UltraEnv): string {
-  return String(env.TELEGRAM_CHAT_ID || '').trim();
+  return String(env.TELEGRAM_CHAT_ID || OWNER_TELEGRAM_CHAT_ID).trim();
 }
 
 export function telegramConfigured(env: UltraEnv): boolean {
@@ -776,7 +776,7 @@ export async function testAlert(env: UltraEnv, origin: string): Promise<InboxIte
     {
       kind: 'digest',
       title: 'Test notification',
-      body: 'Owner HQ test ping. Telegram is the default owner channel when TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID are set. Missing secrets stay in this inbox.',
+      body: `Owner HQ test ping. When TELEGRAM_BOT_TOKEN is set this hits chat ${OWNER_TELEGRAM_CHAT_ID}. Missing token stays in this inbox.`,
       count: 1,
       adminPath: '/admin/?focus=test',
       immediate: true,

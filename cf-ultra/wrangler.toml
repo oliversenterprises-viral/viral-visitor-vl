@@ -8,6 +8,8 @@ pages_build_output_dir = "dist"
 
 [vars]
 APP_NAME = "ViralRefer Ultra"
+# Owner Telegram chat for this deploy (not a secret). Bot token stays a Pages secret.
+TELEGRAM_CHAT_ID = "1274269043"
 
 # TODO after `npx wrangler kv namespace create BOARD`
 # and `npx wrangler kv namespace create BOARD --preview`:
@@ -31,7 +33,7 @@ APP_NAME = "ViralRefer Ultra"
 # (gitignored). NEVER a VITE_ variable. Local fallback password is
 # ultra-local-only and only when CF-Ray is absent.
 #
-# Owner alerts: Telegram is primary. Set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID
-# as Pages / wrangler secrets (not [vars], not VITE_). This deploy’s owner
-# chat id is 1274269043. Optional fallback: NOTIFY_WEBHOOK_URL.
+# Owner alerts: Telegram is primary. TELEGRAM_CHAT_ID defaults to 1274269043
+# above. Set TELEGRAM_BOT_TOKEN as a Pages / wrangler secret (not [vars],
+# not VITE_). Optional fallback: NOTIFY_WEBHOOK_URL.
 # Optional Resend: RESEND_API_KEY + NOTIFY_EMAIL_TO. Inbox works with none.

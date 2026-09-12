@@ -243,8 +243,8 @@ Never prefix these with `VITE_` — that ships in the client bundle. **Do not pa
 
 | Secret | Required? | Purpose |
 | --- | --- | --- |
-| `TELEGRAM_BOT_TOKEN` | Primary | Bot API token from [@BotFather](https://t.me/BotFather). Server-side only. |
-| `TELEGRAM_CHAT_ID` | Primary | Chat that receives pings. **This deploy’s owner chat id is `1274269043`.** |
+| `TELEGRAM_BOT_TOKEN` | Required to send | Bot API token from [@BotFather](https://t.me/BotFather). Server-side secret only. **Do not commit it.** |
+| `TELEGRAM_CHAT_ID` | Defaulted | **This deploy’s owner chat id is `1274269043`** (`wrangler.toml` `[vars]` + code default). Override with a Pages secret only if the owner chat changes. |
 | `NOTIFY_WEBHOOK_URL` | Optional fallback | Discord / Slack incoming webhook or any HTTPS URL. **Wins over** the URL saved in HQ. |
 | `RESEND_API_KEY` | Optional | Send email via [Resend](https://resend.com) for immediate high-signal events only. |
 | `NOTIFY_EMAIL_TO` | With Resend | Inbox that receives owner mail. |
@@ -257,18 +257,19 @@ Never prefix these with `VITE_` — that ships in the client bundle. **Do not pa
 3. Confirm your chat id. For this ViralRefer Ultra owner deploy it is **`1274269043`**. To discover another id, call `getUpdates` **from your machine** (not the repo):  
    `curl https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/getUpdates`  
    and read `message.chat.id`.
-4. Set Pages / wrangler secrets (never `[vars]`, never `VITE_`):
+4. Set the **bot token** as a Pages / wrangler secret (never `[vars]`, never `VITE_`). Chat id is already `1274269043` for this deploy.
 
 ```bash
 cd cf-ultra
 npx wrangler pages secret put TELEGRAM_BOT_TOKEN --project-name viralrefer-ultra
-npx wrangler pages secret put TELEGRAM_CHAT_ID --project-name viralrefer-ultra
-# when prompted for CHAT_ID, enter: 1274269043
+# optional override only:
+# npx wrangler pages secret put TELEGRAM_CHAT_ID --project-name viralrefer-ultra
+# when prompted, enter: 1274269043
 ```
 
-Local Wrangler: copy `.dev.vars.example` → `.dev.vars` and fill `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID=1274269043`. `.dev.vars` is gitignored.
+Local Wrangler: copy `.dev.vars.example` → `.dev.vars` and fill `TELEGRAM_BOT_TOKEN` only. `TELEGRAM_CHAT_ID=1274269043` is already the default. `.dev.vars` is gitignored.
 
-HQ → **Notify me** shows `configured · chat …043` or `missing` (masked — never the token). Toggle Telegram on/off, keep the event checkboxes, then **Test ping**. If secrets are missing, the ping still lands in the Alerts inbox (demo path).
+HQ → **Notify me** shows `configured · chat …043` once the token is set, or `token missing` (masked — never the token). Toggle Telegram on/off, keep the event checkboxes, then **Test ping** — it targets chat `1274269043` when the token is configured. If the token is missing, the ping still lands in the Alerts inbox (demo path).
 
 Optional: paste a webhook URL in HQ (authenticated `POST /api/admin/action` `save_alerts`). The Function stores it in KV (`ultra:alert-prefs`) and **never echoes the full URL** back. A dashboard secret still overrides that value.
 

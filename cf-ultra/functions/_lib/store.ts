@@ -8,7 +8,7 @@ export interface UltraEnv {
   NOTIFY_WEBHOOK_URL?: string;
   /** Telegram Bot API token. Pages / wrangler secret — never VITE_ and never commit. */
   TELEGRAM_BOT_TOKEN?: string;
-  /** Telegram chat id (this deploy’s owner: 1274269043). Pages secret or env — never VITE_. */
+  /** Telegram chat id. Defaults to 1274269043 for this owner deploy. Never VITE_. */
   TELEGRAM_CHAT_ID?: string;
   RESEND_API_KEY?: string;
   NOTIFY_EMAIL_TO?: string;

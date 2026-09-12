@@ -19,6 +19,7 @@ import {
   resetAlertRuntime,
   sanitizeWebhookUrl,
   shouldSendImmediate,
+  telegramChatId,
   telegramConfigured,
   testAlert,
 } from '../functions/_lib/alerts';
@@ -179,8 +180,9 @@ describe('Telegram owner channel', () => {
     expect(OWNER_TELEGRAM_CHAT_ID).toBe('1274269043');
     expect(maskTelegramChatId(OWNER_TELEGRAM_CHAT_ID)).toBe('…043');
     expect(maskTelegramChatId(OWNER_TELEGRAM_CHAT_ID)).not.toContain('1274269043');
+    expect(telegramChatId({})).toBe('1274269043');
     expect(telegramConfigured({})).toBe(false);
-    expect(telegramConfigured({ TELEGRAM_BOT_TOKEN: 'x:token', TELEGRAM_CHAT_ID: OWNER_TELEGRAM_CHAT_ID })).toBe(true);
+    expect(telegramConfigured({ TELEGRAM_BOT_TOKEN: 'x:token' })).toBe(true);
   });
 
   it('builds a short HTML ping with funnel step + HQ link', () => {
@@ -221,7 +223,7 @@ describe('Telegram owner channel', () => {
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }) as typeof fetch;
     try {
-      const env: UltraEnv = { TELEGRAM_BOT_TOKEN: '123456:TESTTOKEN', TELEGRAM_CHAT_ID: OWNER_TELEGRAM_CHAT_ID };
+      const env: UltraEnv = { TELEGRAM_BOT_TOKEN: '123456:TESTTOKEN' };
       const sent = await deliverTelegram(
         env,
         buildTelegramHtml({

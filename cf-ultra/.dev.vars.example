@@ -4,9 +4,9 @@ ADMIN_OWNER_PASSWORD=change-me
 # ADMIN_ACTION_SECRET=
 
 # Owner alerts — Telegram is the primary channel (never VITE_).
-# This deploy’s owner chat id is 1274269043. Put the bot token only here / Pages secrets.
+# Chat id defaults to 1274269043 (this deploy). Put the bot token only here / Pages secrets.
 # TELEGRAM_BOT_TOKEN=
-# TELEGRAM_CHAT_ID=1274269043
+TELEGRAM_CHAT_ID=1274269043
 
 # Optional Discord/Slack incoming webhook or generic HTTPS (fallback).
 # Dashboard secret wins over the URL saved in HQ. Leave unset to use inbox-only demo.

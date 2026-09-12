@@ -75,11 +75,11 @@ function esc(v: unknown): string {
 function telegramStatus(a: Dash['alerts'] | undefined): string {
   const hint = a?.telegramOwnerHint || '1274269043';
   if (a?.telegramConfigured) {
-    return `Telegram: configured · chat ${esc(a.telegramChatMasked || '…set')}. Test ping hits that chat.`;
+    return `Telegram: configured · chat ${esc(a.telegramChatMasked || '…set')} (owner ${esc(hint)}). Test ping hits that chat.`;
   }
   const token = a?.telegramTokenConfigured ? 'token set' : 'token missing';
-  const chat = a?.telegramChatMasked ? `chat ${esc(a.telegramChatMasked)}` : 'chat missing';
-  return `Telegram: missing — ${token}, ${chat}. Inbox still records. Set Pages secrets TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID=${esc(hint)}.`;
+  const chat = a?.telegramChatMasked ? `chat ${esc(a.telegramChatMasked)}` : `chat default ${esc(hint)}`;
+  return `Telegram: missing — ${token}, ${chat}. Inbox still records. Set Pages secret TELEGRAM_BOT_TOKEN. Owner chat id for this deploy is ${esc(hint)}.`;
 }
 
 function bars(rows: { key: string; n: number }[], cls = ''): string {
