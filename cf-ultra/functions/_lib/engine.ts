@@ -645,16 +645,27 @@ export type NextAction = {
   friendsNeeded: number;
   label: string;
   nextRung: Rung | null;
+  /** Punchy near-miss line. Never invents counts. */
+  nearMiss: string;
 };
+
+function friendsFrom(n: number, name: string): string {
+  return n === 1 ? `1 friend from ${name}` : `${n} friends from ${name}`;
+}
 
 /** Always-visible “what to do next” copy. Friends = unique Get my link, never visits. */
 export function nextActionFor(input: { credits: number; weeklyCredits: number; rung: Rung }): NextAction {
   const { credits, weeklyCredits, rung } = input;
   if (rung === 'banner') {
-    return { friendsNeeded: 0, label: 'Hold #1 this week. Keep sharing.', nextRung: null };
+    return { friendsNeeded: 0, label: 'Hold #1 this week. Keep sharing.', nextRung: null, nearMiss: 'Hold #1' };
   }
   if (weeklyCredits >= BANNER_MIN_WEEKLY) {
-    return { friendsNeeded: 0, label: 'You’re in range — keep sharing to take the #1 banner', nextRung: 'banner' };
+    return {
+      friendsNeeded: 0,
+      label: 'You’re in range — keep sharing to take the #1 banner',
+      nextRung: 'banner',
+      nearMiss: 'In range of #1',
+    };
   }
   if (weeklyCredits >= CHALLENGER_MIN_WEEKLY || rung === 'challenger') {
     const n = Math.max(1, BANNER_MIN_WEEKLY - weeklyCredits);
@@ -662,6 +673,7 @@ export function nextActionFor(input: { credits: number; weeklyCredits: number; r
       friendsNeeded: n,
       label: n === 1 ? 'Send to 1 more friend this week to unlock the #1 banner' : `Send to ${n} more friends this week to unlock the #1 banner`,
       nextRung: 'banner',
+      nearMiss: friendsFrom(n, '#1'),
     };
   }
   if (credits >= 1) {
@@ -670,9 +682,10 @@ export function nextActionFor(input: { credits: number; weeklyCredits: number; r
       friendsNeeded: n,
       label: n === 1 ? 'Send to 1 more friend this week to unlock Challenger' : `Send to ${n} more friends this week to unlock Challenger`,
       nextRung: 'challenger',
+      nearMiss: friendsFrom(n, 'Challenger'),
     };
   }
-  return { friendsNeeded: 1, label: 'Send to 1 friend to unlock Rising', nextRung: 'rising' };
+  return { friendsNeeded: 1, label: 'Send to 1 friend to unlock Rising', nextRung: 'rising', nearMiss: friendsFrom(1, 'Rising') };
 }
 
 export function faviconForHost(host: string): string {

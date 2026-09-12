@@ -37,6 +37,9 @@ describe('nextActionFor', () => {
     expect(nextActionFor({ credits: 3, weeklyCredits: 3, rung: 'banner' }).label).toBe(
       'Hold #1 this week. Keep sharing.',
     );
+    expect(nextActionFor({ credits: 0, weeklyCredits: 0, rung: 'entered' }).nearMiss).toBe('1 friend from Rising');
+    expect(nextActionFor({ credits: 1, weeklyCredits: 1, rung: 'rising' }).nearMiss).toBe('1 friend from Challenger');
+    expect(nextActionFor({ credits: 2, weeklyCredits: 2, rung: 'challenger' }).nearMiss).toBe('1 friend from #1');
   });
 });
 

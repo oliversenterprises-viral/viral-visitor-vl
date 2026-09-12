@@ -19,7 +19,7 @@ These names match the Owner HQ funnel chart.
 | 5 | **Friend land** | Friend opens the referral URL | Crystal clear *who* sent them and *what* to do: paste **their** site, tap Get my link. Opening the page does not count. |
 | 6 | **Credit** | Friend taps Get my link | One unique lock (`referrer + actor`). Double-tap / refresh → `alreadyCredited`. Self-tap → `selfJoin`. Both sides celebrate when possible. |
 | 7 | **Climb** | Board updates | Just entered → Rising → Challenger → #1 banner. **You’re here** on the owner’s site. |
-| 8 | **Next action** | Always visible | e.g. “Send to 1 friend to unlock Rising” / “Send to 1 more friend this week to unlock Challenger”. |
+| 8 | **Next action** | Always visible | e.g. “Send to 1 friend to unlock Rising” / “Send to 1 more friend this week to unlock Challenger”. Near-miss HUD (“1 friend from Rising”) and share-kit celebrations decorate this step — they never replace the primary CTA. |
 
 ## Deep links
 
@@ -63,6 +63,19 @@ Do this on a phone-width viewport and a second browser profile.
 - [ ] Next action updates (Rising → “1 more friend this week to unlock Challenger”).
 - [ ] Simulate (demo only) climbs further without inventing public visitor counts.
 - [ ] Owner HQ funnel steps read: Land → Paste site → Get my link → Share → Friend land → Credit.
+
+## Compulsion layer (decorate, don’t confuse)
+
+Casino-light feedback sits **under** the paste form and inside the kit. It must not invent visitors, trap dismissals, or autoplay sound.
+
+| Layer | Honest source |
+| --- | --- |
+| Progress ring / near-miss | `nextActionFor` friend math |
+| Live ticker / toasts | Real `board.activity` only |
+| Ghost counts | Real `liveSites` / `livePlayers` |
+| Rising hook | `expiresAt` on the owner’s chip |
+| Share streak | Local last-share day (dies at next UTC midnight; “dies in 4h” when unpaid) |
+| Confetti tiers | Verified credit count / unlock. Mute default. `prefers-reduced-motion` skips particles |
 
 ## Traffic exchange
 

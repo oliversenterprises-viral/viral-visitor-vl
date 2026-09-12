@@ -1,3 +1,4 @@
+import { burstTier, celebrationLine, playHit, prefersReducedMotion, type BurstTier } from './game';
 import type { UnlockMoment } from './types';
 
 let canvas: HTMLCanvasElement | null = null;
@@ -10,6 +11,7 @@ const COLORS = ['#d6ff3e', '#ff3d8a', '#3ee8ff', '#ffc857', '#f4f1ea'];
 const particles: Particle[] = [];
 
 function ensureCanvas(): CanvasRenderingContext2D | null {
+  if (prefersReducedMotion()) return null;
   if (canvas && ctx) return ctx;
   canvas = document.createElement('canvas');
   canvas.className = 'burst-layer';
@@ -51,11 +53,14 @@ function tick(): void {
   else raf = 0;
 }
 
-export function burst(x = innerWidth / 2, y = innerHeight * 0.35): void {
-  ensureCanvas();
-  for (let i = 0; i < 90; i++) {
+const TIER_N: Record<BurstTier, number> = { spark: 36, burst: 90, storm: 160 };
+
+export function burst(x = innerWidth / 2, y = innerHeight * 0.35, tier: BurstTier = 'burst'): void {
+  if (!ensureCanvas()) return;
+  const n = TIER_N[tier];
+  for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2;
-    const s = 3 + Math.random() * 9;
+    const s = 3 + Math.random() * (tier === 'storm' ? 14 : 9);
     particles.push({
       x,
       y,
@@ -69,25 +74,48 @@ export function burst(x = innerWidth / 2, y = innerHeight * 0.35): void {
   if (!raf) raf = requestAnimationFrame(tick);
 }
 
-export function celebrateUnlock(unlock: UnlockMoment): void {
-  burst();
+export function celebrateUnlock(unlock: UnlockMoment, onShare?: () => void): void {
+  celebrateHit({ host: unlock.host, credits: 3, unlock, onShare });
+}
+
+export function celebrateHit(opts: {
+  host: string;
+  credits: number;
+  unlock?: UnlockMoment | null;
+  onShare?: () => void;
+}): void {
+  const tier = burstTier(opts.credits, Boolean(opts.unlock));
+  burst(innerWidth / 2, innerHeight * 0.35, tier);
+  playHit();
+  if (!opts.unlock) return;
   const existing = document.querySelector('.celebrate');
   existing?.remove();
+  const title = opts.unlock.title;
   const el = document.createElement('div');
   el.className = 'celebrate';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-label', title);
   el.innerHTML = `
     <div class="celebrate-card">
-      <p class="kicker">UNLOCK</p>
-      <h2>${escapeMini(unlock.title)}</h2>
-      <p>${escapeMini(unlock.host)} just climbed. Share this rung while it is hot.</p>
+      <p class="kicker">${escapeMini(tier.toUpperCase())}</p>
+      <h2>${escapeMini(title)}</h2>
+      <p>${escapeMini(celebrationLine(opts.credits, opts.host, opts.unlock.title))}</p>
+      <p class="brag">${escapeMini(opts.unlock.shareText)}</p>
       <button type="button" class="btn volt" data-close-celebrate>Share this moment</button>
+      <button type="button" class="btn ghost" data-dismiss-celebrate>Close</button>
     </div>`;
   document.body.appendChild(el);
-  el.querySelector('[data-close-celebrate]')?.addEventListener('click', () => el.remove());
+  const share = () => {
+    el.remove();
+    opts.onShare?.();
+  };
+  const dismiss = () => el.remove();
+  el.querySelector('[data-close-celebrate]')?.addEventListener('click', share);
+  el.querySelector('[data-dismiss-celebrate]')?.addEventListener('click', dismiss);
   el.addEventListener('click', (e) => {
-    if (e.target === el) el.remove();
+    if (e.target === el) dismiss();
   });
-  setTimeout(() => el.classList.add('on'), 10);
+  setTimeout(() => el.classList.add('on'), prefersReducedMotion() ? 0 : 10);
 }
 
 function escapeMini(value: string): string {
