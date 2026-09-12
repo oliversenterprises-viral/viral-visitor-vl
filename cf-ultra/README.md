@@ -106,6 +106,23 @@ If Wrangler cannot bind KV, Functions still start in **isolate memory demo mode*
 
 No Supabase, no Vercel, no service-role keys are required for this v1 demo.
 
+## Current look (previews)
+
+PNGs from the local Pages preview (`wrangler pages dev dist --kv BOARD` on :8788):
+
+| Shot | Path |
+| --- | --- |
+| Homepage / board | `previews/01-homepage-board.png` |
+| Mobile board | `previews/01b-homepage-board-mobile.png` |
+| Paste URL + Get my link | `previews/02-paste-url-get-link.png` |
+| Share kit | `previews/03-share-kit.png` |
+| Friend referral land | `previews/04-friend-referral-land.png` |
+| TE iframe splash | `previews/05-te-iframe-splash.png` |
+| Embed widget | `previews/05b-embed-widget.png` |
+| Admin stub | `previews/06-admin-dashboard.png` |
+
+Stub routes: `/admin` (partial HQ desk), `/te` (publisher iframe splash).
+
 ## Project layout
 
 ```
