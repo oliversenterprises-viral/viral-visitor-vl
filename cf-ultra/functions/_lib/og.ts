@@ -79,6 +79,7 @@ export function crawlerOgHtml(opts: {
   <meta charset="UTF-8">
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(desc)}">
+  <meta name="robots" content="noindex, follow">
   <link rel="canonical" href="${escapeHtml(opts.canonicalUrl)}">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ViralRefer">

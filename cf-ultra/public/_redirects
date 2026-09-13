@@ -3,4 +3,4 @@
 /a/* /a/:splat 200
 /e/* /e/:splat 200
 /embed.js /embed.js 200
-/* /index.html 200
+/admin /admin/ 308

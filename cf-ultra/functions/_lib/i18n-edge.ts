@@ -47,6 +47,12 @@ export function edgeI18nSnippet(opts?: { picker?: boolean }): string {
   var labels=${JSON.stringify(LABELS)};
   var rtl=${JSON.stringify(RTL)};
   function pick(){
+    try{
+      var q=new URLSearchParams(location.search||'');
+      var ql=(q.get('lang')||q.get('locale')||'').toLowerCase();
+      if(M[ql]) return ql;
+      if(ql==='tl'&&M.fil) return 'fil';
+    }catch(e){}
     try{var s=localStorage.getItem('vr_locale'); if(M[s]) return s;}catch(e){}
     var list=(navigator.languages&&navigator.languages.length)?navigator.languages:(navigator.language?[navigator.language]:['en']);
     for(var i=0;i<list.length;i++){

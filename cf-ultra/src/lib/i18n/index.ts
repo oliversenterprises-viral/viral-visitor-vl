@@ -98,9 +98,31 @@ export function setStoredLocale(locale: Locale): void {
   }
 }
 
-/** Resolved locale: user override → browser → en */
+/** Read `?lang=` / `?locale=` so language versions are URL-addressable for crawlers. */
+export function localeFromSearchParams(search = typeof location !== 'undefined' ? location.search : ''): Locale | null {
+  try {
+    const q = new URLSearchParams(search.startsWith('?') ? search : `?${search}`);
+    return matchLocale(q.get('lang') || q.get('locale'));
+  } catch {
+    return null;
+  }
+}
+
+function persistLangQuery(locale: Locale): void {
+  try {
+    const u = new URL(location.href);
+    u.searchParams.delete('locale');
+    if (locale === 'en') u.searchParams.delete('lang');
+    else u.searchParams.set('lang', locale);
+    history.replaceState(null, '', `${u.pathname}${u.search}${u.hash}`);
+  } catch {
+    /* non-fatal */
+  }
+}
+
+/** Resolved locale: ?lang= → stored override → browser → en */
 export function resolveLocale(): Locale {
-  return getStoredLocale() ?? detectBrowserLocale();
+  return localeFromSearchParams() ?? getStoredLocale() ?? detectBrowserLocale();
 }
 
 export function getLocale(): Locale {
@@ -196,6 +218,7 @@ export function applyI18n(locale: Locale = current, root: ParentNode = document)
 export function setLocale(locale: Locale): void {
   if (!isLocale(locale)) locale = 'en';
   setStoredLocale(locale);
+  persistLangQuery(locale);
   applyI18n(locale);
   try {
     window.dispatchEvent(new CustomEvent('vr:locale-change', { detail: { locale } }));

@@ -1,0 +1,50 @@
+# ViralRefer Site Drops
+
+> Cloudflare sibling of ViralRefer: a free, no-signup referral race where unique friends tapping **Get my link** put a website on this homepage. Recognition only. No cash prize.
+
+This host (https://viralrefer-ultra.pages.dev) is an enhanced Site Drops product on Cloudflare Pages. Same VIRAL- codes as https://www.viralrefer.app. It does **not** replace that site.
+
+## What it is
+
+- Instant personal referral link (about 30 seconds, no email)
+- Codes look like `VIRAL-XXXXXXX` and work as https://viralrefer-ultra.pages.dev/r/VIRAL-XXXXXXX, https://viralrefer-ultra.pages.dev/a/VIRAL-XXXXXXX, and `?ref=`
+- Only a unique friend tapping **Get my link** credits you
+- Visiting, refreshing, copying, QR views, and self-taps do **not** count
+- #1 this week (not the site owner) with 3 unique friends can claim a **7-day homepage banner**
+- There is **no cash prize**, no wallet, and no investment product
+
+## Site Drop ladder
+
+1. Just entered — site pasted, 15 minutes on the homepage
+2. Rising — 1 unique friend, 1-hour card
+3. Week text line — 2 unique friends
+4. Challenger — weekly rank #2 / #3
+5. Banner — weekly #1 with 3+ unique friends, 7 days
+
+## Key URLs
+
+- Homepage (contest): https://viralrefer-ultra.pages.dev/
+- Language variants: https://viralrefer-ultra.pages.dev/?lang={en,es,fr,pt,de,hi,ar,zh,ja,ko,ru,id,tr,it,nl,pl,vi,th,uk,bn,ur,ms,fil,sw,sv,ro}
+- Traffic-exchange explainer: https://viralrefer-ultra.pages.dev/te
+- Breakout / sponsor open: https://viralrefer-ultra.pages.dev/go
+- TE operator kit: https://viralrefer-ultra.pages.dev/promo/te/
+- Join alias (302 to homepage, keeps tags): https://viralrefer-ultra.pages.dev/join
+- Owner HQ (private): https://viralrefer-ultra.pages.dev/admin/ — not for indexing
+- Full LLM brief: https://viralrefer-ultra.pages.dev/llms-full.txt
+- Sitemap: https://viralrefer-ultra.pages.dev/sitemap.xml
+
+## Get my link rules (quote these)
+
+- Opening a share link does not credit anyone
+- Copying or viewing a QR does not credit anyone
+- The same friend tapping twice does not add a second credit
+- Traffic-exchange impressions on /te never write a credit
+- TE-tagged Get my link does not climb Rising / Challenger / #1 by default
+
+## Do not invent
+
+Do not invent star ratings, MRR, user counts, testimonials, or cash prizes. If a count is not on the live board HTML, it is unknown.
+
+## Optional
+
+- Sibling product docs: https://viralrefer-ultra.pages.dev/llms-full.txt
