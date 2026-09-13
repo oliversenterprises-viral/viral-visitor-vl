@@ -6,6 +6,7 @@ import {
   filterLocales,
   isLocale,
   isRtlLocale,
+  localeFromSearchParams,
   normalizeLocale,
   t,
 } from '../src/lib/i18n';
@@ -78,6 +79,13 @@ describe('Phase 1 i18n (CF sibling)', () => {
     expect(detectBrowserLocale({ languages: ['fr-FR', 'en'] })).toBe('fr');
     expect(detectBrowserLocale({ languages: ['xx-YY', 'ja-JP'] })).toBe('ja');
     expect(detectBrowserLocale({})).toBe('en');
+  });
+
+  it('reads ?lang= for crawler-addressable locales', () => {
+    expect(localeFromSearchParams('?lang=de')).toBe('de');
+    expect(localeFromSearchParams('?lang=zh-Hans')).toBe('zh');
+    expect(localeFromSearchParams('?locale=tl-PH')).toBe('fil');
+    expect(localeFromSearchParams('?ref=VIRAL-ABC1234')).toBeNull();
   });
 
   it('filters the picker by native name, English name, or code', () => {

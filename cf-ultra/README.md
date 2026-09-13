@@ -85,6 +85,36 @@ Public Site Drops UI is translated for **26 locales**. Existing Phase 1 set plus
 
 See `src/lib/i18n/` (`data-i18n` attributes + `t()`).
 
+**Crawler strategy (not path-prefix i18n):** English copy is in the initial HTML. `?lang=` is the addressable locale (example `/?lang=es`). Pages Functions rewrite homepage `data-i18n` text, `lang`/`dir`, canonical, and JSON-LD for that query so Google and answer engines do not need JavaScript. The sitemap lists `/?lang=` variants plus `hreflang` (including `x-default`). Client picker still stores `vr_locale` and writes `?lang=` when the visitor changes language. Owner HQ stays English and `noindex`.
+
+## SEO / AEO (Google + answer engines)
+
+White-hat only. No cloaking, no doorway stacks, no fake ratings, MRR, testimonials, or invented user counts. Recognition-only / no cash prize language is the product.
+
+| Asset | Where | What it does |
+| --- | --- | --- |
+| `robots.txt` | Function + `public/robots.txt` | Allow public pages; disallow `/admin`, `/api/` (except `/api/og`); point at sitemap |
+| `sitemap.xml` | Function + `public/sitemap.xml` | `/`, `/te`, `/go`, `/promo/te/`, `/?lang=` variants, lastmod, hreflang |
+| `llms.txt` / `llms-full.txt` | Function + `public/` | Product brief + Site Drops rules for LLM crawlers |
+| Homepage `<head>` | `index.html` (SSR-decorated by `functions/_middleware.ts`) | Unique title/description, canonical, OG/Twitter, theme-color, robots index/follow, JSON-LD |
+| JSON-LD | Organization + SoftwareApplication/WebApplication + FAQPage + HowTo | Honest `Offer` price `0`. No `aggregateRating` |
+| `/te` `/go` | Full unique HTML when top-level; compact `noindex` splash when `size=` or iframe | Rank for TE/share queries without thin doorway pages |
+| `/r/` `/a/` | OG cards | `noindex, follow` — personal links, not ranking targets |
+| `/og.svg` | Static + Function | Homepage share image |
+
+Hero, how-it-works, FAQ, and ladder rules are in the first HTML response (not an empty JS shell). Vite CSS is extracted at build time; Font Awesome is preloaded and applied asynchronously so the H1 can paint without waiting on the icon kit.
+
+### Request indexing after deploy
+
+1. Confirm `https://viralrefer-ultra.pages.dev/robots.txt` and `/sitemap.xml` return 200.
+2. In [Google Search Console](https://search.google.com/search-console) add the Pages host (and later the custom domain). Use the same property type you will keep.
+3. Submit `https://viralrefer-ultra.pages.dev/sitemap.xml`.
+4. URL Inspection → `/`, `/te`, `/go`, `/promo/te/` → **Request indexing**.
+5. Optional: Bing Webmaster Tools sitemap submit. Answer engines that honor `llms.txt` will pick up `/llms.txt` and `/llms-full.txt` on their next crawl.
+6. After a custom domain is attached, the Functions rewrite canonical/OG/sitemap origins to that host — re-submit the new sitemap.
+
+Do **not** request indexing for `/admin`, `/api/*`, or individual `/r/VIRAL-…` links.
+
 ## Run locally
 
 ```bash
@@ -187,7 +217,10 @@ cf-ultra/
     r/[code].ts        # OG + Get my link landing
     e/[host].ts        # embed widget
     embed.js.ts
-    _lib/              # engine, store, memory rate limits, edge cache, OG HTML
+    robots.txt.ts sitemap.xml.ts llms.txt.ts llms-full.txt.ts og.svg.ts
+    _middleware.ts     # framing + homepage SEO decoration
+    _lib/              # engine, store, SEO, memory rate limits, edge cache, OG HTML
+  src/lib/organic-seo.ts
   FUNNEL.md            # Perfect loop + manual checklist (source of truth)
   ARCHITECTURE.md      # 1k–10k+/day Cloudflare scale story
   src/                 # Vite UI

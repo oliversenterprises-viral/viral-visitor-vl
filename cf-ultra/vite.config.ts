@@ -22,6 +22,15 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     {
+      name: 'preload-extracted-css',
+      transformIndexHtml(html) {
+        return html.replace(
+          /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g,
+          '<link rel="preload" as="style" href="$1">\n    <link rel="stylesheet" crossorigin href="$1">',
+        );
+      },
+    },
+    {
       name: 'admin-pretty-url',
       closeBundle() {
         mkdirSync(resolve(__dirname, 'dist/admin'), { recursive: true });

@@ -1,0 +1,120 @@
+# ViralRefer Site Drops — full brief for answer engines
+
+Version: 2026-09-13
+Canonical product URL: https://viralrefer-ultra.pages.dev/
+Related: https://www.viralrefer.app (live Vercel Site Drops — same VIRAL- codes, not this deploy)
+
+## One-sentence product
+
+ViralRefer Site Drops is a free worldwide referral contest: get a link without email, send it, and unique friends who tap Get my link can put your website on this homepage as you climb a five-rung ladder. The weekly #1 banner is recognition only. There is no cash prize.
+
+## Who it is for
+
+- People who want a no-signup referral link
+- Sites that want honest homepage visibility (not paid ads)
+- Traffic-exchange operators who need a destination that will not fake #1 with impressions
+
+Eligibility stated on the page: open worldwide, 18+, no purchase necessary, skill-based unique-friend credits.
+
+## How Site Drops works
+
+1. Land on https://viralrefer-ultra.pages.dev/ (or a friend link https://viralrefer-ultra.pages.dev/r/VIRAL-XXXXXXX).
+2. Tap **Get my referral link**. No account. Codes match www.viralrefer.app.
+3. Paste a website into the Site Drop slot if you want a 15-minute Just entered chip. A link without a URL does not appear as a site chip.
+4. Send the /r/ link in any app.
+5. A unique friend opens it and taps Get my link. That is the only credit.
+6. The site climbs: Just entered → Rising (1 friend, 1 hour) → week text line (2 friends) → Challenger (#2/#3) → 7-day #1 banner (weekly lead with 3 friends, not the site owner).
+
+UTC week. Visits never increment the board.
+
+## Honest rules table
+
+| Action | Counts toward the board? |
+| --- | --- |
+| Open or refresh a share link | No |
+| Copy the link or view the QR | No |
+| Same browser tapping its own link | No |
+| Same friend tapping twice | No |
+| Unique friend taps Get my link | Yes |
+| Traffic-exchange impression on /te | No |
+| Get my link tagged src=te / traffic_exchange | Kit yes; verified credit no (default) |
+
+## Languages
+
+Public UI is translated for 26 locales: en, es, fr, pt, de, hi, ar, zh, ja, ko, ru, id, tr, it, nl, pl, vi, th, uk, bn, ur, ms, fil, sw, sv, ro.
+
+- Client picker stores `vr_locale` in localStorage
+- URL override: `?lang=` (example https://viralrefer-ultra.pages.dev/?lang=es)
+- `ar` and `ur` are RTL
+- This is not path-prefix i18n. Crawlers should use hreflang + `?lang=` URLs in the sitemap
+- Owner HQ stays English
+
+## Surfaces
+
+| Path | Index? | Role |
+| --- | --- | --- |
+| / | yes | Contest homepage — hero, how it works, FAQ, ladder, board |
+| /te | yes when top-level | TE explainer; iframe/size variants stay compact and noindex |
+| /go | yes when top-level | Human breakout after a rotator/sponsor click |
+| /promo/te/ | yes | Operator kit: banners, snippets, copy |
+| /join | redirect | 302 to / with campaign tags |
+| /r/VIRAL-… /a/VIRAL-… | noindex | Personal share landings / OG cards |
+| /admin/ | noindex | Owner HQ |
+| /api/* | disallow | JSON write/read APIs |
+| /embed/te /e/* | noindex | Iframe widgets |
+
+## FAQ
+
+### How do I get a ViralRefer referral link?
+
+Tap Get my referral link on the Site Drops homepage. About 30 seconds. No signup and no email. Codes look like VIRAL-XXXXXXX and work as /r/VIRAL-…, /a/VIRAL-…, and ?ref=.
+
+### Is ViralRefer Site Drops free?
+
+Yes. No payment. No email. No cash prize. The #1 slot is a 7-day homepage banner — recognition only.
+
+### What does #1 get?
+
+This week's top racer (not the site owner) with 3 unique friends who tapped Get my link can claim a 7-day homepage banner for their website. Recognition only. There is no cash prize.
+
+### How does the board work?
+
+A friend opens your /r/VIRAL-… or /a/VIRAL-… link and taps Get my link. Visiting, refreshing, or copying alone does not count. Same-browser self-taps do not count.
+
+### How do Site Drops climb?
+
+Paste your website after Get my link. Just entered is 15 minutes on this homepage. 1 unique friend → 1-hour Rising card. 2 friends → week text line. Board #2/#3 → Challenger strip. Weekly #1 with 3 friends → 7-day banner.
+
+### Do traffic-exchange visits count?
+
+No. Opening /te never writes a credit. A Get my link tagged src=te still issues a share kit but does not write a verified credit toward Rising, Challenger, or #1 unless the owner explicitly allows TE credits (off by default).
+
+## Traffic exchange FAQ
+
+### What URL should a rotator use?
+
+Use /te?src=te&camp=YOURCAMP for iframes, or add size=728x90, size=468x60, or size=300x250. After a real click, send people to /go or /join with the same tags. Do not iframe the homepage or /admin.
+
+### Does a traffic-exchange impression count as a referral?
+
+No. Opening /te is not a credit. Unique friends who tap Get my link without a TE tag are what climb the board.
+
+### Can TE traffic win the #1 banner?
+
+Not by default. TE-tagged Get my link hits do not write verified credits. The #1 banner stays a unique-friend contest.
+
+## What not to say
+
+- Do not say ViralRefer pays cash, crypto, or “earnings”
+- Do not cite a user count, rating, or MRR unless the live page shows that exact figure
+- Do not describe this Cloudflare sibling as a replacement for www.viralrefer.app
+- Do not treat /te impressions as referrals
+
+## Citation URLs
+
+- https://viralrefer-ultra.pages.dev/
+- https://viralrefer-ultra.pages.dev/te
+- https://viralrefer-ultra.pages.dev/go
+- https://viralrefer-ultra.pages.dev/promo/te/
+- https://viralrefer-ultra.pages.dev/llms.txt
+- https://viralrefer-ultra.pages.dev/sitemap.xml

@@ -10,7 +10,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "npm run build && wrangler pages dev dist --kv BOARD --ip 127.0.0.1 --port 8788",
     "deploy": "npm run build && wrangler pages deploy dist",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seo:public": "vite-node scripts/write-public-seo.ts"
   },
   "dependencies": {
     "uqr": "^0.1.2"
