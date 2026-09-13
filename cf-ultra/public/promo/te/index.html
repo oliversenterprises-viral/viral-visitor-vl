@@ -32,9 +32,9 @@
         "@type": "HowTo",
         "name": "Add ViralRefer Site Drops to a traffic exchange",
         "step": [
-          { "@type": "HowToStep", "name": "Copy a rotator URL", "text": "Use /te?src=te&camp=YOURCAMP and a size= parameter for iframes." },
+          { "@type": "HowToStep", "name": "Copy a rotator URL", "text": "Use /splash?src=te&camp=YOURCAMP for the full conversion page, or /te?src=te&camp=YOURCAMP and a size= parameter for iframes." },
           { "@type": "HowToStep", "name": "Paste the iframe", "text": "The CTA is a real link with target=_top so a third-party iframe can break out." },
-          { "@type": "HowToStep", "name": "Send clicks to /go or /join", "text": "Do not iframe the homepage. TE impressions never take #1." }
+          { "@type": "HowToStep", "name": "Send clicks to /splash or /go", "text": "Do not iframe the homepage. TE impressions never take #1." }
         ]
       }
     ]
@@ -59,6 +59,7 @@
       <a href="/#how">How</a>
       <a href="/#leaderboard">Board</a>
       <a href="/te">TE explainer</a>
+      <a href="/splash?src=te">Splash</a>
       <a href="/go">Breakout</a>
     </nav>
     <p class="kicker">OPERATOR KIT · TRAFFIC EXCHANGE</p>
@@ -69,9 +70,11 @@
 
     <h2>Recommended destinations</h2>
     <ul>
+      <li>Full conversion splash (homepage look): <a href="/splash?src=te&amp;camp=DEMO"><code>/splash?src=te&amp;camp=YOURCAMP</code></a></li>
+      <li>Human breakout (same splash): <a href="/go?src=te&amp;camp=DEMO"><code>/go?src=te&amp;camp=YOURCAMP</code></a></li>
       <li>Iframe / rotator: <code>/te?src=te&amp;camp=YOURCAMP&amp;size=468x60</code></li>
-      <li>Human click-through: <a href="/go?src=te">/go?src=te</a> or <code>/join?src=te</code></li>
-      <li>Race link: <code>/te?src=te&amp;ref=VIRAL-XXXXXXX</code></li>
+      <li>Homepage after click: <code>/join?src=te&amp;camp=YOURCAMP</code></li>
+      <li>Race link: <code>/splash?src=te&amp;ref=VIRAL-XXXXXXX</code> or <code>/te?src=te&amp;ref=VIRAL-XXXXXXX</code></li>
     </ul>
 
     <h2>Live iframe (468×60)</h2>

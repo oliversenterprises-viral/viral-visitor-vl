@@ -12,6 +12,8 @@ export const onRequest: PagesFunction = async (context) => {
     path === '/te' ||
     path === '/te.html' ||
     path === '/go' ||
+    path === '/splash' ||
+    path.startsWith('/splash') ||
     path.startsWith('/embed/te') ||
     path.startsWith('/e/') ||
     path.startsWith('/promo/te');

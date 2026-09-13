@@ -52,22 +52,75 @@ export function campaignFromSearch(search: string | URLSearchParams): Campaign {
   });
 }
 
-export function teDestination(
+/** Survive cookie blocks: keep campaign + UTM tags on the next URL. */
+export const PASS_THROUGH_KEYS = [
+  'size',
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_content',
+  'utm_term',
+  'utm',
+  'lang',
+  'locale',
+] as const;
+
+export function passThroughTags(search: URLSearchParams | Record<string, string> | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!search) return out;
+  const get = (key: string) =>
+    search instanceof URLSearchParams ? search.get(key) : search[key];
+  for (const key of PASS_THROUGH_KEYS) {
+    const v = String(get(key) || '')
+      .trim()
+      .slice(0, 80);
+    if (v) out[key] = v;
+  }
+  return out;
+}
+
+export function applySearchTags(u: URL, extra?: Record<string, string> | URLSearchParams): void {
+  const tags = extra instanceof URLSearchParams ? passThroughTags(extra) : extra || {};
+  for (const [k, v] of Object.entries(tags)) {
+    if (v) u.searchParams.set(k, v);
+  }
+}
+
+export function taggedPath(
   origin: string,
-  opts: { ref?: string | null; camp?: string | null; extra?: Record<string, string> } = {},
+  path: string,
+  opts: { ref?: string | null; camp?: string | null; extra?: Record<string, string> | URLSearchParams } = {},
 ): string {
-  const u = new URL('/te', origin.endsWith('/') ? origin : `${origin}/`);
+  const u = new URL(path, origin.endsWith('/') ? origin : `${origin}/`);
   u.searchParams.set('src', 'te');
   if (opts.camp) u.searchParams.set('camp', opts.camp);
   if (opts.ref) u.searchParams.set('ref', opts.ref);
-  for (const [k, v] of Object.entries(opts.extra || {})) {
-    if (v) u.searchParams.set(k, v);
-  }
+  applySearchTags(u, opts.extra);
   return u.toString();
 }
 
-export function breakoutUrl(origin: string, camp: Campaign, ref?: string | null): string {
+export function teDestination(
+  origin: string,
+  opts: { ref?: string | null; camp?: string | null; extra?: Record<string, string> | URLSearchParams } = {},
+): string {
+  return taggedPath(origin, '/te', opts);
+}
+
+export function splashDestination(
+  origin: string,
+  opts: { ref?: string | null; camp?: string | null; extra?: Record<string, string> | URLSearchParams } = {},
+): string {
+  return taggedPath(origin, '/splash', opts);
+}
+
+export function breakoutUrl(
+  origin: string,
+  camp: Campaign,
+  ref?: string | null,
+  extra?: Record<string, string> | URLSearchParams,
+): string {
   const u = new URL('/', origin.endsWith('/') ? origin : `${origin}/`);
+  applySearchTags(u, extra);
   if (camp.te || camp.src) u.searchParams.set('src', camp.te ? 'te' : camp.src);
   if (camp.camp) u.searchParams.set('camp', camp.camp);
   if (ref) u.searchParams.set('ref', ref);

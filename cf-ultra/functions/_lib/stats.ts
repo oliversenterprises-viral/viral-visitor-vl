@@ -14,7 +14,9 @@ export type TrackKind =
   | 'embed_load'
   | 'embed_click'
   | 'error'
-  | 'te_ignored';
+  | 'te_ignored'
+  | 'te_splash_view'
+  | 'te_splash_cta';
 
 export type Platform = 'x' | 'whatsapp' | 'telegram' | 'reddit' | 'qr' | 'embed' | 'direct' | 'native' | 'copy' | 'other';
 
@@ -38,6 +40,8 @@ export interface HourBucket {
   teLands: number;
   teJoins: number;
   teCreditsIgnored: number;
+  teSplashViews: number;
+  teSplashCtas: number;
   platforms: Record<string, number>;
   referrers: Record<string, number>;
   utm: Record<string, number>;
@@ -95,6 +99,8 @@ const COUNTERS: (keyof HourBucket)[] = [
   'teLands',
   'teJoins',
   'teCreditsIgnored',
+  'teSplashViews',
+  'teSplashCtas',
 ];
 
 const MAPS = ['platforms', 'referrers', 'utm', 'camps', 'geo', 'device', 'browser'] as const;
@@ -128,6 +134,8 @@ export function emptyBucket(hour: string): HourBucket {
     teLands: 0,
     teJoins: 0,
     teCreditsIgnored: 0,
+    teSplashViews: 0,
+    teSplashCtas: 0,
     platforms: {},
     referrers: {},
     utm: {},
@@ -208,7 +216,7 @@ export function applyEvent(bucket: HourBucket, kind: TrackKind, hints: VisitorHi
   addCount(bucket.utm, hints.utm);
   if (hints.camp) addCount(bucket.camps, hints.camp);
   if (hints.platform) addCount(bucket.platforms, hints.platform);
-  if (hints.te && (kind === 'land' || kind === 'friend_land')) bucket.teLands += 1;
+  if (hints.te && (kind === 'land' || kind === 'friend_land' || kind === 'te_splash_view')) bucket.teLands += 1;
   if (hints.te && kind === 'join') bucket.teJoins += 1;
 
   switch (kind) {
@@ -255,6 +263,12 @@ export function applyEvent(bucket: HourBucket, kind: TrackKind, hints: VisitorHi
     case 'te_ignored':
       bucket.teCreditsIgnored += 1;
       break;
+    case 'te_splash_view':
+      bucket.teSplashViews += 1;
+      break;
+    case 'te_splash_cta':
+      bucket.teSplashCtas += 1;
+      break;
   }
 }
 
@@ -270,6 +284,7 @@ export function funnelRates(b: HourBucket) {
     bounce: pct(Math.max(0, (b.lands || b.pageviews) - b.joins), b.lands || b.pageviews),
     teToJoin: pct(b.teJoins, b.teLands),
     teQuality: pct(b.credits, b.teLands),
+    splashToCta: pct(b.teSplashCtas, b.teSplashViews),
   };
 }
 
@@ -305,6 +320,8 @@ export function eventText(kind: TrackKind, extra = ''): string {
     embed_click: 'Embed click',
     error: 'Error',
     te_ignored: 'TE credit ignored',
+    te_splash_view: 'TE splash view',
+    te_splash_cta: 'TE splash Get my link',
   };
   return extra ? `${labels[kind]} · ${extra}` : labels[kind];
 }

@@ -39,6 +39,18 @@ describe('rollup merge', () => {
     expect(funnelRates(b).teToJoin).toBe(100);
   });
 
+  it('counts splash views and CTA clicks without inventing credits', () => {
+    const b = emptyBucket('2026-09-12T15');
+    applyEvent(b, 'te_splash_view', { ...hints, te: true, camp: 'demo', utm: 'te' });
+    applyEvent(b, 'te_splash_cta', { ...hints, te: true, camp: 'demo', utm: 'te' });
+    expect(b.teSplashViews).toBe(1);
+    expect(b.teSplashCtas).toBe(1);
+    expect(b.teLands).toBe(1);
+    expect(b.credits).toBe(0);
+    expect(b.camps.demo).toBe(2);
+    expect(funnelRates(b).splashToCta).toBe(100);
+  });
+
   it('computes funnel percents without inventing volume', () => {
     const b = emptyBucket('x');
     b.shares = 10;

@@ -14,6 +14,8 @@ const KINDS = new Set<TrackKind>([
   'embed_load',
   'embed_click',
   'error',
+  'te_splash_view',
+  'te_splash_cta',
 ]);
 
 type Body = {
@@ -58,7 +60,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env }) =
     actorId,
     sessionId: body.session || actorId,
     hints,
-    flushNow: kind !== 'pageview' && kind !== 'land',
+    flushNow: kind !== 'pageview' && kind !== 'land' && kind !== 'te_splash_view',
     text: host || undefined,
     origin: originFromRequest(request),
     request,

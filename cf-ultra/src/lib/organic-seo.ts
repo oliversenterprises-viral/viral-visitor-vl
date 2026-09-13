@@ -148,7 +148,7 @@ export const TE_FAQ: readonly FaqEntry[] = [
   {
     question: 'What URL should a rotator use?',
     answer:
-      'Use /te?src=te&camp=YOURCAMP for iframes, or add size=728x90, size=468x60, or size=300x250. After a real click, send people to /go or /join with the same tags. Do not iframe the homepage or /admin.',
+      'Use /te?src=te&camp=YOURCAMP&size=468x60 for iframes. Full conversion splash: /splash?src=te&camp=YOURCAMP (also /go). After a real click, send people to /splash, /go, or /join with the same tags. Do not iframe the homepage or /admin.',
   },
   {
     question: 'Does a traffic-exchange impression count as a referral?',
@@ -317,6 +317,7 @@ export function buildRobotsTxt(origin?: string): string {
 Allow: /
 Allow: /te
 Allow: /go
+Allow: /splash
 Allow: /promo/te
 Allow: /promo/te/
 Allow: /llms.txt
@@ -441,6 +442,7 @@ This host (${base}) is an enhanced Site Drops product on Cloudflare Pages. Same 
 - Homepage (contest): ${base}/
 - Language variants: ${base}/?lang={${SEO_LOCALES.join(',')}}
 - Traffic-exchange explainer: ${base}/te
+- Full conversion splash (noindex): ${base}/splash?src=te&camp=YOURCAMP
 - Breakout / sponsor open: ${base}/go
 - TE operator kit: ${base}/promo/te/
 - Join alias (302 to homepage, keeps tags): ${base}/join
@@ -527,7 +529,8 @@ Public UI is translated for ${SEO_LOCALES.length} locales: ${SEO_LOCALES.join(',
 | --- | --- | --- |
 | / | yes | Contest homepage — hero, how it works, FAQ, ladder, board |
 | /te | yes when top-level | TE explainer; iframe/size variants stay compact and noindex |
-| /go | yes when top-level | Human breakout after a rotator/sponsor click |
+| /splash | noindex | Full-viewport conversion splash for traffic exchanges |
+| /go | noindex when conversion splash | Human breakout — same conversion layout as /splash |
 | /promo/te/ | yes | Operator kit: banners, snippets, copy |
 | /join | redirect | 302 to / with campaign tags |
 | /r/VIRAL-… /a/VIRAL-… | noindex | Personal share landings / OG cards |
@@ -555,6 +558,7 @@ ${teFaq}
 - ${base}/
 - ${base}/te
 - ${base}/go
+- ${base}/splash
 - ${base}/promo/te/
 - ${base}/llms.txt
 - ${base}/sitemap.xml
@@ -617,7 +621,7 @@ export function isPublicAssetPath(path: string): boolean {
   if (p === '/') return true;
   if (p === '/index.html') return true;
   if (p === '/404' || p === '/404.html') return true;
-  if (p === '/te' || p === '/te.html' || p === '/go' || p === '/join') return true;
+  if (p === '/te' || p === '/te.html' || p === '/go' || p === '/join' || p === '/splash') return true;
   if (p === '/admin') return true;
   if (p.startsWith('/admin/')) return true;
   if (p.startsWith('/promo/')) return true;

@@ -55,7 +55,8 @@ Public UI is translated for 26 locales: en, es, fr, pt, de, hi, ar, zh, ja, ko, 
 | --- | --- | --- |
 | / | yes | Contest homepage — hero, how it works, FAQ, ladder, board |
 | /te | yes when top-level | TE explainer; iframe/size variants stay compact and noindex |
-| /go | yes when top-level | Human breakout after a rotator/sponsor click |
+| /splash | noindex | Full-viewport conversion splash for traffic exchanges |
+| /go | noindex when conversion splash | Human breakout — same conversion layout as /splash |
 | /promo/te/ | yes | Operator kit: banners, snippets, copy |
 | /join | redirect | 302 to / with campaign tags |
 | /r/VIRAL-… /a/VIRAL-… | noindex | Personal share landings / OG cards |
@@ -93,7 +94,7 @@ No. Opening /te never writes a credit. A Get my link tagged src=te still issues 
 
 ### What URL should a rotator use?
 
-Use /te?src=te&camp=YOURCAMP for iframes, or add size=728x90, size=468x60, or size=300x250. After a real click, send people to /go or /join with the same tags. Do not iframe the homepage or /admin.
+Use /te?src=te&camp=YOURCAMP&size=468x60 for iframes. Full conversion splash: /splash?src=te&camp=YOURCAMP (also /go). After a real click, send people to /splash, /go, or /join with the same tags. Do not iframe the homepage or /admin.
 
 ### Does a traffic-exchange impression count as a referral?
 
@@ -115,6 +116,7 @@ Not by default. TE-tagged Get my link hits do not write verified credits. The #1
 - https://viralrefer-ultra.pages.dev/
 - https://viralrefer-ultra.pages.dev/te
 - https://viralrefer-ultra.pages.dev/go
+- https://viralrefer-ultra.pages.dev/splash
 - https://viralrefer-ultra.pages.dev/promo/te/
 - https://viralrefer-ultra.pages.dev/llms.txt
 - https://viralrefer-ultra.pages.dev/sitemap.xml

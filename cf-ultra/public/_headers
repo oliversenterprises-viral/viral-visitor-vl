@@ -33,6 +33,12 @@
   Cache-Control: public, max-age=86400
   Content-Security-Policy: frame-ancestors *
 
+/splash
+  Content-Security-Policy: frame-ancestors *
+
+/go
+  Content-Security-Policy: frame-ancestors *
+
 /admin
   X-Frame-Options: DENY
   Content-Security-Policy: frame-ancestors 'none'

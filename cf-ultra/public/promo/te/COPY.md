@@ -6,11 +6,12 @@ No paid TE integration required. Destination must include `src=te` so credits st
 
 | Use | URL |
 | --- | --- |
-| Rotator / iframe | `/te?src=te&camp=YOURCAMP` |
-| Alias | `/go?src=te&camp=YOURCAMP` |
+| Full conversion splash | `/splash?src=te&camp=YOURCAMP` |
+| Human breakout (same splash) | `/go?src=te&camp=YOURCAMP` |
+| Rotator / iframe | `/te?src=te&camp=YOURCAMP&size=468x60` |
 | Compact iframe | `/embed/te?src=te&camp=YOURCAMP` |
 | Homepage (after click) | `/join?src=te&camp=YOURCAMP` or `/?src=te` |
-| Race link | `/te?src=te&ref=VIRAL-XXXXXXX&camp=YOURCAMP` or `/a/VIRAL-XXXXXXX?src=te` |
+| Race link | `/splash?src=te&ref=VIRAL-XXXXXXX&camp=YOURCAMP` or `/a/VIRAL-XXXXXXX?src=te` |
 
 ## Ad titles
 
@@ -36,6 +37,7 @@ The CTA is a real `<a target="_top">`. It works if cookies and JS are blocked. T
 
 | Size | src | width × height |
 | --- | --- | --- |
+| Full splash | `/splash?src=te&camp=YOURCAMP` | Viewport (not for iframes) |
 | Leader | `/te?src=te&camp=leader&size=728x90` | 728 × 90 |
 | Rotator | `/te?src=te&camp=rotator&size=468x60` | 468 × 60 |
 | Box | `/embed/te?src=te&camp=box&size=300x250` | 300 × 250 |
@@ -46,6 +48,6 @@ Do **not** iframe `/` or `/admin`. Do **not** iframe `/r/VIRAL-…` (join needs 
 
 | Path | Framed by third parties? |
 | --- | --- |
-| `/te`, `/go`, `/embed/te`, `/e/*`, `/promo/te/*` | Yes (`frame-ancestors *`) |
+| `/splash`, `/te`, `/go`, `/embed/te`, `/e/*`, `/promo/te/*` | Yes (`frame-ancestors *`) |
 | `/` homepage | Same-origin only |
 | `/admin` | Never (`DENY`) |

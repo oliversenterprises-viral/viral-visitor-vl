@@ -26,7 +26,17 @@ type Dash = {
   ops: { bannedCodes: string[]; bannedSites: string[]; mutedCodes: string[]; hero: string; lead: string; teCreditsCount?: boolean };
   excludeIps: string[];
   camps: { key: string; n: number }[];
-  te: { lands: number; joins: number; ignored: number; toJoin: number; quality: number; teCreditsCount: boolean };
+  te: {
+    lands: number;
+    joins: number;
+    ignored: number;
+    toJoin: number;
+    quality: number;
+    splashViews?: number;
+    splashCtas?: number;
+    splashToCta?: number;
+    teCreditsCount: boolean;
+  };
   alerts: {
     events: Record<string, boolean>;
     digest: 'off' | 'hourly' | 'daily';
@@ -308,18 +318,23 @@ function render(d: Dash): void {
     </div>
     <section class="lane">
       <h3>Traffic exchange</h3>
-      <p class="note">Splash impressions on <code>/te</code> are not written (edge-cheap). TE still uses the same VIRAL- codes — <code>/te?src=te&amp;ref=VIRAL-XXXXXXX</code>. TE Get-my-link does <strong>not</strong> count as a verified credit unless you flip the switch (default off — #1 banner stays honest).</p>
+      <p class="note">Compact <code>/te?size=</code> iframe impressions stay edge-cheap (no write). Full <code>/splash</code> and <code>/go</code> fire <code>te_splash_view</code> + <code>te_splash_cta</code> with <code>src</code>/<code>camp</code>. TE still uses the same VIRAL- codes — <code>/splash?src=te&amp;ref=VIRAL-XXXXXXX</code>. TE Get-my-link does <strong>not</strong> count as a verified credit unless you flip the switch (default off — #1 banner stays honest).</p>
       <div class="kpis" style="grid-template-columns:1fr 1fr 1fr 1fr">
         <div class="kpi kpi--violet"><b>${d.te?.lands ?? 0}</b><small>TE visits</small></div>
         <div class="kpi kpi--emerald"><b>${d.te?.joins ?? 0}</b><small>TE → Get my link</small></div>
         <div class="kpi kpi--sky"><b>${d.te?.toJoin ?? 0}%</b><small>TE conversion</small></div>
         <div class="kpi kpi--amber"><b>${d.te?.quality ?? 0}%</b><small>Credits / TE visit</small></div>
       </div>
-      <p class="note">Credits ignored from TE: ${d.te?.ignored ?? 0}. Campaigns:</p>
+      <div class="kpis" style="grid-template-columns:1fr 1fr 1fr;margin-top:10px">
+        <div class="kpi kpi--violet"><b>${d.te?.splashViews ?? 0}</b><small>Splash views</small></div>
+        <div class="kpi kpi--emerald"><b>${d.te?.splashCtas ?? 0}</b><small>Splash CTA clicks</small></div>
+        <div class="kpi kpi--sky"><b>${d.te?.splashToCta ?? 0}%</b><small>Splash → CTA</small></div>
+      </div>
+      <p class="note">Credits ignored from TE: ${d.te?.ignored ?? 0}. Campaigns (from <code>camp=</code> on splash + join):</p>
       ${bars(d.camps || [])}
       <div class="ops-row">
         <input data-te-camp placeholder="campaign (optional)" />
-        <button class="btn volt" type="button" data-te-copy>Copy TE destination</button>
+        <button class="btn volt" type="button" data-te-copy>Copy splash URL</button>
         <button class="btn ghost" type="button" data-te-iframe>Copy iframe snippet</button>
       </div>
       <label class="toggle"><input type="checkbox" data-te-count ${d.te?.teCreditsCount || d.ops.teCreditsCount ? 'checked' : ''}/> Allow TE-attributed credits on the weekly race / #1 banner (not recommended)</label>
@@ -438,7 +453,7 @@ function render(d: Dash): void {
   root.querySelector('[data-te-copy]')?.addEventListener('click', async () => {
     const camp = (root.querySelector('[data-te-camp]') as HTMLInputElement)?.value.trim() || 'hq';
     const code = (root.querySelector('[data-code]') as HTMLInputElement)?.value.trim().toUpperCase() || '';
-    const url = new URL('/te', location.origin);
+    const url = new URL('/splash', location.origin);
     url.searchParams.set('src', 'te');
     url.searchParams.set('camp', camp);
     if (/^VIRAL-[A-Z0-9]{4,12}$/.test(code) || /^VR-[A-HJ-NP-Z2-9]{6}$/.test(code)) url.searchParams.set('ref', code);
