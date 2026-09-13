@@ -1,6 +1,7 @@
 import { MESSAGES } from '../../src/lib/i18n/messages';
 import type { Locale } from '../../src/lib/i18n/locales';
 import {
+  GSC_META_CONTENT,
   HOMEPAGE_SEO,
   OG_LOCALE,
   SEO_DEFAULT_ORIGIN,
@@ -79,6 +80,7 @@ export function decorateHomepageHtml(html: string, pageUrl: URL): string {
   out = upsertMeta(out, 'name', 'twitter:description', ogDesc);
   out = upsertMeta(out, 'name', 'twitter:image', image);
   out = upsertMeta(out, 'name', 'theme-color', SEO_THEME_COLOR);
+  out = upsertMeta(out, 'name', 'google-site-verification', GSC_META_CONTENT);
   out = out.replace(
     /<link\s+rel="canonical"[^>]*>/i,
     `<link rel="canonical" href="${escapeAttr(canonical)}">`,

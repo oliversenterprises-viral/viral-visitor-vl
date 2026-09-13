@@ -4,7 +4,11 @@ import { decorateHomepageHtml } from '../functions/_lib/homepage-seo';
 import { goLandingHtml, teLandingHtml } from '../functions/_lib/public-landings';
 import { teSplashHtml } from '../functions/_lib/te-splash';
 import { localeFromSearchParams } from '../src/lib/i18n';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
+  GSC_HTML_BODY,
+  GSC_META_CONTENT,
   HOMEPAGE_FAQ,
   SEO_DEFAULT_ORIGIN,
   SEO_LOCALES,
@@ -114,6 +118,9 @@ describe('organic SEO builders', () => {
     expect(isPublicAssetPath('/te')).toBe(true);
     expect(isPublicAssetPath('/promo/te/')).toBe(true);
     expect(isPublicAssetPath('/this-is-not-a-page')).toBe(false);
+    expect(isPublicAssetPath('/google163d31ba24216edd')).toBe(true);
+    expect(isPublicAssetPath('/google163d31ba24216edd.html')).toBe(true);
+    expect(isPublicAssetPath('/google163d31ba24216edd.html/')).toBe(true);
   });
 
   it('ships a homepage OG SVG', () => {
@@ -140,6 +147,19 @@ describe('decorated homepage HTML', () => {
     expect(html).toContain('Gana la portada.');
     expect(html).toContain('application/ld+json');
     expect(html).toContain('SoftwareApplication');
+    expect(html).toContain(`name="google-site-verification"`);
+    expect(html).toContain(GSC_META_CONTENT);
+  });
+});
+
+describe('Google Search Console file', () => {
+  it('is exactly 53 bytes with no trailing newline', () => {
+    expect(GSC_HTML_BODY).toHaveLength(53);
+    expect(GSC_HTML_BODY.endsWith('\n')).toBe(false);
+    expect(GSC_HTML_BODY).toBe('google-site-verification: google163d31ba24216edd.html');
+    const file = readFileSync(resolve(__dirname, '../public/google163d31ba24216edd.html'));
+    expect(file.byteLength).toBe(53);
+    expect(file.toString('utf8')).toBe(GSC_HTML_BODY);
   });
 });
 

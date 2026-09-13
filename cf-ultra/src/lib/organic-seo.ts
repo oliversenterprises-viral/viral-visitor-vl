@@ -11,6 +11,10 @@ export const SEO_LASTMOD = '2026-09-13';
 export const SEO_THEME_COLOR = '#09090b';
 export const SEO_SITE_NAME = 'ViralRefer Site Drops';
 
+/** Exact 53-byte Google Search Console HTML-file body (no trailing newline). */
+export const GSC_HTML_BODY = 'google-site-verification: google163d31ba24216edd.html';
+export const GSC_META_CONTENT = 'wXvWBlfJ3HiXhKJZ2lX6DAQmvfttyQMPSb9_aUZY0eU';
+
 export const SEO_LOCALES = [
   'en',
   'es',
@@ -622,6 +626,7 @@ export function isPublicAssetPath(path: string): boolean {
   if (p.startsWith('/assets/')) return true;
   if (p.startsWith('/embed')) return true;
   if (/^\/(?:r|a|e)\/[^/]+$/.test(p)) return true;
+  if (/^\/google[0-9a-f]+(?:\.html)?$/.test(p)) return true;
   if (
     p === '/robots.txt' ||
     p === '/sitemap.xml' ||
