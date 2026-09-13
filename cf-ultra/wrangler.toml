@@ -11,17 +11,15 @@ APP_NAME = "ViralRefer Site Drops"
 # Owner Telegram chat for this deploy (not a secret). Bot token stays a Pages secret.
 TELEGRAM_CHAT_ID = "1274269043"
 
-# TODO after `npx wrangler kv namespace create BOARD`
-# and `npx wrangler kv namespace create BOARD --preview`:
-# uncomment and paste the real IDs. Never put secrets here.
-#
-# [[kv_namespaces]]
-# binding = "BOARD"
-# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-# preview_id = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
-#
+# Pin BOARD here. `wrangler pages deploy` without this block can wipe the
+# Pages dashboard KV binding and flip production to isolate-memory demoMode.
+[[kv_namespaces]]
+binding = "BOARD"
+id = "fd7879dbe5364bd089edefa5dc59a152"
+preview_id = "7312c828609e4e0f93eded491ed328ef"
+
 # Local: `npm run dev` / `npm run preview` pass `--kv BOARD`.
-# Production: Pages → Settings → Bindings → KV → BOARD.
+# Production: this file is the source of truth — do not undeploy the bind.
 #
 # If BOARD is missing, Pages Functions keep the board in isolate memory until recycle.
 #
