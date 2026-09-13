@@ -100,7 +100,7 @@ export function teLandingHtml(opts: { origin: string; url: URL }): string {
   const camp = campaignFromSearch(opts.url.searchParams);
   const refRaw = (opts.url.searchParams.get('ref') || '').toUpperCase();
   const ref = isReferralCode(refRaw) ? refRaw : '';
-  const open = breakoutUrl(opts.origin, camp, ref || null);
+  const open = breakoutUrl(opts.origin, camp, ref || null, opts.url.searchParams);
   const canonical = `${opts.origin}/te`;
   const body = `
   <main>
@@ -116,10 +116,11 @@ export function teLandingHtml(opts: { origin: string; url: URL }): string {
     <h2>Put these in the rotator</h2>
     <table>
       <tr><th>URL</th><th>Use</th></tr>
-      <tr><td><code>/te?src=te&amp;camp=YOURCAMP</code></td><td>This explainer or the splash when <code>size=</code> is set</td></tr>
+      <tr><td><code>/te?src=te&amp;camp=YOURCAMP</code></td><td>This explainer or the compact unit when <code>size=</code> is set</td></tr>
+      <tr><td><code>/splash?src=te&amp;camp=YOURCAMP</code></td><td>Full-viewport conversion splash (homepage look, noindex)</td></tr>
       <tr><td><code>/te?src=te&amp;size=728x90</code></td><td>Leaderboard iframe</td></tr>
       <tr><td><code>/embed/te?src=te&amp;size=300x250</code></td><td>Box iframe</td></tr>
-      <tr><td><code>/go?src=te&amp;camp=YOURCAMP</code></td><td>Human breakout after a click</td></tr>
+      <tr><td><code>/go?src=te&amp;camp=YOURCAMP</code></td><td>Same conversion splash as /splash after a click</td></tr>
       <tr><td><code>/join?src=te</code></td><td>302 into the homepage funnel</td></tr>
     </table>
     <p>Do <strong>not</strong> iframe the homepage or Owner HQ. Race traffic: <code>/te?src=te&amp;ref=VIRAL-XXXXXXX</code>.</p>
@@ -162,7 +163,7 @@ export function goLandingHtml(opts: { origin: string; url: URL }): string {
   const camp = campaignFromSearch(opts.url.searchParams);
   const refRaw = (opts.url.searchParams.get('ref') || '').toUpperCase();
   const ref = isReferralCode(refRaw) ? refRaw : '';
-  const open = breakoutUrl(opts.origin, camp, ref || null);
+  const open = breakoutUrl(opts.origin, camp, ref || null, opts.url.searchParams);
   const canonical = `${opts.origin}/go`;
   const body = `
   <main>
@@ -232,7 +233,7 @@ export function promoTeJsonLd(origin: string): Record<string, unknown>[] {
         {
           '@type': 'HowToStep',
           name: 'Copy a rotator URL',
-          text: 'Use /te?src=te&camp=YOURCAMP and a size= parameter for iframes.',
+          text: 'Use /splash?src=te&camp=YOURCAMP for the full conversion page, or /te?src=te&camp=YOURCAMP&size=468x60 for iframes.',
         },
         {
           '@type': 'HowToStep',
@@ -242,7 +243,7 @@ export function promoTeJsonLd(origin: string): Record<string, unknown>[] {
         {
           '@type': 'HowToStep',
           name: 'Send clicks to /go or /join',
-          text: 'Do not iframe the homepage. TE impressions never take #1.',
+          text: 'Do not iframe the homepage. Send human clicks to /splash or /go. TE impressions never take #1.',
         },
       ],
     },

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { crawlerOgHtml } from '../functions/_lib/og';
 import { decorateHomepageHtml } from '../functions/_lib/homepage-seo';
+import { conversionSplashHtml } from '../functions/_lib/conversion-splash';
 import { goLandingHtml, teLandingHtml } from '../functions/_lib/public-landings';
 import { teSplashHtml } from '../functions/_lib/te-splash';
 import { localeFromSearchParams } from '../src/lib/i18n';
@@ -59,6 +60,7 @@ describe('organic SEO builders', () => {
     expect(xml).toContain(`${SEO_DEFAULT_ORIGIN}/te`);
     expect(xml).toContain(`${SEO_DEFAULT_ORIGIN}/go`);
     expect(xml).toContain(`${SEO_DEFAULT_ORIGIN}/promo/te/`);
+    expect(xml).not.toContain(`${SEO_DEFAULT_ORIGIN}/splash`);
     expect(xml).toContain(`${SEO_DEFAULT_ORIGIN}/?lang=es`);
     expect(xml).toContain('hreflang="x-default"');
     expect(xml).toContain('hreflang="ja"');
@@ -116,6 +118,7 @@ describe('organic SEO builders', () => {
     expect(isSeoBot('Mozilla/5.0 (compatible; Googlebot/2.1)')).toBe(true);
     expect(isPublicAssetPath('/')).toBe(true);
     expect(isPublicAssetPath('/te')).toBe(true);
+    expect(isPublicAssetPath('/splash')).toBe(true);
     expect(isPublicAssetPath('/promo/te/')).toBe(true);
     expect(isPublicAssetPath('/this-is-not-a-page')).toBe(false);
     expect(isPublicAssetPath('/google163d31ba24216edd')).toBe(true);
@@ -189,6 +192,18 @@ describe('public landings', () => {
     });
     expect(splash).toContain('noindex');
     expect(splash).toContain('Get my link');
+    expect(splash).toContain('sz-468x60');
+  });
+
+  it('ships a noindex conversion splash that is not a compact iframe unit', () => {
+    const splash = conversionSplashHtml({
+      origin: 'https://example.test',
+      url: new URL('https://example.test/splash?src=te&camp=DEMO'),
+    });
+    expect(splash).toContain('noindex');
+    expect(splash).toContain('Win the homepage.');
+    expect(splash).toContain('te_splash_view');
+    expect(splash).not.toContain('sz-468x60');
   });
 
   it('noindexes personal share OG cards', () => {

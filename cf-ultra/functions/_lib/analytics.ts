@@ -92,7 +92,17 @@ export function isolateBucket(): HourBucket {
   return copy;
 }
 
-const CONVERSION: TrackKind[] = ['join', 'credit', 'share', 'friend_land', 'paste', 'blocked', 'self_ref', 'te_ignored'];
+const CONVERSION: TrackKind[] = [
+  'join',
+  'credit',
+  'share',
+  'friend_land',
+  'paste',
+  'blocked',
+  'self_ref',
+  'te_ignored',
+  'te_splash_cta',
+];
 
 export async function recordAnalytics(
   env: UltraEnv,

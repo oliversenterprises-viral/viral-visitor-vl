@@ -26,6 +26,7 @@ This host (https://viralrefer-ultra.pages.dev) is an enhanced Site Drops product
 - Homepage (contest): https://viralrefer-ultra.pages.dev/
 - Language variants: https://viralrefer-ultra.pages.dev/?lang={en,es,fr,pt,de,hi,ar,zh,ja,ko,ru,id,tr,it,nl,pl,vi,th,uk,bn,ur,ms,fil,sw,sv,ro}
 - Traffic-exchange explainer: https://viralrefer-ultra.pages.dev/te
+- Full conversion splash (noindex): https://viralrefer-ultra.pages.dev/splash?src=te&camp=YOURCAMP
 - Breakout / sponsor open: https://viralrefer-ultra.pages.dev/go
 - TE operator kit: https://viralrefer-ultra.pages.dev/promo/te/
 - Join alias (302 to homepage, keeps tags): https://viralrefer-ultra.pages.dev/join

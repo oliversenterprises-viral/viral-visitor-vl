@@ -15,7 +15,7 @@ export function teSplashHtml(opts: { origin: string; url: URL; compact?: boolean
   const camp: Campaign = campaignFromSearch(opts.url.searchParams);
   const refRaw = (opts.url.searchParams.get('ref') || '').toUpperCase();
   const ref = isReferralCode(refRaw) ? refRaw : '';
-  const open = breakoutUrl(opts.origin, camp, ref || null);
+  const open = breakoutUrl(opts.origin, camp, ref || null, opts.url.searchParams);
   const size = teSizeFromSearch(opts.url, opts.compact);
   const strip = size === '728x90' || size === '468x60';
   const cta = strip ? 'Open' : 'Open — Get my link';

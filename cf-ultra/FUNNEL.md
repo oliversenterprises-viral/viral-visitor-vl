@@ -79,7 +79,7 @@ Casino-light feedback sits **under** the paste form and inside the kit. It must 
 
 ## Traffic exchange
 
-TE / rotators are a **distribution path**, not a funnel step. Iframe the splash (`/te?src=te&camp=…&size=468x60`), not `/`. Impressions do not write KV. `src=te` Get-my-link does not count as Credit. See README “Traffic exchanges”.
+TE / rotators are a **distribution path**, not a funnel step. Iframe compact units (`/te?src=te&camp=…&size=468x60`), not `/`. Send human clicks to `/splash?src=te&camp=…` (homepage-like conversion page). Compact impressions do not write KV. Full splash beacons `te_splash_view` / `te_splash_cta` only — never a referral credit. `src=te` Get-my-link does not count as Credit. See README “Traffic exchanges”.
 
 ## Notifications
 

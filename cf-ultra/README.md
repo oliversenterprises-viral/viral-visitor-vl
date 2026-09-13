@@ -14,8 +14,10 @@ Owners can buy or run hit-exchange traffic **to this sibling** (and to a race li
 
 | URL | Role |
 | --- | --- |
-| `/te?src=te&camp=YOURCAMP` | Fast splash, iframe-safe, **no write per impression** |
-| `/go?src=te&camp=YOURCAMP` | Same splash |
+| `/splash?src=te&camp=YOURCAMP` | Full-viewport conversion splash (homepage look). Fires `te_splash_view` + `te_splash_cta`. `noindex`. |
+| `/go?src=te&camp=YOURCAMP` | Same conversion splash for human breakouts |
+| `/te?src=te&camp=YOURCAMP` | Indexable TE explainer (top-level) |
+| `/te?src=te&camp=YOURCAMP&size=468x60` | Compact iframe unit — **no write per impression** |
 | `/embed/te?src=te&camp=YOURCAMP` | Compact 300×250 iframe |
 | `/join?src=te&camp=YOURCAMP` | 302 into the real funnel |
 | `/a/VIRAL-XXXXXXX?src=te` | Race attribution + TE tag |
@@ -29,7 +31,7 @@ Splash CTA uses `target="_top"` so a third-party iframe can break out. Cookies/s
 - A Get-my-link tagged `src=te` / `traffic_exchange` still issues a **share kit**, but **does not** write a verified credit toward Rising / Challenger / #1.
 - HQ can flip “Allow TE-attributed credits” (off by default). Leave it off.
 
-**HQ:** TE visits, TE→Get my link conversion, credits-per-TE-visit (should stay ~0), campaign list, copy-TE-link.
+**HQ:** TE visits, splash views / CTA clicks, TE→Get my link conversion, credits-per-TE-visit (should stay ~0), campaign list, copy splash URL.
 
 **Promo kit:** `/promo/te/` — live iframe previews, titles, blurbs, SVG banners, copy-paste `<iframe>`. Share kit and HQ copy both the rotator URL and the iframe snippet.
 
@@ -37,7 +39,7 @@ Splash CTA uses `target="_top"` so a third-party iframe can break out. Cookies/s
 
 | Path | Third-party iframe |
 | --- | --- |
-| `/te`, `/go`, `/embed/te`, `/e/*`, `/promo/te/*` | Allowed (`frame-ancestors *`, no `X-Frame-Options`) |
+| `/splash`, `/te`, `/go`, `/embed/te`, `/e/*`, `/promo/te/*` | Allowed (`frame-ancestors *`, no `X-Frame-Options`) |
 | `/` homepage | `SAMEORIGIN` — do not put this in a rotator |
 | `/admin`, `/admin/*` | `DENY` / `frame-ancestors 'none'` |
 | `/r/VIRAL-…` | Not a TE surface — use `/te?ref=VIRAL-…` so breakout keeps tags |
@@ -206,7 +208,7 @@ PNGs from the local Pages preview (`wrangler pages dev dist --kv BOARD` on :8788
 | Admin HQ | `previews/06-admin-dashboard.png` |
 | Admin HQ mobile | `previews/06b-admin-mobile.png` |
 
-Live HQ: `/admin/`. TE splash: `/te`, `/go`, `/embed/te`. Promo kit: `/promo/te/`.
+Live HQ: `/admin/`. Conversion splash: `/splash?src=te&camp=DEMO`. Compact TE: `/te?size=468x60`. Promo kit: `/promo/te/`.
 
 ## Project layout
 
