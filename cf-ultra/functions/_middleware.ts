@@ -1,7 +1,12 @@
-/** Path-scoped framing: TE/embed allow iframes; Admin never; homepage same-origin. */
+import { isPublicAssetPath, notFoundHtml } from '../src/lib/organic-seo';
+import { decorateHomepageHtml } from './_lib/homepage-seo';
+import { html } from './_lib/http';
+
+/** Path-scoped framing + origin-aware homepage SEO (static index.html still wins over functions/index.ts). */
 export const onRequest: PagesFunction = async (context) => {
+  const url = new URL(context.request.url);
+  const path = url.pathname;
   const res = await context.next();
-  const path = new URL(context.request.url).pathname;
   const headers = new Headers(res.headers);
   const te =
     path === '/te' ||
@@ -20,5 +25,20 @@ export const onRequest: PagesFunction = async (context) => {
   } else if (path === '/' || path === '/index.html' || /^\/(?:r|a)\/[A-Za-z0-9_-]+\/?$/i.test(path)) {
     headers.set('x-frame-options', 'SAMEORIGIN');
   }
+
+  if (!isPublicAssetPath(path) && res.status === 200) {
+    return html(notFoundHtml(url.origin), { status: 404, headers: { 'x-vr-seo': '404' } });
+  }
+
+  const homepage = path === '/' || path === '/index.html';
+  const type = headers.get('content-type') || '';
+  if (homepage && res.ok && type.includes('text/html')) {
+    const html = decorateHomepageHtml(await res.text(), url);
+    headers.set('content-type', 'text/html; charset=utf-8');
+    headers.set('x-vr-seo', '1');
+    headers.delete('etag');
+    return new Response(html, { status: res.status, statusText: res.statusText, headers });
+  }
+
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 };

@@ -14,6 +14,7 @@ import {
   buildRobotsTxt,
   buildSitemapXml,
   homepageOgSvg,
+  isPublicAssetPath,
   isSeoBot,
   languageUrl,
   localeFromSearch,
@@ -109,6 +110,10 @@ describe('organic SEO builders', () => {
       ),
     ).toBe(true);
     expect(isSeoBot('Mozilla/5.0 (compatible; Googlebot/2.1)')).toBe(true);
+    expect(isPublicAssetPath('/')).toBe(true);
+    expect(isPublicAssetPath('/te')).toBe(true);
+    expect(isPublicAssetPath('/promo/te/')).toBe(true);
+    expect(isPublicAssetPath('/this-is-not-a-page')).toBe(false);
   });
 
   it('ships a homepage OG SVG', () => {
@@ -131,6 +136,7 @@ describe('decorated homepage HTML', () => {
     const html = decorateHomepageHtml(SAMPLE_HOME, url);
     expect(html).toContain('lang="es"');
     expect(html).toContain('https://preview.example/?lang=es');
+    expect(html).toContain('Gana la portada. — ViralRefer Site Drops');
     expect(html).toContain('Gana la portada.');
     expect(html).toContain('application/ld+json');
     expect(html).toContain('SoftwareApplication');

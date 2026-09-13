@@ -607,6 +607,66 @@ export function wantsCompactTe(request: Request, url: URL): boolean {
   return false;
 }
 
+/** Paths that may return 200. Everything else must not clone the homepage (soft-404). */
+export function isPublicAssetPath(path: string): boolean {
+  const p = path.replace(/\/+$/, '') || '/';
+  if (p === '/') return true;
+  if (p === '/index.html') return true;
+  if (p === '/404' || p === '/404.html') return true;
+  if (p === '/te' || p === '/te.html' || p === '/go' || p === '/join') return true;
+  if (p === '/admin') return true;
+  if (p.startsWith('/admin/')) return true;
+  if (p.startsWith('/promo/')) return true;
+  if (p.startsWith('/te/')) return true;
+  if (p.startsWith('/api/')) return true;
+  if (p.startsWith('/assets/')) return true;
+  if (p.startsWith('/embed')) return true;
+  if (/^\/(?:r|a|e)\/[^/]+$/.test(p)) return true;
+  if (
+    p === '/robots.txt' ||
+    p === '/sitemap.xml' ||
+    p === '/llms.txt' ||
+    p === '/llms-full.txt' ||
+    p === '/og.svg' ||
+    p === '/favicon.svg' ||
+    p === '/embed.js'
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export function notFoundHtml(origin: string): string {
+  const home = normalizeOrigin(origin);
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Page not found — ViralRefer Site Drops</title>
+  <meta name="description" content="This URL is not a ViralRefer Site Drops page. Open the homepage to get a free referral link."/>
+  <meta name="robots" content="noindex, follow"/>
+  <link rel="canonical" href="${escapeHtml(home)}/"/>
+  <meta name="theme-color" content="${SEO_THEME_COLOR}"/>
+  <style>
+    html,body{margin:0;background:#09090b;color:#f4f4f5;font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+    main{max-width:560px;margin:12vh auto;padding:24px}
+    a{color:#c4b5fd}
+    .cta{display:inline-block;margin-top:18px;padding:12px 18px;border-radius:12px;background:#7c3aed;color:#fff;text-decoration:none;font-weight:800}
+  </style>
+</head>
+<body>
+  <main>
+    <p>404</p>
+    <h1>This page is not part of Site Drops.</h1>
+    <p>The contest lives on the homepage. Personal share links look like <code>/r/VIRAL-XXXXXXX</code>. Traffic-exchange units use <code>/te</code>.</p>
+    <p><a class="cta" href="/">Go to ViralRefer Site Drops</a></p>
+    <p><a href="/te">Traffic exchange</a> · <a href="/promo/te/">TE promo kit</a> · <a href="/llms.txt">llms.txt</a></p>
+  </main>
+</body>
+</html>`;
+}
+
 export function isSeoBot(userAgent: string): boolean {
   return /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|applebot|gptbot|chatgpt-user|claudebot|perplexitybot|amazonbot|bytespider|ccbot|anthropic-ai|google-extended|applebot-extended/i.test(
     userAgent,

@@ -96,7 +96,7 @@ White-hat only. No cloaking, no doorway stacks, no fake ratings, MRR, testimonia
 | `robots.txt` | Function + `public/robots.txt` | Allow public pages; disallow `/admin`, `/api/` (except `/api/og`); point at sitemap |
 | `sitemap.xml` | Function + `public/sitemap.xml` | `/`, `/te`, `/go`, `/promo/te/`, `/?lang=` variants, lastmod, hreflang |
 | `llms.txt` / `llms-full.txt` | Function + `public/` | Product brief + Site Drops rules for LLM crawlers |
-| Homepage `<head>` | `index.html` (SSR-decorated by `functions/index.ts`) | Unique title/description, canonical, OG/Twitter, theme-color, robots index/follow, JSON-LD |
+| Homepage `<head>` | `index.html` (SSR-decorated by `functions/_middleware.ts`) | Unique title/description, canonical, OG/Twitter, theme-color, robots index/follow, JSON-LD |
 | JSON-LD | Organization + SoftwareApplication/WebApplication + FAQPage + HowTo | Honest `Offer` price `0`. No `aggregateRating` |
 | `/te` `/go` | Full unique HTML when top-level; compact `noindex` splash when `size=` or iframe | Rank for TE/share queries without thin doorway pages |
 | `/r/` `/a/` | OG cards | `noindex, follow` — personal links, not ranking targets |
@@ -218,6 +218,7 @@ cf-ultra/
     e/[host].ts        # embed widget
     embed.js.ts
     robots.txt.ts sitemap.xml.ts llms.txt.ts llms-full.txt.ts og.svg.ts
+    _middleware.ts     # framing + homepage SEO decoration
     _lib/              # engine, store, SEO, memory rate limits, edge cache, OG HTML
   src/lib/organic-seo.ts
   FUNNEL.md            # Perfect loop + manual checklist (source of truth)

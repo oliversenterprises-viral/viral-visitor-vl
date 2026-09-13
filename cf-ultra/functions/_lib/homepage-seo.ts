@@ -13,15 +13,10 @@ import {
   type SeoLocale,
 } from '../../src/lib/organic-seo';
 
-const TITLE_KEYS = ['hero.title_line1', 'hero.title_line2_lead', 'hero.title_accent'] as const;
-
 function homepageTitle(locale: SeoLocale): string {
   if (locale === 'en') return HOMEPAGE_SEO.title;
-  const d = MESSAGES[locale as Locale];
-  const line1 = d['hero.title_line1'];
-  const lead = d['hero.title_line2_lead'];
-  const accent = d['hero.title_accent'];
-  return `${line1} ${lead} ${accent}`.replace(/\s+/g, ' ').trim();
+  const line1 = MESSAGES[locale as Locale]['hero.title_line1'];
+  return `${line1} — ViralRefer Site Drops`;
 }
 
 function homepageDescription(locale: SeoLocale): string {
@@ -93,7 +88,6 @@ export function decorateHomepageHtml(html: string, pageUrl: URL): string {
     `<script type="application/ld+json" id="vr-organic-jsonld">${jsonLd}</script>`,
   );
 
-  void TITLE_KEYS;
   return out;
 }
 
@@ -110,28 +104,4 @@ function escapeAttr(value: string): string {
 
 function escapeTag(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-}
-
-export type HomepageAssets = { fetch: (request: Request) => Promise<Response> };
-
-export async function serveDecoratedHomepage(
-  request: Request,
-  assets: HomepageAssets | undefined,
-  next: () => Promise<Response>,
-): Promise<Response> {
-  const url = new URL(request.url);
-  if (!assets) return next();
-  try {
-    const assetReq = new Request(new URL('/index.html', url.origin), request);
-    const asset = await assets.fetch(assetReq);
-    if (!asset.ok) return next();
-    const html = decorateHomepageHtml(await asset.text(), url);
-    const headers = new Headers(asset.headers);
-    headers.set('content-type', 'text/html; charset=utf-8');
-    headers.set('cache-control', 'public, max-age=60, s-maxage=60, stale-while-revalidate=300');
-    headers.set('x-vr-seo', '1');
-    return new Response(html, { status: 200, headers });
-  } catch {
-    return next();
-  }
 }
