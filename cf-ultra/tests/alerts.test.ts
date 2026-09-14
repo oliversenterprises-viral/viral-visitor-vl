@@ -294,6 +294,7 @@ describe('Telegram owner channel', () => {
   it('stays inbox-only when Telegram secrets are missing', async () => {
     const item = await testAlert(emptyEnv, 'http://localhost:8788');
     expect(item.delivered).toBe('inbox');
+    expect(item.deliverError).toBe('missing');
     expect(item.body).toMatch(/inbox/i);
   });
 
@@ -329,8 +330,135 @@ describe('Telegram owner channel', () => {
     }
   });
 
+  it('treats Telegram HTTP 200 + ok:false as a failure reason', async () => {
+    const orig = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ ok: false, error_code: 400, description: 'Bad Request' }), {
+        status: 200,
+      })) as typeof fetch;
+    try {
+      const sent = await deliverTelegram({ TELEGRAM_BOT_TOKEN: '123456:TESTTOKEN' }, '<b>x</b>');
+      expect(sent.ok).toBe(false);
+      expect(sent.reason).toBe('http_400');
+    } finally {
+      globalThis.fetch = orig;
+    }
+  });
+
   it('can turn Telegram off from HQ prefs', () => {
     const next = parseAlertPrefsBody({ telegram: false }, defaultAlertPrefs());
     expect(next.telegram).toBe(false);
+  });
+
+  it('awaits Telegram on Test ping and persists delivered=telegram to KV', async () => {
+    const store = new Map<string, string>();
+    const env = {
+      TELEGRAM_BOT_TOKEN: '123456:TESTTOKEN',
+      BOARD: {
+        async get(key: string, type?: string) {
+          const v = store.get(key);
+          if (v == null) return null;
+          return type === 'json' ? JSON.parse(v) : v;
+        },
+        async put(key: string, value: string) {
+          store.set(key, value);
+        },
+      },
+    } as unknown as UltraEnv;
+    const orig = globalThis.fetch;
+    let fetchDone = false;
+    globalThis.fetch = (async () => {
+      await new Promise((r) => setTimeout(r, 15));
+      fetchDone = true;
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }) as typeof fetch;
+    try {
+      const item = await testAlert(env, 'http://localhost:8788');
+      expect(fetchDone).toBe(true);
+      expect(item.delivered).toBe('telegram');
+      expect(item.deliverError).toBeUndefined();
+      const kv = JSON.parse(store.get('ultra:alert-inbox') || 'null') as { delivered?: string }[];
+      expect(kv[0]?.delivered).toBe('telegram');
+    } finally {
+      globalThis.fetch = orig;
+    }
+  });
+
+  it('persists a clear Telegram failure reason on the inbox item', async () => {
+    const store = new Map<string, string>();
+    const env = {
+      TELEGRAM_BOT_TOKEN: '123456:TESTTOKEN',
+      BOARD: {
+        async get(key: string, type?: string) {
+          const v = store.get(key);
+          if (v == null) return null;
+          return type === 'json' ? JSON.parse(v) : v;
+        },
+        async put(key: string, value: string) {
+          store.set(key, value);
+        },
+      },
+    } as unknown as UltraEnv;
+    const orig = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ ok: false, error_code: 401, description: 'Unauthorized' }), {
+        status: 401,
+      })) as typeof fetch;
+    try {
+      const item = await testAlert(env, 'http://localhost:8788');
+      expect(item.delivered).toBe('inbox');
+      expect(item.deliverError).toBe('http_401');
+      const kv = JSON.parse(store.get('ultra:alert-inbox') || 'null') as { deliverError?: string }[];
+      expect(kv[0]?.deliverError).toBe('http_401');
+    } finally {
+      globalThis.fetch = orig;
+    }
+  });
+
+  it('finishes Telegram for a credit alert before emitJoinAlerts returns', async () => {
+    const store = new Map<string, string>();
+    const env = {
+      TELEGRAM_BOT_TOKEN: '123456:TESTTOKEN',
+      BOARD: {
+        async get(key: string, type?: string) {
+          const v = store.get(key);
+          if (v == null) return null;
+          return type === 'json' ? JSON.parse(v) : v;
+        },
+        async put(key: string, value: string) {
+          store.set(key, value);
+        },
+      },
+    } as unknown as UltraEnv;
+    const orig = globalThis.fetch;
+    let inFlight = 0;
+    let completed = 0;
+    globalThis.fetch = (async () => {
+      inFlight += 1;
+      await new Promise((r) => setTimeout(r, 15));
+      completed += 1;
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }) as typeof fetch;
+    try {
+      await emitJoinAlerts({
+        env,
+        origin: 'http://localhost:8788',
+        host: 'friend.com',
+        isNewSite: false,
+        credited: true,
+        creditN: 1,
+        creditHost: 'climber.com',
+        previousRung: 'entered',
+        nextRung: 'rising',
+      });
+      expect(inFlight).toBeGreaterThan(0);
+      expect(completed).toBe(inFlight);
+      const inbox = await readAlertInbox(env);
+      expect(inbox.every((i) => i.delivered === 'telegram')).toBe(true);
+      const kv = JSON.parse(store.get('ultra:alert-inbox') || 'null') as { delivered?: string }[];
+      expect(kv.every((i) => i.delivered === 'telegram')).toBe(true);
+    } finally {
+      globalThis.fetch = orig;
+    }
   });
 });

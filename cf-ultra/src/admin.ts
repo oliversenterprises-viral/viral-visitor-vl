@@ -60,6 +60,7 @@ type Dash = {
       count: number;
       adminPath: string;
       delivered: string;
+      deliverError?: string;
       why?: string;
     }[];
   };
@@ -88,7 +89,7 @@ function esc(v: unknown): string {
 function telegramStatus(a: Dash['alerts'] | undefined): string {
   const hint = a?.telegramOwnerHint || '1274269043';
   if (a?.telegramConfigured) {
-    return `Telegram: configured · chat ${esc(a.telegramChatMasked || '…set')} (owner ${esc(hint)}). Test ping hits that chat.`;
+    return `Telegram: configured · chat ${esc(a.telegramChatMasked || '…set')} (owner ${esc(hint)}). Test ping waits for Telegram and should show delivered=telegram (or a failure reason) on the inbox row.`;
   }
   const token = a?.telegramTokenConfigured ? 'token set' : 'token missing';
   const chat = a?.telegramChatMasked ? `chat ${esc(a.telegramChatMasked)}` : `chat default ${esc(hint)}`;
@@ -263,7 +264,7 @@ function render(d: Dash): void {
     <div class="hq-grid two" data-alerts>
       <section class="lane" id="alerts-inbox">
         <h3>Owner alerts inbox</h3>
-        <p class="note">High-signal only by default (credit + rung climbs). Pageviews, lands, and share clicks from <code>/api/track</code> never enqueue. Owner HQ sessions and excluded IPs never enqueue. Each row shows <strong>why</strong> it fired.</p>
+        <p class="note">Phone pings are <strong>Test ping</strong>, verified <strong>credit</strong>, <strong>rung unlocks</strong>, and <strong>new-site join</strong> if you enable that checkbox. Pageviews, lands, pastes, and share clicks from <code>/api/track</code> are analytics only — they never enqueue and never Telegram, even if Friend land / First share click is checked. Owner HQ sessions and excluded IPs never enqueue. Each row shows <strong>why</strong> it fired. If Telegram fails, the row keeps <code>inbox</code> plus a reason (<code>missing</code> / <code>http_…</code> / <code>rate_limit</code> / <code>network</code>).</p>
         <ol class="activity inbox">${
           (d.alerts?.inbox || []).length
             ? d.alerts.inbox
@@ -272,7 +273,7 @@ function render(d: Dash): void {
                   const focusHost = new URLSearchParams(location.search).get('host');
                   const on = (focus && e.kind === focus) || (focusHost && e.host === focusHost);
                   const why = e.why || '';
-                  return `<li class="${on ? 'focus' : ''}"><span><strong>${esc(e.title)}</strong> · ${esc(e.body)}${e.host ? ` · ${esc(e.host)}` : ''} <small>${esc(e.delivered)}</small>${why ? `<small class="why">Why: ${esc(why)}</small>` : ''}</span><a href="${esc(e.adminPath)}">${new Date(e.at).toLocaleString()}</a></li>`;
+                  return `<li class="${on ? 'focus' : ''}"><span><strong>${esc(e.title)}</strong> · ${esc(e.body)}${e.host ? ` · ${esc(e.host)}` : ''} <small>${esc(e.delivered)}${e.deliverError ? ` · ${esc(e.deliverError)}` : ''}</small>${why ? `<small class="why">Why: ${esc(why)}</small>` : ''}</span><a href="${esc(e.adminPath)}">${new Date(e.at).toLocaleString()}</a></li>`;
                 })
                 .join('')
             : '<li><span>No owner alerts. A unique friend credit or rung unlock will land here — or hit Test ping.</span></li>'
