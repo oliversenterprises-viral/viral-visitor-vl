@@ -139,6 +139,8 @@ export interface JoinResult {
   alreadyCredited: boolean;
   selfJoin: boolean;
   teIgnored: boolean;
+  /** True only when this write created the site row — used for race_started. */
+  isNewSite: boolean;
 }
 
 export const RUNG_ORDER: Rung[] = ['entered', 'rising', 'challenger', 'banner'];
@@ -626,6 +628,7 @@ export function joinAndMaybeCredit(
       alreadyCredited,
       selfJoin,
       teIgnored,
+      isNewSite,
     },
   };
 }

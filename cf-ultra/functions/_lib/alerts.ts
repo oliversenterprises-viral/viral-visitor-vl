@@ -54,6 +54,11 @@ export type InboxItem = {
   count: number;
   adminPath: string;
   delivered: 'inbox' | 'telegram' | 'webhook' | 'email' | 'both' | 'skipped_quiet';
+  /**
+   * Why Telegram did not land. Set when prefs wanted Telegram but send failed.
+   * Values: missing | rate_limit | network | http_<status>.
+   */
+  deliverError?: string;
   /** Plain-language reason this row exists — shown in HQ. */
   why: string;
 };
@@ -470,7 +475,20 @@ export async function deliverTelegram(
         disable_web_page_preview: true,
       }),
     });
-    return { ok: res.ok, reason: res.ok ? undefined : `http_${res.status}` };
+    let apiOk = res.ok;
+    let code = res.status;
+    try {
+      const data = (await res.json()) as { ok?: boolean; error_code?: number };
+      if (data && data.ok === false) {
+        apiOk = false;
+        if (typeof data.error_code === 'number' && Number.isFinite(data.error_code)) code = data.error_code;
+      } else if (data && data.ok === true) {
+        apiOk = true;
+      }
+    } catch {
+      /* keep HTTP status — never log or return the token */
+    }
+    return { ok: apiOk, reason: apiOk ? undefined : `http_${code}` };
   } catch {
     return { ok: false, reason: 'network' };
   }
@@ -504,29 +522,39 @@ function patchDelivered(
   mailed: boolean,
   telegram: boolean,
   quiet: boolean,
+  telegramError?: string,
 ): void {
-  if (quiet) item.delivered = 'skipped_quiet';
-  else {
+  if (quiet) {
+    item.delivered = 'skipped_quiet';
+    delete item.deliverError;
+  } else {
     const outs = [telegram && 'telegram', hooked && 'webhook', mailed && 'email'].filter(Boolean);
     item.delivered =
       outs.length === 0 ? 'inbox' : outs.length === 1 ? (outs[0] as InboxItem['delivered']) : 'both';
+    if (!telegram && telegramError) item.deliverError = telegramError;
+    else delete item.deliverError;
   }
   const m = mem();
   const idx = m.inbox.findIndex((x) => x.id === item.id);
   if (idx >= 0) m.inbox[idx] = item;
 }
 
-function deliverLater(
+/**
+ * Await outbound sends (Telegram first). Pages/Workers drop fire-and-forget
+ * fetches after the response; callers must await this or wrap it in waitUntil.
+ */
+async function deliverOutbound(
   env: UltraEnv,
   origin: string,
   prefs: AlertPrefs,
   item: InboxItem,
   opts: { forceWebhook?: boolean; allowEmail?: boolean },
-): void {
+): Promise<InboxItem> {
   const quiet = inQuietHours(prefs) && !opts.forceWebhook;
   if (quiet) {
     patchDelivered(item, false, false, false, true);
-    return;
+    await persistInbox(env, true);
+    return item;
   }
   const webhook = resolveWebhookUrl(env, prefs);
   const hq = adminUrl(origin, item.adminPath);
@@ -545,17 +573,24 @@ function deliverLater(
     count: item.count,
     adminUrl: hq,
   });
-  void (async () => {
-    let hooked = false;
-    let mailed = false;
-    let telegram = false;
-    if (telegramEnabled(env, prefs)) {
-      telegram = (await deliverTelegram(env, html)).ok;
-    }
-    if (webhook) hooked = await deliverWebhook(webhook, text, item);
-    if (opts.allowEmail && emailConfigured(env)) mailed = await deliverEmail(env, text, item);
-    patchDelivered(item, hooked, mailed, telegram, false);
-  })();
+  let hooked = false;
+  let mailed = false;
+  let telegram = false;
+  let telegramError: string | undefined;
+  if (prefs.telegram === false) {
+    /* HQ turned Telegram off — inbox / webhook / email only */
+  } else if (!telegramConfigured(env)) {
+    telegramError = 'missing';
+  } else {
+    const sent = await deliverTelegram(env, html);
+    telegram = sent.ok;
+    telegramError = sent.ok ? undefined : sent.reason || 'network';
+  }
+  if (webhook) hooked = await deliverWebhook(webhook, text, item);
+  if (opts.allowEmail && emailConfigured(env)) mailed = await deliverEmail(env, text, item);
+  patchDelivered(item, hooked, mailed, telegram, false, telegramError);
+  await persistInbox(env, true);
+  return item;
 }
 
 function hydrateInboxItem(raw: InboxItem): InboxItem {
@@ -593,7 +628,7 @@ async function commitItem(
   mem().inbox = inbox.slice(0, INBOX_CAP);
   const forcePut = Boolean(opts.forceWebhook || shouldSendImmediate(payload.kind, count, payload.immediate));
   await persistInbox(env, forcePut);
-  deliverLater(env, origin, prefs, item, {
+  await deliverOutbound(env, origin, prefs, item, {
     forceWebhook: opts.forceWebhook,
     allowEmail: shouldSendImmediate(payload.kind, count, payload.immediate) || Boolean(opts.forceWebhook),
   });
@@ -667,7 +702,7 @@ export async function emitAlert(
   const count = payload.count || 1;
   if (!opts.force && !shouldSendImmediate(payload.kind, count, payload.immediate)) {
     enqueueBatch(payload);
-    void flushAlertBatches(env, origin);
+    await flushAlertBatches(env, origin);
     return null;
   }
   return commitItem(env, origin, payload, { forceWebhook: opts.force });

@@ -99,7 +99,7 @@ export const onRequestPost: PagesFunction<UltraEnv> = async ({ request, env, wai
   }
 
   const now = Date.now();
-  const isNewSite = Boolean(host && result.site && !loaded.state.sites[host]);
+  const isNewSite = result.isNewSite === true;
   const creditHost = result.referrerCode ? state.players[result.referrerCode]?.siteHost : undefined;
   const previousRung = creditHost ? rungForSite(loaded.state, creditHost, now) : 'entered';
   const nextRung = result.unlock?.rung || (creditHost ? rungForSite(state, creditHost, now) : 'entered');

@@ -292,7 +292,7 @@ First-class analytics console at **`/admin/`**. Not a leftover stub.
 - **Reset stats** lists and deletes every `stats:*` key (works with BOARD KV bound). It does not wipe `ultra:state` / the live board.
 - **Clear inbox** empties `ultra:alert-inbox` (authenticated). Alert prefs stay.
 
-**Owner alerts (live):** defaults are **credit + rung climbs only** (`race_started`, `first_share`, `friend_land`, `spike`, `digest` off). `/api/track` never enqueues alerts. Excluded IPs and Owner HQ sessions never enqueue. Each inbox row shows **why** it fired. **Clear inbox** empties `ultra:alert-inbox`. Telegram still pings when `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are set. Digest is never auto-enabled.
+**Owner alerts (live):** defaults are **credit + rung climbs only** (`race_started`, `first_share`, `friend_land`, `spike`, `digest` off). `/api/track` never enqueues alerts (lands / pastes / shares stay analytics-only even if those HQ checkboxes are on). Conversion writes (`join` credit / rung / optional new-site) and Owner HQ **Test ping** await Telegram (or run under `waitUntil`) and persist `delivered` plus a `deliverError` (`missing` / `http_*` / `rate_limit` / `network`) back to KV. Excluded IPs and Owner HQ sessions never enqueue. Each inbox row shows **why** it fired. **Clear inbox** empties `ultra:alert-inbox`. Telegram still pings when `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are set. Digest is never auto-enabled.
 
 See `ARCHITECTURE.md` for rollup keys and write budget.
 

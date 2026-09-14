@@ -75,6 +75,7 @@ describe('join without a site (live Get my link)', () => {
     const minted = mustJoin(createEmptyState(), { url: '', actorId: actor('aa'), now });
     expect(minted.result.player.code).toMatch(CODE_RE);
     expect(minted.result.site).toBeNull();
+    expect(minted.result.isNewSite).toBe(false);
     expect(Object.keys(minted.state.sites)).toHaveLength(0);
 
     const friend = mustJoin(minted.state, {
@@ -92,6 +93,7 @@ describe('join without a site (live Get my link)', () => {
       now: now + 2000,
     });
     expect(attached.result.site?.host).toBe('later.test');
+    expect(attached.result.isNewSite).toBe(true);
     expect(attached.state.sites['later.test'].ownerCode).toBe(minted.result.player.code);
   });
 });
@@ -102,6 +104,7 @@ describe('join + unique credit climb', () => {
     const a = mustJoin(state, { url: 'https://alpha.test', actorId: actor('aa'), now });
     state = a.state;
     expect(a.result.player.code).toMatch(CODE_RE);
+    expect(a.result.isNewSite).toBe(true);
     expect(state.sites['alpha.test'].creditTimes).toHaveLength(0);
 
     const self = mustJoin(state, {
