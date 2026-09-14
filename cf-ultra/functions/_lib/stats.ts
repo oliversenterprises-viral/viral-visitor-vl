@@ -1,3 +1,5 @@
+import { isTeSource } from './campaign';
+
 /** Hourly/daily rollups. Pageviews buffer in-isolate. Joins/credits flush immediately. */
 
 export type TrackKind =
@@ -46,6 +48,7 @@ export interface HourBucket {
   referrers: Record<string, number>;
   utm: Record<string, number>;
   camps: Record<string, number>;
+  srcs: Record<string, number>;
   geo: Record<string, number>;
   device: Record<string, number>;
   browser: Record<string, number>;
@@ -103,7 +106,7 @@ const COUNTERS: (keyof HourBucket)[] = [
   'teSplashCtas',
 ];
 
-const MAPS = ['platforms', 'referrers', 'utm', 'camps', 'geo', 'device', 'browser'] as const;
+const MAPS = ['platforms', 'referrers', 'utm', 'camps', 'srcs', 'geo', 'device', 'browser'] as const;
 
 export function hourId(now: number = Date.now()): string {
   return new Date(now).toISOString().slice(0, 13);
@@ -140,6 +143,7 @@ export function emptyBucket(hour: string): HourBucket {
     referrers: {},
     utm: {},
     camps: {},
+    srcs: {},
     geo: {},
     device: {},
     browser: {},
@@ -184,9 +188,13 @@ export function hintsFromRequest(
     referrer = 'direct';
   }
   const platform = normalizePlatform(body.platform);
-  const src = String(body.src || body.utm || '').toLowerCase();
+  const src = String(body.src || body.utm || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '')
+    .slice(0, 32);
   const camp = String(body.camp || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
-  const te = body.te === true || src === 'te' || src === 'traffic_exchange';
+  const te = body.te === true || isTeSource(src);
   return {
     country,
     device,
@@ -196,7 +204,7 @@ export function hintsFromRequest(
     platform,
     te,
     camp,
-    src: te ? 'te' : src.slice(0, 32),
+    src: te ? 'te' : src,
   };
 }
 
@@ -215,6 +223,7 @@ export function applyEvent(bucket: HourBucket, kind: TrackKind, hints: VisitorHi
   addCount(bucket.referrers, hints.referrer);
   addCount(bucket.utm, hints.utm);
   if (hints.camp) addCount(bucket.camps, hints.camp);
+  addCount(bucket.srcs, hints.src || 'unknown');
   if (hints.platform) addCount(bucket.platforms, hints.platform);
   if (hints.te && (kind === 'land' || kind === 'friend_land' || kind === 'te_splash_view')) bucket.teLands += 1;
   if (hints.te && kind === 'join') bucket.teJoins += 1;

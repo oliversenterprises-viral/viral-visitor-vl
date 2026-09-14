@@ -96,6 +96,7 @@ export const onRequestGet: PagesFunction<UltraEnv> = async ({ request, env }) =>
     ops,
     excludeIps,
     camps: topMap(window.camps || {}, 8),
+    srcs: topMap(window.srcs || {}, 12),
     te: {
       lands: window.teLands ?? 0,
       joins: window.teJoins ?? 0,
