@@ -26,6 +26,7 @@ type Dash = {
   ops: { bannedCodes: string[]; bannedSites: string[]; mutedCodes: string[]; hero: string; lead: string; teCreditsCount?: boolean };
   excludeIps: string[];
   camps: { key: string; n: number }[];
+  srcs: { key: string; n: number }[];
   te: {
     lands: number;
     joins: number;
@@ -206,6 +207,18 @@ function render(d: Dash): void {
       </section>
     </div>
     <div class="hq-grid two">
+      <section class="lane">
+        <h3>Src</h3>
+        <p class="note">Traffic source tag from <code>?src=</code> (also <code>utm_source</code>). TE tags collapse to <code>te</code>. Missing or empty → <code>unknown</code>. Same window as the range pills (today / 7d / 30d / all).</p>
+        ${bars(d.srcs || [])}
+      </section>
+      <section class="lane">
+        <h3>Campaigns</h3>
+        <p class="note">From <code>?camp=</code> on land, splash, and join. Same window as Src.</p>
+        ${bars(d.camps || [])}
+      </section>
+    </div>
+    <div class="hq-grid two">
       <section class="lane"><h3>Referrers</h3>${bars(d.referrers)}</section>
       <section class="lane"><h3>Geo (CF-ipcountry)</h3>${bars(d.geo, 'hot')}<p class="note">XX = country header missing (local preview).</p></section>
     </div>
@@ -331,7 +344,7 @@ function render(d: Dash): void {
         <div class="kpi kpi--emerald"><b>${d.te?.splashCtas ?? 0}</b><small>Splash CTA clicks</small></div>
         <div class="kpi kpi--sky"><b>${d.te?.splashToCta ?? 0}%</b><small>Splash → CTA</small></div>
       </div>
-      <p class="note">Credits ignored from TE: ${d.te?.ignored ?? 0}. Campaigns (from <code>camp=</code> on splash + join):</p>
+      <p class="note">Credits ignored from TE: ${d.te?.ignored ?? 0}. Campaigns (from <code>camp=</code> on splash + join) and <strong>Src</strong> (from <code>src=</code>, empty → unknown) use the same range pills as the rest of HQ:</p>
       ${bars(d.camps || [])}
       <div class="ops-row">
         <input data-te-camp placeholder="campaign (optional)" />

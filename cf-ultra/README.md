@@ -31,7 +31,7 @@ Splash CTA uses `target="_top"` so a third-party iframe can break out. Cookies/s
 - A Get-my-link tagged `src=te` / `traffic_exchange` still issues a **share kit**, but **does not** write a verified credit toward Rising / Challenger / #1.
 - HQ can flip “Allow TE-attributed credits” (off by default). Leave it off.
 
-**HQ:** TE visits, splash views / CTA clicks, TE→Get my link conversion, credits-per-TE-visit (should stay ~0), campaign list, copy splash URL.
+**HQ:** TE visits, splash views / CTA clicks, TE→Get my link conversion, credits-per-TE-visit (should stay ~0), **Src** + campaign lists (same today / 7d / 30d / all window), copy splash URL.
 
 **Promo kit:** `/promo/te/` — live iframe previews, titles, blurbs, SVG banners, copy-paste `<iframe>`. Share kit and HQ copy both the rotator URL and the iframe snippet.
 
@@ -171,12 +171,16 @@ If Wrangler cannot bind KV, Functions keep the board in **isolate memory** until
    ```
 
 4. Paste the IDs into `wrangler.toml` under `[[kv_namespaces]]` **or** bind `BOARD` in the dashboard: Pages → project → Settings → Bindings → KV namespace.
-5. Deploy **only after approval**:
+5. Deploy **only after approval** (Aegis after Karanga Y — do not ship from this PR unless Pages deploy secrets are already in the environment):
 
    ```bash
-   npm run deploy
-   # wrangler pages deploy dist
+   cd cf-ultra
+   npm ci
+   npm run build
+   npx wrangler pages deploy dist --project-name viralrefer-ultra
    ```
+
+   Equivalent: `npm run deploy` (build + `wrangler pages deploy dist`). `wrangler.toml` already pins BOARD KV (`id` + `preview_id`). Never omit that `[[kv_namespaces]]` block — a deploy without it can wipe the Pages KV binding and flip production to isolate-memory.
 
    Or connect the Git repo to that Pages project (root `cf-ultra`). Do **not** use the existing `viralrefer-premium` Vercel project.
 
@@ -274,7 +278,7 @@ First-class analytics console at **`/admin/`**. Not a leftover stub.
 
 | Surface | Source |
 | --- | --- |
-| Uniques / sessions / funnel / platforms / geo / device / UTM | Live rollups from `/api/track` + join/credit (sampled pageviews) |
+| Uniques / sessions / funnel / platforms / geo / device / UTM / **Src** / campaigns | Live rollups from `/api/track` + join/credit (sampled pageviews). `src=` (empty → `unknown`) and `camp=` share the HQ range pills. |
 | Top sharers / climbing sites / board rungs | Live `ultra:state` + board snapshot |
 | Live visitors + event feed | Isolate last-seen + flushed `stats:feed` |
 | Geo country | `CF-IPCountry` (shows `XX` on local preview) |
